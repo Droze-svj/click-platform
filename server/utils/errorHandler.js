@@ -2,8 +2,18 @@
 
 const logger = require('./logger');
 const { sendError } = require('./response');
-const { getRecoverySuggestions } = require('./errorRecovery');
 const { logErrorForAnalytics } = require('../services/errorAnalyticsService');
+
+// Lazy load errorRecovery to avoid circular dependency
+// Load after all classes are defined
+let getRecoverySuggestions;
+function loadErrorRecovery() {
+  if (!getRecoverySuggestions) {
+    const errorRecovery = require('./errorRecovery');
+    getRecoverySuggestions = errorRecovery.getRecoverySuggestions;
+  }
+  return getRecoverySuggestions;
+}
 
 /**
  * Custom error classes
@@ -119,8 +129,8 @@ function handleError(error, req, res) {
     response.retryAfter = error.retryAfter || 60;
   }
 
-  // Add recovery suggestions
-  const recovery = getRecoverySuggestions(error);
+  // Add recovery suggestions (lazy load to avoid circular dependency)
+  const recovery = loadErrorRecovery()(error);
   response.recovery = {
     message: recovery.message,
     actions: recovery.actions,
