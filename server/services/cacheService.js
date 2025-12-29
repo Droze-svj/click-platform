@@ -24,6 +24,13 @@ let cacheEnabled = false;
  * Initialize Redis client
  */
 async function initCache() {
+  // Skip Redis if not configured (optional service)
+  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+    logger.info('Redis not configured, caching disabled (optional)');
+    cacheEnabled = false;
+    return;
+  }
+
   try {
     const redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`;
     
@@ -31,19 +38,24 @@ async function initCache() {
       url: redisUrl,
       password: process.env.REDIS_PASSWORD || undefined,
       socket: {
+        connectTimeout: 5000, // 5 second timeout
         reconnectStrategy: (retries) => {
-          if (retries > 10) {
-            logger.error('Redis reconnection failed after 10 retries');
+          if (retries > 3) {
+            logger.warn('Redis reconnection failed after 3 retries, disabling cache');
+            cacheEnabled = false;
             return new Error('Redis connection failed');
           }
-          return Math.min(retries * 100, 3000);
+          return Math.min(retries * 100, 2000);
         },
       },
     });
 
     redisClient.on('error', (err) => {
-      logger.error('Redis client error', { error: err.message });
-      captureException(err, { tags: { service: 'redis', type: 'client_error' } });
+      // Don't log as error if cache is already disabled
+      if (cacheEnabled) {
+        logger.warn('Redis client error, disabling cache', { error: err.message });
+        cacheEnabled = false;
+      }
     });
 
     redisClient.on('connect', () => {
@@ -55,12 +67,28 @@ async function initCache() {
       logger.info('Redis client ready');
     });
 
-    await redisClient.connect();
+    // Connect with timeout
+    await Promise.race([
+      redisClient.connect(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
+      )
+    ]);
+    
     cacheEnabled = true;
     logger.info('✅ Redis cache initialized');
   } catch (error) {
     logger.warn('Redis not available, caching disabled', { error: error.message });
     cacheEnabled = false;
+    // Clean up client if it was created
+    if (redisClient) {
+      try {
+        await redisClient.quit().catch(() => {});
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      redisClient = null;
+    }
     // Continue without cache - graceful degradation
   }
 }
