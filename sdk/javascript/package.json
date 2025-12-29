@@ -1,0 +1,35 @@
+{
+  "name": "@click/api-client",
+  "version": "1.0.0",
+  "description": "Official JavaScript SDK for Click API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "click",
+    "api",
+    "sdk",
+    "content",
+    "social-media"
+  ],
+  "author": "Click",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0"
+  }
+}
+
+
+
+
+
+

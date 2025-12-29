@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Connection Test</title>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <pre id="result"></pre>
+    <script>
+        async function testAPI() {
+            const API_URL = 'http://localhost:5001/api';
+            const result = document.getElementById('result');
+            result.textContent = 'Testing...\n';
+            
+            try {
+                // Test 1: Simple health check
+                result.textContent += 'Testing: GET /health\n';
+                const health = await fetch(`${API_URL.replace('/api', '')}/health`);
+                result.textContent += `Health: ${health.status} ${health.statusText}\n`;
+                
+                // Test 2: Registration endpoint
+                result.textContent += '\nTesting: POST /auth/register\n';
+                const registerRes = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Test User',
+                        email: `test${Date.now()}@example.com`,
+                        password: 'Test123456'
+                    })
+                });
+                const registerData = await registerRes.json();
+                result.textContent += `Status: ${registerRes.status}\n`;
+                result.textContent += `Response: ${JSON.stringify(registerData, null, 2)}\n`;
+                
+            } catch (error) {
+                result.textContent += `\nERROR: ${error.message}\n`;
+                result.textContent += `Stack: ${error.stack}\n`;
+            }
+        }
+    </script>
+</body>
+</html>

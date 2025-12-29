@@ -1,0 +1,56 @@
+{
+  "timestamp": "2025-12-29T19:26:34.653Z",
+  "environment": "development",
+  "apiUrl": "http://localhost:5001/api",
+  "results": [
+    {
+      "platform": "twitter",
+      "status": "error",
+      "issues": [
+        "Invalid status code: { connected: false, connectedAt: undefined, configured: false }"
+      ]
+    },
+    {
+      "platform": "linkedin",
+      "status": "error",
+      "issues": [
+        "Invalid status code: { connected: false, connectedAt: undefined, configured: false }"
+      ]
+    },
+    {
+      "platform": "facebook",
+      "status": "error",
+      "issues": [
+        "Invalid status code: {\n  connected: false,\n  connectedAt: undefined,\n  pagesCount: 0,\n  configured: false\n}"
+      ]
+    },
+    {
+      "platform": "instagram",
+      "status": "error",
+      "issues": [
+        "Invalid status code: {\n  connected: false,\n  accountsCount: 0,\n  accounts: [],\n  facebookConnected: false,\n  configured: false\n}"
+      ]
+    },
+    {
+      "platform": "youtube",
+      "status": "error",
+      "issues": [
+        "Invalid status code: {\n  connected: false,\n  connectedAt: undefined,\n  channelId: undefined,\n  configured: false\n}"
+      ]
+    },
+    {
+      "platform": "tiktok",
+      "status": "error",
+      "issues": [
+        "Invalid status code: {\n  connected: false,\n  connectedAt: undefined,\n  username: undefined,\n  configured: false\n}"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "connected": 0,
+    "ready": 0,
+    "notConfigured": 0,
+    "errors": 6
+  }
+}

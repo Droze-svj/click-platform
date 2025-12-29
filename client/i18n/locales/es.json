@@ -1,0 +1,57 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "close": "Cerrar"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido de nuevo",
+    "stats": {
+      "videosProcessed": "Videos Procesados",
+      "contentGenerated": "Contenido Generado",
+      "postsScheduled": "Publicaciones Programadas"
+    }
+  },
+  "content": {
+    "title": "Contenido",
+    "create": "Crear Contenido",
+    "edit": "Editar Contenido",
+    "delete": "Eliminar Contenido",
+    "duplicate": "Duplicar",
+    "publish": "Publicar",
+    "schedule": "Programar"
+  },
+  "analytics": {
+    "title": "Analíticas",
+    "overview": "Resumen",
+    "trends": "Tendencias",
+    "platforms": "Plataformas",
+    "engagement": "Compromiso",
+    "views": "Vistas",
+    "likes": "Me gusta",
+    "shares": "Compartidos"
+  },
+  "moderation": {
+    "title": "Moderación de Contenido",
+    "checking": "Verificando contenido...",
+    "approved": "Contenido aprobado",
+    "flagged": "Contenido marcado para revisión",
+    "profanity": "Lenguaje ofensivo detectado",
+    "spam": "Spam detectado"
+  }
+}
+
+
+
+
+
+

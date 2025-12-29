@@ -1,0 +1,40 @@
+{
+  "version": "2.0",
+  "createdAt": "2025-12-29T04:00:00.902Z",
+  "userId": "6951b649f6a2892fc1a399f4",
+  "user": {
+    "email": "test2@example.com",
+    "name": "Test User",
+    "subscription": {
+      "status": "trial",
+      "startDate": "2025-12-28T22:59:21.626Z",
+      "endDate": "2026-01-04T22:59:21.626Z",
+      "plan": "monthly",
+      "foundingCreator": false,
+      "addOns": []
+    }
+  },
+  "metadata": {
+    "incremental": false,
+    "encrypted": false,
+    "format": "json",
+    "includes": {
+      "content": true,
+      "posts": true,
+      "scripts": true,
+      "settings": true
+    },
+    "contentCount": 0,
+    "postsCount": 0,
+    "scriptsCount": 0
+  },
+  "data": {
+    "content": [],
+    "posts": [],
+    "scripts": [],
+    "settings": {
+      "preferences": {},
+      "socialConnections": {}
+    }
+  }
+}

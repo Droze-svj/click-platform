@@ -1,0 +1,20 @@
+🚀 MongoDB Atlas Setup - Ready to Start!
+
+📋 FOLLOW ALONG GUIDE:
+   See: MONGODB_ATLAS_WALKTHROUGH.md (complete step-by-step)
+
+🎯 QUICK STEPS:
+   1. Go to: https://www.mongodb.com/cloud/atlas/register
+   2. Create account
+   3. Create M0 FREE cluster
+   4. Create database user
+   5. Whitelist IP (0.0.0.0/0)
+   6. Get connection string
+   7. Update .env.production
+
+⏱️  TIME: ~10 minutes
+
+📝 NEXT:
+   After setup, run: node scripts/check-whop-setup.js
+
+Ready? Let's go! 🚀
