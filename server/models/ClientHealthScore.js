@@ -67,8 +67,8 @@ const clientHealthScoreSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['excellent', 'good', 'fair', 'needs_attention', 'critical'],
-    default: 'fair',
-    index: true
+    default: 'fair'
+    // Index defined below with schema.index()
   },
   // Trends
   trends: {

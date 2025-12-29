@@ -39,8 +39,8 @@ const jobDependencySchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['pending', 'completed', 'failed'],
-    default: 'pending',
-    index: true,
+    default: 'pending'
+    // Index defined below with schema.index()
   },
   error: {
     type: String,

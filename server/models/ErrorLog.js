@@ -47,8 +47,8 @@ const errorLogSchema = new mongoose.Schema({
   },
   timestamp: {
     type: Date,
-    default: Date.now,
-    index: true,
+    default: Date.now
+    // Index defined below with schema.index()
   },
 }, {
   timestamps: true,
