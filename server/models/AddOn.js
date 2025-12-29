@@ -57,7 +57,7 @@ const addOnSchema = new mongoose.Schema({
   }
 });
 
-addOnSchema.index({ slug: 1 });
+// Note: slug already has unique: true in field definition, so no need to index again
 addOnSchema.index({ category: 1, isActive: 1 });
 
 addOnSchema.pre('save', function(next) {

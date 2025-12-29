@@ -80,8 +80,8 @@ const contentPerformanceSchema = new mongoose.Schema({
   },
   postedAt: {
     type: Date,
-    required: true,
-    index: true
+    required: true
+    // Index defined below with schema.index()
   },
   createdAt: {
     type: Date,

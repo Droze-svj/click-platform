@@ -26,7 +26,8 @@ const commentSentimentSchema = new mongoose.Schema({
       followers: Number,
       verified: Boolean
     },
-    timestamp: { type: Date, required: true, index: true },
+    timestamp: { type: Date, required: true }
+    // Index defined below with compound index
     platform: {
       type: String,
       enum: ['twitter', 'linkedin', 'facebook', 'instagram', 'youtube', 'tiktok'],
@@ -61,8 +62,8 @@ const commentSentimentSchema = new mongoose.Schema({
     category: {
       type: String,
       enum: ['high_quality', 'medium_quality', 'low_quality', 'spam'],
-      default: 'medium_quality',
-      index: true
+      default: 'medium_quality'
+      // Index defined below with schema.index()
     }
   },
   // Engagement
