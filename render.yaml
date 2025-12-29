@@ -1,12 +1,19 @@
+# Render.com Configuration File
+# This file automatically configures your Render.com service with the correct settings
+
 services:
   - type: web
-    name: click-api
+    name: click-platform
     env: node
+    region: oregon  # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
+    plan: free
     buildCommand: npm install && cd client && npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5001
-    healthCheckPath: /api/health
+      # Add your other environment variables in Render.com dashboard
+      # MONGODB_URI, JWT_SECRET, YOUTUBE_CLIENT_ID, etc.
