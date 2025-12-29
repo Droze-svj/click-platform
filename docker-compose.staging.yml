@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5002:5002"
+    environment:
+      - NODE_ENV=staging
+      - PORT=5002
+      - MONGODB_URI=mongodb://mongo-staging:27017/click-staging
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FRONTEND_URL=http://localhost:3001
+    env_file:
+      - .env.staging
+    volumes:
+      - ./uploads/staging:/app/uploads
+      - ./logs/staging:/app/logs
+    depends_on:
+      - mongo-staging
+      - redis-staging
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+  mongo-staging:
+    image: mongo:7
+    ports:
+      - "27018:27017"  # Different port to avoid conflict with production
+    volumes:
+      - mongo-staging-data:/data/db
+    restart: unless-stopped
+    networks:
+      - staging-network
+    environment:
+      - MONGO_INITDB_DATABASE=click-staging
+
+  redis-staging:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"  # Different port to avoid conflict with production
+    volumes:
+      - redis-staging-data:/data
+    restart: unless-stopped
+    networks:
+      - staging-network
+    command: redis-server --appendonly yes
+
+volumes:
+  mongo-staging-data:
+  redis-staging-data:
+
+networks:
+  staging-network:
+    driver: bridge
+
+

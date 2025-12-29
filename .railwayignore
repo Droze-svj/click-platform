@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Environment files
+.env.local
+.env.development
+.env.test
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Build outputs
+dist/
+build/
+.next/
+client/.next/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Scripts (optional - keep if needed)
+# scripts/

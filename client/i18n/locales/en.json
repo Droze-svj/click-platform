@@ -1,0 +1,57 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "stats": {
+      "videosProcessed": "Videos Processed",
+      "contentGenerated": "Content Generated",
+      "postsScheduled": "Posts Scheduled"
+    }
+  },
+  "content": {
+    "title": "Content",
+    "create": "Create Content",
+    "edit": "Edit Content",
+    "delete": "Delete Content",
+    "duplicate": "Duplicate",
+    "publish": "Publish",
+    "schedule": "Schedule"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Overview",
+    "trends": "Trends",
+    "platforms": "Platforms",
+    "engagement": "Engagement",
+    "views": "Views",
+    "likes": "Likes",
+    "shares": "Shares"
+  },
+  "moderation": {
+    "title": "Content Moderation",
+    "checking": "Checking content...",
+    "approved": "Content approved",
+    "flagged": "Content flagged for review",
+    "profanity": "Profanity detected",
+    "spam": "Spam detected"
+  }
+}
+
+
+
+
+
+

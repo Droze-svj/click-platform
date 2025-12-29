@@ -1,0 +1,17 @@
+🔗 Webhook Setup - Quick Start
+
+📋 WEBHOOK ENDPOINT:
+   POST /api/subscription/webhook
+   ✅ Already implemented in your code!
+
+🎯 NEXT STEPS:
+   1. Start your server: npm run dev
+   2. Start ngrok: ngrok http 5001
+   3. Copy ngrok URL: https://xxxxx.ngrok.io
+   4. Add /api/subscription/webhook to the end
+   5. Configure in Whop Dashboard
+
+📝 WEBHOOK URL FORMAT:
+   https://xxxxx.ngrok.io/api/subscription/webhook
+
+📚 See: WHOP_WEBHOOK_SETUP_GUIDE.md for full guide
