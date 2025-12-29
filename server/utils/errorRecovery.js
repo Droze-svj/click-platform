@@ -1,7 +1,8 @@
 // Error Recovery Utilities
 
 const logger = require('./logger');
-const { AppError, ServiceUnavailableError } = require('./errorHandler');
+// Note: Removed circular dependency - we don't actually need AppError here
+// We only use error.name and error.constructor.name, not the classes themselves
 
 /**
  * Error recovery suggestions based on error type
