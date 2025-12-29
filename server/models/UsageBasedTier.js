@@ -112,7 +112,7 @@ const usageBasedTierSchema = new mongoose.Schema({
 });
 
 usageBasedTierSchema.index({ tier: 1, isActive: 1 });
-usageBasedTierSchema.index({ slug: 1 });
+// Note: slug already has unique: true in field definition, so no need to index again
 
 usageBasedTierSchema.pre('save', function(next) {
   this.updatedAt = new Date();

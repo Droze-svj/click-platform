@@ -97,7 +97,7 @@ const agencyScalePlanSchema = new mongoose.Schema({
 });
 
 agencyScalePlanSchema.index({ isActive: 1, displayOrder: 1 });
-agencyScalePlanSchema.index({ slug: 1 });
+// Note: slug already has unique: true in field definition, so no need to index again
 
 agencyScalePlanSchema.pre('save', function(next) {
   this.updatedAt = new Date();

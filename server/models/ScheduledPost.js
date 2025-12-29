@@ -27,8 +27,8 @@ const scheduledPostSchema = new mongoose.Schema({
   },
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Campaign',
-    index: true
+    ref: 'Campaign'
+    // Index defined below with schema.index()
   },
   platform: {
     type: String,

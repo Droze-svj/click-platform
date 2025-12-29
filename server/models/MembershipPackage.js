@@ -116,7 +116,7 @@ const membershipPackageSchema = new mongoose.Schema({
 });
 
 // Indexes
-membershipPackageSchema.index({ slug: 1 });
+// Note: slug already has unique: true in field definition, so no need to index again
 membershipPackageSchema.index({ isActive: 1, sortOrder: 1 });
 
 membershipPackageSchema.pre('save', function(next) {

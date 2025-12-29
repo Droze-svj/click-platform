@@ -197,8 +197,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Optimized indexes for common queries
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ whopUserId: 1 }, { unique: true, sparse: true });
+// Note: email and whopUserId already have unique: true in field definition, so no need to index again
 userSchema.index({ 'subscription.status': 1, 'subscription.endDate': 1 }); // Active subscriptions
 userSchema.index({ createdAt: -1 });
 userSchema.index({ lastLogin: -1 }); // Recently active users
