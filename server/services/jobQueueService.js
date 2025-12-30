@@ -257,6 +257,19 @@ function createWorker(queueName, processor, options = {}) {
     }
   }
   
+  // Final validation: Ensure connection is valid before creating Worker
+  if (!connection) {
+    logger.error(`❌ Cannot create worker ${queueName}: connection is null/undefined`);
+    return null;
+  }
+  
+  // In production, connection MUST be a string URL
+  if (isProduction && typeof connection !== 'string') {
+    logger.error(`❌ Cannot create worker ${queueName}: connection is not a string in production`);
+    logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
+    return null;
+  }
+  
   logger.info(`✅ Creating worker for ${queueName} with valid Redis connection`);
 
   if (workers[queueName]) {
@@ -270,6 +283,14 @@ function createWorker(queueName, processor, options = {}) {
       ? connection.replace(/:[^:@]+@/, ':****@')
       : `{ host: ${connection.host}, port: ${connection.port} }`;
     logger.info(`🔗 Creating worker ${queueName} with connection: ${connectionLog}`);
+    
+    // CRITICAL: If connection is undefined/null, BullMQ will default to localhost
+    // This should never happen due to checks above, but add one more safeguard
+    if (!connection) {
+      logger.error(`❌ FATAL: Connection is null/undefined when creating worker ${queueName}`);
+      logger.error(`❌ This should never happen. Workers will not be created.`);
+      return null;
+    }
     
     const worker = new Worker(
     queueName,
