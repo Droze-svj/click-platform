@@ -755,7 +755,11 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5001;
 // Bind to 0.0.0.0 to accept connections from both IPv4 and IPv6
 const HOST = process.env.HOST || '0.0.0.0';
-const server = app.listen(PORT, HOST, () => {
+
+// Always bind to port, even if some services failed to initialize
+let server;
+try {
+  server = app.listen(PORT, HOST, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
@@ -852,10 +856,21 @@ const server = app.listen(PORT, HOST, () => {
         });
         logger.info('✅ Cache warming enabled (every 6 hours)');
       }
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    logger.error(`❌ Port ${PORT} is already in use. Please stop the process using this port or change PORT in .env`);
-    process.exit(1);
-  }
-});
+  });
+  
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      logger.error(`❌ Port ${PORT} is already in use. Please stop the process using this port or change PORT in .env`);
+      process.exit(1);
+    } else {
+      logger.error('Server error:', err);
+    }
+  });
+  
+  logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
+} catch (error) {
+  logger.error('❌ Failed to start server:', error);
+  logger.error('Server will not be accessible. Check logs for errors.');
+  process.exit(1);
+}
 
