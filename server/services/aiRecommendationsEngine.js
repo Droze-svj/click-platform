@@ -11,9 +11,22 @@ const {
   recoveryStrategies,
 } = require('../utils/errorHandler');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for AI recommendations', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Get personalized content recommendations
@@ -69,7 +82,13 @@ For each recommendation, provide:
 
 Format as JSON array with fields: title, description, platform, reasoning, keyPoints (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate recommendations');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -274,7 +293,13 @@ Suggest 5 content ideas that:
 
 Format as JSON array with fields: title, description, trendAlignment (string), expectedEngagement (high/medium/low), keyPoints (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate recommendations');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
