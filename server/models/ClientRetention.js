@@ -40,7 +40,7 @@ const clientRetentionSchema = new mongoose.Schema({
   },
   // Subscription
   subscription: {
-    startDate: { type: Date, required: true }
+    startDate: { type: Date, required: true },
     // Index defined below with schema.index()
     endDate: Date,
     status: {
