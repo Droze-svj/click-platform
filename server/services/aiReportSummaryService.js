@@ -240,12 +240,12 @@ async function generateRecommendations(metrics) {
 /**
  * Generate fallback summary
  */
-function generateFallbackSummary(reportData) {
+async function generateFallbackSummary(reportData) {
   const { metrics, period } = reportData;
 
   const summary = `This report covers ${formatPeriod(period)}. `;
   const highlights = extractHighlights(metrics);
-  const recommendations = generateRecommendations(metrics);
+  const recommendations = await generateRecommendations(metrics);
 
   return {
     text: summary + highlights.join('. ') + '.',
