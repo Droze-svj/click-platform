@@ -3,9 +3,22 @@
 const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for video chapters', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Auto-generate video chapters
@@ -36,7 +49,13 @@ Provide:
 
 Format as JSON array with objects containing: title (string), startTime (seconds), endTime (seconds), description (string), topics (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate chapters');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {

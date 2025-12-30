@@ -3,9 +3,22 @@
 const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for AI video editing', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Analyze video for editing suggestions
@@ -37,7 +50,13 @@ Provide:
 
 Format as JSON object with fields: recommendedCuts (array), transitions (array), audioAdjustments (array), pacingImprovements (array), highlights (array), suggestedLength (number), thumbnailMoments (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot analyze video');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
