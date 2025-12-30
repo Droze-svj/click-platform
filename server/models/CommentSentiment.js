@@ -26,7 +26,7 @@ const commentSentimentSchema = new mongoose.Schema({
       followers: Number,
       verified: Boolean
     },
-    timestamp: { type: Date, required: true }
+    timestamp: { type: Date, required: true },
     // Index defined below with compound index
     platform: {
       type: String,
