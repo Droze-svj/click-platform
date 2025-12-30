@@ -59,7 +59,15 @@ const logger = winston.createLogger({
   ],
   rejectionHandlers: [
     new winston.transports.File({
-      filename: path.join(logsDir, 'rejections.log')
+      filename: path.join(logsDir, 'rejections.log'),
+      // Filter out Redis localhost connection errors
+      format: winston.format((info) => {
+        if (info.reason && typeof info.reason === 'object' && info.reason.message &&
+            info.reason.message.includes('ECONNREFUSED') && info.reason.message.includes('127.0.0.1:6379')) {
+          return false; // Don't log this
+        }
+        return info;
+      })()
     })
   ]
 });
