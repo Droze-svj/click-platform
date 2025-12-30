@@ -874,7 +874,8 @@ if (healthCheckServer) {
 // Always bind to port, even if some services failed to initialize
 let server;
 try {
-  // Close health check server before starting main server
+  server = app.listen(PORT, HOST, () => {
+  // Close health check server now that main server is ready
   if (healthCheckServer) {
     console.log('📝 Closing health check server, main server is ready...');
     healthCheckServer.close(() => {
@@ -882,7 +883,6 @@ try {
     });
   }
   
-  server = app.listen(PORT, HOST, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
