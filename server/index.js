@@ -2,6 +2,8 @@
 console.log('🚀 Starting server...');
 console.log('📝 Node version:', process.version);
 console.log('📝 Working directory:', process.cwd());
+console.log('📝 PORT environment variable:', process.env.PORT || 'NOT SET (will use 5001)');
+console.log('📝 NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
 
 // Global error handlers - must be first to catch all errors
 process.on('uncaughtException', (error) => {
@@ -915,38 +917,61 @@ try {
   });
   
   logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
+  console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
 } catch (error) {
   logger.error('❌ Failed to start server:', error);
   logger.error('Stack:', error.stack);
+  console.error('❌ Failed to start main server:', error.message);
+  console.error('Stack:', error.stack);
   
   // Last resort: Create minimal server that just responds to health checks
+  console.log('⚠️ Creating minimal fallback server for health checks...');
   logger.warn('⚠️ Creating minimal fallback server for health checks...');
   try {
-    const fallbackApp = require('express')();
+    const express = require('express');
+    const fallbackApp = express();
+    
     fallbackApp.get('/api/health', (req, res) => {
       res.json({ 
         status: 'degraded', 
         message: 'Server running in fallback mode. Check logs for errors.',
-        error: error.message 
+        error: error.message,
+        port: PORT
       });
     });
+    
     fallbackApp.get('*', (req, res) => {
       res.status(503).json({ 
         status: 'error', 
-        message: 'Server is in fallback mode. Check logs for errors.' 
+        message: 'Server is in fallback mode. Check logs for errors.',
+        port: PORT
       });
     });
     
     const fallbackServer = fallbackApp.listen(PORT, HOST, () => {
-      console.log(`⚠️ Fallback server running on port ${PORT}`);
+      console.log(`✅ Fallback server running on port ${PORT}`);
+      console.log(`✅ Server bound to ${HOST}:${PORT}`);
       console.log(`⚠️ Server is in degraded mode. Check logs for errors.`);
+      logger.info(`✅ Fallback server bound to port ${PORT} on ${HOST}`);
     });
     
     fallbackServer.on('error', (err) => {
       console.error('❌ Even fallback server failed:', err);
+      console.error('Error code:', err.code);
+      logger.error('❌ Even fallback server failed:', err);
       process.exit(1);
     });
+    
+    // Keep process alive
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      fallbackServer.close(() => {
+        console.log('Fallback server closed');
+        process.exit(0);
+      });
+    });
   } catch (fallbackError) {
+    console.error('❌ Even fallback server failed:', fallbackError);
     logger.error('❌ Even fallback server failed:', fallbackError);
     process.exit(1);
   }
