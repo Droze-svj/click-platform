@@ -140,16 +140,46 @@ const redisHost = process.env.REDIS_HOST?.trim();
 
 logger.info('🔍 Checking Redis for job queues...', {
   hasRedisUrl: !!redisUrl,
+  redisUrlLength: redisUrl?.length || 0,
+  redisUrlPrefix: redisUrl ? redisUrl.substring(0, 30) + '...' : 'none',
+  redisUrlFirstChars: redisUrl ? redisUrl.substring(0, 10) : 'none',
   hasRedisHost: !!redisHost,
-  redisUrlLength: redisUrl?.length || 0
+  nodeEnv: process.env.NODE_ENV,
+  rawRedisUrlExists: !!process.env.REDIS_URL,
+  rawRedisUrlLength: process.env.REDIS_URL?.length || 0
 });
 
 if (process.env.NODE_ENV !== 'test') {
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+  
   // Only initialize workers if Redis is properly configured
   // In production/staging, require REDIS_URL (not REDIS_HOST fallback)
-  const shouldInitializeWorkers = (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
-    ? (redisUrl && redisUrl !== '' && (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')))
-    : (redisUrl || redisHost);
+  let shouldInitializeWorkers = false;
+  
+  if (isProduction) {
+    // Production: REDIS_URL is REQUIRED and must be valid
+    if (!redisUrl || redisUrl === '') {
+      logger.error('❌ REDIS_URL is REQUIRED in production but is missing or empty.');
+      logger.error('❌ REDIS_URL value received:', redisUrl ? `"${redisUrl.substring(0, 30)}..." (length: ${redisUrl.length})` : 'NOT SET OR EMPTY');
+      logger.error('❌ Workers will NOT be initialized. Add REDIS_URL to Render.com.');
+      shouldInitializeWorkers = false;
+    } else if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
+      logger.error('❌ Invalid REDIS_URL format in production. Must start with redis:// or rediss://');
+      logger.error('❌ REDIS_URL received:', redisUrl.substring(0, 50));
+      logger.error('❌ Workers will NOT be initialized until REDIS_URL is fixed.');
+      shouldInitializeWorkers = false;
+    } else if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
+      logger.error('❌ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.');
+      logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
+      shouldInitializeWorkers = false;
+    } else {
+      logger.info('✅ REDIS_URL validated for production. Proceeding with worker initialization...');
+      shouldInitializeWorkers = true;
+    }
+  } else {
+    // Development: Allow REDIS_URL or REDIS_HOST
+    shouldInitializeWorkers = (redisUrl && redisUrl !== '') || (redisHost && redisHost !== '');
+  }
   
   if (shouldInitializeWorkers) {
     try {
@@ -165,7 +195,7 @@ if (process.env.NODE_ENV !== 'test') {
     }
   } else {
     logger.warn('⚠️ Redis not configured. Skipping job queue workers initialization.');
-    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+    if (isProduction) {
       logger.warn('⚠️ In production, REDIS_URL (starting with redis://) is required.');
     }
     logger.warn('⚠️ To enable workers, add REDIS_URL to Render.com environment variables.');
