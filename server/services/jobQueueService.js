@@ -286,8 +286,7 @@ function createWorker(queueName, processor, options = {}) {
   }
   
   // CRITICAL: Additional safety checks before creating worker
-  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  
+  // Note: isProduction is already declared at the top of this function
   if (isProduction) {
     // In production, connection MUST be a valid Redis URL string
     if (typeof connection !== 'string') {
