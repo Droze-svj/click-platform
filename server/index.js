@@ -73,8 +73,13 @@ logger.info('🔍 Checking Redis for job queues...', {
 });
 
 if (process.env.NODE_ENV !== 'test') {
-  // Only initialize workers if Redis is configured
-  if (redisUrl || redisHost) {
+  // Only initialize workers if Redis is properly configured
+  // In production/staging, require REDIS_URL (not REDIS_HOST fallback)
+  const shouldInitializeWorkers = (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
+    ? (redisUrl && redisUrl !== '' && (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')))
+    : (redisUrl || redisHost);
+  
+  if (shouldInitializeWorkers) {
     try {
       const { initializeWorkers } = require('./queues');
       const { initializeScheduler } = require('./services/jobScheduler');
@@ -88,6 +93,9 @@ if (process.env.NODE_ENV !== 'test') {
     }
   } else {
     logger.warn('⚠️ Redis not configured. Skipping job queue workers initialization.');
+    if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+      logger.warn('⚠️ In production, REDIS_URL (starting with redis://) is required.');
+    }
     logger.warn('⚠️ To enable workers, add REDIS_URL to Render.com environment variables.');
   }
 }
