@@ -1,3 +1,8 @@
+// Log that we're starting
+console.log('🚀 Starting server...');
+console.log('📝 Node version:', process.version);
+console.log('📝 Working directory:', process.cwd());
+
 // Global error handlers - must be first to catch all errors
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
@@ -13,7 +18,9 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('⚠️ Attempting to start server despite error...');
 });
 
+console.log('📦 Loading environment variables...');
 require('dotenv').config();
+console.log('✅ Environment variables loaded');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
