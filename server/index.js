@@ -886,7 +886,38 @@ try {
   logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
 } catch (error) {
   logger.error('❌ Failed to start server:', error);
-  logger.error('Server will not be accessible. Check logs for errors.');
-  process.exit(1);
+  logger.error('Stack:', error.stack);
+  
+  // Last resort: Create minimal server that just responds to health checks
+  logger.warn('⚠️ Creating minimal fallback server for health checks...');
+  try {
+    const fallbackApp = require('express')();
+    fallbackApp.get('/api/health', (req, res) => {
+      res.json({ 
+        status: 'degraded', 
+        message: 'Server running in fallback mode. Check logs for errors.',
+        error: error.message 
+      });
+    });
+    fallbackApp.get('*', (req, res) => {
+      res.status(503).json({ 
+        status: 'error', 
+        message: 'Server is in fallback mode. Check logs for errors.' 
+      });
+    });
+    
+    const fallbackServer = fallbackApp.listen(PORT, HOST, () => {
+      console.log(`⚠️ Fallback server running on port ${PORT}`);
+      console.log(`⚠️ Server is in degraded mode. Check logs for errors.`);
+    });
+    
+    fallbackServer.on('error', (err) => {
+      console.error('❌ Even fallback server failed:', err);
+      process.exit(1);
+    });
+  } catch (fallbackError) {
+    logger.error('❌ Even fallback server failed:', fallbackError);
+    process.exit(1);
+  }
 }
 
