@@ -55,16 +55,20 @@ function getRedisConnection() {
   // Only allow localhost fallback in development
   if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
     logger.error('⚠️ REDIS_URL is required in production/staging. Workers will be disabled.');
+    logger.error('⚠️ REDIS_URL value received:', redisUrl ? `"${redisUrl.substring(0, 30)}..." (length: ${redisUrl.length})` : 'NOT SET OR EMPTY');
+    logger.error('⚠️ REDIS_HOST value received:', redisHost || 'NOT SET');
     return null;
   }
 
-  logger.info('Using individual Redis config for job queue connection (development only)');
+  logger.warn('⚠️ Using individual Redis config for job queue connection (development only)');
+  logger.warn('⚠️ This should NOT happen in production!');
   redisConnection = {
     host: redisHost || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null,
   };
+  logger.warn('⚠️ Created localhost Redis connection - this will fail in production!');
   return redisConnection;
 }
 
