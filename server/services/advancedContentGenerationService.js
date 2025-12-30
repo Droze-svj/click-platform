@@ -3,9 +3,22 @@
 const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for advanced content generation', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Generate content with advanced options
@@ -45,7 +58,13 @@ ${keywords.length > 0 ? `- Include keywords: ${keywords.join(', ')}` : ''}
 
 Generate high-quality content that meets all requirements.`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -102,7 +121,13 @@ Variation ${i + 1}:
 
 Provide the variation:`;
 
-      const response = await openai.chat.completions.create({
+      const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
         model: 'gpt-4',
         messages: [
           {
@@ -196,7 +221,13 @@ For each section, provide:
 
 Format as JSON object with sections array, each containing: name, content, keyPoints (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
