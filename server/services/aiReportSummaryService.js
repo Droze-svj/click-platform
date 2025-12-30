@@ -76,7 +76,7 @@ async function generateReportSummary(reportData, templateConfig) {
 
     // Extract key highlights and recommendations
     const highlights = extractHighlights(metrics);
-    const recommendations = includeRecommendations ? await generateRecommendations(metrics) : [];
+    const recommendations = includeRecommendations ? generateRecommendations(metrics) : [];
 
     return {
       text: summaryText,
