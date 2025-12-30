@@ -801,9 +801,13 @@ app.use(notFound);
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5001;
-// Bind to 0.0.0.0 to accept connections from both IPv4 and IPv6
-const HOST = process.env.HOST || '0.0.0.0';
+// PORT and HOST already defined above for health check server
+// Close health check server and start main server
+if (healthCheckServer) {
+  healthCheckServer.close(() => {
+    console.log('Health check server closed, starting main server...');
+  });
+}
 
 // Always bind to port, even if some services failed to initialize
 let server;
