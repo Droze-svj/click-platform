@@ -23,6 +23,34 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('📦 Loading environment variables...');
 require('dotenv').config();
 console.log('✅ Environment variables loaded');
+
+// Start minimal health check server IMMEDIATELY to ensure port is bound
+// This happens before any other initialization
+const PORT = process.env.PORT || 5001;
+const HOST = process.env.HOST || '0.0.0.0';
+console.log(`📝 Starting health check server on port ${PORT}...`);
+
+let healthCheckServer = null;
+try {
+  const express = require('express');
+  const healthApp = express();
+  healthApp.get('/api/health', (req, res) => {
+    res.json({ status: 'starting', message: 'Server is initializing...', port: PORT });
+  });
+  healthApp.get('*', (req, res) => {
+    res.status(503).json({ status: 'starting', message: 'Server is initializing...', port: PORT });
+  });
+  healthCheckServer = healthApp.listen(PORT, HOST, () => {
+    console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
+    console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
+  });
+  healthCheckServer.on('error', (err) => {
+    console.error('❌ Health check server error:', err);
+  });
+} catch (healthError) {
+  console.error('❌ Failed to start health check server:', healthError);
+}
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
