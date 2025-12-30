@@ -7,6 +7,11 @@ const { captureException } = require('../utils/sentry');
 // Redis connection configuration
 let redisConnection = null;
 
+// Force clear any cached connection on module load in production
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  redisConnection = null; // Clear any stale cached connection
+}
+
 function getRedisConnection() {
   // In production/staging, ALWAYS require REDIS_URL (no fallbacks)
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
@@ -103,6 +108,15 @@ function getRedisConnection() {
   }
 
   // Fallback to individual config (development only)
+  // CRITICAL: This should NEVER run in production
+  if (isProduction) {
+    logger.error('❌ FATAL: Attempted to use localhost fallback in production!');
+    logger.error('❌ This should never happen. REDIS_URL must be set.');
+    logger.error('❌ Clearing any cached connection and returning null.');
+    redisConnection = null;
+    return null;
+  }
+  
   logger.warn('⚠️ Using individual Redis config for job queue connection (development only)');
   logger.warn('⚠️ This should NOT happen in production!');
   
