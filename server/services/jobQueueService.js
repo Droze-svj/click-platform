@@ -10,12 +10,22 @@ let redisConnection = null;
 function getRedisConnection() {
   // Return cached connection if already created
   if (redisConnection !== null) {
+    logger.info('Using cached Redis connection');
     return redisConnection;
   }
 
   // Check if Redis is configured (validate non-empty strings)
   const redisUrl = process.env.REDIS_URL?.trim();
   const redisHost = process.env.REDIS_HOST?.trim();
+  
+  // Log what we found for debugging
+  logger.info('🔍 getRedisConnection() called', {
+    hasRedisUrl: !!redisUrl,
+    redisUrlLength: redisUrl?.length || 0,
+    redisUrlPrefix: redisUrl ? redisUrl.substring(0, 20) + '...' : 'none',
+    hasRedisHost: !!redisHost,
+    nodeEnv: process.env.NODE_ENV
+  });
   
   if ((!redisUrl || redisUrl === '') && (!redisHost || redisHost === '')) {
     logger.warn('⚠️ Redis not configured for job queues. Workers will be disabled.');
