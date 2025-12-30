@@ -1,3 +1,18 @@
+// Global error handlers - must be first to catch all errors
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Don't exit immediately - try to start server for health checks
+  console.error('⚠️ Attempting to start server despite error...');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise);
+  console.error('Reason:', reason);
+  // Don't exit - try to start server anyway
+  console.error('⚠️ Attempting to start server despite error...');
+});
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

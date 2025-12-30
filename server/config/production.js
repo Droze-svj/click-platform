@@ -129,7 +129,9 @@ function initProduction() {
     logger.error('❌ Production environment initialization failed', {
       error: error.message
     });
-    throw error;
+    // Don't throw - allow server to start even if production config fails
+    logger.warn('⚠️ Continuing without full production config. Server will still start.');
+    return null;
   }
 }
 
