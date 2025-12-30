@@ -18,9 +18,14 @@ function initializeAllWorkers() {
     hasRedisUrl: !!redisUrl,
     redisUrlLength: redisUrl?.length || 0,
     redisUrlPrefix: redisUrl ? redisUrl.substring(0, 30) + '...' : 'none',
+    redisUrlFirstChars: redisUrl ? redisUrl.substring(0, 10) : 'none',
+    redisUrlLastChars: redisUrl && redisUrl.length > 10 ? '...' + redisUrl.substring(redisUrl.length - 10) : 'none',
     hasRedisHost: !!redisHost,
     nodeEnv: process.env.NODE_ENV,
-    isProduction
+    isProduction,
+    rawRedisUrlExists: !!process.env.REDIS_URL,
+    rawRedisUrlLength: process.env.REDIS_URL?.length || 0,
+    rawRedisUrlFirstChars: process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 10) : 'none'
   });
   
   // CRITICAL: In production/staging, REDIS_URL is REQUIRED (no fallbacks)
