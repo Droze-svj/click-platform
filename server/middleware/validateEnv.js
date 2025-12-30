@@ -36,8 +36,15 @@ function validateEnv() {
     missing.forEach(varName => {
       console.error(`   - ${varName}`);
     });
-    console.error('\nPlease set these variables in your .env file');
-    process.exit(1);
+    console.error('\nPlease set these variables in your .env file or Render.com environment variables');
+    
+    // In production, log but don't exit - let server start to show health check endpoint
+    if (process.env.NODE_ENV === 'production') {
+      console.error('⚠️ Continuing in production mode. Server will start but may not function correctly.');
+      console.error('⚠️ Add missing variables to Render.com and redeploy.');
+    } else {
+      process.exit(1);
+    }
   }
 
   // Show warnings for optional vars
