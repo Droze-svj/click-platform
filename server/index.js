@@ -24,58 +24,65 @@ console.log('📦 Loading environment variables...');
 require('dotenv').config();
 console.log('✅ Environment variables loaded');
 
-// Start minimal health check server IMMEDIATELY to ensure port is bound
-// This happens before any other initialization
+// Start minimal health check server IMMEDIATELY using Node's built-in http module
+// This MUST happen before ANY other requires to ensure port is bound
+// Using http module (no dependencies) for maximum reliability
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || '0.0.0.0';
 console.log(`📝 Starting health check server on port ${PORT}...`);
 
 let healthCheckServer = null;
 try {
-  const express = require('express');
-  const healthApp = express();
-  healthApp.get('/api/health', (req, res) => {
-    res.json({ status: 'starting', message: 'Server is initializing...', port: PORT });
-  });
-  healthApp.get('*', (req, res) => {
-    res.status(503).json({ status: 'starting', message: 'Server is initializing...', port: PORT });
-  });
-  healthCheckServer = healthApp.listen(PORT, HOST, () => {
+  // Use Node's built-in http module - no dependencies, always available
+  const http = require('http');
+  
+  const healthCheckHandler = (req, res) => {
+    const url = req.url || '/';
+    if (url === '/api/health' || url === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        status: 'starting', 
+        message: 'Server is initializing...', 
+        port: PORT,
+        timestamp: new Date().toISOString()
+      }));
+    } else {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        status: 'starting', 
+        message: 'Server is initializing...', 
+        port: PORT 
+      }));
+    }
+  };
+  
+  healthCheckServer = http.createServer(healthCheckHandler);
+  
+  healthCheckServer.listen(PORT, HOST, () => {
     console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
     console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
-    // Keep the server alive even if main server fails
-    process.on('exit', () => {
-      if (healthCheckServer) {
-        healthCheckServer.close();
-      }
-    });
+    console.log(`✅ Health check available at http://${HOST}:${PORT}/api/health`);
   });
+  
   healthCheckServer.on('error', (err) => {
     console.error('❌ Health check server error:', err);
     console.error('Error code:', err.code);
     console.error('Error message:', err.message);
-    // If port is in use, try a different approach
     if (err.code === 'EADDRINUSE') {
       console.error('⚠️ Port is already in use. This might be from a previous deployment.');
     }
+    // Don't exit - let the process continue
   });
+  
+  // Keep server alive
+  healthCheckServer.keepAliveTimeout = 65000;
+  healthCheckServer.headersTimeout = 66000;
+  
 } catch (healthError) {
-  console.error('❌ Failed to start health check server:', healthError);
+  console.error('❌ CRITICAL: Failed to start health check server:', healthError);
   console.error('Stack:', healthError.stack);
-  // Try to start a minimal HTTP server using Node's http module
-  try {
-    const http = require('http');
-    const minimalServer = http.createServer((req, res) => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'starting', message: 'Minimal health check active' }));
-    });
-    minimalServer.listen(PORT, HOST, () => {
-      console.log(`✅ Minimal health check server bound to port ${PORT} on ${HOST}`);
-      healthCheckServer = minimalServer;
-    });
-  } catch (minimalError) {
-    console.error('❌ Failed to start minimal health check server:', minimalError);
-  }
+  // This is critical - if we can't start the health check server, Render.com won't detect the port
+  // But we still don't exit - let the main server try to start
 }
 
 const express = require('express');
@@ -867,6 +874,14 @@ if (healthCheckServer) {
 // Always bind to port, even if some services failed to initialize
 let server;
 try {
+  // Close health check server before starting main server
+  if (healthCheckServer) {
+    console.log('📝 Closing health check server, main server is ready...');
+    healthCheckServer.close(() => {
+      console.log('✅ Health check server closed');
+    });
+  }
+  
   server = app.listen(PORT, HOST, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
