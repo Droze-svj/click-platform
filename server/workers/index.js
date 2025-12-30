@@ -61,12 +61,22 @@ function initializeAllWorkers() {
     const { initializeTranscriptWorker } = require('./transcriptProcessor');
     const { initializeSocialPostWorker } = require('./socialPostProcessor');
 
-    // Initialize each worker
-    initializeVideoWorker();
-    initializeContentWorker();
-    initializeEmailWorker();
-    initializeTranscriptWorker();
-    initializeSocialPostWorker();
+    // Initialize each worker (they will check Redis internally)
+    const videoWorker = initializeVideoWorker();
+    const contentWorker = initializeContentWorker();
+    const emailWorker = initializeEmailWorker();
+    const transcriptWorker = initializeTranscriptWorker();
+    const socialWorker = initializeSocialPostWorker();
+    
+    // Check if any workers were actually created
+    const workersCreated = [videoWorker, contentWorker, emailWorker, transcriptWorker, socialWorker].filter(w => w !== null).length;
+    
+    if (workersCreated === 0) {
+      logger.warn('⚠️ No workers were created. Redis may not be configured correctly.');
+      return;
+    }
+    
+    logger.info(`✅ ${workersCreated} workers created successfully`);
 
     logger.info('✅ All workers initialized successfully');
   } catch (error) {
