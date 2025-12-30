@@ -310,6 +310,43 @@ function createWorker(queueName, processor, options = {}) {
       return null;
     }
     
+    // ABSOLUTE FINAL CHECK: Ensure connection is valid before passing to BullMQ
+    // BullMQ will default to localhost if connection is undefined/null/invalid
+    if (!connection) {
+      logger.error(`❌ FATAL: Connection is null/undefined when creating Worker for ${queueName}`);
+      logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+      return null;
+    }
+    
+    // In production, connection MUST be a valid Redis URL string
+    if (isProduction) {
+      if (typeof connection !== 'string') {
+        logger.error(`❌ FATAL: Connection is not a string in production for ${queueName}`);
+        logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
+        logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+        return null;
+      }
+      
+      if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+        logger.error(`❌ FATAL: Invalid connection format for ${queueName} in production`);
+        logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
+        logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+        return null;
+      }
+      
+      if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
+        logger.error(`❌ FATAL: Connection contains localhost for ${queueName} in production`);
+        logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
+        return null;
+      }
+    }
+    
+    // Log the exact connection being used (hide password)
+    const safeConnectionLog = typeof connection === 'string' 
+      ? connection.replace(/:[^:@]+@/, ':****@')
+      : `{ host: ${connection.host}, port: ${connection.port} }`;
+    logger.info(`🔗 Final check passed. Creating Worker ${queueName} with: ${safeConnectionLog}`);
+    
     const worker = new Worker(
     queueName,
     async (job) => {
@@ -336,7 +373,7 @@ function createWorker(queueName, processor, options = {}) {
       }
     },
     {
-      connection: connection,
+      connection: connection, // This is guaranteed to be valid at this point
       concurrency: options.concurrency || 1,
       limiter: options.limiter,
       ...options,
