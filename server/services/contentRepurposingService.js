@@ -3,9 +3,22 @@
 const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for content repurposing', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Repurpose content for platform
@@ -63,7 +76,13 @@ Provide:
 
 Format as JSON object with fields: title, body, hashtags (array), format, changes (array of key modifications)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot repurpose content');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -154,7 +173,13 @@ For each variation, provide:
 
 Format as JSON array with fields: title, body, differences (array), useCase`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot repurpose content');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -218,7 +243,13 @@ Provide:
 
 Format as JSON object with fields: mainMessage, keyPoints (array), takeaways (array), supportingData (array), ctas (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot repurpose content');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
