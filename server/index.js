@@ -62,17 +62,33 @@ initIntelligentCache();
 logger.info('✅ Intelligent cache service initialized');
 
 // Initialize Job Queue Workers (optional - non-blocking)
-const { initializeWorkers } = require('./queues');
-const { initializeScheduler } = require('./services/jobScheduler');
+// Check Redis configuration first
+const redisUrl = process.env.REDIS_URL?.trim();
+const redisHost = process.env.REDIS_HOST?.trim();
+
+logger.info('🔍 Checking Redis for job queues...', {
+  hasRedisUrl: !!redisUrl,
+  hasRedisHost: !!redisHost,
+  redisUrlLength: redisUrl?.length || 0
+});
+
 if (process.env.NODE_ENV !== 'test') {
-  try {
-    initializeWorkers();
-    initializeScheduler();
-    logger.info('✅ Job queue system initialized');
-  } catch (error) {
-    // Workers are optional - server can run without them
-    logger.warn('Job queue workers initialization failed', { error: error.message });
-    logger.warn('Background jobs will not be processed. Server will continue without workers.');
+  // Only initialize workers if Redis is configured
+  if (redisUrl || redisHost) {
+    try {
+      const { initializeWorkers } = require('./queues');
+      const { initializeScheduler } = require('./services/jobScheduler');
+      initializeWorkers();
+      initializeScheduler();
+      logger.info('✅ Job queue system initialized');
+    } catch (error) {
+      // Workers are optional - server can run without them
+      logger.warn('Job queue workers initialization failed', { error: error.message });
+      logger.warn('Background jobs will not be processed. Server will continue without workers.');
+    }
+  } else {
+    logger.warn('⚠️ Redis not configured. Skipping job queue workers initialization.');
+    logger.warn('⚠️ To enable workers, add REDIS_URL to Render.com environment variables.');
   }
 }
 
