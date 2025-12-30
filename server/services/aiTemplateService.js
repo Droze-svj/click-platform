@@ -5,9 +5,22 @@ const AITemplate = require('../models/AITemplate');
 const OpenAI = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for AI templates', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Create or update AI template
@@ -113,7 +126,13 @@ async function generateContentWithTemplate(templateId, input, options = {}) {
     const fullPrompt = buildPromptWithGuardrails(template, input, options);
 
     // Generate content
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot create template');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
