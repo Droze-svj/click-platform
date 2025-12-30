@@ -8,8 +8,20 @@ const { captureException } = require('../utils/sentry');
 let redisConnection = null;
 
 function getRedisConnection() {
-  // Return cached connection if already created
+  // Return cached connection if already created (but validate it first)
   if (redisConnection !== null) {
+    // Safety check: Don't use cached localhost connection in production
+    if (typeof redisConnection === 'object' && redisConnection.host === 'localhost' && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
+      logger.error('⚠️ Cached connection is localhost - clearing cache and returning null');
+      redisConnection = null;
+      return null;
+    }
+    // Safety check: Don't use cached invalid connection string
+    if (typeof redisConnection === 'string' && !redisConnection.startsWith('redis://') && !redisConnection.startsWith('rediss://')) {
+      logger.error('⚠️ Cached connection string is invalid - clearing cache and returning null');
+      redisConnection = null;
+      return null;
+    }
     logger.info('Using cached Redis connection');
     return redisConnection;
   }
