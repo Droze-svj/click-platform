@@ -863,14 +863,6 @@ app.use(notFound);
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// PORT and HOST already defined above for health check server
-// Close health check server and start main server
-if (healthCheckServer) {
-  healthCheckServer.close(() => {
-    console.log('Health check server closed, starting main server...');
-  });
-}
-
 // Always bind to port, even if some services failed to initialize
 let server;
 try {
@@ -979,21 +971,46 @@ try {
         });
         logger.info('✅ Cache warming enabled (every 6 hours)');
       }
-      });
+      }); // Close app.listen callback
       
       server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
-      logger.warn('⚠️ Keeping health check server running since main server failed to start');
-      // Don't exit - keep health check server running so Render.com can detect the port
-      return;
-    } else {
-      logger.error('Server error:', err);
-    }
-  });
-  
-  logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
-  console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
+        if (err.code === 'EADDRINUSE') {
+          logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
+          logger.warn('⚠️ Keeping health check server running since main server failed to start');
+          // Don't exit - keep health check server running so Render.com can detect the port
+          return;
+        } else {
+          logger.error('Server error:', err);
+        }
+      });
+      
+      logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
+      console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
+    }); // Close healthCheckServer.close callback
+  } else {
+    // No health check server, start main server directly
+    server = app.listen(PORT, HOST, () => {
+      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      
+      // Initialize Socket.io for real-time updates
+      initializeSocket(server);
+      logger.info(`🔌 Socket.io initialized for real-time updates`);
+      
+      logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
+      console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
+    });
+    
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        logger.error(`❌ Port ${PORT} is already in use.`);
+        process.exit(1);
+      } else {
+        logger.error('Server error:', err);
+      }
+    });
+  }
 } catch (error) {
   logger.error('❌ Failed to start server:', error);
   logger.error('Stack:', error.stack);
