@@ -238,6 +238,43 @@ async function addJob(queueName, jobData, options = {}) {
  * Create worker for a queue
  */
 function createWorker(queueName, processor, options = {}) {
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+  
+  // CRITICAL: In production, validate REDIS_URL BEFORE calling getRedisConnection()
+  // This prevents any possibility of a cached localhost connection being returned
+  if (isProduction) {
+    const rawRedisUrl = process.env.REDIS_URL;
+    const redisUrl = rawRedisUrl?.trim();
+    
+    logger.info(`🔍 Pre-validation for ${queueName}`, {
+      hasRawRedisUrl: !!rawRedisUrl,
+      rawRedisUrlLength: rawRedisUrl?.length || 0,
+      hasTrimmedRedisUrl: !!redisUrl,
+      trimmedRedisUrlLength: redisUrl?.length || 0,
+      rawRedisUrlFirstChars: rawRedisUrl ? rawRedisUrl.substring(0, 20) : 'none',
+      trimmedRedisUrlFirstChars: redisUrl ? redisUrl.substring(0, 20) : 'none'
+    });
+    
+    if (!redisUrl || redisUrl === '') {
+      logger.error(`❌ FATAL: REDIS_URL is missing or empty. Cannot create worker ${queueName}.`);
+      logger.error(`❌ Raw REDIS_URL exists: ${!!rawRedisUrl}, length: ${rawRedisUrl?.length || 0}`);
+      logger.error(`❌ Trimmed REDIS_URL exists: ${!!redisUrl}, length: ${redisUrl?.length || 0}`);
+      return null;
+    }
+    
+    if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
+      logger.error(`❌ FATAL: REDIS_URL format invalid for ${queueName}. Must start with redis:// or rediss://`);
+      logger.error(`❌ REDIS_URL received: ${redisUrl.substring(0, 50)}`);
+      return null;
+    }
+    
+    if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
+      logger.error(`❌ FATAL: REDIS_URL contains localhost for ${queueName}. Cannot create worker.`);
+      logger.error(`❌ REDIS_URL: ${redisUrl.substring(0, 50)}`);
+      return null;
+    }
+  }
+  
   // Get Redis connection (will return null if not configured)
   const connection = getRedisConnection();
   
