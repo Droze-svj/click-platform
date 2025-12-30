@@ -65,7 +65,7 @@ const conversionSchema = new mongoose.Schema({
   },
   // Conversion Data
   conversionData: {
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
     // Index defined below with compound indexes
     conversionId: String, // External ID
     customerId: String,
