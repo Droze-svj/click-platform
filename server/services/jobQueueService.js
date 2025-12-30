@@ -8,24 +8,9 @@ const { captureException } = require('../utils/sentry');
 let redisConnection = null;
 
 function getRedisConnection() {
-  // Return cached connection if already created (but validate it first)
-  if (redisConnection !== null) {
-    // Safety check: Don't use cached localhost connection in production
-    if (typeof redisConnection === 'object' && redisConnection.host === 'localhost' && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
-      logger.error('⚠️ Cached connection is localhost - clearing cache and returning null');
-      redisConnection = null;
-      return null;
-    }
-    // Safety check: Don't use cached invalid connection string
-    if (typeof redisConnection === 'string' && !redisConnection.startsWith('redis://') && !redisConnection.startsWith('rediss://')) {
-      logger.error('⚠️ Cached connection string is invalid - clearing cache and returning null');
-      redisConnection = null;
-      return null;
-    }
-    logger.info('Using cached Redis connection');
-    return redisConnection;
-  }
-
+  // In production/staging, ALWAYS require REDIS_URL (no fallbacks)
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+  
   // Check if Redis is configured (validate non-empty strings)
   const redisUrl = process.env.REDIS_URL?.trim();
   const redisHost = process.env.REDIS_HOST?.trim();
@@ -36,44 +21,93 @@ function getRedisConnection() {
     redisUrlLength: redisUrl?.length || 0,
     redisUrlPrefix: redisUrl ? redisUrl.substring(0, 20) + '...' : 'none',
     hasRedisHost: !!redisHost,
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
+    isProduction
   });
   
+  // In production/staging, REDIS_URL is REQUIRED
+  if (isProduction) {
+    if (!redisUrl || redisUrl === '') {
+      logger.error('⚠️ REDIS_URL is REQUIRED in production/staging but is missing or empty.');
+      logger.error('⚠️ REDIS_URL value:', redisUrl ? `"${redisUrl.substring(0, 30)}..." (length: ${redisUrl.length})` : 'NOT SET OR EMPTY');
+      logger.error('⚠️ Workers will be disabled. Add REDIS_URL to Render.com environment variables.');
+      // Clear any cached connection
+      redisConnection = null;
+      return null;
+    }
+    
+    // Validate URL format in production
+    if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
+      logger.error('⚠️ Invalid REDIS_URL format in production. Must start with redis:// or rediss://');
+      logger.error('⚠️ REDIS_URL received:', redisUrl.substring(0, 50));
+      logger.error('⚠️ Workers will be disabled until REDIS_URL is fixed.');
+      redisConnection = null;
+      return null;
+    }
+    
+    // Reject localhost in production
+    if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
+      logger.error('⚠️ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.');
+      logger.error('⚠️ Workers will be disabled. Use a cloud Redis service (Redis Cloud, etc.).');
+      redisConnection = null;
+      return null;
+    }
+    
+    // Return cached connection if valid
+    if (redisConnection !== null && typeof redisConnection === 'string' && redisConnection === redisUrl) {
+      logger.info('Using cached Redis connection (production)');
+      return redisConnection;
+    }
+    
+    // Cache and return the valid production URL
+    logger.info('✅ Using REDIS_URL for job queue connection (production)', { 
+      url: redisUrl.replace(/:[^:@]+@/, ':****@') // Hide password in logs
+    });
+    redisConnection = redisUrl;
+    return redisConnection;
+  }
+  
+  // Development mode: Support both REDIS_URL and individual config
   if ((!redisUrl || redisUrl === '') && (!redisHost || redisHost === '')) {
     logger.warn('⚠️ Redis not configured for job queues. Workers will be disabled.');
-    logger.warn('⚠️ Set REDIS_URL environment variable to enable workers.');
+    logger.warn('⚠️ Set REDIS_URL or REDIS_HOST environment variable to enable workers.');
+    redisConnection = null;
     return null;
   }
 
-  // Support both REDIS_URL and individual config
+  // Use REDIS_URL if available
   if (redisUrl && redisUrl !== '') {
     // Validate URL format
     if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
       logger.error('⚠️ Invalid REDIS_URL format. Must start with redis:// or rediss://');
       logger.warn('⚠️ Workers will be disabled until REDIS_URL is fixed.');
+      redisConnection = null;
       return null;
     }
     
-    logger.info('Using REDIS_URL for job queue connection', { 
+    // Return cached if same
+    if (redisConnection === redisUrl) {
+      logger.info('Using cached Redis connection (development)');
+      return redisConnection;
+    }
+    
+    logger.info('Using REDIS_URL for job queue connection (development)', { 
       url: redisUrl.replace(/:[^:@]+@/, ':****@') // Hide password in logs
     });
-    // BullMQ/ioredis accepts connection string directly
-    // Pass the URL string directly, not wrapped in an object
     redisConnection = redisUrl;
     return redisConnection;
   }
 
-  // Fallback to individual config (for local development only)
-  // Only allow localhost fallback in development
-  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
-    logger.error('⚠️ REDIS_URL is required in production/staging. Workers will be disabled.');
-    logger.error('⚠️ REDIS_URL value received:', redisUrl ? `"${redisUrl.substring(0, 30)}..." (length: ${redisUrl.length})` : 'NOT SET OR EMPTY');
-    logger.error('⚠️ REDIS_HOST value received:', redisHost || 'NOT SET');
-    return null;
-  }
-
+  // Fallback to individual config (development only)
   logger.warn('⚠️ Using individual Redis config for job queue connection (development only)');
   logger.warn('⚠️ This should NOT happen in production!');
+  
+  // Return cached if same config
+  if (redisConnection !== null && typeof redisConnection === 'object' && 
+      redisConnection.host === (redisHost || 'localhost')) {
+    return redisConnection;
+  }
+  
   redisConnection = {
     host: redisHost || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
@@ -186,18 +220,41 @@ function createWorker(queueName, processor, options = {}) {
     return null;
   }
   
-  // Additional safety check: If connection is an object with host 'localhost', reject in production
-  if (typeof connection === 'object' && connection.host === 'localhost' && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
-    logger.error(`⚠️ Rejecting localhost connection for ${queueName} in production`);
-    logger.error(`⚠️ Connection object:`, { host: connection.host, port: connection.port });
-    return null;
-  }
+  // CRITICAL: Additional safety checks before creating worker
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
   
-  // Additional safety check: If connection is a string but doesn't start with redis://, reject
-  if (typeof connection === 'string' && !connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
-    logger.error(`⚠️ Invalid Redis connection string format for ${queueName}`);
-    logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 20)}`);
-    return null;
+  if (isProduction) {
+    // In production, connection MUST be a valid Redis URL string
+    if (typeof connection !== 'string') {
+      logger.error(`⚠️ Rejecting non-string connection for ${queueName} in production`);
+      logger.error(`⚠️ Connection type: ${typeof connection}`);
+      return null;
+    }
+    
+    // Must start with redis:// or rediss://
+    if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+      logger.error(`⚠️ Invalid Redis connection string format for ${queueName} in production`);
+      logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 30)}`);
+      return null;
+    }
+    
+    // Must NOT contain localhost or 127.0.0.1
+    if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
+      logger.error(`⚠️ Rejecting localhost connection for ${queueName} in production`);
+      logger.error(`⚠️ Connection contains localhost/127.0.0.1`);
+      return null;
+    }
+  } else {
+    // Development: Additional safety checks
+    if (typeof connection === 'object' && connection.host === 'localhost') {
+      logger.warn(`⚠️ Using localhost connection for ${queueName} (development only)`);
+    }
+    
+    if (typeof connection === 'string' && !connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+      logger.error(`⚠️ Invalid Redis connection string format for ${queueName}`);
+      logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 20)}`);
+      return null;
+    }
   }
   
   logger.info(`✅ Creating worker for ${queueName} with valid Redis connection`);
