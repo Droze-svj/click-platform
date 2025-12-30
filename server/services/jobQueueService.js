@@ -13,27 +13,44 @@ function getRedisConnection() {
     return redisConnection;
   }
 
-  // Check if Redis is configured
-  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+  // Check if Redis is configured (validate non-empty strings)
+  const redisUrl = process.env.REDIS_URL?.trim();
+  const redisHost = process.env.REDIS_HOST?.trim();
+  
+  if ((!redisUrl || redisUrl === '') && (!redisHost || redisHost === '')) {
     logger.warn('⚠️ Redis not configured for job queues. Workers will be disabled.');
+    logger.warn('⚠️ Set REDIS_URL environment variable to enable workers.');
     return null;
   }
 
   // Support both REDIS_URL and individual config
-  if (process.env.REDIS_URL) {
+  if (redisUrl && redisUrl !== '') {
+    // Validate URL format
+    if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
+      logger.error('⚠️ Invalid REDIS_URL format. Must start with redis:// or rediss://');
+      logger.warn('⚠️ Workers will be disabled until REDIS_URL is fixed.');
+      return null;
+    }
+    
     logger.info('Using REDIS_URL for job queue connection', { 
-      url: process.env.REDIS_URL.replace(/:[^:@]+@/, ':****@') // Hide password in logs
+      url: redisUrl.replace(/:[^:@]+@/, ':****@') // Hide password in logs
     });
     // BullMQ/ioredis accepts connection string directly
     // Pass the URL string directly, not wrapped in an object
-    redisConnection = process.env.REDIS_URL;
+    redisConnection = redisUrl;
     return redisConnection;
   }
 
-  // Fallback to individual config (for local development)
-  logger.info('Using individual Redis config for job queue connection');
+  // Fallback to individual config (for local development only)
+  // Only allow localhost fallback in development
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+    logger.error('⚠️ REDIS_URL is required in production/staging. Workers will be disabled.');
+    return null;
+  }
+
+  logger.info('Using individual Redis config for job queue connection (development only)');
   redisConnection = {
-    host: process.env.REDIS_HOST || 'localhost',
+    host: redisHost || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null,

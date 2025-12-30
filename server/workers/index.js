@@ -7,10 +7,20 @@ const logger = require('../utils/logger');
  * Initialize all workers
  */
 function initializeAllWorkers() {
-  // Skip workers if Redis is not configured
-  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+  // Skip workers if Redis is not configured (validate non-empty strings)
+  const redisUrl = process.env.REDIS_URL?.trim();
+  const redisHost = process.env.REDIS_HOST?.trim();
+  
+  if ((!redisUrl || redisUrl === '') && (!redisHost || redisHost === '')) {
     logger.warn('⚠️ Redis not configured. Workers will not be initialized. Background jobs disabled.');
-    logger.warn('⚠️ To enable workers, set REDIS_URL environment variable.');
+    logger.warn('⚠️ To enable workers, set REDIS_URL environment variable in Render.com.');
+    return;
+  }
+  
+  // In production/staging, require REDIS_URL (not localhost fallback)
+  if ((process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') && (!redisUrl || redisUrl === '')) {
+    logger.error('⚠️ REDIS_URL is required in production/staging. Workers will not be initialized.');
+    logger.error('⚠️ Add REDIS_URL to Render.com environment variables to enable workers.');
     return;
   }
 
