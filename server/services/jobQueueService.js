@@ -5,27 +5,40 @@ const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
 // Redis connection configuration
+let redisConnection = null;
+
 function getRedisConnection() {
+  // Return cached connection if already created
+  if (redisConnection !== null) {
+    return redisConnection;
+  }
+
+  // Check if Redis is configured
+  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+    logger.warn('⚠️ Redis not configured for job queues. Workers will be disabled.');
+    return null;
+  }
+
   // Support both REDIS_URL and individual config
   if (process.env.REDIS_URL) {
     logger.info('Using REDIS_URL for job queue connection', { 
       url: process.env.REDIS_URL.replace(/:[^:@]+@/, ':****@') // Hide password in logs
     });
-    // BullMQ can use connection string directly
-    return process.env.REDIS_URL;
+    // BullMQ expects connection string or object with url property
+    redisConnection = { url: process.env.REDIS_URL };
+    return redisConnection;
   }
 
   // Fallback to individual config (for local development)
-  logger.warn('REDIS_URL not set, using localhost fallback for job queue');
-  return {
+  logger.info('Using individual Redis config for job queue connection');
+  redisConnection = {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
     maxRetriesPerRequest: null,
   };
+  return redisConnection;
 }
-
-const redisConnection = getRedisConnection();
 
 // Job queues
 const queues = {};
@@ -36,9 +49,14 @@ const queueEvents = {};
  * Get or create a queue
  */
 function getQueue(name) {
+  const connection = getRedisConnection();
+  if (!connection) {
+    throw new Error('Redis not configured. Cannot create queue.');
+  }
+
   if (!queues[name]) {
     queues[name] = new Queue(name, {
-      connection: redisConnection,
+      connection: connection,
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -56,7 +74,7 @@ function getQueue(name) {
     });
 
     // Set up queue events
-    queueEvents[name] = new QueueEvents(name, { connection: redisConnection });
+    queueEvents[name] = new QueueEvents(name, { connection: connection });
 
     queueEvents[name].on('completed', ({ jobId }) => {
       logger.info('Job completed', { queue: name, jobId });
@@ -81,6 +99,13 @@ function getQueue(name) {
  * Add job to queue
  */
 async function addJob(queueName, jobData, options = {}) {
+  // Check if Redis is available before adding job
+  const connection = getRedisConnection();
+  if (!connection) {
+    logger.warn(`⚠️ Cannot add job to ${queueName} - Redis not configured`);
+    throw new Error('Redis not configured. Cannot add job to queue.');
+  }
+
   try {
     const queue = getQueue(queueName);
     const job = await queue.add(jobData.name || 'job', jobData.data || {}, {
@@ -107,8 +132,11 @@ async function addJob(queueName, jobData, options = {}) {
  * Create worker for a queue
  */
 function createWorker(queueName, processor, options = {}) {
+  // Get Redis connection (will return null if not configured)
+  const connection = getRedisConnection();
+  
   // Skip worker creation if Redis is not configured
-  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+  if (!connection) {
     logger.warn(`⚠️ Skipping worker creation for ${queueName} - Redis not configured`);
     return null;
   }
@@ -145,7 +173,7 @@ function createWorker(queueName, processor, options = {}) {
       }
     },
     {
-      connection: redisConnection,
+      connection: connection,
       concurrency: options.concurrency || 1,
       limiter: options.limiter,
       ...options,
