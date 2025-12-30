@@ -170,8 +170,25 @@ function createWorker(queueName, processor, options = {}) {
   // Skip worker creation if Redis is not configured
   if (!connection) {
     logger.warn(`⚠️ Skipping worker creation for ${queueName} - Redis not configured`);
+    logger.warn(`⚠️ getRedisConnection() returned null for ${queueName}`);
     return null;
   }
+  
+  // Additional safety check: If connection is an object with host 'localhost', reject in production
+  if (typeof connection === 'object' && connection.host === 'localhost' && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
+    logger.error(`⚠️ Rejecting localhost connection for ${queueName} in production`);
+    logger.error(`⚠️ Connection object:`, { host: connection.host, port: connection.port });
+    return null;
+  }
+  
+  // Additional safety check: If connection is a string but doesn't start with redis://, reject
+  if (typeof connection === 'string' && !connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+    logger.error(`⚠️ Invalid Redis connection string format for ${queueName}`);
+    logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 20)}`);
+    return null;
+  }
+  
+  logger.info(`✅ Creating worker for ${queueName} with valid Redis connection`);
 
   if (workers[queueName]) {
     logger.warn('Worker already exists for queue', { queue: queueName });
