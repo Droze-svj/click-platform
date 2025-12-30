@@ -274,7 +274,8 @@ if (process.env.NODE_ENV === 'production') {
     initProduction();
   } catch (error) {
     logger.error('Production initialization failed', { error: error.message });
-    // Don't exit in case of missing optional configs
+    logger.warn('Continuing without production config. Server will still start.');
+    // Don't exit - allow server to start even if production config fails
   }
 }
 
