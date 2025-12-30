@@ -300,11 +300,34 @@ function createWorker(queueName, processor, options = {}) {
     // BullMQ will default to localhost if connection is undefined/null/invalid
     // This check happens BEFORE any Worker creation to prevent localhost connections
     
+    // Log what we're about to check
+    logger.info(`🔍 Final validation for ${queueName}`, {
+      hasConnection: !!connection,
+      connectionType: typeof connection,
+      isProduction,
+      connectionPreview: typeof connection === 'string' 
+        ? connection.substring(0, 50) 
+        : (connection ? JSON.stringify(connection).substring(0, 50) : 'null')
+    });
+    
     if (!connection) {
       logger.error(`❌ FATAL: Connection is null/undefined when creating Worker for ${queueName}`);
       logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
       logger.error(`❌ This should never happen. Check REDIS_URL in Render.com environment variables.`);
       return null;
+    }
+    
+    // Check for localhost connection object (development fallback that shouldn't happen in production)
+    if (typeof connection === 'object') {
+      if (connection.host === 'localhost' || connection.host === '127.0.0.1') {
+        logger.error(`❌ FATAL: Connection object contains localhost for ${queueName}`);
+        logger.error(`❌ Connection object: ${JSON.stringify(connection)}`);
+        logger.error(`❌ This should never happen in production. REDIS_URL must be set.`);
+        if (isProduction) {
+          logger.error(`❌ Aborting worker creation in production.`);
+          return null;
+        }
+      }
     }
     
     // In production, connection MUST be a valid Redis URL string
