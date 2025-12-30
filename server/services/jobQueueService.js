@@ -208,6 +208,12 @@ function createWorker(queueName, processor, options = {}) {
   }
 
   try {
+    // Log connection details for debugging (hide password)
+    const connectionLog = typeof connection === 'string' 
+      ? connection.replace(/:[^:@]+@/, ':****@')
+      : `{ host: ${connection.host}, port: ${connection.port} }`;
+    logger.info(`🔗 Creating worker ${queueName} with connection: ${connectionLog}`);
+    
     const worker = new Worker(
     queueName,
     async (job) => {
