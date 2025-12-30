@@ -24,8 +24,9 @@ function getRedisConnection() {
     logger.info('Using REDIS_URL for job queue connection', { 
       url: process.env.REDIS_URL.replace(/:[^:@]+@/, ':****@') // Hide password in logs
     });
-    // BullMQ expects connection string or object with url property
-    redisConnection = { url: process.env.REDIS_URL };
+    // BullMQ/ioredis accepts connection string directly
+    // Pass the URL string directly, not wrapped in an object
+    redisConnection = process.env.REDIS_URL;
     return redisConnection;
   }
 
