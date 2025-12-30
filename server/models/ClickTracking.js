@@ -48,7 +48,7 @@ const clickTrackingSchema = new mongoose.Schema({
   },
   // Click Data
   click: {
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
     // Index defined below with compound indexes
     ipAddress: String,
     userAgent: String,
