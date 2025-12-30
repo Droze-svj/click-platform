@@ -11,9 +11,17 @@ function initializeAllWorkers() {
   const redisUrl = process.env.REDIS_URL?.trim();
   const redisHost = process.env.REDIS_HOST?.trim();
   
+  // Log what we're checking
+  logger.info('🔍 Checking Redis configuration for workers...', {
+    hasRedisUrl: !!redisUrl,
+    hasRedisHost: !!redisHost,
+    nodeEnv: process.env.NODE_ENV
+  });
+  
   if ((!redisUrl || redisUrl === '') && (!redisHost || redisHost === '')) {
     logger.warn('⚠️ Redis not configured. Workers will not be initialized. Background jobs disabled.');
     logger.warn('⚠️ To enable workers, set REDIS_URL environment variable in Render.com.');
+    logger.warn('⚠️ Skipping all worker initialization.');
     return;
   }
   
@@ -21,8 +29,17 @@ function initializeAllWorkers() {
   if ((process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') && (!redisUrl || redisUrl === '')) {
     logger.error('⚠️ REDIS_URL is required in production/staging. Workers will not be initialized.');
     logger.error('⚠️ Add REDIS_URL to Render.com environment variables to enable workers.');
+    logger.warn('⚠️ Skipping all worker initialization.');
     return;
   }
+  
+  // Double-check: If we don't have a valid Redis URL, don't initialize
+  if (!redisUrl || redisUrl === '') {
+    logger.warn('⚠️ REDIS_URL is empty or invalid. Workers will not be initialized.');
+    return;
+  }
+  
+  logger.info('✅ Redis configuration found. Proceeding with worker initialization...');
 
   try {
     logger.info('🚀 Initializing all job queue workers...');
