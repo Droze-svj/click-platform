@@ -17,7 +17,9 @@ function getRedisConnection() {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
   
   // Check if Redis is configured (validate non-empty strings)
-  const redisUrl = process.env.REDIS_URL?.trim();
+  // IMPORTANT: Use process.env.REDIS_URL directly first to check raw value
+  const rawRedisUrl = process.env.REDIS_URL;
+  const redisUrl = rawRedisUrl?.trim();
   const redisHost = process.env.REDIS_HOST?.trim();
   
   // Log what we found for debugging
@@ -30,8 +32,16 @@ function getRedisConnection() {
     hasRedisHost: !!redisHost,
     nodeEnv: process.env.NODE_ENV,
     isProduction,
-    rawRedisUrlExists: !!process.env.REDIS_URL,
-    rawRedisUrlLength: process.env.REDIS_URL?.length || 0
+    rawRedisUrlExists: !!rawRedisUrl,
+    rawRedisUrlLength: rawRedisUrl?.length || 0,
+    rawRedisUrlFirstChars: rawRedisUrl ? rawRedisUrl.substring(0, 20) : 'none',
+    // Check for common issues
+    hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'")) : false,
+    hasSpaces: rawRedisUrl ? rawRedisUrl.includes(' ') : false,
+    cachedConnectionType: redisConnection ? typeof redisConnection : 'none',
+    cachedConnectionIsLocalhost: redisConnection && typeof redisConnection === 'object' 
+      ? (redisConnection.host === 'localhost' || redisConnection.host === '127.0.0.1')
+      : false
   });
   
   // In production/staging, REDIS_URL is REQUIRED
