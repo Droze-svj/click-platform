@@ -874,18 +874,18 @@ if (healthCheckServer) {
 // Always bind to port, even if some services failed to initialize
 let server;
 try {
-  server = app.listen(PORT, HOST, () => {
-  // Close health check server now that main server is ready
+  // Close health check server before starting main server
+  // This ensures the port is free for the main server
   if (healthCheckServer) {
-    console.log('📝 Closing health check server, main server is ready...');
+    console.log('📝 Closing health check server, starting main server...');
     healthCheckServer.close(() => {
-      console.log('✅ Health check server closed');
-    });
-  }
-  
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      console.log('✅ Health check server closed, starting main server...');
+      
+      // Start main server after health check server is closed
+      server = app.listen(PORT, HOST, () => {
+        logger.info(`🚀 Server running on port ${PORT}`);
+        logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+        logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
   
   // Initialize Socket.io for real-time updates
   initializeSocket(server);
@@ -979,9 +979,9 @@ try {
         });
         logger.info('✅ Cache warming enabled (every 6 hours)');
       }
-  });
-  
-  server.on('error', (err) => {
+      });
+      
+      server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
       logger.warn('⚠️ Keeping health check server running since main server failed to start');
