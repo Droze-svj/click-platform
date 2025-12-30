@@ -19,10 +19,14 @@ function getRedisConnection() {
   logger.info('🔍 getRedisConnection() called', {
     hasRedisUrl: !!redisUrl,
     redisUrlLength: redisUrl?.length || 0,
-    redisUrlPrefix: redisUrl ? redisUrl.substring(0, 20) + '...' : 'none',
+    redisUrlPrefix: redisUrl ? redisUrl.substring(0, 30) + '...' : 'none',
+    redisUrlFirstChars: redisUrl ? redisUrl.substring(0, 10) : 'none',
+    redisUrlLastChars: redisUrl && redisUrl.length > 10 ? '...' + redisUrl.substring(redisUrl.length - 10) : 'none',
     hasRedisHost: !!redisHost,
     nodeEnv: process.env.NODE_ENV,
-    isProduction
+    isProduction,
+    rawRedisUrlExists: !!process.env.REDIS_URL,
+    rawRedisUrlLength: process.env.REDIS_URL?.length || 0
   });
   
   // In production/staging, REDIS_URL is REQUIRED
