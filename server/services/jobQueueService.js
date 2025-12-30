@@ -8,9 +8,15 @@ const { captureException } = require('../utils/sentry');
 function getRedisConnection() {
   // Support both REDIS_URL and individual config
   if (process.env.REDIS_URL) {
+    logger.info('Using REDIS_URL for job queue connection', { 
+      url: process.env.REDIS_URL.replace(/:[^:@]+@/, ':****@') // Hide password in logs
+    });
+    // BullMQ can use connection string directly
     return process.env.REDIS_URL;
   }
 
+  // Fallback to individual config (for local development)
+  logger.warn('REDIS_URL not set, using localhost fallback for job queue');
   return {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
