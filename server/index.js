@@ -983,8 +983,10 @@ try {
   
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      logger.error(`❌ Port ${PORT} is already in use. Please stop the process using this port or change PORT in .env`);
-      process.exit(1);
+      logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
+      logger.warn('⚠️ Keeping health check server running since main server failed to start');
+      // Don't exit - keep health check server running so Render.com can detect the port
+      return;
     } else {
       logger.error('Server error:', err);
     }
