@@ -254,7 +254,18 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Validate environment variables on startup
-validateEnv();
+// Don't exit if in production - log error but continue
+try {
+  validateEnv();
+} catch (error) {
+  logger.error('Environment validation error', { error: error.message });
+  // In production, continue anyway to see what else might be wrong
+  if (process.env.NODE_ENV === 'production') {
+    logger.warn('Continuing despite validation errors. Check logs for missing variables.');
+  } else {
+    throw error;
+  }
+}
 
 // Initialize production configuration if in production
 if (process.env.NODE_ENV === 'production') {
@@ -335,32 +346,33 @@ app.use('/api', (req, res, next) => {
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Database connection with error handling
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click')
-.then(() => {
-  logger.info('✅ MongoDB connected');
-  
-  // Handle connection events
-  mongoose.connection.on('error', (err) => {
-    logger.error('MongoDB connection error:', err);
-  });
-  
-  mongoose.connection.on('disconnected', () => {
-    logger.warn('MongoDB disconnected. Attempting to reconnect...');
-  });
-  
-  mongoose.connection.on('reconnected', () => {
-    logger.info('MongoDB reconnected');
-  });
-})
-.catch(err => {
-  logger.error('❌ MongoDB connection error:', err);
-  // Don't exit in production, allow retries
-  if (process.env.NODE_ENV === 'production') {
-    logger.warn('Continuing without database connection. Will retry...');
-  } else {
-    process.exit(1);
+// Start server even if MongoDB fails initially
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click');
+    logger.info('✅ MongoDB connected');
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      logger.error('MongoDB connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('MongoDB disconnected. Attempting to reconnect...');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      logger.info('MongoDB reconnected');
+    });
+  } catch (err) {
+    logger.error('❌ MongoDB connection error:', err);
+    logger.warn('⚠️ Server will start without database. MongoDB connection will retry in background.');
+    // Don't exit - allow server to start and retry connection
   }
-});
+};
+
+// Connect to database (non-blocking)
+connectDB();
 
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
