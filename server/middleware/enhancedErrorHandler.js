@@ -136,6 +136,14 @@ function notFoundHandler(req, res, next) {
  */
 function setupUnhandledRejectionHandler() {
   process.on('unhandledRejection', (reason, promise) => {
+    // Filter out Redis localhost connection errors - these are expected when REDIS_URL is not set
+    if (reason && typeof reason === 'object' && reason.message && 
+        reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
+      // These are expected when REDIS_URL is not configured - workers will be closed automatically
+      // Don't spam logs with these errors
+      return;
+    }
+    
     logger.error('Unhandled Rejection', {
       reason: reason?.message || reason,
       stack: reason?.stack,
