@@ -391,6 +391,17 @@ function createWorker(queueName, processor, options = {}) {
   });
 
     worker.on('error', (err) => {
+      // Check if error is due to localhost connection in production
+      if (err.message && err.message.includes('127.0.0.1') && (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')) {
+        logger.error(`❌ CRITICAL: Worker ${queueName} is trying to connect to localhost in production!`);
+        logger.error(`❌ This should never happen. REDIS_URL must be set in Render.com.`);
+        logger.error(`❌ Error: ${err.message}`);
+        logger.error(`❌ Closing worker to prevent further localhost connection attempts.`);
+        worker.close().catch(() => {});
+        delete workers[queueName];
+        return;
+      }
+      
       logger.error('Worker error', { queue: queueName, error: err.message });
       captureException(err, { tags: { queue: queueName, type: 'worker_error' } });
     });
