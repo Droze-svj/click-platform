@@ -43,12 +43,39 @@ try {
   healthCheckServer = healthApp.listen(PORT, HOST, () => {
     console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
     console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
+    // Keep the server alive even if main server fails
+    process.on('exit', () => {
+      if (healthCheckServer) {
+        healthCheckServer.close();
+      }
+    });
   });
   healthCheckServer.on('error', (err) => {
     console.error('❌ Health check server error:', err);
+    console.error('Error code:', err.code);
+    console.error('Error message:', err.message);
+    // If port is in use, try a different approach
+    if (err.code === 'EADDRINUSE') {
+      console.error('⚠️ Port is already in use. This might be from a previous deployment.');
+    }
   });
 } catch (healthError) {
   console.error('❌ Failed to start health check server:', healthError);
+  console.error('Stack:', healthError.stack);
+  // Try to start a minimal HTTP server using Node's http module
+  try {
+    const http = require('http');
+    const minimalServer = http.createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'starting', message: 'Minimal health check active' }));
+    });
+    minimalServer.listen(PORT, HOST, () => {
+      console.log(`✅ Minimal health check server bound to port ${PORT} on ${HOST}`);
+      healthCheckServer = minimalServer;
+    });
+  } catch (minimalError) {
+    console.error('❌ Failed to start minimal health check server:', minimalError);
+  }
 }
 
 const express = require('express');
