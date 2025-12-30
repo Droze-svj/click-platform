@@ -3,9 +3,22 @@
 const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for content templates', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Generate content from template
@@ -50,7 +63,13 @@ For each section, provide:
 
 Format as JSON object with sections array, each containing: name, content, suggestedLength`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content from template');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -111,7 +130,13 @@ Provide analysis:
 
 Format as JSON object with fields: themes (array), frequency, engagementStrategies (array), hashtagPatterns (array), formats (array), topPerformers (array), recommendations (array)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content from template');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -178,7 +203,13 @@ Include:
 
 Format as JSON object with fields: trendingTopics (array), seasonalHashtags (array), themes (array), postingTimes (array), formatRecommendations (array), audienceInsights (object)`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content from template');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
