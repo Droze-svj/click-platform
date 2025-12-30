@@ -4,9 +4,22 @@
 const OpenAI = require('openai');
 const logger = require('../utils/logger');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Generate AI summary for report
@@ -35,8 +48,15 @@ async function generateReportSummary(reportData, templateConfig) {
       includeRecommendations
     );
 
+    // Get OpenAI client (lazy initialization)
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, using fallback summary');
+      return generateFallbackSummary(reportData);
+    }
+
     // Generate summary
-    const response = await openai.chat.completions.create({
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -265,7 +285,18 @@ Top Performers:
 
 Write a ${tone} summary suitable for agency leadership:`;
 
-    const response = await openai.chat.completions.create({
+    // Get OpenAI client (lazy initialization)
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, using fallback rollup summary');
+      return {
+        text: `Agency performance summary for ${rollupData.clients.length} clients.`,
+        generatedAt: new Date(),
+        model: 'fallback'
+      };
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
