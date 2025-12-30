@@ -107,12 +107,19 @@ async function addJob(queueName, jobData, options = {}) {
  * Create worker for a queue
  */
 function createWorker(queueName, processor, options = {}) {
+  // Skip worker creation if Redis is not configured
+  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+    logger.warn(`⚠️ Skipping worker creation for ${queueName} - Redis not configured`);
+    return null;
+  }
+
   if (workers[queueName]) {
     logger.warn('Worker already exists for queue', { queue: queueName });
     return workers[queueName];
   }
 
-  const worker = new Worker(
+  try {
+    const worker = new Worker(
     queueName,
     async (job) => {
       logger.info('Processing job', {
@@ -145,7 +152,7 @@ function createWorker(queueName, processor, options = {}) {
     }
   );
 
-  worker.on('completed', async (job) => {
+    worker.on('completed', async (job) => {
     const duration = job.finishedOn - job.processedOn;
     
     logger.info('Worker completed job', {
@@ -210,13 +217,20 @@ function createWorker(queueName, processor, options = {}) {
     }
   });
 
-  worker.on('error', (err) => {
-    logger.error('Worker error', { queue: queueName, error: err.message });
-    captureException(err, { tags: { queue: queueName, type: 'worker_error' } });
-  });
+    worker.on('error', (err) => {
+      logger.error('Worker error', { queue: queueName, error: err.message });
+      captureException(err, { tags: { queue: queueName, type: 'worker_error' } });
+    });
 
-  workers[queueName] = worker;
-  return worker;
+    workers[queueName] = worker;
+    logger.info(`Worker created for queue: ${queueName}`);
+    
+    return worker;
+  } catch (error) {
+    logger.error(`Failed to create worker for ${queueName}`, { error: error.message });
+    // Don't throw - workers are optional
+    return null;
+  }
 }
 
 /**

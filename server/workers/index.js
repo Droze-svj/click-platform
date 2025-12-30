@@ -7,6 +7,13 @@ const logger = require('../utils/logger');
  * Initialize all workers
  */
 function initializeAllWorkers() {
+  // Skip workers if Redis is not configured
+  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+    logger.warn('⚠️ Redis not configured. Workers will not be initialized. Background jobs disabled.');
+    logger.warn('⚠️ To enable workers, set REDIS_URL environment variable.');
+    return;
+  }
+
   try {
     logger.info('🚀 Initializing all job queue workers...');
 
@@ -27,7 +34,8 @@ function initializeAllWorkers() {
     logger.info('✅ All workers initialized successfully');
   } catch (error) {
     logger.error('❌ Failed to initialize workers', { error: error.message });
-    throw error;
+    logger.warn('⚠️ Background jobs will not be processed. Server will continue without workers.');
+    // Don't throw - workers are optional
   }
 }
 
