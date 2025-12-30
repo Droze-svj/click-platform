@@ -36,10 +36,20 @@ function initializeAllWorkers() {
   // Double-check: If we don't have a valid Redis URL, don't initialize
   if (!redisUrl || redisUrl === '') {
     logger.warn('⚠️ REDIS_URL is empty or invalid. Workers will not be initialized.');
+    logger.warn('⚠️ Skipping ALL worker initialization to prevent localhost connections.');
     return;
   }
   
-  logger.info('✅ Redis configuration found. Proceeding with worker initialization...');
+  // Triple-check: Ensure REDIS_URL is a valid connection string
+  if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
+    logger.warn('⚠️ REDIS_URL format is invalid. Must start with redis:// or rediss://');
+    logger.warn('⚠️ Skipping ALL worker initialization.');
+    return;
+  }
+  
+  logger.info('✅ Redis configuration found. Proceeding with worker initialization...', {
+    redisUrlPrefix: redisUrl.substring(0, 20) + '...'
+  });
 
   try {
     logger.info('🚀 Initializing all job queue workers...');
