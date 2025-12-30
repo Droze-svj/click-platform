@@ -5,9 +5,22 @@ const logger = require('../utils/logger');
 const Content = require('../models/Content');
 const User = require('../models/User');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy initialization - only create client when needed and if API key is available
+let openai = null;
+
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    } catch (error) {
+      logger.warn('Failed to initialize OpenAI client for content suggestions', { error: error.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 /**
  * Generate daily content ideas based on user niche and history
@@ -43,7 +56,13 @@ Format as JSON array with these fields: title, description, platforms (array), h
 
 Make the ideas fresh, engaging, and tailored to the ${niche} niche.`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content suggestions');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -130,7 +149,13 @@ async function getTrendingTopics(niche) {
   try {
     const prompt = `What are the top 5 trending topics in the "${niche}" niche right now? Provide short, actionable topic ideas that content creators can use. Format as JSON array of strings.`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content suggestions');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
@@ -181,7 +206,13 @@ Provide:
 
 Format as JSON: {engagementScore, viralPotential, strengths (array), suggestions (array)}`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    if (!client) {
+      logger.warn('OpenAI API key not configured, cannot generate content suggestions');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+
+    const response = await client.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
