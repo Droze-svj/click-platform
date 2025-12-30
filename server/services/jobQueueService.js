@@ -373,6 +373,33 @@ function createWorker(queueName, processor, options = {}) {
       : `{ host: ${connection.host}, port: ${connection.port} }`;
     logger.info(`✅ All validation passed. Creating Worker ${queueName} with: ${safeConnectionLog}`);
     
+    // CRITICAL: One final check - BullMQ will default to localhost if connection is undefined
+    // Even though we've validated above, double-check right before creating Worker
+    if (!connection || connection === undefined || connection === null) {
+      logger.error(`❌ FATAL: Connection is ${connection} when creating Worker for ${queueName}`);
+      logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+      return null;
+    }
+    
+    // In production, ensure connection is a valid string URL
+    if (isProduction && typeof connection !== 'string') {
+      logger.error(`❌ FATAL: Connection is not a string in production for ${queueName}`);
+      logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
+      logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+      return null;
+    }
+    
+    // Final check: ensure connection doesn't contain localhost
+    const connectionString = typeof connection === 'string' ? connection : JSON.stringify(connection);
+    if (connectionString.includes('127.0.0.1') || connectionString.includes('localhost')) {
+      logger.error(`❌ FATAL: Connection contains localhost for ${queueName}`);
+      logger.error(`❌ Connection: ${connectionString.substring(0, 100)}`);
+      logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
+      return null;
+    }
+    
+    logger.info(`✅ Final validation passed. Creating Worker ${queueName}...`);
+    
     const worker = new Worker(
     queueName,
     async (job) => {
