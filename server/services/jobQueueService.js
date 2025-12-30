@@ -296,25 +296,14 @@ function createWorker(queueName, processor, options = {}) {
   }
 
   try {
-    // Log connection details for debugging (hide password)
-    const connectionLog = typeof connection === 'string' 
-      ? connection.replace(/:[^:@]+@/, ':****@')
-      : `{ host: ${connection.host}, port: ${connection.port} }`;
-    logger.info(`🔗 Creating worker ${queueName} with connection: ${connectionLog}`);
-    
-    // CRITICAL: If connection is undefined/null, BullMQ will default to localhost
-    // This should never happen due to checks above, but add one more safeguard
-    if (!connection) {
-      logger.error(`❌ FATAL: Connection is null/undefined when creating worker ${queueName}`);
-      logger.error(`❌ This should never happen. Workers will not be created.`);
-      return null;
-    }
-    
     // ABSOLUTE FINAL CHECK: Ensure connection is valid before passing to BullMQ
     // BullMQ will default to localhost if connection is undefined/null/invalid
+    // This check happens BEFORE any Worker creation to prevent localhost connections
+    
     if (!connection) {
       logger.error(`❌ FATAL: Connection is null/undefined when creating Worker for ${queueName}`);
       logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+      logger.error(`❌ This should never happen. Check REDIS_URL in Render.com environment variables.`);
       return null;
     }
     
@@ -324,19 +313,23 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(`❌ FATAL: Connection is not a string in production for ${queueName}`);
         logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
         logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
+        logger.error(`❌ Check REDIS_URL in Render.com - it must be a valid Redis URL string.`);
         return null;
       }
       
       if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
         logger.error(`❌ FATAL: Invalid connection format for ${queueName} in production`);
         logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
+        logger.error(`❌ Must start with redis:// or rediss://`);
         logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
         return null;
       }
       
       if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
         logger.error(`❌ FATAL: Connection contains localhost for ${queueName} in production`);
+        logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
         logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
+        logger.error(`❌ Use a cloud Redis service (Redis Cloud, etc.) - not localhost.`);
         return null;
       }
     }
@@ -345,7 +338,7 @@ function createWorker(queueName, processor, options = {}) {
     const safeConnectionLog = typeof connection === 'string' 
       ? connection.replace(/:[^:@]+@/, ':****@')
       : `{ host: ${connection.host}, port: ${connection.port} }`;
-    logger.info(`🔗 Final check passed. Creating Worker ${queueName} with: ${safeConnectionLog}`);
+    logger.info(`✅ All validation passed. Creating Worker ${queueName} with: ${safeConnectionLog}`);
     
     const worker = new Worker(
     queueName,
