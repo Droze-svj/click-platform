@@ -137,4 +137,14 @@ router.post('/:approvalId/cancel', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Approval cancelled', 200, approval);
 }));
 
+/**
+ * GET /api/approvals/pending-count
+ * Get pending approvals count for user
+ */
+router.get('/pending-count', auth, asyncHandler(async (req, res) => {
+  const { getPendingApprovalsCount } = require('../services/approvalService');
+  const count = await getPendingApprovalsCount(req.user._id);
+  sendSuccess(res, 'Pending count retrieved', 200, { count });
+}));
+
 module.exports = router;
