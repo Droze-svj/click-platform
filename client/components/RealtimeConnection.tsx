@@ -13,11 +13,13 @@ export default function RealtimeConnection() {
   const { user, loading } = useAuth()
 
   // Don't show on auth pages (login, register) or when loading
-  if (pathname === '/login' || pathname === '/register' || loading) {
-    return null
-  }
+  // Check this AFTER all hooks are called (React rules)
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/'
 
   useEffect(() => {
+    // Don't initialize on auth pages
+    if (isAuthPage || loading) return
+    
     if (!user) return
 
     // Initialize Socket.io connection
@@ -76,20 +78,30 @@ export default function RealtimeConnection() {
     return () => {
       socket.disconnect()
     }
-  }, [user])
+  }, [user, isAuthPage, loading])
 
   // Only show after a few seconds of disconnection (not immediately)
   useEffect(() => {
+    if (isAuthPage || loading) {
+      setShowWarning(false)
+      return
+    }
+    
     if (!isConnected && user) {
       const timer = setTimeout(() => setShowWarning(true), 3000)
       return () => clearTimeout(timer)
     } else {
       setShowWarning(false)
     }
-  }, [isConnected, user])
+  }, [isConnected, user, isAuthPage, loading])
+
+  // Don't show on auth pages or when loading
+  if (isAuthPage || loading) {
+    return null
+  }
 
   // Only show connection status if user is logged in
-  if (!user || loading) {
+  if (!user) {
     return null
   }
 
