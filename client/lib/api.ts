@@ -12,7 +12,7 @@ import { extractApiError } from '../utils/apiResponse'
  * API base URL from environment variables.
  * Exported for use in components that need the URL directly.
  */
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 /**
  * Creates and configures an Axios instance with default settings.
@@ -27,7 +27,7 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001
  */
 function createApiClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api',
     headers: {
       'Content-Type': 'application/json',
     },
