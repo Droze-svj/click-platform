@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { X, ChevronRight, ChevronLeft, CheckCircle2, Circle } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+
 interface OnboardingStep {
   id: string
   title: string
@@ -38,7 +40,7 @@ export default function OnboardingFlow() {
   const loadProgress = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/onboarding', {
+      const response = await fetch(`${API_URL}/onboarding`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
@@ -58,7 +60,7 @@ export default function OnboardingFlow() {
   const completeStep = async (stepId: string, data?: any) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/onboarding/complete-step', {
+      const response = await fetch(`${API_URL}/onboarding/complete-step`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ export default function OnboardingFlow() {
   const skipOnboarding = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/onboarding/skip', {
+      const response = await fetch(`${API_URL}/onboarding/skip`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
@@ -99,7 +101,7 @@ export default function OnboardingFlow() {
   const goToStep = async (stepIndex: number) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/onboarding/goto-step', {
+      const response = await fetch(`${API_URL}/onboarding/goto-step`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
