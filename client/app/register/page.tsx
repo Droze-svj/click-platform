@@ -100,8 +100,8 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md" style={{ position: 'relative', zIndex: 10 }}>
         <h1 className="text-3xl font-bold mb-6 text-center">Sign Up</h1>
         
         {error && (
@@ -120,7 +120,9 @@ export default function Register() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              style={{ pointerEvents: 'auto', zIndex: 20 }}
               required
+              autoComplete="name"
             />
           </div>
 
@@ -133,7 +135,9 @@ export default function Register() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              style={{ pointerEvents: 'auto', zIndex: 20 }}
               required
+              autoComplete="email"
             />
           </div>
 
@@ -146,8 +150,10 @@ export default function Register() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              style={{ pointerEvents: 'auto', zIndex: 20 }}
               required
               minLength={6}
+              autoComplete="new-password"
             />
           </div>
 
