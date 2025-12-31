@@ -96,6 +96,50 @@ function initializeAllWorkers() {
 
   try {
     logger.info('🚀 Initializing all job queue workers...');
+    
+    // CRITICAL: Verify Redis connection BEFORE creating any workers
+    // This prevents BullMQ from defaulting to localhost
+    const { getRedisConnection } = require('../services/jobQueueService');
+    const redisConnection = getRedisConnection();
+    
+    console.log('🔍 [initializeAllWorkers] Checking Redis connection before creating workers...');
+    console.log(`🔍 [initializeAllWorkers] Connection exists: ${!!redisConnection}`);
+    console.log(`🔍 [initializeAllWorkers] Connection type: ${typeof redisConnection}`);
+    console.log(`🔍 [initializeAllWorkers] Connection preview: ${redisConnection ? (typeof redisConnection === 'string' ? redisConnection.substring(0, 50) : JSON.stringify(redisConnection).substring(0, 50)) : 'null/undefined'}`);
+    
+    if (!redisConnection || redisConnection === null || redisConnection === undefined) {
+      const errorMsg = '❌ FATAL: getRedisConnection() returned null/undefined. Cannot create workers.';
+      console.error(errorMsg);
+      logger.error(errorMsg);
+      logger.error('❌ Workers will NOT be initialized. Check REDIS_URL in Render.com.');
+      return;
+    }
+    
+    // In production, connection MUST be a string URL
+    if (isProduction && typeof redisConnection !== 'string') {
+      const errorMsg = '❌ FATAL: Redis connection is not a string in production. Cannot create workers.';
+      console.error(errorMsg);
+      console.error(`❌ Connection type: ${typeof redisConnection}, value: ${JSON.stringify(redisConnection).substring(0, 100)}`);
+      logger.error(errorMsg);
+      logger.error('❌ Connection type:', typeof redisConnection);
+      logger.error('❌ Workers will NOT be initialized. REDIS_URL must be a valid Redis URL string.');
+      return;
+    }
+    
+    // Final check: connection must not contain localhost
+    const connStr = typeof redisConnection === 'string' ? redisConnection : JSON.stringify(redisConnection);
+    if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
+      const errorMsg = '❌ FATAL: Redis connection contains localhost. Cannot create workers.';
+      console.error(errorMsg);
+      console.error(`❌ Connection: ${connStr.substring(0, 100)}`);
+      logger.error(errorMsg);
+      logger.error('❌ Connection contains localhost/127.0.0.1');
+      logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
+      return;
+    }
+    
+    console.log('✅ Redis connection validated. Proceeding with worker creation...');
+    logger.info('✅ Redis connection validated. Proceeding with worker creation...');
 
     // Import and initialize workers
     const { initializeVideoWorker } = require('./videoProcessor');
