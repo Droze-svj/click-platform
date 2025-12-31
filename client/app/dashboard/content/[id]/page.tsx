@@ -21,7 +21,7 @@ const ContentDuplicator = lazy(() => import('../../../../components/ContentDupli
 const OneClickPublish = lazy(() => import('../../../../components/OneClickPublish'))
 const ContentApprovalButton = lazy(() => import('../../../../components/ContentApprovalButton'))
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface Content {
   _id: string

@@ -13,7 +13,7 @@ import EnhancedBatchOperations from '../../../components/EnhancedBatchOperations
 import BulkActions from '../../../components/BulkActions'
 import EmptyState from '../../../components/EmptyState'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface Content {
   _id: string

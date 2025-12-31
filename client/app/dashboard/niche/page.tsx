@@ -10,7 +10,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { extractApiData, extractApiError } from '../../../utils/apiResponse'
 import { useToast } from '../../../contexts/ToastContext'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 const niches = [
   'health', 'finance', 'education', 'technology',

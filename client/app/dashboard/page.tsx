@@ -29,7 +29,7 @@ const QuickTemplateAccess = lazy(() => import('../../components/QuickTemplateAcc
 const AIMultiModelSelector = lazy(() => import('../../components/AIMultiModelSelector'))
 const PredictiveAnalytics = lazy(() => import('../../components/PredictiveAnalytics'))
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface User {
   id: string
