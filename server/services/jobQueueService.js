@@ -493,17 +493,25 @@ function createWorker(queueName, processor, options = {}) {
     }
   );
   
-  // Log immediately after Worker creation to see what connection was passed
-  console.log(`[createWorker] Worker created for ${queueName}`);
-  console.log(`[createWorker] Connection type passed to BullMQ: ${typeof connection}`);
-  if (typeof connection === 'string') {
-    console.log(`[createWorker] Connection string (first 50 chars): ${connection.substring(0, 50)}`);
-    console.log(`[createWorker] Connection string length: ${connection.length}`);
-    console.log(`[createWorker] Connection contains localhost: ${connection.includes('localhost') || connection.includes('127.0.0.1')}`);
-  } else if (connection) {
-    console.log(`[createWorker] Connection object: ${JSON.stringify(connection).substring(0, 100)}`);
-  } else {
-    console.error(`[createWorker] FATAL: Connection is ${connection} - BullMQ will default to localhost!`);
+  // Log immediately after Worker creation to see what connection was passed - use both console.log and logger
+  const workerLogMsg = `[createWorker] Worker created for ${queueName}`;
+  console.log(workerLogMsg);
+  logger.info(workerLogMsg, {
+    queueName,
+    connectionType: typeof connection,
+    connectionPreview: typeof connection === 'string' 
+      ? connection.substring(0, 50) 
+      : (connection ? JSON.stringify(connection).substring(0, 100) : 'null/undefined'),
+    connectionLength: typeof connection === 'string' ? connection.length : 0,
+    containsLocalhost: typeof connection === 'string' 
+      ? (connection.includes('localhost') || connection.includes('127.0.0.1'))
+      : false
+  });
+  
+  if (!connection || connection === undefined || connection === null) {
+    const fatalMsg = `[createWorker] FATAL: Connection is ${connection} - BullMQ will default to localhost!`;
+    console.error(fatalMsg);
+    logger.error(fatalMsg, { queueName, connection });
   }
 
     worker.on('completed', async (job) => {
