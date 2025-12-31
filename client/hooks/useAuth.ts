@@ -36,10 +36,25 @@ export function useAuth() {
 
   const checkAuth = async (retryCount = 0) => {
     try {
+      // Don't redirect on auth pages
+      if (typeof window !== 'undefined') {
+        const pathname = window.location.pathname
+        if (pathname === '/login' || pathname === '/register' || pathname === '/') {
+          setLoading(false)
+          return
+        }
+      }
+
       const token = localStorage.getItem('token')
       if (!token) {
         setLoading(false)
-        router.push('/login')
+        // Only redirect if not on auth pages
+        if (typeof window !== 'undefined') {
+          const pathname = window.location.pathname
+          if (pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
+            router.push('/login')
+          }
+        }
         return
       }
 
