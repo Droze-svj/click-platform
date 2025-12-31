@@ -158,10 +158,19 @@ router.post('/test-sentry', (req, res) => {
 router.get('/debug-redis', (req, res) => {
   try {
     const rawRedisUrl = process.env.REDIS_URL;
-    const { getRedisConnection } = require('../services/jobQueueService');
+    const jobQueueService = require('../services/jobQueueService');
+    
+    // Check if getRedisConnection exists
+    if (!jobQueueService.getRedisConnection || typeof jobQueueService.getRedisConnection !== 'function') {
+      return res.status(500).json({
+        success: false,
+        error: 'getRedisConnection is not available',
+        availableExports: Object.keys(jobQueueService),
+      });
+    }
     
     // Get the connection object that would be used
-    const connection = getRedisConnection();
+    const connection = jobQueueService.getRedisConnection();
     
     // Mask sensitive parts of REDIS_URL for logging
     const maskUrl = (url) => {
