@@ -59,7 +59,7 @@ export default function Dashboard() {
     loadUser()
   }, [])
 
-  const loadUser = async () => {
+  const loadUser = async (retryCount = 0) => {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -70,10 +70,11 @@ export default function Dashboard() {
 
       console.log('🔍 Loading user with token:', token.substring(0, 20) + '...')
       console.log('🔍 API URL:', API_URL)
+      console.log('🔍 Retry attempt:', retryCount)
       
       const response = await axios.get(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 30000
+        timeout: 60000 // Increased to 60 seconds for Render.com free tier
       })
 
       console.log('✅ User loaded successfully:', response.data)
@@ -90,6 +91,9 @@ export default function Dashboard() {
       }
       
       console.log('✅ Extracted user data:', userData)
+      if (!userData) {
+        throw new Error('User data not found in response')
+      }
       setUser(userData)
     } catch (error: any) {
       console.error('❌ Failed to load user:', error)
@@ -99,8 +103,29 @@ export default function Dashboard() {
         status: error.response?.status,
         data: error.response?.data
       })
-      localStorage.removeItem('token')
-      router.push('/login')
+      
+      // Retry logic for network errors (Render.com free tier can be slow)
+      if (retryCount < 2 && (
+        error.code === 'ECONNABORTED' || 
+        error.code === 'ERR_NETWORK' || 
+        error.code === 'ECONNREFUSED' ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('Network Error')
+      )) {
+        console.log(`🔄 Retrying in 2 seconds... (attempt ${retryCount + 1}/2)`)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        return loadUser(retryCount + 1)
+      }
+      
+      // Only redirect to login if it's an auth error (401, 403) or max retries reached
+      if (error.response?.status === 401 || error.response?.status === 403 || retryCount >= 2) {
+        console.log('⚠️ Authentication failed or max retries reached, redirecting to login')
+        localStorage.removeItem('token')
+        router.push('/login')
+      } else {
+        // For other errors, show error but don't redirect
+        console.error('⚠️ Failed to load user but keeping on dashboard')
+      }
     } finally {
       setLoading(false)
     }

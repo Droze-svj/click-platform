@@ -49,10 +49,20 @@ export default function Register() {
       localStorage.setItem('token', token)
       console.log('✅ Token stored in localStorage')
       
+      // Verify token was stored
+      const storedToken = localStorage.getItem('token')
+      if (!storedToken) {
+        setError('Failed to store authentication token. Please try again.')
+        return
+      }
+      console.log('✅ Token verified in localStorage:', storedToken.substring(0, 30) + '...')
+      
       // Wait a moment to ensure token is stored, then redirect
+      // Increased delay to ensure localStorage is fully written
       setTimeout(() => {
+        console.log('🔄 Redirecting to dashboard...')
         router.push('/dashboard')
-      }, 100)
+      }, 500)
     } catch (err: any) {
       console.error('Registration error:', err)
       console.error('Error details:', {
