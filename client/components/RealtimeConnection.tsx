@@ -1,14 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Wifi, WifiOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 export default function RealtimeConnection() {
+  const pathname = usePathname()
   const [isConnected, setIsConnected] = useState(false)
   const [reconnectAttempts, setReconnectAttempts] = useState(0)
   const [showWarning, setShowWarning] = useState(false)
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+
+  // Don't show on auth pages (login, register) or when loading
+  if (pathname === '/login' || pathname === '/register' || loading) {
+    return null
+  }
 
   useEffect(() => {
     if (!user) return
@@ -82,7 +89,7 @@ export default function RealtimeConnection() {
   }, [isConnected, user])
 
   // Only show connection status if user is logged in
-  if (!user) {
+  if (!user || loading) {
     return null
   }
 
