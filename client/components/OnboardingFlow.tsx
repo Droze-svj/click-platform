@@ -35,17 +35,17 @@ export default function OnboardingFlow() {
   const [isVisible, setIsVisible] = useState(false)
   const { showToast } = useToast()
 
-  // Don't show onboarding on public pages
-  const isPublicPage = pathname === '/login' || pathname === '/register' || pathname === '/'
+  // Don't show onboarding on public pages - check immediately
+  const isPublicPage = pathname === '/login' || pathname === '/register' || pathname === '/' || !pathname
+
+  // Return null immediately if on public page - don't even initialize state
+  if (isPublicPage) {
+    return null
+  }
 
   useEffect(() => {
-    // Skip loading if on public page
-    if (isPublicPage) {
-      setIsLoading(false)
-      return
-    }
     loadProgress()
-  }, [isPublicPage])
+  }, [])
 
   const loadProgress = async () => {
     try {
