@@ -12,6 +12,8 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
 import { parseApiError } from '../utils/errorHandler';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api';
+
 interface Recommendation {
   title: string;
   description: string;
@@ -49,7 +51,7 @@ export default function AIRecommendations() {
       if (type) params.append('type', type);
       if (platform) params.append('platform', platform);
 
-      const response = await fetch(`/api/ai/recommendations/personalized?${params}`, {
+      const response = await fetch(`${API_URL}/ai/recommendations/personalized?${params}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { Sparkles, TrendingUp, Lightbulb, Zap, Target } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+
 interface Suggestion {
   id: string
   type: 'trending' | 'idea' | 'optimization' | 'reminder'
@@ -26,7 +28,9 @@ export default function SmartSuggestions() {
 
   const fetchSuggestions = async () => {
     try {
-      const response = await fetch('/api/suggestions/daily', {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_URL}/suggestions/daily`, {
+        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
       

@@ -5,6 +5,8 @@ import { FileText, Sparkles, TrendingUp, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+
 interface Template {
   _id: string
   name: string
@@ -28,7 +30,7 @@ export default function QuickTemplateAccess() {
   const loadPopularTemplates = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/templates?limit=4&sortBy=usageCount&sortOrder=desc', {
+      const response = await fetch(`${API_URL}/templates?limit=4&sortBy=usageCount&sortOrder=desc`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
@@ -47,7 +49,7 @@ export default function QuickTemplateAccess() {
   const handleUseTemplate = async (template: Template) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/templates/${template._id}/use`, {
+      const response = await fetch(`${API_URL}/templates/${template._id}/use`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',

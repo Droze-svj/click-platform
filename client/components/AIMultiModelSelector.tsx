@@ -13,6 +13,8 @@ import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
 import { parseApiError } from '../utils/errorHandler';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api';
+
 interface AIModel {
   id: string;
   name: string;
@@ -51,7 +53,7 @@ export default function AIMultiModelSelector() {
   const fetchModels = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/ai/multi-model/models', {
+      const response = await fetch(`${API_URL}/ai/multi-model/models`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -74,7 +76,7 @@ export default function AIMultiModelSelector() {
   const initProvider = async (provider: string, model: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/ai/multi-model/provider', {
+      const response = await fetch(`${API_URL}/ai/multi-model/provider`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +100,7 @@ export default function AIMultiModelSelector() {
     if (!prompt) return;
     setComparing(true);
     try {
-      const response = await fetch('/api/ai/multi-model/compare', {
+      const response = await fetch(`${API_URL}/ai/multi-model/compare`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
