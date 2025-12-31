@@ -156,7 +156,8 @@ router.post('/test-sentry', (req, res) => {
  *     tags: [Health]
  */
 router.get('/debug-redis', (req, res) => {
-  // This endpoint works completely independently - no need for getRedisConnection
+  // This endpoint works completely independently - just shows REDIS_URL from process.env
+  // No need to call getRedisConnection at all
   const rawRedisUrl = process.env.REDIS_URL;
   const redisUrl = rawRedisUrl?.trim();
   
@@ -169,27 +170,8 @@ router.get('/debug-redis', (req, res) => {
     }
     return url;
   };
-  
-  // Try to get connection from jobQueueService, but don't fail if it's not available
-  let connection = null;
-  let connectionError = null;
-  let availableExports = null;
-  
-  try {
-    const jobQueueService = require('../services/jobQueueService');
-    availableExports = Object.keys(jobQueueService);
     
-    // Check if getRedisConnection exists
-    if (jobQueueService.getRedisConnection && typeof jobQueueService.getRedisConnection === 'function') {
-      connection = jobQueueService.getRedisConnection();
-    } else {
-      connectionError = 'getRedisConnection is not available in jobQueueService';
-    }
-  } catch (err) {
-    connectionError = err.message;
-  }
-    
-  // Build debug response - always succeeds
+  // Build debug response - always succeeds, no external dependencies
   const debug = {
     success: true,
     environment: process.env.NODE_ENV,
@@ -203,19 +185,12 @@ router.get('/debug-redis', (req, res) => {
       hasSpaces: rawRedisUrl ? rawRedisUrl.trim() !== rawRedisUrl : false,
       containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
       startsWithRedis: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) : false,
+      isValid: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) && !redisUrl.includes('localhost') && !redisUrl.includes('127.0.0.1') : false,
     },
-    connection: connection ? {
-      type: typeof connection,
-      isString: typeof connection === 'string',
-      isObject: typeof connection === 'object' && connection !== null,
-      value: typeof connection === 'string' ? maskUrl(connection) : JSON.stringify(connection),
-      containsLocalhost: String(connection).includes('localhost') || String(connection).includes('127.0.0.1'),
-    } : null,
     redisHost: process.env.REDIS_HOST || null,
     redisPort: process.env.REDIS_PORT || null,
     redisPassword: process.env.REDIS_PASSWORD ? '***' : null,
-    connectionError: connectionError || null,
-    availableExports: availableExports,
+    note: 'This endpoint shows REDIS_URL directly from process.env. Workers may use getRedisConnection() which has additional validation.',
   };
 
   res.json(debug);
