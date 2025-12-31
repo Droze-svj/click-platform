@@ -36,17 +36,26 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const loadTranslations = async (lang: SupportedLanguage) => {
     try {
       const response = await fetch(`/i18n/locales/${lang}.json`)
+      if (!response.ok) {
+        throw new Error(`Failed to load translations: ${response.status}`)
+      }
       translations = await response.json()
     } catch (error) {
-      console.error('Failed to load translations:', error)
+      // Silently fail - translations are optional
       // Fallback to English
       if (lang !== 'en') {
         try {
           const fallback = await fetch('/i18n/locales/en.json')
-          translations = await fallback.json()
+          if (fallback.ok) {
+            translations = await fallback.json()
+          }
         } catch (e) {
-          console.error('Failed to load fallback translations:', e)
+          // Silently fail - use empty translations
+          translations = {}
         }
+      } else {
+        // If English also fails, use empty translations
+        translations = {}
       }
     }
   }
