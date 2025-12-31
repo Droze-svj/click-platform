@@ -182,16 +182,54 @@ if (process.env.NODE_ENV !== 'test') {
   }
   
   if (shouldInitializeWorkers) {
-    try {
-      const { initializeWorkers } = require('./queues');
-      const { initializeScheduler } = require('./services/jobScheduler');
-      initializeWorkers();
-      initializeScheduler();
-      logger.info('✅ Job queue system initialized');
-    } catch (error) {
-      // Workers are optional - server can run without them
-      logger.warn('Job queue workers initialization failed', { error: error.message });
-      logger.warn('Background jobs will not be processed. Server will continue without workers.');
+    // CRITICAL: Double-check REDIS_URL one more time before initializing workers
+    // This prevents any possibility of workers being created with invalid Redis config
+    const finalRedisUrlCheck = process.env.REDIS_URL?.trim();
+    if (isProduction) {
+      console.log('🔍 [server/index.js] Final REDIS_URL check before worker initialization...');
+      console.log(`🔍 [server/index.js] REDIS_URL exists: ${!!finalRedisUrlCheck}`);
+      console.log(`🔍 [server/index.js] REDIS_URL length: ${finalRedisUrlCheck?.length || 0}`);
+      console.log(`🔍 [server/index.js] REDIS_URL first 30 chars: ${finalRedisUrlCheck ? finalRedisUrlCheck.substring(0, 30) : 'NONE'}`);
+      
+      if (!finalRedisUrlCheck || finalRedisUrlCheck === '') {
+        const errorMsg = '❌ FATAL: REDIS_URL is missing or empty right before worker initialization. Aborting.';
+        console.error(errorMsg);
+        logger.error(errorMsg);
+        logger.error('❌ Workers will NOT be initialized. Add REDIS_URL to Render.com.');
+        shouldInitializeWorkers = false;
+      } else if (!finalRedisUrlCheck.startsWith('redis://') && !finalRedisUrlCheck.startsWith('rediss://')) {
+        const errorMsg = '❌ FATAL: REDIS_URL format is invalid right before worker initialization. Aborting.';
+        console.error(errorMsg);
+        console.error(`❌ REDIS_URL: ${finalRedisUrlCheck.substring(0, 50)}`);
+        logger.error(errorMsg);
+        logger.error('❌ REDIS_URL received:', finalRedisUrlCheck.substring(0, 50));
+        logger.error('❌ Workers will NOT be initialized until REDIS_URL is fixed.');
+        shouldInitializeWorkers = false;
+      } else if (finalRedisUrlCheck.includes('127.0.0.1') || finalRedisUrlCheck.includes('localhost')) {
+        const errorMsg = '❌ FATAL: REDIS_URL contains localhost right before worker initialization. Aborting.';
+        console.error(errorMsg);
+        logger.error(errorMsg);
+        logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
+        shouldInitializeWorkers = false;
+      } else {
+        console.log('✅ Final REDIS_URL validation passed. Proceeding with worker initialization...');
+      }
+    }
+    
+    if (shouldInitializeWorkers) {
+      try {
+        const { initializeWorkers } = require('./queues');
+        const { initializeScheduler } = require('./services/jobScheduler');
+        initializeWorkers();
+        initializeScheduler();
+        logger.info('✅ Job queue system initialized');
+      } catch (error) {
+        // Workers are optional - server can run without them
+        logger.warn('Job queue workers initialization failed', { error: error.message });
+        logger.warn('Background jobs will not be processed. Server will continue without workers.');
+      }
+    } else {
+      logger.warn('⚠️ Redis validation failed. Skipping job queue workers initialization.');
     }
   } else {
     logger.warn('⚠️ Redis not configured. Skipping job queue workers initialization.');
