@@ -5,6 +5,7 @@ const ContentTemplate = require('../models/ContentTemplate');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
@@ -17,33 +18,46 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
-  const { category, niche, public: publicOnly } = req.query;
+  try {
+    const { category, niche, public: publicOnly, limit, sortBy, sortOrder } = req.query;
 
-  const query = {
-    $or: [
-      { isPublic: true },
-      { createdBy: req.user._id },
-      { isSystemTemplate: true }
-    ]
-  };
+    const query = {
+      $or: [
+        { isPublic: true },
+        { createdBy: req.user._id },
+        { isSystemTemplate: true }
+      ]
+    };
 
-  if (category) {
-    query.category = category;
+    if (category) {
+      query.category = category;
+    }
+
+    if (niche) {
+      query.niche = niche;
+    }
+
+    if (publicOnly === 'true') {
+      query.isPublic = true;
+    }
+
+    let sort = { usageCount: -1, rating: -1 };
+    if (sortBy === 'usageCount') {
+      sort = { usageCount: sortOrder === 'asc' ? 1 : -1 };
+    } else if (sortBy === 'rating') {
+      sort = { rating: sortOrder === 'asc' ? 1 : -1 };
+    }
+
+    const templates = await ContentTemplate.find(query)
+      .sort(sort)
+      .limit(parseInt(limit) || 50)
+      .lean();
+
+    sendSuccess(res, 'Templates fetched', 200, templates || []);
+  } catch (error) {
+    logger.error('Error fetching templates', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Templates fetched', 200, []);
   }
-
-  if (niche) {
-    query.niche = niche;
-  }
-
-  if (publicOnly === 'true') {
-    query.isPublic = true;
-  }
-
-  const templates = await ContentTemplate.find(query)
-    .sort({ usageCount: -1, rating: -1 })
-    .limit(50);
-
-  sendSuccess(res, 'Templates fetched', 200, templates);
 }));
 
 /**
