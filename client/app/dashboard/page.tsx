@@ -63,13 +63,16 @@ export default function Dashboard() {
     try {
       // Wait a bit if we just came from registration
       if (retryCount === 0) {
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
       
       const token = localStorage.getItem('token')
       if (!token) {
         console.log('⚠️ No token found, redirecting to login')
-        router.push('/login')
+        // Don't redirect immediately - show a message first
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
         return
       }
 
