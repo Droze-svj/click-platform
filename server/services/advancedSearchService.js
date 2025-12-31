@@ -321,15 +321,48 @@ async function getSearchFacets(userId, baseQuery = {}) {
   try {
     const query = { ...baseQuery, userId };
 
+    // Wrap each distinct call in a try-catch to prevent one failure from breaking all
+    const getPlatforms = async () => {
+      try {
+        return await ScheduledPost.distinct('platform', { userId });
+      } catch (error) {
+        logger.warn('Error getting platforms for facets', { error: error.message });
+        return [];
+      }
+    };
+
+    const getContentTypes = async () => {
+      try {
+        return await Content.distinct('type', query);
+      } catch (error) {
+        logger.warn('Error getting content types for facets', { error: error.message });
+        return [];
+      }
+    };
+
+    const getTags = async () => {
+      try {
+        return await Content.distinct('tags', query);
+      } catch (error) {
+        logger.warn('Error getting tags for facets', { error: error.message });
+        return [];
+      }
+    };
+
+    const getStatuses = async () => {
+      try {
+        return await Content.distinct('status', query);
+      } catch (error) {
+        logger.warn('Error getting statuses for facets', { error: error.message });
+        return [];
+      }
+    };
+
     const [platforms, contentTypes, tags, statuses] = await Promise.all([
-      // Get unique platforms from posts
-      ScheduledPost.distinct('platform', { userId }).catch(() => []),
-      // Get unique content types
-      Content.distinct('type', query).catch(() => []),
-      // Get all tags
-      Content.distinct('tags', query).catch(() => []),
-      // Get unique statuses
-      Content.distinct('status', query).catch(() => [])
+      getPlatforms(),
+      getContentTypes(),
+      getTags(),
+      getStatuses()
     ]);
 
     return {

@@ -1,10 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+
+// Global flag to prevent multiple simultaneous auth checks
+let authCheckInProgress = false
+let lastAuthCheck = 0
+const AUTH_CHECK_DEBOUNCE_MS = 2000 // 2 seconds
 
 interface User {
   id: string
@@ -29,12 +34,39 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    checkAuth()
+    // Debounce auth checks to prevent excessive API calls
+    const now = Date.now()
+    const timeSinceLastCheck = now - lastAuthCheck
+    
+    if (timeSinceLastCheck < AUTH_CHECK_DEBOUNCE_MS && lastAuthCheck > 0) {
+      // If a check was done recently, wait a bit
+      const timer = setTimeout(() => {
+        if (mountedRef.current) {
+          checkAuth()
+        }
+      }, AUTH_CHECK_DEBOUNCE_MS - timeSinceLastCheck)
+      return () => clearTimeout(timer)
+    } else {
+      checkAuth()
+    }
+
+    return () => {
+      mountedRef.current = false
+    }
   }, [])
 
   const checkAuth = async (retryCount = 0) => {
+    // Prevent multiple simultaneous auth checks
+    if (authCheckInProgress && retryCount === 0) {
+      console.log('🔍 [useAuth] Auth check already in progress, skipping...')
+      return
+    }
+
+    authCheckInProgress = true
+    lastAuthCheck = Date.now()
     try {
       // Don't redirect on auth pages
       if (typeof window !== 'undefined') {
@@ -101,7 +133,10 @@ export function useAuth() {
         setError('Connection issue. Please try again.')
       }
     } finally {
-      setLoading(false)
+      authCheckInProgress = false
+      if (mountedRef.current) {
+        setLoading(false)
+      }
     }
   }
 
