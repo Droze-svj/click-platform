@@ -81,15 +81,20 @@ router.get('/challenges', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/activities', auth, asyncHandler(async (req, res) => {
-  const { limit = 20 } = req.query;
-  const Activity = require('../models/Activity');
-  
-  const activities = await Activity.find({ userId: req.user._id })
-    .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
-    .lean();
+  try {
+    const { limit = 20 } = req.query;
+    const Activity = require('../models/Activity');
+    
+    const activities = await Activity.find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .lean();
 
-  sendSuccess(res, 'Activities fetched', 200, { activities });
+    sendSuccess(res, 'Activities fetched', 200, { activities: activities || [] });
+  } catch (error) {
+    logger.error('Error fetching activities', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Activities fetched', 200, { activities: [] });
+  }
 }));
 
 module.exports = router;

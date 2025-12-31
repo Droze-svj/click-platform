@@ -323,23 +323,23 @@ async function getSearchFacets(userId, baseQuery = {}) {
 
     const [platforms, contentTypes, tags, statuses] = await Promise.all([
       // Get unique platforms from posts
-      ScheduledPost.distinct('platform', { userId }),
+      ScheduledPost.distinct('platform', { userId }).catch(() => []),
       // Get unique content types
-      Content.distinct('type', query),
+      Content.distinct('type', query).catch(() => []),
       // Get all tags
-      Content.distinct('tags', query),
+      Content.distinct('tags', query).catch(() => []),
       // Get unique statuses
-      Content.distinct('status', query)
+      Content.distinct('status', query).catch(() => [])
     ]);
 
     return {
-      platforms: platforms.filter(Boolean),
-      contentTypes: contentTypes.filter(Boolean),
-      tags: tags.filter(Boolean).slice(0, 50), // Limit tags
-      statuses: statuses.filter(Boolean)
+      platforms: (platforms || []).filter(Boolean),
+      contentTypes: (contentTypes || []).filter(Boolean),
+      tags: (tags || []).filter(Boolean).slice(0, 50), // Limit tags
+      statuses: (statuses || []).filter(Boolean)
     };
   } catch (error) {
-    logger.error('Error getting search facets', { error: error.message, userId });
+    logger.error('Error getting search facets', { error: error.message, userId, stack: error.stack });
     return {
       platforms: [],
       contentTypes: [],
@@ -544,13 +544,17 @@ async function saveSearch(userId, searchData) {
 async function getSavedSearches(userId) {
   try {
     const SavedSearch = require('../models/SavedSearch');
+    if (!SavedSearch) {
+      logger.warn('SavedSearch model not found');
+      return [];
+    }
     const searches = await SavedSearch.find({ userId })
       .sort({ createdAt: -1 })
       .lean();
 
-    return searches;
+    return searches || [];
   } catch (error) {
-    logger.error('Error getting saved searches', { error: error.message, userId });
+    logger.error('Error getting saved searches', { error: error.message, userId, stack: error.stack });
     return [];
   }
 }
