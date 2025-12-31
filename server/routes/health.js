@@ -210,12 +210,24 @@ router.get('/debug-redis', (req, res) => {
       connectionError: connectionError || null,
     };
 
-    res.json(debug);
+    // Always return success with debug info, even if getRedisConnection failed
+    res.json({
+      success: true,
+      ...debug,
+    });
   } catch (error) {
+    // If there's an error, still try to return basic REDIS_URL info
     logger.error('Redis debug error', { error: error.message, stack: error.stack });
-    res.status(500).json({
+    const rawRedisUrl = process.env.REDIS_URL;
+    res.status(200).json({
       success: false,
       error: error.message,
+      redisUrl: {
+        exists: !!rawRedisUrl,
+        length: rawRedisUrl?.length || 0,
+        firstChars: rawRedisUrl ? rawRedisUrl.substring(0, 30) : null,
+        containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
+      },
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
