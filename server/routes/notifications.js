@@ -26,22 +26,33 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       query.read = false;
     }
 
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .lean();
+    let notifications = [];
+    let unreadCount = 0;
 
-    const unreadCount = await Notification.countDocuments({
-      userId: req.user._id,
-      read: false
-    });
+    try {
+      notifications = await Notification.find(query)
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .lean();
+    } catch (dbError) {
+      logger.warn('Error querying notifications', { error: dbError.message, userId: req.user._id });
+    }
+
+    try {
+      unreadCount = await Notification.countDocuments({
+        userId: req.user._id,
+        read: false
+      });
+    } catch (countError) {
+      logger.warn('Error counting unread notifications', { error: countError.message, userId: req.user._id });
+    }
 
     sendSuccess(res, 'Notifications fetched', 200, {
       notifications: notifications || [],
       unreadCount: unreadCount || 0
     });
   } catch (error) {
-    logger.error('Error fetching notifications', { error: error.message, userId: req.user._id });
+    logger.error('Error fetching notifications', { error: error.message, userId: req.user._id, stack: error.stack });
     sendSuccess(res, 'Notifications fetched', 200, {
       notifications: [],
       unreadCount: 0

@@ -350,8 +350,13 @@ router.post('/alerts', auth, asyncHandler(async (req, res) => {
  * Get user's search alerts
  */
 router.get('/alerts', auth, asyncHandler(async (req, res) => {
-  const alerts = await getUserAlerts(req.user._id);
-  sendSuccess(res, 'Alerts retrieved', 200, { alerts });
+  try {
+    const alerts = await getUserAlerts(req.user._id);
+    sendSuccess(res, 'Alerts retrieved', 200, { alerts: alerts || [] });
+  } catch (error) {
+    logger.error('Error fetching search alerts', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Alerts retrieved', 200, { alerts: [] });
+  }
 }));
 
 /**
