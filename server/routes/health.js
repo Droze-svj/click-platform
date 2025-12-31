@@ -156,44 +156,52 @@ router.post('/test-sentry', (req, res) => {
  *     tags: [Health]
  */
 router.get('/debug-redis', (req, res) => {
-  // This endpoint works completely independently - just shows REDIS_URL from process.env
-  // No need to call getRedisConnection at all
-  const rawRedisUrl = process.env.REDIS_URL;
-  const redisUrl = rawRedisUrl?.trim();
-  
-  // Mask sensitive parts of REDIS_URL for logging
-  const maskUrl = (url) => {
-    if (!url) return null;
-    if (typeof url === 'string') {
-      // Mask password in redis://default:password@host:port
-      return url.replace(/:([^:@]+)@/, ':****@');
-    }
-    return url;
-  };
+  // SIMPLE endpoint - just reads process.env.REDIS_URL directly
+  // NO function calls, NO requires, NO dependencies
+  try {
+    const rawRedisUrl = process.env.REDIS_URL || '';
+    const redisUrl = rawRedisUrl.trim();
     
-  // Build debug response - always succeeds, no external dependencies
-  const debug = {
-    success: true,
-    environment: process.env.NODE_ENV,
-    redisUrl: {
-      exists: !!rawRedisUrl,
-      length: rawRedisUrl?.length || 0,
-      firstChars: rawRedisUrl ? rawRedisUrl.substring(0, 30) : null,
-      lastChars: rawRedisUrl && rawRedisUrl.length > 30 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : null,
-      masked: maskUrl(rawRedisUrl),
-      hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'") || rawRedisUrl.endsWith('"') || rawRedisUrl.endsWith("'")) : false,
-      hasSpaces: rawRedisUrl ? rawRedisUrl.trim() !== rawRedisUrl : false,
-      containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
-      startsWithRedis: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) : false,
-      isValid: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) && !redisUrl.includes('localhost') && !redisUrl.includes('127.0.0.1') : false,
-    },
-    redisHost: process.env.REDIS_HOST || null,
-    redisPort: process.env.REDIS_PORT || null,
-    redisPassword: process.env.REDIS_PASSWORD ? '***' : null,
-    note: 'This endpoint shows REDIS_URL directly from process.env. Workers may use getRedisConnection() which has additional validation.',
-  };
-
-  res.json(debug);
+    // Simple inline masking
+    let masked = null;
+    if (rawRedisUrl) {
+      try {
+        masked = rawRedisUrl.replace(/:([^:@]+)@/, ':****@');
+      } catch (e) {
+        masked = 'error-masking';
+      }
+    }
+    
+    res.json({
+      success: true,
+      environment: process.env.NODE_ENV || 'unknown',
+      redisUrl: {
+        exists: !!rawRedisUrl && rawRedisUrl.length > 0,
+        length: rawRedisUrl.length,
+        firstChars: rawRedisUrl.length > 0 ? rawRedisUrl.substring(0, Math.min(30, rawRedisUrl.length)) : null,
+        lastChars: rawRedisUrl.length > 30 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : null,
+        masked: masked,
+        hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'") || rawRedisUrl.endsWith('"') || rawRedisUrl.endsWith("'")) : false,
+        hasSpaces: rawRedisUrl ? rawRedisUrl.trim() !== rawRedisUrl : false,
+        containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
+        startsWithRedis: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) : false,
+        isValid: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) && !redisUrl.includes('localhost') && !redisUrl.includes('127.0.0.1') : false,
+      },
+      redisHost: process.env.REDIS_HOST || null,
+      redisPort: process.env.REDIS_PORT || null,
+      redisPassword: process.env.REDIS_PASSWORD ? '***' : null,
+    });
+  } catch (error) {
+    // Even on error, return basic info
+    res.json({
+      success: false,
+      error: error.message,
+      redisUrl: {
+        exists: !!process.env.REDIS_URL,
+        length: process.env.REDIS_URL ? process.env.REDIS_URL.length : 0,
+      },
+    });
+  }
 });
 
 module.exports = router;
