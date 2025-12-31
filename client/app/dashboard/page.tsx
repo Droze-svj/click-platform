@@ -77,8 +77,20 @@ export default function Dashboard() {
       })
 
       console.log('✅ User loaded successfully:', response.data)
-      const userData = extractApiData<{ user: User }>(response)
-      setUser(userData?.user || null)
+      
+      // Handle both response formats: { user: ... } and { data: { user: ... } }
+      let userData: User | null = null
+      if (response.data?.user) {
+        userData = response.data.user
+      } else if (response.data?.data?.user) {
+        userData = response.data.data.user
+      } else {
+        const extracted = extractApiData<{ user: User }>(response)
+        userData = extracted?.user || null
+      }
+      
+      console.log('✅ Extracted user data:', userData)
+      setUser(userData)
     } catch (error: any) {
       console.error('❌ Failed to load user:', error)
       console.error('Error details:', {
