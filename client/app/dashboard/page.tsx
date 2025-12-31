@@ -63,17 +63,30 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
+        console.log('⚠️ No token found, redirecting to login')
         router.push('/login')
         return
       }
 
+      console.log('🔍 Loading user with token:', token.substring(0, 20) + '...')
+      console.log('🔍 API URL:', API_URL)
+      
       const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 30000
       })
 
+      console.log('✅ User loaded successfully:', response.data)
       const userData = extractApiData<{ user: User }>(response)
       setUser(userData?.user || null)
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Failed to load user:', error)
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        data: error.response?.data
+      })
       localStorage.removeItem('token')
       router.push('/login')
     } finally {
