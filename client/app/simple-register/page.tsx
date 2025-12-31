@@ -75,8 +75,10 @@ export default function SimpleRegister() {
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Name:</label>
+          <label htmlFor="simple-name" style={{ display: 'block', marginBottom: '5px' }}>Name:</label>
           <input
+            id="simple-name"
+            name="name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -86,8 +88,10 @@ export default function SimpleRegister() {
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
+          <label htmlFor="simple-email" style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
           <input
+            id="simple-email"
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -97,8 +101,10 @@ export default function SimpleRegister() {
         </div>
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
+          <label htmlFor="simple-password" style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
           <input
+            id="simple-password"
+            name="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

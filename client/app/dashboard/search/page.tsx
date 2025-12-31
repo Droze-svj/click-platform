@@ -69,6 +69,8 @@ export default function SearchPage() {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input
+              id="search-query"
+              name="searchQuery"
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

@@ -203,17 +203,21 @@ export default function NichePage() {
             <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Brand Settings</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="primary-color" className="block text-sm font-medium text-gray-700 mb-2">
                   Primary Color
                 </label>
                 <div className="flex gap-2">
                   <input
+                    id="primary-color-picker"
+                    name="primaryColorPicker"
                     type="color"
                     value={brandSettings.primaryColor}
                     onChange={(e) => setBrandSettings({ ...brandSettings, primaryColor: e.target.value })}
                     className="w-16 h-10 rounded border"
                   />
                   <input
+                    id="primary-color"
+                    name="primaryColor"
                     type="text"
                     value={brandSettings.primaryColor}
                     onChange={(e) => setBrandSettings({ ...brandSettings, primaryColor: e.target.value })}
@@ -223,17 +227,21 @@ export default function NichePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="secondary-color" className="block text-sm font-medium text-gray-700 mb-2">
                   Secondary Color
                 </label>
                 <div className="flex gap-2">
                   <input
+                    id="secondary-color-picker"
+                    name="secondaryColorPicker"
                     type="color"
                     value={brandSettings.secondaryColor}
                     onChange={(e) => setBrandSettings({ ...brandSettings, secondaryColor: e.target.value })}
                     className="w-16 h-10 rounded border"
                   />
                   <input
+                    id="secondary-color"
+                    name="secondaryColor"
                     type="text"
                     value={brandSettings.secondaryColor}
                     onChange={(e) => setBrandSettings({ ...brandSettings, secondaryColor: e.target.value })}
@@ -243,10 +251,12 @@ export default function NichePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="brand-font" className="block text-sm font-medium text-gray-700 mb-2">
                   Font
                 </label>
                 <select
+                  id="brand-font"
+                  name="brandFont"
                   value={brandSettings.font}
                   onChange={(e) => setBrandSettings({ ...brandSettings, font: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -260,10 +270,12 @@ export default function NichePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="brand-logo" className="block text-sm font-medium text-gray-700 mb-2">
                   Logo URL (optional)
                 </label>
                 <input
+                  id="brand-logo"
+                  name="brandLogo"
                   type="url"
                   value={brandSettings.logo}
                   onChange={(e) => setBrandSettings({ ...brandSettings, logo: e.target.value })}
