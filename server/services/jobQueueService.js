@@ -451,14 +451,38 @@ function createWorker(queueName, processor, options = {}) {
     // ABSOLUTE FINAL CHECK: Log exactly what we're passing to BullMQ
     console.log(`[${queueName}] About to create Worker with connection type: ${typeof connection}`);
     console.log(`[${queueName}] Connection preview: ${typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50)}`);
+    logger.info(`[${queueName}] About to create Worker`, {
+      connectionType: typeof connection,
+      connectionPreview: typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50),
+      connectionLength: typeof connection === 'string' ? connection.length : 0
+    });
     
-    // Ensure connection is never undefined - BullMQ defaults to localhost if undefined
+    // CRITICAL: Throw error if connection is invalid - this will prevent Worker creation entirely
     if (connection === undefined || connection === null) {
-      console.error(`[${queueName}] FATAL: Connection is ${connection} - BullMQ will default to localhost!`);
-      logger.error(`❌ FATAL: Connection is ${connection} when creating Worker for ${queueName}`);
-      logger.error(`❌ BullMQ will default to localhost. Aborting worker creation.`);
-      return null;
+      const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is ${connection}. BullMQ would default to localhost.`);
+      console.error(`[${queueName}] ${error.message}`);
+      logger.error(error.message, { queueName, connection });
+      throw error; // Throw instead of return - this will prevent Worker creation
     }
+    
+    // In production, connection MUST be a string
+    if (isProduction && typeof connection !== 'string') {
+      const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is not a string in production. Type: ${typeof connection}`);
+      console.error(`[${queueName}] ${error.message}`);
+      logger.error(error.message, { queueName, connectionType: typeof connection, connection });
+      throw error;
+    }
+    
+    // Final check: connection must not contain localhost
+    const connStr = typeof connection === 'string' ? connection : JSON.stringify(connection);
+    if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
+      const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection contains localhost: ${connStr.substring(0, 100)}`);
+      console.error(`[${queueName}] ${error.message}`);
+      logger.error(error.message, { queueName, connection: connStr.substring(0, 100) });
+      throw error;
+    }
+    
+    logger.info(`✅ All checks passed. Creating Worker ${queueName} with valid connection.`);
     
     const worker = new Worker(
     queueName,
