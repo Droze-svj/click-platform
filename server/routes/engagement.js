@@ -71,4 +71,25 @@ router.get('/challenges', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Challenges fetched', 200, challenges);
 }));
 
+/**
+ * @swagger
+ * /api/engagement/activities:
+ *   get:
+ *     summary: Get user activity feed
+ *     tags: [Engagement]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/activities', auth, asyncHandler(async (req, res) => {
+  const { limit = 20 } = req.query;
+  const Activity = require('../models/Activity');
+  
+  const activities = await Activity.find({ userId: req.user._id })
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit))
+    .lean();
+
+  sendSuccess(res, 'Activities fetched', 200, { activities });
+}));
+
 module.exports = router;
