@@ -44,8 +44,15 @@ export default function Register() {
         setError('Registration successful but no token received. Please try logging in.')
         return
       }
+      
+      // Store token
       localStorage.setItem('token', token)
-      router.push('/dashboard')
+      console.log('✅ Token stored in localStorage')
+      
+      // Wait a moment to ensure token is stored, then redirect
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 100)
     } catch (err: any) {
       console.error('Registration error:', err)
       console.error('Error details:', {
