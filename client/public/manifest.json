@@ -10,9 +10,9 @@
   "icons": [
     {
       "src": "/favicon.png",
-      "sizes": "192x192",
+      "sizes": "32x32",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/watermark-256.png",
@@ -25,6 +25,12 @@
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/watermark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "categories": ["productivity", "social", "business"],
@@ -35,14 +41,14 @@
       "short_name": "Create",
       "description": "Create new content",
       "url": "/dashboard/content",
-      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/watermark-256.png", "sizes": "256x256" }]
     },
     {
       "name": "Analytics",
       "short_name": "Analytics",
       "description": "View analytics",
       "url": "/dashboard/analytics",
-      "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/watermark-256.png", "sizes": "256x256" }]
     }
   ],
   "share_target": {
