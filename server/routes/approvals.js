@@ -143,11 +143,19 @@ router.post('/:approvalId/cancel', auth, asyncHandler(async (req, res) => {
  */
 router.get('/pending-count', auth, asyncHandler(async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      return sendError(res, 'User not authenticated', 401);
+    }
+
     const { getPendingApprovalsCount } = require('../services/approvalService');
-    const count = await getPendingApprovalsCount(req.user._id);
+    const count = await getPendingApprovalsCount(req.user._id.toString());
     sendSuccess(res, 'Pending count retrieved', 200, { count: count || 0 });
   } catch (error) {
-    logger.error('Error fetching pending approvals count', { error: error.message, userId: req.user._id });
+    logger.error('Error fetching pending approvals count', { 
+      error: error.message, 
+      userId: req.user?._id,
+      stack: error.stack 
+    });
     sendSuccess(res, 'Pending count retrieved', 200, { count: 0 });
   }
 }));

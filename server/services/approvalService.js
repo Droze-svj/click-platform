@@ -203,18 +203,36 @@ async function cancelRequest(requestId, userId) {
  */
 async function getPendingApprovalsCount(userId) {
   try {
+    if (!userId) {
+      logger.warn('getPendingApprovalsCount called without userId');
+      return 0;
+    }
+
+    // Ensure userId is a valid ObjectId or string
+    const mongoose = require('mongoose');
+    let userIdObj;
+    try {
+      userIdObj = mongoose.Types.ObjectId.isValid(userId) ? userId : new mongoose.Types.ObjectId(userId);
+    } catch (idError) {
+      logger.error('Invalid userId format for getPendingApprovalsCount', { userId, error: idError.message });
+      return 0;
+    }
+
     const count = await ApprovalRequest.countDocuments({
-      requestedFrom: userId,
+      requestedFrom: userIdObj,
       status: 'pending',
       $or: [
         { expiresAt: null },
         { expiresAt: { $gt: new Date() } }
       ]
+    }).catch((dbError) => {
+      logger.error('Database error in getPendingApprovalsCount', { error: dbError.message, userId });
+      return 0;
     });
 
-    return count;
+    return count || 0;
   } catch (error) {
-    logger.error('Error getting pending approvals count', { error: error.message, userId });
+    logger.error('Error getting pending approvals count', { error: error.message, userId, stack: error.stack });
     return 0;
   }
 }
