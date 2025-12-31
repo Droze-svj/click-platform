@@ -11,7 +11,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import TemplateMarketplace from '../../../components/TemplateMarketplace'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface Template {
   _id: string

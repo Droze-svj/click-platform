@@ -12,7 +12,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import ChangePasswordForm from '../../../components/ChangePasswordForm'
 import Link from 'next/link'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface UserSettings {
   notifications: {

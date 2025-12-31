@@ -8,7 +8,7 @@ import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import DraggableCalendar from '../../../components/DraggableCalendar'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 export default function EnhancedCalendarPage() {
   const router = useRouter()
