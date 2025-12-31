@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Registration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quick Registration Test</h1>
+        
+        <div id="message"></div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required minlength="6">
+            </div>
+            
+            <button type="submit" id="submitBtn">Register</button>
+        </form>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://click-platform.onrender.com/api';
+        const logEl = document.getElementById('log');
+        const messageEl = document.getElementById('message');
+        const form = document.getElementById('registerForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '🔍';
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${time} ${icon} ${message}`;
+            logEntry.style.color = type === 'error' ? '#721c24' : type === 'success' ? '#155724' : '#0c5460';
+            logEl.appendChild(logEntry);
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(message);
+        }
+
+        function showMessage(text, type) {
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+            logEl.innerHTML = '';
+            showMessage('', '');
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                log('Starting registration...');
+                log(`API URL: ${API_URL}`);
+                log(`Email: ${email}`);
+
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password }),
+                });
+
+                log(`Response status: ${response.status}`);
+
+                const data = await response.json();
+                log(`Response received: ${JSON.stringify(data).substring(0, 100)}...`);
+
+                if (!response.ok) {
+                    throw new Error(data.error || data.message || 'Registration failed');
+                }
+
+                const token = data.data?.token || data.token;
+                if (!token) {
+                    throw new Error('No token received');
+                }
+
+                log(`Token received: ${token.substring(0, 30)}...`, 'success');
+                localStorage.setItem('token', token);
+                log('Token stored in localStorage', 'success');
+
+                // Test /auth/me
+                log('Testing /auth/me endpoint...');
+                const meResponse = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const meData = await meResponse.json();
+                log(`/auth/me response: ${JSON.stringify(meData).substring(0, 100)}...`);
+
+                if (meData.user) {
+                    log(`User loaded: ${meData.user.email}`, 'success');
+                    showMessage('✅ Success! Redirecting to dashboard...', 'success');
+                    log('Redirecting to dashboard...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error('No user in /auth/me response');
+                }
+
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                showMessage(`❌ Error: ${error.message}`, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
+            }
+        });
+
+        log('Page loaded. Ready to test registration.');
+        log(`API URL: ${API_URL}`);
+    </script>
+</body>
+</html>
+

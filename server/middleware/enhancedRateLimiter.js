@@ -9,29 +9,38 @@ let redisClient;
 
 try {
   if (process.env.REDIS_URL || process.env.REDIS_HOST) {
-    const redis = require('redis');
-    RedisStore = require('rate-limit-redis').default;
+    // Try to load rate-limit-redis (optional dependency)
+    try {
+      RedisStore = require('rate-limit-redis').default;
+    } catch (storeError) {
+      logger.warn('rate-limit-redis not installed, using memory store for rate limiting');
+      RedisStore = null;
+    }
     
-    redisClient = redis.createClient({
-      url: process.env.REDIS_URL,
-      host: process.env.REDIS_HOST,
-      port: process.env.REDIS_PORT || 6379,
-      password: process.env.REDIS_PASSWORD,
-    });
+    if (RedisStore) {
+      const redis = require('redis');
+      
+      redisClient = redis.createClient({
+        url: process.env.REDIS_URL,
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD,
+      });
 
-    redisClient.on('error', (err) => {
-      logger.warn('Redis connection error, falling back to memory store', { error: err.message });
-      redisClient = null;
-    });
+      redisClient.on('error', (err) => {
+        logger.warn('Redis connection error, falling back to memory store', { error: err.message });
+        redisClient = null;
+      });
 
-    redisClient.on('connect', () => {
-      logger.info('✅ Redis connected for rate limiting');
-    });
+      redisClient.on('connect', () => {
+        logger.info('✅ Redis connected for rate limiting');
+      });
 
-    redisClient.connect().catch(() => {
-      logger.warn('Redis connection failed, using memory store');
-      redisClient = null;
-    });
+      redisClient.connect().catch(() => {
+        logger.warn('Redis connection failed, using memory store');
+        redisClient = null;
+      });
+    }
   }
 } catch (error) {
   logger.warn('Redis not available, using memory store for rate limiting', { error: error.message });
@@ -89,9 +98,13 @@ function createRateLimiter(options) {
 // General API rate limiter (per user/IP)
 const apiLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: 300, // 300 requests per window (increased from 100)
   message: {
     error: 'Too many requests from this IP, please try again later',
+  },
+  // Skip rate limiting for health checks
+  skip: (req) => {
+    return req.path === '/health' || req.path === '/health/debug-redis' || req.path === '/api/health' || req.path === '/api/health/debug-redis';
   },
 });
 
