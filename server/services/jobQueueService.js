@@ -238,11 +238,19 @@ async function addJob(queueName, jobData, options = {}) {
  * Create worker for a queue
  */
 function createWorker(queueName, processor, options = {}) {
+  // Log immediately when function is called
+  console.log(`[createWorker] Called for ${queueName} at ${new Date().toISOString()}`);
+  console.log(`[createWorker] NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`[createWorker] REDIS_URL exists: ${!!process.env.REDIS_URL}`);
+  console.log(`[createWorker] REDIS_URL length: ${process.env.REDIS_URL?.length || 0}`);
+  console.log(`[createWorker] REDIS_URL first 30 chars: ${process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 30) : 'NONE'}`);
+  
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
   
   // CRITICAL: In production, validate REDIS_URL BEFORE calling getRedisConnection()
   // This prevents any possibility of a cached localhost connection being returned
   if (isProduction) {
+    console.log(`[createWorker] Production mode - validating REDIS_URL for ${queueName}`);
     const rawRedisUrl = process.env.REDIS_URL;
     const redisUrl = rawRedisUrl?.trim();
     
