@@ -333,8 +333,10 @@ export default function ApprovalsPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Entity Type</label>
+                  <label htmlFor="approval-entity-type" className="block text-sm font-medium mb-2">Entity Type</label>
                   <select
+                    id="approval-entity-type"
+                    name="entityType"
                     value={newRequest.entityType}
                     onChange={(e) => setNewRequest({ ...newRequest, entityType: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg"
@@ -346,8 +348,10 @@ export default function ApprovalsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Entity ID</label>
+                  <label htmlFor="approval-entity-id" className="block text-sm font-medium mb-2">Entity ID</label>
                   <input
+                    id="approval-entity-id"
+                    name="entityId"
                     type="text"
                     value={newRequest.entityId}
                     onChange={(e) => setNewRequest({ ...newRequest, entityId: e.target.value })}
@@ -357,8 +361,10 @@ export default function ApprovalsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Request From (User ID)</label>
+                  <label htmlFor="approval-requested-from" className="block text-sm font-medium mb-2">Request From (User ID)</label>
                   <input
+                    id="approval-requested-from"
+                    name="requestedFrom"
                     type="text"
                     value={newRequest.requestedFrom}
                     onChange={(e) => setNewRequest({ ...newRequest, requestedFrom: e.target.value })}
@@ -368,8 +374,10 @@ export default function ApprovalsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Message</label>
+                  <label htmlFor="approval-message" className="block text-sm font-medium mb-2">Message</label>
                   <textarea
+                    id="approval-message"
+                    name="message"
                     value={newRequest.message}
                     onChange={(e) => setNewRequest({ ...newRequest, message: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg"
@@ -379,8 +387,10 @@ export default function ApprovalsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Priority</label>
+                  <label htmlFor="approval-priority" className="block text-sm font-medium mb-2">Priority</label>
                   <select
+                    id="approval-priority"
+                    name="priority"
                     value={newRequest.priority}
                     onChange={(e) => setNewRequest({ ...newRequest, priority: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg"

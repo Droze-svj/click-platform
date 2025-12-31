@@ -278,8 +278,10 @@ export default function WorkflowsPage() {
               <h2 className="text-xl font-semibold mb-4">Create Workflow</h2>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Name *</label>
+                <label htmlFor="workflow-name" className="block text-sm font-medium mb-2">Name *</label>
                 <input
+                  id="workflow-name"
+                  name="workflowName"
                   type="text"
                   value={newWorkflow.name}
                   onChange={(e) => setNewWorkflow({ ...newWorkflow, name: e.target.value })}
@@ -289,8 +291,10 @@ export default function WorkflowsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label htmlFor="workflow-description" className="block text-sm font-medium mb-2">Description</label>
                 <textarea
+                  id="workflow-description"
+                  name="workflowDescription"
                   value={newWorkflow.description}
                   onChange={(e) => setNewWorkflow({ ...newWorkflow, description: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg"
@@ -300,7 +304,7 @@ export default function WorkflowsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Steps *</label>
+                <label htmlFor="workflow-steps" className="block text-sm font-medium mb-2">Steps *</label>
                 <div className="space-y-2">
                   {newWorkflow.steps.map((step, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">

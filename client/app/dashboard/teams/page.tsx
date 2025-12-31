@@ -193,8 +193,10 @@ export default function TeamsPage() {
               <h2 className="text-xl font-semibold mb-4">Create Team</h2>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Team Name *</label>
+                <label htmlFor="team-name" className="block text-sm font-medium mb-2">Team Name *</label>
                 <input
+                  id="team-name"
+                  name="teamName"
                   type="text"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
@@ -205,8 +207,10 @@ export default function TeamsPage() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label htmlFor="team-description" className="block text-sm font-medium mb-2">Description</label>
                 <textarea
+                  id="team-description"
+                  name="teamDescription"
                   value={newTeamDescription}
                   onChange={(e) => setNewTeamDescription(e.target.value)}
                   className="w-full px-4 py-2 border rounded-lg"

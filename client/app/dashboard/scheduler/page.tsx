@@ -194,10 +194,12 @@ export default function SchedulerPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="scheduler-content-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Content ID
                   </label>
                   <input
+                    id="scheduler-content-id"
+                    name="contentId"
                     type="text"
                     value={selectedContent || ''}
                     onChange={(e) => setSelectedContent(e.target.value)}
@@ -207,10 +209,12 @@ export default function SchedulerPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="scheduler-platform" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Platform
                   </label>
                   <select
+                    id="scheduler-platform"
+                    name="platform"
                     value={selectedPlatform}
                     onChange={(e) => setSelectedPlatform(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -237,10 +241,12 @@ export default function SchedulerPage() {
 
                 {!useOptimalTime && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label htmlFor="scheduler-time" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Scheduled Time
                     </label>
                     <input
+                      id="scheduler-time"
+                      name="scheduledTime"
                       type="datetime-local"
                       value={scheduledTime}
                       onChange={(e) => setScheduledTime(e.target.value)}
