@@ -949,8 +949,9 @@ try {
     healthCheckServer.close(() => {
       console.log('✅ Health check server closed, starting main server...');
       
-      // Start main server after health check server is closed
-      server = app.listen(PORT, HOST, () => {
+      try {
+        // Start main server after health check server is closed
+        server = app.listen(PORT, HOST, () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
@@ -1062,6 +1063,14 @@ try {
       
       logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
       console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
+      } catch (listenError) {
+        console.error('❌ Error starting main server:', listenError.message);
+        console.error('Stack:', listenError.stack);
+        logger.error('❌ Error starting main server:', { error: listenError.message, stack: listenError.stack });
+        // Keep health check server running so port stays bound
+        logger.warn('⚠️ Keeping health check server running since main server failed to start');
+        return;
+      }
     }); // Close healthCheckServer.close callback
   } else {
     // No health check server, start main server directly
