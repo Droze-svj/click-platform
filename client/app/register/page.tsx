@@ -87,6 +87,12 @@ export default function Register() {
         errorMessage = err.response.data.error
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message
+      } else if (err.response?.data?.details) {
+        // Handle express-validator errors array
+        const validationErrors = Array.isArray(err.response.data.details)
+          ? err.response.data.details.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
+          : JSON.stringify(err.response.data.details)
+        errorMessage = `Validation error: ${validationErrors}`
       } else if (err.response?.data?.errors) {
         // Handle validation errors array
         const validationErrors = Array.isArray(err.response.data.errors) 
@@ -185,6 +191,9 @@ export default function Register() {
               minLength={6}
               autoComplete="new-password"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Must be at least 6 characters with uppercase, lowercase, and a number
+            </p>
           </div>
 
           <button
