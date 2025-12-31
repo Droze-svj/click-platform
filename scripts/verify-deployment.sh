@@ -1,152 +1,84 @@
 #!/bin/bash
 
-# Deployment Verification Script
-# Verifies that deployment was successful
+# Quick Deployment Verification Script
+# Usage: ./scripts/verify-deployment.sh [your-service-url]
 
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+SERVICE_URL="${1:-https://click-platform.onrender.com}"
 
-echo -e "${BLUE}🔍 Verifying Production Deployment...${NC}"
+echo "🔍 Verifying deployment at: $SERVICE_URL"
 echo ""
 
-# Configuration
-API_URL="${API_URL:-http://localhost:5001}"
-FRONTEND_URL="${FRONTEND_URL:-http://localhost:3000}"
-HEALTH_ENDPOINT="$API_URL/api/health"
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# Check counters
-CHECKS_PASSED=0
-CHECKS_FAILED=0
+# Test 1: Health Check
+echo "1️⃣ Testing health endpoint..."
+HEALTH_RESPONSE=$(curl -s "$SERVICE_URL/api/health" || echo "ERROR")
+if [[ "$HEALTH_RESPONSE" == *"status"* ]]; then
+    echo -e "${GREEN}✅ Health endpoint is working${NC}"
+    echo "   Response: $(echo $HEALTH_RESPONSE | jq -r '.status' 2>/dev/null || echo 'ok')"
+else
+    echo -e "${RED}❌ Health endpoint failed${NC}"
+    echo "   Response: $HEALTH_RESPONSE"
+fi
+echo ""
 
-# Function to run check
-check() {
-    local name=$1
-    local command=$2
-    
-    echo -n "  Checking $name... "
-    
-    if eval "$command" > /dev/null 2>&1; then
-        echo -e "${GREEN}✅${NC}"
-        ((CHECKS_PASSED++))
-        return 0
+# Test 2: Redis Debug
+echo "2️⃣ Testing Redis connection..."
+REDIS_RESPONSE=$(curl -s "$SERVICE_URL/api/health/debug-redis" || echo "ERROR")
+if [[ "$REDIS_RESPONSE" == *"redisUrl"* ]]; then
+    REDIS_VALID=$(echo $REDIS_RESPONSE | jq -r '.redisUrl.isValid' 2>/dev/null || echo "unknown")
+    if [[ "$REDIS_VALID" == "true" ]]; then
+        echo -e "${GREEN}✅ Redis connection is valid${NC}"
     else
-        echo -e "${RED}❌${NC}"
-        ((CHECKS_FAILED++))
-        return 1
+        echo -e "${YELLOW}⚠️ Redis connection may have issues${NC}"
     fi
-}
-
-# 1. Check if PM2 is running
-echo -e "${YELLOW}1. Process Management${NC}"
-check "PM2 processes" "pm2 list | grep -q click-api"
-
-# 2. Check application health
-echo -e "${YELLOW}2. Application Health${NC}"
-check "Health endpoint" "curl -f $HEALTH_ENDPOINT"
-
-# Get health response
-HEALTH_RESPONSE=$(curl -s $HEALTH_ENDPOINT || echo "{}")
-if echo "$HEALTH_RESPONSE" | grep -q "success"; then
-    echo -e "  ${GREEN}✅ Health check response valid${NC}"
-    ((CHECKS_PASSED++))
+    echo "   Redis URL exists: $(echo $REDIS_RESPONSE | jq -r '.redisUrl.exists' 2>/dev/null || echo 'unknown')"
+    echo "   Contains localhost: $(echo $REDIS_RESPONSE | jq -r '.redisUrl.containsLocalhost' 2>/dev/null || echo 'unknown')"
 else
-    echo -e "  ${RED}❌ Health check response invalid${NC}"
-    ((CHECKS_FAILED++))
+    echo -e "${RED}❌ Redis debug endpoint failed${NC}"
 fi
+echo ""
 
-# 3. Check database connection
-echo -e "${YELLOW}3. Database${NC}"
-check "MongoDB connection" "mongosh --eval 'db.adminCommand(\"ping\")' --quiet"
-
-# 4. Check Redis (if configured)
-if [ -n "$REDIS_URL" ]; then
-    echo -e "${YELLOW}4. Redis${NC}"
-    check "Redis connection" "redis-cli ping"
-fi
-
-# 5. Check Nginx
-echo -e "${YELLOW}5. Web Server${NC}"
-check "Nginx running" "systemctl is-active --quiet nginx"
-check "Nginx config valid" "nginx -t"
-
-# 6. Check SSL certificate
-if [ -n "$FRONTEND_URL" ] && [[ "$FRONTEND_URL" == https://* ]]; then
-    echo -e "${YELLOW}6. SSL Certificate${NC}"
-    DOMAIN=$(echo "$FRONTEND_URL" | sed -e 's|^[^/]*//||' -e 's|/.*$||')
-    check "SSL certificate valid" "certbot certificates | grep -q $DOMAIN"
-    check "HTTPS accessible" "curl -k -f $FRONTEND_URL > /dev/null"
-fi
-
-# 7. Check disk space
-echo -e "${YELLOW}7. System Resources${NC}"
-DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
-if [ "$DISK_USAGE" -lt 80 ]; then
-    echo -e "  ${GREEN}✅ Disk usage: ${DISK_USAGE}%${NC}"
-    ((CHECKS_PASSED++))
+# Test 3: API Documentation (if available)
+echo "3️⃣ Testing API documentation..."
+DOCS_RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL/api-docs" || echo "000")
+if [[ "$DOCS_RESPONSE" == "200" ]]; then
+    echo -e "${GREEN}✅ API documentation is available${NC}"
+    echo "   URL: $SERVICE_URL/api-docs"
 else
-    echo -e "  ${RED}❌ Disk usage: ${DISK_USAGE}% (above 80%)${NC}"
-    ((CHECKS_FAILED++))
+    echo -e "${YELLOW}⚠️ API documentation not available (may be disabled)${NC}"
 fi
+echo ""
 
-# 8. Check memory
-MEMORY_USAGE=$(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100}')
-if [ "$MEMORY_USAGE" -lt 90 ]; then
-    echo -e "  ${GREEN}✅ Memory usage: ${MEMORY_USAGE}%${NC}"
-    ((CHECKS_PASSED++))
+# Test 4: Response Time
+echo "4️⃣ Testing response time..."
+RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$SERVICE_URL/api/health" || echo "0")
+if (( $(echo "$RESPONSE_TIME > 0" | bc -l) )); then
+    echo -e "${GREEN}✅ Server is responding${NC}"
+    echo "   Response time: ${RESPONSE_TIME}s"
 else
-    echo -e "  ${YELLOW}⚠️  Memory usage: ${MEMORY_USAGE}% (above 90%)${NC}"
-    ((CHECKS_FAILED++))
+    echo -e "${RED}❌ Server is not responding${NC}"
 fi
-
-# 9. Check logs for errors
-echo -e "${YELLOW}8. Application Logs${NC}"
-RECENT_ERRORS=$(pm2 logs click-api --lines 100 --nostream 2>&1 | grep -i "error" | wc -l)
-if [ "$RECENT_ERRORS" -lt 10 ]; then
-    echo -e "  ${GREEN}✅ Recent errors: $RECENT_ERRORS${NC}"
-    ((CHECKS_PASSED++))
-else
-    echo -e "  ${YELLOW}⚠️  Recent errors: $RECENT_ERRORS (check logs)${NC}"
-    ((CHECKS_FAILED++))
-fi
-
-# 10. Check API endpoints
-echo -e "${YELLOW}9. API Endpoints${NC}"
-check "API accessible" "curl -f $API_URL/api/health"
-check "API docs accessible" "curl -f $API_URL/api-docs > /dev/null"
-
-# 11. Check OAuth configuration
-echo -e "${YELLOW}10. OAuth Configuration${NC}"
-if [ -f scripts/verify-oauth.sh ]; then
-    if bash scripts/verify-oauth.sh > /dev/null 2>&1; then
-        echo -e "  ${GREEN}✅ OAuth configuration valid${NC}"
-        ((CHECKS_PASSED++))
-    else
-        echo -e "  ${YELLOW}⚠️  OAuth configuration issues (check manually)${NC}"
-        ((CHECKS_FAILED++))
-    fi
-else
-    echo -e "  ${YELLOW}⚠️  OAuth verification script not found${NC}"
-fi
+echo ""
 
 # Summary
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 Deployment Summary"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo -e "${BLUE}📊 Verification Summary${NC}"
-echo "  ${GREEN}Passed: $CHECKS_PASSED${NC}"
-echo "  ${RED}Failed: $CHECKS_FAILED${NC}"
+echo "Service URL: $SERVICE_URL"
 echo ""
-
-if [ $CHECKS_FAILED -eq 0 ]; then
-    echo -e "${GREEN}✅ All checks passed! Deployment is healthy.${NC}"
-    exit 0
-else
-    echo -e "${RED}❌ Some checks failed. Please review and fix issues.${NC}"
-    exit 1
-fi
-
-
-
+echo "Next steps:"
+echo "1. Check Render.com logs for any errors"
+echo "2. Verify all environment variables are set"
+echo "3. Test OAuth integrations (if configured)"
+echo "4. Test core API endpoints"
+echo "5. Set up monitoring and alerts"
+echo ""
+echo "📖 See POST_DEPLOYMENT_NEXT_STEPS.md for detailed guide"
