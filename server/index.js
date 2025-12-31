@@ -482,10 +482,54 @@ app.use(sanitizeInput);
 const { csrfProtection } = require('./middleware/csrfProtection');
 app.use('/api', csrfProtection);
 
-// CORS middleware
+// CORS middleware - must be configured before routes
+const allowedOrigins = [];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+// Always allow localhost for development
+allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002');
+// Allow production frontend if different
+if (process.env.NODE_ENV === 'production') {
+  allowedOrigins.push('https://click-platform.onrender.com');
+  // Allow any subdomain of onrender.com for flexibility
+  allowedOrigins.push(/^https:\/\/.*\.onrender\.com$/);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or same-origin requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return allowed === origin;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    })) {
+      callback(null, true);
+    } else {
+      // Log for debugging
+      console.log('⚠️ CORS blocked origin:', origin);
+      console.log('✅ Allowed origins:', allowedOrigins);
+      // In development, allow all origins for easier debugging
+      if (process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
 }));
 
 // Performance tracking
