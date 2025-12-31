@@ -115,27 +115,54 @@ function initializeAllWorkers() {
       return;
     }
     
-    // In production, connection MUST be a string URL
-    if (isProduction && typeof redisConnection !== 'string') {
-      const errorMsg = '❌ FATAL: Redis connection is not a string in production. Cannot create workers.';
-      console.error(errorMsg);
-      console.error(`❌ Connection type: ${typeof redisConnection}, value: ${JSON.stringify(redisConnection).substring(0, 100)}`);
-      logger.error(errorMsg);
-      logger.error('❌ Connection type:', typeof redisConnection);
-      logger.error('❌ Workers will NOT be initialized. REDIS_URL must be a valid Redis URL string.');
-      return;
-    }
-    
-    // Final check: connection must not contain localhost
-    const connStr = typeof redisConnection === 'string' ? redisConnection : JSON.stringify(redisConnection);
-    if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
-      const errorMsg = '❌ FATAL: Redis connection contains localhost. Cannot create workers.';
-      console.error(errorMsg);
-      console.error(`❌ Connection: ${connStr.substring(0, 100)}`);
-      logger.error(errorMsg);
-      logger.error('❌ Connection contains localhost/127.0.0.1');
-      logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
-      return;
+    // In production, connection can be IORedis instance or string URL
+    if (isProduction) {
+      const isIORedis = redisConnection && typeof redisConnection === 'object' && redisConnection.constructor && redisConnection.constructor.name === 'Redis';
+      const isString = typeof redisConnection === 'string';
+      
+      if (!isIORedis && !isString) {
+        const errorMsg = '❌ FATAL: Redis connection is not IORedis instance or string in production. Cannot create workers.';
+        console.error(errorMsg);
+        console.error(`❌ Connection type: ${typeof redisConnection}, is IORedis: ${isIORedis}, value: ${JSON.stringify(redisConnection).substring(0, 100)}`);
+        logger.error(errorMsg);
+        logger.error('❌ Connection type:', typeof redisConnection);
+        logger.error('❌ Workers will NOT be initialized. REDIS_URL must be a valid Redis URL string.');
+        return;
+      }
+      
+      // If it's a string, check for localhost
+      if (isString && (redisConnection.includes('127.0.0.1') || redisConnection.includes('localhost'))) {
+        const errorMsg = '❌ FATAL: Redis connection string contains localhost. Cannot create workers.';
+        console.error(errorMsg);
+        console.error(`❌ Connection: ${redisConnection.substring(0, 100)}`);
+        logger.error(errorMsg);
+        logger.error('❌ Connection contains localhost/127.0.0.1');
+        logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
+        return;
+      }
+      
+      // If it's an IORedis instance, check its options
+      if (isIORedis) {
+        const options = redisConnection.options || {};
+        const host = options.host || options.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+          const errorMsg = '❌ FATAL: IORedis instance has localhost host. Cannot create workers.';
+          console.error(errorMsg);
+          console.error(`❌ Host: ${host}`);
+          logger.error(errorMsg);
+          logger.error('❌ IORedis instance contains localhost/127.0.0.1');
+          logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
+          return;
+        }
+        console.log('✅ IORedis instance validated - host:', host);
+        logger.info('✅ IORedis instance validated', { host });
+      }
+    } else {
+      // Development: Final check for localhost in connection string
+      const connStr = typeof redisConnection === 'string' ? redisConnection : JSON.stringify(redisConnection);
+      if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
+        logger.warn('⚠️ Redis connection contains localhost (development only)');
+      }
     }
     
     console.log('✅ Redis connection validated. Proceeding with worker creation...');
