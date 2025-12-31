@@ -25,9 +25,14 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/suggestions', auth, asyncHandler(async (req, res) => {
-  const { currentAction } = req.query;
-  const suggestions = await getSuggestedNextSteps(req.user._id, currentAction);
-  sendSuccess(res, 'Suggestions fetched', 200, suggestions);
+  try {
+    const { currentAction } = req.query;
+    const suggestions = await getSuggestedNextSteps(req.user._id, currentAction);
+    sendSuccess(res, 'Suggestions fetched', 200, suggestions || []);
+  } catch (error) {
+    logger.error('Error fetching workflow suggestions', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Suggestions fetched', 200, []);
+  }
 }));
 
 /**

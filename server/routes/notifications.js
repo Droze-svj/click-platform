@@ -18,26 +18,35 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
-  const { unread, limit = 50 } = req.query;
-  const query = { userId: req.user._id };
+  try {
+    const { unread, limit = 50 } = req.query;
+    const query = { userId: req.user._id };
 
-  if (unread === 'true') {
-    query.read = false;
+    if (unread === 'true') {
+      query.read = false;
+    }
+
+    const notifications = await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .lean();
+
+    const unreadCount = await Notification.countDocuments({
+      userId: req.user._id,
+      read: false
+    });
+
+    sendSuccess(res, 'Notifications fetched', 200, {
+      notifications: notifications || [],
+      unreadCount: unreadCount || 0
+    });
+  } catch (error) {
+    logger.error('Error fetching notifications', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Notifications fetched', 200, {
+      notifications: [],
+      unreadCount: 0
+    });
   }
-
-  const notifications = await Notification.find(query)
-    .sort({ createdAt: -1 })
-    .limit(parseInt(limit));
-
-  const unreadCount = await Notification.countDocuments({
-    userId: req.user._id,
-    read: false
-  });
-
-  sendSuccess(res, 'Notifications fetched', 200, {
-    notifications,
-    unreadCount
-  });
 }));
 
 /**

@@ -22,23 +22,28 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
-  const {
-    niche = 'general',
-    count = 10,
-    includeTrending = true,
-    includeGaps = true,
-    includeSeasonal = true
-  } = req.query;
+  try {
+    const {
+      niche = 'general',
+      count = 10,
+      includeTrending = true,
+      includeGaps = true,
+      includeSeasonal = true
+    } = req.query;
 
-  const suggestions = await getEnhancedSuggestions(req.user._id, {
-    niche,
-    count: parseInt(count),
-    includeTrending: includeTrending === 'true',
-    includeGaps: includeGaps === 'true',
-    includeSeasonal: includeSeasonal === 'true'
-  });
+    const suggestions = await getEnhancedSuggestions(req.user._id, {
+      niche,
+      count: parseInt(count),
+      includeTrending: includeTrending === 'true',
+      includeGaps: includeGaps === 'true',
+      includeSeasonal: includeSeasonal === 'true'
+    });
 
-  sendSuccess(res, 'Enhanced suggestions fetched', 200, suggestions);
+    sendSuccess(res, 'Enhanced suggestions fetched', 200, suggestions || []);
+  } catch (error) {
+    logger.error('Error fetching enhanced suggestions', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Enhanced suggestions fetched', 200, []);
+  }
 }));
 
 /**
@@ -51,9 +56,14 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/trending', auth, asyncHandler(async (req, res) => {
-  const { niche = 'general' } = req.query;
-  const topics = await getTrendingTopics(niche);
-  sendSuccess(res, 'Trending topics fetched', 200, topics);
+  try {
+    const { niche = 'general' } = req.query;
+    const topics = await getTrendingTopics(niche);
+    sendSuccess(res, 'Trending topics fetched', 200, topics || []);
+  } catch (error) {
+    logger.error('Error fetching trending topics', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Trending topics fetched', 200, []);
+  }
 }));
 
 /**
@@ -66,9 +76,24 @@ router.get('/trending', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/gaps', auth, asyncHandler(async (req, res) => {
-  const { period = 30 } = req.query;
-  const gaps = await getContentGaps(req.user._id, parseInt(period));
-  sendSuccess(res, 'Content gaps fetched', 200, gaps);
+  try {
+    const { period = 30 } = req.query;
+    const gaps = await getContentGaps(req.user._id, parseInt(period));
+    sendSuccess(res, 'Content gaps fetched', 200, gaps || {
+      daysWithoutContent: [],
+      missingPlatforms: [],
+      lowEngagementTypes: [],
+      suggestions: []
+    });
+  } catch (error) {
+    logger.error('Error fetching content gaps', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Content gaps fetched', 200, {
+      daysWithoutContent: [],
+      missingPlatforms: [],
+      lowEngagementTypes: [],
+      suggestions: []
+    });
+  }
 }));
 
 /**

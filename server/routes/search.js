@@ -106,8 +106,23 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
  * Get available search facets
  */
 router.get('/facets', auth, asyncHandler(async (req, res) => {
-  const facets = await getSearchFacets(req.user._id);
-  sendSuccess(res, 'Facets retrieved', 200, facets);
+  try {
+    const facets = await getSearchFacets(req.user._id);
+    sendSuccess(res, 'Facets retrieved', 200, facets || {
+      platforms: [],
+      contentTypes: [],
+      tags: [],
+      statuses: []
+    });
+  } catch (error) {
+    logger.error('Error fetching search facets', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Facets retrieved', 200, {
+      platforms: [],
+      contentTypes: [],
+      tags: [],
+      statuses: []
+    });
+  }
 }));
 
 /**
@@ -157,8 +172,13 @@ router.post('/save', auth, asyncHandler(async (req, res) => {
  * Get saved searches
  */
 router.get('/saved', auth, asyncHandler(async (req, res) => {
-  const searches = await getSavedSearches(req.user._id);
-  sendSuccess(res, 'Saved searches retrieved', 200, { searches });
+  try {
+    const searches = await getSavedSearches(req.user._id);
+    sendSuccess(res, 'Saved searches retrieved', 200, { searches: searches || [] });
+  } catch (error) {
+    logger.error('Error fetching saved searches', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Saved searches retrieved', 200, { searches: [] });
+  }
 }));
 
 /**
@@ -166,14 +186,19 @@ router.get('/saved', auth, asyncHandler(async (req, res) => {
  * Get search history
  */
 router.get('/history', auth, asyncHandler(async (req, res) => {
-  const { limit = 20 } = req.query;
+  try {
+    const { limit = 20 } = req.query;
 
-  const history = await SearchHistory.find({ userId: req.user._id })
-    .sort({ createdAt: -1 })
-    .limit(parseInt(limit))
-    .lean();
+    const history = await SearchHistory.find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .lean();
 
-  sendSuccess(res, 'Search history retrieved', 200, { history });
+    sendSuccess(res, 'Search history retrieved', 200, { history: history || [] });
+  } catch (error) {
+    logger.error('Error fetching search history', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Search history retrieved', 200, { history: [] });
+  }
 }));
 
 /**

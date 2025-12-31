@@ -287,30 +287,42 @@ async function getEnhancedSuggestions(userId, options = {}) {
 
     // Trending topics
     if (includeTrending) {
-      const trending = await getTrendingTopics(niche);
-      trending.slice(0, 5).forEach(topic => {
-        suggestions.push({
-          type: 'trending',
-          title: topic,
-          description: `Trending topic in ${niche} niche`,
-          priority: 'high',
-          source: 'trending'
-        });
-      });
+      try {
+        const trending = await getTrendingTopics(niche);
+        if (Array.isArray(trending)) {
+          trending.slice(0, 5).forEach(topic => {
+            suggestions.push({
+              type: 'trending',
+              title: topic,
+              description: `Trending topic in ${niche} niche`,
+              priority: 'high',
+              source: 'trending'
+            });
+          });
+        }
+      } catch (error) {
+        logger.error('Error getting trending topics in enhanced suggestions', { error: error.message, userId });
+      }
     }
 
     // Content gaps
     if (includeGaps) {
-      const gaps = await getContentGaps(userId);
-      gaps.suggestions.forEach(suggestion => {
-        suggestions.push({
-          type: 'gap',
-          title: suggestion.message,
-          description: 'Based on your content analysis',
-          priority: suggestion.priority,
-          source: 'gap-analysis'
-        });
-      });
+      try {
+        const gaps = await getContentGaps(userId);
+        if (gaps && gaps.suggestions && Array.isArray(gaps.suggestions)) {
+          gaps.suggestions.forEach(suggestion => {
+            suggestions.push({
+              type: 'gap',
+              title: suggestion.message,
+              description: 'Based on your content analysis',
+              priority: suggestion.priority,
+              source: 'gap-analysis'
+            });
+          });
+        }
+      } catch (error) {
+        logger.error('Error getting content gaps in enhanced suggestions', { error: error.message, userId });
+      }
     }
 
     // Seasonal content
