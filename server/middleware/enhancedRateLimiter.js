@@ -100,11 +100,17 @@ const apiLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 300, // 300 requests per window (increased from 100)
   message: {
-    error: 'Too many requests from this IP, please try again later',
+    error: 'Too many requests from this IP, please try later',
   },
-  // Skip rate limiting for health checks
+  // Skip rate limiting for health checks and auth/me (called frequently by frontend)
   skip: (req) => {
-    return req.path === '/health' || req.path === '/health/debug-redis' || req.path === '/api/health' || req.path === '/api/health/debug-redis';
+    const path = req.path || req.url || '';
+    return path === '/health' || 
+           path === '/health/debug-redis' || 
+           path === '/api/health' || 
+           path === '/api/health/debug-redis' ||
+           path === '/auth/me' ||
+           path === '/api/auth/me';
   },
 });
 
