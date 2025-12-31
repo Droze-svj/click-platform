@@ -484,38 +484,70 @@ function createWorker(queueName, processor, options = {}) {
     
     logger.info(`✅ All checks passed. Creating Worker ${queueName} with valid connection.`);
     
-    const worker = new Worker(
-    queueName,
-    async (job) => {
-      logger.info('Processing job', {
-        queue: queueName,
-        jobId: job.id,
-        attempt: job.attemptsMade + 1,
-      });
-
-      try {
-        const result = await processor(job.data, job);
-        logger.info('Job processed successfully', {
-          queue: queueName,
-          jobId: job.id,
-        });
-        return result;
-      } catch (error) {
-        logger.error('Job processing error', {
-          queue: queueName,
-          jobId: job.id,
-          error: error.message,
-        });
-        throw error;
-      }
-    },
-    {
-      connection: connection, // This is guaranteed to be valid at this point
-      concurrency: options.concurrency || 1,
-      limiter: options.limiter,
-      ...options,
+    // ABSOLUTE FINAL CHECK: Verify connection one more time right before Worker creation
+    // This prevents any possibility of connection being undefined when passed to BullMQ
+    if (!connection || connection === undefined || connection === null) {
+      const error = new Error(`FATAL: Connection became ${connection} right before Worker creation for ${queueName}. This should never happen.`);
+      console.error(`[${queueName}] ${error.message}`);
+      logger.error(error.message, { queueName, connection });
+      throw error;
     }
-  );
+    
+    // Log the exact connection being passed to BullMQ
+    const finalConnectionLog = typeof connection === 'string' 
+      ? connection.substring(0, 50) 
+      : JSON.stringify(connection).substring(0, 50);
+    console.log(`[${queueName}] FINAL: Creating Worker with connection: ${finalConnectionLog}`);
+    logger.info(`[${queueName}] FINAL: Creating Worker`, {
+      connectionType: typeof connection,
+      connectionPreview: finalConnectionLog,
+      connectionLength: typeof connection === 'string' ? connection.length : 0
+    });
+    
+    let worker;
+    try {
+      worker = new Worker(
+      queueName,
+      async (job) => {
+        logger.info('Processing job', {
+          queue: queueName,
+          jobId: job.id,
+          attempt: job.attemptsMade + 1,
+        });
+
+        try {
+          const result = await processor(job.data, job);
+          logger.info('Job processed successfully', {
+            queue: queueName,
+            jobId: job.id,
+          });
+          return result;
+        } catch (error) {
+          logger.error('Job processing error', {
+            queue: queueName,
+            jobId: job.id,
+            error: error.message,
+          });
+          throw error;
+        }
+      },
+      {
+        connection: connection, // This is guaranteed to be valid at this point
+        concurrency: options.concurrency || 1,
+        limiter: options.limiter,
+        ...options,
+      }
+    );
+    } catch (workerError) {
+      console.error(`[${queueName}] ERROR creating Worker:`, workerError.message);
+      logger.error(`Failed to create Worker ${queueName}`, { 
+        error: workerError.message, 
+        stack: workerError.stack,
+        connectionType: typeof connection,
+        connectionPreview: typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50)
+      });
+      throw workerError; // Re-throw to prevent worker creation
+    }
   
   // Log immediately after Worker creation to see what connection was passed - use both console.log and logger
   const workerLogMsg = `[createWorker] Worker created for ${queueName}`;
