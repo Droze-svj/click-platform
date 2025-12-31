@@ -1,0 +1,57 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "close": "Fermer"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bon retour",
+    "stats": {
+      "videosProcessed": "Vidéos Traitées",
+      "contentGenerated": "Contenu Généré",
+      "postsScheduled": "Publications Planifiées"
+    }
+  },
+  "content": {
+    "title": "Contenu",
+    "create": "Créer du Contenu",
+    "edit": "Modifier le Contenu",
+    "delete": "Supprimer le Contenu",
+    "duplicate": "Dupliquer",
+    "publish": "Publier",
+    "schedule": "Planifier"
+  },
+  "analytics": {
+    "title": "Analytiques",
+    "overview": "Aperçu",
+    "trends": "Tendances",
+    "platforms": "Plateformes",
+    "engagement": "Engagement",
+    "views": "Vues",
+    "likes": "J'aime",
+    "shares": "Partages"
+  },
+  "moderation": {
+    "title": "Modération du Contenu",
+    "checking": "Vérification du contenu...",
+    "approved": "Contenu approuvé",
+    "flagged": "Contenu signalé pour examen",
+    "profanity": "Grossièreté détectée",
+    "spam": "Spam détecté"
+  }
+}
+
+
+
+
+
+
