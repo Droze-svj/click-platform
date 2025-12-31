@@ -61,6 +61,11 @@ export default function Dashboard() {
 
   const loadUser = async (retryCount = 0) => {
     try {
+      // Wait a bit if we just came from registration
+      if (retryCount === 0) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+      
       const token = localStorage.getItem('token')
       if (!token) {
         console.log('⚠️ No token found, redirecting to login')
