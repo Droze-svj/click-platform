@@ -436,6 +436,18 @@ function createWorker(queueName, processor, options = {}) {
     
     logger.info(`✅ Final validation passed. Creating Worker ${queueName}...`);
     
+    // ABSOLUTE FINAL CHECK: Log exactly what we're passing to BullMQ
+    console.log(`[${queueName}] About to create Worker with connection type: ${typeof connection}`);
+    console.log(`[${queueName}] Connection preview: ${typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50)}`);
+    
+    // Ensure connection is never undefined - BullMQ defaults to localhost if undefined
+    if (connection === undefined || connection === null) {
+      console.error(`[${queueName}] FATAL: Connection is ${connection} - BullMQ will default to localhost!`);
+      logger.error(`❌ FATAL: Connection is ${connection} when creating Worker for ${queueName}`);
+      logger.error(`❌ BullMQ will default to localhost. Aborting worker creation.`);
+      return null;
+    }
+    
     const worker = new Worker(
     queueName,
     async (job) => {
