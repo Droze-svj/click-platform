@@ -1,11 +1,13 @@
 // Background job queue service using BullMQ
 
 const { Queue, Worker, QueueEvents } = require('bullmq');
+const IORedis = require('ioredis'); // Import IORedis to create explicit connections
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
 // Redis connection configuration
 let redisConnection = null;
+let redisIORedisInstance = null; // Cached IORedis instance for BullMQ
 
 // CRITICAL: Log REDIS_URL immediately when module loads (before any functions are called)
 const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
@@ -91,18 +93,61 @@ function getRedisConnection() {
       return null;
     }
     
-    // Return cached connection if valid
-    if (redisConnection !== null && typeof redisConnection === 'string' && redisConnection === redisUrl) {
-      logger.info('Using cached Redis connection (production)');
-      return redisConnection;
+    // Return cached IORedis instance if valid
+    if (redisIORedisInstance && redisIORedisInstance.status === 'ready') {
+      logger.info('Using cached IORedis instance (production)');
+      return redisIORedisInstance;
     }
     
-    // Cache and return the valid production URL
-    logger.info('✅ Using REDIS_URL for job queue connection (production)', { 
-      url: redisUrl.replace(/:[^:@]+@/, ':****@') // Hide password in logs
-    });
+    // Cache the connection string
     redisConnection = redisUrl;
-    return redisConnection;
+    
+    // CRITICAL: Create IORedis instance explicitly to prevent BullMQ from defaulting to localhost
+    // BullMQ might create its own connection internally, so we create one explicitly and reuse it
+    try {
+      console.log(`[getRedisConnection] Creating IORedis instance with URL: ${redisUrl.substring(0, 50)}...`);
+      redisIORedisInstance = new IORedis(redisUrl, {
+        maxRetriesPerRequest: null,
+        enableReadyCheck: true,
+        lazyConnect: false, // Connect immediately
+        retryStrategy: (times) => {
+          if (times > 3) {
+            console.error(`[getRedisConnection] IORedis retry limit reached`);
+            return null; // Stop retrying
+          }
+          return Math.min(times * 200, 2000);
+        },
+      });
+      
+      // Log connection events for debugging
+      redisIORedisInstance.on('connect', () => {
+        console.log(`[getRedisConnection] IORedis instance connected`);
+        logger.info('IORedis instance connected');
+      });
+      
+      redisIORedisInstance.on('error', (err) => {
+        console.error(`[getRedisConnection] IORedis instance error:`, err.message);
+        logger.error('IORedis instance error', { error: err.message });
+      });
+      
+      redisIORedisInstance.on('ready', () => {
+        console.log(`[getRedisConnection] IORedis instance ready`);
+        logger.info('IORedis instance ready');
+      });
+      
+      logger.info('✅ Created IORedis instance for BullMQ (production)', { 
+        url: redisUrl.replace(/:[^:@]+@/, ':****@')
+      });
+      
+      // Return IORedis instance instead of connection string
+      // This ensures BullMQ uses our explicit connection
+      return redisIORedisInstance;
+    } catch (err) {
+      console.error(`[getRedisConnection] Error creating IORedis instance:`, err.message);
+      logger.error('Error creating IORedis instance', { error: err.message });
+      // Fallback to connection string (shouldn't happen, but just in case)
+      return redisConnection;
+    }
   }
   
   // Development mode: Support both REDIS_URL and individual config
@@ -123,17 +168,30 @@ function getRedisConnection() {
       return null;
     }
     
-    // Return cached if same
-    if (redisConnection === redisUrl) {
-      logger.info('Using cached Redis connection (development)');
-      return redisConnection;
+    // Return cached IORedis instance if valid
+    if (redisIORedisInstance && redisIORedisInstance.status === 'ready') {
+      logger.info('Using cached IORedis instance (development)');
+      return redisIORedisInstance;
     }
     
-    logger.info('Using REDIS_URL for job queue connection (development)', { 
-      url: redisUrl.replace(/:[^:@]+@/, ':****@') // Hide password in logs
-    });
+    // Cache the connection string
     redisConnection = redisUrl;
-    return redisConnection;
+    
+    // Create IORedis instance for development too
+    try {
+      redisIORedisInstance = new IORedis(redisUrl, {
+        maxRetriesPerRequest: null,
+        enableReadyCheck: true,
+        lazyConnect: false,
+      });
+      logger.info('✅ Created IORedis instance for BullMQ (development)', { 
+        url: redisUrl.replace(/:[^:@]+@/, ':****@')
+      });
+      return redisIORedisInstance;
+    } catch (err) {
+      logger.error('Error creating IORedis instance', { error: err.message });
+      return redisConnection; // Fallback to connection string
+    }
   }
 
   // Fallback to individual config (development only)
@@ -319,24 +377,35 @@ function createWorker(queueName, processor, options = {}) {
   // CRITICAL: Additional safety checks before creating worker
   // Note: isProduction is already declared at the top of this function
   if (isProduction) {
-    // In production, connection MUST be a valid Redis URL string
-    if (typeof connection !== 'string') {
-      logger.error(`⚠️ Rejecting non-string connection for ${queueName} in production`);
-      logger.error(`⚠️ Connection type: ${typeof connection}`);
-      return null;
-    }
-    
-    // Must start with redis:// or rediss://
-    if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
-      logger.error(`⚠️ Invalid Redis connection string format for ${queueName} in production`);
-      logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 30)}`);
-      return null;
-    }
-    
-    // Must NOT contain localhost or 127.0.0.1
-    if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
-      logger.error(`⚠️ Rejecting localhost connection for ${queueName} in production`);
-      logger.error(`⚠️ Connection contains localhost/127.0.0.1`);
+    // In production, connection can be IORedis instance or string URL
+    if (connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis') {
+      // It's an IORedis instance - check its options
+      const options = connection.options || {};
+      const host = options.host || options.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        logger.error(`⚠️ Rejecting IORedis instance with localhost host for ${queueName} in production`);
+        logger.error(`⚠️ Host: ${host}`);
+        return null;
+      }
+      // IORedis instance looks good
+      logger.info(`✅ Using IORedis instance for ${queueName} (production)`);
+    } else if (typeof connection === 'string') {
+      // Must start with redis:// or rediss://
+      if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+        logger.error(`⚠️ Invalid Redis connection string format for ${queueName} in production`);
+        logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 30)}`);
+        return null;
+      }
+      
+      // Must NOT contain localhost or 127.0.0.1
+      if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
+        logger.error(`⚠️ Rejecting localhost connection for ${queueName} in production`);
+        logger.error(`⚠️ Connection contains localhost/127.0.0.1`);
+        return null;
+      }
+    } else {
+      logger.error(`⚠️ Rejecting invalid connection type for ${queueName} in production`);
+      logger.error(`⚠️ Connection type: ${typeof connection}, is IORedis: ${connection && connection.constructor && connection.constructor.name === 'Redis'}`);
       return null;
     }
   } else {
@@ -358,11 +427,16 @@ function createWorker(queueName, processor, options = {}) {
     return null;
   }
   
-  // In production, connection MUST be a string URL
-  if (isProduction && typeof connection !== 'string') {
-    logger.error(`❌ Cannot create worker ${queueName}: connection is not a string in production`);
-    logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
-    return null;
+  // In production, connection can be IORedis instance or string URL
+  if (isProduction) {
+    const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+    const isString = typeof connection === 'string';
+    
+    if (!isIORedis && !isString) {
+      logger.error(`❌ Cannot create worker ${queueName}: connection is not IORedis instance or string in production`);
+      logger.error(`❌ Connection type: ${typeof connection}, is IORedis: ${isIORedis}`);
+      return null;
+    }
   }
   
   logger.info(`✅ Creating worker for ${queueName} with valid Redis connection`);
@@ -484,21 +558,37 @@ function createWorker(queueName, processor, options = {}) {
       throw error; // Throw instead of return - this will prevent Worker creation
     }
     
-    // In production, connection MUST be a string
-    if (isProduction && typeof connection !== 'string') {
-      const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is not a string in production. Type: ${typeof connection}`);
-      console.error(`[${queueName}] ${error.message}`);
-      logger.error(error.message, { queueName, connectionType: typeof connection, connection });
-      throw error;
-    }
-    
-    // Final check: connection must not contain localhost
-    const connStr = typeof connection === 'string' ? connection : JSON.stringify(connection);
-    if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
-      const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection contains localhost: ${connStr.substring(0, 100)}`);
-      console.error(`[${queueName}] ${error.message}`);
-      logger.error(error.message, { queueName, connection: connStr.substring(0, 100) });
-      throw error;
+    // In production, connection can be IORedis instance or string
+    if (isProduction) {
+      const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+      const isString = typeof connection === 'string';
+      
+      if (!isIORedis && !isString) {
+        const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is not IORedis instance or string in production. Type: ${typeof connection}`);
+        console.error(`[${queueName}] ${error.message}`);
+        logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
+        throw error;
+      }
+      
+      // If it's a string, check for localhost
+      if (isString && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
+        const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection string contains localhost: ${connection.substring(0, 100)}`);
+        console.error(`[${queueName}] ${error.message}`);
+        logger.error(error.message, { queueName, connection: connection.substring(0, 100) });
+        throw error;
+      }
+      
+      // If it's an IORedis instance, check its options
+      if (isIORedis) {
+        const options = connection.options || {};
+        const host = options.host || options.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+          const error = new Error(`FATAL: Cannot create Worker ${queueName} - IORedis instance has localhost host: ${host}`);
+          console.error(`[${queueName}] ${error.message}`);
+          logger.error(error.message, { queueName, host });
+          throw error;
+        }
+      }
     }
     
     logger.info(`✅ All checks passed. Creating Worker ${queueName} with valid connection.`);
@@ -568,21 +658,42 @@ function createWorker(queueName, processor, options = {}) {
             logger.error(error.message, { queueName, connection });
             throw error;
           }
-          // In production, connection MUST be a string
-          if (isProduction && typeof connection !== 'string') {
-            const error = new Error(`FATAL: Connection is not a string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
-            console.error(`[${queueName}] ${error.message}`);
-            logger.error(error.message, { queueName, connectionType: typeof connection, connection });
-            throw error;
+          
+          // Check if it's an IORedis instance
+          const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+          const isString = typeof connection === 'string';
+          
+          // In production, connection can be IORedis instance or string
+          if (isProduction) {
+            if (!isIORedis && !isString) {
+              const error = new Error(`FATAL: Connection is not IORedis instance or string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
+              console.error(`[${queueName}] ${error.message}`);
+              logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
+              throw error;
+            }
+            
+            // If it's a string, check for localhost
+            if (isString && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
+              const error = new Error(`FATAL: Connection string contains localhost when passing to BullMQ for ${queueName}: ${connection.substring(0, 100)}`);
+              console.error(`[${queueName}] ${error.message}`);
+              logger.error(error.message, { queueName, connection: connection.substring(0, 100) });
+              throw error;
+            }
+            
+            // If it's an IORedis instance, check its options
+            if (isIORedis) {
+              const options = connection.options || {};
+              const host = options.host || options.hostname;
+              if (host === 'localhost' || host === '127.0.0.1') {
+                const error = new Error(`FATAL: IORedis instance has localhost host when passing to BullMQ for ${queueName}: ${host}`);
+                console.error(`[${queueName}] ${error.message}`);
+                logger.error(error.message, { queueName, host });
+                throw error;
+              }
+            }
           }
-          // Final check: connection must not contain localhost
-          const connStr = typeof connection === 'string' ? connection : JSON.stringify(connection);
-          if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
-            const error = new Error(`FATAL: Connection contains localhost when passing to BullMQ for ${queueName}: ${connStr.substring(0, 100)}`);
-            console.error(`[${queueName}] ${error.message}`);
-            logger.error(error.message, { queueName, connection: connStr.substring(0, 100) });
-            throw error;
-          }
+          
+          console.log(`[${queueName}] Passing ${isIORedis ? 'IORedis instance' : 'connection string'} to BullMQ Worker`);
           return connection;
         })(),
         concurrency: options.concurrency || 1,
