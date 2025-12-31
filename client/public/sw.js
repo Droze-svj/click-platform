@@ -53,8 +53,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Click Notification';
   const options = {
     body: data.body || 'You have a new notification',
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
+    icon: '/favicon.png',
+    badge: '/favicon.png',
     data: data.url || '/dashboard',
   };
 

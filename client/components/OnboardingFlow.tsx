@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { X, ChevronRight, ChevronLeft, CheckCircle2, Circle } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 
@@ -28,14 +29,23 @@ interface OnboardingProgress {
 }
 
 export default function OnboardingFlow() {
+  const pathname = usePathname()
   const [progress, setProgress] = useState<OnboardingProgress | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
   const { showToast } = useToast()
 
+  // Don't show onboarding on public pages
+  const isPublicPage = pathname === '/login' || pathname === '/register' || pathname === '/'
+
   useEffect(() => {
+    // Skip loading if on public page
+    if (isPublicPage) {
+      setIsLoading(false)
+      return
+    }
     loadProgress()
-  }, [])
+  }, [isPublicPage])
 
   const loadProgress = async () => {
     try {
@@ -119,6 +129,11 @@ export default function OnboardingFlow() {
     }
   }
 
+  // Don't render on public pages - return early to prevent any rendering
+  if (isPublicPage) {
+    return null
+  }
+
   if (isLoading || !isVisible || !progress) {
     return null
   }
@@ -127,7 +142,7 @@ export default function OnboardingFlow() {
   const currentIndex = progress.progress.currentStep
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
