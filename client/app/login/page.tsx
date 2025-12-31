@@ -6,7 +6,8 @@ import axios from 'axios'
 import FormField from '../../components/FormField'
 import LoadingSpinner from '../../components/LoadingSpinner'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+// Use production API URL - can be overridden with NEXT_PUBLIC_API_URL env var
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 export default function Login() {
   const router = useRouter()
