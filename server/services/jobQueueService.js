@@ -1,7 +1,15 @@
 // Background job queue service using BullMQ
 
 const { Queue, Worker, QueueEvents } = require('bullmq');
-const IORedis = require('ioredis'); // Import IORedis to create explicit connections
+// IORedis is a dependency of BullMQ, so we can access it through BullMQ's node_modules
+// Try to require it, but if it fails, we'll fall back to connection strings
+let IORedis = null;
+try {
+  IORedis = require('ioredis');
+} catch (err) {
+  console.warn('[jobQueueService] IORedis not available, will use connection strings instead');
+  console.warn('[jobQueueService] Error:', err.message);
+}
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
@@ -104,12 +112,18 @@ function getRedisConnection() {
     
     // CRITICAL: Create IORedis instance explicitly to prevent BullMQ from defaulting to localhost
     // BullMQ might create its own connection internally, so we create one explicitly and reuse it
+    // Use lazyConnect: true to prevent blocking during server startup
+    if (!IORedis) {
+      logger.warn('⚠️ IORedis not available, using connection string instead');
+      return redisConnection;
+    }
+    
     try {
       console.log(`[getRedisConnection] Creating IORedis instance with URL: ${redisUrl.substring(0, 50)}...`);
       redisIORedisInstance = new IORedis(redisUrl, {
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
-        lazyConnect: false, // Connect immediately
+        lazyConnect: true, // Don't connect immediately - let BullMQ handle connection
         retryStrategy: (times) => {
           if (times > 3) {
             console.error(`[getRedisConnection] IORedis retry limit reached`);
@@ -117,17 +131,22 @@ function getRedisConnection() {
           }
           return Math.min(times * 200, 2000);
         },
+        // Connection timeout to prevent hanging
+        connectTimeout: 10000, // 10 seconds
+        // Don't throw errors on connection failures - let BullMQ handle them
+        enableOfflineQueue: false,
       });
       
-      // Log connection events for debugging
+      // Log connection events for debugging (but don't block on them)
       redisIORedisInstance.on('connect', () => {
         console.log(`[getRedisConnection] IORedis instance connected`);
         logger.info('IORedis instance connected');
       });
       
       redisIORedisInstance.on('error', (err) => {
+        // Don't log as fatal - connection errors are expected during startup
         console.error(`[getRedisConnection] IORedis instance error:`, err.message);
-        logger.error('IORedis instance error', { error: err.message });
+        logger.warn('IORedis instance error (non-fatal)', { error: err.message });
       });
       
       redisIORedisInstance.on('ready', () => {
@@ -144,8 +163,10 @@ function getRedisConnection() {
       return redisIORedisInstance;
     } catch (err) {
       console.error(`[getRedisConnection] Error creating IORedis instance:`, err.message);
-      logger.error('Error creating IORedis instance', { error: err.message });
+      console.error(`[getRedisConnection] Stack:`, err.stack);
+      logger.error('Error creating IORedis instance', { error: err.message, stack: err.stack });
       // Fallback to connection string (shouldn't happen, but just in case)
+      logger.warn('⚠️ Falling back to connection string instead of IORedis instance');
       return redisConnection;
     }
   }
@@ -178,11 +199,18 @@ function getRedisConnection() {
     redisConnection = redisUrl;
     
     // Create IORedis instance for development too
+    if (!IORedis) {
+      logger.warn('⚠️ IORedis not available, using connection string instead');
+      return redisConnection;
+    }
+    
     try {
       redisIORedisInstance = new IORedis(redisUrl, {
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
-        lazyConnect: false,
+        lazyConnect: true, // Don't connect immediately
+        connectTimeout: 10000,
+        enableOfflineQueue: false,
       });
       logger.info('✅ Created IORedis instance for BullMQ (development)', { 
         url: redisUrl.replace(/:[^:@]+@/, ':****@')
