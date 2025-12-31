@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+// Use production API URL - can be overridden with NEXT_PUBLIC_API_URL env var
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 export default function Register() {
   const router = useRouter()
@@ -20,7 +21,12 @@ export default function Register() {
     setLoading(true)
 
     try {
-      console.log('Attempting registration to:', `${API_URL}/auth/register`)
+      // Log the actual API URL being used for debugging
+      console.log('🔍 Registration Debug Info:')
+      console.log('  - API_URL:', API_URL)
+      console.log('  - Full endpoint:', `${API_URL}/auth/register`)
+      console.log('  - Timestamp:', new Date().toISOString())
+      
       const response = await axios.post(`${API_URL}/auth/register`, {
         name,
         email,
