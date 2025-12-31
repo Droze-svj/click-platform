@@ -869,6 +869,7 @@ module.exports = {
   retryJob,
   cleanQueue,
   closeAll,
+  getRedisConnection, // Export for debugging
 };
 
 
