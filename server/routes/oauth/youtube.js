@@ -165,20 +165,62 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
     return sendError(res, 'Authorization code and state are required', 400);
   }
 
-  const { accessToken } = await exchangeCodeForToken(req.user._id, code, state);
-  
-  // Get user info for response
-  const { getYouTubeUserInfo } = require('../../services/youtubeOAuthService');
-  const userInfo = await getYouTubeUserInfo(accessToken);
-  
-  sendSuccess(res, {
-    connected: true,
-    userInfo: {
-      id: userInfo.id,
-      title: userInfo.title,
-      subscriberCount: userInfo.subscriberCount,
-    },
-  }, 'YouTube account connected successfully', 200);
+  try {
+    logger.info('Starting YouTube OAuth token exchange', { 
+      userId: req.user._id,
+      hasCode: !!code,
+      hasState: !!state,
+      codeLength: code?.length,
+      stateLength: state?.length
+    });
+
+    const { accessToken } = await exchangeCodeForToken(req.user._id, code, state);
+    
+    logger.info('Token exchange successful, fetching user info', { userId: req.user._id });
+    
+    // Get user info for response
+    const { getYouTubeUserInfo } = require('../../services/youtubeOAuthService');
+    const userInfo = await getYouTubeUserInfo(accessToken);
+    
+    logger.info('YouTube OAuth connection completed successfully', { 
+      userId: req.user._id,
+      channelId: userInfo.id,
+      channelTitle: userInfo.title
+    });
+    
+    sendSuccess(res, {
+      connected: true,
+      userInfo: {
+        id: userInfo.id,
+        title: userInfo.title,
+        subscriberCount: userInfo.subscriberCount,
+      },
+    }, 'YouTube account connected successfully', 200);
+  } catch (error) {
+    logger.error('YouTube OAuth completion error', { 
+      error: error.message,
+      stack: error.stack,
+      userId: req.user._id,
+      errorResponse: error.response?.data,
+      errorStatus: error.response?.status
+    });
+    
+    // Provide more specific error messages
+    if (error.message.includes('Invalid OAuth state')) {
+      return sendError(res, 'Invalid OAuth state. Please start the authorization flow again.', 400);
+    }
+    
+    if (error.response?.status === 400 && error.response?.data?.error === 'invalid_grant') {
+      return sendError(res, 'Authorization code expired or already used. Please start the authorization flow again.', 400);
+    }
+    
+    if (error.response?.status === 400 && error.response?.data?.error === 'redirect_uri_mismatch') {
+      return sendError(res, 'Redirect URI mismatch. Please ensure YOUTUBE_CALLBACK_URL is set correctly in environment variables.', 400);
+    }
+    
+    // Re-throw to let asyncHandler handle it
+    throw error;
+  }
 }));
 
 /**
