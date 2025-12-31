@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 export default function Home() {
   const router = useRouter()
@@ -24,15 +24,19 @@ export default function Home() {
       }
 
       const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 60000 // 60 seconds for Render.com free tier
       })
 
       if (response.data.user) {
         setIsAuthenticated(true)
         router.push('/dashboard')
       }
-    } catch (error) {
-      localStorage.removeItem('token')
+    } catch (error: any) {
+      // Don't remove token on network errors - might be server waking up
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        localStorage.removeItem('token')
+      }
     } finally {
       setLoading(false)
     }
