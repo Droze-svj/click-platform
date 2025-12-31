@@ -4,8 +4,10 @@
 # Usage: ./scripts/finish-youtube-oauth.sh <code> <state>
 
 SERVICE_URL="https://click-platform.onrender.com"
-TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTU1MzY1OTVjOWNiMTBjMmIzZDkyZGYiLCJpYXQiOjE3NjcxOTIxNTgsImV4cCI6MTc2OTc4NDE1OH0.RYDWrLZl0poAEmnJObt1iad316_hYWie7bcPsarpiHo"
-STATE="cc457a042ec42c7660b323bb2796b95cafcceb5821348c724cd2b20decfab969"
+# Token and state should be provided as environment variables or arguments
+# Default to empty - user should provide via environment or get from complete-youtube-oauth-flow.sh
+TOKEN="${YOUTUBE_OAUTH_TOKEN:-}"
+STATE="${YOUTUBE_OAUTH_STATE:-}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -45,6 +47,21 @@ fi
 
 CODE="$1"
 NEW_STATE="${2:-$STATE}"
+AUTH_TOKEN="${3:-$TOKEN}"
+
+if [ -z "$AUTH_TOKEN" ]; then
+    echo -e "${RED}❌ Error: Authentication token is required${NC}"
+    echo ""
+    echo "Usage:"
+    echo "  ./scripts/finish-youtube-oauth.sh 'CODE' 'STATE' 'TOKEN'"
+    echo ""
+    echo "Or set environment variables:"
+    echo "  export YOUTUBE_OAUTH_TOKEN='your_token'"
+    echo "  export YOUTUBE_OAUTH_STATE='your_state'"
+    echo "  ./scripts/finish-youtube-oauth.sh 'CODE'"
+    echo ""
+    exit 1
+fi
 
 echo "Using:"
 echo "  Code: ${CODE:0:30}..."
@@ -53,7 +70,7 @@ echo ""
 
 echo "🔄 Completing OAuth connection..."
 COMPLETE_RESPONSE=$(curl -s -X POST "$SERVICE_URL/api/oauth/youtube/complete" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -d "{
     \"code\": \"$CODE\",
@@ -70,7 +87,7 @@ if echo "$COMPLETE_RESPONSE" | grep -q "success\|connected"; then
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "Check connection status:"
-    echo "curl -H 'Authorization: Bearer $TOKEN' $SERVICE_URL/api/oauth/youtube/status"
+    echo "curl -H 'Authorization: Bearer $AUTH_TOKEN' $SERVICE_URL/api/oauth/youtube/status"
     echo ""
 else
     echo -e "${RED}❌ Connection failed${NC}"
