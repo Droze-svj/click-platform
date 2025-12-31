@@ -100,8 +100,14 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100" style={{ position: 'relative', zIndex: 1 }}>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md" style={{ position: 'relative', zIndex: 10 }}>
+    <div 
+      className="min-h-screen flex items-center justify-center bg-gray-100" 
+      style={{ position: 'relative', zIndex: 9999, isolation: 'isolate' }}
+    >
+      <div 
+        className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md" 
+        style={{ position: 'relative', zIndex: 10000, isolation: 'isolate' }}
+      >
         <h1 className="text-3xl font-bold mb-6 text-center">Sign Up</h1>
         
         {error && (
@@ -110,7 +116,7 @@ export default function Register() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ position: 'relative', zIndex: 10002 }}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Name
@@ -118,9 +124,14 @@ export default function Register() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                console.log('Name input onChange:', e.target.value)
+                setName(e.target.value)
+              }}
+              onFocus={(e) => console.log('Name input focused')}
+              onClick={(e) => console.log('Name input clicked')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              style={{ pointerEvents: 'auto', zIndex: 20 }}
+              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative' }}
               required
               autoComplete="name"
             />
@@ -133,9 +144,14 @@ export default function Register() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                console.log('Email input onChange:', e.target.value)
+                setEmail(e.target.value)
+              }}
+              onFocus={(e) => console.log('Email input focused')}
+              onClick={(e) => console.log('Email input clicked')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              style={{ pointerEvents: 'auto', zIndex: 20 }}
+              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative' }}
               required
               autoComplete="email"
             />
@@ -148,9 +164,14 @@ export default function Register() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                console.log('Password input onChange:', e.target.value.length, 'characters')
+                setPassword(e.target.value)
+              }}
+              onFocus={(e) => console.log('Password input focused')}
+              onClick={(e) => console.log('Password input clicked')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              style={{ pointerEvents: 'auto', zIndex: 20 }}
+              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative' }}
               required
               minLength={6}
               autoComplete="new-password"
