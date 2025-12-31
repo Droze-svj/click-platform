@@ -532,7 +532,32 @@ function createWorker(queueName, processor, options = {}) {
         }
       },
       {
-        connection: connection, // This is guaranteed to be valid at this point
+        // CRITICAL: Ensure connection is explicitly set - never pass undefined
+        // BullMQ defaults to localhost if connection is undefined
+        connection: (() => {
+          if (!connection || connection === undefined || connection === null) {
+            const error = new Error(`FATAL: Connection is ${connection} when passing to BullMQ Worker constructor for ${queueName}`);
+            console.error(`[${queueName}] ${error.message}`);
+            logger.error(error.message, { queueName, connection });
+            throw error;
+          }
+          // In production, connection MUST be a string
+          if (isProduction && typeof connection !== 'string') {
+            const error = new Error(`FATAL: Connection is not a string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
+            console.error(`[${queueName}] ${error.message}`);
+            logger.error(error.message, { queueName, connectionType: typeof connection, connection });
+            throw error;
+          }
+          // Final check: connection must not contain localhost
+          const connStr = typeof connection === 'string' ? connection : JSON.stringify(connection);
+          if (connStr.includes('127.0.0.1') || connStr.includes('localhost')) {
+            const error = new Error(`FATAL: Connection contains localhost when passing to BullMQ for ${queueName}: ${connStr.substring(0, 100)}`);
+            console.error(`[${queueName}] ${error.message}`);
+            logger.error(error.message, { queueName, connection: connStr.substring(0, 100) });
+            throw error;
+          }
+          return connection;
+        })(),
         concurrency: options.concurrency || 1,
         limiter: options.limiter,
         ...options,
