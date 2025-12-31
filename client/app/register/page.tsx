@@ -87,11 +87,20 @@ export default function Register() {
         errorMessage = err.response.data.error
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message
+      } else if (err.response?.data?.errors) {
+        // Handle validation errors array
+        const validationErrors = Array.isArray(err.response.data.errors) 
+          ? err.response.data.errors.map((e: any) => e.msg || e.message || e).join(', ')
+          : JSON.stringify(err.response.data.errors)
+        errorMessage = `Validation error: ${validationErrors}`
       } else if (err.response?.status) {
         errorMessage = `Server error: ${err.response.status} - ${err.message}`
       } else if (err.message) {
         errorMessage = err.message
       }
+      
+      // Log full error response for debugging
+      console.error('Full error response:', err.response?.data)
       
       setError(errorMessage)
     } finally {
@@ -130,8 +139,8 @@ export default function Register() {
               }}
               onFocus={(e) => console.log('Name input focused')}
               onClick={(e) => console.log('Name input clicked')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative' }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
+              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative', color: '#111827' }}
               required
               autoComplete="name"
             />
@@ -150,8 +159,8 @@ export default function Register() {
               }}
               onFocus={(e) => console.log('Email input focused')}
               onClick={(e) => console.log('Email input clicked')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative' }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
+              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative', color: '#111827' }}
               required
               autoComplete="email"
             />
@@ -170,8 +179,8 @@ export default function Register() {
               }}
               onFocus={(e) => console.log('Password input focused')}
               onClick={(e) => console.log('Password input clicked')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative' }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 bg-white"
+              style={{ pointerEvents: 'auto', zIndex: 10001, position: 'relative', color: '#111827' }}
               required
               minLength={6}
               autoComplete="new-password"
