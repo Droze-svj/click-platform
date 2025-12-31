@@ -512,6 +512,14 @@ function createWorker(queueName, processor, options = {}) {
       throw error;
     }
     
+    // CRITICAL: Double-check that connection is not a localhost object
+    if (typeof connection === 'object' && (connection.host === 'localhost' || connection.host === '127.0.0.1')) {
+      const error = new Error(`FATAL: Connection object contains localhost for ${queueName} right before Worker creation. This should never happen in production.`);
+      console.error(`[${queueName}] ${error.message}`);
+      logger.error(error.message, { queueName, connection });
+      throw error;
+    }
+    
     // Log the exact connection being passed to BullMQ
     const finalConnectionLog = typeof connection === 'string' 
       ? connection.substring(0, 50) 
