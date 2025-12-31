@@ -30,8 +30,16 @@ function initializeAllWorkers() {
   
   // CRITICAL: In production/staging, REDIS_URL is REQUIRED (no fallbacks)
   if (isProduction) {
+    // Use console.log for immediate visibility (not filtered by logger)
+    console.log('🔍 [initializeAllWorkers] Production mode - validating REDIS_URL...');
+    console.log(`🔍 [initializeAllWorkers] REDIS_URL exists: ${!!redisUrl}`);
+    console.log(`🔍 [initializeAllWorkers] REDIS_URL length: ${redisUrl?.length || 0}`);
+    console.log(`🔍 [initializeAllWorkers] REDIS_URL first 30 chars: ${redisUrl ? redisUrl.substring(0, 30) : 'NONE'}`);
+    
     if (!redisUrl || redisUrl === '') {
-      logger.error('❌ REDIS_URL is REQUIRED in production/staging but is missing or empty.');
+      const errorMsg = '❌ REDIS_URL is REQUIRED in production/staging but is missing or empty.';
+      console.error(errorMsg);
+      logger.error(errorMsg);
       logger.error('❌ Workers will NOT be initialized. Background jobs will be disabled.');
       logger.error('❌ Add REDIS_URL to Render.com environment variables to enable workers.');
       logger.error('❌ REDIS_URL value received:', redisUrl ? `"${redisUrl.substring(0, 30)}..." (length: ${redisUrl.length})` : 'NOT SET OR EMPTY');
@@ -40,7 +48,10 @@ function initializeAllWorkers() {
     
     // Validate URL format
     if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
-      logger.error('❌ Invalid REDIS_URL format in production. Must start with redis:// or rediss://');
+      const errorMsg = '❌ Invalid REDIS_URL format in production. Must start with redis:// or rediss://';
+      console.error(errorMsg);
+      console.error(`❌ REDIS_URL received: ${redisUrl.substring(0, 50)}`);
+      logger.error(errorMsg);
       logger.error('❌ REDIS_URL received:', redisUrl.substring(0, 50));
       logger.error('❌ Workers will NOT be initialized until REDIS_URL is fixed.');
       return;
@@ -48,11 +59,14 @@ function initializeAllWorkers() {
     
     // Reject localhost in production
     if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
-      logger.error('❌ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.');
+      const errorMsg = '❌ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.';
+      console.error(errorMsg);
+      logger.error(errorMsg);
       logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service (Redis Cloud, etc.).');
       return;
     }
     
+    console.log('✅ Redis configuration validated for production. Proceeding with worker initialization...');
     logger.info('✅ Redis configuration validated for production. Proceeding with worker initialization...', {
       redisUrlPrefix: redisUrl.substring(0, 30) + '...'
     });
