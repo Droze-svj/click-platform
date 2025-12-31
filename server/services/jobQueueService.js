@@ -7,8 +7,27 @@ const { captureException } = require('../utils/sentry');
 // Redis connection configuration
 let redisConnection = null;
 
+// CRITICAL: Log REDIS_URL immediately when module loads (before any functions are called)
+const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+if (isProduction) {
+  const rawRedisUrl = process.env.REDIS_URL;
+  console.log('=== MODULE LOAD: REDIS_URL CHECK ===');
+  console.log(`REDIS_URL exists: ${!!rawRedisUrl}`);
+  console.log(`REDIS_URL length: ${rawRedisUrl?.length || 0}`);
+  console.log(`REDIS_URL first 50 chars: ${rawRedisUrl ? rawRedisUrl.substring(0, 50) : 'NONE'}`);
+  console.log(`REDIS_URL last 20 chars: ${rawRedisUrl && rawRedisUrl.length > 20 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : 'NONE'}`);
+  logger.info('=== MODULE LOAD: REDIS_URL CHECK ===', {
+    redisUrlExists: !!rawRedisUrl,
+    redisUrlLength: rawRedisUrl?.length || 0,
+    redisUrlFirst50: rawRedisUrl ? rawRedisUrl.substring(0, 50) : 'NONE',
+    redisUrlLast20: rawRedisUrl && rawRedisUrl.length > 20 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : 'NONE',
+    hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'")) : false,
+    hasSpaces: rawRedisUrl ? rawRedisUrl.includes(' ') : false
+  });
+}
+
 // Force clear any cached connection on module load in production
-if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+if (isProduction) {
   redisConnection = null; // Clear any stale cached connection
 }
 
