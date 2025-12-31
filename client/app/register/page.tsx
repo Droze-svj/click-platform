@@ -29,7 +29,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json'
         },
-        timeout: 10000
+        timeout: 60000 // 60 seconds - Render.com free tier can take time to wake up
       })
 
       console.log('Registration response:', response.data)
@@ -51,8 +51,15 @@ export default function Register() {
       
       let errorMessage = 'Registration failed'
       
-      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        errorMessage = 'Cannot connect to server. Make sure the backend is running on http://localhost:5001'
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. The server may be waking up (this can take 30-60 seconds on free tier). Please try again in a moment.'
+      } else if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        const isProduction = API_URL.includes('render.com') || API_URL.includes('onrender.com')
+        if (isProduction) {
+          errorMessage = 'Cannot connect to server. The server may be sleeping (free tier). Please wait 30-60 seconds and try again.'
+        } else {
+          errorMessage = 'Cannot connect to server. Make sure the backend is running.'
+        }
       } else if (err.response?.data?.error) {
         errorMessage = err.response.data.error
       } else if (err.response?.data?.message) {

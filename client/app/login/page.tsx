@@ -46,13 +46,31 @@ export default function Login() {
       const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password
+      }, {
+        timeout: 60000 // 60 seconds - Render.com free tier can take time to wake up
       })
 
       const token = response.data.data?.token || response.data.token
       localStorage.setItem('token', token)
       router.push('/dashboard')
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Login failed'
+      let errorMessage = 'Login failed'
+      
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. The server may be waking up (this can take 30-60 seconds on free tier). Please try again in a moment.'
+      } else if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        const isProduction = API_URL.includes('render.com') || API_URL.includes('onrender.com')
+        if (isProduction) {
+          errorMessage = 'Cannot connect to server. The server may be sleeping (free tier). Please wait 30-60 seconds and try again.'
+        } else {
+          errorMessage = 'Cannot connect to server. Make sure the backend is running.'
+        }
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      }
+      
       setError(errorMessage)
     } finally {
       setLoading(false)
