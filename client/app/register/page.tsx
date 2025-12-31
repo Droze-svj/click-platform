@@ -57,14 +57,12 @@ export default function Register() {
       }
       console.log('✅ Token verified in localStorage:', storedToken.substring(0, 30) + '...')
       
-      // Wait a moment to ensure token is stored, then redirect
-      // Increased delay to ensure localStorage is fully written and dashboard is ready
-      console.log('⏳ Waiting before redirect...')
+      // Redirect to success page instead of dashboard directly
+      console.log('✅ Registration successful! Redirecting to success page...')
       setTimeout(() => {
-        console.log('🔄 Redirecting to dashboard...')
-        // Use window.location for a hard navigation to ensure clean state
-        window.location.href = '/dashboard'
-      }, 1000)
+        console.log('🔄 Redirecting to registration success page...')
+        router.push('/registration-success')
+      }, 500)
     } catch (err: any) {
       console.error('Registration error:', err)
       console.error('Error details:', {
