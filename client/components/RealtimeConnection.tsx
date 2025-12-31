@@ -7,14 +7,18 @@ import { useAuth } from '../hooks/useAuth'
 export default function RealtimeConnection() {
   const [isConnected, setIsConnected] = useState(false)
   const [reconnectAttempts, setReconnectAttempts] = useState(0)
+  const [showWarning, setShowWarning] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
     if (!user) return
 
     // Initialize Socket.io connection
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+    const socketUrl = apiUrl.replace('/api', '') || 'https://click-platform.onrender.com'
+    
     const socket = require('socket.io-client')(
-      process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001',
+      socketUrl,
       {
         transports: ['websocket'],
         reconnection: true,
@@ -67,8 +71,29 @@ export default function RealtimeConnection() {
     }
   }, [user])
 
+  // Only show after a few seconds of disconnection (not immediately)
+  useEffect(() => {
+    if (!isConnected && user) {
+      const timer = setTimeout(() => setShowWarning(true), 3000)
+      return () => clearTimeout(timer)
+    } else {
+      setShowWarning(false)
+    }
+  }, [isConnected, user])
+
+  // Only show connection status if user is logged in
+  if (!user) {
+    return null
+  }
+
+  // Don't show warning if connected
   if (isConnected) {
-    return null // Don't show when connected
+    return null
+  }
+
+  // Don't show warning immediately - wait a few seconds
+  if (!showWarning) {
+    return null
   }
 
   return (
@@ -90,7 +115,7 @@ export default function RealtimeConnection() {
           <>
             <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
             <p className="text-sm text-yellow-800 dark:text-yellow-300">
-              Connection lost
+              Real-time connection lost
             </p>
           </>
         )}
