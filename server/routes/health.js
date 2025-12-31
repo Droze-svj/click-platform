@@ -156,81 +156,69 @@ router.post('/test-sentry', (req, res) => {
  *     tags: [Health]
  */
 router.get('/debug-redis', (req, res) => {
-  try {
-    const rawRedisUrl = process.env.REDIS_URL;
-    
-    // Mask sensitive parts of REDIS_URL for logging
-    const maskUrl = (url) => {
-      if (!url) return null;
-      if (typeof url === 'string') {
-        // Mask password in redis://default:password@host:port
-        return url.replace(/:([^:@]+)@/, ':****@');
-      }
-      return url;
-    };
-    
-    // Try to get connection from jobQueueService, but don't fail if it's not available
-    let connection = null;
-    let connectionError = null;
-    try {
-      const jobQueueService = require('../services/jobQueueService');
-      
-      // Check if getRedisConnection exists
-      if (jobQueueService.getRedisConnection && typeof jobQueueService.getRedisConnection === 'function') {
-        connection = jobQueueService.getRedisConnection();
-      } else {
-        connectionError = 'getRedisConnection is not available in jobQueueService';
-      }
-    } catch (err) {
-      connectionError = err.message;
+  // This endpoint works completely independently - no need for getRedisConnection
+  const rawRedisUrl = process.env.REDIS_URL;
+  const redisUrl = rawRedisUrl?.trim();
+  
+  // Mask sensitive parts of REDIS_URL for logging
+  const maskUrl = (url) => {
+    if (!url) return null;
+    if (typeof url === 'string') {
+      // Mask password in redis://default:password@host:port
+      return url.replace(/:([^:@]+)@/, ':****@');
     }
+    return url;
+  };
+  
+  // Try to get connection from jobQueueService, but don't fail if it's not available
+  let connection = null;
+  let connectionError = null;
+  let availableExports = null;
+  
+  try {
+    const jobQueueService = require('../services/jobQueueService');
+    availableExports = Object.keys(jobQueueService);
     
-    const debug = {
-      environment: process.env.NODE_ENV,
-      redisUrl: {
-        exists: !!rawRedisUrl,
-        length: rawRedisUrl?.length || 0,
-        firstChars: rawRedisUrl ? rawRedisUrl.substring(0, 30) : null,
-        lastChars: rawRedisUrl && rawRedisUrl.length > 30 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : null,
-        masked: maskUrl(rawRedisUrl),
-        hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'") || rawRedisUrl.endsWith('"') || rawRedisUrl.endsWith("'")) : false,
-        hasSpaces: rawRedisUrl ? rawRedisUrl.trim() !== rawRedisUrl : false,
-        containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
-      },
-      connection: {
-        type: connection ? typeof connection : 'null',
-        isString: typeof connection === 'string',
-        isObject: typeof connection === 'object' && connection !== null,
-        value: connection ? (typeof connection === 'string' ? maskUrl(connection) : JSON.stringify(connection)) : null,
-        containsLocalhost: connection ? (String(connection).includes('localhost') || String(connection).includes('127.0.0.1')) : false,
-      },
-      redisHost: process.env.REDIS_HOST || null,
-      redisPort: process.env.REDIS_PORT || null,
-      redisPassword: process.env.REDIS_PASSWORD ? '***' : null,
-      connectionError: connectionError || null,
-    };
-
-    // Always return success with debug info, even if getRedisConnection failed
-    res.json({
-      success: true,
-      ...debug,
-    });
-  } catch (error) {
-    // If there's an error, still try to return basic REDIS_URL info
-    logger.error('Redis debug error', { error: error.message, stack: error.stack });
-    const rawRedisUrl = process.env.REDIS_URL;
-    res.status(200).json({
-      success: false,
-      error: error.message,
-      redisUrl: {
-        exists: !!rawRedisUrl,
-        length: rawRedisUrl?.length || 0,
-        firstChars: rawRedisUrl ? rawRedisUrl.substring(0, 30) : null,
-        containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
-      },
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-    });
+    // Check if getRedisConnection exists
+    if (jobQueueService.getRedisConnection && typeof jobQueueService.getRedisConnection === 'function') {
+      connection = jobQueueService.getRedisConnection();
+    } else {
+      connectionError = 'getRedisConnection is not available in jobQueueService';
+    }
+  } catch (err) {
+    connectionError = err.message;
   }
+    
+  // Build debug response - always succeeds
+  const debug = {
+    success: true,
+    environment: process.env.NODE_ENV,
+    redisUrl: {
+      exists: !!rawRedisUrl,
+      length: rawRedisUrl?.length || 0,
+      firstChars: rawRedisUrl ? rawRedisUrl.substring(0, 30) : null,
+      lastChars: rawRedisUrl && rawRedisUrl.length > 30 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : null,
+      masked: maskUrl(rawRedisUrl),
+      hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'") || rawRedisUrl.endsWith('"') || rawRedisUrl.endsWith("'")) : false,
+      hasSpaces: rawRedisUrl ? rawRedisUrl.trim() !== rawRedisUrl : false,
+      containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
+      startsWithRedis: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) : false,
+    },
+    connection: connection ? {
+      type: typeof connection,
+      isString: typeof connection === 'string',
+      isObject: typeof connection === 'object' && connection !== null,
+      value: typeof connection === 'string' ? maskUrl(connection) : JSON.stringify(connection),
+      containsLocalhost: String(connection).includes('localhost') || String(connection).includes('127.0.0.1'),
+    } : null,
+    redisHost: process.env.REDIS_HOST || null,
+    redisPort: process.env.REDIS_PORT || null,
+    redisPassword: process.env.REDIS_PASSWORD ? '***' : null,
+    connectionError: connectionError || null,
+    availableExports: availableExports,
+  };
+
+  res.json(debug);
 });
 
 module.exports = router;
