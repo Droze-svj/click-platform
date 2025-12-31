@@ -24,8 +24,21 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
     return sendError(res, 'Twitter OAuth not configured', 503);
   }
 
-  const callbackUrl = process.env.TWITTER_CALLBACK_URL || 
-    `${req.protocol}://${req.get('host')}/api/oauth/twitter/callback`;
+  // Use TWITTER_CALLBACK_URL if set, otherwise construct from request
+  // In production, prefer environment variable to avoid localhost issues
+  let callbackUrl = process.env.TWITTER_CALLBACK_URL;
+  
+  if (!callbackUrl) {
+    // Fallback: construct from request, but prefer HTTPS in production
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
+    const host = req.get('host') || req.get('x-forwarded-host') || 'localhost:5001';
+    callbackUrl = `${protocol}://${host}/api/oauth/twitter/callback`;
+    
+    // Log warning if using fallback in production
+    if (process.env.NODE_ENV === 'production') {
+      logger.warn('TWITTER_CALLBACK_URL not set, using fallback', { callbackUrl, host });
+    }
+  }
 
   const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
   
