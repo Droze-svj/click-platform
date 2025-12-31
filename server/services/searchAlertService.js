@@ -138,7 +138,8 @@ async function getUserAlerts(userId) {
     return alerts;
   } catch (error) {
     logger.error('Error getting user alerts', { error: error.message, userId });
-    throw error;
+    // Return empty array instead of throwing to prevent 500 errors
+    return [];
   }
 }
 
