@@ -75,7 +75,6 @@ export default function ApprovalWorkflowBuilder({
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/teams/members`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setUsers(response.data.data.members || [])
@@ -89,7 +88,6 @@ export default function ApprovalWorkflowBuilder({
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/approvals/workflows`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         const found = response.data.data.workflows.find((w: any) => w._id === workflowId)

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Wifi, WifiOff, AlertCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useSocket } from '../hooks/useSocket'
 
 export default function RealtimeConnection() {
   const pathname = usePathname()
@@ -11,74 +12,21 @@ export default function RealtimeConnection() {
   const [reconnectAttempts, setReconnectAttempts] = useState(0)
   const [showWarning, setShowWarning] = useState(false)
   const { user, loading } = useAuth()
+  const { connected } = useSocket(user?.id || null)
 
   // Don't show on auth pages (login, register) or when loading
   // Check this AFTER all hooks are called (React rules)
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/'
 
   useEffect(() => {
-    // Don't initialize on auth pages
     if (isAuthPage || loading) return
-    
-    if (!user) return
-
-    // Initialize Socket.io connection
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
-    const socketUrl = apiUrl.replace('/api', '') || 'https://click-platform.onrender.com'
-    
-    const socket = require('socket.io-client')(
-      socketUrl,
-      {
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        reconnectionAttempts: Infinity,
-      }
-    )
-
-    socket.on('connect', () => {
-      setIsConnected(true)
+    setIsConnected(connected)
+    if (!connected && user) {
+      setReconnectAttempts((prev) => prev + 1)
+    } else if (connected) {
       setReconnectAttempts(0)
-      
-      // Join user room
-      socket.emit('join-user', user.id)
-    })
-
-    socket.on('disconnect', () => {
-      setIsConnected(false)
-    })
-
-    socket.on('reconnect_attempt', () => {
-      setReconnectAttempts(prev => prev + 1)
-    })
-
-    socket.on('reconnect', () => {
-      setIsConnected(true)
-      setReconnectAttempts(0)
-      socket.emit('join-user', user.id)
-    })
-
-    // Listen for processing updates
-    socket.on('processing:progress', (data: any) => {
-      // Handle progress updates
-      console.log('Processing progress:', data)
-    })
-
-    socket.on('processing:complete', (data: any) => {
-      // Handle completion
-      console.log('Processing complete:', data)
-    })
-
-    socket.on('processing:failed', (data: any) => {
-      // Handle failure
-      console.log('Processing failed:', data)
-    })
-
-    return () => {
-      socket.disconnect()
     }
-  }, [user, isAuthPage, loading])
+  }, [connected, user, isAuthPage, loading])
 
   // Only show after a few seconds of disconnection (not immediately)
   useEffect(() => {

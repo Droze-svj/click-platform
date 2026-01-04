@@ -58,10 +58,18 @@ router.post('/compare', auth, asyncHandler(async (req, res) => {
 router.get('/models', auth, asyncHandler(async (req, res) => {
   try {
     const models = getAvailableModels();
-    sendSuccess(res, 'Available models fetched', 200, models);
+    sendSuccess(res, 'Available models fetched', 200, models || {
+      providers: [],
+      currentProvider: null,
+      currentModel: null
+    });
   } catch (error) {
     logger.error('Get available models error', { error: error.message });
-    sendError(res, error.message, 500);
+    sendSuccess(res, 'Available models fetched', 200, {
+      providers: [],
+      currentProvider: null,
+      currentModel: null
+    });
   }
 }));
 

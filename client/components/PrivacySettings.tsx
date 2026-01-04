@@ -44,7 +44,9 @@ export default function PrivacySettings() {
       }
     } catch (err) {
       const apiError = handleError(err);
-      setError(apiError);
+      const errorObj = new Error(apiError.message);
+      (errorObj as any).code = apiError.code;
+      setError(errorObj);
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,9 @@ export default function PrivacySettings() {
       }
     } catch (err) {
       const apiError = handleError(err);
-      setError(apiError);
+      const errorObj = new Error(apiError.message);
+      (errorObj as any).code = apiError.code;
+      setError(errorObj);
     } finally {
       setLoading(false);
     }
@@ -110,7 +114,6 @@ export default function PrivacySettings() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ confirm: 'ANONYMIZE' }),
       });
       const data = await response.json();
       if (data.success) {
@@ -138,7 +141,6 @@ export default function PrivacySettings() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ confirm: 'DELETE' }),
       });
       const data = await response.json();
       if (data.success) {

@@ -1,0 +1,315 @@
+{
+  "timestamp": "2026-01-03T18:03:28.288Z",
+  "testDuration": 60000,
+  "baselines": {
+    "responseTimes": [],
+    "errorRates": {
+      "totalCalls": 24,
+      "failedCalls": 0,
+      "errorRate": 0,
+      "successRate": 1
+    },
+    "memoryUsage": [],
+    "cpuUsage": [],
+    "apiCalls": [
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463345387
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463345388
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463352444
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463352446
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463357528
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463357529
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463362626
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463362627
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463367670
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463367671
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463372756
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463372758
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463377818
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463377819
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463382882
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463382887
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463388004
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463388005
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463393069
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463393070
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463398165
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463398167
+      },
+      {
+        "endpoint": "Health Check",
+        "error": "",
+        "timestamp": 1767463403229
+      },
+      {
+        "endpoint": "API Health",
+        "error": "",
+        "timestamp": 1767463403230
+      }
+    ],
+    "pageLoads": [
+      {
+        "page": "Home Page",
+        "responseTime": 1097,
+        "status": 500,
+        "size": 21,
+        "timestamp": 1767463346485
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 948,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463347433
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 50,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463352496
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 23,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463352519
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 70,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463357599
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 23,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463357622
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 19,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463362646
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 17,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463362663
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 55,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463367727
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 24,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463367751
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 32,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463372790
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 23,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463372813
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 35,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463377854
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 21,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463377875
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 87,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463382974
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 24,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463382998
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 33,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463388038
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 25,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463388063
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 69,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463393139
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 20,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463393159
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 33,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463398200
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 24,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463398224
+      },
+      {
+        "page": "Home Page",
+        "responseTime": 30,
+        "status": 200,
+        "size": 13683,
+        "timestamp": 1767463403260
+      },
+      {
+        "page": "Dashboard",
+        "responseTime": 22,
+        "status": 200,
+        "size": 26087,
+        "timestamp": 1767463403282
+      }
+    ],
+    "pageLoadStats": {
+      "count": 24,
+      "average": 116.83333333333333,
+      "median": 27.5,
+      "p95": 818.8499999999982,
+      "min": 17,
+      "max": 1097
+    }
+  }
+}

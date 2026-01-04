@@ -79,7 +79,6 @@ export default function MembershipPage() {
         `${API_URL}/membership/upgrade`,
         { packageSlug },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

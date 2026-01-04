@@ -38,7 +38,6 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/workflows/webhooks?workflowId=${workflowId}`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -62,16 +61,12 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/workflows/webhooks', {
-        method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
-        body: JSON.stringify({
           workflowId,
           ...newWebhook,
-        }),
       })
 
       if (response.ok) {
@@ -95,8 +90,6 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/workflows/webhooks/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -115,8 +108,6 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/workflows/webhooks/${id}/test`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

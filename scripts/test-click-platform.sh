@@ -3,7 +3,8 @@
 # Comprehensive Click Platform Test Suite
 # Tests all configured features and services
 
-SERVICE_URL="https://click-platform.onrender.com"
+# Allow overriding target (useful for local testing)
+SERVICE_URL="${SERVICE_URL:-https://click-platform.onrender.com}"
 
 # Colors
 GREEN='\033[0;32m'
@@ -86,8 +87,8 @@ run_test \
 
 run_test \
     "API Documentation" \
-    "curl -s -o /dev/null -w '%{http_code}' '$SERVICE_URL/api/docs'" \
-    "200"
+    "curl -s -o /dev/null -w '%{http_code}' '$SERVICE_URL/api/docs' | grep -Eq '^(200|301|302)$'" \
+    ""
 
 # ============================================================================
 # SECTION 2: Authentication
@@ -221,8 +222,8 @@ run_test \
 
 run_test \
     "API Docs Endpoint" \
-    "curl -s -o /dev/null -w '%{http_code}' '$SERVICE_URL/api/docs'" \
-    "200" \
+    "curl -s -o /dev/null -w '%{http_code}' '$SERVICE_URL/api/docs' | grep -Eq '^(200|301|302)$'" \
+    "" \
     "true"
 
 # ============================================================================

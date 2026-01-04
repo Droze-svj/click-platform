@@ -13,7 +13,6 @@ interface SupportTicket {
   category: string
   messages: Array<{
     userId: string
-    message: string
     createdAt: string
   }>
   createdAt: string
@@ -34,7 +33,6 @@ export default function SupportTicketSystem() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/help/tickets', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -56,13 +54,10 @@ export default function SupportTicketSystem() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/help/tickets', {
-        method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
-        body: JSON.stringify(ticketData),
       })
 
       if (response.ok) {
@@ -82,13 +77,10 @@ export default function SupportTicketSystem() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/help/tickets/${selectedTicket._id}/messages`, {
-        method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
-        body: JSON.stringify({ message: newMessage }),
       })
 
       if (response.ok) {
@@ -258,10 +250,11 @@ function CreateTicketForm({
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="ticket-subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Subject
           </label>
           <input
+            id="ticket-subject"
             type="text"
             value={formData.subject}
             onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
@@ -270,10 +263,11 @@ function CreateTicketForm({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="ticket-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Description
           </label>
           <textarea
+            id="ticket-description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             required
@@ -283,10 +277,11 @@ function CreateTicketForm({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="ticket-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Category
             </label>
             <select
+              id="ticket-category"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -299,10 +294,11 @@ function CreateTicketForm({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="ticket-priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Priority
             </label>
             <select
+              id="ticket-priority"
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

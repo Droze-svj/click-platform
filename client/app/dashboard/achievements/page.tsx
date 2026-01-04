@@ -70,7 +70,6 @@ export default function AchievementsPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/engagement/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setStats(response.data.data)

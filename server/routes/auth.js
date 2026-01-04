@@ -10,7 +10,10 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 // Apply rate limiting to auth routes
-router.use(authLimiter);
+// In local development, avoid locking yourself out while testing login/register.
+if (process.env.NODE_ENV === 'production') {
+  router.use(authLimiter);
+}
 
 /**
  * @swagger
@@ -142,6 +145,7 @@ router.post('/register',
 router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
   try {
+
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -189,6 +193,7 @@ router.post('/login',
       { expiresIn: '30d' }
     );
 
+
     // Log successful login
     await logSecurityEvent({
       userId: user._id,
@@ -228,6 +233,12 @@ router.post('/login',
 
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
+  // Prevent any caching / 304 Not Modified behavior for auth state.
+
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   res.json({
     user: {
       id: req.user._id,

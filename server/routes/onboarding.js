@@ -33,8 +33,21 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     const progress = await getOnboardingProgress(req.user._id);
     sendSuccess(res, 'Onboarding progress fetched', 200, progress);
   } catch (error) {
-    logger.error('Get onboarding progress error', { error: error.message });
-    sendError(res, error.message, 500);
+    // Degrade gracefully: onboarding should never block the dashboard.
+    // If DB/services are unavailable, return an "empty/complete" state instead of 500.
+    logger.error('Get onboarding progress error', { error: error.message, userId: req.user?._id });
+    sendSuccess(res, 'Onboarding progress fetched', 200, {
+      progress: {
+        currentStep: 0,
+        completed: true,
+        skipped: true,
+      },
+      steps: [],
+      currentStepData: null,
+      totalSteps: 0,
+      completedSteps: 0,
+      isComplete: true,
+    });
   }
 }));
 

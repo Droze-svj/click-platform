@@ -4,9 +4,7 @@ describe('API Response Utilities', () => {
   describe('extractApiData', () => {
     it('should extract data from standard API response format', () => {
       const response = {
-        data: {
           success: true,
-          data: { id: '123', name: 'Test' },
         },
       }
       expect(extractApiData(response)).toEqual({ id: '123', name: 'Test' })
@@ -14,7 +12,6 @@ describe('API Response Utilities', () => {
 
     it('should return null when data is missing', () => {
       const response = {
-        data: {
           success: true,
         },
       }
@@ -23,7 +20,6 @@ describe('API Response Utilities', () => {
 
     it('should handle direct data format (backward compatibility)', () => {
       const response = {
-        data: { id: '123', name: 'Test' },
       }
       expect(extractApiData(response)).toEqual({ id: '123', name: 'Test' })
     })
@@ -31,7 +27,6 @@ describe('API Response Utilities', () => {
     it('should handle already extracted data', () => {
       const response = {
         success: true,
-        data: { id: '123' },
       }
       expect(extractApiData(response)).toEqual({ id: '123' })
     })
@@ -43,9 +38,7 @@ describe('API Response Utilities', () => {
 
     it('should handle array data', () => {
       const response = {
-        data: {
           success: true,
-          data: [{ id: '1' }, { id: '2' }],
         },
       }
       expect(extractApiData(response)).toEqual([{ id: '1' }, { id: '2' }])
@@ -56,7 +49,6 @@ describe('API Response Utilities', () => {
     it('should extract error from Axios error response', () => {
       const error = {
         response: {
-          data: {
             error: 'Custom error message',
           },
         },
@@ -67,8 +59,6 @@ describe('API Response Utilities', () => {
     it('should extract message when error is missing', () => {
       const error = {
         response: {
-          data: {
-            message: 'Error message',
           },
         },
       }
@@ -78,9 +68,7 @@ describe('API Response Utilities', () => {
     it('should fall back to error.message', () => {
       const error = {
         response: {
-          data: {},
         },
-        message: 'Fallback message',
       }
       expect(extractApiError(error)).toBe('Fallback message')
     })
@@ -96,7 +84,6 @@ describe('API Response Utilities', () => {
 
     it('should handle error with data property directly', () => {
       const error = {
-        data: {
           error: 'Direct error',
         },
       }
@@ -112,9 +99,7 @@ describe('API Response Utilities', () => {
   describe('isApiSuccess', () => {
     it('should return true for successful response with success flag', () => {
       const response = {
-        data: {
           success: true,
-          data: { id: '123' },
         },
       }
       expect(isApiSuccess(response)).toBe(true)
@@ -122,7 +107,6 @@ describe('API Response Utilities', () => {
 
     it('should return false for failed response', () => {
       const response = {
-        data: {
           success: false,
         },
       }
@@ -132,7 +116,6 @@ describe('API Response Utilities', () => {
     it('should handle response with success property directly', () => {
       const response = {
         success: true,
-        data: { id: '123' },
       }
       expect(isApiSuccess(response)).toBe(true)
     })

@@ -6,8 +6,7 @@ import axios from 'axios'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 interface ApprovalRequest {
   _id: string
@@ -25,7 +24,6 @@ interface ApprovalRequest {
   }
   status: string
   priority: string
-  message: string
   response: string
   createdAt: string
   expiresAt: string | null
@@ -44,8 +42,8 @@ export default function ApprovalsPage() {
     entityType: 'content',
     entityId: '',
     requestedFrom: '',
-    message: '',
-    priority: 'medium'
+    priority: 'medium',
+    message: ''
   })
 
   useEffect(() => {
@@ -73,8 +71,11 @@ export default function ApprovalsPage() {
         })
       ])
 
+
       if (requestsRes.data.success) {
-        setRequests(requestsRes.data.data || [])
+        const requestsData = requestsRes.data.data || []
+        const safeRequestsData = Array.isArray(requestsData) ? requestsData : []
+        setRequests(safeRequestsData)
       }
       if (countRes.data.success) {
         setPendingCount(countRes.data.data.count || 0)
@@ -94,7 +95,6 @@ export default function ApprovalsPage() {
         `${API_URL}/approvals/${requestId}/approve`,
         { response: response || '' },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Request approved', 'success')
@@ -112,7 +112,6 @@ export default function ApprovalsPage() {
         `${API_URL}/approvals/${requestId}/reject`,
         { response: response || '' },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Request rejected', 'success')
@@ -131,7 +130,6 @@ export default function ApprovalsPage() {
         `${API_URL}/approvals/${requestId}/cancel`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Request cancelled', 'success')
@@ -169,8 +167,6 @@ export default function ApprovalsPage() {
     )
   }
 
-  const pendingRequests = requests.filter(r => r.status === 'pending' && r.requestedFrom._id === user?.id)
-  const myRequests = requests.filter(r => r.requestedBy._id === user?.id)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -208,19 +204,19 @@ export default function ApprovalsPage() {
           ))}
         </div>
 
-        {pendingRequests.length > 0 && (
+        {requests.filter(r => r.status === 'pending').length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <h2 className="font-semibold mb-2">⚠️ Pending Your Approval</h2>
             <div className="space-y-3">
-              {pendingRequests.map((request) => (
+              {requests.filter(r => r.status === 'pending').map((request) => (
                 <div key={request._id} className="bg-white rounded-lg p-4 border border-yellow-300">
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <p className="font-semibold">
                         {request.requestedBy.name} requested approval for {request.entityType}
                       </p>
-                      {request.message && (
-                        <p className="text-sm text-gray-600 mt-1">{request.message}</p>
+                      {request.response && (
+                        <p className="text-sm text-gray-600 mt-1">{request.response}</p>
                       )}
                     </div>
                     <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(request.priority)}`}>
@@ -277,8 +273,8 @@ export default function ApprovalsPage() {
                             <>Requested by <strong>{request.requestedBy.name}</strong></>
                           )}
                         </p>
-                        {request.message && (
-                          <p className="text-sm text-gray-700 mt-1">{request.message}</p>
+                        {request.response && (
+                          <p className="text-sm text-gray-700 mt-1">{request.response}</p>
                         )}
                         {request.response && (
                           <p className="text-sm text-gray-600 mt-1 italic">
@@ -411,8 +407,8 @@ export default function ApprovalsPage() {
                       entityType: 'content',
                       entityId: '',
                       requestedFrom: '',
-                      message: '',
-                      priority: 'medium'
+                      priority: 'medium',
+                      message: ''
                     })
                   }}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
@@ -427,7 +423,6 @@ export default function ApprovalsPage() {
                         `${API_URL}/approvals`,
                         newRequest,
                         {
-                          headers: { Authorization: `Bearer ${token}` }
                         }
                       )
                       showToast('Approval request created', 'success')
@@ -436,8 +431,8 @@ export default function ApprovalsPage() {
                         entityType: 'content',
                         entityId: '',
                         requestedFrom: '',
-                        message: '',
-                        priority: 'medium'
+                        priority: 'medium',
+                        message: ''
                       })
                       await loadData()
                     } catch (error: any) {

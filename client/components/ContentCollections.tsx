@@ -59,15 +59,11 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
     setIsCreating(true)
     try {
       const response = await fetch('/api/collections', {
-        method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
           name: newCollectionName,
           description: newCollectionDesc,
-        }),
       })
 
       if (response.ok) {
@@ -96,12 +92,9 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
 
     try {
       const response = await fetch(`/api/collections/${collectionId}/content`, {
-        method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ contentId }),
       })
 
       if (response.ok) {

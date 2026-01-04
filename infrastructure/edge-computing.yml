@@ -1,0 +1,634 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: click-edge
+  labels:
+    name: click-edge
+    environment: production
+---
+# Edge Computing Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: click-edge-config
+  namespace: click-edge
+data:
+  EDGE_ENABLED: "true"
+  CDN_ENABLED: "true"
+  EDGE_FUNCTIONS_ENABLED: "true"
+  GLOBAL_REPLICATION_ENABLED: "true"
+  LATENCY_OPTIMIZATION_ENABLED: "true"
+  GEO_DISTRIBUTION_ENABLED: "true"
+---
+# Cloudflare Workers (Edge Functions)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-edge-functions
+  namespace: click-edge
+  labels:
+    app: click-edge-functions
+    component: edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: click-edge-functions
+  template:
+    metadata:
+      labels:
+        app: click-edge-functions
+    spec:
+      containers:
+      - name: edge-functions
+        image: click-app/edge-functions:latest
+        ports:
+        - containerPort: 8787
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-edge-config
+        - secretRef:
+            name: cloudflare-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8787
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8787
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# CDN Configuration with Multiple Providers
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cdn-config
+  namespace: click-edge
+data:
+  cloudflare-config.json: |
+    {
+      "zone_id": "your-zone-id",
+      "api_token": "your-api-token",
+      "rules": [
+        {
+          "name": "API Rate Limiting",
+          "match": "/api/*",
+          "action": "rate_limit",
+          "limit": 1000
+        },
+        {
+          "name": "Static Assets Caching",
+          "match": "/*.{js,css,png,jpg,jpeg,gif,ico,svg,woff,woff2,ttf,eot}",
+          "action": "cache",
+          "ttl": 31536000
+        },
+        {
+          "name": "Security Headers",
+          "match": "/*",
+          "action": "headers",
+          "headers": {
+            "X-Frame-Options": "DENY",
+            "X-Content-Type-Options": "nosniff",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload"
+          }
+        }
+      ]
+    }
+  aws-cloudfront-config.json: |
+    {
+      "distribution_id": "your-distribution-id",
+      "origins": [
+        {
+          "domainName": "click-app.com",
+          "originPath": "",
+          "customOriginConfig": {
+            "httpPort": 80,
+            "httpsPort": 443,
+            "originProtocolPolicy": "https-only"
+          }
+        }
+      ],
+      "behaviors": [
+        {
+          "pathPattern": "/api/*",
+          "targetOriginId": "click-app.com",
+          "viewerProtocolPolicy": "https-only",
+          "allowedMethods": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+          "cachedMethods": ["GET", "HEAD"],
+          "forwardedValues": {
+            "queryString": true,
+            "cookies": {
+              "forward": "all"
+            },
+            "headers": ["Authorization", "Content-Type"]
+          },
+          "minTtl": 0,
+          "defaultTtl": 86400,
+          "maxTtl": 31536000
+        },
+        {
+          "pathPattern": "/*.{js,css,png,jpg,jpeg,gif,ico,svg,woff,woff2,ttf,eot}",
+          "targetOriginId": "click-app.com",
+          "viewerProtocolPolicy": "https-only",
+          "cachedMethods": ["GET", "HEAD"],
+          "forwardedValues": {
+            "queryString": false,
+            "cookies": {
+              "forward": "none"
+            }
+          },
+          "minTtl": 86400,
+          "defaultTtl": 31536000,
+          "maxTtl": 31536000
+        }
+      ]
+    }
+---
+# Global Load Balancer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-global-lb
+  namespace: click-edge
+  labels:
+    app: click-global-lb
+    component: load-balancer
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: click-global-lb
+  template:
+    metadata:
+      labels:
+        app: click-global-lb
+    spec:
+      containers:
+      - name: global-lb
+        image: click-app/global-lb:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        - containerPort: 443
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-edge-config
+        volumeMounts:
+        - name: geo-data
+          mountPath: /data/geo
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: geo-data
+        configMap:
+          name: geo-data-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: geo-data-config
+  namespace: click-edge
+data:
+  regions.json: |
+    {
+      "us-east-1": {
+        "endpoint": "https://us-east.click-app.com",
+        "latency": 50,
+        "capacity": 1000
+      },
+      "eu-west-1": {
+        "endpoint": "https://eu-west.click-app.com",
+        "latency": 80,
+        "capacity": 800
+      },
+      "ap-southeast-1": {
+        "endpoint": "https://ap-southeast.click-app.com",
+        "latency": 150,
+        "capacity": 600
+      },
+      "sa-east-1": {
+        "endpoint": "https://sa-east.click-app.com",
+        "latency": 120,
+        "capacity": 400
+      }
+    }
+  countries.json: |
+    {
+      "US": "us-east-1",
+      "CA": "us-east-1",
+      "GB": "eu-west-1",
+      "DE": "eu-west-1",
+      "FR": "eu-west-1",
+      "JP": "ap-southeast-1",
+      "KR": "ap-southeast-1",
+      "AU": "ap-southeast-1",
+      "BR": "sa-east-1",
+      "MX": "sa-east-1",
+      "AR": "sa-east-1"
+    }
+---
+# Edge Cache Management
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-edge-cache
+  namespace: click-edge
+  labels:
+    app: click-edge-cache
+    component: cache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: click-edge-cache
+  template:
+    metadata:
+      labels:
+        app: click-edge-cache
+    spec:
+      containers:
+      - name: edge-cache
+        image: click-app/edge-cache:latest
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-edge-config
+        volumeMounts:
+        - name: cache-data
+          mountPath: /data/cache
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: cache-data
+        persistentVolumeClaim:
+          claimName: edge-cache-pvc
+---
+# Real-time Performance Monitoring
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-performance-monitor
+  namespace: click-edge
+  labels:
+    app: click-performance-monitor
+    component: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: click-performance-monitor
+  template:
+    metadata:
+      labels:
+        app: click-performance-monitor
+    spec:
+      containers:
+      - name: performance-monitor
+        image: click-app/performance-monitor:latest
+        ports:
+        - containerPort: 9090
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-edge-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# WebSocket Edge Server for Real-time Features
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-websocket-edge
+  namespace: click-edge
+  labels:
+    app: click-websocket-edge
+    component: websocket
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: click-websocket-edge
+  template:
+    metadata:
+      labels:
+        app: click-websocket-edge
+    spec:
+      containers:
+      - name: websocket-edge
+        image: click-app/websocket-edge:latest
+        ports:
+        - containerPort: 8081
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-edge-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          tcpSocket:
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Persistent Volumes for Edge Computing
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-cache-pvc
+  namespace: click-edge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: edge-logs-pvc
+  namespace: click-edge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
+---
+# Service Mesh for Edge Services
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: click-edge-gateway
+  namespace: click-edge
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*.click-app.com"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: click-edge-tls
+    hosts:
+    - "*.click-app.com"
+  - port:
+      number: 8081
+      name: websocket
+      protocol: HTTP
+    hosts:
+    - "ws.click-app.com"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: click-edge-routing
+  namespace: click-edge
+spec:
+  hosts:
+  - "*.click-app.com"
+  gateways:
+  - click-edge-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/api"
+    route:
+    - destination:
+        host: click-api-gateway
+        port:
+          number: 4000
+  - match:
+    - uri:
+        prefix: "/ws"
+    route:
+    - destination:
+        host: click-websocket-edge
+        port:
+          number: 8081
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: click-global-lb
+        port:
+          number: 80
+---
+# Traffic Policies for Edge Optimization
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: click-edge-traffic-policy
+  namespace: click-edge
+spec:
+  host: click-global-lb
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 1024
+        http2MaxRequests: 1024
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+# Edge Analytics and Metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: click-edge-alerts
+  namespace: click-edge
+  labels:
+    app: click
+    component: edge
+spec:
+  groups:
+  - name: click.edge
+    rules:
+    - alert: HighLatencyRegion
+      expr: http_request_duration_seconds{quantile="0.95", region=~".+"} > 2
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency in region {{ $labels.region }}"
+        description: "95th percentile latency is {{ $value }}s in {{ $labels.region }}"
+
+    - alert: EdgeCacheMissRate
+      expr: rate(edge_cache_misses_total[5m]) / rate(edge_cache_requests_total[5m]) > 0.8
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High edge cache miss rate"
+        description: "Edge cache miss rate is {{ $value }}%"
+
+    - alert: CDNOriginError
+      expr: rate(cdn_origin_errors_total[5m]) > 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CDN origin errors detected"
+        description: "CDN is experiencing origin errors"
+
+    - alert: WebSocketConnectionLimit
+      expr: websocket_active_connections > 10000
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "WebSocket connection limit approaching"
+        description: "Active WebSocket connections: {{ $value }}"
+---
+# Horizontal Pod Autoscaler for Edge Services
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: click-edge-hpa
+  namespace: click-edge
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: click-global-lb
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: External
+    external:
+      metric:
+        name: global_request_rate
+      target:
+        type: AverageValue
+        averageValue: 1000
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 5
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 120
+      selectPolicy: Min
+
+

@@ -11,14 +11,18 @@ export function middleware(request: NextRequest) {
   // Add request context for better error tracking
   Sentry.setContext('request', {
     url: request.url,
-    method: request.method,
     pathname: request.nextUrl.pathname,
   });
+
+
 
   const response = NextResponse.next();
 
   // Add custom header for tracking (optional)
   response.headers.set('X-Request-Path', request.nextUrl.pathname);
+  // Hard proof marker that the browser is hitting the current Next dev server.
+  response.headers.set('X-Debug-Marker', 'run39');
+  response.headers.set('X-Debug-ReqTs', String(Date.now()));
 
   return response;
 }

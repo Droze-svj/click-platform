@@ -13,8 +13,7 @@ import ROICalculator from '../../../components/ROICalculator'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 interface Analytics {
   total: number
@@ -46,17 +45,14 @@ interface Analytics {
 interface Insights {
   recommendations: Array<{
     type: string
-    message: string
     priority: string
   }>
   trends: Array<{
     type: string
-    message: string
     trend: string
   }>
   opportunities: Array<{
     type: string
-    message: string
     platforms?: string[]
   }>
 }
@@ -82,6 +78,7 @@ export default function AnalyticsPage() {
   }, [user, router, period])
 
   const loadAnalytics = async () => {
+
     try {
       const token = localStorage.getItem('token')
       const [analyticsRes, insightsRes, comprehensiveRes, trendsRes] = await Promise.all([
@@ -108,9 +105,11 @@ export default function AnalyticsPage() {
       if (insightsData) setInsights(insightsData)
       if (comprehensiveData) setComprehensive(comprehensiveData)
       if (trendsData) setTrends(trendsData)
+
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load analytics', 'error')
+
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load analytics', 'error')
     } finally {
       setLoading(false)
     }
@@ -122,7 +121,6 @@ export default function AnalyticsPage() {
       const response = await axios.get(
         `${API_URL}/analytics/enhanced/export?format=${format}&period=${period}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           responseType: format === 'csv' ? 'blob' : 'json'
         }
       )
@@ -420,7 +418,7 @@ export default function AnalyticsPage() {
                 <div className="space-y-3">
                   {insights.recommendations.map((rec, index) => (
                     <div key={index} className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm">{rec.message}</p>
+                      <p className="text-sm">{rec.type} - {rec.priority} priority</p>
                     </div>
                   ))}
                 </div>
@@ -433,7 +431,7 @@ export default function AnalyticsPage() {
                 <div className="space-y-3">
                   {insights.trends.map((trend, index) => (
                     <div key={index} className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm">{trend.message}</p>
+                      <p className="text-sm">{trend.type} - {trend.trend}</p>
                     </div>
                   ))}
                 </div>
@@ -446,7 +444,7 @@ export default function AnalyticsPage() {
                 <div className="space-y-3">
                   {insights.opportunities.map((opp, index) => (
                     <div key={index} className="p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-sm">{opp.message}</p>
+                      <p className="text-sm">{opp.type}</p>
                       {opp.platforms && (
                         <div className="mt-2 flex flex-wrap gap-1">
                           {opp.platforms.map((platform) => (

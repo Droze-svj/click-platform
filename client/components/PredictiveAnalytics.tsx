@@ -26,7 +26,6 @@ export default function PredictiveAnalytics() {
   const [prediction, setPrediction] = useState<PerformancePrediction | null>(null);
   const [contentData, setContentData] = useState({
     title: '',
-    body: '',
     platform: 'instagram',
     tags: [] as string[],
     category: '',
@@ -40,9 +39,9 @@ export default function PredictiveAnalytics() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ contentData }),
+        body: JSON.stringify(contentData),
       });
       const data = await response.json();
       if (data.success) {

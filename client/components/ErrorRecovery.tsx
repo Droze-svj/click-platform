@@ -8,7 +8,6 @@ import { AppError } from '../utils/errorHandler';
 import { cn } from '../lib/utils';
 
 interface RecoverySuggestion {
-  message: string;
   actions: string[];
   retryable: boolean;
   retryAfter?: number;

@@ -8,6 +8,20 @@ const logger = require('../utils/logger');
  * Check if user has active subscription
  */
 const requireActiveSubscription = (req, res, next) => {
+  // Developer convenience: allow bypassing subscription checks in non-production.
+  // This is critical for local testing (video upload/editing) when subscription billing isn't configured.
+  if (process.env.NODE_ENV !== 'production' && process.env.BYPASS_SUBSCRIPTION === 'true') {
+    return next();
+  }
+  // If the request is coming from a local dev environment, allow bypass even without env vars.
+  // This unblocks localhost testing while keeping production protected.
+  if (process.env.NODE_ENV !== 'production') {
+    const hostHeader = (req.headers.host || '').toLowerCase();
+    if (hostHeader.includes('localhost') || hostHeader.includes('127.0.0.1')) {
+      return next();
+    }
+  }
+
   if (!req.user) {
     return sendError(res, 'Authentication required', 401);
   }

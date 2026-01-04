@@ -51,7 +51,6 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
       if (teamId) params.append('teamId', teamId)
 
       const response = await axios.get(`${API_URL}/comments?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.success) {
@@ -81,7 +80,6 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
           teamId: teamId || null
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -102,7 +100,6 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
         `${API_URL}/comments/${commentId}/reaction`,
         { type },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       await loadComments()

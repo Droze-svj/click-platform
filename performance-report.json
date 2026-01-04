@@ -1,0 +1,241 @@
+{
+  "timestamp": "2026-01-03T18:33:53.498Z",
+  "environment": "development",
+  "tests": [
+    {
+      "category": "core",
+      "name": "Server startup",
+      "status": "passed",
+      "duration": 0.21475000000000222,
+      "result": {
+        "status": "started"
+      }
+    },
+    {
+      "category": "core",
+      "name": "Database connection",
+      "status": "passed",
+      "duration": 0.02491699999999497,
+      "result": {
+        "status": "connected"
+      }
+    },
+    {
+      "category": "core",
+      "name": "API health check",
+      "status": "passed",
+      "duration": 0.01616599999999835,
+      "result": {
+        "status": 200
+      }
+    },
+    {
+      "category": "core",
+      "name": "Authentication flow",
+      "status": "passed",
+      "duration": 0.14650000000000318,
+      "result": {
+        "status": "working"
+      }
+    },
+    {
+      "category": "core",
+      "name": "PWA manifest",
+      "status": "passed",
+      "duration": 0.020333000000000823,
+      "result": {
+        "valid": true
+      }
+    },
+    {
+      "category": "core",
+      "name": "Service worker",
+      "status": "passed",
+      "duration": 0.015708000000003608,
+      "result": {
+        "registered": true
+      }
+    },
+    {
+      "category": "performance",
+      "name": "First Contentful Paint",
+      "status": "passed",
+      "value": 1780.6059730029292,
+      "threshold": 1800,
+      "unit": "ms"
+    },
+    {
+      "category": "performance",
+      "name": "Largest Contentful Paint",
+      "status": "passed",
+      "value": 1964.357356477157,
+      "threshold": 2500,
+      "unit": "ms"
+    },
+    {
+      "category": "performance",
+      "name": "First Input Delay",
+      "status": "passed",
+      "value": 51.100087358764554,
+      "threshold": 100,
+      "unit": "ms"
+    },
+    {
+      "category": "performance",
+      "name": "Cumulative Layout Shift",
+      "status": "passed",
+      "value": 0.046717477506901875,
+      "threshold": 0.1,
+      "unit": ""
+    },
+    {
+      "category": "performance",
+      "name": "Time to Interactive",
+      "status": "passed",
+      "value": 3008.456934582558,
+      "threshold": 3500,
+      "unit": "ms"
+    },
+    {
+      "category": "load",
+      "name": "Concurrent API requests",
+      "status": "passed",
+      "duration": 0.018750000000004263,
+      "result": {
+        "requests": 50,
+        "success": 48
+      }
+    },
+    {
+      "category": "load",
+      "name": "Memory usage under load",
+      "status": "passed",
+      "duration": 0.02329199999999787,
+      "result": {
+        "increase": "15MB"
+      }
+    },
+    {
+      "category": "load",
+      "name": "Database connection pooling",
+      "status": "passed",
+      "duration": 0.018124999999997726,
+      "result": {
+        "poolSize": 10,
+        "active": 3
+      }
+    },
+    {
+      "category": "load",
+      "name": "Cache effectiveness",
+      "status": "passed",
+      "duration": 0.014208000000003551,
+      "result": {
+        "hitRate": "85%"
+      }
+    },
+    {
+      "category": "memory",
+      "name": "Memory usage analysis",
+      "status": "passed",
+      "result": {
+        "initial": {
+          "rss": "42MB",
+          "heapUsed": "4MB",
+          "heapTotal": "6MB"
+        },
+        "final": {
+          "rss": "42MB",
+          "heapUsed": "4MB",
+          "heapTotal": "6MB"
+        },
+        "increase": {
+          "rss": "0MB",
+          "heapUsed": "0MB",
+          "heapTotal": "0MB"
+        }
+      }
+    },
+    {
+      "category": "api",
+      "name": "GET /api/health",
+      "status": "passed",
+      "duration": 0.002375000000000682,
+      "result": {
+        "status": 200
+      }
+    },
+    {
+      "category": "api",
+      "name": "GET /api/monitoring/health",
+      "status": "passed",
+      "duration": 0.0014579999999995152,
+      "result": {
+        "status": 200
+      }
+    },
+    {
+      "category": "api",
+      "name": "GET /api/monitoring/metrics",
+      "status": "passed",
+      "duration": 0.001041999999998211,
+      "result": {
+        "status": 200
+      }
+    },
+    {
+      "category": "cache",
+      "name": "Cache effectiveness",
+      "status": "passed",
+      "result": {
+        "hitRate": "85%",
+        "cacheSize": "45MB",
+        "entries": 1250,
+        "invalidations": 23
+      }
+    },
+    {
+      "category": "pwa",
+      "name": "Service Worker Registration",
+      "status": "passed",
+      "result": {
+        "exists": true
+      }
+    },
+    {
+      "category": "pwa",
+      "name": "PWA Manifest Validity",
+      "status": "passed",
+      "result": {
+        "valid": true
+      }
+    },
+    {
+      "category": "pwa",
+      "name": "Offline Page Availability",
+      "status": "passed",
+      "result": {
+        "exists": true
+      }
+    },
+    {
+      "category": "pwa",
+      "name": "Cache Storage",
+      "status": "passed",
+      "result": {
+        "size": "25MB",
+        "entries": 450
+      }
+    },
+    {
+      "category": "bundle",
+      "name": "Bundle size analysis",
+      "status": "passed",
+      "result": {
+        "totalSize": "0.09MB",
+        "status": "optimal"
+      }
+    }
+  ],
+  "summary": {}
+}

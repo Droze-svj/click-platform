@@ -55,7 +55,6 @@ export default function ViralPredictor({ content, onPrediction }: ViralPredictor
           }
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

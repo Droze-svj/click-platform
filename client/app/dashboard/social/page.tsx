@@ -74,13 +74,12 @@ export default function SocialMediaPage() {
     setLoading(true)
     try {
       const response = await axios.get(`${API_URL}/social/accounts`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       const accountsData = extractApiData<ConnectedAccount[]>(response)
       setAccounts(Array.isArray(accountsData) ? accountsData : [])
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load connected accounts', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load connected accounts', 'error')
     } finally {
       setLoading(false)
     }
@@ -123,13 +122,12 @@ export default function SocialMediaPage() {
   const loadOptimalTimes = async (platform: string) => {
     try {
       const response = await axios.get(`${API_URL}/social/optimal-times?platform=${platform}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       const optimalTimesData = extractApiData<OptimalTime[]>(response)
       setOptimalTimes(Array.isArray(optimalTimesData) ? optimalTimesData : [])
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load optimal times', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load optimal times', 'error')
     }
   }
 
@@ -193,7 +191,8 @@ export default function SocialMediaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Social Media Integration</h1>
@@ -336,6 +335,7 @@ export default function SocialMediaPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </ErrorBoundary>
   )

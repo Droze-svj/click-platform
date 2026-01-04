@@ -54,7 +54,6 @@ export default function ScriptDetailPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/scripts/${params.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setScript(response.data.data)
@@ -78,7 +77,6 @@ export default function ScriptDetailPage() {
         `${API_URL}/scripts/${script._id}`,
         { script: editedScript },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       if (response.data.success) {
@@ -101,7 +99,6 @@ export default function ScriptDetailPage() {
       const response = await axios.get(
         `${API_URL}/scripts/${script._id}/export?format=${format}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
         }
       )

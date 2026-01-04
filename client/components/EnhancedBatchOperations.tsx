@@ -54,7 +54,6 @@ export default function EnhancedBatchOperations({
         : { postIds: selectedItems }
 
       await axios.post(endpoint, body, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       showToast(`Deleted ${selectedItems.length} items successfully`, 'success')

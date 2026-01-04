@@ -15,6 +15,20 @@ const createRateLimiter = (windowMs, max, message) => {
     message: { success: false, error: message },
     standardHeaders: true,
     legacyHeaders: false,
+    // In local development, avoid locking yourself out while testing flows.
+    skip: (req) => {
+      if (process.env.NODE_ENV === 'production') return false;
+      const ip = (req.ip || '').toString();
+      const host = (req.hostname || '').toString();
+      const origin = (req.get && req.get('origin')) ? req.get('origin') : '';
+      return (
+        host === 'localhost' ||
+        ip === '127.0.0.1' ||
+        ip === '::1' ||
+        ip.includes('127.0.0.1') ||
+        (typeof origin === 'string' && origin.includes('localhost'))
+      );
+    },
     handler: (req, res) => {
       logger.warn('Rate limit exceeded', {
         ip: req.ip,

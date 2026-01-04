@@ -24,7 +24,6 @@ interface ResourceStatus {
   alerts: Array<{
     type: string;
     severity: string;
-    message: string;
   }>;
 }
 
@@ -42,8 +41,8 @@ export default function InfrastructureDashboard() {
     try {
       const response = await fetch('/api/infrastructure/resources/thresholds', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
       const data = await response.json();
       if (data.success) {

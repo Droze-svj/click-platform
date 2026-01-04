@@ -119,7 +119,11 @@
     </div>
 
     <script>
-        const API_URL = 'https://click-platform.onrender.com/api';
+        // Prefer local proxy when testing locally.
+        const API_URL =
+          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? '/api'
+            : 'https://click-platform.onrender.com/api';
         const logEl = document.getElementById('log');
         const messageEl = document.getElementById('message');
         const form = document.getElementById('registerForm');

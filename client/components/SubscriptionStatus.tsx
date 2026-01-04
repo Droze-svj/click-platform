@@ -36,7 +36,6 @@ export default function SubscriptionStatus() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/subscription/status`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setStatus(response.data.data)

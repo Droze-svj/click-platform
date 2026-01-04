@@ -2,7 +2,6 @@
 
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import Link from 'next/link'
 import Navbar from '../../components/Navbar'
 import { extractApiData } from '../../utils/apiResponse'
@@ -19,6 +18,10 @@ import ToastContainer from '../../components/ToastContainer'
 import { useKeyboardShortcuts, defaultShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useEngagement } from '../../hooks/useEngagement'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
+import { useAuth } from '../../hooks/useAuth'
+
+// Dynamic imports for better code splitting and performance
+import { DynamicAnalytics, DynamicPredictiveAnalytics } from '../../components/DynamicImports'
 
 // Lazy load heavy components for better performance
 const EnhancedContentSuggestions = lazy(() => import('../../components/EnhancedContentSuggestions'))
@@ -27,9 +30,6 @@ const SmartSuggestions = lazy(() => import('../../components/SmartSuggestions'))
 const DailyChallenges = lazy(() => import('../../components/DailyChallenges'))
 const QuickTemplateAccess = lazy(() => import('../../components/QuickTemplateAccess'))
 const AIMultiModelSelector = lazy(() => import('../../components/AIMultiModelSelector'))
-const PredictiveAnalytics = lazy(() => import('../../components/PredictiveAnalytics'))
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface User {
   id: string
@@ -48,96 +48,33 @@ interface User {
 }
 
 export default function Dashboard() {
+  // Test modern design system classes are available
+  useEffect(() => {
+    const testElement = document.createElement('div');
+    testElement.className = 'card-elevated gradient-cosmic animate-float';
+    testElement.style.position = 'absolute';
+    testElement.style.left = '-9999px';
+    testElement.textContent = 'Design Test';
+    document.body.appendChild(testElement);
+
+    setTimeout(() => {
+      const computedStyle = window.getComputedStyle(testElement);
+      console.log('🎨 Modern Design System Test:', {
+        hasCardElevated: computedStyle.backdropFilter !== 'none',
+        hasGradient: computedStyle.background.includes('linear-gradient'),
+        hasAnimation: computedStyle.animation !== 'none',
+        borderRadius: computedStyle.borderRadius,
+        boxShadow: computedStyle.boxShadow
+      });
+      document.body.removeChild(testElement);
+    }, 100);
+  }, []);
+
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  
+  const { user, loading } = useAuth()
+
   // Enable keyboard shortcuts
   useKeyboardShortcuts(defaultShortcuts(router))
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadUser()
-  }, [])
-
-  const loadUser = async (retryCount = 0) => {
-    try {
-      // Wait a bit if we just came from registration
-      if (retryCount === 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-      }
-      
-      const token = localStorage.getItem('token')
-      if (!token) {
-        console.log('⚠️ No token found, redirecting to login')
-        // Don't redirect immediately - show a message first
-        setTimeout(() => {
-          router.push('/login')
-        }, 2000)
-        return
-      }
-
-      console.log('🔍 Loading user with token:', token.substring(0, 20) + '...')
-      console.log('🔍 API URL:', API_URL)
-      console.log('🔍 Retry attempt:', retryCount)
-      
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 60000 // Increased to 60 seconds for Render.com free tier
-      })
-
-      console.log('✅ User loaded successfully:', response.data)
-      
-      // Handle both response formats: { user: ... } and { data: { user: ... } }
-      let userData: User | null = null
-      if (response.data?.user) {
-        userData = response.data.user
-      } else if (response.data?.data?.user) {
-        userData = response.data.data.user
-      } else {
-        const extracted = extractApiData<{ user: User }>(response)
-        userData = extracted?.user || null
-      }
-      
-      console.log('✅ Extracted user data:', userData)
-      if (!userData) {
-        throw new Error('User data not found in response')
-      }
-      setUser(userData)
-    } catch (error: any) {
-      console.error('❌ Failed to load user:', error)
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        status: error.response?.status,
-        data: error.response?.data
-      })
-      
-      // Retry logic for network errors (Render.com free tier can be slow)
-      if (retryCount < 2 && (
-        error.code === 'ECONNABORTED' || 
-        error.code === 'ERR_NETWORK' || 
-        error.code === 'ECONNREFUSED' ||
-        error.message?.includes('timeout') ||
-        error.message?.includes('Network Error')
-      )) {
-        console.log(`🔄 Retrying in 2 seconds... (attempt ${retryCount + 1}/2)`)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        return loadUser(retryCount + 1)
-      }
-      
-      // Only redirect to login if it's an auth error (401, 403) or max retries reached
-      if (error.response?.status === 401 || error.response?.status === 403 || retryCount >= 2) {
-        console.log('⚠️ Authentication failed or max retries reached, redirecting to login')
-        localStorage.removeItem('token')
-        router.push('/login')
-      } else {
-        // For other errors, show error but don't redirect
-        console.error('⚠️ Failed to load user but keeping on dashboard')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -159,107 +96,207 @@ export default function Dashboard() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 bg-mesh relative">
+        <div className="absolute inset-0 bg-dots"></div>
         <Navbar />
-      <SubscriptionBanner />
-      <NextStepsPanel />
-      <QuickActions />
-      <OnboardingTour />
-      <QuickActionsMenu />
-      <ToastContainer />
-      <div className="container mx-auto px-4 py-8" data-tour="dashboard">
-        <div className="mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Subscription Status</h2>
-            <div className="flex items-center gap-4">
-              <span className={`px-4 py-2 rounded ${
-                user.subscription.status === 'active' ? 'bg-green-100 text-green-800' :
-                user.subscription.status === 'trial' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {user.subscription.status.toUpperCase()}
-              </span>
-              <span className="text-gray-600">Plan: {user.subscription.plan}</span>
+        <SubscriptionBanner />
+        <NextStepsPanel />
+        <QuickActions />
+        <OnboardingTour />
+        <QuickActionsMenu />
+        <ToastContainer />
+
+        {/* Enhanced Hero Section with floating elements */}
+        <section className="relative overflow-hidden section-padding">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-purple-600/5 to-pink-600/5"></div>
+          <div className="absolute inset-0 bg-noise"></div>
+
+          {/* Floating decorative elements */}
+          <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl float-element"></div>
+          <div className="absolute top-40 right-20 w-32 h-32 bg-gradient-to-br from-pink-400/20 to-orange-400/20 rounded-full blur-xl float-element"></div>
+          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-gradient-to-br from-green-400/20 to-teal-400/20 rounded-full blur-xl float-element"></div>
+
+          <div className="relative container-modern">
+            <div className="text-center mb-16 animate-slide-in-up">
+              <h1 className="text-hero mb-6 animate-float-subtle">
+                <span className="gradient-cosmic">
+                  Welcome to Click
+                </span>
+              </h1>
+              <p className="text-readable-lg max-w-3xl mx-auto text-center animate-fade-in-blur">
+                Your creative workspace for content creation, automation, and growth.
+                Transform ideas into engaging content with AI-powered tools.
+              </p>
+
+              {/* Animated accent line */}
+              <div className="mt-8 flex justify-center">
+                <div className="w-24 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent rounded-full animate-pulse-glow"></div>
+              </div>
+            </div>
+
+            {/* Stats Overview with enhanced interactivity */}
+            <div className="grid-readable mb-16">
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.1s'}}>
+                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
+                  {user.usage?.videosProcessed ?? 0}
+                </div>
+                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
+                  Videos Processed
+                </div>
+                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
+                    Click to view details →
+                  </div>
+                </div>
+              </div>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.2s'}}>
+                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
+                  {user.usage?.contentGenerated ?? 0}
+                </div>
+                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
+                  Content Created
+                </div>
+                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
+                    Click to view details →
+                  </div>
+                </div>
+              </div>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.3s'}}>
+                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
+                  {user.usage?.quotesCreated ?? 0}
+                </div>
+                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
+                  Quotes Made
+                </div>
+                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
+                    Click to view details →
+                  </div>
+                </div>
+              </div>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.4s'}}>
+                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
+                  {user.usage?.postsScheduled ?? 0}
+                </div>
+                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
+                  Posts Scheduled
+                </div>
+                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
+                    Click to view details →
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Videos Processed"
-            value={user.usage.videosProcessed}
-            icon="🎬"
-          />
-          <StatCard
-            title="Content Generated"
-            value={user.usage.contentGenerated}
-            icon="📝"
-          />
-          <StatCard
-            title="Quote Cards"
-            value={user.usage.quotesCreated}
-            icon="💬"
-          />
-          <StatCard
-            title="Posts Scheduled"
-            value={user.usage.postsScheduled}
-            icon="📅"
-          />
-        </div>
+        <div className="container-readable py-8" data-tour="dashboard">
+          {/* Subscription Status with enhanced visual polish */}
+          <div className="card-elevated p-8 mb-12 animate-slide-in-up hover-lift relative overflow-hidden" style={{animationDelay: '0.5s'}}>
+            {/* Subtle background pattern */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary-500/10 to-transparent rounded-full"></div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="flex-readable-column md:flex-readable md:justify-between relative">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-4 text-readable flex items-center">
+                  <span className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full mr-3 animate-pulse"></span>
+                  Subscription Status
+                </h3>
+                <div className="flex-readable">
+                  <span className={`px-6 py-3 rounded-full text-sm font-semibold shadow-lg ${
+                    user.subscription.status === 'active'
+                      ? 'status-active text-white'
+                      : user.subscription.status === 'trial'
+                      ? 'status-trial text-white'
+                      : 'status-inactive text-white'
+                  }`}>
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-white/80 rounded-full mr-2 animate-pulse"></span>
+                      {user.subscription.status.toUpperCase()}
+                    </span>
+                  </span>
+                  <span className="text-readable font-medium flex items-center">
+                    <span className="text-primary-600 dark:text-primary-400 mr-2">✨</span>
+                    {user.subscription.plan} Plan
+                  </span>
+                </div>
+              </div>
+              <div className="text-center md:text-right">
+                <div className="text-3xl font-bold gradient-cosmic mb-2 animate-float-subtle">{user.subscription.plan}</div>
+                <div className="text-readable-sm text-secondary-600 dark:text-secondary-400">Current Plan</div>
+
+                {/* Progress indicator */}
+                <div className="mt-4 w-24 h-2 bg-secondary-200 dark:bg-secondary-700 rounded-full mx-auto md:mx-0">
+                  <div className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full progress-bar"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        {/* Enhanced Feature Grid */}
+        <section className="grid-staggered mb-16">
           <FeatureCard
             title="Auto Video Clipper"
-            description="Upload long videos and get short-form clips"
+            description="Upload long videos and get short-form clips with AI-powered editing"
             link="/dashboard/video"
             icon="🎥"
             dataTour="video-upload"
+            gradient="from-blue-500 to-cyan-500"
           />
           <FeatureCard
             title="Content Generator"
-            description="Transform text into social media posts"
+            description="Transform text into engaging social media posts with AI assistance"
             link="/dashboard/content"
             icon="✨"
             dataTour="content-generator"
+            gradient="from-purple-500 to-pink-500"
           />
           <FeatureCard
             title="Script Generator"
-            description="Generate YouTube, podcast, and blog scripts"
+            description="Generate YouTube, podcast, and blog scripts instantly"
             link="/dashboard/scripts"
             icon="📝"
             dataTour="scripts"
+            gradient="from-green-500 to-teal-500"
           />
           <FeatureCard
             title="Quote Cards"
-            description="Create branded quote graphics"
+            description="Create beautiful branded quote graphics with typography"
             link="/dashboard/quotes"
             icon="🎨"
+            gradient="from-orange-500 to-red-500"
           />
           <FeatureCard
             title="Content Scheduler"
-            description="Schedule posts across platforms"
+            description="Schedule posts across platforms with optimal timing"
             link="/dashboard/scheduler"
             icon="📆"
+            gradient="from-indigo-500 to-purple-500"
           />
           <FeatureCard
             title="Analytics"
-            description="View performance insights"
+            description="View performance insights and growth metrics"
             link="/dashboard/analytics"
             icon="📊"
+            gradient="from-emerald-500 to-green-500"
           />
           <FeatureCard
             title="Workflows"
-            description="Automate your content creation process"
+            description="Automate your content creation process end-to-end"
             link="/dashboard/workflows"
             icon="🤖"
+            gradient="from-violet-500 to-purple-500"
           />
           <FeatureCard
             title="Niche Packs"
-            description="Customize your brand style"
+            description="Customize your brand style with niche-specific templates"
             link="/dashboard/niche"
             icon="🎯"
+            gradient="from-rose-500 to-pink-500"
           />
-        </div>
+        </section>
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ActivityFeed limit={5} />
@@ -302,12 +339,14 @@ export default function Dashboard() {
                 description="Choose from multiple AI providers and models"
                 link="/dashboard/ai"
                 icon="🧠"
+                gradient="from-blue-500 to-purple-500"
               />
               <FeatureCard
                 title="Predictive Analytics"
                 description="Predict content performance before publishing"
                 link="/dashboard/ai"
                 icon="📊"
+                gradient="from-green-500 to-teal-500"
               />
             </div>
           </div>
@@ -345,18 +384,66 @@ function StatCard({ title, value, icon }: { title: string; value: number; icon: 
   )
 }
 
-function FeatureCard({ title, description, link, icon, dataTour }: { title: string; description: string; link: string; icon: string; dataTour?: string }) {
+function FeatureCard({ title, description, link, icon, dataTour, gradient }: {
+  title: string;
+  description: string;
+  link: string;
+  icon: string;
+  dataTour?: string;
+  gradient: string;
+}) {
+  const dbg = (message: string, data: Record<string, any>) => {
+  }
+
   return (
-    <Link href={link}>
-      <div 
-        className="bg-white rounded-lg shadow p-4 md:p-6 hover:shadow-lg transition cursor-pointer touch-target"
+    <Link
+      href={link}
+      onClick={() => {
+      }}
+    >
+      <div
+        className="card-elevated group touch-target animate-scale-in hover-lift hover-glow interactive-press relative overflow-hidden"
         role="link"
         aria-label={`Navigate to ${title}: ${description}`}
         tabIndex={0}
+        data-tour={dataTour}
       >
-        <div className="text-3xl md:text-4xl mb-3 md:mb-4" aria-hidden="true">{icon}</div>
-        <h3 className="text-lg md:text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-sm md:text-base text-gray-600">{description}</p>
+        {/* Subtle background effect */}
+        <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-300 from-current to-transparent"></div>
+
+        <div className="relative p-8">
+          {/* Enhanced Icon with gradient background */}
+          <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${gradient} text-white mb-6 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl transition-all duration-300 shadow-lg relative`}>
+            <span className="text-3xl animate-float-subtle" aria-hidden="true">{icon}</span>
+            {/* Subtle glow effect */}
+            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300`}></div>
+          </div>
+
+          {/* Enhanced Title and Description */}
+          <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors duration-300">
+            {title}
+          </h3>
+          <p className="text-body-enhanced mb-6 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors duration-300">
+            {description}
+          </p>
+
+          {/* Enhanced Hover indicator with better animation */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm font-semibold text-slate-600 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 animate-slide-in-stagger">
+              <span className="relative">
+                Explore feature
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current group-hover:w-full transition-all duration-300"></span>
+              </span>
+              <svg className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 opacity-0 group-hover:opacity-100 transition-all duration-300 animate-scale-in group-hover:animate-gentle-bounce"></div>
+          </div>
+
+          {/* Subtle progress indicator */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+        </div>
       </div>
     </Link>
   )

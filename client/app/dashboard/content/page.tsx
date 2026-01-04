@@ -76,7 +76,6 @@ export default function ContentPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/content/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.generatedContent) {
         setGeneratedContent(response.data.generatedContent)
@@ -102,8 +101,9 @@ export default function ContentPage() {
       return
     }
 
-    if (text.trim().length < 10) {
-      setError('Please enter at least 10 characters of content')
+    // Backend validation requires at least 50 characters (see server validators).
+    if (text.trim().length < 50) {
+      setError('Please enter at least 50 characters of content')
       return
     }
 
@@ -127,7 +127,6 @@ export default function ContentPage() {
           platforms
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -152,7 +151,6 @@ export default function ContentPage() {
               }
             },
             {
-              headers: { Authorization: `Bearer ${token}` }
             }
           )
         } catch (err) {
@@ -168,7 +166,8 @@ export default function ContentPage() {
         }
       }
     } catch (error: any) {
-      setError(extractApiError(error) || 'Failed to generate content')
+      const errorObj = extractApiError(error)
+      setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to generate content')
     } finally {
       setLoading(false)
     }
@@ -179,7 +178,6 @@ export default function ContentPage() {
     const interval = setInterval(async () => {
       try {
         const response = await axios.get(`${API_URL}/content/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
         })
 
         if (response.data.status === 'completed' && response.data.generatedContent) {

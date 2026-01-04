@@ -33,7 +33,6 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
       if (!token) return
 
       const response = await axios.get(`${API_URL}/user/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.data?.notifications) {
@@ -53,7 +52,6 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
       await axios.put(`${API_URL}/user/settings`, {
         notifications: preferences
       }, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       setSaved(true)

@@ -12,8 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
 import { parseApiError } from '../utils/errorHandler';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api';
+import { apiGet, apiPost } from '../lib/api';
 
 interface AIModel {
   id: string;
@@ -53,20 +52,17 @@ export default function AIMultiModelSelector() {
   const fetchModels = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/ai/multi-model/models`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setProviders(data.data.providers);
-        setCurrentProvider(data.data.currentProvider);
-        setCurrentModel(data.data.currentModel);
+      const res = await apiGet<any>('/ai/multi-model/models');
+      if (res?.success) {
+        setProviders(res.data?.providers || []);
+        setCurrentProvider(res.data?.currentProvider || 'openai');
+        setCurrentModel(res.data?.currentModel || 'gpt-4');
       }
     } catch (err) {
       const apiError = parseApiError(err);
-      setError(apiError);
+      const errorObj = new Error(apiError.message);
+      (errorObj as any).code = apiError.code; // Type assertion for custom property
+      setError(errorObj);
       handleError(apiError);
     } finally {
       setLoading(false);
@@ -76,16 +72,8 @@ export default function AIMultiModelSelector() {
   const initProvider = async (provider: string, model: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/ai/multi-model/provider`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ provider, model }),
-      });
-      const data = await response.json();
-      if (data.success) {
+      const res = await apiPost<any>('/ai/multi-model/provider', { provider, model });
+      if (res?.success) {
         setCurrentProvider(provider);
         setCurrentModel(model);
       }
@@ -100,21 +88,13 @@ export default function AIMultiModelSelector() {
     if (!prompt) return;
     setComparing(true);
     try {
-      const response = await fetch(`${API_URL}/ai/multi-model/compare`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          prompt,
-          taskType,
-          models: ['gpt-4', 'gpt-3.5-turbo'],
-        }),
+      const res = await apiPost<any>('/ai/multi-model/compare', {
+        prompt,
+        taskType,
+        models: ['gpt-4', 'gpt-3.5-turbo'],
       });
-      const data = await response.json();
-      if (data.success) {
-        setComparison(data.data);
+      if (res?.success) {
+        setComparison(res.data);
       }
     } catch (error) {
       console.error('Compare models error:', error);

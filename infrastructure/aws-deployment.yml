@@ -1,0 +1,576 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Click Enterprise Production Infrastructure on AWS'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.micro, t3.small, t3.medium, t3.large, c5.large, c5.xlarge]
+
+  DatabaseInstanceClass:
+    Type: String
+    Default: db.t3.medium
+    AllowedValues: [db.t3.micro, db.t3.small, db.t3.medium, db.t3.large]
+
+Resources:
+  # VPC Configuration
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-vpc'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-igw'
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Public Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public-1'
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public-2'
+
+  # Private Subnets for Application
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.10.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-app-1'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-app-2'
+
+  # Database Subnets
+  DBSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.20.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-db-1'
+
+  DBSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.21.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-db-2'
+
+  # Route Tables
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public-rt'
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # Route Table Associations
+  PublicSubnet1Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2Association:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # Security Groups
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Application Load Balancer
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-alb-sg'
+
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for EC2 instances
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0  # Restrict to your IP in production
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-ec2-sg'
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-db-subnet-group'
+
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: !Ref DatabaseInstanceClass
+      DBName: click
+      Engine: mongodb
+      MasterUsername: !Sub '{{resolve:ssm:/click/${Environment}/db/username:1}}'
+      MasterUserPassword: !Sub '{{resolve:ssm:/click/${Environment}/db/password:1}}'
+      DBInstanceIdentifier: !Sub 'click-${Environment}-db'
+      AllocatedStorage: '20'
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      MultiAZ: !Equals [ !Ref Environment, production ]
+      BackupRetentionPeriod: 7
+      EnableCloudwatchLogsExports:
+        - error
+        - general
+        - slow-query
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-db'
+        - Key: Environment
+          Value: !Ref Environment
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for database
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-db-sg'
+
+  # ElastiCache Redis Cluster
+  RedisSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Subnet group for Redis
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  RedisCluster:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupDescription: Redis cluster for Click
+      NumCacheClusters: !If [IsProduction, 3, 1]
+      NodeType: cache.t3.micro
+      CacheNodeType: cache.t3.micro
+      Engine: redis
+      EngineVersion: '6.2'
+      Port: 6379
+      CacheSubnetGroupName: !Ref RedisSubnetGroup
+      SecurityGroupIds:
+        - !Ref RedisSecurityGroup
+      AutomaticFailoverEnabled: !Equals [ !Ref Environment, production ]
+      MultiAZEnabled: !Equals [ !Ref Environment, production ]
+      SnapshotRetentionLimit: 7
+      SnapshotWindow: '03:00-04:00'
+      MaintenanceWindow: 'sun:04:00-sun:05:00'
+
+  RedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Redis
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-redis-sg'
+
+  # Application Load Balancer
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub '${AWS::StackName}-alb'
+      Scheme: internet-facing
+      Type: application
+      IpAddressType: ipv4
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+  # Target Groups
+  FrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-frontend'
+      Protocol: HTTP
+      Port: 3000
+      VpcId: !Ref VPC
+      TargetType: instance
+      HealthCheckPath: /api/monitoring/health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+
+  BackendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-backend'
+      Protocol: HTTP
+      Port: 5001
+      VpcId: !Ref VPC
+      TargetType: instance
+      HealthCheckPath: /api/health
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+
+  # ALB Listeners
+  HTTPListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: HTTPS
+            Port: '443'
+            StatusCode: HTTP_301
+
+  HTTPSListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Protocol: HTTPS
+      Port: 443
+      Certificates:
+        - CertificateArn: !Ref SSLCertificate
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref FrontendTargetGroup
+
+  # API Listener Rules
+  APIListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HTTPSListener
+      Priority: 1
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /api/*
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref BackendTargetGroup
+
+  # Auto Scaling Group
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-lt'
+      LaunchTemplateData:
+        ImageId: ami-0abcdef1234567890  # Replace with latest Amazon Linux 2 AMI
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !Ref EC2SecurityGroup
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            yum update -y
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+            source ~/.bashrc
+            nvm install 20
+            nvm use 20
+
+            # Install PM2
+            npm install -g pm2
+
+            # Install nginx
+            amazon-linux-extras install nginx1 -y
+            systemctl enable nginx
+            systemctl start nginx
+
+            # Configure nginx
+            cat > /etc/nginx/conf.d/click.conf << EOF
+            server {
+                listen 80;
+                server_name _;
+
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+
+                location /api {
+                    proxy_pass http://localhost:5001;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            EOF
+
+            systemctl reload nginx
+
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: '$Latest'
+      MinSize: !If [IsProduction, '3', '1']
+      MaxSize: !If [IsProduction, '10', '3']
+      DesiredCapacity: !If [IsProduction, '3', '1']
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      TargetGroupARNs:
+        - !Ref FrontendTargetGroup
+        - !Ref BackendTargetGroup
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+
+  # CloudWatch Alarms
+  HighCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${AWS::StackName}-high-cpu'
+      AlarmDescription: 'CPU utilization is too high'
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref ScaleUpPolicy
+
+  ScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70.0
+
+  # CloudFront CDN
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::OriginAccessIdentity
+    Properties:
+      OriginAccessIdentityConfig:
+        Comment: !Sub 'OAI for ${AWS::StackName}'
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub 'CDN for ${AWS::StackName}'
+        DefaultCacheBehavior:
+          TargetOriginId: !Sub '${AWS::StackName}-alb'
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          ForwardedValues:
+            QueryString: true
+            Cookies:
+              Forward: all
+          CachePolicyId: '4135ea2d-6df8-44a3-9df3-4b5a84be39ad'  # CachingEnabled
+        Origins:
+          - DomainName: !GetAtt ApplicationLoadBalancer.DNSName
+            Id: !Sub '${AWS::StackName}-alb'
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_All
+        Aliases:
+          - !Sub '${Environment}.click-app.com'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CloudFrontCertificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+
+  # Route 53 DNS
+  Route53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub '${Environment}.click-app.com'
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID
+
+  # WAF for Security
+  WAFWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub '${AWS::StackName}-waf'
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: 'AWSManagedRulesCommonRuleSet'
+          Priority: 1
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: 'AWSManagedRulesCommonRuleSet'
+          VendorName: AWS
+          ManagedRuleGroupConfig:
+            VendorName: AWS
+            Name: AWSManagedRulesCommonRuleSet
+            Version: Version_1.1
+        - Name: 'AWSManagedRulesKnownBadInputsRuleSet'
+          Priority: 2
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: 'AWSManagedRulesKnownBadInputsRuleSet'
+          VendorName: AWS
+          ManagedRuleGroupConfig:
+            VendorName: AWS
+            Name: AWSManagedRulesKnownBadInputsRuleSet
+            Version: Version_1.0
+
+  # Outputs
+  Outputs:
+    LoadBalancerDNS:
+      Description: DNS name of the load balancer
+      Value: !GetAtt ApplicationLoadBalancer.DNSName
+      Export:
+        Name: !Sub '${AWS::StackName}-LoadBalancerDNS'
+
+    CloudFrontURL:
+      Description: CloudFront distribution URL
+      Value: !Sub 'https://${CloudFrontDistribution.DomainName}'
+      Export:
+        Name: !Sub '${AWS::StackName}-CloudFrontURL'
+
+    DatabaseEndpoint:
+      Description: Database endpoint
+      Value: !GetAtt DBInstance.Endpoint.Address
+      Export:
+        Name: !Sub '${AWS::StackName}-DatabaseEndpoint'
+
+    RedisEndpoint:
+      Description: Redis cluster endpoint
+      Value: !GetAtt RedisCluster.PrimaryEndPoint.Address
+      Export:
+        Name: !Sub '${AWS::StackName}-RedisEndpoint'
+
+

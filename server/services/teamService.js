@@ -57,6 +57,31 @@ async function getUserTeams(userId) {
 }
 
 /**
+ * Get team by ID
+ */
+async function getTeamById(teamId, userId) {
+  try {
+    const team = await Team.findOne({
+      _id: teamId,
+      $or: [
+        { ownerId: userId },
+        { 'members.userId': userId }
+      ]
+    }).populate('ownerId', 'name email')
+      .populate('members.userId', 'name email');
+
+    if (!team) {
+      throw new Error('Team not found or access denied');
+    }
+
+    return team;
+  } catch (error) {
+    logger.error('Error getting team by ID', { error: error.message, teamId, userId });
+    throw error;
+  }
+}
+
+/**
  * Invite member to team
  */
 async function inviteMember(teamId, inviterId, inviteData) {
@@ -257,6 +282,7 @@ async function checkPermission(userId, teamId, permission) {
 module.exports = {
   createTeam,
   getUserTeams,
+  getTeamById,
   inviteMember,
   updateMemberRole,
   removeMember,

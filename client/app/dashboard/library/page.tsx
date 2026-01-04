@@ -148,7 +148,6 @@ export default function LibraryPage() {
         `${API_URL}/library/folders`,
         { name: newFolderName },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -160,7 +159,8 @@ export default function LibraryPage() {
         await loadData()
       }
     } catch (error: any) {
-      const errorMessage = extractApiError(error) || 'Failed to create folder'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to create folder'
       showToast(errorMessage, 'error')
     }
   }
@@ -172,13 +172,13 @@ export default function LibraryPage() {
         `${API_URL}/library/content/${contentId}/organize`,
         { isFavorite: !currentValue },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       await loadData()
       showToast(!currentValue ? 'Added to favorites' : 'Removed from favorites', 'success')
     } catch (error) {
-      const errorMessage = extractApiError(error) || 'Failed to update favorite'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to update favorite'
       showToast(errorMessage, 'error')
     }
   }
@@ -190,7 +190,6 @@ export default function LibraryPage() {
         `${API_URL}/library/content/${contentId}/duplicate`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

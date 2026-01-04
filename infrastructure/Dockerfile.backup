@@ -1,0 +1,60 @@
+# Docker build for Click Backup Service
+FROM node:20-alpine
+
+# Install backup dependencies
+RUN apk add --no-cache \
+    mongodb-tools \
+    postgresql-client \
+    mysql-client \
+    redis \
+    aws-cli \
+    curl \
+    bash \
+    cron \
+    && rm -rf /var/cache/apk/*
+
+# Create backup user
+RUN addgroup -g 1001 -S backup && \
+    adduser -u 1001 -S backup -G backup
+
+# Set working directory
+WORKDIR /app
+
+# Copy backup scripts
+COPY scripts/production-backup.js ./
+COPY scripts/production-analytics.js ./
+COPY package.json ./
+
+# Install Node.js dependencies
+RUN npm install --production --ignore-scripts && \
+    npm cache clean --force
+
+# Create backup directories
+RUN mkdir -p /app/backups && \
+    mkdir -p /app/logs && \
+    mkdir -p /tmp/mongodb && \
+    chown -R backup:backup /app && \
+    chown -R backup:backup /tmp/mongodb
+
+# Switch to backup user
+USER backup
+
+# Copy backup script
+COPY --chown=backup:backup scripts/backup-entrypoint.sh /usr/local/bin/
+
+# Make script executable
+RUN chmod +x /usr/local/bin/backup-entrypoint.sh
+
+# Set environment variables
+ENV BACKUP_SCHEDULE="0 2 * * *" \
+    RETENTION_DAYS=7 \
+    NODE_ENV=production
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
+  CMD echo "Backup service is running"
+
+# Default command
+CMD ["/usr/local/bin/backup-entrypoint.sh"]
+
+

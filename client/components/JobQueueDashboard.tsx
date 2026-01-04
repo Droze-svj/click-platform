@@ -35,7 +35,6 @@ export default function JobQueueDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/jobs/dashboard', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

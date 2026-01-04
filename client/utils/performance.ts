@@ -45,10 +45,10 @@ export function reportWebVitals(metric: any) {
           delta: metric.delta,
           rating: metric.rating,
           url: window.location.href,
-          timestamp: Date.now(),
         }),
         keepalive: true, // Ensures request completes even if page unloads
-      }).catch((error) => {
+      })
+      .catch((error) => {
         // Silently fail analytics
         if (process.env.NODE_ENV === 'development') {
           console.warn('[Analytics] Failed to send metric:', error)

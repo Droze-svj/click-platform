@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import FileUpload from '../../../components/FileUpload'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import LoadingSkeleton from '../../../components/LoadingSkeleton'
@@ -10,11 +9,16 @@ import ErrorAlert from '../../../components/ErrorAlert'
 import SuccessAlert from '../../../components/SuccessAlert'
 import EmptyState from '../../../components/EmptyState'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import BatchVideoProcessor from '../../../components/BatchVideoProcessor'
 import { extractApiData, extractApiError } from '../../../utils/apiResponse'
 import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
+import { apiGet, API_URL } from '../../../lib/api'
+import { DynamicModernVideoEditor, DynamicEnhancedVideoEditor } from '../../../components/DynamicImports'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+// Lazy load heavy video components
+const ModernVideoEditor = lazy(() => import('../../../components/ModernVideoEditor'))
+const EnhancedVideoEditor = lazy(() => import('../../../components/EnhancedVideoEditor'))
 
 interface Video {
   _id: string
@@ -44,7 +48,19 @@ export default function VideoPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
+
+  const loadVideos = useCallback(async () => {
+    try {
+      const response = await apiGet<any>('/video')
+      const videos = response?.data || response || []
+      setVideos(Array.isArray(videos) ? videos : [])
+    } catch (error: any) {
+      const errorObj = extractApiError(error)
+      setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load videos')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!user) {
@@ -73,23 +89,8 @@ export default function VideoPage() {
     return () => {
       off('video-processed', handleVideoProcessed)
     }
-  }, [socket, connected, on, off])
+  }, [socket, connected, on, off, loadVideos])
 
-
-  const loadVideos = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/video`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const videos = extractApiData<Video[]>(response) || []
-      setVideos(Array.isArray(videos) ? videos : [])
-    } catch (error: any) {
-      setError(extractApiError(error) || 'Failed to load videos')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   const handleUpload = async (file: File, uploadResponse?: any) => {
     setError('')
@@ -117,18 +118,16 @@ export default function VideoPage() {
   }
 
   const pollVideoStatus = async (contentId: string) => {
-    const token = localStorage.getItem('token')
     const interval = setInterval(async () => {
       try {
-        const response = await axios.get(`${API_URL}/video/${contentId}/status`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const response = await apiGet<any>(`/video/${contentId}/status`)
         
-        if (response.data.status === 'completed') {
+        const status = response?.status || response?.data?.status
+        if (status === 'completed') {
           clearInterval(interval)
           setSuccess('Video processing complete!')
           await loadVideos()
-        } else if (response.data.status === 'failed') {
+        } else if (status === 'failed') {
           clearInterval(interval)
           setError('Video processing failed')
           clearInterval(interval)
@@ -144,7 +143,7 @@ export default function VideoPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
         <div className="container mx-auto px-4 py-8">
           {loading ? (
             <div className="mb-8">
@@ -152,9 +151,16 @@ export default function VideoPage() {
             </div>
           ) : (
             <>
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Video Upload & Processing</h1>
-          <p className="text-sm md:text-base text-gray-600">Upload long-form videos and get optimized short-form clips</p>
+        {/* Hero Section */}
+        <div className="mb-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <span className="gradient-text">Video Processing</span>
+            </h1>
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+              Upload long-form videos and get optimized short-form clips with AI-powered editing
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -169,8 +175,13 @@ export default function VideoPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6 md:mb-8">
-          <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Upload Video</h2>
+        <div className="card-modern p-6 md:p-8 mb-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2 gradient-text">Upload Video</h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              {uploading ? 'Uploading video...' : 'Drag and drop a video file or click to select'}
+            </p>
+          </div>
           <FileUpload
             onUpload={handleUpload}
             uploadUrl={`${API_URL}/video/upload`}
@@ -178,93 +189,110 @@ export default function VideoPage() {
             maxSize={1073741824}
             disabled={uploading}
           />
-          <p className="mt-2 text-sm text-gray-500" aria-live="polite" aria-atomic="true">
-            {uploading ? 'Uploading video...' : 'Drag and drop a video file or click to select'}
-          </p>
+          <div className="mt-4 flex justify-center">
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <span>Supports MP4, MOV, AVI, MKV, WebM</span>
+              <span>•</span>
+              <span>Max 1GB</span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 md:p-6">
-          <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">Your Videos</h2>
+        <div className="card-modern p-6 md:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold gradient-text">Your Videos</h2>
+            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <span>{videos.length} videos</span>
+            </div>
+          </div>
+
           {videos.length === 0 ? (
-            <EmptyState
-              title="No videos uploaded yet"
-              description="Upload your first video to get started with automatic clip generation"
-              icon="🎥"
-            />
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🎥</div>
+              <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-100">No videos uploaded yet</h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Upload your first video to get started with automatic clip generation
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {videos.map((video) => (
                 <div
                   key={video._id}
-                  className="border rounded-lg p-4 hover:shadow-lg transition cursor-pointer"
-                  onClick={() => setSelectedVideo(video)}
+                  className="card-modern group cursor-pointer animate-fade-in"
+                  onClick={() => router.push(`/dashboard/video/edit/${video._id}`)}
                 >
-                  <div className="mb-2">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      video.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      video.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
-                      video.status === 'failed' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {video.status}
-                    </span>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        video.status === 'completed'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                          : video.status === 'processing'
+                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                          : video.status === 'failed'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                      }`}>
+                        {video.status}
+                      </span>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    <h3 className="font-semibold text-lg mb-2 text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {video.title || 'Untitled Video'}
+                    </h3>
+
+                    {video.generatedContent?.shortVideos && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span>{video.generatedContent.shortVideos.length} clips generated</span>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          router.push(`/dashboard/video/edit/${video._id}`)
+                        }}
+                        className="flex-1 btn-modern btn-modern-primary"
+                      >
+                        <span>Edit Video</span>
+                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <h3 className="font-semibold mb-2">{video.title || 'Untitled'}</h3>
-                  {video.generatedContent?.shortVideos && (
-                    <p className="text-sm text-gray-600">
-                      {video.generatedContent.shortVideos.length} clips generated
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {selectedVideo && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 md:p-6">
-              <div className="flex justify-between items-center mb-3 md:mb-4">
-                <h2 className="text-xl md:text-2xl font-bold pr-2">{selectedVideo.title}</h2>
-                <button
-                  onClick={() => setSelectedVideo(null)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl md:text-3xl touch-target flex-shrink-0"
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
-              
-              {selectedVideo.generatedContent?.shortVideos && selectedVideo.generatedContent.shortVideos.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedVideo.generatedContent.shortVideos.map((clip, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <video
-                        src={`${API_URL.replace('/api', '')}${clip.url}`}
-                        controls
-                        className="w-full rounded mb-2"
-                      />
-                      <p className="text-sm font-semibold mb-1">{clip.caption}</p>
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>{clip.platform}</span>
-                        <span>{Math.round(clip.duration)}s</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  {selectedVideo.status === 'processing' ? (
-                    <>
-                      <LoadingSpinner size="lg" text="Processing video..." />
-                      <p className="mt-4">This may take a few minutes</p>
-                    </>
-                  ) : (
-                    <p>No clips generated yet</p>
-                  )}
-                </div>
-              )}
-            </div>
+
+        {/* Batch Processing Section */}
+        {videos.length > 0 && (
+          <div className="mt-8">
+            <BatchVideoProcessor
+              videos={videos.map(v => ({
+                id: v._id,
+                name: v.title,
+                url: `${v.originalFile?.url || ''}`
+              }))}
+              onBatchComplete={(results) => {
+                const successful = results.filter(r => r.status === 'completed').length
+                const failed = results.filter(r => r.status === 'failed').length
+                setSuccess(`Batch processing completed: ${successful} successful, ${failed} failed`)
+                loadVideos() // Refresh the video list
+              }}
+            />
           </div>
         )}
             </>

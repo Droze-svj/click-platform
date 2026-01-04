@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
-// Use production API URL - can be overridden with NEXT_PUBLIC_API_URL env var
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+// IMPORTANT: In local dev we want the Next rewrite proxy (`/api`) so auth tokens match the local backend.
+const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 
 export default function Register() {
   const router = useRouter()
@@ -15,6 +15,14 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const apiBase = useMemo(() => {
+    if (typeof window === 'undefined') return DEFAULT_API_URL
+    const host = window.location.hostname
+    if (host === 'localhost' || host === '127.0.0.1') return '/api'
+    return DEFAULT_API_URL
+  }, [])
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -23,11 +31,11 @@ export default function Register() {
     try {
       // Log the actual API URL being used for debugging
       console.log('🔍 Registration Debug Info:')
-      console.log('  - API_URL:', API_URL)
-      console.log('  - Full endpoint:', `${API_URL}/auth/register`)
+      console.log('  - API_URL:', apiBase)
+      console.log('  - Full endpoint:', `${apiBase}/auth/register`)
       console.log('  - Timestamp:', new Date().toISOString())
       
-      const response = await axios.post(`${API_URL}/auth/register`, {
+      const response = await axios.post(`${apiBase}/auth/register`, {
         name,
         email,
         password
@@ -66,7 +74,6 @@ export default function Register() {
     } catch (err: any) {
       console.error('Registration error:', err)
       console.error('Error details:', {
-        message: err.message,
         code: err.code,
         response: err.response?.data,
         status: err.response?.status
@@ -77,7 +84,7 @@ export default function Register() {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         errorMessage = 'Request timed out. The server may be waking up (this can take 30-60 seconds on free tier). Please try again in a moment.'
       } else if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        const isProduction = API_URL.includes('render.com') || API_URL.includes('onrender.com')
+        const isProduction = apiBase.includes('render.com') || apiBase.includes('onrender.com')
         if (isProduction) {
           errorMessage = 'Cannot connect to server. The server may be sleeping (free tier). Please wait 30-60 seconds and try again.'
         } else {

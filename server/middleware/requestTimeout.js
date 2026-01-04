@@ -8,6 +8,26 @@ const { sendError } = require('../utils/response');
  */
 function requestTimeout(timeoutMs = 30000) {
   return (req, res, next) => {
+    // #region agent log
+    try {
+      const p = req.path || '';
+      const u = req.originalUrl || '';
+      if (
+        p.includes('/notifications') ||
+        p.includes('/approvals') ||
+        p.includes('/search') ||
+        p.includes('/onboarding') ||
+        p.includes('/auth/me') ||
+        u.includes('/notifications') ||
+        u.includes('/approvals') ||
+        u.includes('/search') ||
+        u.includes('/onboarding') ||
+        u.includes('/auth/me')
+      ) {
+      }
+    } catch {}
+    // #endregion
+
     // Set timeout
     req.setTimeout(timeoutMs, () => {
       if (!res.headersSent) {
@@ -16,6 +36,11 @@ function requestTimeout(timeoutMs = 30000) {
           method: req.method,
           timeout: timeoutMs,
         });
+
+        // #region agent log
+        try {
+        } catch {}
+        // #endregion
 
         res.status(504).json({
           success: false,

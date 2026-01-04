@@ -40,7 +40,6 @@ export default function BusinessIntelligenceDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/analytics/bi/metrics?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -60,7 +59,6 @@ export default function BusinessIntelligenceDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/analytics/bi/trends?period=${period}`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -77,7 +75,6 @@ export default function BusinessIntelligenceDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/analytics/bi/export?format=${format}`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

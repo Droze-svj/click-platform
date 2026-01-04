@@ -13,14 +13,12 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { extractApiData, extractApiError } from '../../../utils/apiResponse'
 import { useToast } from '../../../contexts/ToastContext'
 import { Search, Settings, CheckCircle2, Trash2 } from 'lucide-react'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 interface Notification {
   id: string
   type: 'info' | 'success' | 'warning' | 'error'
   title: string
-  message: string
   read: boolean
   createdAt: Date
   actionUrl?: string
@@ -37,6 +35,7 @@ export default function NotificationsPage() {
   const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set())
 
   useEffect(() => {
+    // Debug instrumentation disabled
     loadNotifications()
   }, [filter])
 
@@ -48,8 +47,8 @@ export default function NotificationsPage() {
         return
       }
 
+
       const response = await axios.get(`${API_URL}/notifications?filter=${filter}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       const notificationsData = extractApiData<Notification[]>(response)
@@ -70,7 +69,6 @@ export default function NotificationsPage() {
       if (!token) return
 
       await axios.put(`${API_URL}/notifications/${id}/read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
@@ -87,7 +85,6 @@ export default function NotificationsPage() {
       if (!token) return
 
       await axios.put(`${API_URL}/notifications/read-all`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
@@ -104,13 +101,13 @@ export default function NotificationsPage() {
       if (!token) return
 
       await axios.delete(`${API_URL}/notifications/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       setNotifications(prev => prev.filter(n => n.id !== id))
       showToast('Notification deleted', 'success')
     } catch (error) {
-      const errorMessage = extractApiError(error) || 'Failed to delete notification'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to delete notification'
       showToast(errorMessage, 'error')
     }
   }
@@ -132,7 +129,8 @@ export default function NotificationsPage() {
       setSelectedNotifications(new Set())
       showToast(`Deleted ${selectedNotifications.size} notifications`, 'success')
     } catch (error) {
-      const errorMessage = extractApiError(error) || 'Failed to delete notifications'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to delete notifications'
       showToast(errorMessage, 'error')
     }
   }
@@ -162,9 +160,8 @@ export default function NotificationsPage() {
     if (filter === 'read') matchesFilter = n.read
 
     // Filter by search query
-    const matchesSearch = searchQuery === '' || 
-      n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.message.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = searchQuery === '' ||
+      n.title.toLowerCase().includes(searchQuery.toLowerCase())
 
     return matchesFilter && matchesSearch
   })
@@ -197,7 +194,6 @@ export default function NotificationsPage() {
       await Promise.all(
         Array.from(selectedNotifications).map(id =>
           axios.put(`${API_URL}/notifications/${id}/read`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
           })
         )
       )
@@ -209,7 +205,8 @@ export default function NotificationsPage() {
       setSelectedNotifications(new Set())
       showToast(`Marked ${count} notification${count !== 1 ? 's' : ''} as read`, 'success')
     } catch (error) {
-      const errorMessage = extractApiError(error) || 'Failed to mark notifications as read'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to mark notifications as read'
       showToast(errorMessage, 'error')
     }
   }
@@ -222,7 +219,6 @@ export default function NotificationsPage() {
       await Promise.all(
         Array.from(selectedNotifications).map(id =>
           axios.delete(`${API_URL}/notifications/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
           })
         )
       )
@@ -232,7 +228,8 @@ export default function NotificationsPage() {
       setSelectedNotifications(new Set())
       showToast(`Deleted ${count} notification${count !== 1 ? 's' : ''}`, 'success')
     } catch (error) {
-      const errorMessage = extractApiError(error) || 'Failed to delete notifications'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to delete notifications'
       showToast(errorMessage, 'error')
     }
   }
@@ -387,7 +384,7 @@ export default function NotificationsPage() {
                       <div className="flex items-start justify-between">
                         <div>
                           <h3 className="font-semibold mb-1">{notification.title}</h3>
-                          <p className="text-gray-600 dark:text-gray-400">{notification.message}</p>
+                          <p className="text-gray-600 dark:text-gray-400">{notification.title}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                             {new Date(notification.createdAt).toLocaleString()}
                           </p>

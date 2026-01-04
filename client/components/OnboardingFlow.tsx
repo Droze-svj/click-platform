@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { X, ChevronRight, ChevronLeft, CheckCircle2, Circle } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { apiGet, apiPost } from '../lib/api'
 
 interface OnboardingStep {
   id: string
@@ -51,16 +50,10 @@ export default function OnboardingFlow() {
 
   const loadProgress = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/onboarding`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setProgress(data.data)
-        setIsVisible(!data.data.isComplete && !data.data.progress.skipped)
+      const response = await apiGet<any>('/onboarding', { withCredentials: true })
+      if (response?.success) {
+        setProgress(response.data)
+        setIsVisible(!response.data?.isComplete && !response.data?.progress?.skipped)
       }
     } catch (error) {
       console.error('Failed to load onboarding:', error)
@@ -71,18 +64,8 @@ export default function OnboardingFlow() {
 
   const completeStep = async (stepId: string, data?: any) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/onboarding/complete-step`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-        body: JSON.stringify({ stepId, data }),
-      })
-
-      if (response.ok) {
+      const response = await apiPost<any>('/onboarding/complete-step', { stepId, data }, { withCredentials: true })
+      if (response?.success) {
         await loadProgress()
         showToast('Step completed!', 'success')
       }
@@ -94,14 +77,8 @@ export default function OnboardingFlow() {
 
   const skipOnboarding = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/onboarding/skip`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include',
-      })
-
-      if (response.ok) {
+      const response = await apiPost<any>('/onboarding/skip', undefined, { withCredentials: true })
+      if (response?.success) {
         setIsVisible(false)
         showToast('Onboarding skipped', 'info')
       }
@@ -112,18 +89,8 @@ export default function OnboardingFlow() {
 
   const goToStep = async (stepIndex: number) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/onboarding/goto-step`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-        body: JSON.stringify({ stepIndex }),
-      })
-
-      if (response.ok) {
+      const response = await apiPost<any>('/onboarding/goto-step', { stepIndex }, { withCredentials: true })
+      if (response?.success) {
         await loadProgress()
       }
     } catch (error) {

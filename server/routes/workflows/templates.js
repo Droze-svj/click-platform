@@ -6,7 +6,7 @@ const {
   getWorkflowTemplates,
   createFromTemplate,
   getTemplateCategories,
-} = require('../../services/workflowTemplateService');
+} = require('../../services/workflowTemplatesCatalogService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');

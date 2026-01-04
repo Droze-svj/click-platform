@@ -28,7 +28,6 @@ export function useSmartDefaults() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/workflows/preferences`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setPreferences(response.data.data)
@@ -62,11 +61,9 @@ export function useSmartDefaults() {
           metadata: {
             ...metadata,
             page: window.location.pathname,
-            sessionId: sessionStorage.getItem('sessionId') || Date.now().toString()
           }
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
     } catch (error) {

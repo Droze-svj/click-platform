@@ -62,7 +62,6 @@ export default function TeamsPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/teams`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.success) {
@@ -90,7 +89,6 @@ export default function TeamsPage() {
           description: newTeamDescription
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

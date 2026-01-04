@@ -7,6 +7,9 @@ class VideoProgressTracker extends EventEmitter {
   constructor() {
     super();
     this.progressMap = new Map();
+    // Keep completed/failed results briefly so the client can fetch them after finishing.
+    // (If we delete immediately, the UI often misses the final status/result.)
+    this.retentionMs = parseInt(process.env.VIDEO_PROGRESS_RETENTION_MS, 10) || 5 * 60 * 1000; // 5 min
   }
 
   /**
@@ -56,6 +59,20 @@ class VideoProgressTracker extends EventEmitter {
   }
 
   /**
+   * Schedule removal of a completed/failed entry after retentionMs.
+   */
+  scheduleCleanup(videoId, operation) {
+    const key = `${videoId}-${operation}`;
+    const tracking = this.progressMap.get(key);
+    if (!tracking) return;
+    if (tracking.cleanupTimer) return;
+
+    tracking.cleanupTimer = setTimeout(() => {
+      this.progressMap.delete(key);
+    }, this.retentionMs);
+  }
+
+  /**
    * Complete tracking
    */
   complete(videoId, operation, result = null) {
@@ -65,9 +82,10 @@ class VideoProgressTracker extends EventEmitter {
     if (tracking) {
       tracking.progress = 100;
       tracking.status = 'completed';
+      tracking.result = result;
       tracking.completedAt = Date.now();
       this.emit('complete', { videoId, operation, result, tracking });
-      this.progressMap.delete(key);
+      this.scheduleCleanup(videoId, operation);
     }
   }
 
@@ -83,7 +101,7 @@ class VideoProgressTracker extends EventEmitter {
       tracking.error = error.message;
       tracking.completedAt = Date.now();
       this.emit('error', { videoId, operation, error, tracking });
-      this.progressMap.delete(key);
+      this.scheduleCleanup(videoId, operation);
     }
   }
 

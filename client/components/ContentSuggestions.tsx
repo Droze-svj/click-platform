@@ -34,13 +34,8 @@ export default function ContentSuggestions() {
       const token = localStorage.getItem('token')
       const [ideasRes, gapsRes, trendingRes] = await Promise.all([
         axios.get(`${API_URL}/suggestions/daily-ideas?count=5`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
         axios.get(`${API_URL}/suggestions/content-gaps`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
         axios.get(`${API_URL}/suggestions/trending`, {
-          headers: { Authorization: `Bearer ${token}` }
         })
       ])
 

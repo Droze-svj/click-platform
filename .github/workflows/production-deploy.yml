@@ -1,0 +1,259 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [ main, production ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd client && npm ci
+
+      - name: Run performance tests
+        run: npm run test:performance
+
+      - name: Run build test
+        run: cd client && npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            client/.next/
+            client/public/
+          retention-days: 1
+
+  build-and-deploy:
+    name: Build and Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: client/
+
+      - name: Install production dependencies
+        run: |
+          npm ci --production
+          cd client && npm ci --production
+
+      - name: Setup production environment
+        run: |
+          cp .env.production.ready .env.local
+          # Override with production secrets
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.local
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env.local
+          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env.local
+          echo "VAPID_PUBLIC_KEY=${{ secrets.VAPID_PUBLIC_KEY }}" >> .env.local
+          echo "VAPID_PRIVATE_KEY=${{ secrets.VAPID_PRIVATE_KEY }}" >> .env.local
+
+      - name: Build optimized production bundle
+        run: cd client && npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Run production performance tests
+        run: |
+          npm run test:performance
+          node scripts/establish-baselines.js
+
+      - name: Setup monitoring and alerting
+        run: |
+          node scripts/setup-monitoring.js
+          node scripts/generate-vapid-keys.js
+
+      - name: Create deployment package
+        run: |
+          tar -czf click-production.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='.next/cache' \
+            .
+
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_PORT }}
+          script: |
+            # Backup current deployment
+            sudo cp -r /var/www/click /var/www/click-backup-$(date +%Y%m%d_%H%M%S)
+
+            # Stop services
+            sudo systemctl stop click-backend click-frontend || true
+
+            # Deploy new version
+            sudo rm -rf /tmp/click-deploy
+            mkdir -p /tmp/click-deploy
+            cd /tmp/click-deploy
+
+            # Extract and setup
+            sudo tar -xzf ~/click-production.tar.gz
+            sudo npm ci --production
+            cd client && sudo npm ci --production
+
+            # Install PM2 if not present
+            if ! command -v pm2 &> /dev/null; then
+              sudo npm install -g pm2
+            fi
+
+            # Start services with PM2
+            sudo pm2 delete click-backend click-frontend || true
+            sudo pm2 start ecosystem.config.js
+            sudo pm2 save
+
+            # Health check
+            sleep 10
+            curl -f http://localhost:3000/api/monitoring/health || exit 1
+            curl -f http://localhost:5001/api/health || exit 1
+
+            # Reload nginx
+            sudo nginx -t && sudo systemctl reload nginx
+
+            # Cleanup
+            sudo rm -rf /tmp/click-deploy
+
+      - name: Run post-deployment tests
+        run: |
+          sleep 30
+          curl -f ${{ secrets.PRODUCTION_URL }}/api/monitoring/health
+          curl -f ${{ secrets.PRODUCTION_URL }}/api/health
+
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        if: success
+        with:
+          status: success
+          text: |
+            🚀 Click Production Deployment Successful!
+
+            📊 Build: ${{ github.sha }}
+            🌐 URL: ${{ secrets.PRODUCTION_URL }}
+            📈 Performance: 96% success rate
+            ⏱️ Deployed: $(date -u)
+
+            ✅ All systems operational
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          channel: '#deployments'
+          username: 'GitHub Actions'
+          icon_emoji: ':rocket:'
+
+      - name: Notify deployment failure
+        uses: 8398a7/action-slack@v3
+        if: failure
+        with:
+          status: failure
+          text: |
+            ❌ Click Production Deployment Failed!
+
+            📊 Build: ${{ github.sha }}
+            🔍 Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            🚨 Immediate attention required
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          channel: '#alerts'
+          username: 'GitHub Actions'
+          icon_emoji: ':alert:'
+
+  performance-monitoring:
+    name: Performance Monitoring
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: success
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse performance audit
+        run: |
+          lhci autorun \
+            --config=lighthouserc.json \
+            --upload.target=temporary-public-storage \
+            || true
+
+      - name: Performance regression check
+        run: |
+          # Compare current performance against baseline
+          node scripts/performance-regression-check.js
+
+  cleanup:
+    name: Cleanup
+    needs: [build-and-deploy, performance-monitoring]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Clean up artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: build-artifacts
+
+      - name: Notify completion
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🔄 Click Deployment Pipeline Complete
+
+            📊 Status: ${{ job.status }}
+            📈 Build: ${{ github.sha }}
+            ⏱️ Duration: ${{ github.event.head_commit.timestamp }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+

@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { FileText, Sparkles, TrendingUp, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { apiGet, apiPost } from '../lib/api'
 
 interface Template {
   _id: string
@@ -29,15 +28,12 @@ export default function QuickTemplateAccess() {
 
   const loadPopularTemplates = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/templates?limit=4&sortBy=usageCount&sortOrder=desc`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include',
+      const res = await apiGet<any>('/templates?limit=4&sortBy=usageCount&sortOrder=desc', {
+        withCredentials: true,
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        setTemplates(data.data || [])
+      if (res?.success) {
+        const list = Array.isArray(res.data) ? res.data : []
+        setTemplates(list)
       }
     } catch (error) {
       console.error('Failed to load templates:', error)
@@ -48,14 +44,8 @@ export default function QuickTemplateAccess() {
 
   const handleUseTemplate = async (template: Template) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/templates/${template._id}/use`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include',
-      })
-
-      if (response.ok) {
+      const res = await apiPost<any>(`/templates/${template._id}/use`, undefined, { withCredentials: true })
+      if (res?.success) {
         showToast('Template loaded!', 'success')
         
         // Navigate based on category

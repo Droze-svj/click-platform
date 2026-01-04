@@ -7,7 +7,6 @@ import { API_URL } from '@/lib/api'
 interface UncertaintyFlag {
   type: string
   severity: string
-  message: string
   suggestion: string
 }
 
@@ -145,7 +144,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
                   {flag.severity}
                 </span>
                 <div className="flex-1">
-                  <div className="text-sm font-medium">{flag.message}</div>
+                  <div className="text-sm font-medium">{flag.suggestion}</div>
                   <div className="text-xs text-gray-600">{flag.suggestion}</div>
                 </div>
               </div>

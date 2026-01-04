@@ -64,8 +64,8 @@ export default function TestRegistration() {
       addLog(`Token from localStorage: ${storedToken.substring(0, 30)}...`)
       
       const meResponse = await axios.get(`${API_URL}/auth/me`, {
-        headers: { 
-          'Authorization': `Bearer ${storedToken}` 
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
         },
         timeout: 30000
       })

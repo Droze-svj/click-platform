@@ -60,6 +60,8 @@ function createRateLimiter(options) {
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Allow callers to skip rate limiting for specific requests
+    skip: typeof options.skip === 'function' ? options.skip : undefined,
     skipSuccessfulRequests: options.skipSuccessfulRequests || false,
     skipFailedRequests: options.skipFailedRequests || false,
     // Custom key generator for per-user rate limiting
@@ -109,6 +111,9 @@ const apiLimiter = createRateLimiter({
            path === '/health/debug-redis' || 
            path === '/api/health' || 
            path === '/api/health/debug-redis' ||
+           // Debug relay should never be rate limited in dev; it is used by instrumentation.
+           path.startsWith('/debug') ||
+           path.startsWith('/api/debug') ||
            path === '/auth/me' ||
            path === '/api/auth/me';
   },
@@ -122,6 +127,20 @@ const authLimiter = createRateLimiter({
     error: 'Too many authentication attempts, please try again later',
   },
   skipSuccessfulRequests: true,
+  // In local development, don't lock yourself out while iterating on auth flows.
+  skip: (req) => {
+    if (process.env.NODE_ENV === 'production') return false;
+    const ip = (req.ip || '').toString();
+    const host = (req.hostname || '').toString();
+    const origin = (req.get && req.get('origin')) ? req.get('origin') : '';
+    return (
+      host === 'localhost' ||
+      ip === '127.0.0.1' ||
+      ip === '::1' ||
+      ip.includes('127.0.0.1') ||
+      (typeof origin === 'string' && origin.includes('localhost'))
+    );
+  },
 });
 
 // Upload endpoints rate limiter

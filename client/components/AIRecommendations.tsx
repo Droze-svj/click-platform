@@ -11,8 +11,7 @@ import { cn } from '../lib/utils';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import ErrorDisplay from './ErrorDisplay';
 import { parseApiError } from '../utils/errorHandler';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api';
+import { apiGet } from '../lib/api';
 
 interface Recommendation {
   title: string;
@@ -44,6 +43,22 @@ export default function AIRecommendations() {
   const [error, setError] = useState<Error | null>(null);
   const { handleError } = useErrorHandler();
 
+  const normalizeRecommendations = (raw: any): RecommendationsData => {
+    return {
+      recommendations: Array.isArray(raw?.recommendations) ? raw.recommendations : [],
+      preferences: {
+        categories: Array.isArray(raw?.preferences?.categories) ? raw.preferences.categories : [],
+        platforms: Array.isArray(raw?.preferences?.platforms) ? raw.preferences.platforms : [],
+        topTopics: Array.isArray(raw?.preferences?.topTopics) ? raw.preferences.topTopics : [],
+      },
+      basedOn: {
+        contentAnalyzed: typeof raw?.basedOn?.contentAnalyzed === 'number' ? raw.basedOn.contentAnalyzed : 0,
+        topCategories: Array.isArray(raw?.basedOn?.topCategories) ? raw.basedOn.topCategories : [],
+        topPlatforms: Array.isArray(raw?.basedOn?.topPlatforms) ? raw.basedOn.topPlatforms : [],
+      },
+    };
+  };
+
   const fetchRecommendations = async () => {
     setLoading(true);
     try {
@@ -51,23 +66,26 @@ export default function AIRecommendations() {
       if (type) params.append('type', type);
       if (platform) params.append('platform', platform);
 
-      const response = await fetch(`${API_URL}/ai/recommendations/personalized?${params}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const data = await response.json();
-      if (data.success) {
-        setRecommendations(data.data);
+      const response = await apiGet<any>(`/ai/recommendations/personalized?${params.toString()}`);
+      if (response?.success) {
+        setRecommendations(normalizeRecommendations(response.data));
       }
     } catch (err) {
       const apiError = parseApiError(err);
-      setError(apiError);
-      handleError(apiError);
+      const errorObj = new Error(apiError.message);
+      (errorObj as any).code = apiError.code;
+      setError(errorObj);
     } finally {
       setLoading(false);
     }
   };
+
+  // Side-effect: show toast/log via centralized error handler.
+  // Keeping this out of the request catch avoids any render-phase updates during Fast Refresh / dev overlay.
+  useEffect(() => {
+    if (!error) return;
+    handleError(error);
+  }, [error, handleError]);
 
   useEffect(() => {
     fetchRecommendations();
@@ -93,10 +111,10 @@ export default function AIRecommendations() {
         {recommendations && (
           <div className="mb-4 p-4 bg-muted rounded">
             <p className="text-sm text-muted-foreground mb-2">
-              Based on {recommendations.basedOn.contentAnalyzed} pieces of content
+              Based on {recommendations.basedOn?.contentAnalyzed ?? 0} pieces of content
             </p>
             <div className="flex flex-wrap gap-2">
-              {recommendations.basedOn.topCategories.map((cat) => (
+              {(recommendations.basedOn?.topCategories || []).map((cat) => (
                 <Badge key={cat} variant="secondary">{cat}</Badge>
               ))}
             </div>
