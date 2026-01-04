@@ -29,7 +29,6 @@ export default function RegistrationSuccess() {
       console.log('Checking auth with token:', token.substring(0, 20) + '...')
       
       const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
         timeout: 60000
       })
 

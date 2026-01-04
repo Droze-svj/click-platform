@@ -51,7 +51,6 @@ interface PerformanceData {
   recommendations: Array<{
     type: string
     priority: string
-    message: string
     action: string
   }>
 }
@@ -75,7 +74,6 @@ export default function ContentPerformanceAnalytics({ contentId }: ContentPerfor
       const response = await axios.get(
         `${API_URL}/analytics/content-performance/${contentId}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -95,7 +93,6 @@ export default function ContentPerformanceAnalytics({ contentId }: ContentPerfor
       const response = await axios.get(
         `${API_URL}/analytics/content-performance/${contentId}/prediction`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

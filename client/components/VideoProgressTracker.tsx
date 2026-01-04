@@ -15,12 +15,14 @@ interface Progress {
 interface VideoProgressTrackerProps {
   videoId: string
   operation?: string
+  jobId?: string // For export operations
   onComplete?: (result: any) => void
 }
 
-export default function VideoProgressTracker({ videoId, operation, onComplete }: VideoProgressTrackerProps) {
+export default function VideoProgressTracker({ videoId, operation, jobId, onComplete }: VideoProgressTrackerProps) {
   const [progress, setProgress] = useState<Progress | null>(null)
   const [isPolling, setIsPolling] = useState(true)
+  const [failures, setFailures] = useState(0)
 
   useEffect(() => {
     if (!isPolling) return
@@ -28,30 +30,43 @@ export default function VideoProgressTracker({ videoId, operation, onComplete }:
     const pollProgress = async () => {
       try {
         const token = localStorage.getItem('token')
-        const endpoint = operation
-          ? `/api/video/progress/${videoId}?operation=${operation}`
-          : `/api/video/progress/${videoId}`
+
+        // Use different endpoints based on operation type
+        let endpoint: string;
+        if (operation === 'export' && jobId) {
+          // Export operations use the export job status endpoint
+          endpoint = `/api/export/${jobId}`;
+        } else {
+          // Video operations use the video progress endpoint
+          endpoint = operation
+            ? `/api/video/progress/${videoId}?operation=${operation}`
+            : `/api/video/progress/${videoId}`;
+        }
 
         const response = await fetch(endpoint, {
-          headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
         })
 
-        if (response.ok) {
-          const data = await response.json()
-          if (data.data) {
-            setProgress(data.data)
-            
-            if (data.data.status === 'completed' || data.data.status === 'failed') {
-              setIsPolling(false)
-              if (onComplete && data.data.status === 'completed') {
-                onComplete(data.data)
-              }
+        if (!response.ok) {
+          setFailures((n) => n + 1)
+          return
+        }
+
+        const data = await response.json()
+        if (data?.data) {
+          setFailures(0)
+          setProgress(data.data)
+
+          if (data.data.status === 'completed' || data.data.status === 'failed') {
+            setIsPolling(false)
+            if (onComplete) {
+              onComplete(data.data)
             }
           }
         }
       } catch (error) {
         console.error('Failed to fetch progress:', error)
+        setFailures((n) => n + 1)
       }
     }
 
@@ -60,6 +75,19 @@ export default function VideoProgressTracker({ videoId, operation, onComplete }:
 
     return () => clearInterval(interval)
   }, [videoId, operation, isPolling, onComplete])
+
+  useEffect(() => {
+    // Stop polling after repeated failures (backend down, auth expired, etc.)
+    if (failures >= 5) {
+      setIsPolling(false)
+      setProgress({
+        videoId,
+        operation: operation || 'processing',
+        progress: 0,
+        status: 'failed',
+      })
+    }
+  }, [failures, videoId, operation])
 
   if (!progress) {
     return (

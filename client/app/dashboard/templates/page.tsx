@@ -58,14 +58,13 @@ export default function TemplatesPage() {
       if (selectedNiche !== 'all') params.append('niche', selectedNiche)
 
       const response = await axios.get(`${API_URL}/templates?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       const templatesData = extractApiData<any[]>(response)
       setTemplates(Array.isArray(templatesData) ? templatesData : [])
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load templates', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load templates', 'error')
     } finally {
       setLoading(false)
     }
@@ -79,11 +78,9 @@ export default function TemplatesPage() {
           `${API_URL}/templates/${templateId}/use`,
           {},
           {
-            headers: { Authorization: `Bearer ${token}` }
           }
         ),
         axios.get(`${API_URL}/templates/${templateId}`, {
-          headers: { Authorization: `Bearer ${token}` }
         })
       ])
 
@@ -103,8 +100,8 @@ export default function TemplatesPage() {
         showToast('Template loaded', 'success')
       }
     } catch (error: any) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to use template', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to use template', 'error')
     }
   }
 

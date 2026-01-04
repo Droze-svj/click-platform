@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPost } from '../lib/api'
 
 interface EnhancedSuggestion {
   type: string
@@ -22,7 +20,6 @@ interface ContentGap {
   lowEngagementTypes: string[]
   suggestions: Array<{
     type: string
-    message: string
     priority: string
   }>
 }
@@ -54,13 +51,9 @@ export default function EnhancedContentSuggestions() {
   const loadSuggestions = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/suggestions/enhanced`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      if (response.data.success) {
-        setSuggestions(response.data.data || [])
+      const response = await apiGet<any>('/suggestions/enhanced')
+      if (response?.success) {
+        setSuggestions(response.data || [])
       }
     } catch (error) {
       showToast('Failed to load suggestions', 'error')
@@ -71,13 +64,9 @@ export default function EnhancedContentSuggestions() {
 
   const loadGaps = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/suggestions/enhanced/gaps`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      if (response.data.success) {
-        setGaps(response.data.data)
+      const response = await apiGet<any>('/suggestions/enhanced/gaps')
+      if (response?.success) {
+        setGaps(response.data)
       }
     } catch (error) {
       // Silent fail
@@ -86,13 +75,9 @@ export default function EnhancedContentSuggestions() {
 
   const loadTrending = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/suggestions/enhanced/trending`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      if (response.data.success) {
-        setTrending(response.data.data || [])
+      const response = await apiGet<any>('/suggestions/enhanced/trending')
+      if (response?.success) {
+        setTrending(response.data || [])
       }
     } catch (error) {
       // Silent fail
@@ -106,17 +91,9 @@ export default function EnhancedContentSuggestions() {
     }
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.post(
-        `${API_URL}/suggestions/enhanced/viral-prediction`,
-        { contentData: { text: predictionContent } },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      )
-
-      if (response.data.success) {
-        setViralPrediction(response.data.data)
+      const response = await apiPost<any>('/suggestions/enhanced/viral-prediction', { contentData: { text: predictionContent } })
+      if (response?.success) {
+        setViralPrediction(response.data)
         showToast('Viral prediction generated', 'success')
       }
     } catch (error) {

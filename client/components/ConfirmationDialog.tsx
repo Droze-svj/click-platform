@@ -9,7 +9,7 @@ interface ConfirmationDialogProps {
   onClose: () => void
   onConfirm: () => void
   title: string
-  message: string
+  message?: string
   type?: 'danger' | 'warning' | 'info' | 'success'
   confirmLabel?: string
   cancelLabel?: string

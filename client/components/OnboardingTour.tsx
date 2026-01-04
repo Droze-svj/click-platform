@@ -40,11 +40,28 @@ export default function OnboardingTour() {
   const [currentStep, setCurrentStep] = useState(0)
   const [isActive, setIsActive] = useState(false)
 
+
   useEffect(() => {
+    // In local dev, the tour overlay can block all interactions; disable unless explicitly opted-in.
+
+    try {
+      const host =
+        typeof window !== 'undefined' && window.location && window.location.host ? String(window.location.host) : null
+      const search =
+        typeof window !== 'undefined' && window.location && window.location.search ? String(window.location.search) : ''
+      const isLocal = !!host && (host.includes('localhost') || host.includes('127.0.0.1'))
+      const forceTour = search.includes('tour=1')
+      if (isLocal && !forceTour) {
+        setIsActive(false)
+        return
+      }
+    } catch {}
+
     // Check if user has completed onboarding
     const hasCompleted = localStorage.getItem('onboarding_completed')
     if (!hasCompleted) {
       setIsActive(true)
+    } else {
     }
   }, [])
 
@@ -113,7 +130,13 @@ export default function OnboardingTour() {
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" />
+      <div
+        data-agent-overlay="onboarding-tour-overlay"
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={() => {
+          handleSkip()
+        }}
+      />
 
       {/* Highlight */}
       <div

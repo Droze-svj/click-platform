@@ -66,7 +66,6 @@ export default function ChangePasswordForm() {
           newPassword: formData.newPassword,
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

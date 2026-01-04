@@ -6,9 +6,10 @@ const {
   predictContentPerformance,
   predictOptimalPostingTime,
   forecastContentTrends,
-} = require('../../services/predictiveAnalyticsService');
+} = require('../../services/predictiveContentService');
 const asyncHandler = require('../../middleware/asyncHandler');
-const { sendSuccess } = require('../../utils/response');
+const { sendSuccess, sendError } = require('../../utils/response');
+const logger = require('../../utils/logger');
 const {
   ValidationError,
 } = require('../../utils/errorHandler');

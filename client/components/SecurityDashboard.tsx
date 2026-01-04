@@ -35,7 +35,6 @@ export default function SecurityDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/security/stats?period=30', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -53,7 +52,6 @@ export default function SecurityDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/security/events?limit=20', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

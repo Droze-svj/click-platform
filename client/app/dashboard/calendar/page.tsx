@@ -60,15 +60,14 @@ export default function CalendarPage() {
       const response = await axios.get(
         `${API_URL}/scheduler?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
       const postsData = extractApiData<ScheduledPost[]>(response) || (Array.isArray(response.data) ? response.data : [])
       setScheduledPosts(Array.isArray(postsData) ? postsData : [])
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load scheduled posts', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load scheduled posts', 'error')
     } finally {
       setLoading(false)
     }
@@ -162,7 +161,6 @@ export default function CalendarPage() {
         `${API_URL}/scheduler/posts/${draggedPost.postId}`,
         { scheduledTime: newScheduledTime.toISOString() },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

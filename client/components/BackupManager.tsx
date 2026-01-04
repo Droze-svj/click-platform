@@ -51,7 +51,6 @@ export default function BackupManager() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/backup/list', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -70,7 +69,6 @@ export default function BackupManager() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/backup/stats', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -102,7 +100,7 @@ export default function BackupManager() {
         body: JSON.stringify({
           ...backupOptions,
           password: backupOptions.encrypt ? encryptionPassword : null,
-        }),
+        })
       })
 
       if (response.ok) {
@@ -125,7 +123,6 @@ export default function BackupManager() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/backup/export`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -154,8 +151,6 @@ export default function BackupManager() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/backup/${filename}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

@@ -25,6 +25,12 @@ function csrfProtection(req, res, next) {
     return next();
   }
 
+  // Skip for local debug relay endpoints (dev only)
+  // Mounted under /api, so req.path here will be like "/debug/log"
+  if (process.env.NODE_ENV !== 'production' && req.path.startsWith('/debug')) {
+    return next();
+  }
+
   // Skip CSRF for authentication endpoints (they use JWT, not sessions)
   if (req.path.startsWith('/auth/login') || 
       req.path.startsWith('/auth/register') || 

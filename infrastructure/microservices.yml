@@ -1,0 +1,581 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: click-microservices
+  labels:
+    name: click-microservices
+    environment: production
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: click-service-account
+  namespace: click-microservices
+  labels:
+    app: click
+    component: service-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: click-microservices-role
+  labels:
+    app: click
+    component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: click-microservices-binding
+  labels:
+    app: click
+    component: rbac
+subjects:
+- kind: ServiceAccount
+  name: click-service-account
+  namespace: click-microservices
+roleRef:
+  kind: ClusterRole
+  name: click-microservices-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# API Gateway Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-api-gateway
+  namespace: click-microservices
+  labels:
+    app: click-api-gateway
+    component: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: click-api-gateway
+  template:
+    metadata:
+      labels:
+        app: click-api-gateway
+    spec:
+      serviceAccountName: click-service-account
+      containers:
+      - name: api-gateway
+        image: click-app/api-gateway:latest
+        ports:
+        - containerPort: 4000
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# User Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-user-service
+  namespace: click-microservices
+  labels:
+    app: click-user-service
+    component: user
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: click-user-service
+  template:
+    metadata:
+      labels:
+        app: click-user-service
+    spec:
+      containers:
+      - name: user-service
+        image: click-app/user-service:latest
+        ports:
+        - containerPort: 3001
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-config
+        - secretRef:
+            name: click-secrets
+        volumeMounts:
+        - name: user-data
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: user-data
+        persistentVolumeClaim:
+          claimName: user-service-pvc
+---
+# Content Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-content-service
+  namespace: click-microservices
+  labels:
+    app: click-content-service
+    component: content
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: click-content-service
+  template:
+    metadata:
+      labels:
+        app: click-content-service
+    spec:
+      containers:
+      - name: content-service
+        image: click-app/content-service:latest
+        ports:
+        - containerPort: 3002
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-config
+        - secretRef:
+            name: click-secrets
+        volumeMounts:
+        - name: content-data
+          mountPath: /app/uploads
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "1Gi"
+            cpu: "800m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: content-data
+        persistentVolumeClaim:
+          claimName: content-service-pvc
+---
+# Video Processing Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-video-service
+  namespace: click-microservices
+  labels:
+    app: click-video-service
+    component: video
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: click-video-service
+  template:
+    metadata:
+      labels:
+        app: click-video-service
+    spec:
+      containers:
+      - name: video-service
+        image: click-app/video-service:latest
+        ports:
+        - containerPort: 3003
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-config
+        volumeMounts:
+        - name: video-temp
+          mountPath: /tmp/video-processing
+        - name: video-storage
+          mountPath: /app/videos
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 30
+          periodSeconds: 15
+      volumes:
+      - name: video-temp
+        emptyDir: {}
+      - name: video-storage
+        persistentVolumeClaim:
+          claimName: video-service-pvc
+---
+# Analytics Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-analytics-service
+  namespace: click-microservices
+  labels:
+    app: click-analytics-service
+    component: analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: click-analytics-service
+  template:
+    metadata:
+      labels:
+        app: click-analytics-service
+    spec:
+      containers:
+      - name: analytics-service
+        image: click-app/analytics-service:latest
+        ports:
+        - containerPort: 3004
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-config
+        - secretRef:
+            name: click-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3004
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Notification Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-notification-service
+  namespace: click-microservices
+  labels:
+    app: click-notification-service
+    component: notification
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: click-notification-service
+  template:
+    metadata:
+      labels:
+        app: click-notification-service
+    spec:
+      containers:
+      - name: notification-service
+        image: click-app/notification-service:latest
+        ports:
+        - containerPort: 3005
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: click-config
+        - secretRef:
+            name: click-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Service Mesh (Istio Gateway)
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: click-gateway
+  namespace: click-microservices
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - click-app.com
+    - "*.click-app.com"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: click-tls
+    hosts:
+    - click-app.com
+    - "*.click-app.com"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: click-frontend
+  namespace: click-microservices
+spec:
+  hosts:
+  - click-app.com
+  gateways:
+  - click-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+      ignoreUriCase: true
+    route:
+    - destination:
+        host: click-frontend
+        port:
+          number: 3000
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: click-api
+  namespace: click-microservices
+spec:
+  hosts:
+  - api.click-app.com
+  gateways:
+  - click-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: click-api-gateway
+        port:
+          number: 4000
+    timeout: 60s
+    retries:
+      attempts: 2
+      perTryTimeout: 30s
+---
+# Circuit Breaker
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: click-backend-circuit-breaker
+  namespace: click-microservices
+spec:
+  host: click-backend
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 1024
+        http2MaxRequests: 1024
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+# Rate Limiting
+apiVersion: config.istio.io/v1alpha2
+kind: handler
+metadata:
+  name: click-ratelimit-handler
+  namespace: click-microservices
+spec:
+  compiledAdapter: ratelimit
+  params:
+    domain: click-app
+    descriptors:
+    - key: generic_key
+      value: api
+      rate_limit:
+        unit: minute
+        requests_per_unit: 1000
+    - key: generic_key
+      value: uploads
+      rate_limit:
+        unit: minute
+        requests_per_unit: 10
+---
+apiVersion: config.istio.io/v1alpha2
+kind: instance
+metadata:
+  name: click-ratelimit-instance
+  namespace: click-microservices
+spec:
+  compiledAdapter: ratelimit
+  params:
+    value: request.headers["x-api-key"] | "unknown"
+    dimensions:
+      destination: destination.service.host
+      source: source.service
+---
+apiVersion: config.istio.io/v1alpha2
+kind: rule
+metadata:
+  name: click-ratelimit-rule
+  namespace: click-microservices
+spec:
+  match: request.headers["x-api-key"] != ""
+  actions:
+  - handler: click-ratelimit-handler
+    instances:
+    - click-ratelimit-instance
+---
+# Persistent Volumes
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: user-service-pvc
+  namespace: click-microservices
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: content-service-pvc
+  namespace: click-microservices
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: video-service-pvc
+  namespace: click-microservices
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: fast-ssd
+---
+# ConfigMaps for microservices configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: click-microservices-config
+  namespace: click-microservices
+data:
+  USER_SERVICE_URL: "http://click-user-service:3001"
+  CONTENT_SERVICE_URL: "http://click-content-service:3002"
+  VIDEO_SERVICE_URL: "http://click-video-service:3003"
+  ANALYTICS_SERVICE_URL: "http://click-analytics-service:3004"
+  NOTIFICATION_SERVICE_URL: "http://click-notification-service:3005"
+  REDIS_URL: "redis://redis-service:6379"
+  MONGODB_URL: "mongodb://mongodb-service:27017"
+  SERVICE_DISCOVERY_ENABLED: "true"
+  CIRCUIT_BREAKER_ENABLED: "true"
+  RATE_LIMITING_ENABLED: "true"
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+
+

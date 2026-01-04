@@ -61,6 +61,26 @@ router.get('/', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /api/notifications/unread-count
+ * Convenience endpoint used by some UI widgets.
+ */
+router.get('/unread-count', auth, asyncHandler(async (req, res) => {
+  try {
+    let unreadCount = 0;
+    try {
+      unreadCount = await Notification.countDocuments({ userId: req.user._id, read: false });
+    } catch (countError) {
+      logger.warn('Error counting unread notifications', { error: countError.message, userId: req.user._id });
+    }
+
+    sendSuccess(res, 'Unread notifications count fetched', 200, { unreadCount: unreadCount || 0 });
+  } catch (error) {
+    logger.error('Error fetching unread notifications count', { error: error.message, userId: req.user._id, stack: error.stack });
+    sendSuccess(res, 'Unread notifications count fetched', 200, { unreadCount: 0 });
+  }
+}));
+
+/**
  * @swagger
  * /api/notifications/{notificationId}/read:
  *   put:

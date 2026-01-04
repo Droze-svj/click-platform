@@ -42,7 +42,6 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/versions/content/${contentId}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -67,7 +66,6 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/versions/${version._id}/restore`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

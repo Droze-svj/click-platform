@@ -24,7 +24,6 @@ export function useFeatureFlag(featureName: string) {
         }
 
         const response = await fetch(`/api/feature-flags/${featureName}`, {
-          headers: {
             Authorization: `Bearer ${token}`,
           },
           credentials: 'include',

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { CheckCircle, Sparkles } from 'lucide-react'
 
 interface SuccessAnimationProps {
-  message: string
   onComplete?: () => void
   duration?: number
   showIcon?: boolean

@@ -52,13 +52,12 @@ export default function SchedulerPage() {
     setLoading(true)
     try {
       const response = await axios.get(`${API_URL}/scheduler`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       const posts = extractApiData<ScheduledPost[]>(response) || []
       setPosts(Array.isArray(posts) ? posts : [])
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load scheduled posts', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load scheduled posts', 'error')
     } finally {
       setLoading(false)
     }
@@ -79,7 +78,6 @@ export default function SchedulerPage() {
             platform: selectedPlatform
           },
           {
-            headers: { Authorization: `Bearer ${token}` }
           }
         )
       } else {
@@ -91,7 +89,6 @@ export default function SchedulerPage() {
             scheduledTime: scheduledTime || new Date().toISOString()
           },
           {
-            headers: { Authorization: `Bearer ${token}` }
           }
         )
       }

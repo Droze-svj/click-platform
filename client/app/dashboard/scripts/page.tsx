@@ -43,28 +43,29 @@ export default function ScriptsPage() {
   const [targetAudience, setTargetAudience] = useState('')
   const [showForm, setShowForm] = useState(false)
 
+  const loadScripts = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`${API_URL}/scripts`, {
+      })
+      const scriptsData = extractApiData<Script[]>(response)
+      setScripts(Array.isArray(scriptsData) ? scriptsData : [])
+    } catch (error: any) {
+      const errorObj = extractApiError(error)
+      setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load scripts')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
+
     if (!user) {
       router.push('/login')
       return
     }
     loadScripts()
   }, [user, router, loadScripts])
-
-  const loadScripts = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/scripts`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const scriptsData = extractApiData<Script[]>(response)
-      setScripts(Array.isArray(scriptsData) ? scriptsData : [])
-    } catch (error: any) {
-      setError(extractApiError(error) || 'Failed to load scripts')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,7 +112,6 @@ export default function ScriptsPage() {
           }
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -124,7 +124,8 @@ export default function ScriptsPage() {
         await loadScripts()
       }
     } catch (error: any) {
-      const errorMsg = extractApiError(error) || 'Failed to generate script'
+      const errorObj = extractApiError(error)
+      const errorMsg = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to generate script'
       setError(errorMsg)
       showToast(errorMsg, 'error')
     } finally {
@@ -138,7 +139,6 @@ export default function ScriptsPage() {
       const response = await axios.get(
         `${API_URL}/scripts/${scriptId}/export?format=${format}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
         }
       )
@@ -165,7 +165,6 @@ export default function ScriptsPage() {
     try {
       const token = localStorage.getItem('token')
       await axios.delete(`${API_URL}/scripts/${scriptId}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       showToast('Script deleted successfully', 'success')
       await loadScripts()
@@ -204,8 +203,9 @@ export default function ScriptsPage() {
             <form onSubmit={handleGenerate}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Topic *</label>
+                  <label htmlFor="script-topic" className="block text-sm font-medium mb-2">Topic *</label>
                   <input
+                    id="script-topic"
                     type="text"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
@@ -215,8 +215,9 @@ export default function ScriptsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Script Type *</label>
+                  <label htmlFor="script-type" className="block text-sm font-medium mb-2">Script Type *</label>
                   <select
+                    id="script-type"
                     value={scriptType}
                     onChange={(e) => setScriptType(e.target.value)}
                     className="w-full px-4 py-2 border rounded-lg"
@@ -230,8 +231,9 @@ export default function ScriptsPage() {
                 </div>
                 {(scriptType === 'youtube' || scriptType === 'podcast') && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">Duration (minutes)</label>
+                    <label htmlFor="script-duration" className="block text-sm font-medium mb-2">Duration (minutes)</label>
                     <input
+                      id="script-duration"
                       type="number"
                       value={duration}
                       onChange={(e) => setDuration(parseInt(e.target.value))}
@@ -242,8 +244,9 @@ export default function ScriptsPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tone</label>
+                  <label htmlFor="script-tone" className="block text-sm font-medium mb-2">Tone</label>
                   <select
+                    id="script-tone"
                     value={tone}
                     onChange={(e) => setTone(e.target.value)}
                     className="w-full px-4 py-2 border rounded-lg"
@@ -258,8 +261,9 @@ export default function ScriptsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Target Audience</label>
+                  <label htmlFor="script-audience" className="block text-sm font-medium mb-2">Target Audience</label>
                   <input
+                    id="script-audience"
                     type="text"
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}

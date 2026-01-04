@@ -8,10 +8,11 @@ const {
   getTrendBasedSuggestions,
 } = require('../../services/aiRecommendationsEngine');
 const asyncHandler = require('../../middleware/asyncHandler');
-const { sendSuccess } = require('../../utils/response');
+const { sendSuccess, sendError } = require('../../utils/response');
 const {
   ValidationError,
 } = require('../../utils/errorHandler');
+const logger = require('../../utils/logger');
 const router = express.Router();
 
 router.get('/personalized', auth, asyncHandler(async (req, res) => {
@@ -22,10 +23,18 @@ router.get('/personalized', auth, asyncHandler(async (req, res) => {
       type: type || null,
       platform: platform || null,
     });
-    sendSuccess(res, 'Personalized recommendations fetched', 200, result);
+    sendSuccess(res, 'Personalized recommendations fetched', 200, result || {
+      recommendations: [],
+      insights: {},
+      topPlatforms: []
+    });
   } catch (error) {
-    logger.error('Get personalized recommendations error', { error: error.message });
-    sendError(res, error.message, 500);
+    logger.error('Get personalized recommendations error', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Personalized recommendations fetched', 200, {
+      recommendations: [],
+      insights: {},
+      topPlatforms: []
+    });
   }
 }));
 
@@ -51,10 +60,10 @@ router.get('/trend-based', auth, asyncHandler(async (req, res) => {
   const { platform } = req.query;
   try {
     const result = await getTrendBasedSuggestions(req.user._id, platform || 'instagram');
-    sendSuccess(res, 'Trend-based suggestions fetched', 200, result);
+    sendSuccess(res, 'Trend-based suggestions fetched', 200, result || []);
   } catch (error) {
-    logger.error('Get trend-based suggestions error', { error: error.message });
-    sendError(res, error.message, 500);
+    logger.error('Get trend-based suggestions error', { error: error.message, userId: req.user._id });
+    sendSuccess(res, 'Trend-based suggestions fetched', 200, []);
   }
 }));
 

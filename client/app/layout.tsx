@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+
 import ErrorBoundary from '../components/ErrorBoundary'
 import OfflineIndicator from '../components/OfflineIndicator'
 import AccessibilityFeatures from '../components/AccessibilityFeatures'
@@ -14,6 +15,21 @@ import { TranslationProvider } from '../hooks/useTranslation'
 import { ToastProvider } from '../contexts/ToastContext'
 import PerformanceMonitor from '../components/PerformanceMonitor'
 import Analytics from '../components/Analytics'
+import AgentClientPing from '../components/AgentClientPing'
+import RouteChangeLogger from '../components/RouteChangeLogger'
+import ServerPingPixel from '../components/ServerPingPixel'
+import DevDebugBanner from '../components/DevDebugBanner'
+import TokenStorageProbe from '../components/TokenStorageProbe'
+import NavigationProbe from '../components/NavigationProbe'
+import InteractionProbe from '../components/InteractionProbe'
+import DebugLayout from '../components/DebugLayout'
+import ErrorDashboard from '../components/ErrorDashboard'
+import PWAManager from '../components/PWAManager'
+import PWAInstallPrompt from '../components/PWAInstallPrompt'
+import PWAUpdateHandler from '../components/PWAUpdateHandler'
+import '../utils/networkDebugger' // Initialize network debugging
+import '../utils/analytics' // Initialize analytics
+import '../utils/rum' // Initialize RUM monitoring
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,10 +39,9 @@ export const metadata: Metadata = {
   keywords: ['content creation', 'social media', 'AI', 'marketing', 'automation', 'content management'],
   manifest: '/manifest.json',
   themeColor: '#667eea',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Click',
+  // Removed deprecated apple-mobile-web-app-capable - using mobile-web-app-capable instead
+  other: {
+    'mobile-web-app-capable': 'yes',
   },
   viewport: {
     width: 'device-width',
@@ -67,17 +82,30 @@ export default function RootLayout({
         <ErrorBoundary>
           <TranslationProvider>
             <ToastProvider>
-            <Analytics />
-            <PerformanceMonitor />
-            <PWARegistration />
-            <RealtimeConnection />
-            <OnboardingFlow />
-            <AccessibilityFeatures />
-            <OfflineIndicator />
-            <KeyboardShortcuts />
-            <KeyboardShortcutsHelper />
-            <MobileTouchEnhancements />
-            {children}
+              <Analytics />
+              <PerformanceMonitor />
+              <ServerPingPixel />
+              <AgentClientPing />
+              <RouteChangeLogger />
+              <DevDebugBanner />
+              <TokenStorageProbe />
+              <NavigationProbe />
+              <InteractionProbe />
+              <PWARegistration />
+              <RealtimeConnection />
+              <OnboardingFlow />
+              <AccessibilityFeatures />
+              <OfflineIndicator />
+              <KeyboardShortcutsHelper />
+              <MobileTouchEnhancements />
+              <PWAManager>
+                <DebugLayout>
+                  {children}
+                </DebugLayout>
+                <ErrorDashboard />
+                <PWAInstallPrompt />
+                <PWAUpdateHandler />
+              </PWAManager>
             </ToastProvider>
           </TranslationProvider>
         </ErrorBoundary>

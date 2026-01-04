@@ -21,9 +21,9 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
       const response = await fetch(`/api/content/${contentId}/duplicate`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
+        credentials: 'include'
       })
 
       if (!response.ok) {

@@ -25,7 +25,11 @@ export default function SimpleRegister() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
       })
 
       console.log('Response status:', response.status)

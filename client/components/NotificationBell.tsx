@@ -2,18 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 
 import { useSocket } from '../hooks/useSocket'
 import { useToast } from '../contexts/ToastContext'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPut } from '../lib/api'
 
 interface Notification {
   _id: string
   type: 'info' | 'success' | 'warning' | 'error'
   title: string
-  message: string
   read: boolean
   createdAt: string
 }
@@ -35,12 +32,9 @@ export default function NotificationBell() {
 
   const loadPendingApprovals = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/approvals/pending-count`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setPendingApprovals(response.data.data.count || 0)
+      const response = await apiGet<any>('/approvals/pending-count')
+      if (response?.success) {
+        setPendingApprovals(response.data?.count || 0)
       }
     } catch (error) {
       console.error('Failed to load pending approvals', error)
@@ -63,13 +57,10 @@ export default function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/notifications?limit=10`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setNotifications(response.data.data.notifications || [])
-        setUnreadCount(response.data.data.unreadCount || 0)
+      const response = await apiGet<any>('/notifications?limit=10')
+      if (response?.success) {
+        setNotifications(response.data?.notifications || [])
+        setUnreadCount(response.data?.unreadCount || 0)
       }
     } catch (error) {
       console.error('Failed to load notifications', error)
@@ -80,10 +71,7 @@ export default function NotificationBell() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.put(`${API_URL}/notifications/${notificationId}/read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiPut(`/notifications/${notificationId}/read`, {})
       setNotifications(prev =>
         prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
       )
@@ -95,10 +83,7 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.put(`${API_URL}/notifications/read-all`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiPut('/notifications/read-all', {})
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
       setUnreadCount(0)
     } catch (error) {

@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback } from 'react'
 
 interface UseFormAutoSaveOptions {
   formKey: string
-  data: any
   enabled?: boolean
   debounceMs?: number
   onSave?: (data: any) => void | Promise<void>

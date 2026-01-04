@@ -56,7 +56,6 @@ export default function EnhancedWorkflowBuilder() {
   const loadWorkflows = async () => {
     try {
       const response = await axios.get(`${API_URL}/workflows`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setWorkflows(response.data.data || [])
@@ -71,7 +70,6 @@ export default function EnhancedWorkflowBuilder() {
   const loadSuggestions = async () => {
     try {
       const response = await axios.get(`${API_URL}/workflows/enhanced/suggestions`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setSuggestions(response.data.data || [])
@@ -92,7 +90,6 @@ export default function EnhancedWorkflowBuilder() {
         `${API_URL}/workflows/enhanced`,
         newWorkflow,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Workflow created successfully!', 'success')
@@ -130,7 +127,6 @@ export default function EnhancedWorkflowBuilder() {
         `${API_URL}/workflows/enhanced/${workflowId}/execute`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Workflow executed successfully!', 'success')

@@ -33,7 +33,6 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/analytics/content-performance/${contentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

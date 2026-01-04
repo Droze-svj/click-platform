@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Trophy, Target, CheckCircle2, Circle, Flame } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { apiGet } from '../lib/api'
 
 interface Challenge {
   id: string
@@ -29,15 +28,9 @@ export default function DailyChallenges() {
 
   const fetchChallenges = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${API_URL}/engagement/challenges`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include',
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setChallenges(data.data || [])
+      const response = await apiGet<any>('/engagement/challenges')
+      if (response?.success) {
+        setChallenges(response.data || [])
       }
     } catch (error) {
       console.error('Failed to fetch challenges:', error)

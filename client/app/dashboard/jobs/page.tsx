@@ -8,6 +8,7 @@ import LoadingSkeleton from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
 import JobDetailsModal from '../../../components/JobDetailsModal'
 import { Search, Filter, Download, RefreshCw } from 'lucide-react'
+import { useAuth } from '../../../hooks/useAuth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
@@ -16,7 +17,6 @@ interface Job {
   name: string
   state: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed'
   progress: number
-  data: any
   attemptsMade: number
   failedReason?: string
   processedOn?: Date
@@ -46,6 +46,7 @@ interface QueueMetrics {
 
 export default function JobsDashboard() {
   const router = useRouter()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [userJobs, setUserJobs] = useState<{
     active: Job[]
@@ -91,11 +92,14 @@ export default function JobsDashboard() {
       }
 
       // Load queue stats (if admin)
-      try {
-        const statsResponse = await axios.get(`${API_URL}/jobs/dashboard/stats`, { headers })
-        setQueueStats(statsResponse.data.data || {})
-      } catch (error) {
-        // Not admin, skip
+      const isAdmin = !!user && (((user as any).role === 'admin') || !!(user as any).isAdmin)
+      if (isAdmin) {
+        try {
+          const statsResponse = await axios.get(`${API_URL}/jobs/dashboard/stats`, { headers })
+          setQueueStats(statsResponse.data.data || {})
+        } catch (error) {
+          // If stats fail even for admins, don't break the rest of the dashboard.
+        }
       }
     } catch (error: any) {
       console.error('Failed to load jobs:', error)
@@ -120,7 +124,6 @@ export default function JobsDashboard() {
 
       // Try to cancel (we'll need to find the queue)
       await axios.post(`${API_URL}/jobs/user/${jobId}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       loadData()
@@ -254,10 +257,9 @@ export default function JobsDashboard() {
             ) : (
               <div className="space-y-4">
                 {userJobs.active
-                  .filter(job => 
-                    searchQuery === '' || 
-                    job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    JSON.stringify(job.data).toLowerCase().includes(searchQuery.toLowerCase())
+                  .filter(job =>
+                    searchQuery === '' ||
+                    job.name.toLowerCase().includes(searchQuery.toLowerCase())
                   )
                   .map((job) => (
                     <JobCard
@@ -284,10 +286,9 @@ export default function JobsDashboard() {
             ) : (
               <div className="space-y-4">
                 {userJobs.completed
-                  .filter(job => 
-                    searchQuery === '' || 
-                    job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    JSON.stringify(job.data).toLowerCase().includes(searchQuery.toLowerCase())
+                  .filter(job =>
+                    searchQuery === '' ||
+                    job.name.toLowerCase().includes(searchQuery.toLowerCase())
                   )
                   .slice(0, 20)
                   .map((job) => (
@@ -315,10 +316,9 @@ export default function JobsDashboard() {
             ) : (
               <div className="space-y-4">
                 {userJobs.failed
-                  .filter(job => 
-                    searchQuery === '' || 
-                    job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    JSON.stringify(job.data).toLowerCase().includes(searchQuery.toLowerCase())
+                  .filter(job =>
+                    searchQuery === '' ||
+                    job.name.toLowerCase().includes(searchQuery.toLowerCase())
                   )
                   .map((job) => (
                     <JobCard

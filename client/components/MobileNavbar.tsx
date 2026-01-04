@@ -13,6 +13,10 @@ export default function MobileNavbar() {
   const { user, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
 
+
+  const dbg = (message: string, data: Record<string, any>) => {
+  }
+
   if (pathname === '/login' || pathname === '/register' || pathname === '/') {
     return null
   }
@@ -46,7 +50,9 @@ export default function MobileNavbar() {
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              setIsOpen(!isOpen)
+            }}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Menu"
           >
@@ -72,8 +78,11 @@ export default function MobileNavbar() {
       {isOpen && (
         <>
           <div
+            data-agent-overlay="mobile-navbar-backdrop"
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false)
+            }}
           />
           <div className="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-gray-800 z-50 overflow-y-auto shadow-xl">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">

@@ -20,7 +20,6 @@ export default function UploadProgress({ uploadId, onComplete, onError }: Upload
       try {
         const token = localStorage.getItem('token')
         const response = await fetch(`/api/upload/progress/${uploadId}`, {
-          headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
         })
 

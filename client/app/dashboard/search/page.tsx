@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import ErrorAlert from '../../../components/ErrorAlert'
 import EmptyState from '../../../components/EmptyState'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { extractApiData, extractApiError } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { apiGet } from '../../../lib/api'
 
 export default function SearchPage() {
   const router = useRouter()
@@ -42,20 +40,17 @@ export default function SearchPage() {
     setError('')
 
     try {
-      const token = localStorage.getItem('token')
       const params = new URLSearchParams()
       if (query) params.append('q', query)
       if (type) params.append('type', type)
       if (status) params.append('status', status)
 
-      const response = await axios.get(`${API_URL}/search/content?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      const resultsData = extractApiData<SearchResult[]>(response)
+      const response = await apiGet<any>(`/search/content?${params.toString()}`)
+      const resultsData = response?.data || response
       setResults(Array.isArray(resultsData) ? resultsData : [])
     } catch (error: any) {
-      setError(extractApiError(error) || 'Search failed')
+      const errorObj = extractApiError(error)
+      setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Search failed')
     } finally {
       setLoading(false)
     }

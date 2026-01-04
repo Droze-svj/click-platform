@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+// Prefer same-origin proxy, but if user has NEXT_PUBLIC_API_URL misconfigured to Render
+// while running locally, force /api so local testing stays local.
+const API_URL =
+  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? '/api'
+    : process.env.NEXT_PUBLIC_API_URL || '/api'
 
 export default function AutoTestRegistration() {
   const [status, setStatus] = useState<string>('Ready to test')

@@ -9,38 +9,62 @@ const { captureException } = require('../utils/sentry');
 const slowQueries = [];
 const SLOW_QUERY_THRESHOLD = 100; // milliseconds
 
+// Debug counters (do not log secrets)
+let __agentExecWrapCount = 0;
+let __monitoringInitialized = false;
+let __execAlreadyWrapped = false;
+
 /**
  * Initialize query performance monitoring
  */
 function initQueryMonitoring() {
-  // Monitor all queries
-  mongoose.set('debug', (collectionName, method, query, doc) => {
-    const startTime = Date.now();
-    
-    // Log slow queries
+  // #region agent log
+  // #endregion
+
+  if (__monitoringInitialized) {
+    // Avoid double-initializing in dev/hot-reload scenarios.
+    // #region agent log
+    // #endregion
+    return;
+  }
+  __monitoringInitialized = true;
+
+  // IMPORTANT: Wrap mongoose.Query.prototype.exec ONLY ONCE.
+  // The previous implementation wrapped exec inside mongoose debug callback,
+  // causing exec to be re-wrapped repeatedly and destroying performance.
+  if (!__execAlreadyWrapped) {
     const originalExec = mongoose.Query.prototype.exec;
     mongoose.Query.prototype.exec = function(...args) {
+      __agentExecWrapCount += 1;
+      // #region agent log
+      if (__agentExecWrapCount <= 3 || __agentExecWrapCount === 10) {
+      }
+      // #endregion
+
       const queryStart = Date.now();
-      
       return originalExec.apply(this, args).then(result => {
         const duration = Date.now() - queryStart;
-        
+
         if (duration > SLOW_QUERY_THRESHOLD) {
+          const collectionName = String((this && this.mongooseCollection && this.mongooseCollection.name) || '');
+          const method = String((this && this.op) || '');
+          const queryObj = (this && typeof this.getQuery === 'function') ? this.getQuery() : {};
+          const queryString = JSON.stringify(queryObj || {});
+
           // Record in monitoring service
-          const queryString = JSON.stringify(query || {});
           recordDatabaseQuery(queryString, duration);
 
-      logger.warn('Slow query detected', {
+          logger.warn('Slow query detected', {
             collection: collectionName,
             method,
             duration,
-            query: JSON.stringify(query),
+            query: queryString,
           });
 
           slowQueries.push({
             collection: collectionName,
             method,
-            query: JSON.stringify(query),
+            query: queryString,
             duration,
             timestamp: new Date(),
           });
@@ -54,7 +78,7 @@ function initQueryMonitoring() {
           if (duration > 1000) {
             captureException(new Error('Very slow query detected'), {
               tags: { collection: collectionName, method },
-              extra: { duration, query: JSON.stringify(query) },
+              extra: { duration, query: queryString },
             });
           }
         }
@@ -62,9 +86,13 @@ function initQueryMonitoring() {
         return result;
       });
     };
-  });
+    __execAlreadyWrapped = true;
+  }
 
   logger.info('Query performance monitoring initialized');
+
+  // #region agent log
+  // #endregion
 }
 
 /**

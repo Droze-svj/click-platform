@@ -40,7 +40,6 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
         endpoint,
         body,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast(`Deleted ${selectedItems.length} items successfully`, 'success')
@@ -61,7 +60,6 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
         `${API_URL}/export/bulk`,
         { type, ids: selectedItems },
         {
-          headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
         }
       )

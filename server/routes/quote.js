@@ -10,8 +10,15 @@ const { extractQuotes } = require('../services/aiService');
 const router = express.Router();
 
 // Generate quote cards from content
-router.post('/generate', auth, async (req, res) => {
+router.post('/generate', (req, res, next) => {
+  // #region agent log
+  // #endregion
+  next();
+}, auth, async (req, res) => {
   try {
+    // #region agent log
+    // #endregion
+
     const { contentId, quoteText, style } = req.body;
 
     let content;
@@ -26,7 +33,12 @@ router.post('/generate', auth, async (req, res) => {
       ? await extractQuotes(content.transcript || content.description, req.user.niche)
       : quoteText ? [{ quote: quoteText, context: '', impact: '' }] : [];
 
+    // #region agent log
+    // #endregion
+
     if (quotes.length === 0) {
+      // #region agent log
+      // #endregion
       return res.status(400).json({ error: 'No quotes found' });
     }
 

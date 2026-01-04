@@ -71,7 +71,6 @@ export default function SettingsPage() {
       }
 
       const response = await axios.get(`${API_URL}/user/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       const settingsData = extractApiData<UserSettings>(response)
@@ -95,7 +94,6 @@ export default function SettingsPage() {
       if (!token) return
 
       await axios.put(`${API_URL}/user/settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       // Show success toast
@@ -139,10 +137,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
-      <ToastContainer />
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <ToastContainer />
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -355,6 +354,7 @@ export default function SettingsPage() {
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
+        </div>
       </div>
     </ErrorBoundary>
   )
@@ -386,7 +386,6 @@ function ToggleSetting({ label, value, onChange }: { label: string; value: boole
         />
       </button>
     </div>
-    </ErrorBoundary>
   )
 }
 

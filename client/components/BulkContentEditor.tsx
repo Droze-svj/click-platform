@@ -42,13 +42,13 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
         body: JSON.stringify({
           contentIds: selectedIds,
-          updates: payload,
-        }),
+          updates: payload
+        })
       })
 
       if (response.ok) {

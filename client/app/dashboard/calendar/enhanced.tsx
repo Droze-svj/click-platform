@@ -30,7 +30,6 @@ export default function EnhancedCalendarPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/analytics/content-performance/optimal-times`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.success) {
@@ -45,7 +44,6 @@ export default function EnhancedCalendarPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/suggestions/enhanced/gaps`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.success) {

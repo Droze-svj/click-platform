@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import { useRouter } from 'next/navigation'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet } from '../lib/api'
 
 interface Activity {
   _id: string
@@ -21,18 +20,18 @@ export default function ActivityFeed({ limit = 10 }: { limit?: number }) {
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
+  const dbg = (message: string, data: Record<string, any>) => {
+  }
+
   useEffect(() => {
     loadActivities()
   }, [])
 
   const loadActivities = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/engagement/activities?limit=${limit}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setActivities(response.data.data.activities || [])
+      const response = await apiGet<any>(`/engagement/activities?limit=${limit}`)
+      if (response?.success) {
+        setActivities(response.data?.activities || [])
       }
     } catch (error) {
       console.error('Failed to load activities', error)

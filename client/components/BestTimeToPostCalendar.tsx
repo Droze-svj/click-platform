@@ -150,7 +150,7 @@ export default function BestTimeToPostCalendar() {
 
             {/* Days */}
             {days.map((day) => (
-              <>
+              <div key={day} className="contents">
                 <div
                   key={`${day}-label`}
                   className="font-medium text-sm text-gray-700 dark:text-gray-300 py-2"
@@ -167,7 +167,7 @@ export default function BestTimeToPostCalendar() {
                     />
                   )
                 })}
-              </>
+              </div>
             ))}
           </div>
         </div>

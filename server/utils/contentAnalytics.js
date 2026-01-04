@@ -101,6 +101,9 @@ async function getContentAnalytics(userId, period = 30) {
  * Get content insights
  */
 async function getContentInsights(userId) {
+  // #region agent log
+  // #endregion
+
   const analytics = await getContentAnalytics(userId, 30);
 
   const insights = {

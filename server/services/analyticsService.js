@@ -1,5 +1,6 @@
 // Analytics Service (Privacy-Compliant)
 
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
@@ -169,10 +170,187 @@ async function trackFeatureUsage(userId, feature, metadata = {}) {
   });
 }
 
+/**
+ * Get comprehensive analytics (enhanced version of user analytics)
+ */
+async function getComprehensiveAnalytics(userId, period = 30) {
+  // #region agent log
+  // #endregion
+
+  try {
+    const analytics = await getUserAnalytics(userId, `${period}d`);
+
+    // Add additional comprehensive data
+    const user = await User.findById(userId).select('createdAt lastLogin usage subscription');
+    if (!user) {
+      return { error: 'User not found' };
+    }
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - period);
+
+    // Get detailed content breakdown
+    const contentBreakdown = await Content.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          count: { $sum: 1 },
+          types: { $addToSet: '$type' }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Get platform-specific posting stats
+    const platformStats = await ScheduledPost.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: '$platform',
+          total: { $sum: 1 },
+          published: {
+            $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] }
+          },
+          scheduled: {
+            $sum: { $cond: [{ $eq: ['$status', 'scheduled'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    return {
+      ...analytics,
+      period: `${period} days`,
+      user: {
+        accountAge: user ? Math.floor((now - user.createdAt) / (1000 * 60 * 60 * 24)) : 0,
+        lastLogin: user?.lastLogin,
+        subscription: user?.subscription || null,
+      },
+      detailed: {
+        contentBreakdown,
+        platformStats,
+        engagement: {
+          avgContentPerDay: analytics.content.created / period,
+          publishingRate: analytics.content.published / period,
+        }
+      }
+    };
+  } catch (error) {
+    logger.error('Get comprehensive analytics error', { error: error.message, userId });
+    throw error;
+  }
+}
+
+/**
+ * Get performance trends over time
+ */
+async function getPerformanceTrends(userId, period = 30) {
+  // #region agent log
+  // #endregion
+
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - period);
+
+    // Get daily content creation trends
+    const contentTrends = await Content.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          contentCreated: { $sum: 1 },
+          types: { $addToSet: '$type' }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Get daily posting trends
+    const postingTrends = await ScheduledPost.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          postsScheduled: { $sum: 1 },
+          postsPublished: {
+            $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] }
+          }
+        }
+      },
+      {
+        $sort: { '_id': 1 }
+      }
+    ]);
+
+    // Calculate trends
+    const contentGrowth = contentTrends.length >= 2 ?
+      ((contentTrends[contentTrends.length - 1]?.contentCreated || 0) -
+       (contentTrends[0]?.contentCreated || 0)) / (contentTrends.length - 1) : 0;
+
+    const postingGrowth = postingTrends.length >= 2 ?
+      ((postingTrends[postingTrends.length - 1]?.postsPublished || 0) -
+       (postingTrends[0]?.postsPublished || 0)) / (postingTrends.length - 1) : 0;
+
+    return {
+      period: `${period} days`,
+      trends: {
+        contentCreation: contentTrends,
+        postingActivity: postingTrends,
+      },
+      growth: {
+        contentGrowth: Math.round(contentGrowth * 100) / 100,
+        postingGrowth: Math.round(postingGrowth * 100) / 100,
+      },
+      summary: {
+        totalContent: contentTrends.reduce((sum, day) => sum + day.contentCreated, 0),
+        totalPosts: postingTrends.reduce((sum, day) => sum + day.postsScheduled, 0),
+        publishedPosts: postingTrends.reduce((sum, day) => sum + day.postsPublished, 0),
+        avgContentPerDay: Math.round(contentTrends.reduce((sum, day) => sum + day.contentCreated, 0) / period * 100) / 100,
+        avgPostsPerDay: Math.round(postingTrends.reduce((sum, day) => sum + day.postsScheduled, 0) / period * 100) / 100,
+      },
+      timestamp: new Date(),
+    };
+  } catch (error) {
+    logger.error('Get performance trends error', { error: error.message, userId });
+    throw error;
+  }
+}
+
 module.exports = {
   trackEvent,
   trackPageView,
   trackFeatureUsage,
   getUserAnalytics,
   getPlatformAnalytics,
+  getComprehensiveAnalytics,
+  getPerformanceTrends,
 };

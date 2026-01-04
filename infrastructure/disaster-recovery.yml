@@ -1,0 +1,501 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: click-dr
+  labels:
+    name: click-dr
+    environment: disaster-recovery
+---
+# Disaster Recovery Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: click-dr-config
+  namespace: click-dr
+data:
+  RTO_HOURS: "4"  # Recovery Time Objective
+  RPO_MINUTES: "15"  # Recovery Point Objective
+  BACKUP_RETENTION_DAYS: "30"
+  MULTI_REGION_ENABLED: "true"
+  AUTO_FAILOVER_ENABLED: "true"
+  CROSS_REGION_REPLICATION: "true"
+---
+# Multi-Region Database Replication
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb-replica-set
+  namespace: click-dr
+  labels:
+    app: mongodb
+    component: database
+spec:
+  serviceName: mongodb-replica
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6.0
+        ports:
+        - containerPort: 27017
+          protocol: TCP
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secrets
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secrets
+              key: password
+        - name: MONGO_REPLICA_SET_NAME
+          value: click-rs
+        - name: MONGO_REPLICA_SET_MEMBERS
+          value: "mongodb-0,mongodb-1,mongodb-2"
+        command:
+        - mongod
+        - --replSet
+        - click-rs
+        - --bind_ip_all
+        - --auth
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-keyfile
+          mountPath: /data/keyfile
+          readOnly: true
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - mongo
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: mongodb-keyfile
+        secret:
+          secretName: mongodb-keyfile
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 500Gi
+      storageClassName: fast-ssd
+---
+# Cross-Region Redis Replication
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-cluster
+  namespace: click-dr
+  labels:
+    app: redis
+    component: cache
+spec:
+  serviceName: redis-cluster
+  replicas: 6  # 3 masters + 3 slaves for HA
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.0-alpine
+        ports:
+        - containerPort: 6379
+          protocol: TCP
+          name: redis
+        - containerPort: 16379
+          protocol: TCP
+          name: cluster-bus
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-cluster-config
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-cluster-config
+  namespace: click-dr
+data:
+  redis.conf: |
+    cluster-enabled yes
+    cluster-config-file /data/nodes.conf
+    cluster-node-timeout 5000
+    appendonly yes
+    protected-mode no
+    cluster-announce-ip 127.0.0.1
+    cluster-announce-port 6379
+    cluster-announce-bus-port 16379
+---
+# Backup CronJob
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: click-backup-job
+  namespace: click-dr
+  labels:
+    app: click
+    component: backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: click-app/backup:latest
+            envFrom:
+            - configMapRef:
+                name: click-dr-config
+            - secretRef:
+                name: backup-secrets
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          restartPolicy: OnFailure
+---
+# Cross-Region Replication Job
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cross-region-replication
+  namespace: click-dr
+  labels:
+    app: click
+    component: replication
+spec:
+  schedule: "*/15 * * * *"  # Every 15 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: replication
+            image: click-app/replication:latest
+            envFrom:
+            - configMapRef:
+                name: click-dr-config
+            - secretRef:
+                name: replication-secrets
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "200m"
+          restartPolicy: OnFailure
+---
+# Failover Detection and Recovery
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-failover-controller
+  namespace: click-dr
+  labels:
+    app: click-failover-controller
+    component: failover
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: click-failover-controller
+  template:
+    metadata:
+      labels:
+        app: click-failover-controller
+    spec:
+      containers:
+      - name: failover-controller
+        image: click-app/failover-controller:latest
+        envFrom:
+        - configMapRef:
+            name: click-dr-config
+        - secretRef:
+            name: failover-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Network Policies for DR
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: click-dr-network-policy
+  namespace: click-dr
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: click-production
+    - namespaceSelector:
+        matchLabels:
+          name: click-dr
+    ports:
+    - protocol: TCP
+      port: 27017  # MongoDB
+    - protocol: TCP
+      port: 6379   # Redis
+    - protocol: TCP
+      port: 5432   # PostgreSQL (if used)
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: click-production
+    - namespaceSelector:
+        matchLabels:
+          name: click-dr
+    ports:
+    - protocol: TCP
+      port: 53     # DNS
+    - protocol: TCP
+      port: 27017  # MongoDB
+    - protocol: TCP
+      port: 6379   # Redis
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443    # HTTPS for external APIs
+---
+# Persistent Volumes for DR
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: click-dr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Ti
+  storageClassName: backup-storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: replication-pvc
+  namespace: click-dr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: replication-storage
+---
+# Secrets for DR operations
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-keyfile
+  namespace: click-dr
+type: Opaque
+data:
+  keyfile: "bW9uZ29rZXlmaWxlZGF0YQ=="  # Base64 encoded keyfile
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-secrets
+  namespace: click-dr
+type: Opaque
+data:
+  aws-access-key-id: "QUtJQTJBUk5KS0ZKS0RKS0RKS0RKS0RK"  # Base64 encoded
+  aws-secret-access-key: "c2VjcmV0a2V5ZGF0YQ=="  # Base64 encoded
+  s3-bucket: "Y2xpY2stYmFja3Vwcy1wcm9k"  # click-backups-prod
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: replication-secrets
+  namespace: click-dr
+type: Opaque
+data:
+  primary-region-endpoint: "aHR0cHM6Ly9hcGkuY2xpY2stYXBwLmNvbQ=="  # Base64 encoded
+  secondary-region-endpoint: "aHR0cHM6Ly9hcGkuZGUuY2xpY2stYXBwLmNvbQ=="  # Base64 encoded
+  replication-key: "cmVwbGljYXRpb25rZXlkYXRh"  # Base64 encoded
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: failover-secrets
+  namespace: click-dr
+type: Opaque
+data:
+  route53-hosted-zone: "WjJGVEROREFUQVFXWTJPS1ZEU0RKS0RKS0RK"  # Route53 hosted zone ID
+  cloudflare-api-token: "Y2xvdWRmbGFyZWFwaXRva2VuZGF0YQ=="  # Cloudflare API token
+---
+# Monitoring for DR
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: click-dr-alerts
+  namespace: click-dr
+  labels:
+    app: click
+    component: monitoring
+spec:
+  groups:
+  - name: click.dr
+    rules:
+    - alert: DatabaseReplicationLag
+      expr: mongodb_replication_lag > 300
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Database replication lag is too high"
+        description: "MongoDB replication lag is {{ $value }} seconds"
+
+    - alert: CrossRegionSyncFailure
+      expr: cross_region_sync_status != 1
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Cross-region synchronization failed"
+        description: "Cross-region data synchronization has failed"
+
+    - alert: BackupFailure
+      expr: backup_job_status != 1
+      for: 1h
+      labels:
+        severity: critical
+      annotations:
+        summary: "Backup job failed"
+        description: "Automated backup job has failed"
+
+    - alert: FailoverDetected
+      expr: region_failover_active == 1
+      labels:
+        severity: critical
+      annotations:
+        summary: "Automatic failover activated"
+        description: "System has automatically failed over to secondary region"
+---
+# Service Monitor for DR components
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: click-dr-monitor
+  namespace: click-dr
+  labels:
+    app: click
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: click-dr
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+
+

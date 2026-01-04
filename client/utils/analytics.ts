@@ -44,7 +44,6 @@ async function sendToAnalyticsEndpoint(data: AnalyticsEventData) {
       body: JSON.stringify({
         ...data,
         url: typeof window !== 'undefined' ? window.location.href : '',
-        timestamp: new Date().toISOString(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       }),
       keepalive: true, // Ensures request completes even if page unloads
@@ -278,6 +277,31 @@ export function setUserProperties(userId: string, properties?: Record<string, an
  * }
  * ```
  */
+/**
+ * Track PWA-specific events
+ *
+ * @param event PWA event type
+ * @param data Additional event data
+ *
+ * @example
+ * ```typescript
+ * trackPWAEvent('install_prompt_shown', { platform: 'desktop' })
+ * trackPWAEvent('app_installed', { platform: 'mobile' })
+ * trackPWAEvent('offline_access', { cachedPages: 15 })
+ * ```
+ */
+export function trackPWAEvent(event: string, data?: Record<string, any>) {
+  if (typeof window === 'undefined') return
+
+  trackEvent('custom', {
+    category: 'pwa',
+    action: event,
+    label: event,
+    value: 1,
+    customData: data
+  })
+}
+
 export function usePageView(path?: string, title?: string) {
   if (typeof window === 'undefined') return
 

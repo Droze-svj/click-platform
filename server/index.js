@@ -32,65 +32,68 @@ console.log('📦 Loading environment variables...');
 require('dotenv').config();
 console.log('✅ Environment variables loaded');
 
-// Start minimal health check server IMMEDIATELY using Node's built-in http module
-// This MUST happen before ANY other requires to ensure port is bound
-// Using http module (no dependencies) for maximum reliability
+// Start minimal health check server (production/staging only).
+// In local dev, this extra server can race with nodemon restarts and cause EADDRINUSE / partial startup.
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || '0.0.0.0';
-console.log(`📝 Starting health check server on port ${PORT}...`);
+const __isHosted = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
 
 let healthCheckServer = null;
-try {
-  // Use Node's built-in http module - no dependencies, always available
-  const http = require('http');
-  
-  const healthCheckHandler = (req, res) => {
-    const url = req.url || '/';
-    if (url === '/api/health' || url === '/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        status: 'starting', 
-        message: 'Server is initializing...', 
-        port: PORT,
-        timestamp: new Date().toISOString()
-      }));
-    } else {
-      res.writeHead(503, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ 
-        status: 'starting', 
-        message: 'Server is initializing...', 
-        port: PORT 
-      }));
-    }
-  };
-  
-  healthCheckServer = http.createServer(healthCheckHandler);
-  
-  healthCheckServer.listen(PORT, HOST, () => {
-    console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
-    console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
-    console.log(`✅ Health check available at http://${HOST}:${PORT}/api/health`);
-  });
-  
-  healthCheckServer.on('error', (err) => {
-    console.error('❌ Health check server error:', err);
-    console.error('Error code:', err.code);
-    console.error('Error message:', err.message);
-    if (err.code === 'EADDRINUSE') {
-      console.error('⚠️ Port is already in use. This might be from a previous deployment.');
-    }
-    // Don't exit - let the process continue
-  });
-  
-  // Keep server alive
-  healthCheckServer.keepAliveTimeout = 65000;
-  healthCheckServer.headersTimeout = 66000;
-  
-} catch (healthError) {
-  console.error('❌ CRITICAL: Failed to start health check server:', healthError);
-  console.error('Stack:', healthError.stack);
-  // This is critical - if we can't start the health check server, Render.com won't detect the port
-  // But we still don't exit - let the main server try to start
+if (__isHosted) {
+  console.log(`📝 Starting health check server on port ${PORT}...`);
+  try {
+    // Use Node's built-in http module - no dependencies, always available
+    const http = require('http');
+    
+    const healthCheckHandler = (req, res) => {
+      const url = req.url || '/';
+      if (url === '/api/health' || url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          status: 'starting', 
+          message: 'Server is initializing...', 
+          port: PORT,
+          timestamp: new Date().toISOString()
+        }));
+      } else {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          status: 'starting', 
+          message: 'Server is initializing...', 
+          port: PORT 
+        }));
+      }
+    };
+    
+    healthCheckServer = http.createServer(healthCheckHandler);
+    
+    healthCheckServer.listen(PORT, HOST, () => {
+      console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
+      console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
+      console.log(`✅ Health check available at http://${HOST}:${PORT}/api/health`);
+    });
+    
+    healthCheckServer.on('error', (err) => {
+      console.error('❌ Health check server error:', err);
+      console.error('Error code:', err.code);
+      console.error('Error message:', err.message);
+      if (err.code === 'EADDRINUSE') {
+        console.error('⚠️ Port is already in use. This might be from a previous deployment.');
+      }
+      // Don't exit - let the process continue
+    });
+    
+    // Keep server alive
+    healthCheckServer.keepAliveTimeout = 65000;
+    healthCheckServer.headersTimeout = 66000;
+    
+  } catch (healthError) {
+    console.error('❌ CRITICAL: Failed to start health check server:', healthError);
+    console.error('Stack:', healthError.stack);
+    // This is critical in hosted environments, but don't exit - let the main server try to start
+  }
+} else {
+  console.log('📝 Dev mode: skipping separate health check server (starting Express directly)');
 }
 
 const express = require('express');
@@ -132,6 +135,28 @@ initCache().catch(err => {
 const { initIntelligentCache } = require('./services/intelligentCacheService');
 initIntelligentCache();
 logger.info('✅ Intelligent cache service initialized');
+
+// Initialize Redis Cache Service
+const redisCache = require('./utils/redisCache');
+logger.info('✅ Redis cache service initialized');
+
+// Initialize APM (Application Performance Monitoring)
+const { apmMonitor, apmMiddleware } = require('./utils/apm');
+global.apmMonitor = apmMonitor; // Make available globally for error handlers
+logger.info('✅ APM monitoring service initialized');
+
+// Initialize Alerting System
+const alertingSystem = require('./utils/alerting');
+global.alertingSystem = alertingSystem;
+logger.info('✅ Alerting system initialized');
+
+// Initialize API Optimization Middleware
+const apiOptimizer = require('./middleware/apiOptimizer');
+logger.info('✅ API optimization middleware loaded');
+
+// Initialize Database Optimizer
+const databaseOptimizer = require('./utils/databaseOptimizer');
+logger.info('✅ Database optimizer loaded');
 
 // Initialize Job Queue Workers (optional - non-blocking)
 // Check Redis configuration first
@@ -467,6 +492,54 @@ if (process.env.NODE_ENV === 'production') {
 
 const app = express();
 
+// Auth/API responses must not be served as 304 (ETag cache hits) because the client expects a JSON body.
+// Disabling ETag generation prevents Express from returning "Not Modified" for API JSON routes like /api/auth/me.
+app.set('etag', false);
+
+// #region agent log
+// Backend request probe: capture high-signal browser/API traffic even if the frontend bypasses the Next.js /api proxy.
+// Never log secrets (no tokens/cookies).
+app.use('/api', (req, res, next) => {
+  try {
+    const p = req.path || '';
+    const should =
+      p.startsWith('/auth') ||
+      p.startsWith('/debug') ||
+      p.startsWith('/notifications') ||
+      p.startsWith('/approvals') ||
+      p.startsWith('/search') ||
+      p.startsWith('/onboarding');
+    if (should) {
+      // Debug instrumentation disabled
+    }
+  } catch {}
+  next();
+});
+// #endregion
+
+// EARLY request tracing for debugging (must run before CSRF/body parsing/etc).
+// This is intentionally lightweight and only targets the endpoints that were timing out.
+app.use('/api', (req, res, next) => {
+  const p = req.path || '';
+  if (
+    p.startsWith('/notifications') ||
+    p.startsWith('/approvals') ||
+    p.startsWith('/search') ||
+    p.startsWith('/onboarding') ||
+    p.startsWith('/auth/me')
+  ) {
+    const start = Date.now();
+    const startPath = req.path;
+    // #region agent log
+    // #endregion
+    res.on('finish', () => {
+      // #region agent log
+      // #endregion
+    });
+  }
+  next();
+});
+
 // Compression middleware
 app.use(compression());
 
@@ -480,6 +553,8 @@ app.use(sanitizeInput);
 
 // CSRF Protection (after body parsing)
 const { csrfProtection } = require('./middleware/csrfProtection');
+// #region agent log
+// #endregion
 app.use('/api', csrfProtection);
 
 // CORS middleware - must be configured before routes
@@ -488,7 +563,17 @@ if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 // Always allow localhost for development
-allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002');
+allowedOrigins.push(
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://localhost:3010',
+  'http://localhost:3011',
+  'http://localhost:3012',
+  'http://127.0.0.1:3010',
+  'http://127.0.0.1:3011',
+  'http://127.0.0.1:3012'
+);
 // Allow production frontend if different
 if (process.env.NODE_ENV === 'production') {
   allowedOrigins.push('https://click-platform.onrender.com');
@@ -526,10 +611,26 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400 // 24 hours
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept', 
+    'Origin',
+    'X-Auth-Token',
+    'Cache-Control',
+    'Pragma'
+  ],
+  exposedHeaders: [
+    'Content-Range', 
+    'X-Content-Range',
+    'X-Total-Count',
+    'X-Page-Count'
+  ],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Performance tracking
@@ -561,8 +662,39 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const { addRequestId } = require('./middleware/requestId');
 app.use(addRequestId);
 
-// Rate limiting (applied to all routes)
-app.use('/api', apiLimiter);
+// Targeted request timing for debugging (avoid logging secrets)
+app.use('/api', (req, res, next) => {
+  const p = req.path || '';
+  if (
+    p.startsWith('/notifications') ||
+    p.startsWith('/approvals') ||
+    p.startsWith('/search') ||
+    p.startsWith('/onboarding') ||
+    p.startsWith('/auth/me')
+  ) {
+    const start = Date.now();
+    // #region agent log
+    // #endregion
+    res.on('finish', () => {
+      const durationMs = Date.now() - start;
+      // #region agent log
+      // #endregion
+    });
+  }
+  next();
+});
+
+// Rate limiting (applied to API routes)
+// In local development, rate limiting can break the app (429 storms) and also blocks our debug relay.
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  app.use('/api', apiLimiter);
+}
+
+// API Optimization Middleware (compression, caching, performance)
+app.use('/api', apiOptimizer);
+
+// APM Middleware for performance monitoring
+app.use('/api', apmMiddleware);
 
 // Cache middleware for GET requests (skip auth and status endpoints)
 app.use('/api', (req, res, next) => {
@@ -576,29 +708,26 @@ app.use('/api', (req, res, next) => {
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Database connection with error handling
-// Start server even if MongoDB fails initially
+// Database connection with multi-provider support
+// Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)
+const { initDatabases, getDatabaseHealth } = require('./config/database');
+
+// Connect to database (supports multiple providers)
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/click');
-    logger.info('✅ MongoDB connected');
-    
-    // Handle connection events
-    mongoose.connection.on('error', (err) => {
-      logger.error('MongoDB connection error:', err);
-    });
-    
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB disconnected. Attempting to reconnect...');
-    });
-    
-    mongoose.connection.on('reconnected', () => {
-      logger.info('MongoDB reconnected');
-    });
+    const dbStatus = await initDatabases();
+
+    if (dbStatus.supabase || dbStatus.prisma || dbStatus.mongodb) {
+      logger.info('✅ Database connected successfully');
+      logger.info('Database status:', getDatabaseHealth());
+    } else {
+      logger.error('❌ No database connection available');
+      logger.warn('⚠️ Server will start in degraded mode. Database features will not work.');
+    }
   } catch (err) {
-    logger.error('❌ MongoDB connection error:', err);
-    logger.warn('⚠️ Server will start without database. MongoDB connection will retry in background.');
-    // Don't exit - allow server to start and retry connection
+    logger.error('❌ Database connection error:', err);
+    logger.warn('⚠️ Server will start without database. Connection will retry in background.');
+    // Don't exit - allow server to start
   }
 };
 
@@ -606,19 +735,68 @@ const connectDB = async () => {
 connectDB();
 
 // API Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+const swaggerUiOptions = {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'Click API'
+};
+
+// Primary docs route (common Swagger default)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+// Compatibility alias for existing scripts/docs that expect /api/docs
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+// Redis Caching Middleware for API routes
+// Cache GET requests for better performance
+app.use('/api', redisCache.middleware({
+  ttl: 300, // 5 minutes default
+  skipCache: (req) => {
+    // Don't cache non-GET requests, auth routes, or uploads
+    return req.method !== 'GET' ||
+           req.originalUrl.includes('/auth/') ||
+           req.originalUrl.includes('/upload/') ||
+           req.originalUrl.includes('/admin/') ||
+           req.originalUrl.includes('/batch/') ||
+           req.originalUrl.includes('/export/');
+  },
+  condition: (req) => {
+    // Only cache for authenticated users or public routes
+    return !!req.user || req.originalUrl.includes('/analytics/');
+  }
 }));
 
 // Routes
+// #region agent log - Route mounting
+// #endregion
+
+// Debug middleware for all API requests
+app.use('/api', (req, res, next) => {
+  // #region agent log - API request received
+  // #endregion
+  next();
+});
+
+// Debug middleware for quote routes
+app.use('/api/quote', (req, res, next) => {
+  // #region agent log
+  // #endregion
+  next();
+});
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/video', require('./routes/video'));
 app.use('/api/content', require('./routes/content'));
 app.use('/api/quote', require('./routes/quote'));
 app.use('/api/scheduler', require('./routes/scheduler'));
+// Analytics routes - more specific first
+app.use('/api/analytics/content', require('./routes/analytics/content'));
+app.use('/api/analytics/performance', require('./routes/analytics/performance'));
+app.use('/api/analytics/growth', require('./routes/analytics/growth'));
+app.use('/api/analytics/advanced', require('./routes/analytics/advanced'));
 app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/analytics', require('./routes/analytics/advanced-features'));
+
 app.use('/api/niche', require('./routes/niche'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/search', require('./routes/search'));
@@ -632,17 +810,9 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/scripts', require('./routes/scripts'));
 app.use('/api/versions', require('./routes/versions'));
 app.use('/api/collaboration', require('./routes/collaboration'));
-app.use('/api/analytics/advanced', require('./routes/analytics/advanced'));
 app.use('/api/membership', require('./routes/membership'));
 app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/search', require('./routes/search'));
-app.use('/api/templates', require('./routes/templates'));
 app.use('/api/subscription', require('./routes/subscription/status'));
-app.use('/api/analytics/performance', require('./routes/analytics/performance'));
-app.use('/api/analytics/content', require('./routes/analytics/content'));
-app.use('/api/analytics/growth', require('./routes/analytics/growth'));
-app.use('/api/analytics', require('./routes/analytics/advanced-features'));
-app.use('/api/export', require('./routes/export'));
 app.use('/api/import', require('./routes/import'));
 app.use('/api/workflows', require('./routes/workflows'));
 app.use('/api/engagement', require('./routes/engagement'));
@@ -670,6 +840,7 @@ app.use('/api/help', require('./routes/help-center'));
 app.use('/api/templates/marketplace', require('./routes/templates/marketplace'));
 app.use('/api/collaboration/realtime', require('./routes/collaboration/realtime'));
 app.use('/api/collaboration/permissions', require('./routes/collaboration/permissions'));
+app.use('/api/push', require('./routes/push'));
 app.use('/api/templates/analytics', require('./routes/templates/analytics'));
 app.use('/api/sso', require('./routes/sso'));
 app.use('/api/admin/dashboard', require('./routes/admin/dashboard'));
@@ -707,6 +878,7 @@ app.use('/api/video/transcription', require('./routes/video/transcription'));
 app.use('/api/video/thumbnails', require('./routes/video/thumbnails'));
 app.use('/api/video/chapters', require('./routes/video/chapters'));
 app.use('/api/video/optimization', require('./routes/video/optimization'));
+app.use('/api/debug', require('./routes/debug'));
 app.use('/api/ai/multi-model', require('./routes/ai/multi-model'));
 app.use('/api/ai/recommendations', require('./routes/ai/recommendations'));
 app.use('/api/ai/predictive', require('./routes/ai/predictive'));
@@ -977,6 +1149,80 @@ app.use('/api/health', require('./routes/health'));
 app.use('/api/free-ai-models', require('./routes/free-ai-models'));
 app.use('/api/model-versions', require('./routes/model-versions'));
 
+// Monitoring and Health Check Routes
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+app.get('/api/monitoring/health', (req, res) => {
+  const { getDatabaseHealth } = require('./config/database');
+  const dbHealth = getDatabaseHealth();
+
+  const health = {
+    server: {
+      status: 'healthy',
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.env.npm_package_version || '1.0.0'
+    },
+    database: dbHealth,
+    apm: global.apmMonitor ? global.apmMonitor.healthCheck() : { status: 'not_initialized' },
+    alerting: global.alertingSystem ? global.alertingSystem.getStats() : { status: 'not_initialized' },
+    timestamp: new Date().toISOString()
+  }
+
+  res.json(health)
+})
+
+app.get('/api/monitoring/metrics', (req, res) => {
+  const metrics = {
+    apm: global.apmMonitor ? global.apmMonitor.getStats() : null,
+    alerting: global.alertingSystem ? global.alertingSystem.getStats() : null,
+    system: {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      cpu: process.cpuUsage(),
+      platform: process.platform,
+      nodeVersion: process.version
+    },
+    timestamp: new Date().toISOString()
+  }
+
+  res.json(metrics)
+})
+
+app.get('/api/monitoring/alerts', (req, res) => {
+  const limit = parseInt(req.query.limit) || 50
+  const alerts = global.alertingSystem ? global.alertingSystem.getHistory(limit) : []
+  res.json({ alerts, timestamp: new Date().toISOString() })
+})
+
+app.post('/api/monitoring/test-alert', async (req, res) => {
+  if (global.alertingSystem) {
+    await global.alertingSystem.test()
+    res.json({ message: 'Test alert sent' })
+  } else {
+    res.status(503).json({ error: 'Alerting system not initialized' })
+  }
+})
+
 // 404 handler
 app.use(notFound);
 
@@ -985,6 +1231,72 @@ app.use(errorHandler);
 
 // Always bind to port, even if some services failed to initialize
 let server;
+// Graceful shutdown hooks (helps nodemon restarts release port cleanly in dev)
+let __shutdownHooksInstalled = false;
+function __installShutdownHooks() {
+  if (__shutdownHooksInstalled) return;
+  __shutdownHooksInstalled = true;
+
+  const shutdown = (signal, isNodemonRestart = false) => {
+    // #region agent log
+    try {
+    } catch {}
+    // #endregion
+
+    const finish = () => {
+      // #region agent log
+      try {
+      } catch {}
+      // #endregion
+
+      // Close mongoose connection if it exists
+      try {
+        if (mongoose?.connection?.readyState) {
+          mongoose.connection.close(false).catch(() => {});
+        }
+      } catch {}
+
+      if (isNodemonRestart) {
+        // Hand control back to nodemon
+        try { process.kill(process.pid, 'SIGUSR2'); } catch { process.exit(0); }
+      } else {
+        process.exit(0);
+      }
+    };
+
+    try {
+      if (server && server.listening) {
+        // #region agent log
+        try {
+        } catch {}
+        // #endregion
+
+        // Force-close idle/active keep-alive connections so the port is released promptly.
+        // (prevents nodemon restart races where the old process is still holding the listen socket)
+        try { server.closeIdleConnections && server.closeIdleConnections(); } catch {}
+        try { server.closeAllConnections && server.closeAllConnections(); } catch {}
+
+        server.close(() => finish());
+        return;
+      }
+    } catch {}
+    finish();
+  };
+
+  process.once('SIGINT', () => shutdown('SIGINT', false));
+  process.once('SIGTERM', () => shutdown('SIGTERM', false));
+  // Nodemon restart signal
+  process.once('SIGUSR2', () => shutdown('SIGUSR2', true));
+
+  // #region agent log
+  process.once('exit', (code) => {
+    try {
+    } catch {}
+  });
+  // #endregion
+}
+
+__installShutdownHooks();
 try {
   // Close health check server before starting main server
   // This ensures the port is free for the main server

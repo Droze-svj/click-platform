@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
+
 interface ExportImportModalProps {
   isOpen: boolean
   onClose: () => void
@@ -24,20 +25,46 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
   if (!isOpen) return null
 
   const handleExport = async () => {
+    logExport('export_start', {
+      type,
+      format: exportFormat,
+      selectedIdsCount: selectedIds.length,
+      selectedIds: selectedIds.slice(0, 5) // Log first 5 IDs
+    });
+
     setExporting(true)
     try {
       const token = localStorage.getItem('token')
-      
+
+      logExport('auth_check', {
+        type,
+        hasToken: !!token,
+        tokenLength: token?.length || 0
+      });
+
       if (selectedIds.length > 0) {
         // Bulk export
+        logExport('making_bulk_export_request', {
+          type,
+          format: exportFormat,
+          idsCount: selectedIds.length,
+          endpoint: `${API_URL}/export/bulk`
+        });
+
         const response = await axios.post(
           `${API_URL}/export/bulk`,
           { type, ids: selectedIds, format: exportFormat },
           {
-            headers: { Authorization: `Bearer ${token}` },
             responseType: 'blob'
           }
         )
+
+        logExport('bulk_export_response', {
+          type,
+          status: response.status,
+          hasData: !!response.data,
+          dataSize: response.data?.size || 0
+        });
 
         const blob = new Blob([response.data])
         const url = window.URL.createObjectURL(blob)
@@ -55,7 +82,6 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
         const response = await axios.get(
           `${API_URL}/export/${type}?format=${exportFormat}`,
           {
-            headers: { Authorization: `Bearer ${token}` },
             responseType: 'blob'
           }
         )
@@ -101,7 +127,6 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
         `${API_URL}/import/${type}`,
         { data },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

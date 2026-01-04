@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Search, Filter, X, Clock, Star, TrendingUp, Sparkles, Save, History, Bell, Eye, MoreVertical, Copy, ExternalLink, AlertCircle } from 'lucide-react'
-import axios from 'axios'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPost } from '../lib/api'
 
 interface SearchResult {
   content: any
@@ -80,12 +78,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const loadFacets = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/search/facets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setFacets(response.data.data)
+      const response = await apiGet<any>('/search/facets')
+      if (response?.success) {
+        setFacets(response.data)
       }
     } catch (error) {
       console.error('Error loading facets:', error)
@@ -94,12 +89,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const loadSuggestions = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/search/suggestions?q=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setSuggestions(response.data.data.suggestions || [])
+      const response = await apiGet<any>(`/search/suggestions?q=${encodeURIComponent(query)}`)
+      if (response?.success) {
+        setSuggestions(response.data?.suggestions || [])
       }
     } catch (error) {
       console.error('Error loading suggestions:', error)
@@ -108,12 +100,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const loadSearchHistory = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/search/history?limit=10`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setSearchHistory(response.data.data.history || [])
+      const response = await apiGet<any>('/search/history?limit=10')
+      if (response?.success) {
+        setSearchHistory(response.data?.history || [])
       }
     } catch (error) {
       console.error('Error loading history:', error)
@@ -122,12 +111,10 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const loadSearchAlerts = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/search/alerts`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setSearchAlerts(response.data.data || [])
+      const response = await apiGet<any>('/search/alerts')
+      if (response?.success) {
+        // API returns { alerts: [...] }
+        setSearchAlerts(response.data?.alerts || [])
       }
     } catch (error) {
       console.error('Error loading search alerts:', error)
@@ -136,12 +123,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const loadSavedSearches = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/search/saved`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setSavedSearches(response.data.data.searches || [])
+      const response = await apiGet<any>('/search/saved')
+      if (response?.success) {
+        setSavedSearches(response.data?.searches || [])
       }
     } catch (error) {
       console.error('Error loading saved searches:', error)
@@ -153,17 +137,11 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      
       if (searchType === 'natural') {
         // Natural language search
-        const response = await axios.post(
-          `${API_URL}/search/natural`,
-          { query: searchQuery },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (response.data.success) {
-          setResults(response.data.data.results.map((r: any) => ({
+        const response = await apiPost<any>('/search/natural', { query: searchQuery })
+        if (response?.success) {
+          setResults((response.data?.results || []).map((r: any) => ({
             content: r,
             relevanceScore: 50,
             matchedFields: [],
@@ -172,13 +150,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           
           // Cluster results
           try {
-            const clusterResponse = await axios.post(
-              `${API_URL}/search/cluster`,
-              { results: response.data.data.results, maxClusters: 5 },
-              { headers: { Authorization: `Bearer ${token}` } }
-            )
-            if (clusterResponse.data.success) {
-              setClusteredResults(clusterResponse.data.data)
+            const clusterResponse = await apiPost<any>('/search/cluster', { results: response.data?.results || [], maxClusters: 5 })
+            if (clusterResponse?.success) {
+              setClusteredResults(clusterResponse.data)
             }
           } catch (error) {
             console.error('Error clustering results:', error)
@@ -189,13 +163,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         return Array.isArray(filterValue) ? filterValue.length > 0 : filterValue !== null
       })) {
         // Faceted search
-        const response = await axios.post(
-          `${API_URL}/search/faceted`,
-          { query: searchQuery, filters },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (response.data.success) {
-          setResults(response.data.data.results.map((r: any) => ({
+        const response = await apiPost<any>('/search/faceted', { query: searchQuery, filters })
+        if (response?.success) {
+          setResults((response.data?.results || []).map((r: any) => ({
             content: r,
             relevanceScore: 50,
             matchedFields: [],
@@ -204,13 +174,9 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         }
       } else {
         // Semantic search
-        const response = await axios.post(
-          `${API_URL}/search/semantic`,
-          { query: searchQuery, limit: 20 },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (response.data.success) {
-          setResults(response.data.data.results || [])
+        const response = await apiPost<any>('/search/semantic', { query: searchQuery, limit: 20 })
+        if (response?.success) {
+          setResults(response.data?.results || [])
         }
       }
     } catch (error: any) {
@@ -224,30 +190,21 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
   const handleResultClick = async (result: SearchResult, position: number) => {
     // Track click
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(
-        `${API_URL}/search/click`,
-        {
-          contentId: result.content._id,
-          position,
-          query,
-          searchId: Date.now().toString()
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await apiPost('/search/click', {
+        contentId: result.content._id,
+        position,
+        query,
+        searchId: Date.now().toString()
+      })
     } catch (error) {
       console.error('Error tracking click:', error)
     }
 
     // Load preview
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        `${API_URL}/search/preview/${result.content._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (response.data.success) {
-        setPreviewContent(response.data.data)
+      const response = await apiGet<any>(`/search/preview/${result.content._id}`)
+      if (response?.success) {
+        setPreviewContent(response.data)
         setShowPreview(true)
       }
     } catch (error) {
@@ -259,20 +216,15 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const createSearchAlert = async () => {
     try {
-      const token = localStorage.getItem('token')
       const name = prompt('Enter alert name:')
       if (!name) return
 
-      await axios.post(
-        `${API_URL}/search/alerts`,
-        {
-          name,
-          query,
-          filters,
-          frequency: 'daily'
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await apiPost('/search/alerts', {
+        name,
+        query,
+        filters,
+        frequency: 'daily'
+      })
       alert('Search alert created!')
       loadSearchAlerts()
     } catch (error: any) {
@@ -334,12 +286,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
   const saveCurrentSearch = async () => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(
-        `${API_URL}/search/save`,
-        { query, filters, name: query || 'Saved Search' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await apiPost('/search/save', { query, filters, name: query || 'Saved Search' })
       loadSavedSearches()
     } catch (error) {
       console.error('Error saving search:', error)

@@ -64,11 +64,10 @@ export default function RealtimeCollaboration({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-          'X-Socket-ID': socket.socket?.id || '',
+          'Authorization': `Bearer ${token}`,
+          'X-Socket-ID': socket.socket?.id || ''
         },
-        credentials: 'include',
-        body: JSON.stringify({ socketId: socket.socket?.id || '' }),
+        credentials: 'include'
       })
 
       if (response.ok) {
@@ -92,9 +91,9 @@ export default function RealtimeCollaboration({
       await fetch(`/api/collaboration/realtime/${contentId}/leave`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
+        credentials: 'include'
       })
     } catch (error) {
       console.error('Failed to leave session:', error)
@@ -146,13 +145,13 @@ export default function RealtimeCollaboration({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
         body: JSON.stringify({
           operation,
-          ...change,
-        }),
+          ...change
+        })
       })
     } catch (error) {
       console.error('Failed to send content change:', error)
@@ -168,10 +167,10 @@ export default function RealtimeCollaboration({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
-        body: JSON.stringify({ cursor }),
+        body: JSON.stringify(cursor)
       })
     } catch (error) {
       console.error('Failed to update cursor:', error)

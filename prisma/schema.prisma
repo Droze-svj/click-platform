@@ -1,0 +1,268 @@
+// Prisma schema for Click application
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  username          String?  @unique
+  firstName         String?
+  lastName          String?
+  password          String
+  avatar            String?
+  bio               String?
+  website           String?
+  location          String?
+  socialLinks       Json?
+  emailVerified     Boolean  @default(false)
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+  follows           Follow[] @relation("UserFollows")
+  followers         Follow[] @relation("UserFollowers")
+  workspaces        Workspace[]
+  workspaceMembers  WorkspaceMember[]
+  workspaceInvitations WorkspaceInvitation[] @relation("WorkspaceInvitationInvitedBy")
+  subscription      Subscription?
+  notifications     Notification[]
+  collaborations    Collaboration[]
+  achievements      Achievement[]
+  securityLogs      SecurityLog[]
+
+  @@map("users")
+}
+
+// Post model
+model Post {
+  id                String   @id @default(cuid())
+  title             String
+  content           String?
+  excerpt           String?
+  slug              String   @unique
+  status            String   @default("draft") // draft, published, scheduled, archived
+  featuredImage     String?
+  thumbnail         String?
+  tags              String[]
+  categories        String[]
+  metadata          Json?
+  seoTitle          String?
+  seoDescription    String?
+  publishedAt       DateTime?
+  scheduledAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  authorId          String
+  author            User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments          Comment[]
+  likes             Like[]
+  versions          PostVersion[]
+  collaborations    Collaboration[]
+  workspaceId       String?
+  workspace         Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@map("posts")
+}
+
+// Comment model
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies     Comment[] @relation("CommentReplies")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("comments")
+}
+
+// Like model
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+// Follow model
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollows", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// Workspace model
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  avatar      String?
+  isAgency    Boolean  @default(false)
+  settings    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     WorkspaceMember[]
+  posts       Post[]
+  invitations WorkspaceInvitation[]
+
+  @@map("workspaces")
+}
+
+// Workspace Member model
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String   @default("member") // owner, admin, member
+  joinedAt    DateTime @default(now())
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+// Subscription model
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan              String   @default("free")
+  status            String   @default("active") // active, cancelled, expired, past_due
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean  @default(false)
+  stripeCustomerId   String?
+  stripeSubscriptionId String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+// Notification model
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // comment, like, follow, mention, etc.
+  title     String
+  message   String
+  data      Json?
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// Achievement model
+model Achievement {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // post_created, milestone_reached, etc.
+  title       String
+  description String
+  icon        String?
+  unlockedAt  DateTime @default(now())
+  metadata    Json?
+
+  @@map("achievements")
+}
+
+// Security Log model
+model SecurityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // login, logout, password_change, etc.
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("security_logs")
+}
+
+// Post Version model
+model PostVersion {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  version   Int
+  title     String
+  content   String?
+  changes   Json?
+  createdAt DateTime @default(now())
+
+  @@map("post_versions")
+}
+
+// Collaboration model
+model Collaboration {
+  id          String   @id @default(cuid())
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions Json?    // read, write, admin
+  invitedAt   DateTime @default(now())
+  acceptedAt  DateTime?
+
+  @@unique([postId, userId])
+  @@map("collaborations")
+}
+
+// Workspace Invitation model
+model WorkspaceInvitation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  email       String
+  role        String   @default("member")
+  invitedById String
+  invitedBy   User     @relation("WorkspaceInvitationInvitedBy", fields: [invitedById], references: [id])
+  invitedAt   DateTime @default(now())
+  expiresAt   DateTime?
+  acceptedAt  DateTime?
+  token       String   @unique
+
+  @@map("workspace_invitations")
+}
+
+

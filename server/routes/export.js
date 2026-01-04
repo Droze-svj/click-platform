@@ -3,6 +3,7 @@
 
 const express = require('express');
 const auth = require('../middleware/auth');
+
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { createExportJob, getExportJobStatus, retryExport } = require('../services/robustExportService');
@@ -19,18 +20,51 @@ router.post('/', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { type, format, filters, options } = req.body;
 
+  logExportServer('export_request_received', {
+    userId,
+    type,
+    format,
+    hasFilters: !!filters,
+    hasOptions: !!options,
+    filtersKeys: filters ? Object.keys(filters) : [],
+    optionsKeys: options ? Object.keys(options) : []
+  });
+
   if (!type || !format) {
+    logExportServer('export_error_validation', {
+      userId,
+      type,
+      format,
+      error: 'Type and format are required'
+    });
     return sendError(res, 'Type and format are required', 400);
   }
 
-  const job = await createExportJob(userId, {
-    type,
-    format,
-    filters: filters || {},
-    options: options || {}
-  });
+  try {
+    const job = await createExportJob(userId, {
+      type,
+      format,
+      filters: filters || {},
+      options: options || {}
+    });
 
-  sendSuccess(res, 'Export job created', 201, job);
+    logExportServer('export_job_created', {
+      userId,
+      jobId: job?.id || job?._id,
+      type,
+      format
+    });
+
+    sendSuccess(res, 'Export job created', 201, job);
+  } catch (error) {
+    logExportServer('export_error_job_creation', {
+      userId,
+      type,
+      format,
+      error: error.message
+    });
+    throw error;
+  }
 }));
 
 /**

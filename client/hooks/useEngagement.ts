@@ -21,7 +21,6 @@ export function useEngagement() {
       try {
         const token = localStorage.getItem('token')
         const response = await axios.get(`${API_URL}/engagement/achievements`, {
-          headers: { Authorization: `Bearer ${token}` }
         })
         if (response.data.success) {
           const latest = response.data.data[0]

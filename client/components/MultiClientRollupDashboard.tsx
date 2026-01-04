@@ -21,7 +21,6 @@ interface ClientSummary {
   riskFlags: Array<{
     type: string
     severity: string
-    message: string
   }>
 }
 

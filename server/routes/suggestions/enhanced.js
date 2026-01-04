@@ -10,6 +10,7 @@ const {
 } = require('../../services/enhancedSuggestionsService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
+const logger = require('../../utils/logger');
 const router = express.Router();
 
 /**

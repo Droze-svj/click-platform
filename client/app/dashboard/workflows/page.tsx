@@ -54,10 +54,14 @@ export default function WorkflowsPage() {
       const token = localStorage.getItem('token')
       const [workflowsRes, suggestionsRes] = await Promise.all([
         axios.get(`${API_URL}/workflows`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }),
         axios.get(`${API_URL}/workflows/suggestions`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
       ])
 
@@ -81,7 +85,6 @@ export default function WorkflowsPage() {
         `${API_URL}/workflows/${workflowId}/execute`,
         { data: {} },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -124,7 +127,6 @@ export default function WorkflowsPage() {
         `${API_URL}/workflows`,
         newWorkflow,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -145,7 +147,6 @@ export default function WorkflowsPage() {
     try {
       const token = localStorage.getItem('token')
       await axios.delete(`${API_URL}/workflows/${workflowId}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       showToast('Workflow deleted successfully', 'success')
       await loadData()
@@ -376,7 +377,7 @@ export default function WorkflowsPage() {
 
           {/* Workflow Templates Section */}
           <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <WorkflowTemplates />
+            {/* <WorkflowTemplates /> */}
           </div>
 
           {/* Enhanced Workflow Builder */}

@@ -39,7 +39,6 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
       const platform = content?.platform || 'all'
       
       const response = await fetch(`/api/social/optimal-times?platform=${platform}`, {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 

@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const {
   createTeam,
   getUserTeams,
+  getTeamById,
   inviteMember,
   updateMemberRole,
   removeMember,
@@ -27,6 +28,21 @@ const router = express.Router();
 router.get('/', auth, asyncHandler(async (req, res) => {
   const teams = await getUserTeams(req.user._id);
   sendSuccess(res, 'Teams fetched', 200, teams);
+}));
+
+/**
+ * @swagger
+ * /api/teams/{teamId}:
+ *   get:
+ *     summary: Get team by ID
+ *     tags: [Teams]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:teamId', auth, asyncHandler(async (req, res) => {
+  const { teamId } = req.params;
+  const team = await getTeamById(teamId, req.user._id);
+  sendSuccess(res, 'Team fetched', 200, team);
 }));
 
 /**

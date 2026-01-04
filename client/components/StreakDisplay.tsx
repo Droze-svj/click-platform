@@ -23,7 +23,6 @@ export default function StreakDisplay() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/engagement/streak`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setStreak(response.data.data)

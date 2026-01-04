@@ -46,7 +46,6 @@ export default function NichePage() {
         return
       }
       await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
     } catch (error) {
       localStorage.removeItem('token')
@@ -88,7 +87,6 @@ export default function NichePage() {
         `${API_URL}/niche/select`,
         { niche },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -96,7 +94,8 @@ export default function NichePage() {
       setSuccess('Niche updated successfully!')
       showToast('Niche updated successfully!', 'success')
     } catch (error: any) {
-      const errorMessage = extractApiError(error) || 'Failed to update niche'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to update niche'
       setError(errorMessage)
       showToast(errorMessage, 'error')
     } finally {
@@ -115,14 +114,14 @@ export default function NichePage() {
         `${API_URL}/niche/brand`,
         brandSettings,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
       setSuccess('Brand settings updated successfully!')
       showToast('Brand settings updated successfully!', 'success')
     } catch (error: any) {
-      const errorMessage = extractApiError(error) || 'Failed to update brand settings'
+      const errorObj = extractApiError(error)
+      const errorMessage = typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to update brand settings'
       setError(errorMessage)
       showToast(errorMessage, 'error')
     } finally {

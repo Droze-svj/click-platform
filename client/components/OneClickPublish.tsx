@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Send, CheckCircle2, Loader2, X } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
+import { apiPost } from '../lib/api'
 
 interface Platform {
   id: string
@@ -51,21 +52,12 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
       // Publish to all selected platforms
       for (const platformId of selectedPlatforms) {
         try {
-          const response = await fetch(`/api/social/post`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              platform: platformId,
-              contentId,
-            }),
+          const response = await apiPost('/social/post', {
+            platform: platformId,
+            contentId,
           })
 
-          if (response.ok) {
-            publishedPlatforms.push(platformId)
-          }
+          publishedPlatforms.push(platformId)
         } catch (error) {
           console.error(`Failed to publish to ${platformId}:`, error)
         }

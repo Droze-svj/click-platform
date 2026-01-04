@@ -32,8 +32,23 @@ router.get('/', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/insights', auth, asyncHandler(async (req, res) => {
-  const insights = await getContentInsights(req.user._id);
-  sendSuccess(res, 'Content insights fetched', 200, insights);
+  // #region agent log
+  // #endregion
+
+  try {
+    // #region agent log
+    // #endregion
+
+    const insights = await getContentInsights(req.user._id);
+
+    // #region agent log
+    // #endregion
+    sendSuccess(res, 'Content insights fetched', 200, insights);
+  } catch (error) {
+    // #region agent log
+    // #endregion
+    throw error;
+  }
 }));
 
 module.exports = router;

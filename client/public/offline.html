@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 400px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      opacity: 0.9;
+    }
+
+    .features {
+      text-align: left;
+      margin: 32px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .features li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .features li::before {
+      content: '✓';
+      color: #4ade80;
+      font-weight: bold;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .button {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 8px;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+
+    .button.secondary:hover {
+      background: white;
+      color: #667eea;
+    }
+
+    .status {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .features {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📱</div>
+
+    <h1>You're Offline</h1>
+
+    <p>
+      Don't worry! Click works offline with advanced caching and synchronization.
+      Your content and work are safe, and we'll sync everything when you're back online.
+    </p>
+
+    <ul class="features">
+      <li>View cached content and previous work</li>
+      <li>Queue actions for automatic sync</li>
+      <li>Receive push notifications for updates</li>
+      <li>Access offline-optimized interface</li>
+      <li>Background sync when connection returns</li>
+    </ul>
+
+    <div>
+      <button class="button" onclick="window.location.reload()">
+        Try Again
+      </button>
+      <button class="button secondary" onclick="window.history.back()">
+        Go Back
+      </button>
+    </div>
+
+    <div class="status" id="status">
+      Checking connection...
+    </div>
+  </div>
+
+  <script>
+    // Check online status
+    function updateStatus() {
+      const status = document.getElementById('status');
+      if (navigator.onLine) {
+        status.textContent = 'Connection detected - reloading...';
+        status.style.color = '#4ade80';
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        status.textContent = 'Offline - content cached for your use';
+        status.style.color = '#fbbf24';
+      }
+    }
+
+    // Initial check
+    updateStatus();
+
+    // Listen for online/offline events
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+
+    // Periodic connection check
+    setInterval(updateStatus, 5000);
+
+    // Service Worker communication
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'online-status') {
+          updateStatus();
+        }
+      });
+    }
+
+    // Cache status
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        const cacheInfo = document.createElement('div');
+        cacheInfo.textContent = `${names.length} cache(s) available`;
+        cacheInfo.style.fontSize = '12px';
+        cacheInfo.style.marginTop = '8px';
+        document.querySelector('.status').appendChild(cacheInfo);
+      });
+    }
+  </script>
+</body>
+</html>
+
+

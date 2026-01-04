@@ -30,12 +30,9 @@ export default function PerformancePredictor({ content, onPredict }: Performance
     setIsPredicting(true)
     try {
       const response = await fetch('/api/ai/predict-performance', {
-        method: 'POST',
-        headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(content),
       })
 
       if (response.ok) {

@@ -16,7 +16,43 @@ const {
 } = require('../services/approvalWorkflowService');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const logger = require('../utils/logger');
 const router = express.Router();
+
+/**
+ * GET /api/approvals/pending-count
+ * Get pending approvals count for user
+ *
+ * IMPORTANT: This route MUST be declared before any dynamic `/:approvalId` routes,
+ * otherwise Express will treat "pending-count" as an approvalId and route incorrectly.
+ */
+router.get('/pending-count', auth, asyncHandler(async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      logger.warn('pending-count called without authenticated user');
+      return sendSuccess(res, 'Pending count retrieved', 200, { count: 0 });
+    }
+
+    // Ensure userId is valid
+    const userId = req.user._id;
+    if (!userId) {
+      logger.warn('pending-count called with invalid userId');
+      return sendSuccess(res, 'Pending count retrieved', 200, { count: 0 });
+    }
+
+    const { getPendingApprovalsCount } = require('../services/approvalService');
+    const userIdString = userId.toString ? userId.toString() : String(userId);
+    const count = await getPendingApprovalsCount(userIdString);
+    sendSuccess(res, 'Pending count retrieved', 200, { count: count || 0 });
+  } catch (error) {
+    logger.error('Error fetching pending approvals count', { 
+      error: error.message, 
+      userId: req.user?._id,
+      stack: error.stack 
+    });
+    sendSuccess(res, 'Pending count retrieved', 200, { count: 0 });
+  }
+}));
 
 /**
  * POST /api/approvals/workflows
@@ -25,6 +61,20 @@ const router = express.Router();
 router.post('/workflows', auth, asyncHandler(async (req, res) => {
   const workflow = await createWorkflow(req.user._id, req.body);
   sendSuccess(res, 'Workflow created', 201, workflow);
+}));
+
+/**
+ * GET /api/approvals
+ * Get all approval requests for current user
+ */
+router.get('/', auth, asyncHandler(async (req, res) => {
+  const { status } = req.query;
+
+  // Get approvals where user is either requester or approver
+  const { getUserApprovalRequests } = require('../services/approvalService');
+  const approvals = await getUserApprovalRequests(req.user._id, { status });
+
+  sendSuccess(res, 'Approvals retrieved', 200, approvals);
 }));
 
 /**
@@ -118,16 +168,6 @@ router.get('/my-approvals', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
- * GET /api/approvals/:approvalId
- * Get approval details
- */
-router.get('/:approvalId', auth, asyncHandler(async (req, res) => {
-  const { approvalId } = req.params;
-  const approval = await getApprovalDetails(approvalId, req.user._id);
-  sendSuccess(res, 'Approval details retrieved', 200, approval);
-}));
-
-/**
  * POST /api/approvals/:approvalId/cancel
  * Cancel approval process
  */
@@ -138,26 +178,13 @@ router.post('/:approvalId/cancel', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
- * GET /api/approvals/pending-count
- * Get pending approvals count for user
+ * GET /api/approvals/:approvalId
+ * Get approval details
  */
-router.get('/pending-count', auth, asyncHandler(async (req, res) => {
-  try {
-    if (!req.user || !req.user._id) {
-      return sendError(res, 'User not authenticated', 401);
-    }
-
-    const { getPendingApprovalsCount } = require('../services/approvalService');
-    const count = await getPendingApprovalsCount(req.user._id.toString());
-    sendSuccess(res, 'Pending count retrieved', 200, { count: count || 0 });
-  } catch (error) {
-    logger.error('Error fetching pending approvals count', { 
-      error: error.message, 
-      userId: req.user?._id,
-      stack: error.stack 
-    });
-    sendSuccess(res, 'Pending count retrieved', 200, { count: 0 });
-  }
+router.get('/:approvalId', auth, asyncHandler(async (req, res) => {
+  const { approvalId } = req.params;
+  const approval = await getApprovalDetails(approvalId, req.user._id);
+  sendSuccess(res, 'Approval details retrieved', 200, approval);
 }));
 
 module.exports = router;

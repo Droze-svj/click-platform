@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPost } from '../lib/api'
 
 interface Suggestion {
   type: 'workflow' | 'action'
@@ -23,6 +21,9 @@ export default function NextStepsPanel() {
   const [loading, setLoading] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
 
+  const dbg = (message: string, data: Record<string, any>) => {
+  }
+
   useEffect(() => {
     if (user) {
       loadSuggestions()
@@ -31,12 +32,9 @@ export default function NextStepsPanel() {
 
   const loadSuggestions = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/workflows/suggestions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        setSuggestions(response.data.data || [])
+      const res = await apiGet<any>('/workflows/suggestions')
+      if (res?.success) {
+        setSuggestions(Array.isArray(res.data) ? res.data : [])
       }
     } catch (error) {
       console.error('Failed to load suggestions', error)
@@ -49,14 +47,7 @@ export default function NextStepsPanel() {
     if (suggestion.type === 'workflow' && suggestion.workflowId) {
       // Execute workflow
       try {
-        const token = localStorage.getItem('token')
-        await axios.post(
-          `${API_URL}/workflows/${suggestion.workflowId}/execute`,
-          { data: {} },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        )
+        await apiPost<any>(`/workflows/${suggestion.workflowId}/execute`, { data: {} })
         // Navigate based on workflow steps
         if (suggestion.steps && suggestion.steps.length > 0) {
           const nextAction = suggestion.steps[1]?.action

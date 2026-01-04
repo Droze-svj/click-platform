@@ -21,6 +21,7 @@ async function compressVideo(inputPath, outputPath, options = {}) {
       format = 'mp4',
       resolution = null, // e.g., '1280x720'
       bitrate = null,
+      onProgress = null,
     } = options;
 
     const qualitySettings = {
@@ -60,6 +61,9 @@ async function compressVideo(inputPath, outputPath, options = {}) {
         })
         .on('progress', (progress) => {
           logger.debug('Compression progress', { percent: progress.percent });
+          if (typeof onProgress === 'function' && typeof progress.percent === 'number') {
+            onProgress(progress.percent);
+          }
         })
         .on('end', () => {
           logger.info('Video compression completed', { outputPath });
@@ -172,7 +176,7 @@ async function getVideoMetadata(videoPath) {
 /**
  * Convert video format
  */
-async function convertVideoFormat(inputPath, outputPath, targetFormat) {
+async function convertVideoFormat(inputPath, outputPath, targetFormat, options = {}) {
   try {
     const formatMap = {
       mp4: { videoCodec: 'libx264', audioCodec: 'aac', extension: 'mp4' },
@@ -186,6 +190,8 @@ async function convertVideoFormat(inputPath, outputPath, targetFormat) {
       throw new Error(`Unsupported format: ${targetFormat}`);
     }
 
+    const { onProgress = null } = options || {};
+
     return new Promise((resolve, reject) => {
       ffmpeg(inputPath)
         .videoCodec(format.videoCodec)
@@ -193,6 +199,12 @@ async function convertVideoFormat(inputPath, outputPath, targetFormat) {
         .output(outputPath)
         .on('start', () => {
           logger.info('Video format conversion started', { inputPath, outputPath });
+        })
+        .on('progress', (progress) => {
+          logger.debug('Convert progress', { percent: progress.percent });
+          if (typeof onProgress === 'function' && typeof progress.percent === 'number') {
+            onProgress(progress.percent);
+          }
         })
         .on('end', () => {
           logger.info('Video format conversion completed', { outputPath });
@@ -214,8 +226,9 @@ async function convertVideoFormat(inputPath, outputPath, targetFormat) {
 /**
  * Trim video
  */
-async function trimVideo(inputPath, outputPath, startTime, duration) {
+async function trimVideo(inputPath, outputPath, startTime, duration, options = {}) {
   try {
+    const { onProgress = null } = options || {};
     return new Promise((resolve, reject) => {
       ffmpeg(inputPath)
         .setStartTime(startTime)
@@ -223,6 +236,12 @@ async function trimVideo(inputPath, outputPath, startTime, duration) {
         .output(outputPath)
         .on('start', () => {
           logger.info('Video trim started', { inputPath, startTime, duration });
+        })
+        .on('progress', (progress) => {
+          logger.debug('Trim progress', { percent: progress.percent });
+          if (typeof onProgress === 'function' && typeof progress.percent === 'number') {
+            onProgress(progress.percent);
+          }
         })
         .on('end', () => {
           logger.info('Video trim completed', { outputPath });
@@ -288,13 +307,15 @@ async function mergeVideos(inputPaths, outputPath) {
 /**
  * Extract audio from video
  */
-async function extractAudio(videoPath, outputPath, format = 'mp3') {
+async function extractAudio(videoPath, outputPath, format = 'mp3', options = {}) {
   try {
     const codecMap = {
       mp3: 'libmp3lame',
       wav: 'pcm_s16le',
       aac: 'aac',
     };
+
+    const { onProgress = null } = options || {};
 
     return new Promise((resolve, reject) => {
       ffmpeg(videoPath)
@@ -303,6 +324,12 @@ async function extractAudio(videoPath, outputPath, format = 'mp3') {
         .output(outputPath)
         .on('start', () => {
           logger.info('Audio extraction started', { videoPath, outputPath });
+        })
+        .on('progress', (progress) => {
+          logger.debug('Extract-audio progress', { percent: progress.percent });
+          if (typeof onProgress === 'function' && typeof progress.percent === 'number') {
+            onProgress(progress.percent);
+          }
         })
         .on('end', () => {
           logger.info('Audio extraction completed', { outputPath });

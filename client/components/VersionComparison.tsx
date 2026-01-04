@@ -50,7 +50,6 @@ export default function VersionComparison({
       const res = await axios.get(
         `${API_URL}/versions/${entityId}/compare/export?version1=${version1}&version2=${version2}&entityType=${entityType}&format=${exportFormat}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           responseType: exportFormat === 'json' ? 'blob' : 'text'
         }
       )

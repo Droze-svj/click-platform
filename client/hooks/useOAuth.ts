@@ -22,7 +22,6 @@ export function useOAuth(token: string | null) {
     if (!token) throw new Error('Authentication required')
 
     const response = await axios.get(`${API_URL}/oauth/${platform}/authorize`, {
-      headers: { Authorization: `Bearer ${token}` }
     })
 
     if (response.data.success) {
@@ -41,7 +40,6 @@ export function useOAuth(token: string | null) {
       `${API_URL}/oauth/${platform}/complete`,
       { code, state },
       {
-        headers: { Authorization: `Bearer ${token}` }
       }
     )
 
@@ -57,7 +55,6 @@ export function useOAuth(token: string | null) {
     if (!token) throw new Error('Authentication required')
 
     const response = await axios.get(`${API_URL}/oauth/${platform}/status`, {
-      headers: { Authorization: `Bearer ${token}` }
     })
 
     if (response.data.success) {
@@ -73,7 +70,6 @@ export function useOAuth(token: string | null) {
     if (!token) throw new Error('Authentication required')
 
     const response = await axios.delete(`${API_URL}/oauth/${platform}/disconnect`, {
-      headers: { Authorization: `Bearer ${token}` }
     })
 
     if (!response.data.success) {

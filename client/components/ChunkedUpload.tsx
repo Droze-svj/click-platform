@@ -68,10 +68,7 @@ export default function ChunkedUpload({
 
     const token = localStorage.getItem('token')
     const response = await fetch(`/api/upload/chunked/${uploadId}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
       credentials: 'include',
-      body: formData,
       signal: abortControllerRef.current?.signal,
     })
 
@@ -91,9 +88,8 @@ export default function ChunkedUpload({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        'Authorization': `Bearer ${token}`,
       },
-      credentials: 'include',
       body: JSON.stringify({
         outputPath: `/uploads/${file.name}`,
       }),

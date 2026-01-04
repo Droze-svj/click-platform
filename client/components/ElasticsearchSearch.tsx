@@ -46,7 +46,6 @@ export default function ElasticsearchSearch({
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/search/elasticsearch/status', {
-        headers: { Authorization: `Bearer ${token}` },
         credentials: 'include',
       })
 
@@ -67,14 +66,14 @@ export default function ElasticsearchSearch({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
         credentials: 'include',
         body: JSON.stringify({
           query: searchQuery,
           index: 'content',
-          size: 10,
-        }),
+          size: 10
+        })
       })
 
       if (response.ok) {
@@ -94,7 +93,6 @@ export default function ElasticsearchSearch({
       const response = await fetch(
         `/api/search/elasticsearch/suggestions?q=${encodeURIComponent(searchQuery)}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           credentials: 'include',
         }
       )

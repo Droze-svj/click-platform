@@ -2,10 +2,8 @@
 
 interface QueuedRequest {
   url: string;
-  method: string;
   body?: any;
   headers?: Record<string, string>;
-  timestamp: number;
   retryCount: number;
 }
 
@@ -31,7 +29,6 @@ class OfflineErrorHandler {
 
     this.queue.push({
       ...request,
-      timestamp: Date.now(),
       retryCount: 0,
     });
 
@@ -69,8 +66,8 @@ class OfflineErrorHandler {
    */
   private async retryRequest(request: QueuedRequest): Promise<void> {
     const response = await fetch(request.url, {
-      method: request.method,
-      headers: request.headers,
+      method: 'POST',
+      headers: request.headers || {},
       body: request.body ? JSON.stringify(request.body) : undefined,
     });
 

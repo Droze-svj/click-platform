@@ -44,7 +44,6 @@ export default function EnterpriseWorkspaceDashboard() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/enterprise/workspaces`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.success) {

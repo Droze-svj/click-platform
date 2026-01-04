@@ -42,7 +42,6 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/search/suggestions?q=${encodeURIComponent(searchTerm)}&type=${type}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data.success) {
         setSuggestions(response.data.data || [])

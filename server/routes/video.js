@@ -20,6 +20,7 @@ const Music = require('../models/Music');
 const logger = require('../utils/logger');
 const { requireActiveSubscription } = require('../middleware/subscriptionAccess');
 const { uploadFile, deleteFile } = require('../services/storageService');
+const { trackAction } = require('../services/workflowService');
 const router = express.Router();
 
 // Configure multer for video uploads
@@ -130,20 +131,43 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
 
     await content.save();
 
-    // Process video in background using job queue
-    const { addVideoProcessingJob, JOB_PRIORITY } = require('../queues');
-    const job = await addVideoProcessingJob({
-      contentId: content._id.toString(),
-      videoPath: req.file.path,
-      user: {
-        _id: req.user._id.toString(),
-        email: req.user.email,
-        name: req.user.name,
-      },
-    }, {
-      priority: JOB_PRIORITY.HIGH,
-      jobId: `video-${content._id}`,
-    });
+    // Process video in background using job queue.
+    // IMPORTANT: Redis/job queues may not be configured in local/free-tier environments.
+    // Fall back to in-process processing so users can still test uploads/clipping.
+    try {
+      const { addVideoProcessingJob, JOB_PRIORITY } = require('../queues');
+      await addVideoProcessingJob({
+        contentId: content._id.toString(),
+        videoPath: req.file.path,
+        user: {
+          _id: req.user._id.toString(),
+          email: req.user.email,
+          name: req.user.name,
+        },
+      }, {
+        priority: JOB_PRIORITY.HIGH,
+        jobId: `video-${content._id}`,
+      });
+    } catch (queueError) {
+      logger.warn('Job queue unavailable; falling back to in-process video processing', {
+        error: queueError.message,
+        contentId: content._id.toString(),
+        userId: req.user._id.toString(),
+      });
+      setImmediate(() => {
+        processVideo(content._id.toString(), req.file.path, {
+          _id: req.user._id.toString(),
+          email: req.user.email,
+          name: req.user.name,
+        }).catch((err) => {
+          logger.error('In-process video processing failed', {
+            error: err.message,
+            contentId: content._id.toString(),
+            userId: req.user._id.toString(),
+          });
+        });
+      });
+    }
 
     // Store music preference if provided
     if (req.body.musicId) {
@@ -262,10 +286,18 @@ async function processVideo(contentId, videoPath, user) {
 
       // Generate caption for clip
       const caption = await generateCaptions(highlight.text, user.niche);
+
+      // Base clip path (before any effects/overlays). If we later add music mixing or other transforms,
+      // update this to point at the new output file.
+      const finalClipPath = clipPath;
       
       // Generate and optimize thumbnail
       const thumbnailFilename = `thumb-${clipFilename.replace('.mp4', '.jpg')}`;
       const thumbnailPath = path.join(__dirname, '../../uploads/thumbnails', thumbnailFilename);
+      const thumbnailsDir = path.dirname(thumbnailPath);
+      if (!fs.existsSync(thumbnailsDir)) {
+        fs.mkdirSync(thumbnailsDir, { recursive: true });
+      }
       await generateThumbnail(finalClipPath, thumbnailPath, {
         width: 1280,
         height: 720,
@@ -532,6 +564,41 @@ router.delete('/:contentId', auth, async (req, res) => {
     });
   } catch (error) {
     logger.error('Delete video error', { error: error.message, contentId: req.params.contentId });
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get single video by ID
+router.get('/:contentId', auth, async (req, res) => {
+  try {
+    const { contentId } = req.params;
+
+    // Find the video content
+    const content = await Content.findOne({
+      _id: contentId,
+      userId: req.user._id,
+      type: 'video'
+    });
+
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        error: 'Video not found'
+      });
+    }
+
+    // Populate user info for the response
+    await content.populate('userId', 'name email');
+
+    res.json({
+      success: true,
+      data: content
+    });
+  } catch (error) {
+    logger.error('Get video error', { error: error.message, contentId: req.params.contentId });
     res.status(500).json({
       success: false,
       error: error.message

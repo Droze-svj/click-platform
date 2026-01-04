@@ -18,8 +18,8 @@ export function Skeleton({
   height,
   animation = 'pulse',
 }: SkeletonProps) {
-  const baseClasses = 'bg-gray-200 dark:bg-gray-700 rounded';
-  
+  const baseClasses = 'bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded';
+
   const variantClasses = {
     text: 'h-4',
     circular: 'rounded-full',
@@ -28,7 +28,8 @@ export function Skeleton({
 
   const animationClasses = {
     pulse: 'animate-pulse',
-    wave: 'animate-[wave_1.6s_ease-in-out_infinite]',
+    wave: 'loading-shimmer',
+    shimmer: 'loading-shimmer',
     none: '',
   };
 
@@ -42,6 +43,7 @@ export function Skeleton({
         baseClasses,
         variantClasses[variant],
         animationClasses[animation],
+        'animate-fade-in-blur',
         className
       )}
       style={style}
@@ -71,11 +73,70 @@ export function SkeletonGroup({ count = 3, className, children }: SkeletonGroupP
 
 export function CardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
-      <Skeleton variant="text" width="60%" height={24} />
-      <Skeleton variant="text" width="100%" />
-      <Skeleton variant="text" width="80%" />
-      <Skeleton variant="rectangular" height={100} />
+    <div className="card-modern p-6 space-y-4 animate-fade-in-blur">
+      <div className="flex items-center space-x-4">
+        <Skeleton variant="circular" width={40} height={40} />
+        <div className="flex-1 space-y-2">
+          <Skeleton variant="text" width="40%" height={20} />
+          <Skeleton variant="text" width="30%" height={16} />
+        </div>
+      </div>
+      <Skeleton variant="text" width="100%" height={16} />
+      <Skeleton variant="text" width="90%" height={16} />
+      <Skeleton variant="rectangular" height={120} className="rounded-lg" />
+      <div className="flex justify-between items-center pt-4">
+        <Skeleton variant="text" width="25%" height={14} />
+        <Skeleton variant="text" width="20%" height={14} />
+      </div>
+    </div>
+  );
+}
+
+export function StatsCardSkeleton() {
+  return (
+    <div className="card-elevated p-8 text-center animate-fade-in-blur">
+      <Skeleton variant="circular" width={48} height={48} className="mx-auto mb-4" />
+      <Skeleton variant="text" width="60%" height={32} className="mx-auto mb-3" />
+      <Skeleton variant="text" width="40%" height={18} className="mx-auto" />
+    </div>
+  );
+}
+
+export function ListItemSkeleton() {
+  return (
+    <div className="flex items-center space-x-4 p-4 animate-fade-in-blur">
+      <Skeleton variant="circular" width={32} height={32} />
+      <div className="flex-1 space-y-2">
+        <Skeleton variant="text" width="70%" height={16} />
+        <Skeleton variant="text" width="50%" height={14} />
+      </div>
+      <Skeleton variant="rectangular" width={80} height={24} className="rounded-full" />
+    </div>
+  );
+}
+
+export function ContentSkeleton() {
+  return (
+    <div className="space-y-6 animate-fade-in-blur">
+      <div className="text-center space-y-4">
+        <Skeleton variant="text" width="50%" height={36} className="mx-auto" />
+        <Skeleton variant="text" width="70%" height={20} className="mx-auto" />
+      </div>
+
+      <div className="grid-readable">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <StatsCardSkeleton key={i} />
+        ))}
+      </div>
+
+      <CardSkeleton />
+
+      <div className="space-y-3">
+        <Skeleton variant="text" width="30%" height={24} />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <ListItemSkeleton key={i} />
+        ))}
+      </div>
     </div>
   );
 }

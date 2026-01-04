@@ -5,7 +5,6 @@ import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
 
 interface ToastProps {
   id: string
-  message: string
   type: 'success' | 'error' | 'warning' | 'info'
   title?: string
   duration?: number

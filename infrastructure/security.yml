@@ -1,0 +1,541 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: click-security
+  labels:
+    name: click-security
+    environment: production
+---
+# Security Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: click-security-config
+  namespace: click-security
+data:
+  WAF_ENABLED: "true"
+  DDoS_PROTECTION_ENABLED: "true"
+  RATE_LIMITING_ENABLED: "true"
+  API_SECURITY_ENABLED: "true"
+  AUDIT_LOGGING_ENABLED: "true"
+  COMPLIANCE_MONITORING_ENABLED: "true"
+  VULNERABILITY_SCANNING_ENABLED: "true"
+  ENCRYPTION_AT_REST_ENABLED: "true"
+  ENCRYPTION_IN_TRANSIT_ENABLED: "true"
+---
+# Web Application Firewall (WAF)
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx-with-waf
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "false"
+spec:
+  controller: k8s.io/ingress-nginx
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: click-waf-ingress
+  namespace: click-security
+  annotations:
+    nginx.ingress.kubernetes.io/waf: "true"
+    nginx.ingress.kubernetes.io/waf-debug: "false"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/rate-limit-burst: "50"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://click-app.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/cors-expose-headers: "Content-Length,Content-Range"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx-with-waf
+  tls:
+  - hosts:
+    - click-app.com
+    - api.click-app.com
+    secretName: click-tls
+  rules:
+  - host: click-app.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: click-frontend-service
+            port:
+              number: 3000
+  - host: api.click-app.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: click-backend-service
+            port:
+              number: 5001
+---
+# Security Policies
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: click-security-policy
+  namespace: click-security
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default,runtime/default'
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: 'runtime/default'
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  allowedCapabilities:
+    - NET_BIND_SERVICE
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  readOnlyRootFilesystem: true
+---
+# Network Policies for Security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: click-security-network-policy
+  namespace: click-security
+spec:
+  podSelector:
+    matchLabels:
+      app: click
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+  - from:
+    - podSelector:
+        matchLabels:
+          app: click
+    ports:
+    - protocol: TCP
+      port: 3000
+    - protocol: TCP
+      port: 5001
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: click
+    ports:
+    - protocol: TCP
+      port: 27017  # MongoDB
+    - protocol: TCP
+      port: 6379   # Redis
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53     # DNS
+    - protocol: TCP
+      port: 443    # HTTPS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53     # DNS
+---
+# Security Context Constraints
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: click-scc
+  namespace: click-security
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: []
+defaultAddCapabilities: []
+fsGroup:
+  type: MustRunAs
+groups: []
+readOnlyRootFilesystem: true
+requiredDropCapabilities:
+- ALL
+runAsUser:
+  type: MustRunAsNonRoot
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+volumes:
+- configMap
+- downwardAPI
+- emptyDir
+- persistentVolumeClaim
+- projected
+- secret
+---
+# Audit Logging
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: audit-policy
+  namespace: click-security
+data:
+  audit-policy.yaml: |
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    rules:
+    - level: Metadata
+      resources:
+      - group: ""
+        resources: ["pods", "services", "configmaps", "secrets"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]
+      verbs: ["create", "update", "patch", "delete"]
+    - level: RequestResponse
+      resources:
+      - group: ""
+        resources: ["secrets"]
+      verbs: ["create", "update", "patch"]
+    - level: Metadata
+      resources:
+      - group: ""
+        resources: ["pods/exec", "pods/portforward", "pods/proxy"]
+    - level: None
+      resources:
+      - group: ""
+        resources: ["events"]
+      - group: "certificates.k8s.io"
+        resources: ["certificatesigningrequests"]
+---
+# Compliance Monitoring
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: click-compliance-monitor
+  namespace: click-security
+  labels:
+    app: click-compliance-monitor
+    component: compliance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: click-compliance-monitor
+  template:
+    metadata:
+      labels:
+        app: click-compliance-monitor
+    spec:
+      containers:
+      - name: compliance-monitor
+        image: click-app/compliance-monitor:latest
+        envFrom:
+        - configMapRef:
+            name: click-security-config
+        volumeMounts:
+        - name: compliance-config
+          mountPath: /etc/compliance
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: compliance-config
+        configMap:
+          name: compliance-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: compliance-config
+  namespace: click-security
+data:
+  compliance-rules.json: |
+    {
+      "gdpr": {
+        "dataRetention": "2555 days",
+        "dataEncryption": true,
+        "userConsent": true,
+        "dataPortability": true
+      },
+      "soc2": {
+        "accessControls": true,
+        "auditLogging": true,
+        "changeManagement": true,
+        "incidentResponse": true
+      },
+      "hipaa": {
+        "dataEncryption": true,
+        "accessControls": true,
+        "auditLogging": true,
+        "breachNotification": true
+      },
+      "pci": {
+        "dataEncryption": true,
+        "accessControls": true,
+        "networkSecurity": true,
+        "vulnerabilityScanning": true
+      }
+    }
+---
+# Vulnerability Scanner
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: vulnerability-scanner
+  namespace: click-security
+  labels:
+    app: click-vulnerability-scanner
+    component: security
+spec:
+  schedule: "0 3 * * *"  # Daily at 3 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trivy-scanner
+            image: aquasecurity/trivy:latest
+            command:
+            - trivy
+            - image
+            - --exit-code
+            - "1"
+            - --no-progress
+            - --format
+            - json
+            - click-app/frontend:latest
+            - click-app/backend:latest
+            volumeMounts:
+            - name: scan-results
+              mountPath: /tmp
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+          volumes:
+          - name: scan-results
+            emptyDir: {}
+          restartPolicy: OnFailure
+---
+# Secret Management with External Secrets Operator
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: click-secret-store
+  namespace: click-security
+spec:
+  provider:
+    aws:
+      service: SecretsManager
+      region: us-east-1
+      additionalRoles:
+      - arn:aws:iam::123456789012:role/click-secret-access-role
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: click-database-secrets
+  namespace: click-security
+spec:
+  refreshInterval: 15s
+  secretStoreRef:
+    name: click-secret-store
+    kind: SecretStore
+  target:
+    name: click-database-secrets
+    creationPolicy: Owner
+  data:
+  - secretKey: username
+    remoteRef:
+      key: click/prod/database
+      property: username
+  - secretKey: password
+    remoteRef:
+      key: click/prod/database
+      property: password
+---
+# Certificate Management
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  namespace: click-security
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: security@click-app.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: click-tls
+  namespace: click-security
+spec:
+  secretName: click-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - click-app.com
+  - www.click-app.com
+  - api.click-app.com
+  - monitoring.click-app.com
+---
+# RBAC for Security
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: click-security-admin
+  namespace: click-security
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets", "events"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies", "ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["security.openshift.io"]
+  resources: ["securitycontextconstraints"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["cert-manager.io"]
+  resources: ["certificates", "issuers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: click-security-admin-binding
+  namespace: click-security
+subjects:
+- kind: User
+  name: click-security-admin
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: click-security-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+# Security Monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: click-security-alerts
+  namespace: click-security
+  labels:
+    app: click
+    component: security
+spec:
+  groups:
+  - name: click.security
+    rules:
+    - alert: HighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is {{ $value }}% over the last 5 minutes"
+
+    - alert: SuspiciousActivity
+      expr: rate(http_requests_total{method="POST", status="401"}[5m]) > 10
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Suspicious authentication activity"
+        description: "High number of failed authentication attempts"
+
+    - alert: DDoSAttack
+      expr: rate(http_requests_total[1m]) > 1000
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Potential DDoS attack detected"
+        description: "Request rate exceeded threshold: {{ $value }} req/min"
+
+    - alert: CertificateExpiry
+      expr: certmanager_certificate_expiry_seconds < 604800
+      labels:
+        severity: warning
+      annotations:
+        summary: "SSL certificate expiring soon"
+        description: "Certificate {{ $labels.name }} expires in {{ $value }} seconds"
+
+    - alert: VulnerabilityDetected
+      expr: trivy_vulnerabilities_total{severity="HIGH"} > 0
+      labels:
+        severity: critical
+      annotations:
+        summary: "High-severity vulnerability detected"
+        description: "Container image has high-severity vulnerabilities"
+
+

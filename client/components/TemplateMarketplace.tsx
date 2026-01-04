@@ -66,7 +66,6 @@ export default function TemplateMarketplace() {
       params.append('sortBy', filters.sortBy)
 
       const response = await axios.get(`${API_URL}/templates/marketplace?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       if (response.data.success) {
@@ -85,7 +84,6 @@ export default function TemplateMarketplace() {
         `${API_URL}/templates/${template._id}/use`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Template applied!', 'success')
@@ -103,7 +101,6 @@ export default function TemplateMarketplace() {
         `${API_URL}/templates/${selectedTemplate._id}/rate`,
         { rating, review },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       showToast('Rating submitted!', 'success')

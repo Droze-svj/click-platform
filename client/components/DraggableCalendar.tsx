@@ -45,7 +45,6 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
       const response = await axios.get(
         `${API_URL}/scheduler/posts?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -77,7 +76,6 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
         `${API_URL}/scheduler/posts/${draggedPost}`,
         { scheduledTime: targetDate.toISOString() },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 

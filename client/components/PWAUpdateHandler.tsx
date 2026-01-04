@@ -1,0 +1,236 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { RefreshCw, X, CheckCircle } from 'lucide-react'
+import { trackPWAEvent } from '../utils/analytics'
+
+interface PWAUpdateHandlerProps {
+  onUpdate?: () => void
+}
+
+export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) => {
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [updating, setUpdating] = useState(false)
+  const [updateComplete, setUpdateComplete] = useState(false)
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Listen for service worker updates
+    const handleServiceWorkerUpdate = (event: any) => {
+      const newRegistration = event.detail
+      setRegistration(newRegistration)
+
+      // Check if this is a meaningful update (not just cache refresh)
+      if (newRegistration && newRegistration.waiting) {
+        setUpdateAvailable(true)
+        trackPWAEvent('update_available', {
+          timestamp: Date.now(),
+          swVersion: 'new'
+        })
+      }
+    }
+
+    // Listen for update found
+    const handleUpdateFound = () => {
+      trackPWAEvent('update_check_started', { timestamp: Date.now() })
+    }
+
+    // Listen for update ready
+    const handleUpdateReady = (event: any) => {
+      setUpdateAvailable(true)
+      setRegistration(event.detail)
+      trackPWAEvent('update_ready', { timestamp: Date.now() })
+    }
+
+    // Add event listeners
+    window.addEventListener('sw-update-available', handleServiceWorkerUpdate)
+    window.addEventListener('sw-update-found', handleUpdateFound)
+    window.addEventListener('sw-update-ready', handleUpdateReady)
+
+    return () => {
+      window.removeEventListener('sw-update-available', handleServiceWorkerUpdate)
+      window.removeEventListener('sw-update-found', handleUpdateFound)
+      window.removeEventListener('sw-update-ready', handleUpdateReady)
+    }
+  }, [])
+
+  const handleUpdate = async () => {
+    if (!registration?.waiting) return
+
+    setUpdating(true)
+    trackPWAEvent('update_accepted', { timestamp: Date.now() })
+
+    try {
+      // Tell the new service worker to skip waiting
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+
+      // Listen for the controlling change
+      const handleControllerChange = () => {
+        setUpdateComplete(true)
+        setUpdateAvailable(false)
+        setUpdating(false)
+
+        trackPWAEvent('update_completed', {
+          timestamp: Date.now(),
+          reloadRequired: true
+        })
+
+        // Reload after a short delay to show success message
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+
+        if (onUpdate) {
+          onUpdate()
+        }
+      }
+
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange, { once: true })
+
+    } catch (error) {
+      console.error('Update failed:', error)
+      setUpdating(false)
+      trackPWAEvent('update_failed', {
+        error: error.message,
+        timestamp: Date.now()
+      })
+    }
+  }
+
+  const handleDismiss = () => {
+    setUpdateAvailable(false)
+    trackPWAEvent('update_dismissed', { timestamp: Date.now() })
+  }
+
+  const handleRemindLater = () => {
+    setUpdateAvailable(false)
+    // Show again in 24 hours
+    setTimeout(() => {
+      setUpdateAvailable(true)
+    }, 24 * 60 * 60 * 1000)
+    trackPWAEvent('update_remind_later', { timestamp: Date.now() })
+  }
+
+  if (!updateAvailable || updateComplete) return null
+
+  return (
+    <div className="fixed top-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-lg p-4 animate-in slide-in-from-top-2 duration-300">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <RefreshCw className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">
+                Update Available
+              </h3>
+              <p className="text-xs text-blue-100">
+                New features & improvements
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleDismiss}
+            className="text-blue-200 hover:text-white transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="mb-4">
+          <p className="text-sm text-blue-100 mb-2">
+            A new version of Click is available with performance improvements and new features.
+          </p>
+          <div className="text-xs text-blue-200 space-y-1">
+            <div>• Faster loading times</div>
+            <div>• Bug fixes and stability</div>
+            <div>• New offline capabilities</div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleUpdate}
+            disabled={updating}
+            className="flex-1 bg-white text-blue-600 hover:bg-blue-50 disabled:bg-blue-100 font-medium py-2 px-4 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+          >
+            {updating ? (
+              <>
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3 h-3" />
+                Update Now
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleRemindLater}
+            className="px-3 py-2 text-xs text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          >
+            Later
+          </button>
+        </div>
+
+        {/* Update Complete Message */}
+        {updateComplete && (
+          <div className="mt-3 p-2 bg-green-500/20 rounded-lg flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-300" />
+            <span className="text-xs text-green-300">Update complete! Reloading...</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Hook for managing PWA updates
+export const usePWAUpdate = () => {
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+
+    const handleUpdateReady = (event: any) => {
+      setUpdateAvailable(true)
+      setRegistration(event.detail)
+    }
+
+    window.addEventListener('sw-update-ready', handleUpdateReady)
+
+    return () => {
+      window.removeEventListener('sw-update-ready', handleUpdateReady)
+    }
+  }, [])
+
+  const update = async () => {
+    if (!registration?.waiting) return false
+
+    try {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+      return true
+    } catch (error) {
+      console.error('Update failed:', error)
+      return false
+    }
+  }
+
+  return {
+    updateAvailable,
+    update
+  }
+}
+
+export default PWAUpdateHandler
+
+

@@ -1,54 +1,103 @@
 {
-  "name": "Click - Content Creation Platform",
+  "name": "Click - AI-Powered Content Creation",
   "short_name": "Click",
-  "description": "Transform long-form content into social-ready formats with AI-powered tools",
+  "description": "Transform long-form content into social-ready formats with AI-powered tools. Works offline with advanced caching and push notifications.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#667eea",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "lang": "en-US",
+  "dir": "ltr",
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "32x32",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/watermark-256.png",
-      "sizes": "256x256",
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/watermark-1024.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/watermark.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["productivity", "social", "business"],
-  "screenshots": [],
+  "categories": [
+    "productivity",
+    "social",
+    "business",
+    "utilities"
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Click Dashboard - Content Creation Interface"
+    },
+    {
+      "src": "/screenshots/editor.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Video Editor - Professional Editing Tools"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Create Content",
       "short_name": "Create",
-      "description": "Create new content",
-      "url": "/dashboard/content",
-      "icons": [{ "src": "/watermark-256.png", "sizes": "256x256" }]
+      "description": "Create new content with AI assistance",
+      "url": "/dashboard/content/create",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My Content",
+      "short_name": "Library",
+      "description": "View your content library",
+      "url": "/dashboard/library",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Analytics",
       "short_name": "Analytics",
-      "description": "View analytics",
+      "description": "View content performance analytics",
       "url": "/dashboard/analytics",
-      "icons": [{ "src": "/watermark-256.png", "sizes": "256x256" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Video Editor",
+      "short_name": "Editor",
+      "description": "Professional video editing tools",
+      "url": "/dashboard/video",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "share_target": {
@@ -58,13 +107,73 @@
     "params": {
       "title": "title",
       "text": "text",
-      "url": "url"
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            "image/*",
+            "video/*",
+            "audio/*"
+          ]
+        }
+      ]
     }
-  }
+  },
+  "file_handlers": [
+    {
+      "action": "/dashboard/content/upload",
+      "accept": {
+        "image/*": [
+          ".png",
+          ".jpg",
+          ".jpeg",
+          ".gif",
+          ".webp"
+        ],
+        "video/*": [
+          ".mp4",
+          ".webm",
+          ".avi",
+          ".mov"
+        ],
+        "audio/*": [
+          ".mp3",
+          ".wav",
+          ".m4a"
+        ],
+        "text/*": [
+          ".txt",
+          ".md"
+        ]
+      }
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "web+click",
+      "url": "/handle/%s"
+    }
+  ],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "note_taking": {
+    "new_note_url": "/dashboard/content/create?type=note"
+  },
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.json"
+    }
+  ]
 }
-
-
-
-
-
-

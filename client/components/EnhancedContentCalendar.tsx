@@ -5,8 +5,7 @@ import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { Calendar, Clock, AlertCircle, Plus } from 'lucide-react'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { API_URL } from '../lib/api'
 
 interface ScheduledPost {
   _id: string
@@ -55,9 +54,8 @@ export default function EnhancedContentCalendar() {
       const endDate = getEndDate()
 
       const response = await axios.get(
-        `${API_URL}/scheduling/calendar?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        `${API_URL}/productive/calendar?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
@@ -72,19 +70,25 @@ export default function EnhancedContentCalendar() {
   }
 
   const loadGaps = async () => {
+
     try {
       const startDate = getStartDate()
       const endDate = getEndDate()
 
       const response = await axios.get(
-        `${API_URL}/scheduling/gaps?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        `${API_URL}/productive/calendar/gaps?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
 
+
       if (response.data.success) {
-        setGaps(response.data.data || [])
+        let gapsData = response.data.data || []
+        // Handle case where API returns object instead of array
+        if (!Array.isArray(gapsData)) {
+          gapsData = []
+        }
+        setGaps(gapsData)
       }
     } catch (error) {
       // Silent fail for gaps
@@ -210,7 +214,7 @@ export default function EnhancedContentCalendar() {
           const dateStr = day.toISOString().split('T')[0]
           const posts = calendar[dateStr] || []
           const isToday = dateStr === new Date().toISOString().split('T')[0]
-          const isGap = gaps.some(g => g.date === dateStr)
+
 
           return (
             <div

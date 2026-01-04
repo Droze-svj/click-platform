@@ -5,7 +5,6 @@ import Toast from '../components/Toast'
 
 interface Toast {
   id: string
-  message: string
   type: 'success' | 'error' | 'info' | 'warning'
   title?: string
   duration?: number

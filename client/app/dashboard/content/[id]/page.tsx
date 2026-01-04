@@ -66,7 +66,6 @@ export default function ContentDetailPage() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/content/${params.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       const contentData = extractApiData<Content>(response) || (response.data && response.data._id ? response.data : null)
@@ -74,8 +73,8 @@ export default function ContentDetailPage() {
         setContent(contentData)
       }
     } catch (error) {
-      const errorMessage = extractApiError(error)
-      showToast(errorMessage || 'Failed to load content', 'error')
+      const errorObj = extractApiError(error)
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load content', 'error')
       router.push('/dashboard/content')
     } finally {
       setLoading(false)
@@ -91,7 +90,6 @@ export default function ContentDetailPage() {
         `${API_URL}/library/content/${content._id}/organize`,
         { isFavorite: !content.isFavorite },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       const updatedContent = { ...content, isFavorite: !content.isFavorite }
@@ -112,7 +110,6 @@ export default function ContentDetailPage() {
         `${API_URL}/library/content/${content._id}/organize`,
         { tags: newTags },
         {
-          headers: { Authorization: `Bearer ${token}` }
         }
       )
       setContent({ ...content, tags: newTags })

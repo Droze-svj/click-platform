@@ -1,0 +1,309 @@
+{
+  "timestamp": "2026-01-02T21:16:12.333Z",
+  "summary": {
+    "serverHealth": 100,
+    "performanceScore": 100,
+    "functionalityScore": 100,
+    "totalErrors": 0,
+    "totalRecommendations": 0
+  },
+  "details": {
+    "serverStatus": {
+      "Frontend Home": {
+        "name": "Frontend Home",
+        "url": "http://localhost:3010/",
+        "status": 200,
+        "responseTime": 3065,
+        "success": true,
+        "size": 13177
+      },
+      "Frontend Dashboard": {
+        "name": "Frontend Dashboard",
+        "url": "http://localhost:3010/dashboard",
+        "status": 200,
+        "responseTime": 2393,
+        "success": true,
+        "size": 25538
+      },
+      "Backend API Auth": {
+        "name": "Backend API Auth",
+        "url": "http://localhost:5001/api/auth/me",
+        "status": 401,
+        "responseTime": 37,
+        "success": true,
+        "size": 29
+      },
+      "Backend API Analytics": {
+        "name": "Backend API Analytics",
+        "url": "http://localhost:5001/api/analytics/content/insights",
+        "status": 401,
+        "responseTime": 5,
+        "success": true,
+        "size": 29
+      }
+    },
+    "performance": {
+      "Home Page Load": {
+        "name": "Home Page Load",
+        "runs": 5,
+        "successfulRuns": 5,
+        "failedRuns": 0,
+        "averageTime": 23,
+        "minTime": 18,
+        "maxTime": 31,
+        "p95Time": 29,
+        "stability": "excellent"
+      },
+      "Dashboard Load": {
+        "name": "Dashboard Load",
+        "runs": 5,
+        "successfulRuns": 5,
+        "failedRuns": 0,
+        "averageTime": 22,
+        "minTime": 18,
+        "maxTime": 26,
+        "p95Time": 26,
+        "stability": "excellent"
+      },
+      "Video Page Load": {
+        "name": "Video Page Load",
+        "runs": 3,
+        "successfulRuns": 3,
+        "failedRuns": 0,
+        "averageTime": 113,
+        "minTime": 21,
+        "maxTime": 286,
+        "p95Time": 261,
+        "stability": "excellent"
+      },
+      "API Health Check": {
+        "name": "API Health Check",
+        "runs": 3,
+        "successfulRuns": 3,
+        "failedRuns": 0,
+        "averageTime": 3,
+        "minTime": 2,
+        "maxTime": 5,
+        "p95Time": 5,
+        "stability": "excellent"
+      }
+    },
+    "functionality": {
+      "Error Test Page": {
+        "name": "Error Test Page",
+        "url": "http://localhost:3010/test-errors",
+        "status": 200,
+        "containsExpected": true,
+        "size": 17789,
+        "success": true
+      },
+      "Login Page": {
+        "name": "Login Page",
+        "url": "http://localhost:3010/login",
+        "status": 200,
+        "containsExpected": true,
+        "size": 16597,
+        "success": true
+      },
+      "Register Page": {
+        "name": "Register Page",
+        "url": "http://localhost:3010/register",
+        "status": 200,
+        "containsExpected": true,
+        "size": 15713,
+        "success": true
+      },
+      "Invalid API Endpoint Error": {
+        "name": "Invalid API Endpoint",
+        "status": 404,
+        "correctError": true,
+        "success": true
+      },
+      "Invalid Frontend Route Error": {
+        "name": "Invalid Frontend Route",
+        "status": 404,
+        "correctError": true,
+        "success": true
+      }
+    },
+    "errors": [],
+    "recommendations": [],
+    "logAnalysis": {
+      "totalEntries": 13,
+      "byMessageType": {
+        "debug_ping_received": 13
+      },
+      "byLocation": {
+        "server/routes/debug.js:ping": 13
+      },
+      "recentEntries": [
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?nonce=run39-dev-banner&ts=1767379200289"
+          },
+          "timestamp": 1767379200295
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?nonce=run39-dev-banner&ts=1767379200302"
+          },
+          "timestamp": 1767379215979
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?nonce=run39-dev-banner&ts=1767379208247"
+          },
+          "timestamp": 1767379231647
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?nonce=run39-dev-banner&ts=1767379208264"
+          },
+          "timestamp": 1767379239507
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?ts=1767379396729&nonce=a691803c-9672-4f5d-9cf6-dac7a493eca5"
+          },
+          "timestamp": 1767379397854
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?ts=1767379401130&nonce=2d280a05-74f6-43a7-b51c-ac00ce4d514e"
+          },
+          "timestamp": 1767379401722
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?ts=1767379412812&nonce=c88499a9-7c0a-4f6a-aa4f-55ac57e29617"
+          },
+          "timestamp": 1767379413393
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?ts=1767379451807&nonce=499f1a91-7d10-4629-9466-29fb1ac552f5"
+          },
+          "timestamp": 1767379451867
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/dashboard",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?nonce=run39-dev-banner&ts=1767379452413"
+          },
+          "timestamp": 1767379452426
+        },
+        {
+          "sessionId": "debug-session",
+          "runId": "run6",
+          "hypothesisId": "H16",
+          "location": "server/routes/debug.js:ping",
+          "message": "debug_ping_received",
+          "data": {
+            "hasAuthHeader": false,
+            "origin": null,
+            "referer": "http://localhost:3010/dashboard",
+            "host": "localhost:5001",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "originalUrl": "/api/debug/ping?nonce=run39-dev-banner&ts=1767379452437"
+          },
+          "timestamp": 1767379468073
+        }
+      ],
+      "timeRange": {
+        "start": "2026-01-02T18:38:41.616Z",
+        "end": "2026-01-02T18:44:28.073Z",
+        "duration": 346457
+      }
+    }
+  },
+  "recommendations": []
+}

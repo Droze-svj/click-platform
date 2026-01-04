@@ -5,7 +5,7 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
-  testMatch: /.*\.spec\.js$/, // Only run .spec.js files (Playwright tests)
+  testMatch: /.*\.spec\.(js|ts)$/, // Allow .spec.js and .spec.ts (debug tests live in TS)
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
