@@ -11,3 +11,6 @@ logs/
 .vscode/
 .idea/
 
+# Next.js build cache
+.next/
+node_modules/
