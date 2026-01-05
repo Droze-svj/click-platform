@@ -110,7 +110,7 @@ export const preloadForRoute = (pathname: string) => {
       LazyContentSuggestions.preload?.()
       break
     case '/dashboard/workflows':
-      LazyWorkflowTemplates.preload?.()
+      // LazyWorkflowTemplates is no longer lazy loaded
       break
   }
 }
