@@ -65,7 +65,7 @@ class AlertingSystem {
     try {
       // Initialize email transporter
       if (this.config.email.enabled) {
-        this.transporters.set('email', nodemailer.createTransporter({
+        this.transporters.set('email', nodemailer.createTransport({
           host: this.config.email.host,
           port: this.config.email.port,
           secure: this.config.email.secure,
