@@ -723,7 +723,7 @@ const predefinedTemplates: VideoTemplate[] = [
       },
       layout: {
         textPosition: 'lower-third',
-        logoPosition: 'bottom-center',
+        logoPosition: 'bottom-left',
         transitionStyle: 'fade',
         backgroundStyle: 'blur'
       },
