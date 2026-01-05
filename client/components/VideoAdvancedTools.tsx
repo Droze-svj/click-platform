@@ -6,6 +6,12 @@ import { useToast } from '../contexts/ToastContext'
 import VideoProgressTracker from './VideoProgressTracker'
 import { extractApiError } from '../utils/apiResponse'
 
+// Simple logging function for video editing operations
+const logVideoEdit = (action: string, data: any) => {
+  if (process.env.NEXT_PUBLIC_DEBUG_VIDEO === 'true') {
+    console.log(`[VideoEdit] ${action}:`, data)
+  }
+}
 
 interface VideoAdvancedToolsProps {
   videoId?: string
