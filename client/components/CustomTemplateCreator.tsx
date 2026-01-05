@@ -180,7 +180,7 @@ export default function CustomTemplateCreator({
       textColor: '#FFFFFF',
       accentColor: '#3B82F6',
       textStyle: 'minimal',
-      fontSize: { title: 48, subtitle: 24, body: 16 }
+      fontSize: { title: 48, subtitle: 24 }
     },
     layout: initialTemplate?.layout || {
       textPosition: 'center',
@@ -312,7 +312,7 @@ export default function CustomTemplateCreator({
         textColor: '#FFFFFF',
         accentColor: '#3B82F6',
         textStyle: 'minimal',
-        fontSize: { title: 48, subtitle: 24, body: 16 }
+        fontSize: { title: 48, subtitle: 24 }
       },
       layout: {
         textPosition: 'center',
