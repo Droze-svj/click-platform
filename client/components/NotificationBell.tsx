@@ -144,7 +144,7 @@ export default function NotificationBell() {
                     }`} />
                     <div className="flex-1">
                       <p className="font-semibold text-sm">{notification.title}</p>
-                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                      <p className="text-sm text-gray-600 mt-1">{notification.title}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(notification.createdAt).toLocaleString()}
                       </p>
