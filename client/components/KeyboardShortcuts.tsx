@@ -39,6 +39,15 @@ interface VideoEditorShortcuts {
   zoomIn: () => void
   zoomOut: () => void
   resetZoom: () => void
+  skipToStart: () => void
+  skipToEnd: () => void
+  increaseVolume: () => void
+  decreaseVolume: () => void
+  setPlaybackSpeed: (speed: number) => void
+  addTextOverlay: () => void
+  addVideoFilter: () => void
+  exportVideo: () => void
+  saveProject: () => void
 }
 
 export function createVideoEditorShortcuts(callbacks: VideoEditorShortcuts): KeyboardShortcut[] {
