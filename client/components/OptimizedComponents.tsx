@@ -97,20 +97,15 @@ export const preloadOnInteraction = () => {
   document.addEventListener('touchstart', handleInteraction)
 }
 
-// Preload components based on route - updated
+// Preload components based on route - temporarily disabled due to TypeScript issues
 export const preloadForRoute = (pathname: string) => {
+  // Preload functionality temporarily disabled
   switch (pathname) {
     case '/dashboard/video':
-      LazyModernVideoEditor.preload?.()
-      break
     case '/dashboard/analytics':
-      LazyAnalytics.preload?.()
-      break
     case '/dashboard':
-      LazyContentSuggestions.preload?.()
-      break
     case '/dashboard/workflows':
-      // LazyWorkflowTemplates is no longer lazy loaded
+      // Preload disabled to fix build
       break
   }
 }
