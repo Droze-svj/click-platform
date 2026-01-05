@@ -93,7 +93,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
       console.error('Update failed:', error)
       setUpdating(false)
       trackPWAEvent('update_failed', {
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: Date.now()
       })
     }
