@@ -390,7 +390,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
           <VideoProgressTracker
             videoId={videoId}
             operation={currentOperation}
-            jobId={currentOperation === 'export' ? currentJobId : undefined}
+            jobId={currentOperation === 'export' ? (currentJobId ?? undefined) : undefined}
             onComplete={(result) => {
               setIsProcessing(false)
               setCurrentOperation(null)
