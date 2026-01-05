@@ -627,7 +627,7 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
             </div>
           )}
 
-          {activeTool === 'export' && (
+          {activeTool === 'export' && videoSrc && (
             <div className="mt-4">
               <SocialMediaExporter
                 videoUrl={videoSrc}
