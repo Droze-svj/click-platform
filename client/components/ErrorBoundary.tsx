@@ -316,7 +316,7 @@ const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({ children, fallback, onErr
 
     // Log error
     try {
-      logError(error, {
+      logError(error, 'ErrorBoundary', 'error-caught', {
         componentStack: info.componentStack || '',
         errorBoundary: true,
       });
