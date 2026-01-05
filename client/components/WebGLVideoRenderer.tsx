@@ -388,7 +388,7 @@ export default function WebGLVideoRenderer({
   // Update texture from video
   const updateTexture = useCallback((gl: WebGLRenderingContext, video: HTMLVideoElement) => {
     const texture = textureRef.current
-    if (!texture) return
+    if (!texture || !glRef.current) return
 
     glRef.current.bindTexture(glRef.current.TEXTURE_2D, texture)
     glRef.current.texImage2D(glRef.current.TEXTURE_2D, 0, glRef.current.RGBA, glRef.current.RGBA, glRef.current.UNSIGNED_BYTE, video)
