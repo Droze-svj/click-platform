@@ -417,7 +417,21 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
     toggleMute: () => {
       setVideoState(prev => ({ ...prev, isMuted: !prev.isMuted }))
     },
+    volumeUp: () => {
+      setVideoState(prev => ({
+        ...prev,
+        volume: Math.min(1, prev.volume + 0.1)
+      }))
+    },
+    volumeDown: () => {
+      setVideoState(prev => ({
+        ...prev,
+        volume: Math.max(0, prev.volume - 0.1)
+      }))
+    },
+    fullscreen: () => showToast('Toggle fullscreen', 'info'),
     setPlaybackSpeed: (speed: number) => setPlaybackSpeed(speed),
+    addVideoFilter: () => showToast('Video filter added', 'success'),
     addTextOverlay: () => {
       setTextOverlays(prev => [...prev, {
         id: Date.now().toString(),
@@ -439,8 +453,10 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
     paste: () => showToast('Paste operation', 'info'),
     delete: () => showToast('Delete operation', 'info'),
     selectAll: () => showToast('Select all', 'info'),
+    split: () => showToast('Split clip', 'info'),
     zoomIn: () => showToast('Zoom in', 'info'),
     zoomOut: () => showToast('Zoom out', 'info'),
+    resetZoom: () => showToast('Reset zoom', 'info'),
     fitToScreen: () => showToast('Fit to screen', 'info'),
     toggleFullscreen: () => showToast('Toggle fullscreen', 'info'),
     exportVideo: () => showToast('Export video', 'info'),
