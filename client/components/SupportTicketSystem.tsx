@@ -54,6 +54,8 @@ export default function SupportTicketSystem() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/help/tickets', {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
