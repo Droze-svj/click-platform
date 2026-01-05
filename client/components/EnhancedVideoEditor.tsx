@@ -111,7 +111,12 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
     sepia: 0,
     vignette: 0,
     sharpen: 0,
-    noise: 0
+    noise: 0,
+    temperature: 0,
+    tint: 0,
+    highlights: 0,
+    shadows: 0,
+    clarity: 0
   })
   const [trimStart, setTrimStart] = useState(0)
   const [trimEnd, setTrimEnd] = useState(0)
