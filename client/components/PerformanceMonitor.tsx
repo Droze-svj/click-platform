@@ -163,8 +163,8 @@ export default function PerformanceMonitor() {
 
       } catch (error) {
         sendDebugLog('performance_monitor_error', {
-          error: error.message,
-          stack: error.stack
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
         })
       }
     }
