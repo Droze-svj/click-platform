@@ -996,21 +996,33 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
             <div className="flex-1 p-6 min-w-0 overflow-y-auto">
               {/* Video Preview Section */}
               <div className="mb-8">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-                  <RealTimeVideoPreview
-                    videoUrl={videoUrl || videoPath}
-                    textOverlays={textOverlays}
-                    videoFilters={videoFilters}
-                    playbackSpeed={playbackSpeed}
-                    onTimeUpdate={(currentTime, duration) => {
-                      setVideoState(prev => ({ ...prev, currentTime, duration }))
-                    }}
-                    onVideoLoad={(duration) => {
-                      setVideoState(prev => ({ ...prev, duration }))
-                    }}
-                    className="w-full"
-                  />
-                </div>
+                {(videoUrl || videoPath) ? (
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                    <RealTimeVideoPreview
+                      videoUrl={videoUrl || videoPath}
+                      textOverlays={textOverlays}
+                      videoFilters={videoFilters}
+                      playbackSpeed={playbackSpeed}
+                      onTimeUpdate={(currentTime, duration) => {
+                        setVideoState(prev => ({ ...prev, currentTime, duration }))
+                      }}
+                      onVideoLoad={(duration) => {
+                        setVideoState(prev => ({ ...prev, duration }))
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                    <div className="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                      <div className="text-center">
+                        <Video className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No video loaded</p>
+                        <p className="text-sm">Upload a video to start editing</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Category Content with Smooth Transitions */}
