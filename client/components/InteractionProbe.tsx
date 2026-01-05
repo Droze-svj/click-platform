@@ -255,8 +255,8 @@ export default function InteractionProbe() {
               })
             } catch {}
             // Call the original method to maintain functionality
-            if (window.__interactionProbeState.origStopImmediatePropagation) {
-              window.__interactionProbeState.origStopImmediatePropagation()
+            if (window.__interactionProbeState?.origStopImmediatePropagation) {
+              window.__interactionProbeState.origStopImmediatePropagation.call(this)
             }
           }
         }
