@@ -230,7 +230,7 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
                           <span
                             key={i}
                             className={`px-2 py-1 rounded text-xs border ${getSeverityColor(flag.severity)}`}
-                            title={flag.message}
+                            title={flag.type}
                           >
                             {flag.severity}
                           </span>
