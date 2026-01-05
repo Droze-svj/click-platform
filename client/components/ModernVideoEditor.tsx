@@ -704,15 +704,21 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
       case 'ai-analysis':
         return (
           <div className="space-y-6">
-            <AISceneDetection
-              videoUrl={videoUrl}
-              onScenesDetected={(scenes) => {
-                showToast(`Detected ${scenes.length} scenes with AI`, 'success')
-              }}
-              onSuggestedEdit={(edit) => {
-                showToast(`AI suggests: ${edit.suggestion}`, 'info')
-              }}
-            />
+            {videoUrl ? (
+              <AISceneDetection
+                videoUrl={videoUrl}
+                onScenesDetected={(scenes) => {
+                  showToast(`Detected ${scenes.length} scenes with AI`, 'success')
+                }}
+                onSuggestedEdit={(edit) => {
+                  showToast(`AI suggests: ${edit.suggestion}`, 'info')
+                }}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                Please load a video first to access AI analysis features.
+              </div>
+            )}
           </div>
         )
       case 'collaborate':
