@@ -238,7 +238,7 @@ export default function InteractionProbe() {
             } catch {}
             // Call the original method to maintain functionality
             if (window.__interactionProbeState?.origStopPropagation) {
-              window.__interactionProbeState.origStopPropagation()
+              window.__interactionProbeState.origStopPropagation.call(this)
             }
           }
 
