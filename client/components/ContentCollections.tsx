@@ -95,7 +95,9 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
     if (!contentId) return
 
     try {
-      const response = await fetch(`/api/collections/${collectionId}/content`, {
+      const response = await fetch(`/api/collections/${collectionId}/content?contentId=${contentId}`, {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
