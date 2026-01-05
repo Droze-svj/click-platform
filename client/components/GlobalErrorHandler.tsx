@@ -9,14 +9,14 @@ export function GlobalErrorHandler({ children }: { children: React.ReactNode }) 
     // Handle unhandled promise rejections
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const error = parseApiError(event.reason);
-      logError(error, { type: 'unhandledRejection' });
+      logError(error.message, 'GlobalErrorHandler', 'unhandledRejection', error);
       event.preventDefault(); // Prevent default browser behavior
     };
 
     // Handle uncaught errors
     const handleError = (event: ErrorEvent) => {
       const error = parseApiError(event.error);
-      logError(error, { type: 'uncaughtError' });
+      logError(error.message, 'GlobalErrorHandler', 'uncaughtError', error);
     };
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
