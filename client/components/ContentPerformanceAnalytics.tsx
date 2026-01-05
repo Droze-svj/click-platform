@@ -219,7 +219,7 @@ export default function ContentPerformanceAnalytics({ contentId }: ContentPerfor
                 }`}
               >
                 <div className="flex items-start justify-between">
-                  <p className="text-sm">{rec.message}</p>
+                  <p className="text-sm">{rec.action}</p>
                   <span className={`px-2 py-1 rounded text-xs ${
                     rec.priority === 'high' ? 'bg-red-100 text-red-800' :
                     rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
