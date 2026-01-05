@@ -190,6 +190,100 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
 
   const showToast = useToast()
 
+  // Navigation categories with modern design and realistic icons
+  const categories = [
+    {
+      id: 'edit',
+      label: 'Edit',
+      icon: EditToolIcon,
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      textColor: 'text-blue-700 dark:text-blue-300',
+      description: 'Basic editing tools',
+      features: ['Trim', 'Crop', 'Rotate', 'Split']
+    },
+    {
+      id: 'effects',
+      label: 'Effects',
+      icon: MagicEffectsIcon,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      textColor: 'text-purple-700 dark:text-purple-300',
+      description: 'Filters & enhancements',
+      features: ['Filters', 'Text', 'Transitions', 'Audio']
+    },
+    {
+      id: 'color',
+      label: 'Color',
+      icon: ColorPaletteIcon,
+      color: 'from-indigo-500 to-indigo-600',
+      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+      textColor: 'text-indigo-700 dark:text-indigo-300',
+      description: 'Professional color grading',
+      features: ['Curves', 'Color Wheels', 'LUTs', 'Scopes']
+    },
+    {
+      id: 'chromakey',
+      label: 'Chroma Key',
+      icon: MagicWandIcon,
+      color: 'from-emerald-500 to-emerald-600',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+      textColor: 'text-emerald-700 dark:text-emerald-300',
+      description: 'Green screen & compositing',
+      features: ['Key Removal', 'Spill Suppression', 'Edge Refinement']
+    },
+    {
+      id: 'visual-fx',
+      label: 'Visual FX',
+      icon: VisualFXIcon,
+      color: 'from-cyan-500 to-blue-500',
+      bgColor: 'bg-cyan-50 dark:bg-cyan-900/20',
+      textColor: 'text-cyan-700 dark:text-cyan-300',
+      description: 'Particle systems & effects',
+      features: ['Particles', 'Lens Flares', 'Lights', 'Motion']
+    },
+    {
+      id: 'ai-analysis',
+      label: 'AI Analysis',
+      icon: NeuralNetworkIcon,
+      color: 'from-pink-500 to-purple-500',
+      bgColor: 'bg-pink-50 dark:bg-pink-900/20',
+      textColor: 'text-pink-700 dark:text-pink-300',
+      description: 'Smart scene detection',
+      features: ['Scene Detection', 'Auto-Editing', 'Suggestions']
+    },
+    {
+      id: 'collaborate',
+      label: 'Collaborate',
+      icon: CollaborationIcon,
+      color: 'from-green-500 to-teal-500',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      textColor: 'text-green-700 dark:text-green-300',
+      description: 'Real-time collaboration',
+      features: ['Live Cursors', 'Comments', 'Team Editing']
+    },
+    {
+      id: 'timeline',
+      label: 'Timeline',
+      icon: LayersIcon,
+      color: 'from-yellow-500 to-orange-500',
+      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+      textColor: 'text-yellow-700 dark:text-yellow-300',
+      description: 'Advanced editing',
+      features: ['Multi-track', 'Keyframes', 'Precision', 'Layers']
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      icon: UploadCloudIcon,
+      color: 'from-red-500 to-pink-500',
+      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      textColor: 'text-red-700 dark:text-red-300',
+      description: 'Share & export',
+      features: ['Social Media', 'Formats', 'Quality', 'Presets']
+    }
+  ]
+
   // Detect device type and adjust layout
   useEffect(() => {
     const updateDeviceView = () => {
@@ -287,99 +381,6 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
     return () => window.removeEventListener('navigateToCategory', handleNavigateToCategory as EventListener)
   }, [categories, trackUserAction])
 
-  // Navigation categories with modern design and realistic icons
-  const categories = [
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: EditToolIcon,
-      color: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      textColor: 'text-blue-700 dark:text-blue-300',
-      description: 'Basic editing tools',
-      features: ['Trim', 'Crop', 'Rotate', 'Split']
-    },
-    {
-      id: 'effects',
-      label: 'Effects',
-      icon: MagicEffectsIcon,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      textColor: 'text-purple-700 dark:text-purple-300',
-      description: 'Filters & enhancements',
-      features: ['Filters', 'Text', 'Transitions', 'Audio']
-    },
-    {
-      id: 'color',
-      label: 'Color',
-      icon: ColorPaletteIcon,
-      color: 'from-indigo-500 to-indigo-600',
-      bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
-      textColor: 'text-indigo-700 dark:text-indigo-300',
-      description: 'Professional color grading',
-      features: ['Curves', 'Color Wheels', 'LUTs', 'Scopes']
-    },
-    {
-      id: 'chromakey',
-      label: 'Chroma Key',
-      icon: MagicWandIcon,
-      color: 'from-emerald-500 to-emerald-600',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
-      textColor: 'text-emerald-700 dark:text-emerald-300',
-      description: 'Green screen & compositing',
-      features: ['Key Removal', 'Spill Suppression', 'Edge Refinement']
-    },
-    {
-      id: 'visual-fx',
-      label: 'Visual FX',
-      icon: VisualFXIcon,
-      color: 'from-cyan-500 to-blue-500',
-      bgColor: 'bg-cyan-50 dark:bg-cyan-900/20',
-      textColor: 'text-cyan-700 dark:text-cyan-300',
-      description: 'Particle systems & effects',
-      features: ['Particles', 'Lens Flares', 'Lights', 'Motion']
-    },
-    {
-      id: 'ai-analysis',
-      label: 'AI Analysis',
-      icon: NeuralNetworkIcon,
-      color: 'from-pink-500 to-purple-500',
-      bgColor: 'bg-pink-50 dark:bg-pink-900/20',
-      textColor: 'text-pink-700 dark:text-pink-300',
-      description: 'Smart scene detection',
-      features: ['Scene Detection', 'Auto-Editing', 'Suggestions']
-    },
-    {
-      id: 'collaborate',
-      label: 'Collaborate',
-      icon: CollaborationIcon,
-      color: 'from-green-500 to-teal-500',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      textColor: 'text-green-700 dark:text-green-300',
-      description: 'Real-time collaboration',
-      features: ['Live Cursors', 'Comments', 'Team Editing']
-    },
-    {
-      id: 'timeline',
-      label: 'Timeline',
-      icon: LayersIcon,
-      color: 'from-yellow-500 to-orange-500',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-      textColor: 'text-yellow-700 dark:text-yellow-300',
-      description: 'Advanced editing',
-      features: ['Multi-track', 'Keyframes', 'Precision', 'Layers']
-    },
-    {
-      id: 'export',
-      label: 'Export',
-      icon: UploadCloudIcon,
-      color: 'from-red-500 to-pink-500',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      textColor: 'text-red-700 dark:text-red-300',
-      description: 'Share & export',
-      features: ['Social Media', 'Formats', 'Quality', 'Presets']
-    }
-  ]
 
   // Keyboard shortcuts setup
   const keyboardShortcuts = createVideoEditorShortcuts({
