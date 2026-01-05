@@ -37,8 +37,9 @@ export default function PerformancePredictor({ content, onPredict }: Performance
         credentials: 'include',
         body: JSON.stringify({
           content: content.text,
-          title: content.title,
-          description: content.description
+          type: content.type,
+          platform: content.platform,
+          tags: content.tags
         })
       })
 
