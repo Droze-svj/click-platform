@@ -26,6 +26,7 @@ export default function PredictiveAnalytics() {
   const [prediction, setPrediction] = useState<PerformancePrediction | null>(null);
   const [contentData, setContentData] = useState({
     title: '',
+    body: '',
     platform: 'instagram',
     tags: [] as string[],
     category: '',
