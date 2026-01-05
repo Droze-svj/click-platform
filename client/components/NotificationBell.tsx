@@ -46,7 +46,7 @@ export default function NotificationBell() {
       socket.on('notification', (notification: Notification) => {
         setNotifications(prev => [notification, ...prev])
         setUnreadCount(prev => prev + 1)
-        showToast(notification.message, notification.type)
+        showToast(notification.title, notification.type)
       })
 
       return () => {
