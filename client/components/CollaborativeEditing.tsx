@@ -133,6 +133,7 @@ export default function CollaborativeEditing({
       userName: currentUser.name,
       text: text.trim(),
       position,
+      timestamp: Date.now(),
       resolved: false,
       replies: []
     }
