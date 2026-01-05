@@ -73,10 +73,6 @@ export default function ErrorRecovery({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
-          {recovery.message}
-        </p>
-
         {recovery.actions && recovery.actions.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
