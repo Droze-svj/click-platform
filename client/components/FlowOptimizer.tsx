@@ -177,10 +177,10 @@ export default function FlowOptimizer({
   // Analyze user behavior and suggest next steps
   const analyzeFlow = useCallback(() => {
     const recentActions = userActions.slice(-10)
-    const completedCategories = [...new Set(recentActions
+    const completedCategories = Array.from(new Set(recentActions
       .filter(action => action.action === 'category_switched')
       .map(action => action.data.to)
-    )]
+    ))
 
     // Detect workflow pattern
     let detectedWorkflow = 'quick_social' // default
