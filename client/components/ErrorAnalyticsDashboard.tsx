@@ -32,6 +32,7 @@ export default function ErrorAnalyticsDashboard() {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/error-analytics/stats?days=${period}`, {
+        headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
