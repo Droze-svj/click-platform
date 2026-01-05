@@ -149,7 +149,7 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
   const [audioTracks, setAudioTracks] = useState<Array<{ url: string, startTime: number, volume: number }>>([])
   const [videoSegments, setVideoSegments] = useState<Array<{ start: number, end: number, id: string }>>([])
 
-  const showToast = useToast()
+  const { showToast } = useToast()
 
   // Video event handlers
   useEffect(() => {
