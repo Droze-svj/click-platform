@@ -79,10 +79,10 @@ export default function ErrorDashboard() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={resetStats} size="sm" variant="outline">
+            <Button onClick={resetStats} variant="outline">
               Reset Stats
             </Button>
-            <Button onClick={() => setIsVisible(false)} size="sm" variant="destructive">
+            <Button onClick={() => setIsVisible(false)} variant="destructive">
               Close
             </Button>
           </div>
