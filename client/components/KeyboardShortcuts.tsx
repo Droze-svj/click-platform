@@ -52,7 +52,6 @@ interface VideoEditorShortcuts {
   exportVideo: () => void
   saveProject: () => void
 }
-}
 
 export function createVideoEditorShortcuts(callbacks: VideoEditorShortcuts): KeyboardShortcut[] {
   return [
