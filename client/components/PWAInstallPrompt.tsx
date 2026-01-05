@@ -98,7 +98,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
     } catch (error) {
       console.error('PWA install failed:', error)
-      trackPWAEvent('install_error', { error: error.message })
+      trackPWAEvent('install_error', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setInstalling(false)
       setDeferredPrompt(null)
