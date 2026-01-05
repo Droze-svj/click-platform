@@ -999,7 +999,7 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
                 {(videoUrl || videoPath) ? (
                   <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
                     <RealTimeVideoPreview
-                      videoUrl={videoUrl || videoPath}
+                      videoUrl={(videoUrl || videoPath) as string}
                       textOverlays={textOverlays}
                       videoFilters={videoFilters}
                       playbackSpeed={playbackSpeed}
