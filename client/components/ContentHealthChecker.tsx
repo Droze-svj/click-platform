@@ -16,6 +16,7 @@ interface ContentHealthCheckerProps {
 
 interface HealthIssue {
   type: 'error' | 'warning' | 'info'
+  message: string
   suggestion: string
   fixable: boolean
 }
@@ -32,6 +33,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.title || content.title.trim().length < 5) {
       foundIssues.push({
         type: 'warning',
+        message: 'Title is too short',
         suggestion: 'Add a descriptive title (at least 5 characters)',
         fixable: true,
       })
@@ -41,6 +43,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.text || content.text.trim().length < 50) {
       foundIssues.push({
         type: 'error',
+        message: 'Content is too short',
         suggestion: 'Add more content (at least 50 characters)',
         fixable: true,
       })
@@ -50,12 +53,14 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.tags || content.tags.length === 0) {
       foundIssues.push({
         type: 'warning',
+        message: 'No tags added',
         suggestion: 'Add relevant tags to improve discoverability',
         fixable: true,
       })
     } else if (content.tags.length < 3) {
       foundIssues.push({
         type: 'info',
+        message: 'Few tags added',
         suggestion: 'Add 3-5 relevant tags for better reach',
         fixable: true,
       })
@@ -65,6 +70,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
     if (!content.description || content.description.trim().length < 20) {
       foundIssues.push({
         type: 'info',
+        message: 'Missing description',
         suggestion: 'Add a description (at least 20 characters)',
         fixable: true,
       })
@@ -76,6 +82,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
       if (length > 280) {
         foundIssues.push({
           type: 'warning',
+          message: 'Content too long for Twitter',
           suggestion: 'Consider shortening for Twitter compatibility',
           fixable: false,
         })
