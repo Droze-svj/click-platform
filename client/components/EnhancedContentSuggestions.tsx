@@ -227,7 +227,7 @@ export default function EnhancedContentSuggestions() {
                       'bg-blue-50 dark:bg-blue-900/20'
                     }`}
                   >
-                    <p className="text-sm">{suggestion.message}</p>
+                    <p className="text-sm">{suggestion.description}</p>
                   </div>
                 ))
               ) : (
