@@ -1041,7 +1041,7 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
                       return getCategoryContent()
                     } catch (error) {
 
-                      logReactError(error, null, 'ModernVideoEditor')
+                      logReactError(error as Error, null, 'ModernVideoEditor')
                       return (
                         <div className="text-center py-8 text-red-600 dark:text-red-400">
                           <p className="font-semibold">Error loading {activeCategory} tools</p>
