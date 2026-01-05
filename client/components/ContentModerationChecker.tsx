@@ -32,13 +32,17 @@ export default function ContentModerationChecker({
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/moderation/check', {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
+        body: JSON.stringify({
           text: content.text,
           title: content.title,
           description: content.description,
+        }),
       })
 
       if (response.ok) {
