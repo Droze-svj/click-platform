@@ -349,7 +349,7 @@ export default function VideoEditor({ videoId, videoUrl, videoPath, onExport }: 
       />
 
       {/* Video Comparison Modal */}
-      {showComparison && processedVideo && (
+      {showComparison && processedVideo && videoSrc && (
         <VideoComparison
           originalVideo={videoSrc}
           processedVideo={processedVideo}
