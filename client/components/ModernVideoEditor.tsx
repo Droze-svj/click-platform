@@ -114,7 +114,7 @@ interface VideoFilter {
 export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExport }: VideoEditorProps) {
 
   // UI State Management
-  const [activeCategory, setActiveCategory] = useState<'edit' | 'effects' | 'timeline' | 'export' | 'ai'>('edit')
+  const [activeCategory, setActiveCategory] = useState<'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey'>('edit')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(true)
   const [timelineCollapsed, setTimelineCollapsed] = useState(false)
