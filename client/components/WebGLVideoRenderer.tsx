@@ -324,7 +324,7 @@ export default function WebGLVideoRenderer({
     programRef.current = program
 
     // Create buffer for quad
-    const positionBuffer = gl.createBuffer()
+    const positionBuffer = glRef.current.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
