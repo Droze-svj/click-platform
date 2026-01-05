@@ -40,7 +40,7 @@ export default function VideoEditor({ videoId, videoUrl, videoPath, onExport }: 
   const [isProcessing, setIsProcessing] = useState(false)
   const [showComparison, setShowComparison] = useState(false)
 
-  const showToast = useToast()
+  const { showToast } = useToast()
 
   // Video event handlers
   useEffect(() => {
