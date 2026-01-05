@@ -79,10 +79,13 @@ export default function SupportTicketSystem() {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/help/tickets/${selectedTicket._id}/messages`, {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
+        body: JSON.stringify({ message: newMessage })
       })
 
       if (response.ok) {
