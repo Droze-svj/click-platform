@@ -113,7 +113,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
       })
 
       let requestBody;
-      let headers = { Authorization: `Bearer ${token}` };
+      let headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
       if (tool === 'export') {
         // Export uses JSON, not FormData
