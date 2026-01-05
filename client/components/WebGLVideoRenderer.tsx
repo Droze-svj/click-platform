@@ -306,8 +306,8 @@ export default function WebGLVideoRenderer({
 
     // Create shaders
 
-    const vertexShader = createShader(glRef.current, gl.VERTEX_SHADER, vertexShaderSource)
-    const fragmentShader = createShader(glRef.current, gl.FRAGMENT_SHADER, fragmentShaderSource)
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource)
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource)
 
     if (!vertexShader || !fragmentShader) {
       console.error('Failed to create shaders')
@@ -315,7 +315,7 @@ export default function WebGLVideoRenderer({
     }
 
     // Create program
-    const program = createProgram(glRef.current, vertexShader, fragmentShader)
+    const program = createProgram(gl, vertexShader, fragmentShader)
     if (!program) {
       console.error('Failed to create program')
       return false
