@@ -49,7 +49,7 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
       })
       setHasReported(true)
     } catch (fetchErr) {
-      console.warn('[ErrorBoundary] Debug log send failed:', fetchErr.message)
+      console.warn('[ErrorBoundary] Debug log send failed:', fetchErr instanceof Error ? fetchErr.message : String(fetchErr))
     }
   }, [hasReported, retryCount])
 
