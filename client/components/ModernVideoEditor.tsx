@@ -646,14 +646,20 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
       case 'export':
         return (
           <div className="space-y-6">
-            <SocialMediaExporter
-              videoUrl={videoUrl}
-              videoId={videoId}
-              onExport={(preset, options) => {
-                showToast(`Starting export for ${preset.platform}...`, 'info')
-                console.log('Export config:', { preset, options, textOverlays, videoFilters })
-              }}
-            />
+            {videoUrl ? (
+              <SocialMediaExporter
+                videoUrl={videoUrl}
+                videoId={videoId}
+                onExport={(preset, options) => {
+                  showToast(`Starting export for ${preset.platform}...`, 'info')
+                  console.log('Export config:', { preset, options, textOverlays, videoFilters })
+                }}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                Please load a video first to access export features.
+              </div>
+            )}
           </div>
         )
       case 'color':
