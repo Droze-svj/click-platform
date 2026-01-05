@@ -315,7 +315,7 @@ export default function WebGLVideoRenderer({
     }
 
     // Create program
-    const program = createProgram(gl, vertexShader, fragmentShader)
+    const program = createProgram(glRef.current, vertexShader, fragmentShader)
     if (!program) {
       console.error('Failed to create program')
       return false
