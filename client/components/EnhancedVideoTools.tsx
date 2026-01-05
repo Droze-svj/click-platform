@@ -537,7 +537,7 @@ export default function EnhancedVideoTools({
           <VideoProgressTracker
             videoId={videoId}
             operation={currentOperation}
-            jobId={currentOperation === 'export-enhanced' ? currentJobId : undefined}
+            jobId={currentOperation === 'export-enhanced' ? (currentJobId ?? undefined) : undefined}
             onComplete={(result) => {
               setIsProcessing(false)
               setCurrentOperation(null)
