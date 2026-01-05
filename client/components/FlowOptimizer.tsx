@@ -220,7 +220,7 @@ export default function FlowOptimizer({
       return step && completedCategories.includes(step.category)
     })
 
-    if (workflowComplete && !prev.completedSteps.includes('workflow_complete')) {
+    if (workflowComplete) {
       onFlowComplete(userFlow)
       showToast('🎉 Workflow complete! Your video is ready to export.', 'success')
     }
