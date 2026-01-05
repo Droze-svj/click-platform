@@ -90,6 +90,7 @@ interface VideoFilter {
   highlights: number
   shadows: number
   clarity: number
+  dehaze: number
 }
 
 export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onExport }: VideoEditorProps) {
@@ -121,7 +122,8 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
     tint: 0,
     highlights: 0,
     shadows: 0,
-    clarity: 0
+    clarity: 0,
+    dehaze: 0
   })
   const [trimStart, setTrimStart] = useState(0)
   const [trimEnd, setTrimEnd] = useState(0)
