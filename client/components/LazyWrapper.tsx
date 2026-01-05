@@ -70,7 +70,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
       fallback={options?.fallback}
       errorFallback={options?.errorFallback}
     >
-      <LazyComponent {...props} ref={ref} />
+      <LazyComponent {...(props as any)} ref={ref} />
     </LazyWrapper>
   ))
 
