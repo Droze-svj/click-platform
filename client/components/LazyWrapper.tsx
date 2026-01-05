@@ -74,9 +74,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
     </LazyWrapper>
   ))
 
-  WrappedComponent.displayName = `Lazy(${
-    LazyComponent.displayName || LazyComponent.name || 'Component'
-  })`
+  WrappedComponent.displayName = `Lazy(Component)`
 
   // Add preload method
   ;(WrappedComponent as any).preload = importFn
