@@ -35,6 +35,7 @@ interface VideoEditorShortcuts {
   copy: () => void
   paste: () => void
   delete: () => void
+  selectAll: () => void
   split: () => void
   zoomIn: () => void
   zoomOut: () => void
