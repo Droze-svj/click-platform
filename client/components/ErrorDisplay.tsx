@@ -54,15 +54,6 @@ export default function ErrorDisplay({
       <Icon className="h-5 w-5 flex-shrink-0 mt-0.5" />
       <div className="flex-1">
         <p className="text-sm font-medium">{errorMessage}</p>
-        {error instanceof AppError && error.fields && error.fields.length > 0 && (
-          <ul className="mt-2 list-disc list-inside text-xs space-y-1">
-            {error.fields.map((field, idx) => (
-              <li key={idx}>
-                <span className="font-medium">{field.field}:</span> {field.message}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
       {onDismiss && (
         <button
