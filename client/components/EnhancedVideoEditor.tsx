@@ -85,6 +85,11 @@ interface VideoFilter {
   vignette: number
   sharpen: number
   noise: number
+  temperature: number
+  tint: number
+  highlights: number
+  shadows: number
+  clarity: number
 }
 
 export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onExport }: VideoEditorProps) {
