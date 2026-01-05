@@ -18,6 +18,7 @@ import {
   Wand2,
   Filter,
   Sliders,
+  Eye,
   Mic,
   Speaker,
   Download
