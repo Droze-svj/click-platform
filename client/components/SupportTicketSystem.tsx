@@ -12,6 +12,7 @@ interface SupportTicket {
   priority: string
   category: string
   messages: Array<{
+    message: string
     userId: string
     createdAt: string
   }>
