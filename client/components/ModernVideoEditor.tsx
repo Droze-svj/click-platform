@@ -188,7 +188,7 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
     properties?: any
   }>>([])
 
-  const showToast = useToast()
+  const { showToast } = useToast()
 
   // Navigation categories with modern design and realistic icons
   const categories = [
