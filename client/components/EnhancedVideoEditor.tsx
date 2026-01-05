@@ -392,25 +392,27 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
         </div>
 
         {/* Real-time Video Preview */}
-        <RealTimeVideoPreview
-          videoUrl={videoSrc}
-          textOverlays={textOverlays}
-          videoFilters={videoFilters}
-          playbackSpeed={playbackSpeed}
-          onTimeUpdate={(currentTime, duration) => {
-            setVideoState(prev => ({ ...prev, currentTime, duration }))
-            if (trimEnd === 0 && duration > 0) {
-              setTrimEnd(duration)
-            }
-          }}
-          onVideoLoad={(duration) => {
-            setVideoState(prev => ({ ...prev, duration }))
-            if (trimEnd === 0) {
-              setTrimEnd(duration)
-            }
-          }}
-          className="mb-4"
-        />
+        {videoSrc && (
+          <RealTimeVideoPreview
+            videoUrl={videoSrc}
+            textOverlays={textOverlays}
+            videoFilters={videoFilters}
+            playbackSpeed={playbackSpeed}
+            onTimeUpdate={(currentTime, duration) => {
+              setVideoState(prev => ({ ...prev, currentTime, duration }))
+              if (trimEnd === 0 && duration > 0) {
+                setTrimEnd(duration)
+              }
+            }}
+            onVideoLoad={(duration) => {
+              setVideoState(prev => ({ ...prev, duration }))
+              if (trimEnd === 0) {
+                setTrimEnd(duration)
+              }
+            }}
+            className="mb-4"
+          />
+        )}
 
         {/* Playback Speed Control */}
         <div className="flex items-center justify-center gap-2 mb-4 p-2 bg-gray-50 dark:bg-gray-700 rounded">
