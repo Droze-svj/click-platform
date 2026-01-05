@@ -56,7 +56,6 @@ export default function ErrorDashboard() {
       <div className="fixed bottom-4 right-4 z-50">
         <Button
           onClick={() => setIsVisible(true)}
-          size="sm"
           variant="outline"
           className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
         >
