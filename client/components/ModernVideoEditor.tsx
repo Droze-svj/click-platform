@@ -674,14 +674,20 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
       case 'chromakey':
         return (
           <div className="space-y-6">
-            <ChromaKey
-              videoUrl={videoUrl}
-              settings={chromaKeySettings}
-              onSettingsChange={setChromaKeySettings}
-              onProcessed={(resultUrl) => {
-                showToast('Chroma key processed successfully!', 'success')
-              }}
-            />
+            {videoUrl ? (
+              <ChromaKey
+                videoUrl={videoUrl}
+                settings={chromaKeySettings}
+                onSettingsChange={setChromaKeySettings}
+                onProcessed={(resultUrl) => {
+                  showToast('Chroma key processed successfully!', 'success')
+                }}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                Please load a video first to access chroma key features.
+              </div>
+            )}
           </div>
         )
       case 'visual-fx':
