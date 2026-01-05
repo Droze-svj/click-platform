@@ -199,7 +199,7 @@ export default function InteractionProbe() {
       })
     } catch (error) {
       send('interaction_probe_installed_error', {
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         probeVersion: 'run39_comprehensive_debug',
         href: window.location.href
       })
