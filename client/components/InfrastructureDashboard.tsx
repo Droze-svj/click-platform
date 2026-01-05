@@ -167,7 +167,7 @@ export default function InfrastructureDashboard() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{alert.message}</span>
+                    <span className="text-sm font-medium">{alert.type}</span>
                     <Badge variant={alert.severity === 'critical' ? 'destructive' : 'secondary'}>
                       {alert.severity}
                     </Badge>
