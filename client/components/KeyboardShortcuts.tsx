@@ -53,6 +53,7 @@ interface VideoEditorShortcuts {
   saveProject: () => void
   newProject: () => void
   openProject: () => void
+  showKeyboardHelp: () => void
 }
 
 export function createVideoEditorShortcuts(callbacks: VideoEditorShortcuts): KeyboardShortcut[] {
