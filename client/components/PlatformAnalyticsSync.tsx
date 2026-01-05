@@ -23,6 +23,9 @@ export default function PlatformAnalyticsSync({ postId, onSync }: PlatformAnalyt
         : '/api/analytics/platform/sync-all'
 
       const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         credentials: 'include',
