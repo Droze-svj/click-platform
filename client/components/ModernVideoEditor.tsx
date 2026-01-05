@@ -499,8 +499,8 @@ export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExpo
                   tint: template.settings.colorGrade.tint,
                   highlights: template.settings.colorGrade.highlights,
                   shadows: template.settings.colorGrade.shadows,
-                  clarity: template.settings.colorGrade.clarity,
-                  dehaze: template.settings.colorGrade.dehaze
+                  clarity: template.settings.colorGrade.clarity || 0,
+                  dehaze: template.settings.colorGrade.dehaze || 0
                 }))
 
                 // Apply text overlays
