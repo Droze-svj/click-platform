@@ -75,7 +75,7 @@ export default function ErrorDashboard() {
             Error Monitoring Dashboard
           </CardTitle>
           <div className="flex gap-2">
-            <Button onClick={updateStats} size="sm" variant="outline">
+            <Button onClick={updateStats} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
