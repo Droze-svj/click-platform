@@ -564,7 +564,7 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
             </div>
           )}
 
-          {activeTool === 'ai-analysis' && (
+          {activeTool === 'ai-analysis' && videoSrc && (
             <div className="mt-4">
               <AIContentAnalysis
                 videoUrl={videoSrc}
