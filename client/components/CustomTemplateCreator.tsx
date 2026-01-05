@@ -239,7 +239,7 @@ export default function CustomTemplateCreator({
       id: `overlay-${Date.now()}`,
       text: 'Your Text Here',
       position: { x: 50, y: 50 },
-      fontSize: template.typography.fontSize.body,
+      fontSize: template.typography.fontSize.subtitle,
       color: template.typography.textColor,
       fontFamily: template.typography.primaryFont,
       startTime: 0,
