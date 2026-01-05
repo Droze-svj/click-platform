@@ -97,7 +97,7 @@ export const preloadOnInteraction = () => {
   document.addEventListener('touchstart', handleInteraction)
 }
 
-// Preload components based on route
+// Preload components based on route - updated
 export const preloadForRoute = (pathname: string) => {
   switch (pathname) {
     case '/dashboard/video':
