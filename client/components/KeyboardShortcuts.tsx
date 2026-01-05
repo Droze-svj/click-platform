@@ -40,6 +40,8 @@ interface VideoEditorShortcuts {
   zoomIn: () => void
   zoomOut: () => void
   resetZoom: () => void
+  fitToScreen: () => void
+  toggleFullscreen: () => void
   skipToStart: () => void
   skipToEnd: () => void
   increaseVolume: () => void
