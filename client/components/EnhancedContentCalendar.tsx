@@ -214,7 +214,7 @@ export default function EnhancedContentCalendar() {
           const dateStr = day.toISOString().split('T')[0]
           const posts = calendar[dateStr] || []
           const isToday = dateStr === new Date().toISOString().split('T')[0]
-
+          const isGap = gaps.some(gap => gap.date === dateStr)
 
           return (
             <div
