@@ -158,7 +158,7 @@ export default function PerformanceMonitor() {
             promise: event.promise?.toString(),
             stack: event.reason?.stack
           })
-          return originalOnUnhandledRejection?.(event) || false
+          return originalOnUnhandledRejection?.call(window, event) || false
         }
 
       } catch (error) {
