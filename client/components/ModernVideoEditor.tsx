@@ -103,6 +103,12 @@ interface VideoFilter {
   vignette: number
   sharpen: number
   noise: number
+  temperature: number
+  tint: number
+  highlights: number
+  shadows: number
+  clarity: number
+  dehaze: number
 }
 
 export default function ModernVideoEditor({ videoId, videoUrl, videoPath, onExport }: VideoEditorProps) {
