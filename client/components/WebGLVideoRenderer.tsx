@@ -302,12 +302,13 @@ export default function WebGLVideoRenderer({
       return false
     }
 
-    glRef.current = gl as WebGLRenderingContext
+    const webGLContext = gl as WebGLRenderingContext
+    glRef.current = webGLContext
 
     // Create shaders
 
-    const vertexShader = createShader(glRef.current, glRef.current.VERTEX_SHADER, vertexShaderSource)
-    const fragmentShader = createShader(glRef.current, glRef.current.FRAGMENT_SHADER, fragmentShaderSource)
+    const vertexShader = createShader(glRef.current, webGLContext.VERTEX_SHADER, vertexShaderSource)
+    const fragmentShader = createShader(glRef.current, webGLContext.FRAGMENT_SHADER, fragmentShaderSource)
 
     if (!vertexShader || !fragmentShader) {
       console.error('Failed to create shaders')
@@ -324,26 +325,26 @@ export default function WebGLVideoRenderer({
     programRef.current = program
 
     // Create buffer for quad
-    const positionBuffer = glRef.current.createBuffer()
-    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, positionBuffer)
-    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
+    const positionBuffer = webGLContext.createBuffer()
+    webGLContext.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+    webGLContext.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
        1,  1,
-    ]), glRef.current.STATIC_DRAW)
+    ]), gl.STATIC_DRAW)
 
-    const texCoordBuffer = glRef.current.createBuffer()
-    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, texCoordBuffer)
-    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
+    const texCoordBuffer = webGLContext.createBuffer()
+    webGLContext.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer)
+    webGLContext.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
       1, 0,
-    ]), glRef.current.STATIC_DRAW)
+    ]), gl.STATIC_DRAW)
 
     // Create texture
-    const texture = glRef.current.createTexture()
+    const texture = webGLContext.createTexture()
     textureRef.current = texture
 
     setIsInitialized(true)
@@ -390,12 +391,12 @@ export default function WebGLVideoRenderer({
     const texture = textureRef.current
     if (!texture || !glRef.current) return
 
-    glRef.current.bindTexture(glRef.current.TEXTURE_2D, texture)
-    glRef.current.texImage2D(glRef.current.TEXTURE_2D, 0, glRef.current.RGBA, glRef.current.RGBA, glRef.current.UNSIGNED_BYTE, video)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_S, glRef.current.CLAMP_TO_EDGE)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_T, glRef.current.CLAMP_TO_EDGE)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MIN_FILTER, glRef.current.LINEAR)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MAG_FILTER, glRef.current.LINEAR)
+    webGLContext.bindTexture(webGLContext.TEXTURE_2D, texture)
+    webGLContext.texImage2D(webGLContext.TEXTURE_2D, 0, webGLContext.RGBA, webGLContext.RGBA, webGLContext.UNSIGNED_BYTE, video)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_WRAP_S, webGLContext.CLAMP_TO_EDGE)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_WRAP_T, webGLContext.CLAMP_TO_EDGE)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_MIN_FILTER, webGLContext.LINEAR)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_MAG_FILTER, webGLContext.LINEAR)
   }, [])
 
   // Render frame
@@ -440,29 +441,29 @@ export default function WebGLVideoRenderer({
 
     // Position buffer
     gl.enableVertexAttribArray(positionLocation)
-    gl.bindBuffer(glRef.current.ARRAY_BUFFER, gl.createBuffer())
-    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+    webGLContext.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
       -1,  1,
        1, -1,
        1,  1,
-    ]), glRef.current.STATIC_DRAW)
-    gl.vertexAttribPointer(positionLocation, 2, glRef.current.FLOAT, false, 0, 0)
+    ]), gl.STATIC_DRAW)
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
     // Texture coordinate buffer
     gl.enableVertexAttribArray(texCoordLocation)
-    gl.bindBuffer(glRef.current.ARRAY_BUFFER, gl.createBuffer())
-    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+    webGLContext.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
       0, 0,
       1, 1,
       1, 0,
-    ]), glRef.current.STATIC_DRAW)
-    gl.vertexAttribPointer(texCoordLocation, 2, glRef.current.FLOAT, false, 0, 0)
+    ]), gl.STATIC_DRAW)
+    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0)
 
     // Update texture
     updateTexture(gl, video)
