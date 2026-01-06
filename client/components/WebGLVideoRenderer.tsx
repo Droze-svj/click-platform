@@ -391,12 +391,12 @@ export default function WebGLVideoRenderer({
     const texture = textureRef.current
     if (!texture || !glRef.current) return
 
-    webGLContext.bindTexture(webGLContext.TEXTURE_2D, texture)
-    webGLContext.texImage2D(webGLContext.TEXTURE_2D, 0, webGLContext.RGBA, webGLContext.RGBA, webGLContext.UNSIGNED_BYTE, video)
-    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_WRAP_S, webGLContext.CLAMP_TO_EDGE)
-    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_WRAP_T, webGLContext.CLAMP_TO_EDGE)
-    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_MIN_FILTER, webGLContext.LINEAR)
-    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_MAG_FILTER, webGLContext.LINEAR)
+    glRef.current.bindTexture(glRef.current.TEXTURE_2D, texture)
+    glRef.current.texImage2D(glRef.current.TEXTURE_2D, 0, glRef.current.RGBA, glRef.current.RGBA, glRef.current.UNSIGNED_BYTE, video)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_S, glRef.current.CLAMP_TO_EDGE)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_T, glRef.current.CLAMP_TO_EDGE)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MIN_FILTER, glRef.current.LINEAR)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MAG_FILTER, glRef.current.LINEAR)
   }, [])
 
   // Render frame
