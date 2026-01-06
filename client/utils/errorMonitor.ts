@@ -207,11 +207,11 @@ export class ErrorMonitor {
     }
 
     // Per-category thresholds
-    for (const [category, count] of this.errorCounts.byCategory) {
+    this.errorCounts.byCategory.forEach((count, category) => {
       if (count >= 5) { // Category-specific threshold
         this.sendThresholdAlert('per_category', count, category)
       }
-    }
+    })
   }
 
   /**
@@ -402,5 +402,6 @@ export const errorMonitor = ErrorMonitor.getInstance()
 
 // Convenience function to monitor errors
 export const monitorError = errorMonitor.monitorError.bind(errorMonitor)
+
 
 
