@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { apiGet, apiPut } from '../../../../lib/api'
 import Navbar from '../../../../components/Navbar'
 import LoadingSkeleton from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { useAuth } from '../../../../hooks/useAuth'
-import { User, Mail, Camera, Save } from 'lucide-react'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { User, Mail, Camera, Save, Key } from 'lucide-react'
 
 export default function ProfileSettingsPage() {
   const router = useRouter()
@@ -21,25 +19,49 @@ export default function ProfileSettingsPage() {
     email: '',
     bio: '',
     website: '',
+    location: '',
+    social_links: {} as Record<string, string>,
+    niche: '',
     profilePicture: null as File | null,
   })
   const [preview, setPreview] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user) {
+    loadProfile()
+  }, [])
+
+  const loadProfile = async () => {
+    try {
+      const profileData = await apiGet('/auth/profile')
       setProfile({
-        name: user.name || '',
-        email: user.email || '',
-        bio: (user as any).bio || '',
-        website: (user as any).website || '',
+        name: profileData.user.name || '',
+        email: profileData.user.email || '',
+        bio: profileData.user.bio || '',
+        website: profileData.user.website || '',
+        location: profileData.user.location || '',
+        social_links: profileData.user.social_links || {},
+        niche: profileData.user.niche || '',
         profilePicture: null,
       })
-      if ((user as any).profilePicture) {
-        setPreview((user as any).profilePicture)
+    } catch (error) {
+      console.error('Failed to load profile:', error)
+      // Fallback to user data if API fails
+      if (user) {
+        setProfile({
+          name: user.name || '',
+          email: user.email || '',
+          bio: (user as any).bio || '',
+          website: (user as any).website || '',
+          location: (user as any).location || '',
+          social_links: (user as any).social_links || {},
+          niche: user.niche || '',
+          profilePicture: null,
+        })
       }
+    } finally {
       setLoading(false)
     }
-  }, [user])
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -56,27 +78,16 @@ export default function ProfileSettingsPage() {
   const saveProfile = async () => {
     setSaving(true)
     try {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        router.push('/login')
-        return
+      const updateData = {
+        name: profile.name,
+        bio: profile.bio,
+        website: profile.website,
+        location: profile.location,
+        social_links: profile.social_links,
+        niche: profile.niche,
       }
 
-      const formData = new FormData()
-      formData.append('name', profile.name)
-      formData.append('email', profile.email)
-      formData.append('bio', profile.bio)
-      formData.append('website', profile.website)
-      if (profile.profilePicture) {
-        formData.append('profilePicture', profile.profilePicture)
-      }
-
-      await axios.put(`${API_URL}/user/profile`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        }
-      })
+      await apiPut('/auth/profile', updateData)
 
       const event = new CustomEvent('toast', {
         detail: { message: 'Profile updated successfully', type: 'success' }
@@ -85,7 +96,7 @@ export default function ProfileSettingsPage() {
     } catch (error: any) {
       console.error('Failed to save profile:', error)
       const event = new CustomEvent('toast', {
-        detail: { message: 'Failed to update profile', type: 'error' }
+        detail: { message: error.response?.data?.error || 'Failed to update profile', type: 'error' }
       })
       window.dispatchEvent(event)
     } finally {
@@ -207,6 +218,74 @@ export default function ProfileSettingsPage() {
             />
           </div>
 
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Location</label>
+            <input
+              type="text"
+              value={profile.location}
+              onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
+              placeholder="City, Country"
+              className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Niche */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Niche</label>
+            <select
+              value={profile.niche}
+              onChange={(e) => setProfile(prev => ({ ...prev, niche: e.target.value }))}
+              className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select your niche</option>
+              <option value="health">Health & Fitness</option>
+              <option value="finance">Finance & Money</option>
+              <option value="education">Education</option>
+              <option value="technology">Technology</option>
+              <option value="lifestyle">Lifestyle</option>
+              <option value="business">Business</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Social Links */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Social Links</label>
+            <div className="space-y-2">
+              <input
+                type="url"
+                value={profile.social_links.twitter || ''}
+                onChange={(e) => setProfile(prev => ({
+                  ...prev,
+                  social_links: { ...prev.social_links, twitter: e.target.value }
+                }))}
+                placeholder="Twitter URL"
+                className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="url"
+                value={profile.social_links.linkedin || ''}
+                onChange={(e) => setProfile(prev => ({
+                  ...prev,
+                  social_links: { ...prev.social_links, linkedin: e.target.value }
+                }))}
+                placeholder="LinkedIn URL"
+                className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="url"
+                value={profile.social_links.instagram || ''}
+                onChange={(e) => setProfile(prev => ({
+                  ...prev,
+                  social_links: { ...prev.social_links, instagram: e.target.value }
+                }))}
+                placeholder="Instagram URL"
+                className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
 
           {/* Save Button */}
           <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
