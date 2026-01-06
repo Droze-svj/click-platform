@@ -422,7 +422,7 @@ export default function WebGLVideoRenderer({
 
     // Clear
     gl.clearColor(0, 0, 0, 1)
-    gl.clear(glRef.current.COLOR_BUFFER_BIT)
+    gl.clear(gl.COLOR_BUFFER_BIT)
 
     // Check for WebGL errors after clear
     const clearError = gl.getError()
