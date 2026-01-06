@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 
 interface HistoryState<T> {
   state: T
+  timestamp: number
 }
 
 /**
