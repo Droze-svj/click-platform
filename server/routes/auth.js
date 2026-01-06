@@ -164,6 +164,7 @@ router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
 
     // Find user in Supabase
     const { data: user, error: findError } = await supabase
@@ -172,7 +173,10 @@ router.post('/login',
       .eq('email', email.toLowerCase())
       .single();
 
+    console.log('Supabase query result:', { userFound: !!user, error: findError?.message, userId: user?.id });
+
     if (findError || !user) {
+      console.log('User lookup failed');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
