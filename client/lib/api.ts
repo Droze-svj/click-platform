@@ -164,7 +164,7 @@ function createApiClient(): AxiosInstance {
   client.interceptors.request.use(
     (config) => {
       const startTime = Date.now()
-      config.metadata = { startTime }
+      ;(config as any).metadata = { startTime }
 
       // Enhanced logging
       console.log('🔍 API: Request interceptor triggered for:', config.url)
