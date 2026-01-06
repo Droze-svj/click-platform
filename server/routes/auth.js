@@ -156,6 +156,11 @@ router.post('/register',
  *       401:
  *         description: Invalid credentials
  */
+// Temporarily disable login route to isolate the suspicious error
+router.post('/login', (req, res) => {
+  res.json({ success: false, error: 'Login temporarily disabled for debugging' });
+});
+/*
 router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
   try {
@@ -228,6 +233,7 @@ router.post('/login',
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// */
 
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
