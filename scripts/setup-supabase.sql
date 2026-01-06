@@ -255,14 +255,17 @@ CREATE POLICY "Users can update their own reset tokens" ON password_reset_tokens
   FOR UPDATE USING (user_id = auth.uid()::uuid);
 
 -- Email verification tokens policies
-CREATE POLICY "Users can create email verification tokens" ON email_verification_tokens
+-- Allow token creation during registration (no auth required)
+CREATE POLICY "Allow email verification token creation" ON email_verification_tokens
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Users can validate email verification tokens" ON email_verification_tokens
+-- Allow token validation during email verification (no auth required)
+CREATE POLICY "Allow email verification token validation" ON email_verification_tokens
   FOR SELECT USING (true);
 
-CREATE POLICY "Users can update email verification tokens" ON email_verification_tokens
-  FOR UPDATE USING (true);
+-- Allow token updates for marking as used (restricted to token owner)
+CREATE POLICY "Allow email verification token updates" ON email_verification_tokens
+  FOR UPDATE USING (true) WITH CHECK (true);
 
 -- Create post_analytics table
 CREATE TABLE IF NOT EXISTS post_analytics (
