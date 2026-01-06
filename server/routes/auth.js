@@ -548,7 +548,7 @@ router.post('/login',
       );
 
       // Remove password and sensitive data from response
-      const { password: _, social_links: _, ...userWithoutPassword } = user;
+      const { password: _, social_links, ...userWithoutPassword } = user;
 
       logger.info('User logged in successfully', { email: user.email, userId: user.id });
 
