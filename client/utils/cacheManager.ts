@@ -496,7 +496,7 @@ class AdvancedCacheManager {
         console.log(`🔮 Prefetched ${type}: ${url}`)
       }
     } catch (error) {
-      console.warn(`⚠️ Prefetch failed for ${url}:`, error.message)
+      console.warn(`⚠️ Prefetch failed for ${url}:`, (error as Error).message)
     }
   }
 
