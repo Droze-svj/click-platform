@@ -1,232 +1,226 @@
-// OAuth callback routes for social media platforms
-
 const express = require('express');
 const auth = require('../middleware/auth');
-const {
-  getTwitterAuthUrl,
-  exchangeTwitterToken,
-  getTwitterUserInfo,
-} = require('../services/oauthService');
-const {
-  getAuthorizationUrl: getLinkedInAuthUrl,
-  isConfigured: isLinkedInConfigured,
-} = require('../services/linkedinOAuthService');
-const {
-  getAuthorizationUrl: getFacebookAuthUrl,
-  isConfigured: isFacebookConfigured,
-} = require('../services/facebookOAuthService');
-const {
-  getAuthorizationUrl: getYouTubeAuthUrl,
-  isConfigured: isYouTubeConfigured,
-} = require('../services/youtubeOAuthService');
-const {
-  getAuthorizationUrl: getTikTokAuthUrl,
-  isConfigured: isTikTokConfigured,
-} = require('../services/tiktokOAuthService');
-const { connectAccount } = require('../services/socialMediaService');
-const { generateState, verifyState } = require('../utils/oauthStateManager');
 const asyncHandler = require('../middleware/asyncHandler');
-const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const router = express.Router();
 
-/**
- * Get OAuth authorization URL
- */
-router.get('/auth/:platform', auth, asyncHandler(async (req, res) => {
-  const { platform } = req.params;
-  const userId = req.user._id;
+// OAuth Services
+const twitterOAuth = require('../services/twitterOAuthService');
 
+/**
+ * GET /api/oauth/:platform/connect
+ * Initiate OAuth connection flow
+ */
+router.get('/:platform/connect', auth, asyncHandler(async (req, res) => {
   try {
-    let authData;
+    const { platform } = req.params;
+    const { redirect_uri } = req.query;
+
+    const state = Buffer.from(JSON.stringify({
+      userId: req.user.id,
+      platform,
+      redirectUri: redirect_uri || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social`
+    })).toString('base64');
+
+    let authUrl;
 
     switch (platform.toLowerCase()) {
       case 'twitter':
-        authData = getTwitterAuthUrl();
+        if (!twitterOAuth.isConfigured()) {
+          return res.status(400).json({
+            success: false,
+            error: 'Twitter OAuth not configured. Please contact administrator.'
+          });
+        }
+        authUrl = twitterOAuth.getAuthorizationUrl(state);
         break;
-      case 'linkedin':
-        if (!isLinkedInConfigured()) {
-          return sendError(res, 'LinkedIn OAuth not configured', 503);
-        }
-        const linkedinCallbackUrl = process.env.LINKEDIN_CALLBACK_URL || 
-          `${req.protocol}://${req.get('host')}/api/oauth/linkedin/callback`;
-        authData = await getLinkedInAuthUrl(userId, linkedinCallbackUrl);
-        // Convert to expected format
-        authData = { authUrl: authData.url, state: authData.state };
-        break;
-      case 'facebook':
-        if (!isFacebookConfigured()) {
-          return sendError(res, 'Facebook OAuth not configured', 503);
-        }
-        const facebookCallbackUrl = process.env.FACEBOOK_CALLBACK_URL || 
-          `${req.protocol}://${req.get('host')}/api/oauth/facebook/callback`;
-        authData = await getFacebookAuthUrl(userId, facebookCallbackUrl);
-        // Convert to expected format
-        authData = { authUrl: authData.url, state: authData.state };
-        break;
-      case 'instagram':
-        // Instagram requires Facebook connection first
-        if (!isFacebookConfigured()) {
-          return sendError(res, 'Facebook OAuth not configured (required for Instagram)', 503);
-        }
-        // For Instagram, we need to check if Facebook is connected first
-        const User = require('../models/User');
-        const user = await User.findById(userId).select('oauth.facebook');
-        if (!user?.oauth?.facebook?.connected) {
-          return sendError(res, 'Facebook account must be connected first for Instagram', 400);
-        }
-        // Instagram uses Facebook OAuth, but we'll redirect to get Instagram accounts
-        return sendError(res, 'Please connect Facebook first, then use /api/oauth/instagram/accounts to get Instagram accounts', 400);
-      case 'youtube':
-        if (!isYouTubeConfigured()) {
-          return sendError(res, 'YouTube OAuth not configured', 503);
-        }
-        const youtubeCallbackUrl = process.env.YOUTUBE_CALLBACK_URL || 
-          `${req.protocol}://${req.get('host')}/api/oauth/youtube/callback`;
-        authData = await getYouTubeAuthUrl(userId, youtubeCallbackUrl);
-        // Convert to expected format
-        authData = { authUrl: authData.url, state: authData.state };
-        break;
-      case 'tiktok':
-        if (!isTikTokConfigured()) {
-          return sendError(res, 'TikTok OAuth not configured', 503);
-        }
-        const tiktokCallbackUrl = process.env.TIKTOK_CALLBACK_URL || 
-          `${req.protocol}://${req.get('host')}/api/oauth/tiktok/callback`;
-        authData = await getTikTokAuthUrl(userId, tiktokCallbackUrl);
-        // Convert to expected format
-        authData = { authUrl: authData.url, state: authData.state };
-        break;
+
       default:
-        return sendError(res, 'Unsupported platform', 400);
+        return res.status(400).json({
+          success: false,
+          error: `Unsupported platform: ${platform}`
+        });
     }
 
-    // Generate and store state for verification (if not already done by service)
-    if (!authData.state) {
-      const state = generateState(userId, platform);
-      authData.state = state;
-      // Replace state in auth URL with our generated state
-      authData.authUrl = authData.authUrl.replace(/state=[^&]+/, `state=${state}`);
-    }
-
-    sendSuccess(res, 'Authorization URL generated', 200, {
-      authUrl: authData.authUrl,
-      state: authData.state,
+    res.json({
+      success: true,
+      auth_url: authUrl,
+      state: state
     });
+
   } catch (error) {
-    logger.error('OAuth URL generation error', { error: error.message, platform });
-    sendError(res, error.message, 500);
+    console.error('OAuth connect error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to initiate OAuth connection'
+    });
   }
 }));
 
 /**
- * OAuth callback handler
+ * GET /api/oauth/:platform/callback
+ * Handle OAuth callback and exchange code for tokens
  */
-router.get('/callback/:platform', asyncHandler(async (req, res) => {
-  const { platform } = req.params;
-  const { code, state, error } = req.query;
-
-  if (error) {
-    logger.error('OAuth callback error', { error, platform });
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=${encodeURIComponent(error)}`);
-  }
-
-  if (!code) {
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=no_code`);
-  }
-
-  if (!state) {
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=no_state`);
-  }
-
+router.get('/:platform/callback', async (req, res) => {
   try {
-    // Verify state (will be done on frontend with user session)
-    // For now, we'll redirect to frontend with code and state
-    // Frontend will call /complete endpoint with user auth
-    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?platform=${platform}&code=${code}&state=${state}`;
-    
-    res.redirect(redirectUrl);
-  } catch (error) {
-    logger.error('OAuth callback processing error', { error: error.message, platform });
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=${encodeURIComponent(error.message)}`);
-  }
-}));
+    const { platform } = req.params;
+    const { code, state, error: oauthError, error_description } = req.query;
 
-/**
- * Complete OAuth connection (called from frontend after callback)
- */
-router.post('/complete', auth, asyncHandler(async (req, res) => {
-  const { platform, code, state } = req.body;
-  const userId = req.user._id;
+    // Handle OAuth errors
+    if (oauthError) {
+      const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=${encodeURIComponent(oauthError)}&description=${encodeURIComponent(error_description || '')}`;
+      return res.redirect(redirectUri);
+    }
 
-  if (!platform) {
-    return sendError(res, 'Platform is required', 400);
-  }
+    if (!code || !state) {
+      const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=missing_code`;
+      return res.redirect(redirectUri);
+    }
 
-  try {
-    // Use dedicated services for each platform
+    // Decode state
+    let stateData;
+    try {
+      stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+    } catch (error) {
+      const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=invalid_state`;
+      return res.redirect(redirectUri);
+    }
+
+    const { userId, redirectUri: originalRedirectUri } = stateData;
+
+    let tokens, profile, accountData;
+
     switch (platform.toLowerCase()) {
       case 'twitter':
-        // Verify state
-        if (state && !verifyState(state, userId, platform)) {
-          return sendError(res, 'Invalid or expired OAuth state', 400);
-        }
-        
-        const tokenData = await exchangeTwitterToken(code);
-        const userInfo = await getTwitterUserInfo(tokenData.accessToken);
-        
-        const expiresAt = tokenData.expiresIn
-          ? new Date(Date.now() + tokenData.expiresIn * 1000)
-          : null;
+        // Exchange code for tokens
+        tokens = await twitterOAuth.exchangeCodeForToken(code);
 
-        const metadata = {
-          expiresAt,
-          platformUserId: userInfo.id,
-          platformUsername: userInfo.username || userInfo.name,
-          ...userInfo,
-        };
+        // Get user profile
+        profile = await twitterOAuth.getUserProfile(tokens.access_token);
 
-        const connection = await connectAccount(
-          userId,
-          platform,
-          tokenData.accessToken,
-          tokenData.refreshToken,
-          metadata
-        );
-
-        sendSuccess(res, 'Account connected successfully', 200, connection);
+        // Connect account to user
+        accountData = await twitterOAuth.connectAccount(userId, tokens, profile);
         break;
 
-      case 'linkedin':
-        // Redirect to dedicated LinkedIn route
-        // The frontend should call /api/oauth/linkedin/complete instead
-        return sendError(res, 'Please use /api/oauth/linkedin/complete endpoint', 400);
-
-      case 'facebook':
-        // Redirect to dedicated Facebook route
-        // The frontend should call /api/oauth/facebook/complete instead
-        return sendError(res, 'Please use /api/oauth/facebook/complete endpoint', 400);
-
-      case 'instagram':
-        // Instagram requires Facebook connection first
-        return sendError(res, 'Instagram requires Facebook connection. Please connect Facebook first, then use /api/oauth/instagram/accounts', 400);
-
-      case 'youtube':
-        // Redirect to dedicated YouTube route
-        return sendError(res, 'Please use /api/oauth/youtube/complete endpoint', 400);
-
-      case 'tiktok':
-        // Redirect to dedicated TikTok route
-        return sendError(res, 'Please use /api/oauth/tiktok/complete endpoint', 400);
-
       default:
-        return sendError(res, 'Unsupported platform', 400);
+        const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=unsupported_platform`;
+        return res.redirect(redirectUri);
     }
+
+    logger.info(`OAuth connection successful for ${platform}`, { userId, platformUserId: profile.id });
+
+    // Redirect back to frontend with success
+    const successRedirectUri = `${originalRedirectUri || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social`}?success=true&platform=${platform}`;
+    res.redirect(successRedirectUri);
+
   } catch (error) {
-    logger.error('OAuth completion error', { error: error.message, platform, userId });
-    sendError(res, error.message, 500);
+    console.error('OAuth callback error:', error);
+
+    const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=oauth_failed&description=${encodeURIComponent(error.message)}`;
+    res.redirect(redirectUri);
+  }
+});
+
+/**
+ * GET /api/oauth/accounts
+ * Get user's connected social media accounts
+ */
+router.get('/accounts', auth, asyncHandler(async (req, res) => {
+  try {
+    const accounts = {
+      twitter: null,
+      linkedin: null,
+      facebook: null,
+      instagram: null
+    };
+
+    // Get Twitter accounts
+    try {
+      const twitterAccounts = await twitterOAuth.getConnectedAccounts(req.user.id);
+      if (twitterAccounts.length > 0) {
+        accounts.twitter = twitterAccounts[0]; // Take the first one for now
+      }
+    } catch (error) {
+      console.error('Error fetching Twitter accounts:', error);
+    }
+
+    // TODO: Add other platforms when implemented
+    // accounts.linkedin = await linkedinOAuth.getConnectedAccounts(req.user.id);
+    // accounts.facebook = await facebookOAuth.getConnectedAccounts(req.user.id);
+    // accounts.instagram = await instagramOAuth.getConnectedAccounts(req.user.id);
+
+    res.json({
+      success: true,
+      accounts
+    });
+
+  } catch (error) {
+    console.error('Get accounts error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch connected accounts'
+    });
   }
 }));
+
+/**
+ * DELETE /api/oauth/:platform/disconnect
+ * Disconnect a social media account
+ */
+router.delete('/:platform/disconnect', auth, asyncHandler(async (req, res) => {
+  try {
+    const { platform } = req.params;
+    const { platform_user_id } = req.body;
+
+    if (!platform_user_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Platform user ID is required'
+      });
+    }
+
+    switch (platform.toLowerCase()) {
+      case 'twitter':
+        await twitterOAuth.disconnectAccount(req.user.id, platform_user_id);
+        break;
+
+      default:
+        return res.status(400).json({
+          success: false,
+          error: `Unsupported platform: ${platform}`
+        });
+    }
+
+    logger.info(`Account disconnected for ${platform}`, { userId: req.user.id, platformUserId: platform_user_id });
+
+    res.json({
+      success: true,
+      message: `${platform} account disconnected successfully`
+    });
+
+  } catch (error) {
+    console.error('Disconnect account error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to disconnect account'
+    });
+  }
+}));
+
+/**
+ * GET /api/oauth/status
+ * Get OAuth configuration status
+ */
+router.get('/status', (req, res) => {
+  res.json({
+    success: true,
+    configured: {
+      twitter: twitterOAuth.isConfigured(),
+      linkedin: false, // TODO: implement
+      facebook: false, // TODO: implement
+      instagram: false  // TODO: implement
+    }
+  });
+});
 
 module.exports = router;
-
