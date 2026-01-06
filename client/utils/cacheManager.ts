@@ -747,7 +747,7 @@ class AdvancedCacheManager {
           await this.store(url, response, 'offline-content')
         }
       } catch (error) {
-        console.warn(`Failed to preload ${url}:`, error.message)
+        console.warn(`Failed to preload ${url}:`, (error as Error).message)
       }
     })
 
