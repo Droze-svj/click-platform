@@ -96,6 +96,9 @@ export function useAuth() {
       // #endregion
     }
 
+    // Track timing for debugging
+    const authStartTime = Date.now()
+
     // If another component already triggered an auth check, wait for it to finish and reuse the result.
     // IMPORTANT: do NOT "skip" without updating local state, otherwise pages that check `!user` will redirect to /login.
     if (authCheckInProgress && retryCount === 0) {
@@ -161,7 +164,6 @@ export function useAuth() {
       console.log('🔍 [useAuth] Retry attempt:', retryCount)
       console.log('🔍 [useAuth] About to call apiGet /auth/me')
 
-      const authStartTime = Date.now()
       sendAuthDebugLog('auth_check_start', {
         tokenLength: token.length,
         retryCount,
