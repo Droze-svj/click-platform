@@ -1,6 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
+
+// Force dynamic rendering to avoid SSR issues with localStorage
+export const dynamic = 'force-dynamic'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { logError, logNetworkError, logTemplateError } from '../../utils/errorHandler'

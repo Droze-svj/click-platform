@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+// Force dynamic rendering to avoid SSR issues with localStorage
+export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import LoadingSpinner from '../../../components/LoadingSpinner'
