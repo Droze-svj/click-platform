@@ -879,6 +879,40 @@ app.get('/', (req, res) => {
                 <button id="show-register-btn" class="btn">Test Registration</button>
                 <button id="show-login-btn" class="btn secondary">Test Login</button>
             </div>
+        </div>
+
+        <div id="auth-forms" style="display: none; margin: 30px auto; max-width: 600px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+            <h3 id="form-title" style="color: white; text-align: center;">Register</h3>
+            <form id="register-form" style="max-width: 400px; margin: 0 auto;">
+                <div style="margin-bottom: 15px;">
+                    <input type="email" id="reg-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="password" id="reg-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="reg-firstname" placeholder="First Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="reg-lastname" placeholder="Last Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Register</button>
+            </form>
+
+            <form id="login-form" style="max-width: 400px; margin: 0 auto; display: none;">
+                <div style="margin-bottom: 15px;">
+                    <input type="email" id="login-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="password" id="login-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Login</button>
+            </form>
+
+            <div id="auth-result" style="margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
+        </div>
+
+        <div class="grid">
 
             <div class="card">
                 <h3>📝 Content Creation</h3>
@@ -950,36 +984,6 @@ curl -s https://click-platform.onrender.com/api/health
             </div>
         </div>
 
-        <div id="auth-forms" style="display: none; margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-            <h3 id="form-title" style="color: white; text-align: center;">Register</h3>
-            <form id="register-form" style="max-width: 400px; margin: 0 auto;">
-                <div style="margin-bottom: 15px;">
-                    <input type="email" id="reg-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="password" id="reg-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="reg-firstname" placeholder="First Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="reg-lastname" placeholder="Last Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <button type="submit" class="btn" style="width: 100%;">Register</button>
-            </form>
-
-            <form id="login-form" style="max-width: 400px; margin: 0 auto; display: none;">
-                <div style="margin-bottom: 15px;">
-                    <input type="email" id="login-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="password" id="login-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <button type="submit" class="btn" style="width: 100%;">Login</button>
-            </form>
-
-            <div id="auth-result" style="margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
-        </div>
 
         <div style="text-align: center; margin-top: 40px; opacity: 0.8;">
             <p>💡 <strong>Next Steps:</strong> Full React frontend deployment coming soon!</p>
@@ -1034,6 +1038,11 @@ curl -s https://click-platform.onrender.com/api/health
                 console.log('auth-forms visibility:', window.getComputedStyle(authForms).visibility);
                 console.log('auth-forms opacity:', window.getComputedStyle(authForms).opacity);
                 console.log('auth-forms parent display:', authForms.parentElement ? window.getComputedStyle(authForms.parentElement).display : 'no parent');
+
+                // Scroll the form into view smoothly
+                setTimeout(() => {
+                    authForms.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
             } else {
                 console.error('auth-forms element not found!');
             }
