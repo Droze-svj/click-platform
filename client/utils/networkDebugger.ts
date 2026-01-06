@@ -202,7 +202,7 @@ class NetworkDebugger {
         method: method.toUpperCase()
       })
 
-      return originalOpen.call(this, method, url, ...args)
+      return (originalOpen as any).apply(this, [method, url, ...args])
     }
 
     XMLHttpRequest.prototype.send = function(body?: Document | XMLHttpRequestBodyInit | null) {
@@ -261,7 +261,7 @@ class NetworkDebugger {
         }
 
         if (originalOnReadyStateChange) {
-          originalOnReadyStateChange.call(this)
+          (originalOnReadyStateChange as any).call(this)
         }
       }
 

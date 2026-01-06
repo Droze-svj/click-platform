@@ -41,11 +41,11 @@ class OfflineQueueManager {
    */
   addToQueue(action: Omit<QueuedAction, 'id' | 'timestamp' | 'retryCount'>): string {
     const queuedAction: QueuedAction = {
+      ...action,
       id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
       retryCount: 0,
-      maxRetries: 3,
-      ...action
+      maxRetries: 3
     }
 
     this.queue.push(queuedAction)
@@ -119,7 +119,7 @@ class OfflineQueueManager {
         result.failed++
         action.retryCount++
 
-        const errorMsg = `${action.type}: ${error.message}`
+        const errorMsg = `${action.type}: ${(error as Error).message}`
         result.errors.push(errorMsg)
 
         if (action.retryCount >= action.maxRetries) {
@@ -164,7 +164,7 @@ class OfflineQueueManager {
 
       return response.ok
     } catch (error) {
-      console.warn(`Failed to execute action ${action.type}:`, error.message)
+      console.warn(`Failed to execute action ${action.type}:`, (error as Error).message)
       return false
     }
   }
@@ -252,7 +252,7 @@ class OfflineQueueManager {
         console.log(`📋 Loaded ${this.queue.length} queued actions from storage`)
       }
     } catch (error) {
-      console.warn('Failed to load offline queue from storage:', error.message)
+      console.warn('Failed to load offline queue from storage:', (error as Error).message)
       this.queue = []
     }
   }
@@ -264,7 +264,7 @@ class OfflineQueueManager {
     try {
       localStorage.setItem('offline-queue', JSON.stringify(this.queue))
     } catch (error) {
-      console.warn('Failed to save offline queue to storage:', error.message)
+      console.warn('Failed to save offline queue to storage:', (error as Error).message)
     }
   }
 
@@ -401,5 +401,6 @@ if (typeof window !== 'undefined') {
 }
 
 export default offlineQueue
+
 
 
