@@ -352,7 +352,7 @@ class AdvancedCacheManager {
   private cleanupExpiredEntries() {
     let cleaned = 0
 
-    for (const [cacheName, entries] of this.entries.entries()) {
+    this.entries.forEach((entries, cacheName) => {
       const validEntries = entries.filter(entry => {
         if (entry.expires && Date.now() > entry.expires) {
           cleaned++
@@ -362,7 +362,7 @@ class AdvancedCacheManager {
       })
 
       this.entries.set(cacheName, validEntries)
-    }
+    })
 
     if (cleaned > 0) {
       console.log(`🧹 Cleaned up ${cleaned} expired cache entries`)
