@@ -159,6 +159,7 @@ router.post('/register',
 router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
   try {
+    console.log('Login attempt for:', req.body.email);
 
     const { email, password } = req.body;
 
