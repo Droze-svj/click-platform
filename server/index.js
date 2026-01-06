@@ -870,36 +870,36 @@ app.get('/', (req, res) => {
             <div class="card">
                 <h3>🔐 Authentication</h3>
                 <p>Test user registration, login, and email verification.</p>
-                <button onclick="showRegistrationForm()" class="btn">Test Registration</button>
-                <button onclick="showLoginForm()" class="btn secondary">Test Login</button>
+                <button id="show-register-btn" class="btn">Test Registration</button>
+                <button id="show-login-btn" class="btn secondary">Test Login</button>
             </div>
 
             <div class="card">
                 <h3>📝 Content Creation</h3>
                 <p>Create, edit, and manage your content posts.</p>
-                <button onclick="testEndpoint('/api/posts', 'GET')" class="btn">View Posts</button>
-                <button onclick="createSamplePost()" class="btn secondary">Create Post</button>
+                <button id="view-posts-btn" class="btn">View Posts</button>
+                <button id="create-post-btn" class="btn secondary">Create Post</button>
             </div>
 
             <div class="card">
                 <h3>📊 Analytics Dashboard</h3>
                 <p>Track performance and engagement metrics.</p>
-                <button onclick="testEndpoint('/api/analytics/dashboard', 'GET')" class="btn">View Analytics</button>
-                <button onclick="testEndpoint('/api/analytics/performance', 'GET')" class="btn secondary">Performance</button>
+                <button id="view-analytics-btn" class="btn">View Analytics</button>
+                <button id="view-performance-btn" class="btn secondary">Performance</button>
             </div>
 
             <div class="card">
                 <h3>🔗 Social Integration</h3>
                 <p>Connect and post to social media platforms.</p>
-                <button onclick="testEndpoint('/api/oauth/twitter', 'GET')" class="btn">Connect Twitter</button>
-                <button onclick="testEndpoint('/api/oauth/connected-accounts', 'GET')" class="btn secondary">View Connections</button>
+                <button id="connect-twitter-btn" class="btn">Connect Twitter</button>
+                <button id="view-connections-btn" class="btn secondary">View Connections</button>
             </div>
 
             <div class="card">
                 <h3>👑 Admin Panel</h3>
                 <p>Manage users and system settings.</p>
-                <button onclick="testEndpoint('/api/admin/stats', 'GET')" class="btn">System Stats</button>
-                <button onclick="testEndpoint('/api/admin/users', 'GET')" class="btn secondary">User Management</button>
+                <button id="admin-stats-btn" class="btn">System Stats</button>
+                <button id="admin-users-btn" class="btn secondary">User Management</button>
             </div>
 
             <div class="card">
@@ -1069,8 +1069,15 @@ curl -s https://click-platform.onrender.com/api/health
 
                 if (response.ok) {
                     resultDiv.style.background = '#10b981';
-                    resultDiv.innerHTML = '<strong>✅ Login Successful!</strong><br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; word-break: break-all;">' + result.token + '</code><br><br><button onclick="copyCurrentToken()" style="margin-top: 10px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 5px; color: white; cursor: pointer;">Copy Token</button><br><br><details><summary>User Info</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result.user, null, 2) + '</pre></details>';
+                    resultDiv.innerHTML = '<strong>✅ Login Successful!</strong><br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; word-break: break-all;">' + result.token + '</code><br><br><button id="copy-token-btn" style="margin-top: 10px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 5px; color: white; cursor: pointer;">Copy Token</button><br><br><details><summary>User Info</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result.user, null, 2) + '</pre></details>';
                     authToken = result.token;
+                    // Add event listener for the dynamically created copy button
+                    setTimeout(() => {
+                        const copyBtn = document.getElementById('copy-token-btn');
+                        if (copyBtn) {
+                            copyBtn.addEventListener('click', copyCurrentToken);
+                        }
+                    }, 100);
                 } else {
                     resultDiv.style.background = '#ef4444';
                     resultDiv.innerHTML = '<strong>❌ Login Failed:</strong><br>' + (result.error || 'Unknown error') + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
@@ -1201,6 +1208,18 @@ curl -s https://click-platform.onrender.com/api/health
                 alert('❌ Network error creating post: ' + error.message);
             }
         }
+
+        // Add event listeners for buttons
+        document.getElementById('show-register-btn').addEventListener('click', showRegistrationForm);
+        document.getElementById('show-login-btn').addEventListener('click', showLoginForm);
+        document.getElementById('view-posts-btn').addEventListener('click', () => testEndpoint('/api/posts', 'GET'));
+        document.getElementById('create-post-btn').addEventListener('click', createSamplePost);
+        document.getElementById('view-analytics-btn').addEventListener('click', () => testEndpoint('/api/analytics/dashboard', 'GET'));
+        document.getElementById('view-performance-btn').addEventListener('click', () => testEndpoint('/api/analytics/performance', 'GET'));
+        document.getElementById('connect-twitter-btn').addEventListener('click', () => testEndpoint('/api/oauth/twitter', 'GET'));
+        document.getElementById('view-connections-btn').addEventListener('click', () => testEndpoint('/api/oauth/connected-accounts', 'GET'));
+        document.getElementById('admin-stats-btn').addEventListener('click', () => testEndpoint('/api/admin/stats', 'GET'));
+        document.getElementById('admin-users-btn').addEventListener('click', () => testEndpoint('/api/admin/users', 'GET'));
 
         // Auto-test health on page load
         window.addEventListener('load', () => {

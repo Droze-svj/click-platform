@@ -1,6 +1,42 @@
 -- Click Platform Database Schema for Supabase
 -- Run this in Supabase SQL Editor: https://supabase.com/dashboard/project/cylfimsyfnodvgrzulof/supabase
 
+-- CLEANUP: Drop existing policies if they exist (run this first if you get "already exists" errors)
+-- Uncomment and run these lines first if you encounter policy conflicts:
+/*
+DROP POLICY IF EXISTS "Allow user registration" ON users;
+DROP POLICY IF EXISTS "Allow login checks" ON users;
+DROP POLICY IF EXISTS "Users can view own data" ON users;
+DROP POLICY IF EXISTS "Users can update own data" ON users;
+DROP POLICY IF EXISTS "Users can view published posts" ON posts;
+DROP POLICY IF EXISTS "Users can create posts" ON posts;
+DROP POLICY IF EXISTS "Users can update own posts" ON posts;
+DROP POLICY IF EXISTS "Users can view comments" ON comments;
+DROP POLICY IF EXISTS "Users can create comments" ON comments;
+DROP POLICY IF EXISTS "Users can view likes" ON likes;
+DROP POLICY IF EXISTS "Users can manage own likes" ON likes;
+DROP POLICY IF EXISTS "Users can view follows" ON follows;
+DROP POLICY IF EXISTS "Users can manage own follows" ON follows;
+DROP POLICY IF EXISTS "Users can view workspaces they belong to" ON workspaces;
+DROP POLICY IF EXISTS "Users can create workspaces" ON workspaces;
+DROP POLICY IF EXISTS "Workspace members can view members" ON workspace_members;
+DROP POLICY IF EXISTS "Workspace owners can manage members" ON workspace_members;
+DROP POLICY IF EXISTS "Users can create password reset tokens" ON password_reset_tokens;
+DROP POLICY IF EXISTS "Users can validate their own reset tokens" ON password_reset_tokens;
+DROP POLICY IF EXISTS "Users can update their own reset tokens" ON password_reset_tokens;
+DROP POLICY IF EXISTS "Users can create email verification tokens" ON email_verification_tokens;
+DROP POLICY IF EXISTS "Users can validate email verification tokens" ON email_verification_tokens;
+DROP POLICY IF EXISTS "Users can update email verification tokens" ON email_verification_tokens;
+DROP POLICY IF EXISTS "Users can view analytics for their posts" ON post_analytics;
+DROP POLICY IF EXISTS "Users can create analytics for their posts" ON post_analytics;
+DROP POLICY IF EXISTS "Users can update analytics for their posts" ON post_analytics;
+DROP POLICY IF EXISTS "Users can manage their platform accounts" ON platform_accounts;
+DROP POLICY IF EXISTS "Users can view insights for their posts" ON content_insights;
+DROP POLICY IF EXISTS "Users can create insights for their posts" ON content_insights;
+DROP POLICY IF EXISTS "Users can view engagement history for their posts" ON engagement_history;
+DROP POLICY IF EXISTS "Users can manage their analytics dashboards" ON analytics_dashboards;
+*/
+
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -133,18 +169,25 @@ ALTER TABLE email_verification_tokens ENABLE ROW LEVEL SECURITY;
 
 -- Create basic RLS policies
 -- Allow insert for registration (before auth) - NO AUTH REQUIRED
+DROP POLICY IF EXISTS "Allow user registration" ON users;
+DROP POLICY IF EXISTS "Allow login checks" ON users;
+DROP POLICY IF EXISTS "Users can view own data" ON users;
+DROP POLICY IF EXISTS "Users can update own data" ON users;
 CREATE POLICY "Allow user registration" ON users
   FOR INSERT WITH CHECK (true);
 
 -- Allow select for login verification - NO AUTH REQUIRED
+DROP POLICY IF EXISTS "Allow login checks" ON users;
 CREATE POLICY "Allow login checks" ON users
   FOR SELECT USING (true);
 
 -- Users can view their own data - REQUIRES AUTH
+DROP POLICY IF EXISTS "Users can view own data" ON users;
 CREATE POLICY "Users can view own data" ON users
   FOR SELECT USING (auth.uid()::text = id::text);
 
 -- Users can update their own data - REQUIRES AUTH
+DROP POLICY IF EXISTS "Users can update own data" ON users;
 CREATE POLICY "Users can update own data" ON users
   FOR UPDATE USING (auth.uid()::text = id::text);
 
