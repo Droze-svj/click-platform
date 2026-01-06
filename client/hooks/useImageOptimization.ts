@@ -110,7 +110,7 @@ export const useImageOptimization = (
   const getResponsiveSources = useCallback((baseUrl: string) => {
     if (!state.supportsWebP) return []
 
-    const sources = []
+    const sources: Array<{ media: string; srcSet: string }> = []
 
     // WebP sources for different breakpoints
     const breakpoints = [640, 768, 1024, 1280, 1536] // Tailwind breakpoints
