@@ -12,11 +12,13 @@ const getSupabaseClient = () => {
 
 const auth = async (req, res, next) => {
   try {
+    console.log('🔐 Auth middleware called for:', req.path);
     const authHeader = String(req.header('Authorization') || '');
     const hasBearer = authHeader.startsWith('Bearer ');
     const token = hasBearer ? authHeader.slice('Bearer '.length) : '';
 
     if (!token) {
+      console.log('❌ No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
 
