@@ -112,7 +112,7 @@ export default function PerformancePage() {
 
       {/* Error Alert */}
       {error && (
-        <ErrorAlert message={error} onRetry={loadPerformance} />
+        <ErrorAlert message={error} onClose={() => setError(null)} />
       )}
 
       {/* Summary Cards */}

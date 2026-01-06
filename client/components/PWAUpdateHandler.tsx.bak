@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { RefreshCw, X, CheckCircle } from 'lucide-react'
-// import { // trackPWAEvent } from '../utils/analytics'
+// import { trackPWAEvent } from '../utils/analytics'
 
 interface PWAUpdateHandlerProps {
   onUpdate?: () => void
@@ -25,23 +25,23 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
       // Check if this is a meaningful update (not just cache refresh)
       if (newRegistration && newRegistration.waiting) {
         setUpdateAvailable(true)
-        // trackPWAEvent('update_available', {
-        //   timestamp: Date.now(),
-        //   swVersion: 'new'
-        // })
+        trackPWAEvent('update_available', {
+          timestamp: Date.now(),
+          swVersion: 'new'
+        })
       }
     }
 
     // Listen for update found
     const handleUpdateFound = () => {
-      // trackPWAEvent('update_check_started', { timestamp: Date.now() })
+      trackPWAEvent('update_check_started', { timestamp: Date.now() })
     }
 
     // Listen for update ready
     const handleUpdateReady = (event: any) => {
       setUpdateAvailable(true)
       setRegistration(event.detail)
-      // trackPWAEvent('update_ready', { timestamp: Date.now() })
+      trackPWAEvent('update_ready', { timestamp: Date.now() })
     }
 
     // Add event listeners
@@ -60,7 +60,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
     if (!registration?.waiting) return
 
     setUpdating(true)
-    // trackPWAEvent('update_accepted', { timestamp: Date.now() })
+    trackPWAEvent('update_accepted', { timestamp: Date.now() })
 
     try {
       // Tell the new service worker to skip waiting
@@ -72,10 +72,10 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
         setUpdateAvailable(false)
         setUpdating(false)
 
-        // trackPWAEvent('update_completed', {
-        //   timestamp: Date.now(),
-        //   reloadRequired: true
-        // })
+        trackPWAEvent('update_completed', {
+          timestamp: Date.now(),
+          reloadRequired: true
+        })
 
         // Reload after a short delay to show success message
         setTimeout(() => {
@@ -92,16 +92,16 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
     } catch (error) {
       console.error('Update failed:', error)
       setUpdating(false)
-      // trackPWAEvent('update_failed', {
-      //   error: error instanceof Error ? error.message : String(error),
-      //   timestamp: Date.now()
-      // })
+      trackPWAEvent('update_failed', {
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: Date.now()
+      })
     }
   }
 
   const handleDismiss = () => {
     setUpdateAvailable(false)
-    // trackPWAEvent('update_dismissed', { timestamp: Date.now() })
+    trackPWAEvent('update_dismissed', { timestamp: Date.now() })
   }
 
   const handleRemindLater = () => {
@@ -110,7 +110,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
     setTimeout(() => {
       setUpdateAvailable(true)
     }, 24 * 60 * 60 * 1000)
-    // trackPWAEvent('update_remind_later', { timestamp: Date.now() })
+    trackPWAEvent('update_remind_later', { timestamp: Date.now() })
   }
 
   if (!updateAvailable || updateComplete) return null

@@ -16,21 +16,15 @@ const nextConfig = {
     domains: ['localhost'],
   },
 
-  // Enable static export for production deployment
-  output: 'export',
-  trailingSlash: true,
-
-  // API rewrites for seamless backend integration (only in development)
-  ...(process.env.NODE_ENV === 'development' ? {
-    async rewrites() {
-      return [
-        {
-          source: '/api/:path*',
-          destination: 'http://localhost:5001/api/:path*',
-        },
-      ]
-    }
-  } : {}),
+  // API rewrites for seamless backend integration
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://click-platform.onrender.com/api/:path*',
+      },
+    ]
+  },
 
 }
 
