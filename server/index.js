@@ -891,10 +891,7 @@ app.get('/', (req, res) => {
                     <input type="password" id="reg-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <input type="text" id="reg-firstname" placeholder="First Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="reg-lastname" placeholder="Last Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                    <input type="text" id="reg-name" placeholder="Full Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
                 </div>
                 <button type="submit" class="btn" style="width: 100%;">Register</button>
             </form>
@@ -1144,8 +1141,7 @@ curl -s https://click-platform.onrender.com/api/health
             const data = {
                 email: document.getElementById('reg-email').value,
                 password: document.getElementById('reg-password').value,
-                firstName: document.getElementById('reg-firstname').value,
-                lastName: document.getElementById('reg-lastname').value
+                name: document.getElementById('reg-name').value
             };
 
             try {
