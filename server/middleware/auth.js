@@ -45,14 +45,8 @@ const auth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    // #region agent log
-    try {
-    } catch {}
-    // #endregion
-    // For debugging purposes, continue with a mock user instead of failing
-    req.user = { _id: '507f1f77bcf86cd799439011', email: 'debug@example.com' };
-    return next();
-    // res.status(401).json({ error: 'Invalid token' });
+    console.error('Auth middleware error:', error.message);
+    return res.status(401).json({ error: 'Invalid token', details: error.message });
   }
 };
 
