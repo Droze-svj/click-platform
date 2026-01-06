@@ -220,3 +220,169 @@ CREATE POLICY "Users can validate email verification tokens" ON email_verificati
 
 CREATE POLICY "Users can update email verification tokens" ON email_verification_tokens
   FOR UPDATE USING (true);
+
+-- Create post_analytics table
+CREATE TABLE IF NOT EXISTS post_analytics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  platform TEXT NOT NULL, -- 'twitter', 'linkedin', 'instagram', 'facebook', etc.
+  platform_post_id TEXT, -- The ID on the platform
+  platform_post_url TEXT, -- URL to the post on the platform
+
+  -- Core metrics
+  views INTEGER DEFAULT 0,
+  likes INTEGER DEFAULT 0,
+  shares INTEGER DEFAULT 0,
+  comments INTEGER DEFAULT 0,
+  retweets INTEGER DEFAULT 0, -- Twitter specific
+  saves INTEGER DEFAULT 0, -- Instagram/TikTok saves
+
+  -- Engagement rates (calculated)
+  engagement_rate DECIMAL(5,4) DEFAULT 0, -- (likes + comments + shares) / views * 100
+  click_through_rate DECIMAL(5,4) DEFAULT 0, -- clicks / impressions * 100
+
+  -- Timing data
+  posted_at TIMESTAMP WITH TIME ZONE,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  -- Additional platform-specific data
+  metadata JSONB, -- Store platform-specific metrics
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  UNIQUE(post_id, platform)
+);
+
+-- Create platform_accounts table
+CREATE TABLE IF NOT EXISTS platform_accounts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  platform TEXT NOT NULL, -- 'twitter', 'linkedin', 'instagram', etc.
+  platform_user_id TEXT NOT NULL,
+  username TEXT NOT NULL,
+  display_name TEXT,
+  avatar TEXT,
+  access_token TEXT, -- Encrypted
+  refresh_token TEXT, -- Encrypted
+  token_expires_at TIMESTAMP WITH TIME ZONE,
+  is_connected BOOLEAN DEFAULT TRUE,
+  metadata JSONB, -- Platform-specific account data
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, platform)
+);
+
+-- Create content_insights table
+CREATE TABLE IF NOT EXISTS content_insights (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+
+  -- AI-generated insights
+  performance_score INTEGER DEFAULT 0, -- 0-100 score
+  best_posting_time TEXT, -- "Monday 2-4 PM"
+  recommended_hashtags TEXT[], -- AI suggested hashtags
+  content_improvements TEXT[], -- Suggestions for better performance
+  audience_reach_estimate INTEGER, -- Estimated audience size
+
+  -- Trend analysis
+  trending_topics TEXT[], -- Related trending topics
+  competitor_performance JSONB, -- How competitors are doing
+
+  -- Generated at timestamp
+  generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '7 days'),
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create engagement_history table for time-series data
+CREATE TABLE IF NOT EXISTS engagement_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  post_analytics_id UUID REFERENCES post_analytics(id) ON DELETE CASCADE,
+  recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  -- Snapshot of metrics at this time
+  views INTEGER DEFAULT 0,
+  likes INTEGER DEFAULT 0,
+  shares INTEGER DEFAULT 0,
+  comments INTEGER DEFAULT 0,
+
+  -- Growth rates
+  views_growth INTEGER DEFAULT 0,
+  likes_growth INTEGER DEFAULT 0,
+  shares_growth INTEGER DEFAULT 0,
+  comments_growth INTEGER DEFAULT 0,
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create analytics_dashboards table for user preferences
+CREATE TABLE IF NOT EXISTS analytics_dashboards (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  config JSONB, -- Dashboard configuration (widgets, filters, etc.)
+  is_default BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for new tables
+ALTER TABLE post_analytics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE content_insights ENABLE ROW LEVEL SECURITY;
+ALTER TABLE engagement_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_dashboards ENABLE ROW LEVEL SECURITY;
+
+-- Post analytics policies
+CREATE POLICY "Users can view analytics for their posts" ON post_analytics
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM posts WHERE id = post_id AND author_id = auth.uid())
+  );
+
+CREATE POLICY "Users can create analytics for their posts" ON post_analytics
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM posts WHERE id = post_id AND author_id = auth.uid())
+  );
+
+CREATE POLICY "Users can update analytics for their posts" ON post_analytics
+  FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM posts WHERE id = post_id AND author_id = auth.uid())
+  );
+
+-- Platform accounts policies
+CREATE POLICY "Users can manage their platform accounts" ON platform_accounts
+  FOR ALL USING (user_id = auth.uid());
+
+-- Content insights policies
+CREATE POLICY "Users can view insights for their posts" ON content_insights
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Users can create insights for their posts" ON content_insights
+  FOR INSERT WITH CHECK (user_id = auth.uid());
+
+-- Engagement history policies
+CREATE POLICY "Users can view engagement history for their posts" ON engagement_history
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM post_analytics pa
+      JOIN posts p ON pa.post_id = p.id
+      WHERE pa.id = engagement_history.post_analytics_id
+      AND p.author_id = auth.uid()
+    )
+  );
+
+-- Analytics dashboards policies
+CREATE POLICY "Users can manage their analytics dashboards" ON analytics_dashboards
+  FOR ALL USING (user_id = auth.uid());
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_post_analytics_post_id ON post_analytics(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_analytics_platform ON post_analytics(platform);
+CREATE INDEX IF NOT EXISTS idx_platform_accounts_user_id ON platform_accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_content_insights_post_id ON content_insights(post_id);
+CREATE INDEX IF NOT EXISTS idx_engagement_history_analytics_id ON engagement_history(post_analytics_id);
+CREATE INDEX IF NOT EXISTS idx_engagement_history_recorded_at ON engagement_history(recorded_at);
