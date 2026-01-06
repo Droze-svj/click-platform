@@ -49,26 +49,27 @@ export const metadata: Metadata = {
     maximumScale: 5,
     userScalable: true,
   },
-  openGraph: {
-    type: 'website',
-    title: 'Click - AI-Powered Content Creation',
-    description: 'Transform long-form content into social-ready formats with AI-powered tools',
-    siteName: 'Click',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Click - AI-Powered Content Creation',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Click - AI-Powered Content Creation',
-    description: 'Transform long-form content into social-ready formats with AI-powered tools',
-    images: ['/og-image.png'],
-  },
+  // Temporarily remove og-image references to prevent 404s
+  // openGraph: {
+  //   type: 'website',
+  //   title: 'Click - AI-Powered Content Creation',
+  //   description: 'Transform long-form content into social-ready formats with AI-powered tools',
+  //   siteName: 'Click',
+  //   images: [
+  //     {
+  //       url: '/og-image.png',
+  //       width: 1200,
+  //       height: 630,
+  //       alt: 'Click - AI-Powered Content Creation',
+  //     },
+  //   ],
+  // },
+  // twitter: {
+  //   card: 'summary_large_image',
+  //   title: 'Click - AI-Powered Content Creation',
+  //   description: 'Transform long-form content into social-ready formats with AI-powered tools',
+  //   images: ['/og-image.png'],
+  // },
 }
 
 export default function RootLayout({
