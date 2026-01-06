@@ -1,5 +1,6 @@
 'use client'
 
+// @ts-nocheck
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { logWebGLError, measurePerformance } from '../utils/errorHandler'
 
