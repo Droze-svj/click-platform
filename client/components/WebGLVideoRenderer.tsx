@@ -332,7 +332,7 @@ export default function WebGLVideoRenderer({
        1, -1,
       -1,  1,
        1,  1,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
 
     const texCoordBuffer = webGLContext.createBuffer()
     webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, texCoordBuffer)
@@ -341,7 +341,7 @@ export default function WebGLVideoRenderer({
       1, 1,
       0, 0,
       1, 0,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
 
     // Create texture
     const texture = webGLContext.createTexture()
@@ -449,7 +449,7 @@ export default function WebGLVideoRenderer({
       -1,  1,
        1, -1,
        1,  1,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
     // Texture coordinate buffer
@@ -462,7 +462,7 @@ export default function WebGLVideoRenderer({
       0, 0,
       1, 1,
       1, 0,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
     gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0)
 
     // Update texture
