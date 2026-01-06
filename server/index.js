@@ -870,36 +870,36 @@ app.get('/', (req, res) => {
             <div class="card">
                 <h3>🔐 Authentication</h3>
                 <p>Test user registration, login, and email verification.</p>
-                <a href="/api/auth/register" class="btn">Test Registration</a>
-                <a href="/api/auth/login" class="btn secondary">Test Login</a>
+                <button onclick="showRegistrationForm()" class="btn">Test Registration</button>
+                <button onclick="showLoginForm()" class="btn secondary">Test Login</button>
             </div>
 
             <div class="card">
                 <h3>📝 Content Creation</h3>
                 <p>Create, edit, and manage your content posts.</p>
-                <a href="/api/posts" class="btn">View Posts</a>
-                <a href="/api/posts" class="btn secondary">Create Post</a>
+                <button onclick="testEndpoint('/api/posts', 'GET')" class="btn">View Posts</button>
+                <button onclick="createSamplePost()" class="btn secondary">Create Post</button>
             </div>
 
             <div class="card">
                 <h3>📊 Analytics Dashboard</h3>
                 <p>Track performance and engagement metrics.</p>
-                <a href="/api/analytics/dashboard" class="btn">View Analytics</a>
-                <a href="/api/analytics/performance" class="btn secondary">Performance</a>
+                <button onclick="testEndpoint('/api/analytics/dashboard', 'GET')" class="btn">View Analytics</button>
+                <button onclick="testEndpoint('/api/analytics/performance', 'GET')" class="btn secondary">Performance</button>
             </div>
 
             <div class="card">
                 <h3>🔗 Social Integration</h3>
                 <p>Connect and post to social media platforms.</p>
-                <a href="/api/oauth/twitter" class="btn">Connect Twitter</a>
-                <a href="/api/oauth" class="btn secondary">View Connections</a>
+                <button onclick="testEndpoint('/api/oauth/twitter', 'GET')" class="btn">Connect Twitter</button>
+                <button onclick="testEndpoint('/api/oauth/connected-accounts', 'GET')" class="btn secondary">View Connections</button>
             </div>
 
             <div class="card">
                 <h3>👑 Admin Panel</h3>
                 <p>Manage users and system settings.</p>
-                <a href="/api/admin/stats" class="btn">System Stats</a>
-                <a href="/api/admin/users" class="btn secondary">User Management</a>
+                <button onclick="testEndpoint('/api/admin/stats', 'GET')" class="btn">System Stats</button>
+                <button onclick="testEndpoint('/api/admin/users', 'GET')" class="btn secondary">User Management</button>
             </div>
 
             <div class="card">
@@ -944,6 +944,37 @@ curl -s https://click-platform.onrender.com/api/health
             </div>
         </div>
 
+        <div id="auth-forms" style="display: none; margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+            <h3 id="form-title" style="color: white; text-align: center;">Register</h3>
+            <form id="register-form" style="max-width: 400px; margin: 0 auto;">
+                <div style="margin-bottom: 15px;">
+                    <input type="email" id="reg-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="password" id="reg-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="reg-firstname" placeholder="First Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="reg-lastname" placeholder="Last Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Register</button>
+            </form>
+
+            <form id="login-form" style="max-width: 400px; margin: 0 auto; display: none;">
+                <div style="margin-bottom: 15px;">
+                    <input type="email" id="login-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="password" id="login-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">Login</button>
+            </form>
+
+            <div id="auth-result" style="margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
+        </div>
+
         <div style="text-align: center; margin-top: 40px; opacity: 0.8;">
             <p>💡 <strong>Next Steps:</strong> Full React frontend deployment coming soon!</p>
             <p>For now, test all your APIs and backend functionality here.</p>
@@ -951,6 +982,8 @@ curl -s https://click-platform.onrender.com/api/health
     </div>
 
     <script>
+        let authToken = null;
+
         async function testHealth() {
             try {
                 const response = await fetch('/api/health');
@@ -961,19 +994,207 @@ curl -s https://click-platform.onrender.com/api/health
             }
         }
 
+        function showRegistrationForm() {
+            document.getElementById('auth-forms').style.display = 'block';
+            document.getElementById('form-title').textContent = 'Register';
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('auth-result').style.display = 'none';
+        }
+
+        function showLoginForm() {
+            document.getElementById('auth-forms').style.display = 'block';
+            document.getElementById('form-title').textContent = 'Login';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('auth-result').style.display = 'none';
+        }
+
+        // Handle registration form
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('auth-result');
+
+            const data = {
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+                firstName: document.getElementById('reg-firstname').value,
+                lastName: document.getElementById('reg-lastname').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    resultDiv.style.background = '#10b981';
+                    resultDiv.innerHTML = '<strong>✅ Registration Successful!</strong><br>Check your email for verification link.<br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px;">' + (result.token || 'Check response below') + '</code><br><br><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre>';
+                    authToken = result.token;
+                } else {
+                    resultDiv.style.background = '#ef4444';
+                    resultDiv.innerHTML = '<strong>❌ Registration Failed:</strong><br>' + (result.error || 'Unknown error') + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
+                }
+            } catch (error) {
+                resultDiv.style.background = '#ef4444';
+                resultDiv.innerHTML = '<strong>❌ Network Error:</strong><br>' + error.message;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.style.color = 'white';
+        });
+
+        // Handle login form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('auth-result');
+
+            const data = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    resultDiv.style.background = '#10b981';
+                    resultDiv.innerHTML = '<strong>✅ Login Successful!</strong><br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; word-break: break-all;">' + result.token + '</code><br><br><button onclick="copyToken(\'' + result.token + '\')" style="margin-top: 10px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 5px; color: white; cursor: pointer;">Copy Token</button><br><br><details><summary>User Info</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result.user, null, 2) + '</pre></details>';
+                    authToken = result.token;
+                } else {
+                    resultDiv.style.background = '#ef4444';
+                    resultDiv.innerHTML = '<strong>❌ Login Failed:</strong><br>' + (result.error || 'Unknown error') + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
+                }
+            } catch (error) {
+                resultDiv.style.background = '#ef4444';
+                resultDiv.innerHTML = '<strong>❌ Network Error:</strong><br>' + error.message;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.style.color = 'white';
+        });
+
         async function testMe() {
+            if (!authToken) {
+                alert('🔒 Please login first to test authentication.');
+                showLoginForm();
+                return;
+            }
+
             try {
                 const response = await fetch('/api/auth/me', {
-                    credentials: 'include'
+                    headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 if (response.status === 401) {
-                    alert('🔒 Not authenticated. Please login first.');
+                    alert('🔒 Token expired. Please login again.');
+                    showLoginForm();
                 } else {
                     const data = await response.json();
-                    alert('✅ Authentication working!\\n\\n' + JSON.stringify(data, null, 2));
+                    alert('✅ Authentication working!\\n\\nUser: ' + data.email + '\\nRole: ' + (data.role || 'member'));
                 }
             } catch (error) {
                 alert('❌ Auth test failed: ' + error.message);
+            }
+        }
+
+        function copyToken(token) {
+            navigator.clipboard.writeText(token).then(() => {
+                alert('✅ Token copied to clipboard!');
+            }).catch(() => {
+                // Fallback for browsers that don't support clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = token;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ Token copied to clipboard!');
+            });
+        }
+
+        async function testEndpoint(endpoint, method = 'GET') {
+            if (!authToken && endpoint !== '/api/health') {
+                alert('🔒 Please login first to access protected endpoints.');
+                showLoginForm();
+                return;
+            }
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (authToken) {
+                    headers['Authorization'] = 'Bearer ' + authToken;
+                }
+
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: headers
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    result = { message: 'No JSON response' };
+                }
+
+                if (response.ok) {
+                    alert('✅ ' + method + ' ' + endpoint + ' succeeded!\\n\\nStatus: ' + response.status + '\\n\\nResponse:\\n' + JSON.stringify(result, null, 2));
+                } else if (response.status === 401) {
+                    alert('🔒 ' + method + ' ' + endpoint + ' requires authentication.\\n\\nPlease login first.');
+                    showLoginForm();
+                } else if (response.status === 403) {
+                    alert('🚫 ' + method + ' ' + endpoint + ' requires admin privileges.\\n\\nMake sure you\\'re logged in with an admin account.');
+                } else {
+                    alert('❌ ' + method + ' ' + endpoint + ' failed.\\n\\nStatus: ' + response.status + '\\nError: ' + (result.error || result.message || 'Unknown error') + '\\n\\nFull Response:\\n' + JSON.stringify(result, null, 2));
+                }
+            } catch (error) {
+                alert('❌ Network error accessing ' + endpoint + ': ' + error.message);
+            }
+        }
+
+        async function createSamplePost() {
+            if (!authToken) {
+                alert('🔒 Please login first to create posts.');
+                showLoginForm();
+                return;
+            }
+
+            const postData = {
+                title: "My First Click Post",
+                content: "Welcome to Click Platform! This is my first automated post created from the web interface.",
+                platforms: ["twitter"],
+                status: "draft"
+            };
+
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify(postData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('✅ Post created successfully!\\n\\nTitle: ' + result.title + '\\nStatus: ' + result.status + '\\nID: ' + result.id + '\\n\\nFull Response:\\n' + JSON.stringify(result, null, 2));
+                } else {
+                    alert('❌ Failed to create post.\\n\\nStatus: ' + response.status + '\\nError: ' + (result.error || 'Unknown error') + '\\n\\nFull Response:\\n' + JSON.stringify(result, null, 2));
+                }
+            } catch (error) {
+                alert('❌ Network error creating post: ' + error.message);
             }
         }
 
