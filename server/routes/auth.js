@@ -219,7 +219,7 @@ router.post('/login',
     // Find user in Supabase
     const { data: user, error: findError } = await supabase
       .from('users')
-      .select('id, email, name, password, subscription, niche, login_attempts, last_login_at')
+      .select('id, email, first_name, last_name, password, subscription, niche, login_attempts, last_login_at')
       .eq('email', email.toLowerCase())
       .single();
 
@@ -230,6 +230,11 @@ router.post('/login',
       console.log('User lookup failed');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
+
+    // Create a combined name field for compatibility
+    user.name = user.first_name && user.last_name
+      ? `${user.first_name} ${user.last_name}`
+      : user.first_name || user.last_name || 'User';
 
     // Check if account is locked (too many failed attempts)
     if ((user.login_attempts || 0) >= 5) {
