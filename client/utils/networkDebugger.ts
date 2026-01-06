@@ -152,9 +152,9 @@ class NetworkDebugger {
           endTime,
           duration,
           error: {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
+            message: (error as Error).message,
+            name: (error as Error).name,
+            stack: (error as Error).stack
           }
         }
 
@@ -348,5 +348,6 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     networkDebugger.enable()
   }, 1000)
 }
+
 
 
