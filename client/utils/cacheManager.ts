@@ -586,7 +586,7 @@ class AdvancedCacheManager {
 
     let refreshed = 0
 
-    for (const [cacheName, config] of this.caches.entries()) {
+    this.caches.forEach(async (config, cacheName) => {
       if (config.strategy === 'stale-while-revalidate') {
         const entries = this.entries.get(cacheName) || []
 
@@ -603,12 +603,12 @@ class AdvancedCacheManager {
                 refreshed++
               }
             } catch (error) {
-              console.warn(`⚠️ Background refresh failed for ${entry.url}:`, error.message)
+              console.warn(`⚠️ Background refresh failed for ${entry.url}:`, (error as Error).message)
             }
           }
         }
       }
-    }
+    })
 
     console.log(`🔄 Background refresh complete: ${refreshed} entries updated`)
     return refreshed
