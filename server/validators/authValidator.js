@@ -1,4 +1,5 @@
 // Input validation for auth routes
+// Updated for firstName/lastName fields
 
 const { body, validationResult } = require('express-validator');
 
