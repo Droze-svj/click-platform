@@ -1,4 +1,4 @@
-// Next.js middleware - simplified version
+// Next.js middleware - simplified version (updated 2025-01-06)
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
