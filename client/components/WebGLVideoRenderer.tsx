@@ -344,7 +344,7 @@ export default function WebGLVideoRenderer({
     ]), glRef.current.STATIC_DRAW)
 
     // Create texture
-    const texture = gl.createTexture()
+    const texture = glRef.current.createTexture()
     textureRef.current = texture
 
     setIsInitialized(true)
