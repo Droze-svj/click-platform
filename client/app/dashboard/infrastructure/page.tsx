@@ -25,7 +25,9 @@ export default function InfrastructurePage() {
     // Check if user is admin (you may need to adjust this based on your auth system)
     const checkAdmin = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) return;
+
         const response = await fetch('/api/auth/me', {
           headers: {
             Authorization: `Bearer ${token}`,
