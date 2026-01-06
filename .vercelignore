@@ -1,0 +1,21 @@
+# Exclude all server files and scripts that use __dirname
+server/
+scripts/
+debug-server.js
+test-system-analysis.js
+test-video-editing.js
+jest.config.js
+playwright.config.js
+ecosystem.config.js
+ecosystem.staging.config.js
+
+# Exclude test files
+tests/
+
+# Exclude config files that aren't needed for client build
+prisma.config.ts
+playwright.config.no-webserver.js
+
+# Exclude any potential build artifacts
+*.log
+logs/
