@@ -672,15 +672,15 @@ class AdvancedCacheManager {
 
     // Remove stale entries
     if (insights.staleEntries > 0) {
-      for (const [cacheName, entries] of this.entries.entries()) {
+      this.entries.forEach((entries, cacheName) => {
         const validEntries = entries.filter(e => !e.expires || Date.now() <= e.expires)
         this.entries.set(cacheName, validEntries)
-      }
+      })
       console.log(`🗑️ Removed ${insights.staleEntries} stale entries`)
     }
 
     // Balance cache sizes
-    for (const [cacheName, config] of this.caches.entries()) {
+    this.caches.forEach((config, cacheName) => {
       if (config.maxEntries) {
         const entries = this.entries.get(cacheName) || []
         if (entries.length > config.maxEntries) {
@@ -696,7 +696,7 @@ class AdvancedCacheManager {
           console.log(`✂️ Trimmed ${cacheName} from ${entries.length} to ${keptEntries.length} entries`)
         }
       }
-    }
+    })
 
     console.log('✅ Cache optimization complete')
   }
