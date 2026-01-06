@@ -214,11 +214,6 @@ router.post('/login',
 
     const { email, password } = req.body;
     console.log('Login attempt for email:', email);
-    console.log('Environment check:', {
-      hasSupabaseUrl: !!process.env.SUPABASE_URL,
-      hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      nodeEnv: process.env.NODE_ENV
-    });
 
     // Find user in Supabase
     const { data: user, error: findError } = await supabase
@@ -228,16 +223,8 @@ router.post('/login',
       .single();
 
 
-    console.log('Supabase query result:', {
-      userFound: !!user,
-      error: findError?.message,
-      errorCode: findError?.code,
-      userId: user?.id,
-      userEmail: user?.email
-    });
-
     if (findError || !user) {
-      console.log('User lookup failed - returning invalid credentials');
+      console.log('User lookup failed');
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
