@@ -11,37 +11,32 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Skip authentication check for now to prevent 404 errors
-    // Will re-enable when backend is properly integrated
-    setLoading(false)
+    checkAuth()
   }, [])
 
-  // Temporarily disabled authentication check
-  // const checkAuth = async () => {
-  //   try {
-  //     const token = localStorage.getItem('token')
-  //     if (!token) {
-  //       setLoading(false)
-  //       return
-  //     }
+  const checkAuth = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setLoading(false)
+        return
+      }
 
-  //     const response = await axios.get(`${API_URL}/auth/me`, {
-  //       timeout: 60000 // 60 seconds for Render.com free tier
-  //     })
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        timeout: 10000 // 10 seconds timeout
+      })
 
-  //     if (response.data.user) {
-  //       setIsAuthenticated(true)
-  //       router.push('/dashboard')
-  //     }
-  //   } catch (error: any) {
-  //     // Don't remove token on network errors - might be server waking up
-  //     if (error.response?.status === 401 || error.response?.status === 403) {
-  //       localStorage.removeItem('token')
-  //     }
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
+      if (response.data.user) {
+        setIsAuthenticated(true)
+        router.push('/dashboard')
+      }
+    } catch (error: any) {
+      // Don't remove token on network errors - backend might not be ready yet
+      console.log('Auth check failed:', error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (loading) {
     return (
