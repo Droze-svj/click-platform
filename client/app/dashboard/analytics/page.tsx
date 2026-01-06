@@ -2,484 +2,323 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
-import LoadingSpinner from '../../../components/LoadingSpinner'
-import EngagementGrowthDashboard from '../../../components/EngagementGrowthDashboard'
-import { extractApiData, extractApiError } from '../../../utils/apiResponse'
-import ContentPerformanceHeatmap from '../../../components/ContentPerformanceHeatmap'
-import BestTimeToPostCalendar from '../../../components/BestTimeToPostCalendar'
-import ContentGapAnalysis from '../../../components/ContentGapAnalysis'
-import ROICalculator from '../../../components/ROICalculator'
-import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import { apiGet } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
-import { useToast } from '../../../contexts/ToastContext'
-import { API_URL } from '../../../lib/api'
+import LoadingSpinner from '../../../components/LoadingSpinner'
+import ErrorAlert from '../../../components/ErrorAlert'
+import {
+  BarChart3,
+  TrendingUp,
+  Eye,
+  Heart,
+  MessageSquare,
+  Share2,
+  Target,
+  Calendar,
+  Award,
+  Zap
+} from 'lucide-react'
 
-interface Analytics {
-  total: number
-  byType: Record<string, number>
-  byStatus: Record<string, number>
-  byPlatform: Record<string, number>
-  engagement: {
-    totalViews: number
-    totalEngagement: number
-    averageEngagement: number
-    topPerforming: Array<{
-      id: string
-      title: string
-      engagement: number
-      views: number
-    }>
-  }
-  trends: {
-    daily: Array<{ date: string; count: number }>
-  }
-  bestPerforming: Array<{
-    id: string
-    title: string
-    engagement: number
-    views: number
-  }>
+interface AnalyticsOverview {
+  total_posts: number
+  published_posts: number
+  total_views: number
+  total_engagement: number
+  avg_engagement_rate: string
 }
 
-interface Insights {
-  recommendations: Array<{
-    type: string
-    priority: string
-  }>
-  trends: Array<{
-    type: string
-    trend: string
-  }>
-  opportunities: Array<{
-    type: string
-    platforms?: string[]
-  }>
+interface PlatformDistribution {
+  [platform: string]: {
+    posts: number
+    views: number
+    engagement: number
+  }
+}
+
+interface TopPerformingPost {
+  id: string
+  title: string
+  published_at: string
+  total_views: number
+  total_engagement: number
+  avg_engagement_rate: string
+}
+
+interface DashboardData {
+  overview: AnalyticsOverview
+  platform_distribution: PlatformDistribution
+  recent_posts: any[]
+  top_performing_posts: TopPerformingPost[]
 }
 
 export default function AnalyticsPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const { showToast } = useToast()
-  const [analytics, setAnalytics] = useState<Analytics | null>(null)
-  const [insights, setInsights] = useState<Insights | null>(null)
-  const [comprehensive, setComprehensive] = useState<any>(null)
-  const [trends, setTrends] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [period, setPeriod] = useState(30)
-  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'platforms'>('overview')
+  const [error, setError] = useState<string | null>(null)
+  const [data, setData] = useState<DashboardData | null>(null)
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
     loadAnalytics()
-  }, [user, router, period])
+  }, [])
 
   const loadAnalytics = async () => {
-
     try {
-      const token = localStorage.getItem('token')
-      const [analyticsRes, insightsRes, comprehensiveRes, trendsRes] = await Promise.all([
-        axios.get(`${API_URL}/analytics/content?period=${period}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/analytics/content/insights`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/analytics/enhanced/comprehensive?period=${period}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/analytics/enhanced/trends?period=${period}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ])
+      setLoading(true)
+      setError(null)
 
-      const analyticsData = extractApiData<Analytics>(analyticsRes)
-      const insightsData = extractApiData<Insights>(insightsRes)
-      const comprehensiveData = extractApiData<any>(comprehensiveRes)
-      const trendsData = extractApiData<any>(trendsRes)
-
-      if (analyticsData) setAnalytics(analyticsData)
-      if (insightsData) setInsights(insightsData)
-      if (comprehensiveData) setComprehensive(comprehensiveData)
-      if (trendsData) setTrends(trendsData)
-
-    } catch (error) {
-
-      const errorObj = extractApiError(error)
-      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load analytics', 'error')
+      const response = await apiGet<DashboardData>('/analytics/dashboard')
+      setData(response)
+    } catch (err: any) {
+      console.error('Failed to load analytics:', err)
+      setError(err.message || 'Failed to load analytics')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleExport = async (format: 'json' | 'csv') => {
-    try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        `${API_URL}/analytics/enhanced/export?format=${format}&period=${period}`,
-        {
-          responseType: format === 'csv' ? 'blob' : 'json'
-        }
-      )
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+    return num.toString()
+  }
 
-      if (format === 'csv') {
-        const blob = new Blob([response.data])
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `analytics_export_${Date.now()}.csv`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        const blob = new Blob([JSON.stringify(response.data.data, null, 2)], { type: 'application/json' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `analytics_export_${Date.now()}.json`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      }
-
-      showToast(`Analytics exported as ${format.toUpperCase()}`, 'success')
-    } catch (error) {
-      showToast('Failed to export analytics', 'error')
+  const getPlatformColor = (platform: string) => {
+    const colors = {
+      twitter: 'bg-blue-500',
+      linkedin: 'bg-blue-700',
+      instagram: 'bg-pink-500',
+      facebook: 'bg-blue-600',
+      tiktok: 'bg-black',
+      youtube: 'bg-red-500'
     }
+    return colors[platform as keyof typeof colors] || 'bg-gray-500'
+  }
+
+  const getPlatformIcon = (platform: string) => {
+    const icons = {
+      twitter: '🐦',
+      linkedin: '💼',
+      instagram: '📷',
+      facebook: '📘',
+      tiktok: '🎵',
+      youtube: '📺'
+    }
+    return icons[platform as keyof typeof icons] || '📱'
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading analytics..." />
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="lg" />
+        <span className="ml-2 text-gray-600 dark:text-gray-400">Loading analytics...</span>
       </div>
     )
   }
 
-  return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-0 mb-4 md:mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Analytics</h1>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(parseInt(e.target.value))}
-            className="w-full sm:w-auto px-4 py-2 border rounded-lg touch-target"
-          >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
-          </select>
-        </div>
-
-        {/* Engagement & Growth Dashboard */}
-        <div className="mb-4 md:mb-8">
-          <EngagementGrowthDashboard />
-        </div>
-
-        {/* Advanced Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-8">
-          <ContentPerformanceHeatmap />
-          <BestTimeToPostCalendar />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-4 md:mb-8">
-          <ContentGapAnalysis />
-          <ROICalculator />
-        </div>
-
-        {activeTab === 'overview' && analytics && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-8">
-              <div className="bg-white rounded-lg shadow p-4 md:p-6">
-                <p className="text-xs md:text-sm text-gray-600">Total Content</p>
-                <p className="text-2xl md:text-3xl font-bold mt-2">{analytics.total}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-4 md:p-6">
-                <p className="text-xs md:text-sm text-gray-600">Total Views</p>
-                <p className="text-2xl md:text-3xl font-bold mt-2">{analytics.engagement.totalViews}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-4 md:p-6">
-                <p className="text-xs md:text-sm text-gray-600">Total Engagement</p>
-                <p className="text-2xl md:text-3xl font-bold mt-2">{analytics.engagement.totalEngagement}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-6">
-                <p className="text-sm text-gray-600">Avg Engagement</p>
-                <p className="text-3xl font-bold mt-2">
-                  {analytics.engagement.averageEngagement.toFixed(1)}
-                </p>
-              </div>
-            </div>
-
-            {comprehensive && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {comprehensive.content && (
-                  <>
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <p className="text-sm text-gray-600">Success Rate</p>
-                      <p className="text-3xl font-bold mt-2">
-                        {comprehensive.content.successRate?.toFixed(1) || 0}%
-                      </p>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <p className="text-sm text-gray-600">Avg Processing</p>
-                      <p className="text-3xl font-bold mt-2">
-                        {comprehensive.content.averageProcessingTime?.toFixed(1) || 0}m
-                      </p>
-                    </div>
-                  </>
-                )}
-                {comprehensive.posts && (
-                  <>
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <p className="text-sm text-gray-600">Posts Scheduled</p>
-                      <p className="text-3xl font-bold mt-2">{comprehensive.posts.scheduled || 0}</p>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6">
-                      <p className="text-sm text-gray-600">Posts Posted</p>
-                      <p className="text-3xl font-bold mt-2">{comprehensive.posts.posted || 0}</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === 'trends' && trends && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Engagement Trends</h2>
-              <div className="space-y-4">
-                {trends.engagement && trends.engagement.length > 0 ? (
-                  trends.engagement.map((item: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm">Week {item.week}</span>
-                      <div className="flex-1 mx-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-purple-600 h-2 rounded-full"
-                            style={{ width: `${Math.min((item.value / 100) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                      <span className="text-sm font-semibold">{item.value.toFixed(0)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-8">No trend data available</p>
-                )}
-              </div>
-            </div>
-
-            {trends.bestPerforming && trends.bestPerforming.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Best Performing Posts</h2>
-                <div className="space-y-3">
-                  {trends.bestPerforming.map((post: any) => (
-                    <div key={post.id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                      <div>
-                        <p className="font-medium capitalize">{post.platform}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(post.scheduledTime).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span className="text-lg font-bold text-green-600">{post.engagement}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+            <p className="text-gray-600 dark:text-gray-400">Track your content performance</p>
           </div>
-        )}
+        </div>
+        <ErrorAlert message={error} onRetry={loadAnalytics} />
+      </div>
+    )
+  }
 
-        {activeTab === 'platforms' && comprehensive && comprehensive.platforms && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(comprehensive.platforms).map(([platform, stats]: [string, any]) => (
-              <div key={platform} className="bg-white rounded-lg shadow p-6">
-                <h3 className="font-semibold text-lg capitalize mb-4">{platform}</h3>
-                <div className="space-y-3">
+  if (!data) return null
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics</h1>
+          <p className="text-gray-600 dark:text-gray-400">Track your content performance and insights</p>
+        </div>
+        <button
+          onClick={loadAnalytics}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+        >
+          <BarChart3 className="w-4 h-4" />
+          Refresh
+        </button>
+      </div>
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <Target className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Posts</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.overview.total_posts}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+              <Eye className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Views</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(data.overview.total_views)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+              <Heart className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Engagement</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(data.overview.total_engagement)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+          <div className="flex items-center">
+            <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Engagement Rate</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.overview.avg_engagement_rate}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Platform Distribution */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Platform Performance</h2>
+        {Object.keys(data.platform_distribution).length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(data.platform_distribution).map(([platform, stats]) => (
+              <div key={platform} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <span className="text-2xl mr-2">{getPlatformIcon(platform)}</span>
+                  <span className="font-medium text-gray-900 dark:text-white capitalize">{platform}</span>
+                </div>
+                <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Connected</span>
-                    <span className={stats.connected ? 'text-green-600' : 'text-red-600'}>
-                      {stats.connected ? '✓ Yes' : '✗ No'}
-                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Posts</span>
+                    <span className="font-medium">{stats.posts}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Posts</span>
-                    <span className="font-semibold">{stats.postsCount || 0}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Views</span>
+                    <span className="font-medium">{formatNumber(stats.views)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Avg Engagement</span>
-                    <span className="font-semibold">{stats.averageEngagement?.toFixed(0) || 0}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Engagement</span>
+                    <span className="font-medium">{formatNumber(stats.engagement)}</span>
                   </div>
-                  {stats.lastUsed && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Last Used</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(stats.lastUsed).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
           </div>
+        ) : (
+          <div className="text-center py-8">
+            <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">No platform analytics available yet</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Analytics will appear once your posts are published and get engagement</p>
+          </div>
         )}
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {analytics && (
-            <>
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Content by Type</h2>
-                <div className="space-y-3">
-                  {Object.entries(analytics.byType).map(([type, count]) => (
-                    <div key={type}>
-                      <div className="flex justify-between mb-1">
-                        <span className="capitalize">{type}</span>
-                        <span className="font-semibold">{count}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-purple-600 h-2 rounded-full"
-                          style={{
-                            width: `${(count / analytics.total) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Platform Distribution</h2>
-                <div className="space-y-3">
-                  {Object.entries(analytics.byPlatform || {}).map(([platform, count]) => (
-                    <div key={platform}>
-                      <div className="flex justify-between mb-1">
-                        <span className="capitalize">{platform}</span>
-                        <span className="font-semibold">{count}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{
-                            width: `${(count / Object.values(analytics.byPlatform || {}).reduce((a: number, b: number) => a + b, 0)) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {analytics && analytics.bestPerforming.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Top Performing Content</h2>
-            <div className="space-y-3">
-              {analytics.bestPerforming.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                >
+      {/* Top Performing Posts */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Performing Posts</h2>
+        {data.top_performing_posts.length > 0 ? (
+          <div className="space-y-4">
+            {data.top_performing_posts.map((post, index) => (
+              <div key={post.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full mr-4">
+                    <Award className={`w-4 h-4 ${index === 0 ? 'text-yellow-600' : 'text-gray-600'}`} />
+                  </div>
                   <div>
-                    <p className="font-medium">{item.title || 'Untitled'}</p>
-                    <p className="text-sm text-gray-600">
-                      {item.views} views • {item.engagement} engagement
+                    <h3 className="font-medium text-gray-900 dark:text-white">{post.title || 'Untitled Post'}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(post.published_at).toLocaleDateString()}
                     </p>
                   </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Views</p>
+                    <p className="font-medium">{formatNumber(post.total_views)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Engagement</p>
+                    <p className="font-medium">{formatNumber(post.total_engagement)}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Rate</p>
+                    <p className="font-medium">{post.avg_engagement_rate}%</p>
+                  </div>
                   <button
-                    onClick={() => router.push(`/dashboard/content/${item.id}`)}
-                    className="text-purple-600 hover:underline text-sm"
+                    onClick={() => router.push(`/dashboard/analytics/posts/${post.id}`)}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
                   >
-                    View
+                    View Details
                   </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {activeTab === 'overview' && insights && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {insights.recommendations.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">💡 Recommendations</h2>
-                <div className="space-y-3">
-                  {insights.recommendations.map((rec, index) => (
-                    <div key={index} className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm">{rec.type} - {rec.priority} priority</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {insights.trends.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">📈 Trends</h2>
-                <div className="space-y-3">
-                  {insights.trends.map((trend, index) => (
-                    <div key={index} className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm">{trend.type} - {trend.trend}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {insights.opportunities.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">🚀 Opportunities</h2>
-                <div className="space-y-3">
-                  {insights.opportunities.map((opp, index) => (
-                    <div key={index} className="p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-sm">{opp.type}</p>
-                      {opp.platforms && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {opp.platforms.map((platform) => (
-                            <span key={platform} className="text-xs bg-yellow-200 px-2 py-1 rounded">
-                              {platform}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {comprehensive && comprehensive.daily && comprehensive.daily.length > 0 && activeTab === 'overview' && (
-          <div className="bg-white rounded-lg shadow p-6 mt-6">
-            <h2 className="text-xl font-semibold mb-4">Daily Activity</h2>
-            <div className="space-y-2">
-              {comprehensive.daily.slice(-14).map((day: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                  <span className="text-sm">{new Date(day.date).toLocaleDateString()}</span>
-                  <div className="flex gap-4 text-sm">
-                    <span>Content: {day.contentCreated}</span>
-                    <span>Posts: {day.postsScheduled}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+        ) : (
+          <div className="text-center py-8">
+            <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">No published posts with analytics yet</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">Publish some posts to start seeing performance data</p>
           </div>
         )}
       </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => router.push('/dashboard/posts')}
+            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" />
+            <h3 className="font-medium text-gray-900 dark:text-white">View All Posts</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Manage and analyze your content</p>
+          </button>
+
+          <button
+            onClick={() => router.push('/dashboard/analytics/performance')}
+            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <TrendingUp className="w-8 h-8 text-green-600 dark:text-green-400 mb-2" />
+            <h3 className="font-medium text-gray-900 dark:text-white">Performance Trends</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">View engagement over time</p>
+          </button>
+
+          <button
+            onClick={() => router.push('/dashboard/analytics/insights')}
+            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <Zap className="w-8 h-8 text-purple-600 dark:text-purple-400 mb-2" />
+            <h3 className="font-medium text-gray-900 dark:text-white">AI Insights</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Get smart recommendations</p>
+          </button>
+        </div>
       </div>
-    </ErrorBoundary>
+    </div>
   )
 }
