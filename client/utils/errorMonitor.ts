@@ -41,7 +41,7 @@ export class ErrorMonitor {
   private constructor() {
     this.config = {
       enabled: process.env.NODE_ENV === 'development' ||
-               (typeof localStorage !== 'undefined' && localStorage.getItem('error_monitoring') === 'enabled'),
+               (typeof window !== 'undefined' && typeof localStorage !== 'undefined' && localStorage.getItem('error_monitoring') === 'enabled'),
       thresholds: {
         maxErrorsPerMinute: 10,
         maxErrorsPerSession: 50,

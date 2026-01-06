@@ -25,15 +25,17 @@ interface SyncResult {
 
 class OfflineQueueManager {
   private queue: QueuedAction[] = []
-  private isOnline: boolean = navigator.onLine
+  private isOnline: boolean = typeof navigator !== 'undefined' ? navigator.onLine : true
   private isProcessing: boolean = false
   private syncInProgress: boolean = false
 
   constructor() {
-    this.loadQueueFromStorage()
-    this.setupNetworkListeners()
-    this.setupVisibilityListeners()
-    this.startPeriodicSync()
+    if (typeof window !== 'undefined') {
+      this.loadQueueFromStorage()
+      this.setupNetworkListeners()
+      this.setupVisibilityListeners()
+      this.startPeriodicSync()
+    }
   }
 
   /**
@@ -200,7 +202,7 @@ class OfflineQueueManager {
   private setupNetworkListeners() {
     const updateOnlineStatus = () => {
       const wasOffline = !this.isOnline
-      this.isOnline = navigator.onLine
+      this.isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
 
       if (this.isOnline && wasOffline) {
         console.log('🌐 Back online, processing offline queue...')
@@ -244,6 +246,8 @@ class OfflineQueueManager {
    * Load queue from localStorage
    */
   private loadQueueFromStorage() {
+    if (typeof localStorage === 'undefined') return
+
     try {
       const stored = localStorage.getItem('offline-queue')
       if (stored) {
@@ -261,6 +265,8 @@ class OfflineQueueManager {
    * Save queue to localStorage
    */
   private saveQueueToStorage() {
+    if (typeof localStorage === 'undefined') return
+
     try {
       localStorage.setItem('offline-queue', JSON.stringify(this.queue))
     } catch (error) {
