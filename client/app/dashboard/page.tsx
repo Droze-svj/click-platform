@@ -19,6 +19,7 @@ import { useKeyboardShortcuts, defaultShortcuts } from '../../hooks/useKeyboardS
 import { useEngagement } from '../../hooks/useEngagement'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { useAuth } from '../../hooks/useAuth'
+import DashboardOverview from '../../components/DashboardOverview'
 
 // Dynamic imports for better code splitting and performance
 import { DynamicAnalytics, DynamicPredictiveAnalytics } from '../../components/DynamicImports'
@@ -189,6 +190,13 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* New Dashboard Overview */}
+        <section className="py-8 bg-white dark:bg-gray-900">
+          <div className="container-readable">
+            <DashboardOverview />
           </div>
         </section>
 
