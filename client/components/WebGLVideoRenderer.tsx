@@ -325,22 +325,22 @@ export default function WebGLVideoRenderer({
 
     // Create buffer for quad
     const positionBuffer = glRef.current.createBuffer()
-    glRef.current.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, positionBuffer)
+    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
        1,  1,
-    ]), gl.STATIC_DRAW)
+    ]), glRef.current.STATIC_DRAW)
 
     const texCoordBuffer = gl.createBuffer()
-    glRef.current.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer)
-    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, texCoordBuffer)
+    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
       1, 0,
-    ]), gl.STATIC_DRAW)
+    ]), glRef.current.STATIC_DRAW)
 
     // Create texture
     const texture = gl.createTexture()
@@ -390,12 +390,12 @@ export default function WebGLVideoRenderer({
     const texture = textureRef.current
     if (!texture || !glRef.current) return
 
-    glRef.current.bindTexture(gl.TEXTURE_2D, texture)
-    glRef.current.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video)
-    glRef.current.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    glRef.current.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    glRef.current.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    glRef.current.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    glRef.current.bindTexture(glRef.current.TEXTURE_2D, texture)
+    glRef.current.texImage2D(glRef.current.TEXTURE_2D, 0, glRef.current.RGBA, glRef.current.RGBA, glRef.current.UNSIGNED_BYTE, video)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_S, glRef.current.CLAMP_TO_EDGE)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_T, glRef.current.CLAMP_TO_EDGE)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MIN_FILTER, glRef.current.LINEAR)
+    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MAG_FILTER, glRef.current.LINEAR)
   }, [])
 
   // Render frame
@@ -422,11 +422,11 @@ export default function WebGLVideoRenderer({
 
     // Clear
     glRef.current.clearColor(0, 0, 0, 1)
-    glRef.current.clear(gl.COLOR_BUFFER_BIT)
+    glRef.current.clear(glRef.current.COLOR_BUFFER_BIT)
 
     // Check for WebGL errors after clear
-    const clearError = gl.getError()
-    if (clearError !== gl.NO_ERROR) {
+    const clearError = glRef.current.getError()
+    if (clearError !== glRef.current.NO_ERROR) {
       logWebGLError('clear', clearError)
       return
     }
@@ -435,55 +435,55 @@ export default function WebGLVideoRenderer({
     glRef.current.useProgram(program)
 
     // Set up attributes
-    const positionLocation = gl.getAttribLocation(program, 'a_position')
-    const texCoordLocation = gl.getAttribLocation(program, 'a_texCoord')
+    const positionLocation = glRef.current.getAttribLocation(program, 'a_position')
+    const texCoordLocation = glRef.current.getAttribLocation(program, 'a_texCoord')
 
     // Position buffer
     glRef.current.enableVertexAttribArray(positionLocation)
-    glRef.current.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, gl.createBuffer())
+    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
       -1,  1,
        1, -1,
        1,  1,
-    ]), gl.STATIC_DRAW)
-    glRef.current.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
+    ]), glRef.current.STATIC_DRAW)
+    glRef.current.vertexAttribPointer(positionLocation, 2, glRef.current.FLOAT, false, 0, 0)
 
     // Texture coordinate buffer
     glRef.current.enableVertexAttribArray(texCoordLocation)
-    glRef.current.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, gl.createBuffer())
+    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
       0, 0,
       1, 1,
       1, 0,
-    ]), gl.STATIC_DRAW)
-    glRef.current.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0)
+    ]), glRef.current.STATIC_DRAW)
+    glRef.current.vertexAttribPointer(texCoordLocation, 2, glRef.current.FLOAT, false, 0, 0)
 
     // Update texture
     updateTexture(gl, video)
 
     // Set uniforms
-    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution')
-    const brightnessLocation = gl.getUniformLocation(program, 'u_brightness')
-    const contrastLocation = gl.getUniformLocation(program, 'u_contrast')
-    const saturationLocation = gl.getUniformLocation(program, 'u_saturation')
-    const hueLocation = gl.getUniformLocation(program, 'u_hue')
-    const blurLocation = gl.getUniformLocation(program, 'u_blur')
-    const sepiaLocation = gl.getUniformLocation(program, 'u_sepia')
-    const vignetteLocation = gl.getUniformLocation(program, 'u_vignette')
-    const sharpenLocation = gl.getUniformLocation(program, 'u_sharpen')
-    const noiseLocation = gl.getUniformLocation(program, 'u_noise')
-    const temperatureLocation = gl.getUniformLocation(program, 'u_temperature')
-    const tintLocation = gl.getUniformLocation(program, 'u_tint')
-    const highlightsLocation = gl.getUniformLocation(program, 'u_highlights')
-    const shadowsLocation = gl.getUniformLocation(program, 'u_shadows')
-    const clarityLocation = gl.getUniformLocation(program, 'u_clarity')
-    const dehazeLocation = gl.getUniformLocation(program, 'u_dehaze')
+    const resolutionLocation = glRef.current.getUniformLocation(program, 'u_resolution')
+    const brightnessLocation = glRef.current.getUniformLocation(program, 'u_brightness')
+    const contrastLocation = glRef.current.getUniformLocation(program, 'u_contrast')
+    const saturationLocation = glRef.current.getUniformLocation(program, 'u_saturation')
+    const hueLocation = glRef.current.getUniformLocation(program, 'u_hue')
+    const blurLocation = glRef.current.getUniformLocation(program, 'u_blur')
+    const sepiaLocation = glRef.current.getUniformLocation(program, 'u_sepia')
+    const vignetteLocation = glRef.current.getUniformLocation(program, 'u_vignette')
+    const sharpenLocation = glRef.current.getUniformLocation(program, 'u_sharpen')
+    const noiseLocation = glRef.current.getUniformLocation(program, 'u_noise')
+    const temperatureLocation = glRef.current.getUniformLocation(program, 'u_temperature')
+    const tintLocation = glRef.current.getUniformLocation(program, 'u_tint')
+    const highlightsLocation = glRef.current.getUniformLocation(program, 'u_highlights')
+    const shadowsLocation = glRef.current.getUniformLocation(program, 'u_shadows')
+    const clarityLocation = glRef.current.getUniformLocation(program, 'u_clarity')
+    const dehazeLocation = glRef.current.getUniformLocation(program, 'u_dehaze')
 
     glRef.current.uniform2f(resolutionLocation, width, height)
     glRef.current.uniform1f(brightnessLocation, filters.brightness)
@@ -503,11 +503,11 @@ export default function WebGLVideoRenderer({
     glRef.current.uniform1f(dehazeLocation, filters.dehaze || 0)
 
     // Draw
-    glRef.current.drawArrays(gl.TRIANGLES, 0, 6)
+    glRef.current.drawArrays(glRef.current.TRIANGLES, 0, 6)
 
     // Check for WebGL errors after draw
-    const drawError = gl.getError()
-    if (drawError !== gl.NO_ERROR) {
+    const drawError = glRef.current.getError()
+    if (drawError !== glRef.current.NO_ERROR) {
       logWebGLError('drawArrays', drawError)
       return
     }
