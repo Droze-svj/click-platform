@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   env: {
-    API_URL: '/api', // Use Next.js API routes for now
+    API_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api',
   },
   // Minimal configuration to avoid any build issues
   swcMinify: true,
