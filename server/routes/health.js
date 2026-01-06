@@ -13,7 +13,11 @@ async function checkDatabase() {
   try {
     // Check if Supabase is configured
     if (!process.env.SUPABASE_URL) {
-      return { connected: false, error: 'Supabase not configured' };
+      return { connected: false, error: 'SUPABASE_URL not set' };
+    }
+
+    if (!process.env.SUPABASE_ANON_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return { connected: false, error: 'SUPABASE keys not set' };
     }
 
     // Import Supabase client
@@ -29,12 +33,12 @@ async function checkDatabase() {
     const latency = Date.now() - start;
 
     if (error) {
-      return { connected: false, error: error.message };
+      return { connected: false, error: `Supabase error: ${error.message}` };
     }
 
     return { connected: true, latency: `${latency}ms` };
   } catch (error) {
-    return { connected: false, error: error.message };
+    return { connected: false, error: `Connection error: ${error.message}` };
   }
 }
 
@@ -120,11 +124,19 @@ router.get('/', async (req, res) => {
     const statusCode = 200;
     res.status(statusCode).json(health);
   } catch (error) {
-    logger.error('Health check error', { error: error.message });
-    res.status(503).json({
+    logger.error('Health check error', {
+      error: error.message,
+      stack: error.stack,
+      supabaseUrl: process.env.SUPABASE_URL ? 'set' : 'not set',
+      supabaseKeys: (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) ? 'set' : 'not set'
+    });
+    // Return 200 OK even on error for uptime monitoring
+    res.status(200).json({
       status: 'error',
       timestamp: new Date().toISOString(),
       error: error.message,
+      service: 'running',
+      uptime: process.uptime()
     });
   }
 });
