@@ -102,7 +102,7 @@ export const useImageOptimization = (
       await Promise.all(promises)
       console.log('✅ Critical images preloaded')
     } catch (error) {
-      console.warn('⚠️ Some critical images failed to preload:', error.message)
+      console.warn('⚠️ Some critical images failed to preload:', (error as Error).message)
     }
   }, [state.supportsWebP, preloadImage, getOptimizedUrl])
 
@@ -207,5 +207,6 @@ export const checkImageFormatSupport = async (): Promise<{
 
   return results
 }
+
 
 
