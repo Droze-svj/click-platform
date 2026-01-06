@@ -98,6 +98,17 @@ CREATE TABLE IF NOT EXISTS workspace_members (
   UNIQUE(workspace_id, user_id)
 );
 
+-- Create password_reset_tokens table
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  used_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Enable Row Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
@@ -106,6 +117,7 @@ ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE password_reset_tokens ENABLE ROW LEVEL SECURITY;
 
 -- Create basic RLS policies
 -- Allow insert for registration (before auth) - NO AUTH REQUIRED
@@ -176,3 +188,13 @@ CREATE POLICY "Workspace owners can manage members" ON workspace_members
   FOR ALL USING (
     EXISTS (SELECT 1 FROM workspaces WHERE id = workspace_id AND owner_id = auth.uid())
   );
+
+-- Password reset tokens policies
+CREATE POLICY "Users can create password reset tokens" ON password_reset_tokens
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Users can validate their own reset tokens" ON password_reset_tokens
+  FOR SELECT USING (user_id = auth.uid()::uuid);
+
+CREATE POLICY "Users can update their own reset tokens" ON password_reset_tokens
+  FOR UPDATE USING (user_id = auth.uid()::uuid);
