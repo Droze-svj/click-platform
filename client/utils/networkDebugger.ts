@@ -178,7 +178,7 @@ class NetworkDebugger {
     const originalSend = XMLHttpRequest.prototype.send
 
     XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...args: any[]) {
-      if (!networkDebugger.enabled) return originalOpen.call(this, method, url, ...(args as [any?, any?, any?, any?, any?]))
+      if (!networkDebugger.enabled) return (originalOpen as any).call(this, method, url, ...args)
 
       const requestId = networkDebugger.generateRequestId()
       const urlString = typeof url === 'string' ? url : url.href
