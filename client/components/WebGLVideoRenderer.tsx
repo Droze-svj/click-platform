@@ -355,12 +355,12 @@ export default function WebGLVideoRenderer({
     const shader = gl.createShader(type)
     if (!shader) return null
 
-    glRef.current.shaderSource(shader, source)
-    glRef.current.compileShader(shader)
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader)
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       console.error('Shader compile error:', gl.getShaderInfoLog(shader))
-      glRef.current.deleteShader(shader)
+      gl.deleteShader(shader)
       return null
     }
 
@@ -372,13 +372,13 @@ export default function WebGLVideoRenderer({
     const program = gl.createProgram()
     if (!program) return null
 
-    glRef.current.attachShader(program, vertexShader)
-    glRef.current.attachShader(program, fragmentShader)
-    glRef.current.linkProgram(program)
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.error('Program link error:', gl.getProgramInfoLog(program))
-      glRef.current.deleteProgram(program)
+      gl.deleteProgram(program)
       return null
     }
 
