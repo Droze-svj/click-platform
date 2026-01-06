@@ -222,7 +222,7 @@ class AdvancedCacheManager {
       }
       return networkResponse
     } catch (error) {
-      throw new Error(`Network request failed and no cache available: ${error.message}`)
+      throw new Error(`Network request failed and no cache available: ${(error as Error).message}`)
     }
   }
 
