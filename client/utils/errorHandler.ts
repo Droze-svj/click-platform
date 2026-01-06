@@ -251,6 +251,7 @@ export const parseApiError = (error: any): { message: string; code?: string; det
   if (error?.response?.data) {
     const data = error.response.data
     return {
+      message: data.message || data.error || 'API request failed',
       code: data.code || data.status,
       details: data.details || data
     }
