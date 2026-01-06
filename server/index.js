@@ -723,10 +723,7 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
-// Serve a simple landing page for testing
+// Serve a simple landing page for testing - MUST BE BEFORE OTHER ROUTES
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
