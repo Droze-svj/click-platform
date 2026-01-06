@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 
+// Authentication middleware for JWT token verification
 // Initialize Supabase client lazily
 const getSupabaseClient = () => {
   const { createClient } = require('@supabase/supabase-js');
