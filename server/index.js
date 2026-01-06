@@ -9,21 +9,29 @@ console.log('📝 NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
   console.error('Stack:', error.stack);
+  Sentry.captureException(error, {
+    tags: { type: 'uncaught_exception' },
+    level: 'fatal'
+  });
   // Don't exit immediately - try to start server for health checks
   console.error('⚠️ Attempting to start server despite error...');
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   // Filter out Redis localhost connection errors - these are expected when REDIS_URL is not set
-  if (reason && typeof reason === 'object' && reason.message && 
+  if (reason && typeof reason === 'object' && reason.message &&
       reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
     // These are expected when REDIS_URL is not configured - workers will be closed automatically
     // Don't spam logs with these errors
     return;
   }
-  
+
   console.error('❌ Unhandled Rejection at:', promise);
   console.error('Reason:', reason);
+  Sentry.captureException(reason, {
+    tags: { type: 'unhandled_rejection' },
+    extra: { promise: promise.toString() }
+  });
   // Don't exit - try to start server anyway
   console.error('⚠️ Attempting to start server despite error...');
 });
@@ -31,6 +39,15 @@ process.on('unhandledRejection', (reason, promise) => {
 console.log('📦 Loading environment variables...');
 require('dotenv').config();
 console.log('✅ Environment variables loaded');
+
+// Initialize Sentry for error tracking
+const Sentry = require('@sentry/node');
+Sentry.init({
+  dsn: "https://a400da46f531219b7ce6f78a9d5cb6ff@o4510623214731264.ingest.de.sentry.io/4510629716033616",
+  sendDefaultPii: true,
+  environment: process.env.NODE_ENV || 'development',
+  tracesSampleRate: 1.0,
+});
 
 // Start minimal health check server (production/staging only).
 // In local dev, this extra server can race with nodemon restarts and cause EADDRINUSE / partial startup.
@@ -1226,6 +1243,9 @@ app.post('/api/monitoring/test-alert', async (req, res) => {
 // 404 handler
 app.use(notFound);
 
+// Sentry error handler - catches errors not handled by custom middleware
+app.use(Sentry.expressErrorHandler());
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
@@ -1248,6 +1268,11 @@ function __installShutdownHooks() {
       try {
       } catch {}
       // #endregion
+
+      // Flush Sentry events before shutdown
+      try {
+        Sentry.close(2000).catch(() => {});
+      } catch {}
 
       // Close mongoose connection if it exists
       try {

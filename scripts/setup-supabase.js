@@ -2,7 +2,16 @@
 // This script creates the necessary tables and RLS policies for Click
 
 const { createClient } = require('@supabase/supabase-js');
+const Sentry = require('@sentry/node');
 require('dotenv').config();
+
+// Initialize Sentry for error tracking
+Sentry.init({
+  dsn: "https://a400da46f531219b7ce6f78a9d5cb6ff@o4510623214731264.ingest.de.sentry.io/4510629716033616",
+  sendDefaultPii: true,
+  environment: process.env.NODE_ENV || 'development',
+  tracesSampleRate: 1.0,
+});
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -191,6 +200,17 @@ async function setupDatabase() {
 
   } catch (error) {
     console.error('❌ Error setting up database:', error);
+    Sentry.captureException(error, {
+      tags: {
+        script: 'setup-supabase',
+        operation: 'database_setup'
+      },
+      extra: {
+        supabaseUrl: supabaseUrl ? 'configured' : 'missing',
+        hasServiceKey: !!supabaseKey
+      }
+    });
+    await Sentry.close(2000); // Give Sentry time to send the error
     process.exit(1);
   }
 }
