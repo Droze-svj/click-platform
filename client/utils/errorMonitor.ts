@@ -337,7 +337,7 @@ export class ErrorMonitor {
       this.monitorError(event.reason, 'Global', 'unhandledrejection', {
         promise: event.promise
       })
-      originalOnUnhandledRejection?.(event)
+      originalOnUnhandledRejection?.call(window, event)
     }
 
     // Monitor console errors
