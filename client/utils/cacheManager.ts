@@ -376,7 +376,7 @@ class AdvancedCacheManager {
     let cleaned = 0
     const maxEntries = 50 // Keep only 50 entries per cache
 
-    for (const [cacheName, entries] of this.entries.entries()) {
+    this.entries.forEach((entries, cacheName) => {
       if (entries.length > maxEntries) {
         // Sort by last access time and keep most recent
         entries.sort((a, b) => b.timestamp - a.timestamp)
@@ -384,7 +384,7 @@ class AdvancedCacheManager {
         cleaned += entries.length - maxEntries
         this.entries.set(cacheName, keptEntries)
       }
-    }
+    })
 
     if (cleaned > 0) {
       console.log(`🧹 Cleaned up ${cleaned} LRU cache entries`)
