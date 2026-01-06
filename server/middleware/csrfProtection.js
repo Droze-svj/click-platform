@@ -32,10 +32,13 @@ function csrfProtection(req, res, next) {
   }
 
   // Skip CSRF for authentication endpoints (they use JWT, not sessions)
-  if (req.path.startsWith('/auth/login') || 
-      req.path.startsWith('/auth/register') || 
-      req.path.startsWith('/auth/logout') || 
-      req.path.startsWith('/auth/refresh')) {
+  if (req.path.startsWith('/auth/login') ||
+      req.path.startsWith('/auth/register') ||
+      req.path.startsWith('/auth/logout') ||
+      req.path.startsWith('/auth/refresh') ||
+      req.path.startsWith('/auth/forgot-password') ||
+      req.path.startsWith('/auth/reset-password') ||
+      req.path.startsWith('/auth/validate-reset-token')) {
     return next();
   }
 
