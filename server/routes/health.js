@@ -180,6 +180,22 @@ router.post('/test-sentry', (req, res) => {
 
 /**
  * @swagger
+ * /api/health/uptime:
+ *   get:
+ *     summary: Simple uptime check (always returns 200 OK)
+ *     tags: [Health]
+ */
+router.get('/uptime', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: 'running'
+  });
+});
+
+/**
+ * @swagger
  * /api/health/debug-redis:
  *   get:
  *     summary: Debug Redis configuration (for troubleshooting)
