@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const { isCloudStorageEnabled } = require('../services/storageService');
-const { isConfigured: isTwitterOAuthConfigured } = require('../services/twitterOAuthService');
+const twitterOAuth = require('../services/twitterOAuthService');
 const logger = require('../utils/logger');
 
 /**
@@ -114,7 +114,7 @@ router.get('/', async (req, res) => {
         },
         oauth: {
           twitter: {
-            enabled: isTwitterOAuthConfigured(),
+            enabled: twitterOAuth.isConfigured(),
             configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET),
           },
           linkedin: {
