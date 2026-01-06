@@ -59,7 +59,9 @@ export default function ApprovalsPage() {
 
   const loadData = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      if (!token) return
+
       const params = new URLSearchParams()
       if (filter !== 'all') {
         params.append('status', filter)
@@ -93,7 +95,9 @@ export default function ApprovalsPage() {
   const handleApprove = async (requestId: string) => {
     const response = prompt('Add a response (optional):')
     try {
-      const token = localStorage.getItem('token')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      if (!token) return
+
       await axios.post(
         `${API_URL}/approvals/${requestId}/approve`,
         { response: response || '' },
@@ -110,7 +114,9 @@ export default function ApprovalsPage() {
   const handleReject = async (requestId: string) => {
     const response = prompt('Add a reason for rejection (optional):')
     try {
-      const token = localStorage.getItem('token')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      if (!token) return
+
       await axios.post(
         `${API_URL}/approvals/${requestId}/reject`,
         { response: response || '' },
@@ -128,7 +134,9 @@ export default function ApprovalsPage() {
     if (!confirm('Are you sure you want to cancel this request?')) return
 
     try {
-      const token = localStorage.getItem('token')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      if (!token) return
+
       await axios.post(
         `${API_URL}/approvals/${requestId}/cancel`,
         {},
@@ -421,7 +429,9 @@ export default function ApprovalsPage() {
                 <button
                   onClick={async () => {
                     try {
-                      const token = localStorage.getItem('token')
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+                      if (!token) return
+
                       await axios.post(
                         `${API_URL}/approvals`,
                         newRequest,
