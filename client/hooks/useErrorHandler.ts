@@ -21,9 +21,10 @@ export function useErrorHandler() {
 
       // Log error
       if (logOption) {
-        logError(appError, {
+        logError(appError.message, 'useErrorHandler', 'handleError', {
           statusCode: appError.statusCode,
           code: appError.code,
+          details: appError.details,
         });
       }
 
