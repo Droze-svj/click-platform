@@ -303,7 +303,7 @@ export default function WebGLVideoRenderer({
     }
 
     const webGLContext = gl as WebGLRenderingContext
-    webGLContext = webGLContext
+    glRef.current = webGLContext
 
     // Create shaders
 
