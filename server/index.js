@@ -1004,15 +1004,6 @@ curl -s https://click-platform.onrender.com/api/health
         function showRegistrationForm() {
             console.log('Registration button clicked');
 
-            // Add visual feedback immediately
-            document.body.style.backgroundColor = '#10b981';
-            setTimeout(() => {
-                document.body.style.backgroundColor = '';
-            }, 200);
-
-            // Show alert to confirm function execution
-            alert('Registration button clicked! Check console for details.');
-
             // Debug DOM element existence
             const authForms = document.getElementById('auth-forms');
             const formTitle = document.getElementById('form-title');
@@ -1151,7 +1142,12 @@ curl -s https://click-platform.onrender.com/api/health
                     body: JSON.stringify(data)
                 });
 
-                const result = await response.json();
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    result = { error: 'Invalid response from server' };
+                }
 
                 if (response.ok) {
                     resultDiv.style.background = '#10b981';
@@ -1159,7 +1155,15 @@ curl -s https://click-platform.onrender.com/api/health
                     authToken = result.token;
                 } else {
                     resultDiv.style.background = '#ef4444';
-                    resultDiv.innerHTML = '<strong>❌ Registration Failed:</strong><br>' + (result.error || 'Unknown error') + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
+                    let errorMessage = result.error || 'Unknown error';
+                    if (result.details && Array.isArray(result.details)) {
+                        errorMessage += '<br><br><strong>Validation Errors:</strong><ul>';
+                        result.details.forEach(detail => {
+                            errorMessage += '<li>' + detail.msg + ' (field: ' + detail.path + ')</li>';
+                        });
+                        errorMessage += '</ul>';
+                    }
+                    resultDiv.innerHTML = '<strong>❌ Registration Failed:</strong><br>' + errorMessage + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
                 }
             } catch (error) {
                 resultDiv.style.background = '#ef4444';
@@ -1202,7 +1206,15 @@ curl -s https://click-platform.onrender.com/api/health
                     }, 100);
                 } else {
                     resultDiv.style.background = '#ef4444';
-                    resultDiv.innerHTML = '<strong>❌ Login Failed:</strong><br>' + (result.error || 'Unknown error') + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
+                    let errorMessage = result.error || 'Unknown error';
+                    if (result.details && Array.isArray(result.details)) {
+                        errorMessage += '<br><br><strong>Validation Errors:</strong><ul>';
+                        result.details.forEach(detail => {
+                            errorMessage += '<li>' + detail.msg + ' (field: ' + detail.path + ')</li>';
+                        });
+                        errorMessage += '</ul>';
+                    }
+                    resultDiv.innerHTML = '<strong>❌ Login Failed:</strong><br>' + errorMessage + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
                 }
             } catch (error) {
                 resultDiv.style.background = '#ef4444';
