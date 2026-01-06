@@ -726,8 +726,278 @@ app.use('/api', (req, res, next) => {
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// In production, the frontend is served by Next.js
-// API routes are handled by this Express server
+// Serve a simple landing page for testing
+app.get('/', (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Platform - Test Your APIs</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 1.5em;
+        }
+        .card p {
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        .btn {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #3730a3;
+        }
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status.online {
+            background: #10b981;
+            color: white;
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .api-test {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        .endpoint {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .method {
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .method.get { background: #10b981; }
+        .method.post { background: #f59e0b; }
+        .method.put { background: #3b82f6; }
+        .method.delete { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Click Platform</h1>
+        <p class="subtitle">Your AI-powered content creation platform is ready for testing!</p>
+
+        <div style="text-align: center; margin-bottom: 30px;">
+            <span class="status online">✓ API Status: Online</span>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🔐 Authentication</h3>
+                <p>Test user registration, login, and email verification.</p>
+                <a href="/api/auth/register" class="btn">Test Registration</a>
+                <a href="/api/auth/login" class="btn secondary">Test Login</a>
+            </div>
+
+            <div class="card">
+                <h3>📝 Content Creation</h3>
+                <p>Create, edit, and manage your content posts.</p>
+                <a href="/api/posts" class="btn">View Posts</a>
+                <a href="/api/posts" class="btn secondary">Create Post</a>
+            </div>
+
+            <div class="card">
+                <h3>📊 Analytics Dashboard</h3>
+                <p>Track performance and engagement metrics.</p>
+                <a href="/api/analytics/dashboard" class="btn">View Analytics</a>
+                <a href="/api/analytics/performance" class="btn secondary">Performance</a>
+            </div>
+
+            <div class="card">
+                <h3>🔗 Social Integration</h3>
+                <p>Connect and post to social media platforms.</p>
+                <a href="/api/oauth/twitter" class="btn">Connect Twitter</a>
+                <a href="/api/oauth" class="btn secondary">View Connections</a>
+            </div>
+
+            <div class="card">
+                <h3>👑 Admin Panel</h3>
+                <p>Manage users and system settings.</p>
+                <a href="/api/admin/stats" class="btn">System Stats</a>
+                <a href="/api/admin/users" class="btn secondary">User Management</a>
+            </div>
+
+            <div class="card">
+                <h3>🔧 API Testing</h3>
+                <p>Use these endpoints to test functionality.</p>
+                <button onclick="testHealth()" class="btn">Test Health</button>
+                <button onclick="testMe()" class="btn secondary">Test Auth</button>
+            </div>
+        </div>
+
+        <div class="api-test">
+            <h3>🧪 Quick API Tests</h3>
+            <p>Click the buttons above or use these curl commands:</p>
+
+            <div class="code">
+curl -s https://click-platform.onrender.com/api/health
+            </div>
+
+            <div class="endpoint">
+                <span><span class="method get">GET</span> /api/health</span>
+                <span>Check API status</span>
+            </div>
+
+            <div class="endpoint">
+                <span><span class="method post">POST</span> /api/auth/register</span>
+                <span>Register new user</span>
+            </div>
+
+            <div class="endpoint">
+                <span><span class="method post">POST</span> /api/auth/login</span>
+                <span>User login</span>
+            </div>
+
+            <div class="endpoint">
+                <span><span class="method get">GET</span> /api/posts</span>
+                <span>Get user posts</span>
+            </div>
+
+            <div class="endpoint">
+                <span><span class="method get">GET</span> /api/analytics/dashboard</span>
+                <span>View analytics</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; opacity: 0.8;">
+            <p>💡 <strong>Next Steps:</strong> Full React frontend deployment coming soon!</p>
+            <p>For now, test all your APIs and backend functionality here.</p>
+        </div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                alert('✅ API is working!\\n\\n' + JSON.stringify(data, null, 2));
+            } catch (error) {
+                alert('❌ API test failed: ' + error.message);
+            }
+        }
+
+        async function testMe() {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+                if (response.status === 401) {
+                    alert('🔒 Not authenticated. Please login first.');
+                } else {
+                    const data = await response.json();
+                    alert('✅ Authentication working!\\n\\n' + JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                alert('❌ Auth test failed: ' + error.message);
+            }
+        }
+
+        // Auto-test health on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 1000);
+        });
+    </script>
+</body>
+</html>`);
+});
+
+// Serve Next.js build files in production (if available)
+if (process.env.NODE_ENV === 'production') {
+  const nextJsPath = path.join(__dirname, '../client/.next');
+
+  if (fs.existsSync(nextJsPath)) {
+    console.log('📦 Next.js build found, serving from:', nextJsPath);
+    // Could add Next.js serving logic here if needed
+  }
+}
 
 // Database connection with multi-provider support
 // Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)
