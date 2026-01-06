@@ -83,30 +83,20 @@ export default function RootLayout({
         <ErrorBoundary>
           <TranslationProvider>
             <ToastProvider>
-              {/* Temporarily disable complex components that might make API calls */}
-              {/* <Analytics /> */}
-              {/* <PerformanceMonitor /> */}
-              {/* <ServerPingPixel /> */}
-              {/* <AgentClientPing /> */}
-              {/* <RouteChangeLogger /> */}
-              {/* <DevDebugBanner /> */}
-              {/* <TokenStorageProbe /> */}
-              {/* <NavigationProbe /> */}
-              {/* <InteractionProbe /> */}
-              {/* <PWARegistration /> */}
-              {/* <RealtimeConnection /> */}
-              {/* <OnboardingFlow /> */}
-              {/* <AccessibilityFeatures /> */}
-              {/* <OfflineIndicator /> */}
-              {/* <KeyboardShortcutsHelper /> */}
-              {/* <MobileTouchEnhancements /> */}
+              <Analytics />
+              <PerformanceMonitor />
+              <AgentClientPing />
+              <DevDebugBanner />
+              <PWARegistration />
+              <RealtimeConnection />
+              <OnboardingFlow />
+              <OfflineIndicator />
               <PWAManager>
                 <DebugLayout>
                   {children}
                 </DebugLayout>
-                {/* <ErrorDashboard /> */}
-                {/* <PWAInstallPrompt /> */}
-                {/* <PWAUpdateHandler /> */}
+                <PWAInstallPrompt />
+                <PWAUpdateHandler />
               </PWAManager>
             </ToastProvider>
           </TranslationProvider>
