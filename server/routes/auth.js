@@ -618,5 +618,136 @@ router.post('/resend-verification',
   }
 });
 
+// Get user profile
+router.get('/profile', require('../middleware/auth'), async (req, res) => {
+  try {
+    // User data is already available from auth middleware
+    const profile = {
+      id: req.user.id,
+      email: req.user.email,
+      name: req.user.name,
+      avatar: req.user.avatar,
+      bio: req.user.bio,
+      website: req.user.website,
+      location: req.user.location,
+      social_links: req.user.social_links,
+      niche: req.user.niche,
+      subscription: req.user.subscription,
+      email_verified: req.user.email_verified,
+      created_at: req.user.created_at
+    };
+
+    res.json({ success: true, profile });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Update user profile
+router.put('/profile', require('../middleware/auth'), async (req, res) => {
+  try {
+    const { name, bio, website, location, social_links, niche } = req.body;
+
+    // Validate input
+    if (name && (typeof name !== 'string' || name.trim().length < 2)) {
+      return res.status(400).json({ success: false, error: 'Name must be at least 2 characters long' });
+    }
+
+    if (website && !/^https?:\/\/.+/.test(website)) {
+      return res.status(400).json({ success: false, error: 'Website must be a valid URL starting with http:// or https://' });
+    }
+
+    // Prepare update data
+    const updateData = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (bio !== undefined) updateData.bio = bio ? bio.trim() : null;
+    if (website !== undefined) updateData.website = website ? website.trim() : null;
+    if (location !== undefined) updateData.location = location ? location.trim() : null;
+    if (social_links !== undefined) updateData.social_links = social_links || {};
+    if (niche !== undefined) updateData.niche = niche;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid fields to update' });
+    }
+
+    // Update user in Supabase
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', req.user.id)
+      .select('id, email, name, avatar, bio, website, location, social_links, niche, subscription, email_verified, created_at')
+      .single();
+
+    if (updateError) {
+      console.error('Profile update error:', updateError);
+      return res.status(500).json({ success: false, error: 'Failed to update profile' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      profile: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Change password
+router.post('/change-password', require('../middleware/auth'), async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters long' });
+    }
+
+    // Get current user with password
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, password')
+      .eq('id', req.user.id)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Verify current password
+    const bcrypt = require('bcryptjs');
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('id', req.user.id);
+
+    if (updateError) {
+      console.error('Password change error:', updateError);
+      return res.status(500).json({ success: false, error: 'Failed to change password' });
+    }
+
+    res.json({ success: true, message: 'Password changed successfully' });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 module.exports = router;
 
