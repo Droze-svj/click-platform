@@ -426,7 +426,7 @@ export default function WebGLVideoRenderer({
 
     // Check for WebGL errors after clear
     const clearError = gl.getError()
-    if (clearError !== glRef.current.NO_ERROR) {
+    if (clearError !== gl.NO_ERROR) {
       logWebGLError('clear', clearError)
       return
     }
@@ -503,11 +503,11 @@ export default function WebGLVideoRenderer({
     gl.uniform1f(dehazeLocation, filters.dehaze || 0)
 
     // Draw
-    gl.drawArrays(glRef.current.TRIANGLES, 0, 6)
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
 
     // Check for WebGL errors after draw
     const drawError = gl.getError()
-    if (drawError !== glRef.current.NO_ERROR) {
+    if (drawError !== gl.NO_ERROR) {
       logWebGLError('drawArrays', drawError)
       return
     }
