@@ -1,29 +1,9 @@
-// Next.js middleware with Sentry integration
+// Next.js middleware - simplified version
 
-import * as Sentry from '@sentry/nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Only use Sentry if it's properly initialized (DSN is set)
-  const hasSentry = !!process.env.NEXT_PUBLIC_SENTRY_DSN;
-
-  if (hasSentry) {
-    try {
-      // Sentry v10+ handles transactions automatically via autoInstrumentMiddleware
-      // No need to manually create transactions
-
-      // Add request context for better error tracking
-      Sentry.setContext('request', {
-        url: request.url,
-        pathname: request.nextUrl.pathname,
-      });
-    } catch (error) {
-      // Silently fail if Sentry is not properly configured
-      console.warn('Sentry context setting failed:', error);
-    }
-  }
-
   const response = NextResponse.next();
 
   // Add custom header for tracking (optional)
