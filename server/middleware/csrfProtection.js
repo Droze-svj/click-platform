@@ -32,6 +32,7 @@ function csrfProtection(req, res, next) {
   }
 
   // Skip CSRF for authentication endpoints (they use JWT, not sessions)
+  // req.path will be like "/auth/forgot-password" when mounted under "/api/auth"
   if (req.path.startsWith('/auth/login') ||
       req.path.startsWith('/auth/register') ||
       req.path.startsWith('/auth/logout') ||
@@ -39,6 +40,7 @@ function csrfProtection(req, res, next) {
       req.path.startsWith('/auth/forgot-password') ||
       req.path.startsWith('/auth/reset-password') ||
       req.path.startsWith('/auth/validate-reset-token')) {
+    console.log('Skipping CSRF for auth endpoint:', req.path);
     return next();
   }
 
