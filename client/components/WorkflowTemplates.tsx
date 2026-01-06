@@ -64,9 +64,12 @@ export default function WorkflowTemplates() {
     setCreating(templateId);
     try {
       const response = await fetch('/api/workflows/templates/create', {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
+        body: JSON.stringify({ templateId }),
       });
       const data = await response.json();
       if (data.success) {
