@@ -336,12 +336,12 @@ export default function WebGLVideoRenderer({
 
     const texCoordBuffer = webGLContext.createBuffer()
     webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, texCoordBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    webGLContext.bufferData(webGLContext.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
       1, 0,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
 
     // Create texture
     const texture = webGLContext.createTexture()
@@ -442,27 +442,27 @@ export default function WebGLVideoRenderer({
     // Position buffer
     gl.enableVertexAttribArray(positionLocation)
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    webGLContext.bufferData(webGLContext.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
       -1,  1,
        1, -1,
        1,  1,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
     // Texture coordinate buffer
     gl.enableVertexAttribArray(texCoordLocation)
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    webGLContext.bufferData(webGLContext.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
       0, 0,
       1, 1,
       1, 0,
-    ]), gl.STATIC_DRAW)
+    ]), webGLContext.STATIC_DRAW)
     gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0)
 
     // Update texture
