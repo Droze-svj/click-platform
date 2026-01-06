@@ -124,7 +124,7 @@ export default function AdminPage() {
             <p className="text-gray-600 dark:text-gray-400">System overview and management</p>
           </div>
         </div>
-        <ErrorAlert message={error} onRetry={loadDashboard} />
+        <ErrorAlert message={error} onClose={() => setError(null)} />
       </div>
     )
   }

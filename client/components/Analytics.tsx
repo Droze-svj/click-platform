@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { trackPageView } from '../utils/analytics'
+// import { trackPageView } from '../utils/analytics'
 
 /**
  * Analytics Component
@@ -28,7 +28,7 @@ export default function Analytics() {
   useEffect(() => {
     // Track page view when pathname changes
     if (pathname) {
-      trackPageView(pathname)
+      // trackPageView(pathname)
     }
   }, [pathname])
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { X, Download, Smartphone, Zap, Wifi } from 'lucide-react'
-// import { // trackPWAEvent } from '../utils/analytics'
+// import { trackPWAEvent } from '../utils/analytics'
 
 interface PWAInstallPromptProps {
   onInstall?: () => void
@@ -46,7 +46,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
         setTimeout(() => {
           if (!dismissed) {
             setShowPrompt(true)
-            // trackPWAEvent('install_prompt_shown', { trigger: 'auto' })
+            trackPWAEvent('install_prompt_shown', { trigger: 'auto' })
           }
         }, 30000) // Show after 30 seconds of engagement
       }
@@ -57,7 +57,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       const handleAppInstalled = () => {
         setShowPrompt(false)
         setDeferredPrompt(null)
-        // trackPWAEvent('install_completed', { method: 'prompt' })
+        trackPWAEvent('install_completed', { method: 'prompt' })
 
         if (onInstall) {
           onInstall()
@@ -86,19 +86,19 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       const { outcome } = await deferredPrompt.userChoice
 
       if (outcome === 'accepted') {
-        // trackPWAEvent('install_accepted', { method: 'prompt' })
+        trackPWAEvent('install_accepted', { method: 'prompt' })
         setShowPrompt(false)
 
         if (onInstall) {
           onInstall()
         }
       } else {
-        // trackPWAEvent('install_declined', { method: 'prompt' })
+        trackPWAEvent('install_declined', { method: 'prompt' })
       }
 
     } catch (error) {
       console.error('PWA install failed:', error)
-      // trackPWAEvent('install_error', { error: error instanceof Error ? error.message : String(error) })
+      trackPWAEvent('install_error', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setInstalling(false)
       setDeferredPrompt(null)
@@ -112,7 +112,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     // Remember dismissal
     localStorage.setItem('pwa-prompt-dismissed', Date.now().toString())
 
-    // trackPWAEvent('install_prompt_dismissed', { trigger: 'user' })
+    trackPWAEvent('install_prompt_dismissed', { trigger: 'user' })
 
     if (onDismiss) {
       onDismiss()
@@ -121,7 +121,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
   // Manual install for browsers that don't support beforeinstallprompt
   const handleManualInstall = () => {
-    // trackPWAEvent('install_manual_attempt', { userAgent: navigator.userAgent })
+    trackPWAEvent('install_manual_attempt', { userAgent: navigator.userAgent })
 
     // Show manual install instructions
     alert(`To install Click:\n\n1. Tap the share button in your browser\n2. Select "Add to Home Screen"\n3. Tap "Add" to install\n\nThe app will appear on your home screen!`)

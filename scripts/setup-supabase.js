@@ -28,30 +28,22 @@ async function setupDatabase() {
   console.log('🚀 Setting up Click database schema in Supabase...');
 
   try {
-    // Create users table
+    // Create users table using direct SQL
     console.log('📋 Creating users table...');
-    await supabase.rpc('exec_sql', {
-      sql: `
-        CREATE TABLE IF NOT EXISTS users (
-          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-          email TEXT UNIQUE NOT NULL,
-          username TEXT UNIQUE,
-          first_name TEXT,
-          last_name TEXT,
-          password TEXT NOT NULL,
-          avatar TEXT,
-          bio TEXT,
-          website TEXT,
-          location TEXT,
-          social_links JSONB,
-          email_verified BOOLEAN DEFAULT FALSE,
-          email_verified_at TIMESTAMP WITH TIME ZONE,
-          last_login_at TIMESTAMP WITH TIME ZONE,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `
-    });
+    const { data: userTable, error: userError } = await supabase
+      .from('users')
+      .select('count')
+      .limit(1);
+
+    if (userError && userError.message.includes('relation "public.users" does not exist')) {
+      // Table doesn't exist, we can't create it from client side
+      // We'll need to create it manually in Supabase dashboard
+      console.log('⚠️  Users table does not exist. Please create it manually in Supabase dashboard.');
+      console.log('   Go to: https://supabase.com/dashboard/project/cylfimsyfnodvgrzulof/supabase');
+      console.log('   SQL Editor > New Query > Paste the table creation SQL');
+    } else {
+      console.log('✅ Users table exists');
+    }
 
     // Create posts table
     console.log('📋 Creating posts table...');

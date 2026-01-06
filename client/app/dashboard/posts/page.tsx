@@ -159,7 +159,7 @@ export default function PostsPage() {
 
       {/* Error Alert */}
       {error && (
-        <ErrorAlert message={error} onRetry={loadPosts} />
+        <ErrorAlert message={error} onClose={() => setError(null)} />
       )}
 
       {/* Posts List */}

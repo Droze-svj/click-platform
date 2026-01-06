@@ -726,42 +726,8 @@ app.use('/api', (req, res, next) => {
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Serve Next.js static export files
-if (process.env.NODE_ENV === 'production') {
-  const staticPath = path.join(__dirname, '../client/out');
-
-  // Serve static export files
-  if (fs.existsSync(staticPath)) {
-    app.use(express.static(staticPath));
-
-    // Handle SPA routing - serve index.html for all non-API routes
-    app.get('*', (req, res) => {
-      // Skip API routes
-      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-        return;
-      }
-
-      // Try to serve index.html for SPA routes
-      const indexPath = path.join(staticPath, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-      } else {
-        res.status(404).send('Frontend not available. Please check deployment.');
-      }
-    });
-  } else {
-    console.warn('⚠️ Next.js static export not found at:', staticPath);
-    console.warn('Make sure to run: cd client && npm run build');
-
-    // Fallback response for non-API routes
-    app.get('*', (req, res) => {
-      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-        return;
-      }
-      res.status(503).send('Service temporarily unavailable. Frontend building...');
-    });
-  }
-}
+// In production, the frontend is served by Next.js
+// API routes are handled by this Express server
 
 // Database connection with multi-provider support
 // Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)

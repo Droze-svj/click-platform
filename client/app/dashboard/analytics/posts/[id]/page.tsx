@@ -148,7 +148,7 @@ export default function PostAnalyticsPage() {
             Back
           </button>
         </div>
-        <ErrorAlert message={error} onRetry={loadPostAnalytics} />
+        <ErrorAlert message={error} onClose={() => setError(null)} />
       </div>
     )
   }

@@ -86,7 +86,7 @@ export default function DashboardOverview() {
     return (
       <ErrorAlert
         message={error}
-        onRetry={loadDashboardData}
+        onClose={() => setError(null)}
       />
     )
   }
