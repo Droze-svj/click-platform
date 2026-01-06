@@ -423,7 +423,7 @@ class AdvancedCacheManager {
   getStats(): Record<string, any> {
     const stats: Record<string, any> = {}
 
-    for (const [cacheName, config] of this.caches.entries()) {
+    this.caches.forEach((config, cacheName) => {
       const entries = this.entries.get(cacheName) || []
       const expired = entries.filter(e => e.expires && Date.now() > e.expires).length
 
