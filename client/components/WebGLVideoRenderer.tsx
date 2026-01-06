@@ -404,7 +404,7 @@ export default function WebGLVideoRenderer({
     const startTime = performance.now()
 
     try {
-      const gl = webGLContext
+      const gl = glRef.current
       const program = programRef.current
       const video = videoElement
 
