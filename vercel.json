@@ -11,5 +11,12 @@
       "src": "/(.*)",
       "dest": "/client/$1"
     }
-  ]
+  ],
+  "functions": {
+    "client/**/*.js": {
+      "runtime": "@vercel/next"
+    }
+  },
+  "regions": ["cdg1"],
+  "outputDirectory": "client/.next"
 }
