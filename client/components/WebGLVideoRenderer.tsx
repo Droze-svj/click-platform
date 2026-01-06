@@ -441,7 +441,7 @@ export default function WebGLVideoRenderer({
 
     // Position buffer
     gl.enableVertexAttribArray(positionLocation)
-    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, glRef.current.createBuffer())
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
     glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
@@ -454,7 +454,7 @@ export default function WebGLVideoRenderer({
 
     // Texture coordinate buffer
     gl.enableVertexAttribArray(texCoordLocation)
-    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, glRef.current.createBuffer())
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
     glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
