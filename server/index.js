@@ -1001,6 +1001,21 @@ curl -s https://click-platform.onrender.com/api/health
         }
 
         function showRegistrationForm() {
+            // #region agent log
+            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'showRegistrationForm',
+                    message: 'Function called',
+                    data: {},
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    hypothesisId: 'A'
+                })
+            }).catch(() => {});
+            // #endregion
+
             console.log('Registration button clicked');
             document.getElementById('auth-forms').style.display = 'block';
             document.getElementById('form-title').textContent = 'Register';
@@ -1218,12 +1233,83 @@ curl -s https://click-platform.onrender.com/api/health
 
         // Add event listeners for buttons - using DOMContentLoaded for reliability
         function attachEventListeners() {
+            // #region agent log
+            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'attachEventListeners',
+                    message: 'Function called',
+                    data: { readyState: document.readyState },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    hypothesisId: 'B'
+                })
+            }).catch(() => {});
+            // #endregion
+
             // Auth buttons
             const registerBtn = document.getElementById('show-register-btn');
             const loginBtn = document.getElementById('show-login-btn');
 
-            if (registerBtn) registerBtn.addEventListener('click', showRegistrationForm);
-            if (loginBtn) loginBtn.addEventListener('click', showLoginForm);
+            // #region agent log
+            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'attachEventListeners',
+                    message: 'Button elements found',
+                    data: {
+                        registerBtn: !!registerBtn,
+                        loginBtn: !!loginBtn
+                    },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    hypothesisId: 'C'
+                })
+            }).catch(() => {});
+            // #endregion
+
+            if (registerBtn) {
+                registerBtn.addEventListener('click', (e) => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: 'registerBtn.click',
+                            message: 'Register button clicked',
+                            data: { buttonId: 'show-register-btn' },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            hypothesisId: 'A'
+                        })
+                    }).catch(() => {});
+                    // #endregion
+
+                    showRegistrationForm();
+                });
+            }
+            if (loginBtn) {
+                loginBtn.addEventListener('click', (e) => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: 'loginBtn.click',
+                            message: 'Login button clicked',
+                            data: { buttonId: 'show-login-btn' },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            hypothesisId: 'A'
+                        })
+                    }).catch(() => {});
+                    // #endregion
+
+                    showLoginForm();
+                });
+            }
 
             // API testing buttons
             const buttons = [
@@ -1240,9 +1326,39 @@ curl -s https://click-platform.onrender.com/api/health
             buttons.forEach(({ id, action }) => {
                 const btn = document.getElementById(id);
                 if (btn) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: 'attachEventListeners',
+                            message: 'Attaching listener to button',
+                            data: { buttonId: id },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            hypothesisId: 'C'
+                        })
+                    }).catch(() => {});
+                    // #endregion
+
                     btn.addEventListener('click', action);
                     console.log('Attached listener to button:', id);
                 } else {
+                    // #region agent log
+                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: 'attachEventListeners',
+                            message: 'Button not found',
+                            data: { buttonId: id },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            hypothesisId: 'D'
+                        })
+                    }).catch(() => {});
+                    // #endregion
+
                     console.warn('Button not found:', id);
                 }
             });
@@ -1252,13 +1368,58 @@ curl -s https://click-platform.onrender.com/api/health
 
         // Attach listeners when DOM is ready
         if (document.readyState === 'loading') {
+            // #region agent log
+            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'DOMContentLoaded',
+                    message: 'DOM still loading, adding event listener',
+                    data: { readyState: document.readyState },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    hypothesisId: 'E'
+                })
+            }).catch(() => {});
+            // #endregion
+
             document.addEventListener('DOMContentLoaded', attachEventListeners);
         } else {
+            // #region agent log
+            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'DOMContentLoaded',
+                    message: 'DOM already loaded, calling attachEventListeners directly',
+                    data: { readyState: document.readyState },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    hypothesisId: 'E'
+                })
+            }).catch(() => {});
+            // #endregion
+
             attachEventListeners();
         }
 
         // Auto-test health on page load
         window.addEventListener('load', () => {
+            // #region agent log
+            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'window.load',
+                    message: 'Page fully loaded',
+                    data: {},
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    hypothesisId: 'B'
+                })
+            }).catch(() => {});
+            // #endregion
+
             setTimeout(testHealth, 1000);
         });
     </script>
