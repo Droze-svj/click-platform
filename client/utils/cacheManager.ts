@@ -434,7 +434,7 @@ class AdvancedCacheManager {
         valid: entries.length - expired,
         totalSize: this.estimateCacheSize(entries)
       }
-    }
+    })
 
     return stats
   }
