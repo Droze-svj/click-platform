@@ -566,7 +566,7 @@ class AdvancedCacheManager {
           return { url, success: true }
         }
       } catch (error) {
-        console.warn(`⚠️ Cache warming failed for ${url}:`, error.message)
+        console.warn(`⚠️ Cache warming failed for ${url}:`, (error as Error).message)
       }
       return { url, success: false }
     })
