@@ -40,13 +40,28 @@ async function getAuthorizationUrl(userId, callbackUrl) {
       `state=${state}&` +
       `scope=${encodeURIComponent(scope)}`;
 
-    // Store state in user's OAuth data
+    // Store state in user's social_links (using as OAuth storage)
+    const { data: currentUser } = await supabase
+      .from('users')
+      .select('social_links')
+      .eq('id', userId)
+      .single();
+
+    const socialLinks = currentUser?.social_links || {};
+    const oauthData = socialLinks.oauth || {};
+    const linkedinData = oauthData.linkedin || {};
+
     const { error: updateError } = await supabase
       .from('users')
       .update({
-        oauth: {
-          linkedin: {
-            state: state
+        social_links: {
+          ...socialLinks,
+          oauth: {
+            ...oauthData,
+            linkedin: {
+              ...linkedinData,
+              state: state
+            }
           }
         }
       })
@@ -75,11 +90,14 @@ async function exchangeCodeForToken(userId, code, state) {
     // Verify state
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('oauth')
+      .select('social_links')
       .eq('id', userId)
       .single();
 
-    if (userError || !user || !user.oauth?.linkedin?.state || user.oauth.linkedin.state !== state) {
+    const oauthData = user?.social_links?.oauth || {};
+    const linkedinData = oauthData.linkedin || {};
+
+    if (userError || !user || !linkedinData.state || linkedinData.state !== state) {
       throw new Error('Invalid OAuth state');
     }
 
@@ -111,26 +129,30 @@ async function exchangeCodeForToken(userId, code, state) {
     // Get user info
     const userInfo = await getLinkedInUserInfo(access_token);
 
-    // Save tokens to user
-    const currentOAuth = user.oauth || {};
-    const linkedinOAuth = currentOAuth.linkedin || {};
+    // Save tokens to user (using social_links for OAuth data)
+    const socialLinks = user.social_links || {};
+    const oauthData = socialLinks.oauth || {};
+    const linkedinData = oauthData.linkedin || {};
 
     const { error: saveError } = await supabase
       .from('users')
       .update({
-        oauth: {
-          ...currentOAuth,
-          linkedin: {
-            ...linkedinOAuth,
-            accessToken: access_token,
-            refreshToken: refresh_token,
-            connected: true,
-            connectedAt: new Date().toISOString(),
-            expiresAt: expires_in
-              ? new Date(Date.now() + expires_in * 1000).toISOString()
-              : null,
-            platformUserId: userInfo.id,
-            platformUsername: userInfo.name,
+        social_links: {
+          ...socialLinks,
+          oauth: {
+            ...oauthData,
+            linkedin: {
+              ...linkedinData,
+              accessToken: access_token,
+              refreshToken: refresh_token,
+              connected: true,
+              connectedAt: new Date().toISOString(),
+              expiresAt: expires_in
+                ? new Date(Date.now() + expires_in * 1000).toISOString()
+                : null,
+              platformUserId: userInfo.id,
+              platformUsername: userInfo.name,
+            }
           }
         }
       })
@@ -182,31 +204,35 @@ async function getLinkedInUserInfo(accessToken) {
 async function getLinkedInClient(userId) {
   const { data: user, error } = await supabase
     .from('users')
-    .select('oauth')
+    .select('social_links')
     .eq('id', userId)
     .single();
 
-  if (error || !user || !user.oauth?.linkedin?.connected || !user.oauth.linkedin.accessToken) {
+  const oauthData = user?.social_links?.oauth || {};
+  const linkedinData = oauthData.linkedin || {};
+
+  if (error || !user || !linkedinData.connected || !linkedinData.accessToken) {
     throw new Error('LinkedIn account not connected');
   }
 
   // Check if token is expired and refresh if needed
-  if (user.oauth.linkedin.expiresAt && new Date() > new Date(user.oauth.linkedin.expiresAt)) {
-    if (user.oauth.linkedin.refreshToken) {
+  if (linkedinData.expiresAt && new Date() > new Date(linkedinData.expiresAt)) {
+    if (linkedinData.refreshToken) {
       await refreshAccessToken(userId);
       // Reload user after refresh
       const { data: refreshedUser } = await supabase
         .from('users')
-        .select('oauth')
+        .select('social_links')
         .eq('id', userId)
         .single();
-      return refreshedUser.oauth.linkedin.accessToken;
+      const refreshedOauth = refreshedUser?.social_links?.oauth || {};
+      return refreshedOauth.linkedin?.accessToken;
     } else {
       throw new Error('LinkedIn token expired and no refresh token available');
     }
   }
 
-  return user.oauth.linkedin.accessToken;
+  return linkedinData.accessToken;
 }
 
 /**
@@ -216,11 +242,14 @@ async function refreshAccessToken(userId) {
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('oauth')
+      .select('social_links')
       .eq('id', userId)
       .single();
 
-    if (error || !user || !user.oauth?.linkedin?.refreshToken) {
+    const oauthData = user?.social_links?.oauth || {};
+    const linkedinData = oauthData.linkedin || {};
+
+    if (error || !user || !linkedinData.refreshToken) {
       throw new Error('No refresh token available');
     }
 
@@ -245,21 +274,25 @@ async function refreshAccessToken(userId) {
 
     const { access_token, expires_in, refresh_token } = response.data;
 
-    const currentOAuth = user.oauth || {};
-    const linkedinOAuth = currentOAuth.linkedin || {};
+    const socialLinks = user.social_links || {};
+    const oauthData = socialLinks.oauth || {};
+    const linkedinData = oauthData.linkedin || {};
 
     const { error: updateError } = await supabase
       .from('users')
       .update({
-        oauth: {
-          ...currentOAuth,
-          linkedin: {
-            ...linkedinOAuth,
-            accessToken: access_token,
-            refreshToken: refresh_token || linkedinOAuth.refreshToken,
-            expiresAt: expires_in
-              ? new Date(Date.now() + expires_in * 1000).toISOString()
-              : null,
+        social_links: {
+          ...socialLinks,
+          oauth: {
+            ...oauthData,
+            linkedin: {
+              ...linkedinData,
+              accessToken: access_token,
+              refreshToken: refresh_token || linkedinData.refreshToken,
+              expiresAt: expires_in
+                ? new Date(Date.now() + expires_in * 1000).toISOString()
+                : null,
+            }
           }
         }
       })
@@ -368,10 +401,10 @@ async function postToLinkedIn(userId, text, options = {}, retries = 1) {
  */
 async function disconnectLinkedIn(userId) {
   try {
-    // Get current oauth data
+    // Get current oauth data from social_links
     const { data: user, error: fetchError } = await supabase
       .from('users')
-      .select('oauth')
+      .select('social_links')
       .eq('id', userId)
       .single();
 
@@ -379,14 +412,18 @@ async function disconnectLinkedIn(userId) {
       throw new Error(`Failed to fetch user: ${fetchError.message}`);
     }
 
-    // Remove linkedin from oauth
-    const currentOAuth = user.oauth || {};
-    const { linkedin, ...remainingOAuth } = currentOAuth;
+    // Remove linkedin from oauth in social_links
+    const socialLinks = user.social_links || {};
+    const oauthData = socialLinks.oauth || {};
+    const { linkedin, ...remainingOauth } = oauthData;
 
     const { error: updateError } = await supabase
       .from('users')
       .update({
-        oauth: remainingOAuth
+        social_links: {
+          ...socialLinks,
+          oauth: remainingOauth
+        }
       })
       .eq('id', userId);
 
