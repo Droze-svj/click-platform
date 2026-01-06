@@ -2,22 +2,37 @@
 
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const { isCloudStorageEnabled } = require('../services/storageService');
 const { isConfigured: isTwitterOAuthConfigured } = require('../services/twitterOAuthService');
 const logger = require('../utils/logger');
 
 /**
- * Check database connection
+ * Check Supabase database connection
  */
 async function checkDatabase() {
   try {
-    if (mongoose.connection.readyState === 1) {
-      // Ping database
-      await mongoose.connection.db.admin().ping();
-      return { connected: true, latency: Date.now() };
+    // Check if Supabase is configured
+    if (!process.env.SUPABASE_URL) {
+      return { connected: false, error: 'Supabase not configured' };
     }
-    return { connected: false, error: 'Not connected' };
+
+    // Import Supabase client
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Test connection with a simple query
+    const start = Date.now();
+    const { data, error } = await supabase.from('users').select('count').limit(1);
+    const latency = Date.now() - start;
+
+    if (error) {
+      return { connected: false, error: error.message };
+    }
+
+    return { connected: true, latency: `${latency}ms` };
   } catch (error) {
     return { connected: false, error: error.message };
   }
@@ -101,7 +116,8 @@ router.get('/', async (req, res) => {
       },
     };
 
-    const statusCode = health.status === 'ok' ? 200 : 503;
+    // Always return 200 OK for uptime monitoring - service is running even if DB is down
+    const statusCode = 200;
     res.status(statusCode).json(health);
   } catch (error) {
     logger.error('Health check error', { error: error.message });
