@@ -1973,6 +1973,7 @@ app.use('/api/privacy', require('./routes/privacy'));
 app.use('/api/cache', require('./routes/cache'));
 app.use('/api/oauth/twitter', require('./routes/oauth/twitter'));
 app.use('/api/oauth/linkedin', require('./routes/oauth/linkedin'));
+app.use('/api/oauth/google', require('./routes/oauth/google'));
 app.use('/api/oauth/facebook', require('./routes/oauth/facebook'));
 app.use('/api/oauth/instagram', require('./routes/oauth/instagram'));
 app.use('/api/oauth/youtube', require('./routes/oauth/youtube'));
