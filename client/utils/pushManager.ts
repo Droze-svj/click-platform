@@ -61,7 +61,7 @@ class PushNotificationManager {
 
       console.log('✅ Push notification manager initialized')
     } catch (error) {
-      console.warn('⚠️ Push notification initialization failed:', error.message)
+      console.warn('⚠️ Push notification initialization failed:', (error as Error).message)
     }
   }
 
@@ -76,7 +76,7 @@ class PushNotificationManager {
         this.vapidKey = data.publicKey
       }
     } catch (error) {
-      console.warn('Failed to fetch VAPID key:', error.message)
+      console.warn('Failed to fetch VAPID key:', (error as Error).message)
     }
   }
 
@@ -121,7 +121,7 @@ class PushNotificationManager {
       const registration = await navigator.serviceWorker.ready
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey!)
+        applicationServerKey: this.urlBase64ToUint8Array(this.vapidKey!) as BufferSource
       })
 
       this.subscription = subscription
@@ -151,7 +151,7 @@ class PushNotificationManager {
         console.log('✅ Existing push subscription found')
       }
     } catch (error) {
-      console.warn('Failed to get existing subscription:', error.message)
+      console.warn('Failed to get existing subscription:', (error as Error).message)
     }
   }
 
@@ -198,16 +198,18 @@ class PushNotificationManager {
         this.subscription = null
 
         // Notify server
-        await fetch('/api/push/unsubscribe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            endpoint: this.subscription.endpoint,
-            userId: this.getUserId()
+        if (this.subscription) {
+          await fetch('/api/push/unsubscribe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              endpoint: (this.subscription as PushSubscription).endpoint,
+              userId: this.getUserId()
+            })
           })
-        })
+        }
 
         console.log('✅ Push notifications unsubscribed')
       }
@@ -307,7 +309,7 @@ class PushNotificationManager {
         return await response.json()
       }
     } catch (error) {
-      console.warn('Failed to get push stats:', error.message)
+      console.warn('Failed to get push stats:', (error as Error).message)
     }
     return null
   }
@@ -377,7 +379,6 @@ class PushNotificationManager {
         body: options.body,
         icon: options.icon || '/icons/icon-192x192.png',
         badge: options.badge,
-        image: options.image,
         tag: options.tag,
         requireInteraction: options.requireInteraction,
         silent: options.silent,
@@ -422,5 +423,6 @@ if (typeof window !== 'undefined') {
 }
 
 export default pushManager
+
 
 

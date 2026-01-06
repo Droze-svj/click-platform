@@ -210,10 +210,11 @@ export class RetryHandler {
 }
 
 // Export singleton instance
-export const retryHandler = RetryHandler.instance || RetryHandler.getInstance()
+export const retryHandler = RetryHandler.getInstance()
 
 // Convenience functions
 export const withRetry = retryHandler.executeWithRetry.bind(retryHandler)
 export const createRetryableApiCall = retryHandler.createRetryableApiCall.bind(retryHandler)
+
 
 
