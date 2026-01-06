@@ -206,7 +206,7 @@ router.post('/login',
       })
       .eq('id', user.id);
 
-    logger.info('User logged in', { email: user.email, userId: user.id });
+    logger.info('User logged in successfully', { email: user.email, userId: user.id });
 
     res.json({
       success: true,
