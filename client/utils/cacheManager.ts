@@ -711,14 +711,14 @@ class AdvancedCacheManager {
       insights: this.getCacheInsights()
     }
 
-    for (const [cacheName, entries] of this.entries.entries()) {
+    this.entries.forEach((entries, cacheName) => {
       data.caches[cacheName] = entries.map(entry => ({
         url: entry.url,
         timestamp: entry.timestamp,
         expires: entry.expires,
         priority: entry.priority
       }))
-    }
+    })
 
     return data
   }
