@@ -11,18 +11,15 @@ const getSupabaseClient = () => {
 
 const auth = async (req, res, next) => {
   try {
-    console.log('🔐 Auth middleware called for:', req.path);
     const authHeader = String(req.header('Authorization') || '');
     const hasBearer = authHeader.startsWith('Bearer ');
     const token = hasBearer ? authHeader.slice('Bearer '.length) : '';
 
     if (!token) {
-      console.log('❌ No token provided');
       return res.status(401).json({ error: 'No token provided' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-    console.log('✅ Token decoded, userId:', decoded.userId);
 
     // Get user from Supabase
     const supabase = getSupabaseClient();
@@ -32,14 +29,7 @@ const auth = async (req, res, next) => {
       .eq('id', decoded.userId)
       .single();
 
-    console.log('🔍 Supabase query result:', {
-      userFound: !!user,
-      error: userError?.message,
-      userEmail: user?.email
-    });
-
     if (userError || !user) {
-      console.log('❌ User not found in database');
       return res.status(401).json({ error: 'User not found' });
     }
 
@@ -58,10 +48,8 @@ const auth = async (req, res, next) => {
     }
 
     req.user = user;
-    console.log('✅ Auth middleware passed, proceeding to route');
     next();
   } catch (error) {
-    console.error('❌ Auth middleware error:', error.message);
     return res.status(401).json({ error: 'Invalid token', details: error.message });
   }
 };
