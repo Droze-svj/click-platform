@@ -1,5 +1,5 @@
 // Input validation for auth routes
-// Updated for firstName/lastName fields
+// Updated for firstName/lastName fields - forced rebuild
 
 const { body, validationResult } = require('express-validator');
 
@@ -54,10 +54,3 @@ module.exports = {
   validateRegister,
   validateLogin
 };
-
-
-
-
-
-
-
