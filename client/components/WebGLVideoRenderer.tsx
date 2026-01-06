@@ -352,15 +352,15 @@ export default function WebGLVideoRenderer({
 
   // Create shader helper
   const createShader = (gl: WebGLRenderingContext, type: number, source: string) => {
-    const shader = gl.createShader(type)
+    const shader = glRef.current.createShader(type)
     if (!shader) return null
 
-    gl.shaderSource(shader, source)
-    gl.compileShader(shader)
+    glRef.current.shaderSource(shader, source)
+    glRef.current.compileShader(shader)
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error('Shader compile error:', gl.getShaderInfoLog(shader))
-      gl.deleteShader(shader)
+    if (!glRef.current.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error('Shader compile error:', glRef.current.getShaderInfoLog(shader))
+      glRef.current.deleteShader(shader)
       return null
     }
 
@@ -369,16 +369,16 @@ export default function WebGLVideoRenderer({
 
   // Create program helper
   const createProgram = (gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) => {
-    const program = gl.createProgram()
+    const program = glRef.current.createProgram()
     if (!program) return null
 
-    gl.attachShader(program, vertexShader)
-    gl.attachShader(program, fragmentShader)
-    gl.linkProgram(program)
+    glRef.current.attachShader(program, vertexShader)
+    glRef.current.attachShader(program, fragmentShader)
+    glRef.current.linkProgram(program)
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error('Program link error:', gl.getProgramInfoLog(program))
-      gl.deleteProgram(program)
+    if (!glRef.current.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Program link error:', glRef.current.getProgramInfoLog(program))
+      glRef.current.deleteProgram(program)
       return null
     }
 
@@ -418,28 +418,28 @@ export default function WebGLVideoRenderer({
       canvas.height = height
     }
 
-    gl.viewport(0, 0, width, height)
+    glRef.current.viewport(0, 0, width, height)
 
     // Clear
-    gl.clearColor(0, 0, 0, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    glRef.current.clearColor(0, 0, 0, 1)
+    glRef.current.clear(glRef.current.COLOR_BUFFER_BIT)
 
     // Check for WebGL errors after clear
-    const clearError = gl.getError()
-    if (clearError !== gl.NO_ERROR) {
+    const clearError = glRef.current.getError()
+    if (clearError !== glRef.current.NO_ERROR) {
       logWebGLError('clear', clearError)
       return
     }
 
     // Use program
-    gl.useProgram(program)
+    glRef.current.useProgram(program)
 
     // Set up attributes
-    const positionLocation = gl.getAttribLocation(program, 'a_position')
-    const texCoordLocation = gl.getAttribLocation(program, 'a_texCoord')
+    const positionLocation = glRef.current.getAttribLocation(program, 'a_position')
+    const texCoordLocation = glRef.current.getAttribLocation(program, 'a_texCoord')
 
     // Position buffer
-    gl.enableVertexAttribArray(positionLocation)
+    glRef.current.enableVertexAttribArray(positionLocation)
     glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, glRef.current.createBuffer())
     glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       -1, -1,
@@ -449,10 +449,10 @@ export default function WebGLVideoRenderer({
        1, -1,
        1,  1,
     ]), glRef.current.STATIC_DRAW)
-    gl.vertexAttribPointer(positionLocation, 2, glRef.current.FLOAT, false, 0, 0)
+    glRef.current.vertexAttribPointer(positionLocation, 2, glRef.current.FLOAT, false, 0, 0)
 
     // Texture coordinate buffer
-    gl.enableVertexAttribArray(texCoordLocation)
+    glRef.current.enableVertexAttribArray(texCoordLocation)
     glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, glRef.current.createBuffer())
     glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       0, 1,
@@ -462,52 +462,52 @@ export default function WebGLVideoRenderer({
       1, 1,
       1, 0,
     ]), glRef.current.STATIC_DRAW)
-    gl.vertexAttribPointer(texCoordLocation, 2, glRef.current.FLOAT, false, 0, 0)
+    glRef.current.vertexAttribPointer(texCoordLocation, 2, glRef.current.FLOAT, false, 0, 0)
 
     // Update texture
     updateTexture(gl, video)
 
     // Set uniforms
-    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution')
-    const brightnessLocation = gl.getUniformLocation(program, 'u_brightness')
-    const contrastLocation = gl.getUniformLocation(program, 'u_contrast')
-    const saturationLocation = gl.getUniformLocation(program, 'u_saturation')
-    const hueLocation = gl.getUniformLocation(program, 'u_hue')
-    const blurLocation = gl.getUniformLocation(program, 'u_blur')
-    const sepiaLocation = gl.getUniformLocation(program, 'u_sepia')
-    const vignetteLocation = gl.getUniformLocation(program, 'u_vignette')
-    const sharpenLocation = gl.getUniformLocation(program, 'u_sharpen')
-    const noiseLocation = gl.getUniformLocation(program, 'u_noise')
-    const temperatureLocation = gl.getUniformLocation(program, 'u_temperature')
-    const tintLocation = gl.getUniformLocation(program, 'u_tint')
-    const highlightsLocation = gl.getUniformLocation(program, 'u_highlights')
-    const shadowsLocation = gl.getUniformLocation(program, 'u_shadows')
-    const clarityLocation = gl.getUniformLocation(program, 'u_clarity')
-    const dehazeLocation = gl.getUniformLocation(program, 'u_dehaze')
+    const resolutionLocation = glRef.current.getUniformLocation(program, 'u_resolution')
+    const brightnessLocation = glRef.current.getUniformLocation(program, 'u_brightness')
+    const contrastLocation = glRef.current.getUniformLocation(program, 'u_contrast')
+    const saturationLocation = glRef.current.getUniformLocation(program, 'u_saturation')
+    const hueLocation = glRef.current.getUniformLocation(program, 'u_hue')
+    const blurLocation = glRef.current.getUniformLocation(program, 'u_blur')
+    const sepiaLocation = glRef.current.getUniformLocation(program, 'u_sepia')
+    const vignetteLocation = glRef.current.getUniformLocation(program, 'u_vignette')
+    const sharpenLocation = glRef.current.getUniformLocation(program, 'u_sharpen')
+    const noiseLocation = glRef.current.getUniformLocation(program, 'u_noise')
+    const temperatureLocation = glRef.current.getUniformLocation(program, 'u_temperature')
+    const tintLocation = glRef.current.getUniformLocation(program, 'u_tint')
+    const highlightsLocation = glRef.current.getUniformLocation(program, 'u_highlights')
+    const shadowsLocation = glRef.current.getUniformLocation(program, 'u_shadows')
+    const clarityLocation = glRef.current.getUniformLocation(program, 'u_clarity')
+    const dehazeLocation = glRef.current.getUniformLocation(program, 'u_dehaze')
 
-    gl.uniform2f(resolutionLocation, width, height)
-    gl.uniform1f(brightnessLocation, filters.brightness)
-    gl.uniform1f(contrastLocation, filters.contrast)
-    gl.uniform1f(saturationLocation, filters.saturation)
-    gl.uniform1f(hueLocation, filters.hue)
-    gl.uniform1f(blurLocation, filters.blur)
-    gl.uniform1f(sepiaLocation, filters.sepia)
-    gl.uniform1f(vignetteLocation, filters.vignette)
-    gl.uniform1f(sharpenLocation, filters.sharpen)
-    gl.uniform1f(noiseLocation, filters.noise)
-    gl.uniform1f(temperatureLocation, filters.temperature || 100)
-    gl.uniform1f(tintLocation, filters.tint || 0)
-    gl.uniform1f(highlightsLocation, filters.highlights || 0)
-    gl.uniform1f(shadowsLocation, filters.shadows || 0)
-    gl.uniform1f(clarityLocation, filters.clarity || 0)
-    gl.uniform1f(dehazeLocation, filters.dehaze || 0)
+    glRef.current.uniform2f(resolutionLocation, width, height)
+    glRef.current.uniform1f(brightnessLocation, filters.brightness)
+    glRef.current.uniform1f(contrastLocation, filters.contrast)
+    glRef.current.uniform1f(saturationLocation, filters.saturation)
+    glRef.current.uniform1f(hueLocation, filters.hue)
+    glRef.current.uniform1f(blurLocation, filters.blur)
+    glRef.current.uniform1f(sepiaLocation, filters.sepia)
+    glRef.current.uniform1f(vignetteLocation, filters.vignette)
+    glRef.current.uniform1f(sharpenLocation, filters.sharpen)
+    glRef.current.uniform1f(noiseLocation, filters.noise)
+    glRef.current.uniform1f(temperatureLocation, filters.temperature || 100)
+    glRef.current.uniform1f(tintLocation, filters.tint || 0)
+    glRef.current.uniform1f(highlightsLocation, filters.highlights || 0)
+    glRef.current.uniform1f(shadowsLocation, filters.shadows || 0)
+    glRef.current.uniform1f(clarityLocation, filters.clarity || 0)
+    glRef.current.uniform1f(dehazeLocation, filters.dehaze || 0)
 
     // Draw
-    gl.drawArrays(gl.TRIANGLES, 0, 6)
+    glRef.current.drawArrays(glRef.current.TRIANGLES, 0, 6)
 
     // Check for WebGL errors after draw
-    const drawError = gl.getError()
-    if (drawError !== gl.NO_ERROR) {
+    const drawError = glRef.current.getError()
+    if (drawError !== glRef.current.NO_ERROR) {
       logWebGLError('drawArrays', drawError)
       return
     }
