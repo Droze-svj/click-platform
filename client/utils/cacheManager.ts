@@ -630,7 +630,7 @@ class AdvancedCacheManager {
 
     let totalSizeBytes = 0
 
-    for (const [cacheName, entries] of this.entries.entries()) {
+    this.entries.forEach((entries, cacheName) => {
       insights.byType[cacheName] = {
         entries: entries.length,
         size: this.estimateCacheSize(entries),
@@ -644,7 +644,7 @@ class AdvancedCacheManager {
 
       // Rough size calculation
       totalSizeBytes += entries.length * 10240 // 10KB per entry
-    }
+    })
 
     insights.totalSize = this.formatBytes(totalSizeBytes)
     insights.cacheEfficiency = insights.totalEntries > 0 ?
