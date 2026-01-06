@@ -433,8 +433,15 @@ CREATE INDEX IF NOT EXISTS idx_content_insights_post_id ON content_insights(post
 CREATE INDEX IF NOT EXISTS idx_engagement_history_analytics_id ON engagement_history(post_analytics_id);
 CREATE INDEX IF NOT EXISTS idx_engagement_history_recorded_at ON engagement_history(recorded_at);
 
--- Create admin user for testing (dariovuma@gmail.com)
--- Password: admin123 (hashed with bcrypt, 10 rounds)
-INSERT INTO users (email, first_name, last_name, password, email_verified, email_verified_at, created_at)
-VALUES ('dariovuma@gmail.com', 'Admin', 'User', '$2b$10$8K3lVzJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe', true, NOW(), NOW())
-ON CONFLICT (email) DO NOTHING;
+-- Fix admin user schema (dariovuma@gmail.com)
+-- Update existing admin user to have correct schema with 'name' field and 'role'
+UPDATE users
+SET
+  name = COALESCE(name, CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, ''))),
+  role = 'admin'
+WHERE email = 'dariovuma@gmail.com';
+
+-- If admin user doesn't exist, create it
+INSERT INTO users (email, name, password, email_verified, email_verified_at, role, created_at)
+SELECT 'dariovuma@gmail.com', 'Admin User', '$2b$10$8K3lVzJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe', true, NOW(), 'admin', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'dariovuma@gmail.com');
