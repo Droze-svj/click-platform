@@ -10,6 +10,10 @@ const logger = require('../utils/logger');
 const router = express.Router();
 
 // Initialize Supabase client
+// #region agent log
+fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:13',message:'Initializing Supabase client',data:{hasSupabaseUrl:!!process.env.SUPABASE_URL,hasServiceRoleKey:!!process.env.SUPABASE_SERVICE_ROLE_KEY,hasJwtSecret:!!process.env.JWT_SECRET},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+// #endregion
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -55,11 +59,22 @@ if (process.env.NODE_ENV === 'production') {
 router.post('/register',
   authRateLimiter, validateRegister, async (req, res) => {
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:56',message:'Register endpoint called',data:{email:req.body.email,name:req.body.name,hasPassword:!!req.body.password},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     const { email, password, name } = req.body;
 
     if (!email || !password || !name) {
+      // #region agent log
+      fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:66',message:'Validation failed - missing fields',data:{email:!!email,password:!!password,name:!!name},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+      // #endregion
       return res.status(400).json({ success: false, error: 'All fields are required' });
     }
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:71',message:'About to check if user exists',data:{email:email.toLowerCase()},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     // Check if user already exists
     const { data: existingUser } = await supabase
@@ -69,12 +84,26 @@ router.post('/register',
       .single();
 
     if (existingUser) {
+      // #region agent log
+      fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:79',message:'User already exists - returning error',data:{existingUserId:existingUser.id},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+      // #endregion
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:85',message:'User does not exist - proceeding with registration',data:{},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     // Hash password
     const bcrypt = require('bcryptjs');
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:91',message:'About to hash password',data:{},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
     const hashedPassword = await bcrypt.hash(password, 12);
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:103',message:'About to insert user into Supabase',data:{email:email.toLowerCase(),name:name,hasHashedPassword:!!hashedPassword},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     // Create user in Supabase
     const { data: user, error: insertError } = await supabase
@@ -94,10 +123,21 @@ router.post('/register',
       .select('id, email, name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
       .single();
 
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:119',message:'Supabase insert result',data:{hasUser:!!user,hasInsertError:!!insertError,insertError:insertError},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     if (insertError) {
+      // #region agent log
+      fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:123',message:'Insert error - returning 500',data:{insertError:insertError},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+      // #endregion
       logger.error('Supabase insert error', { error: insertError });
       return res.status(500).json({ success: false, error: 'Failed to create user' });
     }
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:134',message:'About to create JWT token',data:{userId:user.id,hasJwtSecret:!!process.env.JWT_SECRET},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     const token = jwt.sign(
       { userId: user.id },
@@ -105,10 +145,18 @@ router.post('/register',
       { expiresIn: '30d' }
     );
 
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:142',message:'JWT token created successfully',data:{tokenLength:token.length},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     // Generate email verification token
     const crypto = require('crypto');
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:150',message:'About to save email verification token',data:{userId:user.id,tokenLength:verificationToken.length},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     // Save verification token
     const { error: tokenError } = await supabase
@@ -118,6 +166,10 @@ router.post('/register',
         token: verificationToken,
         expires_at: expiresAt.toISOString()
       });
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:161',message:'Email verification token save result',data:{hasTokenError:!!tokenError,tokenError:tokenError},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     if (tokenError) {
       console.error('Failed to save verification token:', tokenError);
@@ -151,6 +203,10 @@ router.post('/register',
       // Don't fail registration if email fails
     }
     
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:186',message:'About to send successful registration response',data:{userId:user.id,email:user.email},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -165,6 +221,9 @@ router.post('/register',
       }
     });
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:200',message:'Registration error caught',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
     logger.error('Registration error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
