@@ -386,3 +386,9 @@ CREATE INDEX IF NOT EXISTS idx_platform_accounts_user_id ON platform_accounts(us
 CREATE INDEX IF NOT EXISTS idx_content_insights_post_id ON content_insights(post_id);
 CREATE INDEX IF NOT EXISTS idx_engagement_history_analytics_id ON engagement_history(post_analytics_id);
 CREATE INDEX IF NOT EXISTS idx_engagement_history_recorded_at ON engagement_history(recorded_at);
+
+-- Create admin user for testing (dariovuma@gmail.com)
+-- Password: admin123 (hashed with bcrypt, 10 rounds)
+INSERT INTO users (email, first_name, last_name, password, email_verified, email_verified_at, created_at)
+VALUES ('dariovuma@gmail.com', 'Admin', 'User', '$2b$10$8K3lVzJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe', true, NOW(), NOW())
+ON CONFLICT (email) DO NOTHING;
