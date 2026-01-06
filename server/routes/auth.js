@@ -334,33 +334,25 @@ router.post('/forgot-password',
     // Check if user exists
     const { data: user, error: findError } = await supabase
       .from('users')
-      .select('id, email, name')
+      .select('id, email, first_name, last_name')
       .eq('email', email.toLowerCase())
       .single();
+
+    if (user) {
+      user.name = `${user.first_name} ${user.last_name}`;
+    }
 
     if (findError || !user) {
       // Don't reveal if email exists or not for security
       return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
     }
 
-    // Generate reset token
-    const crypto = require('crypto');
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-    // Save reset token
-    const { error: tokenError } = await supabase
-      .from('password_reset_tokens')
-      .insert({
-        user_id: user.id,
-        token: resetToken,
-        expires_at: expiresAt.toISOString()
-      });
-
-    if (tokenError) {
-      console.error('Failed to save reset token:', tokenError);
-      return res.status(500).json({ success: false, error: 'Failed to process request' });
-    }
+    // Generate reset token (JWT that expires in 1 hour)
+    const resetToken = jwt.sign(
+      { userId: user.id, type: 'password_reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     // Send reset email
     try {
@@ -425,23 +417,15 @@ router.post('/reset-password',
       return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long' });
     }
 
-    // Check token validity
-    const { data: resetToken, error: tokenError } = await supabase
-      .from('password_reset_tokens')
-      .select('id, user_id, expires_at, used')
-      .eq('token', token)
-      .single();
-
-    if (tokenError || !resetToken) {
-      return res.status(400).json({ success: false, error: 'Invalid token' });
-    }
-
-    if (resetToken.used) {
-      return res.status(400).json({ success: false, error: 'Token has already been used' });
-    }
-
-    if (new Date(resetToken.expires_at) < new Date()) {
-      return res.status(400).json({ success: false, error: 'Token has expired' });
+    // Verify JWT token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.type !== 'password_reset') {
+        return res.status(400).json({ success: false, error: 'Invalid token type' });
+      }
+    } catch (error) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired token' });
     }
 
     // Hash new password
@@ -452,21 +436,12 @@ router.post('/reset-password',
     const { error: updateError } = await supabase
       .from('users')
       .update({ password: hashedPassword })
-      .eq('id', resetToken.user_id);
+      .eq('id', decoded.userId);
 
     if (updateError) {
       console.error('Failed to update password:', updateError);
       return res.status(500).json({ success: false, error: 'Failed to update password' });
     }
-
-    // Mark token as used
-    await supabase
-      .from('password_reset_tokens')
-      .update({
-        used: true,
-        used_at: new Date().toISOString()
-      })
-      .eq('id', resetToken.id);
 
     res.json({ success: true, message: 'Password has been reset successfully' });
 
