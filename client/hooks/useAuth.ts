@@ -76,6 +76,26 @@ export function useAuth() {
 
   const checkAuth = async (retryCount = 0) => {
 
+    // Enhanced debugging function
+    const sendAuthDebugLog = (message: string, data: any) => {
+      // #region agent log
+      fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'useAuth.ts',
+          message,
+          data: {
+            ...data,
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run-auth-debug'
+          }
+        }),
+      }).catch(() => {})
+      // #endregion
+    }
+
     // If another component already triggered an auth check, wait for it to finish and reuse the result.
     // IMPORTANT: do NOT "skip" without updating local state, otherwise pages that check `!user` will redirect to /login.
     if (authCheckInProgress && retryCount === 0) {
@@ -134,26 +154,6 @@ export function useAuth() {
         setUser(cachedUser)
         setError(null)
         return
-      }
-
-      // Enhanced debugging
-      const sendAuthDebugLog = (message: string, data: any) => {
-        // #region agent log
-        fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            location: 'useAuth.ts',
-            message,
-            data: {
-              ...data,
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              runId: 'run-auth-debug'
-            }
-          }),
-        }).catch(() => {})
-        // #endregion
       }
 
       console.log('🔍 [useAuth] Checking auth with token present (length):', token.length)
