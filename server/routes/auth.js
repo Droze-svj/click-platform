@@ -219,7 +219,7 @@ router.post('/login',
     // Find user in Supabase
     const { data: user, error: findError } = await supabase
       .from('users')
-      .select('id, email, first_name, last_name, password, subscription, niche, login_attempts, last_login_at')
+      .select('id, email, first_name, last_name, password, login_attempts, last_login_at')
       .eq('email', email.toLowerCase())
       .single();
 
