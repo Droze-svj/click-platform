@@ -154,7 +154,7 @@ export const useImagePreloader = () => {
       })
 
       await Promise.all(promises)
-      setPreloadedRoutes(prev => new Set([...prev, route]))
+      setPreloadedRoutes(prev => new Set([...Array.from(prev), route]))
       console.log(`📸 Preloaded ${images.length} images for route: ${route}`)
     } catch (error) {
       console.warn(`⚠️ Failed to preload images for route ${route}:`, error)
