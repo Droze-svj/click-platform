@@ -508,8 +508,8 @@ class AdvancedCacheManager {
 
     let invalidationCount = 0
 
-    for (const [cacheName, entries] of this.entries.entries()) {
-      if (configName && cacheName !== configName) continue
+    this.entries.forEach((entries, cacheName) => {
+      if (configName && cacheName !== configName) return
 
       const filteredEntries = entries.filter(entry => {
         const matches = typeof pattern === 'string'
@@ -524,7 +524,7 @@ class AdvancedCacheManager {
       })
 
       this.entries.set(cacheName, filteredEntries)
-    }
+    })
 
     // Also invalidate from browser Cache API
     if ('caches' in window) {
