@@ -722,7 +722,10 @@ class AdvancedCacheManager {
 
     return data
   }
-}
+
+  /**
+   * Preload critical resources
+   */
 
   /**
    * Preload critical resources
