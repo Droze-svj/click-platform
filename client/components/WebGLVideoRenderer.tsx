@@ -327,12 +327,12 @@ export default function WebGLVideoRenderer({
     // Create buffer for quad
     const positionBuffer = glRef.current.createBuffer()
     glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, positionBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bufferData(glRef.current.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
        1,  1,
-    ]), gl.STATIC_DRAW)
+    ]), glRef.current.STATIC_DRAW)
 
     const texCoordBuffer = glRef.current.createBuffer()
     glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, texCoordBuffer)
