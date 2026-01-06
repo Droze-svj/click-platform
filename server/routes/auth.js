@@ -5,7 +5,7 @@ const { authLimiter } = require('../middleware/enhancedRateLimiter');
 const { authRateLimiter } = require('../middleware/security');
 const { validateRegister, validateLogin } = require('../validators/authValidator');
 const { sendWelcomeEmail } = require('../services/emailService');
-const { logSecurityEvent, detectSuspiciousActivity } = require('../services/securityAuditService');
+const { logSecurityEvent } = require('../services/securityAuditService');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -189,12 +189,12 @@ router.post('/login',
 
     // Log successful login
     await logSecurityEvent({
-      userId: user._id,
+      userId: user.id,
       eventType: 'login',
       severity: 'low',
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
-      details: { suspicious: suspicious.suspicious },
+      details: { action: 'successful_login' },
     });
 
     // Update last login in Supabase
