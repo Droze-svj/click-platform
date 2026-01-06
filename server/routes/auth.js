@@ -292,5 +292,160 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
   });
 });
 
+// Request password reset
+router.post('/forgot-password',
+  authRateLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    // Check if user exists
+    const { data: user, error: findError } = await supabase
+      .from('users')
+      .select('id, email, name')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (findError || !user) {
+      // Don't reveal if email exists or not for security
+      return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+    }
+
+    // Generate reset token
+    const crypto = require('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Save reset token
+    const { error: tokenError } = await supabase
+      .from('password_reset_tokens')
+      .insert({
+        user_id: user.id,
+        token: resetToken,
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (tokenError) {
+      console.error('Failed to save reset token:', tokenError);
+      return res.status(500).json({ success: false, error: 'Failed to process request' });
+    }
+
+    // Send reset email
+    try {
+      const { sendPasswordResetEmail } = require('../services/emailService');
+      await sendPasswordResetEmail(user.email, resetToken, user.name);
+    } catch (emailError) {
+      console.error('Failed to send reset email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Validate reset token
+router.get('/validate-reset-token/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const { data: resetToken, error } = await supabase
+      .from('password_reset_tokens')
+      .select('id, user_id, expires_at, used')
+      .eq('token', token)
+      .single();
+
+    if (error || !resetToken) {
+      return res.json({ valid: false, message: 'Invalid or expired token' });
+    }
+
+    if (resetToken.used) {
+      return res.json({ valid: false, message: 'Token has already been used' });
+    }
+
+    if (new Date(resetToken.expires_at) < new Date()) {
+      return res.json({ valid: false, message: 'Token has expired' });
+    }
+
+    res.json({ valid: true, message: 'Token is valid' });
+
+  } catch (error) {
+    console.error('Validate reset token error:', error);
+    res.status(500).json({ valid: false, message: 'Server error' });
+  }
+});
+
+// Reset password with token
+router.post('/reset-password',
+  authRateLimiter, async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Token and new password are required' });
+    }
+
+    // Validate password strength
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long' });
+    }
+
+    // Check token validity
+    const { data: resetToken, error: tokenError } = await supabase
+      .from('password_reset_tokens')
+      .select('id, user_id, expires_at, used')
+      .eq('token', token)
+      .single();
+
+    if (tokenError || !resetToken) {
+      return res.status(400).json({ success: false, error: 'Invalid token' });
+    }
+
+    if (resetToken.used) {
+      return res.status(400).json({ success: false, error: 'Token has already been used' });
+    }
+
+    if (new Date(resetToken.expires_at) < new Date()) {
+      return res.status(400).json({ success: false, error: 'Token has expired' });
+    }
+
+    // Hash new password
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update user password
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('id', resetToken.user_id);
+
+    if (updateError) {
+      console.error('Failed to update password:', updateError);
+      return res.status(500).json({ success: false, error: 'Failed to update password' });
+    }
+
+    // Mark token as used
+    await supabase
+      .from('password_reset_tokens')
+      .update({
+        used: true,
+        used_at: new Date().toISOString()
+      })
+      .eq('id', resetToken.id);
+
+    res.json({ success: true, message: 'Password has been reset successfully' });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 module.exports = router;
 
