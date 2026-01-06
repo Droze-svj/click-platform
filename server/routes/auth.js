@@ -217,13 +217,18 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
 
   res.json({
     user: {
-      id: req.user._id,
+      id: req.user.id,
       email: req.user.email,
       name: req.user.name,
       subscription: req.user.subscription,
       niche: req.user.niche,
-      brandSettings: req.user.brandSettings,
-      usage: req.user.usage
+      avatar: req.user.avatar,
+      bio: req.user.bio,
+      website: req.user.website,
+      location: req.user.location,
+      social_links: req.user.social_links,
+      email_verified: req.user.email_verified,
+      created_at: req.user.created_at
     }
   });
 });
