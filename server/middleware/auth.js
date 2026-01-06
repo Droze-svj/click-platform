@@ -18,6 +18,7 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    console.log('Auth middleware - decoded userId:', decoded.userId);
 
     // Get user from Supabase
     const { data: user, error: userError } = await supabase
@@ -26,7 +27,10 @@ const auth = async (req, res, next) => {
       .eq('id', decoded.userId)
       .single();
 
+    console.log('Auth middleware - Supabase query result:', { user: user ? user.email : null, error: userError });
+
     if (userError || !user) {
+      console.log('Auth middleware - user not found, returning 401');
       return res.status(401).json({ error: 'User not found' });
     }
 
