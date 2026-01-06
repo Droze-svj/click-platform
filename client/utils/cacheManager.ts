@@ -411,7 +411,8 @@ class AdvancedCacheManager {
    * Clear all caches
    */
   async clearAllCaches(): Promise<void> {
-    for (const cacheName of this.caches.keys()) {
+    const cacheNames = Array.from(this.caches.keys())
+    for (const cacheName of cacheNames) {
       await this.clearCache(cacheName)
     }
   }
