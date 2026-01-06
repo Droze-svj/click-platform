@@ -866,6 +866,12 @@ app.get('/', (req, res) => {
             <span class="status online">✓ API Status: Online</span>
         </div>
 
+        <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+            <h3 style="color: white; margin-bottom: 10px;">🧪 Button Test</h3>
+            <button onclick="alert('Buttons are working!')" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Test Alert</button>
+            <button onclick="console.log('Console test - check browser dev tools')" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">Test Console</button>
+        </div>
+
         <div class="grid">
             <div class="card">
                 <h3>🔐 Authentication</h3>
@@ -995,6 +1001,7 @@ curl -s https://click-platform.onrender.com/api/health
         }
 
         function showRegistrationForm() {
+            console.log('Registration button clicked');
             document.getElementById('auth-forms').style.display = 'block';
             document.getElementById('form-title').textContent = 'Register';
             document.getElementById('register-form').style.display = 'block';
@@ -1209,17 +1216,46 @@ curl -s https://click-platform.onrender.com/api/health
             }
         }
 
-        // Add event listeners for buttons
-        document.getElementById('show-register-btn').addEventListener('click', showRegistrationForm);
-        document.getElementById('show-login-btn').addEventListener('click', showLoginForm);
-        document.getElementById('view-posts-btn').addEventListener('click', () => testEndpoint('/api/posts', 'GET'));
-        document.getElementById('create-post-btn').addEventListener('click', createSamplePost);
-        document.getElementById('view-analytics-btn').addEventListener('click', () => testEndpoint('/api/analytics/dashboard', 'GET'));
-        document.getElementById('view-performance-btn').addEventListener('click', () => testEndpoint('/api/analytics/performance', 'GET'));
-        document.getElementById('connect-twitter-btn').addEventListener('click', () => testEndpoint('/api/oauth/twitter', 'GET'));
-        document.getElementById('view-connections-btn').addEventListener('click', () => testEndpoint('/api/oauth/connected-accounts', 'GET'));
-        document.getElementById('admin-stats-btn').addEventListener('click', () => testEndpoint('/api/admin/stats', 'GET'));
-        document.getElementById('admin-users-btn').addEventListener('click', () => testEndpoint('/api/admin/users', 'GET'));
+        // Add event listeners for buttons - using DOMContentLoaded for reliability
+        function attachEventListeners() {
+            // Auth buttons
+            const registerBtn = document.getElementById('show-register-btn');
+            const loginBtn = document.getElementById('show-login-btn');
+
+            if (registerBtn) registerBtn.addEventListener('click', showRegistrationForm);
+            if (loginBtn) loginBtn.addEventListener('click', showLoginForm);
+
+            // API testing buttons
+            const buttons = [
+                { id: 'view-posts-btn', action: () => testEndpoint('/api/posts', 'GET') },
+                { id: 'create-post-btn', action: createSamplePost },
+                { id: 'view-analytics-btn', action: () => testEndpoint('/api/analytics/dashboard', 'GET') },
+                { id: 'view-performance-btn', action: () => testEndpoint('/api/analytics/performance', 'GET') },
+                { id: 'connect-twitter-btn', action: () => testEndpoint('/api/oauth/twitter', 'GET') },
+                { id: 'view-connections-btn', action: () => testEndpoint('/api/oauth/connected-accounts', 'GET') },
+                { id: 'admin-stats-btn', action: () => testEndpoint('/api/admin/stats', 'GET') },
+                { id: 'admin-users-btn', action: () => testEndpoint('/api/admin/users', 'GET') }
+            ];
+
+            buttons.forEach(({ id, action }) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', action);
+                    console.log('Attached listener to button:', id);
+                } else {
+                    console.warn('Button not found:', id);
+                }
+            });
+
+            console.log('Event listeners attachment completed');
+        }
+
+        // Attach listeners when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachEventListeners);
+        } else {
+            attachEventListeners();
+        }
 
         // Auto-test health on page load
         window.addEventListener('load', () => {
