@@ -1,5 +1,11 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const auth = async (req, res, next) => {
   try {
@@ -7,39 +13,28 @@ const auth = async (req, res, next) => {
     const hasBearer = authHeader.startsWith('Bearer ');
     const token = hasBearer ? authHeader.slice('Bearer '.length) : '';
 
-    // #region agent log
-    try {
-    } catch {}
-    // #endregion
-    
     if (!token) {
-      // #region agent log
-      try {
-      } catch {}
-      // #endregion
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
-    
-    if (!user) {
-      // #region agent log
-      try {
-      } catch {}
-      // #endregion
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+
+    // Get user from Supabase
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email, name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
+      .eq('id', decoded.userId)
+      .single();
+
+    if (userError || !user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
     // Check subscription status
-    if (user.subscription.status !== 'active' && user.subscription.status !== 'trial') {
-      // #region agent log
-      try {
-      } catch {}
-      // #endregion
-      return res.status(403).json({ 
+    if (user.subscription?.status !== 'active' && user.subscription?.status !== 'trial') {
+      return res.status(403).json({
         error: 'Subscription required',
-        subscriptionStatus: user.subscription.status
+        subscriptionStatus: user.subscription?.status
       });
     }
 
