@@ -259,8 +259,16 @@ router.post('/register',
 router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:259',message:'Login endpoint called',data:{email:req.body.email,hasPassword:!!req.body.password},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     const { email, password } = req.body;
     console.log('Login attempt for email:', email);
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:266',message:'About to query user in Supabase',data:{email:email.toLowerCase()},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     // Find user in Supabase
     const { data: user, error: findError } = await supabase
@@ -268,6 +276,10 @@ router.post('/login',
       .select('id, email, name, password, subscription, niche, login_attempts, last_login_at')
       .eq('email', email.toLowerCase())
       .single();
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:272',message:'Supabase user query result',data:{userFound:!!user,hasFindError:!!findError,findError:findError,userId:user?.id,userName:user?.name,userHasPassword:!!user?.password},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
 
     console.log('Supabase query result:', { userFound: !!user, error: findError?.message, userId: user?.id });
 
@@ -284,7 +296,17 @@ router.post('/login',
     // Verify password
     const bcrypt = require('bcryptjs');
     console.log('Login attempt for:', user.email, 'password length:', password.length);
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:285',message:'About to verify password',data:{passwordLength:password.length,storedPasswordLength:user.password?.length},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     const isValidPassword = await bcrypt.compare(password, user.password);
+
+    // #region agent log
+    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'server/routes/auth.js:291',message:'Password verification result',data:{isValidPassword:isValidPassword},timestamp:Date.now(),sessionId:'debug-session'})}).catch(()=>{});
+    // #endregion
+
     console.log('Password verification result:', isValidPassword);
 
     // TEMPORARY: Allow login with correct email for testing
