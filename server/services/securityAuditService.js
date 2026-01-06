@@ -9,21 +9,10 @@ const { maskSensitiveData } = require('../utils/dataEncryption');
  */
 async function logSecurityEvent(event, details = {}) {
   try {
-    const securityLog = new SecurityLog({
-      event,
-      userId: details.userId,
-      ip: details.ip,
-      userAgent: details.userAgent,
-      method: details.method,
-      path: details.path,
-      statusCode: details.statusCode || 200,
-      metadata: maskSensitiveData(details.metadata || {}),
-      timestamp: new Date(),
-    });
+    // Temporarily disable security logging since we're using Supabase instead of MongoDB
+    // TODO: Create security_logs table in Supabase and implement proper logging
 
-    await securityLog.save();
-
-    // Log to console for critical events
+    // For now, just log critical events to console
     if (['failed_login', 'suspicious_activity', 'unauthorized_access'].includes(event)) {
       logger.warn('Security event', {
         event,
@@ -33,7 +22,7 @@ async function logSecurityEvent(event, details = {}) {
       });
     }
 
-    return securityLog;
+    return { logged: true, method: 'console_only' };
   } catch (error) {
     logger.error('Log security event error', { error: error.message, event });
     return null;
@@ -45,45 +34,10 @@ async function logSecurityEvent(event, details = {}) {
  */
 async function detectSuspiciousActivity(userId, ip, userAgent) {
   try {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    // Temporarily disable suspicious activity detection since we're using Supabase
+    // TODO: Implement suspicious activity detection using Supabase tables
 
-    // Check for multiple failed logins
-    const failedLogins = await SecurityLog.countDocuments({
-      userId,
-      event: 'failed_login',
-      timestamp: { $gte: oneHourAgo },
-    });
-
-    if (failedLogins >= 5) {
-      await logSecurityEvent('suspicious_activity', {
-        userId,
-        ip,
-        userAgent,
-        metadata: { reason: 'multiple_failed_logins', count: failedLogins },
-      });
-      return { suspicious: true, reason: 'multiple_failed_logins' };
-    }
-
-    // Check for login from new location
-    const recentLogins = await SecurityLog.find({
-      userId,
-      event: 'successful_login',
-      timestamp: { $gte: oneHourAgo },
-    }).sort({ timestamp: -1 }).limit(5);
-
-    if (recentLogins.length > 0) {
-      const uniqueIPs = new Set(recentLogins.map(l => l.ip));
-      if (!uniqueIPs.has(ip) && uniqueIPs.size >= 2) {
-        await logSecurityEvent('suspicious_activity', {
-          userId,
-          ip,
-          userAgent,
-          metadata: { reason: 'login_from_new_location' },
-        });
-        return { suspicious: true, reason: 'login_from_new_location' };
-      }
-    }
-
+    // Return safe default for now
     return { suspicious: false };
   } catch (error) {
     logger.error('Detect suspicious activity error', { error: error.message, userId });
