@@ -82,29 +82,30 @@ export default function RootLayout({
         <ErrorBoundary>
           <TranslationProvider>
             <ToastProvider>
-              <Analytics />
-              <PerformanceMonitor />
-              <ServerPingPixel />
-              <AgentClientPing />
-              <RouteChangeLogger />
-              <DevDebugBanner />
-              <TokenStorageProbe />
-              <NavigationProbe />
-              <InteractionProbe />
-              <PWARegistration />
-              <RealtimeConnection />
-              <OnboardingFlow />
-              <AccessibilityFeatures />
-              <OfflineIndicator />
-              <KeyboardShortcutsHelper />
-              <MobileTouchEnhancements />
+              {/* Temporarily disable complex components that might make API calls */}
+              {/* <Analytics /> */}
+              {/* <PerformanceMonitor /> */}
+              {/* <ServerPingPixel /> */}
+              {/* <AgentClientPing /> */}
+              {/* <RouteChangeLogger /> */}
+              {/* <DevDebugBanner /> */}
+              {/* <TokenStorageProbe /> */}
+              {/* <NavigationProbe /> */}
+              {/* <InteractionProbe /> */}
+              {/* <PWARegistration /> */}
+              {/* <RealtimeConnection /> */}
+              {/* <OnboardingFlow /> */}
+              {/* <AccessibilityFeatures /> */}
+              {/* <OfflineIndicator /> */}
+              {/* <KeyboardShortcutsHelper /> */}
+              {/* <MobileTouchEnhancements /> */}
               <PWAManager>
                 <DebugLayout>
                   {children}
                 </DebugLayout>
-                <ErrorDashboard />
-                <PWAInstallPrompt />
-                <PWAUpdateHandler />
+                {/* <ErrorDashboard /> */}
+                {/* <PWAInstallPrompt /> */}
+                {/* <PWAUpdateHandler /> */}
               </PWAManager>
             </ToastProvider>
           </TranslationProvider>
