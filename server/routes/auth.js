@@ -324,7 +324,7 @@ router.get('/debug-user/:email', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', require('../middleware/auth-middleware'), async (req, res) => {
+router.get('/me', require('../middleware/auth'), async (req, res) => {
   // Prevent any caching / 304 Not Modified behavior for auth state.
 
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
