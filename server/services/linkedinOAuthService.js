@@ -94,10 +94,10 @@ async function exchangeCodeForToken(userId, code, state) {
       .eq('id', userId)
       .single();
 
-    const oauthData = user?.social_links?.oauth || {};
-    const linkedinData = oauthData.linkedin || {};
+    const oauthDataVerify = user?.social_links?.oauth || {};
+    const linkedinDataVerify = oauthDataVerify.linkedin || {};
 
-    if (userError || !user || !linkedinData.state || linkedinData.state !== state) {
+    if (userError || !user || !linkedinDataVerify.state || linkedinDataVerify.state !== state) {
       throw new Error('Invalid OAuth state');
     }
 
@@ -131,8 +131,8 @@ async function exchangeCodeForToken(userId, code, state) {
 
     // Save tokens to user (using social_links for OAuth data)
     const socialLinks = user.social_links || {};
-    const oauthData = socialLinks.oauth || {};
-    const linkedinData = oauthData.linkedin || {};
+    const oauthDataSave = socialLinks.oauth || {};
+    const linkedinDataSave = oauthDataSave.linkedin || {};
 
     const { error: saveError } = await supabase
       .from('users')
@@ -140,9 +140,9 @@ async function exchangeCodeForToken(userId, code, state) {
         social_links: {
           ...socialLinks,
           oauth: {
-            ...oauthData,
+            ...oauthDataSave,
             linkedin: {
-              ...linkedinData,
+              ...linkedinDataSave,
               accessToken: access_token,
               refreshToken: refresh_token,
               connected: true,
@@ -246,10 +246,10 @@ async function refreshAccessToken(userId) {
       .eq('id', userId)
       .single();
 
-    const oauthData = user?.social_links?.oauth || {};
-    const linkedinData = oauthData.linkedin || {};
+    const oauthDataRefresh = user?.social_links?.oauth || {};
+    const linkedinDataRefresh = oauthDataRefresh.linkedin || {};
 
-    if (error || !user || !linkedinData.refreshToken) {
+    if (error || !user || !linkedinDataRefresh.refreshToken) {
       throw new Error('No refresh token available');
     }
 
@@ -275,8 +275,8 @@ async function refreshAccessToken(userId) {
     const { access_token, expires_in, refresh_token } = response.data;
 
     const socialLinks = user.social_links || {};
-    const oauthData = socialLinks.oauth || {};
-    const linkedinData = oauthData.linkedin || {};
+    const oauthDataUpdate = socialLinks.oauth || {};
+    const linkedinDataUpdate = oauthDataUpdate.linkedin || {};
 
     const { error: updateError } = await supabase
       .from('users')
@@ -284,11 +284,11 @@ async function refreshAccessToken(userId) {
         social_links: {
           ...socialLinks,
           oauth: {
-            ...oauthData,
+            ...oauthDataUpdate,
             linkedin: {
-              ...linkedinData,
+              ...linkedinDataUpdate,
               accessToken: access_token,
-              refreshToken: refresh_token || linkedinData.refreshToken,
+              refreshToken: refresh_token || linkedinDataUpdate.refreshToken,
               expiresAt: expires_in
                 ? new Date(Date.now() + expires_in * 1000).toISOString()
                 : null,
@@ -414,8 +414,8 @@ async function disconnectLinkedIn(userId) {
 
     // Remove linkedin from oauth in social_links
     const socialLinks = user.social_links || {};
-    const oauthData = socialLinks.oauth || {};
-    const { linkedin, ...remainingOauth } = oauthData;
+    const oauthDataDisconnect = socialLinks.oauth || {};
+    const { linkedin, ...remainingOauth } = oauthDataDisconnect;
 
     const { error: updateError } = await supabase
       .from('users')
