@@ -1009,6 +1009,9 @@ curl -s https://click-platform.onrender.com/api/health
                 document.body.style.backgroundColor = '';
             }, 200);
 
+            // Show alert to confirm function execution
+            alert('Registration button clicked! Check console for details.');
+
             // Debug DOM element existence
             const authForms = document.getElementById('auth-forms');
             const formTitle = document.getElementById('form-title');
@@ -1071,7 +1074,21 @@ curl -s https://click-platform.onrender.com/api/health
                 console.log('After timeout - auth-forms computed display:', authForms ? window.getComputedStyle(authForms).display : 'element gone');
                 console.log('After timeout - register-form computed display:', registerForm ? window.getComputedStyle(registerForm).display : 'element gone');
 
-                // Check for potential CSS conflicts
+                // Try to force visibility with !important-like behavior
+                if (authForms) {
+                    authForms.style.setProperty('display', 'block', 'important');
+                    authForms.style.visibility = 'visible';
+                    authForms.style.opacity = '1';
+                    console.log('FORCED visibility changes applied');
+                }
+                if (registerForm) {
+                    registerForm.style.setProperty('display', 'block', 'important');
+                    registerForm.style.visibility = 'visible';
+                    registerForm.style.opacity = '1';
+                    console.log('FORCED register-form visibility changes applied');
+                }
+
+                    // Check for potential CSS conflicts
                 if (authForms) {
                     const authFormsRect = authForms.getBoundingClientRect();
                     console.log('auth-forms bounding rect:', {
@@ -1081,7 +1098,24 @@ curl -s https://click-platform.onrender.com/api/health
                         left: authFormsRect.left
                     });
                     console.log('auth-forms is visible in viewport:', authFormsRect.top >= 0 && authFormsRect.left >= 0 && authFormsRect.width > 0 && authFormsRect.height > 0);
+
+                    // Force visibility check
+                    console.log('auth-forms offsetWidth:', authForms.offsetWidth);
+                    console.log('auth-forms offsetHeight:', authForms.offsetHeight);
+                    console.log('auth-forms clientWidth:', authForms.clientWidth);
+                    console.log('auth-forms clientHeight:', authForms.clientHeight);
                 }
+
+                // Also check if the form is actually in the DOM and visible
+                setTimeout(() => {
+                    const currentAuthForms = document.getElementById('auth-forms');
+                    if (currentAuthForms) {
+                        console.log('Final check - auth-forms display:', window.getComputedStyle(currentAuthForms).display);
+                        console.log('Final check - auth-forms visibility:', window.getComputedStyle(currentAuthForms).visibility);
+                        console.log('Final check - auth-forms opacity:', window.getComputedStyle(currentAuthForms).opacity);
+                        console.log('Can you SEE the form now?', currentAuthForms.offsetWidth > 0 && currentAuthForms.offsetHeight > 0);
+                    }
+                }, 500);
             }, 100);
         }
 
