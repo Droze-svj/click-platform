@@ -15,7 +15,7 @@ export function useApi() {
   const [error, setError] = useState<string | null>(null)
 
   const request = async <T = any>(
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+    method: 'get' | 'post' | 'put' | 'delete',
     endpoint: string,
     data?: any,
     options?: UseApiOptions
@@ -26,9 +26,11 @@ export function useApi() {
     try {
       const token = localStorage.getItem('token')
       const config = {
+        headers: {
           Authorization: token ? `Bearer ${token}` : undefined,
           'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
         }
+      }
 
       let response
       switch (method) {
