@@ -802,6 +802,7 @@ app.use('/api/quote', (req, res, next) => {
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/posts', require('./routes/posts'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/video', require('./routes/video'));
 app.use('/api/content', require('./routes/content'));
