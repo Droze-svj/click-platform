@@ -326,7 +326,7 @@ export default function WebGLVideoRenderer({
     // Create buffer for quad
     const positionBuffer = glRef.current.createBuffer()
     glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, positionBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
@@ -335,7 +335,7 @@ export default function WebGLVideoRenderer({
 
     const texCoordBuffer = glRef.current.createBuffer()
     glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, texCoordBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
@@ -441,7 +441,7 @@ export default function WebGLVideoRenderer({
     // Position buffer
     gl.enableVertexAttribArray(positionLocation)
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
       -1,  1,
@@ -454,7 +454,7 @@ export default function WebGLVideoRenderer({
     // Texture coordinate buffer
     gl.enableVertexAttribArray(texCoordLocation)
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    glRef.current.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
       0, 0,
