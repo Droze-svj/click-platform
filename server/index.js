@@ -1001,27 +1001,58 @@ curl -s https://click-platform.onrender.com/api/health
         }
 
         function showRegistrationForm() {
-            // #region agent log
-            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'showRegistrationForm',
-                    message: 'Function called',
-                    data: {},
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    hypothesisId: 'A'
-                })
-            }).catch(() => {});
-            // #endregion
-
             console.log('Registration button clicked');
-            document.getElementById('auth-forms').style.display = 'block';
-            document.getElementById('form-title').textContent = 'Register';
-            document.getElementById('register-form').style.display = 'block';
-            document.getElementById('login-form').style.display = 'none';
-            document.getElementById('auth-result').style.display = 'none';
+
+            // Debug DOM element existence
+            const authForms = document.getElementById('auth-forms');
+            const formTitle = document.getElementById('form-title');
+            const registerForm = document.getElementById('register-form');
+            const loginForm = document.getElementById('login-form');
+            const authResult = document.getElementById('auth-result');
+
+            console.log('DOM elements found:', {
+                authForms: !!authForms,
+                formTitle: !!formTitle,
+                registerForm: !!registerForm,
+                loginForm: !!loginForm,
+                authResult: !!authResult
+            });
+
+            // Apply changes with verification
+            if (authForms) {
+                authForms.style.display = 'block';
+                console.log('Set auth-forms display to block');
+            } else {
+                console.error('auth-forms element not found!');
+            }
+
+            if (formTitle) {
+                formTitle.textContent = 'Register';
+                console.log('Set form-title text to Register');
+            } else {
+                console.error('form-title element not found!');
+            }
+
+            if (registerForm) {
+                registerForm.style.display = 'block';
+                console.log('Set register-form display to block');
+            } else {
+                console.error('register-form element not found!');
+            }
+
+            if (loginForm) {
+                loginForm.style.display = 'none';
+                console.log('Set login-form display to none');
+            } else {
+                console.error('login-form element not found!');
+            }
+
+            if (authResult) {
+                authResult.style.display = 'none';
+                console.log('Set auth-result display to none');
+            } else {
+                console.error('auth-result element not found!');
+            }
         }
 
         function showLoginForm() {
