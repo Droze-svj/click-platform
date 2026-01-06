@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 // Initialize Supabase client lazily
 const getSupabaseClient = () => {
-  const { createClient } = require('@getSupabaseClient()/getSupabaseClient()-js');
+  const { createClient } = require('@supabase/supabase-js');
   return createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -25,9 +25,16 @@ const auth = async (req, res, next) => {
     // Get user from Supabase
     const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
-      .select('id, email, name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
+      .select('id, email, first_name, last_name, avatar, bio, website, location, social_links, email_verified, created_at')
       .eq('id', decoded.userId)
       .single();
+
+    if (user) {
+      // Create combined name field for compatibility
+      user.name = user.first_name && user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : user.first_name || user.last_name || 'User';
+    }
 
     console.log('Auth middleware - Supabase query result:', { user: user ? user.email : null, error: userError });
 
@@ -45,14 +52,6 @@ const auth = async (req, res, next) => {
       });
     }
 
-    // Check subscription status
-    if (user.subscription?.status !== 'active' && user.subscription?.status !== 'trial') {
-      return res.status(403).json({
-        error: 'Subscription required',
-        subscriptionStatus: user.subscription?.status
-      });
-    }
-
     req.user = user;
     next();
   } catch (error) {
@@ -61,17 +60,5 @@ const auth = async (req, res, next) => {
   }
 };
 
-// Add subscription status check to auth middleware
-const { checkSubscriptionStatus } = require('./subscriptionAccess');
-
-// Enhanced auth middleware that also checks subscription
-const authWithSubscription = (req, res, next) => {
-  auth(req, res, (err) => {
-    if (err) return next(err);
-    checkSubscriptionStatus(req, res, next);
-  });
-};
-
 module.exports = auth;
-module.exports.authWithSubscription = authWithSubscription;
 
