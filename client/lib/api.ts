@@ -421,7 +421,7 @@ export async function apiDelete<T = any>(endpoint: string, config?: AxiosRequest
  * ```
  */
 export function handleApiError(error: unknown): string {
-  return extractApiError(error)
+  return extractApiError(error).message
 }
 
 /**
