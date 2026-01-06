@@ -177,13 +177,15 @@ router.post('/login',
     }
 
     // Check if account is locked (too many failed attempts)
-    if (user.login_attempts >= 5) {
+    if ((user.login_attempts || 0) >= 5) {
       return res.status(423).json({ success: false, error: 'Account temporarily locked due to too many failed login attempts' });
     }
 
     // Verify password
     const bcrypt = require('bcryptjs');
+    console.log('Login attempt for:', user.email, 'password length:', password.length);
     const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('Password verification result:', isValidPassword);
 
     if (!isValidPassword) {
       // Increment login attempts
