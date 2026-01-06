@@ -7,7 +7,12 @@ services:
     env: node
     region: oregon  # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
     plan: free
-    buildCommand: npm install
+    buildCommand: |
+      npm install &&
+      cd client &&
+      npm install &&
+      npm run build &&
+      cd ..
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -15,5 +20,7 @@ services:
         value: production
       - key: PORT
         value: 5001
+      - key: FRONTEND_URL
+        value: https://click-platform.onrender.com
       # Add your other environment variables in Render.com dashboard
-      # MONGODB_URI, JWT_SECRET, YOUTUBE_CLIENT_ID, etc.
+      # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET, etc.
