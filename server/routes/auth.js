@@ -87,9 +87,10 @@ router.post('/register',
           status: 'trial',
           startDate: new Date().toISOString(),
           endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7-day trial
-        }
+        },
+        login_attempts: 0
       })
-      .select()
+      .select('id, email, name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
       .single();
 
     if (insertError) {
@@ -103,12 +104,15 @@ router.post('/register',
       { expiresIn: '30d' }
     );
 
-    logger.info('User registered', { email: user.email, userId: user.id });
-    
+    logger.info('User registered successfully', { email: user.email, userId: user.id });
+
     // Send welcome email (async, don't wait for it)
-    sendWelcomeEmail(user.email, user.name).catch(err => {
-      logger.error('Failed to send welcome email', { error: err.message, email: user.email });
-    });
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch (emailError) {
+      logger.error('Failed to send welcome email', { error: emailError.message, email: user.email });
+      // Don't fail registration if email fails
+    }
     
     res.status(201).json({
       success: true,
@@ -161,11 +165,10 @@ router.post('/login',
   try {
     const { email, password } = req.body;
 
-    // Simple login - check if user exists and return success
-    // In production, this would validate password hash
+    // Find user in Supabase
     const { data: user, error: findError } = await supabase
       .from('users')
-      .select('id, email, name, subscription, niche')
+      .select('id, email, name, password, subscription, niche, login_attempts, last_login_at')
       .eq('email', email.toLowerCase())
       .single();
 
@@ -173,33 +176,56 @@ router.post('/login',
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // For now, accept any password for the test user
-    if (email === 'test@example.com' && password === 'Test123456') {
-      const token = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '30d' }
-      );
-
-      logger.info('User logged in', { email: user.email, userId: user.id });
-
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        data: {
-          token,
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            subscription: user.subscription,
-            niche: user.niche
-          }
-        }
-      });
+    // Check if account is locked (too many failed attempts)
+    if (user.login_attempts >= 5) {
+      return res.status(423).json({ success: false, error: 'Account temporarily locked due to too many failed login attempts' });
     }
 
-    return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    // Verify password
+    const bcrypt = require('bcryptjs');
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      // Increment login attempts
+      await supabase
+        .from('users')
+        .update({
+          login_attempts: (user.login_attempts || 0) + 1
+        })
+        .eq('id', user.id);
+
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+
+    // Successful login - reset attempts and update last login
+    await supabase
+      .from('users')
+      .update({
+        login_attempts: 0,
+        last_login_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '30d' }
+    );
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+
+    logger.info('User logged in successfully', { email: user.email, userId: user.id });
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user: userWithoutPassword
+      }
+    });
 
   } catch (error) {
     logger.error('Login error:', error);
