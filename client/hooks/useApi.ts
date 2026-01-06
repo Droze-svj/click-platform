@@ -15,6 +15,7 @@ export function useApi() {
   const [error, setError] = useState<string | null>(null)
 
   const request = async <T = any>(
+    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
     endpoint: string,
     data?: any,
     options?: UseApiOptions
