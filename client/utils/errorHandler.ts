@@ -232,7 +232,7 @@ export const measurePerformance = async <T>(
     return result
   } catch (error) {
     const duration = performance.now() - start
-    logPerformance(operation, duration, { success: false, error: error.message, ...data })
+    logPerformance(operation, duration, { success: false, error: (error as Error).message, ...data })
     throw error
   }
 }
