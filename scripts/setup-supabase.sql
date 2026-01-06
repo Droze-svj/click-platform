@@ -108,21 +108,21 @@ ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 
 -- Create basic RLS policies
--- Users can view their own data
-CREATE POLICY "Users can view own data" ON users
-  FOR SELECT USING (auth.uid() = id);
-
--- Users can update their own data
-CREATE POLICY "Users can update own data" ON users
-  FOR UPDATE USING (auth.uid() = id);
-
--- Allow insert for registration (before auth)
+-- Allow insert for registration (before auth) - NO AUTH REQUIRED
 CREATE POLICY "Allow user registration" ON users
   FOR INSERT WITH CHECK (true);
 
--- Allow select for login verification
+-- Allow select for login verification - NO AUTH REQUIRED
 CREATE POLICY "Allow login checks" ON users
   FOR SELECT USING (true);
+
+-- Users can view their own data - REQUIRES AUTH
+CREATE POLICY "Users can view own data" ON users
+  FOR SELECT USING (auth.uid()::text = id::text);
+
+-- Users can update their own data - REQUIRES AUTH
+CREATE POLICY "Users can update own data" ON users
+  FOR UPDATE USING (auth.uid()::text = id::text);
 
 -- Posts policies
 CREATE POLICY "Users can view published posts" ON posts
