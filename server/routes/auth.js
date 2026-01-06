@@ -242,6 +242,30 @@ router.post('/login',
   }
 });
 
+// Debug endpoint to check user lookup
+router.get('/debug-user/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    console.log('Debug lookup for:', email);
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, email, name')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    console.log('Debug result:', { user: user ? 'found' : 'not found', error: error?.message });
+
+    res.json({
+      success: !!user,
+      user: user ? { id: user.id, email: user.email, name: user.name } : null,
+      error: error?.message
+    });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
   // Prevent any caching / 304 Not Modified behavior for auth state.
