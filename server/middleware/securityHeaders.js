@@ -13,6 +13,7 @@ function securityHeaders() {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for production
+        scriptSrcAttr: ["'unsafe-hashes'"], // Allow inline event handlers
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: ["'self'", process.env.API_URL || "http://localhost:5001", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
         frameSrc: ["'none'"],
