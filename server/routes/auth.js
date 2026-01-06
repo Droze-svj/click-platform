@@ -83,6 +83,7 @@ router.post('/register',
         email: email.toLowerCase(),
         password: hashedPassword,
         name,
+        email_verified: false,
         subscription: {
           status: 'trial',
           startDate: new Date().toISOString(),
@@ -104,13 +105,49 @@ router.post('/register',
       { expiresIn: '30d' }
     );
 
+    // Generate email verification token
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Save verification token
+    const { error: tokenError } = await supabase
+      .from('email_verification_tokens')
+      .insert({
+        user_id: user.id,
+        token: verificationToken,
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (tokenError) {
+      console.error('Failed to save verification token:', tokenError);
+      // Don't fail registration if token save fails, but log it
+    }
+
     logger.info('User registered successfully', { email: user.email, userId: user.id });
 
-    // Send welcome email (async, don't wait for it)
+    // Send email verification (async, don't wait for it)
     try {
-      await sendWelcomeEmail(user.email, user.name);
+      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+      const emailContent = {
+        to: user.email,
+        subject: 'Verify Your Email Address',
+        html: `
+          <h2>Welcome to Click Platform!</h2>
+          <p>Hello ${user.name},</p>
+          <p>Thank you for registering with Click Platform. Please verify your email address to complete your registration and start using our services.</p>
+          <p>Click the link below to verify your email:</p>
+          <a href="${verificationUrl}" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+          <p>This link will expire in 24 hours.</p>
+          <p>If you didn't create an account, please ignore this email.</p>
+          <br>
+          <p>Best regards,<br>Click Platform Team</p>
+        `
+      };
+
+      await sendWelcomeEmail(user.email, user.name, emailContent);
     } catch (emailError) {
-      logger.error('Failed to send welcome email', { error: emailError.message, email: user.email });
+      logger.error('Failed to send verification email', { error: emailError.message, email: user.email });
       // Don't fail registration if email fails
     }
     
@@ -443,6 +480,140 @@ router.post('/reset-password',
 
   } catch (error) {
     console.error('Reset password error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Verify email with token
+router.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const { data: verificationToken, error } = await supabase
+      .from('email_verification_tokens')
+      .select('id, user_id, expires_at, used')
+      .eq('token', token)
+      .single();
+
+    if (error || !verificationToken) {
+      return res.status(400).json({ success: false, error: 'Invalid verification token' });
+    }
+
+    if (verificationToken.used) {
+      return res.status(400).json({ success: false, error: 'Token has already been used' });
+    }
+
+    if (new Date(verificationToken.expires_at) < new Date()) {
+      return res.status(400).json({ success: false, error: 'Token has expired' });
+    }
+
+    // Update user email verification status
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ email_verified: true, email_verified_at: new Date().toISOString() })
+      .eq('id', verificationToken.user_id);
+
+    if (updateError) {
+      console.error('Failed to update user verification status:', updateError);
+      return res.status(500).json({ success: false, error: 'Failed to verify email' });
+    }
+
+    // Mark token as used
+    await supabase
+      .from('email_verification_tokens')
+      .update({
+        used: true,
+        used_at: new Date().toISOString()
+      })
+      .eq('id', verificationToken.id);
+
+    res.json({ success: true, message: 'Email verified successfully' });
+
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// Resend email verification
+router.post('/resend-verification',
+  authRateLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    // Find user
+    const { data: user, error: findError } = await supabase
+      .from('users')
+      .select('id, email, name, email_verified')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (findError || !user) {
+      return res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
+    }
+
+    if (user.email_verified) {
+      return res.status(400).json({ success: false, error: 'Email is already verified' });
+    }
+
+    // Delete any existing verification tokens for this user
+    await supabase
+      .from('email_verification_tokens')
+      .delete()
+      .eq('user_id', user.id);
+
+    // Generate new verification token
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Save verification token
+    const { error: tokenError } = await supabase
+      .from('email_verification_tokens')
+      .insert({
+        user_id: user.id,
+        token: verificationToken,
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (tokenError) {
+      console.error('Failed to save verification token:', tokenError);
+      return res.status(500).json({ success: false, error: 'Failed to process request' });
+    }
+
+    // Send verification email
+    try {
+      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+      const emailContent = {
+        to: user.email,
+        subject: 'Verify Your Email Address',
+        html: `
+          <h2>Welcome to Click Platform!</h2>
+          <p>Hello ${user.name},</p>
+          <p>Thank you for registering with Click Platform. Please verify your email address to complete your registration.</p>
+          <p>Click the link below to verify your email:</p>
+          <a href="${verificationUrl}" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+          <p>This link will expire in 24 hours.</p>
+          <p>If you didn't create an account, please ignore this email.</p>
+          <br>
+          <p>Best regards,<br>Click Platform Team</p>
+        `
+      };
+
+      await sendWelcomeEmail(user.email, user.name, emailContent);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
+
+  } catch (error) {
+    console.error('Resend verification error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
