@@ -303,12 +303,12 @@ export default function WebGLVideoRenderer({
     }
 
     const webGLContext = gl as WebGLRenderingContext
-    glRef.current = webGLContext
+    webGLContext = webGLContext
 
     // Create shaders
 
-    const vertexShader = createShader(glRef.current, glRef.current.VERTEX_SHADER, vertexShaderSource)
-    const fragmentShader = createShader(glRef.current, glRef.current.FRAGMENT_SHADER, fragmentShaderSource)
+    const vertexShader = createShader(webGLContext, webGLContext.VERTEX_SHADER, vertexShaderSource)
+    const fragmentShader = createShader(webGLContext, webGLContext.FRAGMENT_SHADER, fragmentShaderSource)
 
     if (!vertexShader || !fragmentShader) {
       console.error('Failed to create shaders')
@@ -316,7 +316,7 @@ export default function WebGLVideoRenderer({
     }
 
     // Create program
-    const program = createProgram(glRef.current, vertexShader, fragmentShader)
+    const program = createProgram(webGLContext, vertexShader, fragmentShader)
     if (!program) {
       console.error('Failed to create program')
       return false
@@ -325,8 +325,8 @@ export default function WebGLVideoRenderer({
     programRef.current = program
 
     // Create buffer for quad
-    const positionBuffer = glRef.current.createBuffer()
-    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, positionBuffer)
+    const positionBuffer = webGLContext.createBuffer()
+    webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, positionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       -1, -1,
        1, -1,
@@ -334,8 +334,8 @@ export default function WebGLVideoRenderer({
        1,  1,
     ]), gl.STATIC_DRAW)
 
-    const texCoordBuffer = glRef.current.createBuffer()
-    glRef.current.bindBuffer(glRef.current.ARRAY_BUFFER, texCoordBuffer)
+    const texCoordBuffer = webGLContext.createBuffer()
+    webGLContext.bindBuffer(webGLContext.ARRAY_BUFFER, texCoordBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       0, 1,
       1, 1,
@@ -344,7 +344,7 @@ export default function WebGLVideoRenderer({
     ]), gl.STATIC_DRAW)
 
     // Create texture
-    const texture = glRef.current.createTexture()
+    const texture = webGLContext.createTexture()
     textureRef.current = texture
 
     setIsInitialized(true)
@@ -389,14 +389,14 @@ export default function WebGLVideoRenderer({
   // Update texture from video
   const updateTexture = useCallback((gl: WebGLRenderingContext, video: HTMLVideoElement) => {
     const texture = textureRef.current
-    if (!texture || !glRef.current) return
+    if (!texture || !webGLContext) return
 
-    glRef.current.bindTexture(glRef.current.TEXTURE_2D, texture)
-    glRef.current.texImage2D(glRef.current.TEXTURE_2D, 0, glRef.current.RGBA, glRef.current.RGBA, glRef.current.UNSIGNED_BYTE, video)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_S, glRef.current.CLAMP_TO_EDGE)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_WRAP_T, glRef.current.CLAMP_TO_EDGE)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MIN_FILTER, glRef.current.LINEAR)
-    glRef.current.texParameteri(glRef.current.TEXTURE_2D, glRef.current.TEXTURE_MAG_FILTER, glRef.current.LINEAR)
+    webGLContext.bindTexture(webGLContext.TEXTURE_2D, texture)
+    webGLContext.texImage2D(webGLContext.TEXTURE_2D, 0, webGLContext.RGBA, webGLContext.RGBA, webGLContext.UNSIGNED_BYTE, video)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_WRAP_S, webGLContext.CLAMP_TO_EDGE)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_WRAP_T, webGLContext.CLAMP_TO_EDGE)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_MIN_FILTER, webGLContext.LINEAR)
+    webGLContext.texParameteri(webGLContext.TEXTURE_2D, webGLContext.TEXTURE_MAG_FILTER, webGLContext.LINEAR)
   }, [])
 
   // Render frame
@@ -404,7 +404,7 @@ export default function WebGLVideoRenderer({
     const startTime = performance.now()
 
     try {
-      const gl = glRef.current
+      const gl = webGLContext
       const program = programRef.current
       const video = videoElement
 
