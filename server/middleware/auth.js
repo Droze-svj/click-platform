@@ -1,11 +1,13 @@
 const jwt = require('jsonwebtoken');
-const { createClient } = require('@supabase/supabase-js');
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Initialize Supabase client lazily
+const getSupabaseClient = () => {
+  const { createClient } = require('@getSupabaseClient()/getSupabaseClient()-js');
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+};
 
 const auth = async (req, res, next) => {
   try {
@@ -21,7 +23,7 @@ const auth = async (req, res, next) => {
     console.log('Auth middleware - decoded userId:', decoded.userId);
 
     // Get user from Supabase
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
       .select('id, email, name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
       .eq('id', decoded.userId)

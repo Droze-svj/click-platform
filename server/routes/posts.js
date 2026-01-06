@@ -1,15 +1,17 @@
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const router = express.Router();
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Supabase client will be created in route handlers to avoid loading issues
+const createSupabaseClient = () => {
+  const { createClient } = require('@supabase/supabase-js');
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+};
 
 /**
  * GET /api/posts
@@ -28,7 +30,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    let query = supabase
+    let query = createSupabaseClient()
       .from('posts')
       .select(`
         id,
@@ -114,7 +116,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       .replace(/^-+|-+$/g, '');
 
     // Create post
-    const { data: post, error } = await supabase
+    const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .insert({
         title,
@@ -163,7 +165,7 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: post, error } = await supabase
+    const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .select(`
         id,
@@ -240,7 +242,7 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
       updateData.scheduled_at = scheduled_at ? new Date(scheduled_at).toISOString() : null;
     }
 
-    const { data: post, error } = await supabase
+    const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .update(updateData)
       .eq('id', id)
@@ -277,7 +279,7 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: post, error } = await supabase
+    const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .delete()
       .eq('id', id)
@@ -313,7 +315,7 @@ router.post('/:id/publish', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { data: post, error } = await supabase
+    const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .update({
         status: 'published',
@@ -363,7 +365,7 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
       return res.status(400).json({ success: false, error: 'Scheduled date must be in the future' });
     }
 
-    const { data: post, error } = await supabase
+    const { data: post, error } = await createSupabaseClient()
       .from('posts')
       .update({
         status: 'scheduled',
