@@ -57,10 +57,10 @@ router.post('/register',
   authRateLimiter, validateRegister, async (req, res) => {
   try {
 
-    const { email, password, name } = req.body;
+    const { email, password, firstName, lastName } = req.body;
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ success: false, error: 'All fields are required' });
+    if (!email || !password || !firstName || !lastName) {
+      return res.status(400).json({ success: false, error: 'Email, password, first name, and last name are required' });
     }
 
 
@@ -87,16 +87,12 @@ router.post('/register',
       .insert({
         email: email.toLowerCase(),
         password: hashedPassword,
-        name,
-        email_verified: false,
-        subscription: {
-          status: 'trial',
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7-day trial
-        },
+        first_name: firstName,
+        last_name: lastName,
+        email_verified: true, // For now, mark as verified since we don't have email verification set up
         login_attempts: 0
       })
-      .select('id, email, name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
+      .select('id, email, first_name, last_name, avatar, bio, website, location, social_links, email_verified, created_at')
       .single();
 
 
@@ -105,6 +101,8 @@ router.post('/register',
       return res.status(500).json({ success: false, error: 'Failed to create user' });
     }
 
+    // Create combined name for response
+    user.name = `${user.first_name} ${user.last_name}`;
 
     const token = jwt.sign(
       { userId: user.id },
@@ -112,66 +110,40 @@ router.post('/register',
       { expiresIn: '30d' }
     );
 
-
-    // Generate email verification token
-    const crypto = require('crypto');
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-
-    // Save verification token
-    const { error: tokenError } = await supabase
-      .from('email_verification_tokens')
-      .insert({
-        user_id: user.id,
-        token: verificationToken,
-        expires_at: expiresAt.toISOString()
-      });
-
-
-    if (tokenError) {
-      console.error('Failed to save verification token:', tokenError);
-      // Don't fail registration if token save fails, but log it
-    }
-
     logger.info('User registered successfully', { email: user.email, userId: user.id });
 
-    // Send email verification (async, don't wait for it)
+    // Send welcome email (async, don't wait for it)
     try {
-      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-      const emailContent = {
+      const welcomeContent = {
         to: user.email,
-        subject: 'Verify Your Email Address',
+        subject: 'Welcome to Click Platform!',
         html: `
           <h2>Welcome to Click Platform!</h2>
           <p>Hello ${user.name},</p>
-          <p>Thank you for registering with Click Platform. Please verify your email address to complete your registration and start using our services.</p>
-          <p>Click the link below to verify your email:</p>
-          <a href="${verificationUrl}" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
-          <p>This link will expire in 24 hours.</p>
-          <p>If you didn't create an account, please ignore this email.</p>
+          <p>Thank you for registering with Click Platform! Your account has been created successfully and you can now start using our services.</p>
+          <p>You can now log in with your email and password.</p>
           <br>
           <p>Best regards,<br>Click Platform Team</p>
         `
       };
 
-      await sendWelcomeEmail(user.email, user.name, emailContent);
+      await sendWelcomeEmail(user.email, user.name, welcomeContent);
     } catch (emailError) {
-      logger.error('Failed to send verification email', { error: emailError.message, email: user.email });
-      // Don't fail registration if email fails
+      logger.error('Failed to send welcome email', { error: emailError });
     }
-    
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'User registered successfully!',
       data: {
         token,
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
-          subscription: user.subscription
+          first_name: user.first_name,
+          last_name: user.last_name,
+          emailVerified: user.email_verified
         }
       }
     });
