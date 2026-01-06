@@ -13,7 +13,7 @@ const requireAdmin = asyncHandler(async (req, res, next) => {
   // In production, you'd have a proper roles table
   const adminEmails = process.env.ADMIN_EMAILS ?
     process.env.ADMIN_EMAILS.split(',') :
-    ['admin@clickplatform.com']; // Default admin email
+    ['admin@clickplatform.com', 'dariovuma@gmail.com']; // Default admin emails
 
   if (!adminEmails.includes(req.user.email)) {
     return res.status(403).json({
