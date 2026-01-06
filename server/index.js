@@ -1003,6 +1003,12 @@ curl -s https://click-platform.onrender.com/api/health
         function showRegistrationForm() {
             console.log('Registration button clicked');
 
+            // Add visual feedback immediately
+            document.body.style.backgroundColor = '#10b981';
+            setTimeout(() => {
+                document.body.style.backgroundColor = '';
+            }, 200);
+
             // Debug DOM element existence
             const authForms = document.getElementById('auth-forms');
             const formTitle = document.getElementById('form-title');
@@ -1021,38 +1027,62 @@ curl -s https://click-platform.onrender.com/api/health
             // Apply changes with verification
             if (authForms) {
                 authForms.style.display = 'block';
-                console.log('Set auth-forms display to block');
+                console.log('Set auth-forms display to block, computed style:', window.getComputedStyle(authForms).display);
+                console.log('auth-forms visibility:', window.getComputedStyle(authForms).visibility);
+                console.log('auth-forms opacity:', window.getComputedStyle(authForms).opacity);
+                console.log('auth-forms parent display:', authForms.parentElement ? window.getComputedStyle(authForms.parentElement).display : 'no parent');
             } else {
                 console.error('auth-forms element not found!');
             }
 
             if (formTitle) {
                 formTitle.textContent = 'Register';
-                console.log('Set form-title text to Register');
+                console.log('Set form-title text to Register, actual text:', formTitle.textContent);
+                console.log('form-title display:', window.getComputedStyle(formTitle).display);
             } else {
                 console.error('form-title element not found!');
             }
 
             if (registerForm) {
                 registerForm.style.display = 'block';
-                console.log('Set register-form display to block');
+                console.log('Set register-form display to block, computed style:', window.getComputedStyle(registerForm).display);
+                console.log('register-form visibility:', window.getComputedStyle(registerForm).visibility);
+                console.log('register-form parent display:', registerForm.parentElement ? window.getComputedStyle(registerForm.parentElement).display : 'no parent');
             } else {
                 console.error('register-form element not found!');
             }
 
             if (loginForm) {
                 loginForm.style.display = 'none';
-                console.log('Set login-form display to none');
+                console.log('Set login-form display to none, computed style:', window.getComputedStyle(loginForm).display);
             } else {
                 console.error('login-form element not found!');
             }
 
             if (authResult) {
                 authResult.style.display = 'none';
-                console.log('Set auth-result display to none');
+                console.log('Set auth-result display to none, computed style:', window.getComputedStyle(authResult).display);
             } else {
                 console.error('auth-result element not found!');
             }
+
+            // Force a reflow and check final state
+            setTimeout(() => {
+                console.log('After timeout - auth-forms computed display:', authForms ? window.getComputedStyle(authForms).display : 'element gone');
+                console.log('After timeout - register-form computed display:', registerForm ? window.getComputedStyle(registerForm).display : 'element gone');
+
+                // Check for potential CSS conflicts
+                if (authForms) {
+                    const authFormsRect = authForms.getBoundingClientRect();
+                    console.log('auth-forms bounding rect:', {
+                        width: authFormsRect.width,
+                        height: authFormsRect.height,
+                        top: authFormsRect.top,
+                        left: authFormsRect.left
+                    });
+                    console.log('auth-forms is visible in viewport:', authFormsRect.top >= 0 && authFormsRect.left >= 0 && authFormsRect.width > 0 && authFormsRect.height > 0);
+                }
+            }, 100);
         }
 
         function showLoginForm() {
