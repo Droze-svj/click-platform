@@ -39,7 +39,9 @@ function csrfProtection(req, res, next) {
       req.path.startsWith('/auth/refresh') ||
       req.path.startsWith('/auth/forgot-password') ||
       req.path.startsWith('/auth/reset-password') ||
-      req.path.startsWith('/auth/validate-reset-token')) {
+      req.path.startsWith('/auth/validate-reset-token') ||
+      req.path.startsWith('/auth/verify-email') ||
+      req.path.startsWith('/auth/resend-verification')) {
     console.log('Skipping CSRF for auth endpoint:', req.path);
     return next();
   }
