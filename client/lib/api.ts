@@ -210,7 +210,7 @@ function createApiClient(): AxiosInstance {
   // Enhanced response interceptor with detailed logging
   client.interceptors.response.use(
     (response) => {
-      const duration = Date.now() - response.config.metadata?.startTime
+      const duration = Date.now() - (response.config as any).metadata?.startTime
 
       console.log('🔍 API: Response received for:', response.config.url, 'status:', response.status, 'duration:', duration + 'ms')
 
