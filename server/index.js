@@ -1069,7 +1069,7 @@ curl -s https://click-platform.onrender.com/api/health
 
                 if (response.ok) {
                     resultDiv.style.background = '#10b981';
-                    resultDiv.innerHTML = '<strong>✅ Login Successful!</strong><br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; word-break: break-all;">' + result.token + '</code><br><br><button onclick="copyToken(\'' + result.token + '\')" style="margin-top: 10px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 5px; color: white; cursor: pointer;">Copy Token</button><br><br><details><summary>User Info</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result.user, null, 2) + '</pre></details>';
+                    resultDiv.innerHTML = '<strong>✅ Login Successful!</strong><br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; word-break: break-all;">' + result.token + '</code><br><br><button onclick="copyCurrentToken()" style="margin-top: 10px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 5px; color: white; cursor: pointer;">Copy Token</button><br><br><details><summary>User Info</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result.user, null, 2) + '</pre></details>';
                     authToken = result.token;
                 } else {
                     resultDiv.style.background = '#ef4444';
@@ -1107,13 +1107,17 @@ curl -s https://click-platform.onrender.com/api/health
             }
         }
 
-        function copyToken(token) {
-            navigator.clipboard.writeText(token).then(() => {
+        function copyCurrentToken() {
+            if (!authToken) {
+                alert('❌ No token available to copy!');
+                return;
+            }
+            navigator.clipboard.writeText(authToken).then(() => {
                 alert('✅ Token copied to clipboard!');
             }).catch(() => {
                 // Fallback for browsers that don't support clipboard API
                 const textArea = document.createElement('textarea');
-                textArea.value = token;
+                textArea.value = authToken;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
