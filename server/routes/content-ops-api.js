@@ -152,8 +152,9 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(skip)
+      .maxTimeMS(8000)
       .lean(),
-    Content.countDocuments(query)
+    Content.countDocuments(query).maxTimeMS(8000)
   ]);
 
   sendSuccess(res, 'Content retrieved', 200, {
@@ -928,8 +929,8 @@ router.get('/search', requireScope('content.read'), asyncHandler(async (req, res
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   const [results, total] = await Promise.all([
-    Content.find(query).sort(sort).limit(parseInt(limit)).skip(skip).lean(),
-    Content.countDocuments(query)
+    Content.find(query).sort(sort).limit(parseInt(limit)).skip(skip).maxTimeMS(8000).lean(),
+    Content.countDocuments(query).maxTimeMS(8000)
   ]);
 
   sendSuccess(res, 'Search completed', 200, {

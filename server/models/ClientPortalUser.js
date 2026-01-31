@@ -29,8 +29,8 @@ const clientPortalUserSchema = new mongoose.Schema({
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
+    // Indexed below as standalone index
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -42,12 +42,13 @@ class NetworkDebugger {
   }
 
   private sendDebugLog(message: string, data: any) {
-    // #region agent log
-    fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+    console.log('NetworkDebugger:', message, data)
+    // Use local debug API instead of external service
+    fetch('/api/debug/log', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        location: 'networkDebugger.ts',
+        component: 'NetworkDebugger',
         message: `network_${message}`,
         data: {
           ...data,

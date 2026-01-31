@@ -7,14 +7,12 @@ const sceneDetectionJobSchema = new mongoose.Schema({
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Content',
-    required: true,
-    index: true
+    required: true
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -62,8 +60,7 @@ const sceneDetectionJobSchema = new mongoose.Schema({
   duration: Number, // in seconds
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   updatedAt: {
     type: Date,

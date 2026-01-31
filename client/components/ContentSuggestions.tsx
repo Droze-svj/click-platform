@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { apiGet } from '../lib/api'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 interface ContentIdea {
   title: string
@@ -31,27 +29,26 @@ export default function ContentSuggestions() {
   const loadSuggestions = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
       const [ideasRes, gapsRes, trendingRes] = await Promise.all([
-        axios.get(`${API_URL}/suggestions/daily-ideas?count=5`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/suggestions/content-gaps`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/suggestions/trending`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        apiGet<any>('/suggestions/daily-ideas?count=5'),
+        apiGet<any>('/suggestions/content-gaps'),
+        apiGet<any>('/suggestions/trending')
       ])
 
-      if (ideasRes.data.success) {
-        setIdeas(ideasRes.data.data || [])
+      if (ideasRes?.success && ideasRes.data) {
+        setIdeas(ideasRes.data || [])
+      } else if (Array.isArray(ideasRes)) {
+        setIdeas(ideasRes)
       }
-      if (gapsRes.data.success) {
-        setGaps(gapsRes.data.data || [])
+      if (gapsRes?.success && gapsRes.data) {
+        setGaps(gapsRes.data || [])
+      } else if (Array.isArray(gapsRes)) {
+        setGaps(gapsRes)
       }
-      if (trendingRes.data.success) {
-        setTrending(trendingRes.data.data || [])
+      if (trendingRes?.success && trendingRes.data) {
+        setTrending(trendingRes.data || [])
+      } else if (Array.isArray(trendingRes)) {
+        setTrending(trendingRes)
       }
     } catch (error) {
       showToast('Failed to load suggestions', 'error')

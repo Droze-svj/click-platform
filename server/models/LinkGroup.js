@@ -21,8 +21,8 @@ const linkGroupSchema = new mongoose.Schema({
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
+    // Indexed below as standalone index
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

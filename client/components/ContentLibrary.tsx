@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { BookOpen, Search, Filter, Plus, Copy, Edit, Trash2 } from 'lucide-react'
-import axios from 'axios'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPost } from '../lib/api'
 
 interface LibraryItem {
   id: string
@@ -34,15 +32,14 @@ export default function ContentLibrary() {
   const loadLibrary = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      
-      const response = await axios.get(
-        `${API_URL}/library/items`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const response = await apiGet<any>('/library/items')
 
-      if (response.data.success) {
-        setItems(response.data.data.items || [])
+      if (response?.success && response.data?.items) {
+        setItems(response.data.items)
+      } else if (response?.items && Array.isArray(response.items)) {
+        setItems(response.items)
+      } else if (Array.isArray(response)) {
+        setItems(response)
       }
     } catch (error: any) {
       console.error('Library load error:', error)
@@ -72,27 +69,17 @@ export default function ContentLibrary() {
 
   const useItem = async (item: LibraryItem) => {
     try {
-      const token = localStorage.getItem('token')
-      
       // Create new content from library item
-      const response = await axios.post(
-        `${API_URL}/content/generate`,
-        {
-          text: item.text,
-          title: item.title,
-          type: item.type,
-          platforms: item.platforms
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const response = await apiPost<any>('/content/generate', {
+        text: item.text,
+        title: item.title,
+        type: item.type,
+        platforms: item.platforms
+      })
 
-      if (response.data.success) {
+      if (response?.success || response) {
         // Increment usage count
-        await axios.post(
-          `${API_URL}/library/items/${item.id}/use`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
+        await apiPost(`/library/items/${item.id}/use`, {})
         
         // Reload library
         loadLibrary()
@@ -104,14 +91,7 @@ export default function ContentLibrary() {
 
   const duplicateItem = async (item: LibraryItem) => {
     try {
-      const token = localStorage.getItem('token')
-      
-      await axios.post(
-        `${API_URL}/library/items/${item.id}/duplicate`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      
+      await apiPost(`/library/items/${item.id}/duplicate`, {})
       loadLibrary()
     } catch (error: any) {
       console.error('Duplicate error:', error)

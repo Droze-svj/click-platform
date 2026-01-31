@@ -29,11 +29,12 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 
       if (!shouldSendDebug) return
 
-      await fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+      console.log('ErrorBoundary activated:', errorData)
+      await fetch('/api/debug/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          location: 'ErrorBoundary.tsx',
+          component: 'ErrorBoundary',
           message: 'error_boundary_activated',
           data: {
             ...errorData,

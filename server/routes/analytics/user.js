@@ -16,8 +16,40 @@ const router = express.Router();
  * Get user analytics (privacy-compliant)
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  
+  // Check both host header and x-forwarded-host (for proxy requests)
+  const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+                      (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
+  const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
+  
+  // In development mode OR when on localhost, return mock data for dev users
+  if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
+    return sendSuccess(res, 'User analytics retrieved (dev mode)', 200, {
+      timeRange: req.query.timeRange || '30d',
+      content: { created: 0, scheduled: 0, published: 0 },
+      usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, scriptsGenerated: 0 },
+      timestamp: new Date()
+    });
+  }
+  
   const timeRange = req.query.timeRange || '30d';
-  const analytics = await getUserAnalytics(req.user._id, timeRange);
+  let analytics;
+  try {
+    analytics = await getUserAnalytics(userId, timeRange);
+  } catch (error) {
+    // Handle CastError gracefully for dev mode
+    if (allowDevMode && (error.name === 'CastError' || error.message?.includes('Cast to ObjectId'))) {
+      return sendSuccess(res, 'User analytics retrieved (dev mode)', 200, {
+        timeRange,
+        content: { created: 0, scheduled: 0, published: 0 },
+        usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, scriptsGenerated: 0 },
+        timestamp: new Date()
+      });
+    }
+    throw error;
+  }
   
   if (analytics.error) {
     return sendError(res, analytics.error, 403);

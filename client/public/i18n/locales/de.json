@@ -10,48 +10,157 @@
     "loading": "Laden...",
     "error": "Fehler",
     "success": "Erfolg",
-    "close": "Schließen"
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "retry": "Wiederholen",
+    "more": "Mehr",
+    "menu": "Menü",
+    "logout": "Abmelden",
+    "yes": "Ja",
+    "no": "Nein",
+    "redirecting": "Weiterleitung zur Anmeldung…"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "videos": "Videos",
+    "content": "Inhalt",
+    "aiFeatures": "KI-Funktionen",
+    "library": "Bibliothek",
+    "scripts": "Skripte",
+    "workflows": "Workflows",
+    "jobs": "Aufträge",
+    "teams": "Teams",
+    "approvals": "Freigaben",
+    "quotes": "Zitate",
+    "scheduler": "Planer",
+    "calendar": "Kalender",
+    "social": "Soziale Netzwerke",
+    "analytics": "Analysen",
+    "achievements": "Erfolge",
+    "membership": "Mitgliedschaft",
+    "notifications": "Benachrichtigungen",
+    "settings": "Einstellungen",
+    "templates": "Vorlagen",
+    "infrastructure": "Infrastruktur",
+    "clickTagline": "KI-gestützte Inhalte"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Willkommen zurück",
+    "heroWelcome": "Willkommen bei Click",
+    "heroTitle": "Erstellen, wiederverwenden und veröffentlichen",
+    "heroSubtitle": "KI-Tools, intelligente Planung und Analysen in einem Workspace.",
+    "heroDescription": "Ihr KI-Workspace zum Erstellen, Wiederverwenden und Veröffentlichen auf 6 Plattformen. Verwandeln Sie Long-Form-Content in Social-Formate—schneller.",
     "stats": {
-      "videosProcessed": "Videos Verarbeitet",
-      "contentGenerated": "Inhalt Generiert",
-      "postsScheduled": "Beiträge Geplant"
-    }
+      "videosProcessed": "Videos verarbeitet",
+      "contentGenerated": "Inhalt erstellt",
+      "contentCreated": "Inhalt erstellt",
+      "quotesCreated": "Zitate erstellt",
+      "postsScheduled": "Beiträge geplant"
+    },
+    "clickToView": "Details anzeigen →"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "loggingIn": "Anmeldung...",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "passwordPlaceholder": "Passwort eingeben",
+    "forgotPassword": "Passwort vergessen?",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "loginTitle": "Willkommen bei Click",
+    "loginSubtitle": "Melden Sie sich an für KI-gestützte Content-Erstellung.",
+    "registerTitle": "Konto erstellen",
+    "registerSubtitle": "Starten Sie mit KI-gestützter Content-Erstellung."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Kontoeinstellungen verwalten",
+    "profile": "Profil",
+    "editProfile": "Profil bearbeiten",
+    "general": "Allgemein",
+    "notifications": "Benachrichtigungen",
+    "privacy": "Datenschutz",
+    "security": "Sicherheit",
+    "appearance": "Darstellung",
+    "theme": "Design",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeAuto": "Auto (System)",
+    "language": "Sprache",
+    "timezone": "Zeitzone",
+    "saveSettings": "Einstellungen speichern",
+    "saving": "Speichern...",
+    "saved": "Einstellungen gespeichert",
+    "saveFailed": "Speichern fehlgeschlagen"
   },
   "content": {
     "title": "Inhalt",
-    "create": "Inhalt Erstellen",
-    "edit": "Inhalt Bearbeiten",
-    "delete": "Inhalt Löschen",
+    "create": "Inhalt erstellen",
+    "edit": "Inhalt bearbeiten",
+    "delete": "Inhalt löschen",
     "duplicate": "Duplizieren",
     "publish": "Veröffentlichen",
     "schedule": "Planen"
+  },
+  "video": {
+    "title": "Videos",
+    "upload": "Hochladen",
+    "edit": "Bearbeiten",
+    "processing": "Verarbeitung...",
+    "noVideo": "Kein Video",
+    "noVideoHint": "Bitte Video-URL angeben, um mit der Bearbeitung zu starten.",
+    "goToVideos": "Zu Videos"
   },
   "analytics": {
     "title": "Analysen",
     "overview": "Übersicht",
     "trends": "Trends",
     "platforms": "Plattformen",
-    "engagement": "Engagement",
+    "engagement": "Interaktion",
     "views": "Aufrufe",
     "likes": "Likes",
     "shares": "Teilungen"
   },
   "moderation": {
     "title": "Inhaltsmoderation",
-    "checking": "Inhalt wird überprüft...",
+    "checking": "Inhalt wird geprüft...",
     "approved": "Inhalt genehmigt",
-    "flagged": "Inhalt zur Überprüfung markiert",
+    "flagged": "Zur Überprüfung markiert",
     "profanity": "Obszönität erkannt",
     "spam": "Spam erkannt"
+  },
+  "backup": {
+    "title": "Backups",
+    "create": "Backup erstellen",
+    "download": "Herunterladen",
+    "delete": "Löschen",
+    "passwordRequired": "Passwort für verschlüsseltes Backup erforderlich",
+    "created": "Backup erstellt",
+    "createFailed": "Backup-Erstellung fehlgeschlagen",
+    "downloaded": "Backup heruntergeladen",
+    "downloadFailed": "Download fehlgeschlagen",
+    "deleted": "Backup gelöscht",
+    "deleteFailed": "Löschen fehlgeschlagen"
+  },
+  "translation": {
+    "title": "Übersetzung",
+    "translate": "Übersetzen",
+    "translateTo": "Übersetzen in",
+    "translateToAll": "Alle übersetzen",
+    "targetLanguage": "Zielsprache",
+    "viewIn": "Anzeigen auf",
+    "original": "Original",
+    "translations": "Übersetzungen",
+    "noTranslations": "Noch keine Übersetzungen",
+    "translating": "Wird übersetzt…",
+    "translated": "Übersetzt",
+    "translationFailed": "Übersetzung fehlgeschlagen",
+    "viewOriginal": "Original anzeigen",
+    "selectLanguage": "Sprache wählen"
   }
 }
-
-
-
-
-
-

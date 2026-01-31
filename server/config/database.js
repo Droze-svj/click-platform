@@ -16,34 +16,17 @@ const initSupabase = async () => {
 
   if (supabaseUrl && supabaseServiceKey) {
     try {
-      // Create admin client with service role key for server-side operations
       const { createClient } = require('@supabase/supabase-js');
       const adminSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
-      // Test Supabase connection with admin client
-      // Try a simple query that doesn't rely on schema cache
-      const { data, error } = await adminSupabase.rpc('exec_sql', {
-        sql: 'SELECT 1 as test'
-      });
-
-      if (!error && data) {
+      // Test via auth (no exec_sql required). exec_sql is only for migrations.
+      const { error: authError } = await adminSupabase.auth.getSession();
+      if (!authError) {
         databaseStatus.supabase = true;
         console.log('✅ Supabase connected successfully');
         return true;
-      } else {
-        console.warn('⚠️ Supabase connection test failed:', error?.message || 'Unknown error');
-        // Fallback: try basic auth check
-        try {
-          const { data: authData, error: authError } = await adminSupabase.auth.getSession();
-          if (!authError) {
-            databaseStatus.supabase = true;
-            console.log('✅ Supabase connected successfully (auth check)');
-            return true;
-          }
-        } catch (authErr) {
-          console.warn('⚠️ Supabase auth check also failed');
-        }
       }
+      console.warn('⚠️ Supabase connection test failed:', authError?.message || 'Unknown error');
     } catch (error) {
       console.warn('⚠️ Supabase connection error:', error.message);
     }

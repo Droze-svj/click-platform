@@ -8,8 +8,8 @@ const userPreferencesSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true,
-    index: true
+    unique: true
+    // unique: true already creates an index, and there's also a standalone index below
   },
   // Pro mode
   proMode: {
@@ -88,13 +88,48 @@ const userPreferencesSchema = new mongoose.Schema({
     showTooltips: { type: Boolean, default: true },
     showKeyboardHints: { type: Boolean, default: true }
   },
+  // Manual editing presets
+  presets: [{
+    id: String,
+    name: String,
+    category: String,
+    settings: mongoose.Schema.Types.Mixed,
+    thumbnail: String,
+    createdAt: Date,
+    updatedAt: Date,
+    usageCount: { type: Number, default: 0 },
+    isPublic: { type: Boolean, default: false }
+  }],
+  // Edit analytics
+  editAnalytics: {
+    sessions: [{
+      id: String,
+      startedAt: Date,
+      endedAt: Date,
+      featuresUsed: [String],
+      renderTime: Number,
+      exportTime: Number,
+      errors: [String]
+    }],
+    featureUsage: mongoose.Schema.Types.Mixed,
+    cacheHitRate: { type: Number, default: 0 }
+  },
+  // Downloaded templates
+  downloadedTemplates: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Template'
+  }],
+  // Completed tutorials
+  completedTutorials: [String],
+  // Synced devices
+  syncedDevices: [String],
   updatedAt: {
     type: Date,
     default: Date.now
   }
 });
 
-userPreferencesSchema.index({ userId: 1 });
+// userId already has unique: true which creates an index
 userPreferencesSchema.index({ 'proMode.enabled': 1 });
 
 userPreferencesSchema.pre('save', function(next) {

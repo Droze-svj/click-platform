@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import axios, { AxiosError } from 'axios'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPost, apiPut, apiDelete, handleApiError } from '../lib/api'
 
 interface UseApiOptions {
   onSuccess?: (data: any) => void
@@ -24,43 +22,29 @@ export function useApi() {
     setError(null)
 
     try {
-      const token = localStorage.getItem('token')
-      const config = {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-          'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json'
-        }
-      }
-
       let response
       switch (method) {
         case 'get':
-          response = await axios.get(`${API_URL}${endpoint}`, config)
+          response = await apiGet<T>(endpoint)
           break
         case 'post':
-          response = await axios.post(`${API_URL}${endpoint}`, data, config)
+          response = await apiPost<T>(endpoint, data)
           break
         case 'put':
-          response = await axios.put(`${API_URL}${endpoint}`, data, config)
+          response = await apiPut<T>(endpoint, data)
           break
         case 'delete':
-          response = await axios.delete(`${API_URL}${endpoint}`, config)
+          response = await apiDelete(endpoint)
           break
       }
 
-      const result = response.data.data || response.data
+      const result = (response as any)?.data || response
       if (options?.onSuccess) {
         options.onSuccess(result)
       }
-      return result
+      return result as T
     } catch (err) {
-      const axiosError = err as AxiosError
-      const errorMessage =
-        (axiosError.response?.data as any)?.error ||
-        (axiosError.response?.data as any)?.message ||
-        axiosError.message ||
-        'An error occurred'
-
+      const errorMessage = handleApiError(err)
       setError(errorMessage)
       if (options?.onError) {
         options.onError(errorMessage)

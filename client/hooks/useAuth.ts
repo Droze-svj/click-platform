@@ -7,13 +7,17 @@ import { apiGet } from '../lib/api'
 // Global flag to prevent multiple simultaneous auth checks
 let authCheckInProgress = false
 let lastAuthCheck = 0
-const AUTH_CHECK_DEBOUNCE_MS = 2000 // 2 seconds
+const AUTH_CHECK_DEBOUNCE_MS = 1000 // Reduced to 1 second for better responsiveness
 
 // Global cache to avoid refetching /auth/me across multiple components/hooks mounts
 let cachedToken: string | null = null
 let cachedUser: User | null = null
 let lastAuthSuccess = 0
 const AUTH_SUCCESS_CACHE_MS = 30_000 // 30 seconds
+
+// Queue for pending auth checks to prevent race conditions
+let authCheckQueue: Array<() => void> = []
+let authCheckTimeout: NodeJS.Timeout | null = null
 
 interface User {
   id: string
@@ -42,13 +46,49 @@ async function waitForAuthCheckToFinish(timeoutMs = 5000) {
 
 export function useAuth() {
   const router = useRouter()
+
+  // Debug logging disabled to prevent console spam
+  // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
+
+  // Mock user for development mode
+  const mockUser: User = {
+    id: 'dev-user-123',
+    email: 'dev@example.com',
+    name: 'Development User',
+    subscription: { status: 'active', plan: 'pro' },
+    niche: 'video editing',
+    brandSettings: {},
+    usage: {
+      videosProcessed: 5,
+      contentGenerated: 10,
+      quotesCreated: 3,
+      postsScheduled: 7,
+    },
+  }
+
   const [user, setUser] = useState<User | null>(() => {
+    // Use mock user in development mode
+    if (process.env.NODE_ENV === 'development') {
+      // Debug logging disabled to prevent console spam
+      // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {});
+
+      // Set a mock JWT token for development
+      if (typeof window !== 'undefined') {
+        const mockToken = 'dev-jwt-token-' + Date.now() // Simple mock token for dev
+        localStorage.setItem('token', mockToken)
+      }
+      return mockUser
+    }
+
     if (typeof window === 'undefined') return null
     const token = localStorage.getItem('token')
     if (token && cachedToken === token && cachedUser) return cachedUser
     return null
   })
   const [loading, setLoading] = useState(() => {
+    // In development mode, we use mock user immediately, so loading should be false
+    if (process.env.NODE_ENV === 'development') return false
+    
     if (typeof window === 'undefined') return true
     const token = localStorage.getItem('token')
     // If we have a cached user for the current token, we can render immediately and refresh in the background.
@@ -75,61 +115,88 @@ export function useAuth() {
   }, [])
 
   const checkAuth = async (retryCount = 0) => {
+    // Debug logging disabled to prevent console spam
+    // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
 
-    // Enhanced debugging function
+    // If auth check is already in progress, queue this request
+    if (authCheckInProgress) {
+      return new Promise<void>((resolve) => {
+        authCheckQueue.push(() => resolve())
+      })
+    }
+
+    // Check debounce timing
+    const now = Date.now()
+    if (now - lastAuthCheck < AUTH_CHECK_DEBOUNCE_MS) {
+      return new Promise<void>((resolve) => {
+        authCheckQueue.push(() => resolve())
+      })
+    }
+
+    // Enhanced debugging function (commented out to avoid ERR_CONNECTION_REFUSED)
     const sendAuthDebugLog = (message: string, data: any) => {
-      // #region agent log
-      fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'useAuth.ts',
-          message,
-          data: {
-            ...data,
-            timestamp: Date.now(),
-            sessionId: 'debug-session',
-            runId: 'run-auth-debug'
-          }
-        }),
-      }).catch(() => {})
-      // #endregion
+      // Development debug logging disabled to prevent console spam
+      // fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     location: 'useAuth.ts',
+      //     message,
+      //     data: {
+      //       ...data,
+      //       timestamp: Date.now(),
+      //       sessionId: 'debug-session',
+      //       runId: 'run-auth-debug'
+      //     }
+      //   }),
+      // }).catch(() => {})
     }
 
     // Track timing for debugging
     const authStartTime = Date.now()
 
-    // If another component already triggered an auth check, wait for it to finish and reuse the result.
-    // IMPORTANT: do NOT "skip" without updating local state, otherwise pages that check `!user` will redirect to /login.
-    if (authCheckInProgress && retryCount === 0) {
-      console.log('🔍 [useAuth] Auth check already in progress, waiting...')
-      await waitForAuthCheckToFinish()
-
-      if (!mountedRef.current) return
-
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token')
-        if (token && cachedToken === token && cachedUser) {
-          setUser(cachedUser)
-          setError(null)
-        }
-      }
-
-      setLoading(false)
-      return
-    }
-
-    authCheckInProgress = true
-    lastAuthCheck = Date.now()
     try {
-      // Don't redirect on auth pages
-      if (typeof window !== 'undefined') {
-        const pathname = window.location.pathname
-        if (pathname === '/login' || pathname === '/register' || pathname === '/') {
-          setLoading(false)
-          return
+      // Skip auth check in development mode - use mock user
+      // IMPORTANT: Check this BEFORE setting authCheckInProgress to avoid blocking future checks
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [useAuth] Development mode - using mock user')
+
+        // Ensure token is set in development mode for API calls
+        if (typeof window !== 'undefined') {
+          const existingToken = localStorage.getItem('token')
+          if (!existingToken || !existingToken.startsWith('dev-jwt-token-')) {
+            const mockToken = 'dev-jwt-token-' + Date.now()
+            localStorage.setItem('token', mockToken)
+            console.log('🔧 [useAuth] Set development token:', mockToken.substring(0, 20) + '...')
+          }
         }
+
+        // Debug logging disabled to prevent console spam
+        // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {});
+
+        setUser(mockUser)
+        setLoading(false)
+        setError(null)
+        authCheckInProgress = false // Reset flag before returning
+        // Process any queued auth checks
+        if (authCheckQueue.length > 0) {
+          const nextCheck = authCheckQueue.shift()
+          if (nextCheck) nextCheck()
+        }
+        return
       }
+
+      authCheckInProgress = true
+      lastAuthCheck = now
+
+    // Don't redirect on auth pages
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname
+      if (pathname === '/login' || pathname === '/register' || pathname === '/') {
+        setLoading(false)
+        return
+      }
+    }
 
       const token = localStorage.getItem('token')
       if (!token) {
@@ -146,13 +213,13 @@ export function useAuth() {
 
       // If we've recently fetched the user for this exact token, reuse it.
       // This prevents repeated /auth/me calls when multiple components mount and call useAuth().
-      const now = Date.now()
+      const currentTime = Date.now()
       if (
         retryCount === 0 &&
         cachedToken &&
         cachedToken === token &&
         cachedUser &&
-        now - lastAuthSuccess < AUTH_SUCCESS_CACHE_MS
+        currentTime - lastAuthSuccess < AUTH_SUCCESS_CACHE_MS
       ) {
         setUser(cachedUser)
         setError(null)
@@ -258,6 +325,19 @@ export function useAuth() {
       }
     } finally {
       authCheckInProgress = false
+
+      // Process queued auth checks
+      if (authCheckQueue.length > 0) {
+        const nextCheck = authCheckQueue.shift()
+        if (nextCheck) {
+          // Use setTimeout to avoid immediate recursive calls
+          if (authCheckTimeout) clearTimeout(authCheckTimeout)
+          authCheckTimeout = setTimeout(() => {
+            nextCheck()
+          }, 10)
+        }
+      }
+
       if (mountedRef.current) {
         setLoading(false)
       }

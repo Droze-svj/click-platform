@@ -26,8 +26,8 @@ const errorLogSchema = new mongoose.Schema({
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    index: true,
+    ref: 'User'
+    // Indexed in compound index below: { userId: 1, timestamp: -1 }
   },
   path: {
     type: String,

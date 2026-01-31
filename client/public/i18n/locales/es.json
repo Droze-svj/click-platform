@@ -10,48 +10,157 @@
     "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "retry": "Reintentar",
+    "more": "Más",
+    "menu": "Menú",
+    "logout": "Cerrar sesión",
+    "yes": "Sí",
+    "no": "No",
+    "redirecting": "Redirigiendo a iniciar sesión…"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "videos": "Videos",
+    "content": "Contenido",
+    "aiFeatures": "Funciones IA",
+    "library": "Biblioteca",
+    "scripts": "Guiones",
+    "workflows": "Flujos",
+    "jobs": "Tareas",
+    "teams": "Equipos",
+    "approvals": "Aprobaciones",
+    "quotes": "Citas",
+    "scheduler": "Programador",
+    "calendar": "Calendario",
+    "social": "Redes sociales",
+    "analytics": "Analíticas",
+    "achievements": "Logros",
+    "membership": "Suscripción",
+    "notifications": "Notificaciones",
+    "settings": "Ajustes",
+    "templates": "Plantillas",
+    "infrastructure": "Infraestructura",
+    "clickTagline": "Contenido potenciado por IA"
   },
   "dashboard": {
     "title": "Panel",
     "welcome": "Bienvenido de nuevo",
+    "heroWelcome": "Bienvenido a Click",
+    "heroTitle": "Crea, reutiliza y publica",
+    "heroSubtitle": "Herramientas con IA, programación inteligente y analíticas en un solo espacio.",
+    "heroDescription": "Tu espacio de trabajo con IA para crear, reutilizar y publicar en 6 plataformas. Convierte contenido largo en formatos para redes—más rápido.",
     "stats": {
-      "videosProcessed": "Videos Procesados",
-      "contentGenerated": "Contenido Generado",
-      "postsScheduled": "Publicaciones Programadas"
-    }
+      "videosProcessed": "Videos procesados",
+      "contentGenerated": "Contenido generado",
+      "contentCreated": "Contenido creado",
+      "quotesCreated": "Citas creadas",
+      "postsScheduled": "Publicaciones programadas"
+    },
+    "clickToView": "Ver detalles →"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "loggingIn": "Iniciando sesión...",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "loginTitle": "Bienvenido a Click",
+    "loginSubtitle": "Inicia sesión para acceder a la creación de contenido con IA.",
+    "registerTitle": "Crea tu cuenta",
+    "registerSubtitle": "Empieza con la creación de contenido potenciada por IA."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "subtitle": "Gestiona las preferencias de tu cuenta",
+    "profile": "Perfil",
+    "editProfile": "Editar perfil",
+    "general": "General",
+    "notifications": "Notificaciones",
+    "privacy": "Privacidad",
+    "security": "Seguridad",
+    "appearance": "Apariencia",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeAuto": "Automático (sistema)",
+    "language": "Idioma",
+    "timezone": "Zona horaria",
+    "saveSettings": "Guardar ajustes",
+    "saving": "Guardando...",
+    "saved": "Ajustes guardados correctamente",
+    "saveFailed": "Error al guardar los ajustes"
   },
   "content": {
     "title": "Contenido",
-    "create": "Crear Contenido",
-    "edit": "Editar Contenido",
-    "delete": "Eliminar Contenido",
+    "create": "Crear contenido",
+    "edit": "Editar contenido",
+    "delete": "Eliminar contenido",
     "duplicate": "Duplicar",
     "publish": "Publicar",
     "schedule": "Programar"
+  },
+  "video": {
+    "title": "Videos",
+    "upload": "Subir",
+    "edit": "Editar",
+    "processing": "Procesando...",
+    "noVideo": "Sin video",
+    "noVideoHint": "Añade una URL de video para empezar a editar.",
+    "goToVideos": "Ir a Videos"
   },
   "analytics": {
     "title": "Analíticas",
     "overview": "Resumen",
     "trends": "Tendencias",
     "platforms": "Plataformas",
-    "engagement": "Compromiso",
-    "views": "Vistas",
+    "engagement": "Participación",
+    "views": "Visualizaciones",
     "likes": "Me gusta",
     "shares": "Compartidos"
   },
   "moderation": {
-    "title": "Moderación de Contenido",
+    "title": "Moderación de contenido",
     "checking": "Verificando contenido...",
     "approved": "Contenido aprobado",
     "flagged": "Contenido marcado para revisión",
     "profanity": "Lenguaje ofensivo detectado",
     "spam": "Spam detectado"
+  },
+  "backup": {
+    "title": "Copias de seguridad",
+    "create": "Crear copia",
+    "download": "Descargar",
+    "delete": "Eliminar",
+    "passwordRequired": "Contraseña necesaria para copia cifrada",
+    "created": "Copia creada correctamente",
+    "createFailed": "Error al crear la copia",
+    "downloaded": "Copia descargada",
+    "downloadFailed": "Error al descargar la copia",
+    "deleted": "Copia eliminada",
+    "deleteFailed": "Error al eliminar la copia"
+  },
+  "translation": {
+    "title": "Traducción",
+    "translate": "Traducir",
+    "translateTo": "Traducir a",
+    "translateToAll": "Traducir a todos",
+    "targetLanguage": "Idioma de destino",
+    "viewIn": "Ver en",
+    "original": "Original",
+    "translations": "Traducciones",
+    "noTranslations": "Sin traducciones aún",
+    "translating": "Traduciendo…",
+    "translated": "Traducido",
+    "translationFailed": "Error al traducir",
+    "viewOriginal": "Ver original",
+    "selectLanguage": "Seleccionar idioma"
   }
 }
-
-
-
-
-
-

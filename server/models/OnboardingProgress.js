@@ -36,7 +36,7 @@ const onboardingProgressSchema = new mongoose.Schema({
   },
 });
 
-onboardingProgressSchema.index({ userId: 1 });
+// userId already has unique: true which creates an index
 onboardingProgressSchema.index({ completed: 1 });
 
 module.exports = mongoose.model('OnboardingProgress', onboardingProgressSchema);

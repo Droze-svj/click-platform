@@ -13,13 +13,11 @@ const scheduledPostSchema = new mongoose.Schema({
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   contentId: {
     type: mongoose.Schema.Types.ObjectId,

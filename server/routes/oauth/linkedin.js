@@ -7,13 +7,25 @@ const {
   exchangeCodeForToken,
   postToLinkedIn,
   disconnectLinkedIn,
-  isConfigured
+  getConnectionStatus,
+  healthCheck,
+  isConfigured,
+  defaultRedirectUri,
 } = require('../../services/linkedinOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
 const router = express.Router();
+
+/**
+ * GET /api/oauth/linkedin/health
+ * Health check for LinkedIn OAuth config
+ */
+router.get('/health', asyncHandler(async (req, res) => {
+  const h = healthCheck();
+  sendSuccess(res, 'Health check', 200, h);
+}));
 
 /**
  * GET /api/oauth/linkedin/authorize
@@ -24,9 +36,7 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
     return sendError(res, 'LinkedIn OAuth not configured', 503);
   }
 
-  const callbackUrl = process.env.LINKEDIN_CALLBACK_URL || 
-    `${req.protocol}://${req.get('host')}/api/oauth/linkedin/callback`;
-
+  const callbackUrl = defaultRedirectUri(req);
   const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
   
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
@@ -91,18 +101,21 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
 
 /**
  * POST /api/oauth/linkedin/post
- * Post to LinkedIn
+ * Post to LinkedIn. Body: text (required), mediaUrl, title, imageUrl, visibility (PUBLIC|CONNECTIONS), fallbackToTextOnImageError (bool).
  */
 router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { text, mediaUrl, title } = req.body;
+  const { text, mediaUrl, title, imageUrl, visibility, fallbackToTextOnImageError } = req.body;
 
-  if (!text || text.trim().length === 0) {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return sendError(res, 'Post text is required', 400);
   }
 
   const options = {};
   if (mediaUrl) options.mediaUrl = mediaUrl;
   if (title) options.title = title;
+  if (imageUrl) options.imageUrl = imageUrl;
+  if (visibility === 'CONNECTIONS' || visibility === 'PUBLIC') options.visibility = visibility;
+  if (fallbackToTextOnImageError === true || fallbackToTextOnImageError === 'true') options.fallbackToTextOnImageError = true;
 
   const post = await postToLinkedIn(req.user._id, text, options);
   
@@ -120,20 +133,11 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
 
 /**
  * GET /api/oauth/linkedin/status
- * Get LinkedIn connection status
+ * Get LinkedIn connection status (from Supabase social_links)
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const User = require('../../models/User');
-  const user = await User.findById(req.user._id).select('oauth.linkedin');
-  
-  const connected = user?.oauth?.linkedin?.connected || false;
-  const connectedAt = user?.oauth?.linkedin?.connectedAt;
-
-  sendSuccess(res, 'Status retrieved', 200, {
-    connected,
-    connectedAt,
-    configured: isConfigured()
-  });
+  const status = await getConnectionStatus(req.user._id);
+  sendSuccess(res, 'Status retrieved', 200, status);
 }));
 
 module.exports = router;

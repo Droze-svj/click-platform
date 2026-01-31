@@ -1,281 +1,178 @@
-// Instagram OAuth Service (via Facebook Graph API)
+// Instagram OAuth Service
+// Features: Basic Display API, long-lived token exchange, platform_accounts storage.
 
-const axios = require('axios');
+const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
-const User = require('../models/User');
-const { getFacebookClient, getFacebookPages } = require('./facebookOAuthService');
-const { retryWithBackoff } = require('../utils/retryWithBackoff');
 
-/**
- * Check if Instagram OAuth is configured (uses Facebook)
- */
-function isConfigured() {
-  return !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
+const TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
+const GRAPH_API_BASE = 'https://graph.instagram.com';
+const DEFAULT_SCOPE = 'user_profile,user_media';
+const LOG_CONTEXT = { service: 'instagram-oauth' };
+
+function defaultRedirectUri() {
+  return process.env.INSTAGRAM_REDIRECT_URI ||
+    `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social/connect/instagram/callback`;
 }
 
-/**
- * Get Instagram Business accounts (requires Facebook page)
- */
-async function getInstagramAccounts(userId) {
-  try {
-    const user = await User.findById(userId).select('oauth.facebook');
-    
-    if (!user || !user.oauth?.facebook?.connected) {
-      throw new Error('Facebook account must be connected first for Instagram');
+class InstagramOAuthService {
+  constructor() {
+    this.clientId = process.env.INSTAGRAM_CLIENT_ID;
+    this.clientSecret = process.env.INSTAGRAM_CLIENT_SECRET;
+    this.redirectUri = defaultRedirectUri();
+    this.supabase = null;
+    this.isConfiguredFlag = !!(this.clientId && this.clientSecret);
+    if (this.isConfiguredFlag) {
+      logger.info('Instagram OAuth client initialized', LOG_CONTEXT);
+    } else {
+      logger.warn('Instagram OAuth not configured. Set INSTAGRAM_CLIENT_ID and INSTAGRAM_CLIENT_SECRET', LOG_CONTEXT);
     }
+  }
 
-    const accessToken = user.oauth.facebook.accessToken;
-    const pages = await getFacebookPages(accessToken);
-    
-    const instagramAccounts = [];
-
-    // Get Instagram Business accounts for each page
-    for (const page of pages) {
-      try {
-        const response = await axios.get(
-          `https://graph.facebook.com/v18.0/${page.id}`,
-          {
-            params: {
-              access_token: page.accessToken,
-              fields: 'instagram_business_account',
-            },
-          }
-        );
-
-        if (response.data.instagram_business_account) {
-          const igAccountId = response.data.instagram_business_account.id;
-          
-          // Get Instagram account details
-          const igAccount = await axios.get(
-            `https://graph.facebook.com/v18.0/${igAccountId}`,
-            {
-              params: {
-                access_token: page.accessToken,
-                fields: 'id,username,profile_picture_url',
-              },
-            }
-          );
-
-          instagramAccounts.push({
-            id: igAccountId,
-            username: igAccount.data.username,
-            profilePicture: igAccount.data.profile_picture_url,
-            pageId: page.id,
-            pageName: page.name,
-            pageAccessToken: page.accessToken,
-          });
-        }
-      } catch (error) {
-        logger.warn('Instagram account fetch error for page', { 
-          pageId: page.id, 
-          error: error.message 
-        });
+  getSupabaseClient() {
+    if (!this.supabase) {
+      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        throw new Error('Supabase not configured');
       }
+      this.supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
     }
+    return this.supabase;
+  }
 
-    // Save Instagram accounts to user
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.instagram.accounts': instagramAccounts,
-        'oauth.instagram.connected': instagramAccounts.length > 0,
-      }
+  isConfigured() {
+    return this.isConfiguredFlag;
+  }
+
+  getScope() {
+    const s = process.env.INSTAGRAM_SCOPE;
+    return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
+  }
+
+  getAuthorizationUrl(state) {
+    if (!this.isConfigured()) throw new Error('Instagram OAuth not configured');
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      redirect_uri: this.redirectUri,
+      scope: this.getScope(),
+      response_type: 'code',
+      state,
+    });
+    return `https://api.instagram.com/oauth/authorize?${params.toString()}`;
+  }
+
+  async exchangeCodeForToken(code) {
+    if (!this.isConfigured()) throw new Error('Instagram OAuth not configured');
+    const response = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: this.redirectUri,
+      }),
     });
 
-    return instagramAccounts;
-  } catch (error) {
-    logger.error('Get Instagram accounts error', { error: error.message, userId });
-    throw error;
-  }
-}
-
-/**
- * Get Instagram client (access token for specific account)
- */
-async function getInstagramClient(userId, instagramAccountId = null) {
-  const user = await User.findById(userId).select('oauth.facebook oauth.instagram');
-  
-  if (!user || !user.oauth?.facebook?.connected) {
-    throw new Error('Facebook account must be connected first for Instagram');
-  }
-
-  // If no account ID specified, use the first one
-  if (!instagramAccountId && user.oauth?.instagram?.accounts?.length > 0) {
-    instagramAccountId = user.oauth.instagram.accounts[0].id;
-  }
-
-  // Find the account and return its page access token
-  if (user.oauth?.instagram?.accounts) {
-    const account = user.oauth.instagram.accounts.find(
-      acc => acc.id === instagramAccountId
-    );
-    
-    if (account) {
-      return {
-        accountId: account.id,
-        accessToken: account.pageAccessToken,
-        username: account.username,
-      };
-    }
-  }
-
-  // Fallback: refresh accounts
-  const accounts = await getInstagramAccounts(userId);
-  if (accounts.length === 0) {
-    throw new Error('No Instagram Business accounts found. Please connect a Facebook page with an Instagram Business account.');
-  }
-
-  const account = accounts.find(acc => acc.id === instagramAccountId) || accounts[0];
-  return {
-    accountId: account.id,
-    accessToken: account.pageAccessToken,
-    username: account.username,
-  };
-}
-
-/**
- * Post image to Instagram
- */
-async function postToInstagram(userId, imageUrl, caption, options = {}, retries = 1) {
-  try {
-    if (!imageUrl) {
-      throw new Error('Image URL is required for Instagram posts');
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`Instagram OAuth token exchange failed: ${response.status} - ${errorData}`);
     }
 
-    const client = await getInstagramClient(userId, options.instagramAccountId);
-    const { accountId, accessToken } = client;
+    const data = await response.json();
+    const longLivedUrl = `${GRAPH_API_BASE}/access_token?grant_type=ig_exchange_token&client_secret=${this.clientSecret}&access_token=${data.access_token}`;
+    const longLivedRes = await fetch(longLivedUrl);
 
-    // Step 1: Create media container
-    const mediaData = {
-      image_url: imageUrl,
-      caption: caption || '',
-    };
-
-    if (options.isCarousel && options.children) {
-      // Carousel post
-      mediaData.media_type = 'CAROUSEL';
-      mediaData.children = options.children.join(',');
+    if (!longLivedRes.ok) {
+      return data;
     }
 
-    const mediaResponse = await retryWithBackoff(
-      async () => {
-        return await axios.post(
-          `https://graph.facebook.com/v18.0/${accountId}/media`,
-          null,
-          {
-            params: {
-              access_token: accessToken,
-              ...mediaData,
-            },
-          }
-        );
-      },
-      {
-        maxRetries: retries,
-        initialDelay: 2000, // Instagram needs more time
-        onRetry: (attempt, error) => {
-          logger.warn('Instagram media creation retry', { 
-            attempt, 
-            error: error.message, 
-            userId 
-          });
-        },
-      }
-    );
+    const longLivedData = await longLivedRes.json();
+    return { ...data, ...longLivedData };
+  }
 
-    const creationId = mediaResponse.data.id;
+  async getUserProfile(accessToken) {
+    const response = await fetch(`${GRAPH_API_BASE}/me?fields=id,username,account_type&access_token=${accessToken}`);
 
-    // Step 2: Wait a bit for media to be ready (Instagram requirement)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (!response.ok) {
+      throw new Error(`Instagram API user profile fetch failed: ${response.statusText}`);
+    }
 
-    // Step 3: Publish the media
-    const publishResponse = await retryWithBackoff(
-      async () => {
-        return await axios.post(
-          `https://graph.facebook.com/v18.0/${accountId}/media_publish`,
-          null,
-          {
-            params: {
-              access_token: accessToken,
-              creation_id: creationId,
-            },
-          }
-        );
-      },
-      {
-        maxRetries: retries,
-        initialDelay: 2000,
-        onRetry: (attempt, error) => {
-          logger.warn('Instagram publish retry', { 
-            attempt, 
-            error: error.message, 
-            userId 
-          });
-        },
-      }
-    );
-
-    logger.info('Instagram post successful', { 
-      userId, 
-      postId: publishResponse.data.id,
-      accountId 
-    });
-    
+    const data = await response.json();
     return {
-      id: publishResponse.data.id,
-      url: `https://www.instagram.com/p/${publishResponse.data.id}/`,
-      caption: caption,
-      imageUrl: imageUrl,
+      id: data.id,
+      username: data.username,
+      display_name: data.username,
+      avatar: null,
+      metadata: { account_type: data.account_type },
     };
-  } catch (error) {
-    logger.error('Instagram post error', { error: error.message, userId });
-    
-    // Handle rate limiting
-    if (error.response?.status === 429) {
-      const retryAfter = error.response.headers['retry-after'] || 60;
-      throw new Error(`Rate limit exceeded. Please try again after ${retryAfter} seconds.`);
-    }
+  }
 
-    // Handle specific Instagram errors
-    if (error.response?.data?.error) {
-      const igError = error.response.data.error;
-      if (igError.code === 2207026) {
-        throw new Error('Image URL is not accessible. Please ensure the image is publicly accessible.');
-      }
-      if (igError.code === 2207007) {
-        throw new Error('Image format not supported. Please use JPG or PNG.');
-      }
+  async connectAccount(userId, tokens, profile) {
+    const supabase = this.getSupabaseClient();
+    const accountData = {
+      user_id: userId,
+      platform: 'instagram',
+      platform_user_id: profile.id,
+      username: profile.username,
+      display_name: profile.display_name,
+      avatar: profile.avatar,
+      access_token: tokens.access_token,
+      refresh_token: null,
+      token_expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
+      is_connected: true,
+      metadata: {
+        ...profile.metadata,
+        connected_at: new Date().toISOString(),
+      },
+    };
+
+    const { data, error } = await supabase
+      .from('platform_accounts')
+      .upsert(accountData, { onConflict: 'user_id,platform' })
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Instagram connect account error', { ...LOG_CONTEXT, userId, error: error.message });
+      throw error;
     }
-    
-    throw error;
+    return data;
+  }
+
+  async getConnectedAccounts(userId) {
+    const supabase = this.getSupabaseClient();
+    const { data, error } = await supabase
+      .from('platform_accounts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('platform', 'instagram')
+      .eq('is_connected', true);
+
+    if (error) {
+      logger.error('Instagram get connected accounts error', { ...LOG_CONTEXT, userId, error: error.message });
+      throw error;
+    }
+    return data || [];
+  }
+
+  async disconnectAccount(userId, platformUserId) {
+    const supabase = this.getSupabaseClient();
+    const { error } = await supabase
+      .from('platform_accounts')
+      .delete()
+      .eq('user_id', userId)
+      .eq('platform', 'instagram')
+      .eq('platform_user_id', platformUserId);
+
+    if (error) {
+      logger.error('Instagram disconnect account error', { ...LOG_CONTEXT, userId, error: error.message });
+      throw error;
+    }
+    return { success: true };
   }
 }
 
-/**
- * Disconnect Instagram account
- */
-async function disconnectInstagram(userId) {
-  try {
-    await User.findByIdAndUpdate(userId, {
-      $unset: {
-        'oauth.instagram': '',
-      }
-    });
-
-    logger.info('Instagram account disconnected', { userId });
-  } catch (error) {
-    logger.error('Instagram disconnect error', { error: error.message, userId });
-    throw error;
-  }
-}
-
-module.exports = {
-  isConfigured,
-  getInstagramAccounts,
-  getInstagramClient,
-  postToInstagram,
-  disconnectInstagram,
-};
-
-
-
-
+module.exports = new InstagramOAuthService();

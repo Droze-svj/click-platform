@@ -7,8 +7,8 @@ const modelLearningSchema = new mongoose.Schema({
   // User context
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    index: true,
+    ref: 'User'
+    // Indexed in compound index below: { userId: 1, createdAt: -1 }
   },
 
   // Model identification

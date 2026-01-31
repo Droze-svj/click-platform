@@ -7,6 +7,8 @@ const Content = require('../models/Content');
 const TranslationMemory = require('../models/TranslationMemory');
 const TranslationGlossary = require('../models/TranslationGlossary');
 const logger = require('../utils/logger');
+const { searchMemory: searchTranslationMemory, addToMemory: addToTranslationMemory } = require('./translationMemoryService');
+const { getUserGlossaries } = require('./translationGlossaryService');
 
 // Lazy initialization - only create client when needed and if API key is available
 let openai = null;
@@ -132,27 +134,35 @@ async function translateContent(contentId, targetLanguage, options = {}) {
       content.title || content.description || content.body || ''
     );
 
-    // Get translation memory matches
+    // Get translation memory matches (optional; skip on error)
     let memoryMatches = [];
     if (useTranslationMemory && contentUserId) {
-      memoryMatches = await getTranslationMemoryMatches(
-        contentUserId,
-        sourceLanguage.language,
-        targetLanguage,
-        content.title || '',
-        content.description || '',
-        content.body || ''
-      );
+      try {
+        const query = [content.title, content.description, content.body].filter(Boolean).join(' ').substring(0, 500);
+        memoryMatches = await searchTranslationMemory(
+          contentUserId,
+          sourceLanguage.language,
+          targetLanguage,
+          query || undefined,
+          { limit: 10 }
+        );
+      } catch (e) {
+        logger.warn('Translation memory search skipped', { error: e?.message });
+      }
     }
 
-    // Get glossary terms
+    // Get glossary terms (optional; skip on error)
     let glossaryTerms = [];
     if (useGlossary && contentUserId) {
-      glossaryTerms = await getGlossaryTerms(
-        contentUserId,
-        sourceLanguage.language,
-        targetLanguage
-      );
+      try {
+        const glossaries = await getUserGlossaries(contentUserId, {
+          sourceLanguage: sourceLanguage.language,
+          targetLanguage
+        });
+        glossaryTerms = (glossaries || []).flatMap((g) => (g.terms || []).map((t) => ({ term: t.term, translation: t.translation })));
+      } catch (e) {
+        logger.warn('Glossary fetch skipped', { error: e?.message });
+      }
     }
 
     // Prepare content for translation
@@ -164,8 +174,8 @@ async function translateContent(contentId, targetLanguage, options = {}) {
       tags: content.tags || []
     };
 
-    // Build translation prompt
-    let prompt = `Translate the following content to ${SUPPORTED_LANGUAGES[targetLanguage] || targetLanguage}:\n\n`;
+    // Build translation prompt – translate everything: title, description, body, transcript, tags
+    let prompt = `Translate the following content to ${SUPPORTED_LANGUAGES[targetLanguage] || targetLanguage}. Translate every field.\n\n`;
 
     if (contentToTranslate.title) {
       prompt += `Title: ${contentToTranslate.title}\n`;
@@ -176,11 +186,18 @@ async function translateContent(contentId, targetLanguage, options = {}) {
     if (contentToTranslate.body) {
       prompt += `Body: ${contentToTranslate.body}\n`;
     }
+    if (contentToTranslate.transcript && contentToTranslate.transcript.trim()) {
+      prompt += `Transcript: ${contentToTranslate.transcript.substring(0, 3000)}${contentToTranslate.transcript.length > 3000 ? '...' : ''}\n`;
+    }
+    if (contentToTranslate.tags && contentToTranslate.tags.length) {
+      prompt += `Tags (comma-separated): ${contentToTranslate.tags.join(', ')}\n`;
+    }
 
     prompt += `\nRequirements:\n`;
     prompt += `- Maintain the original tone and style\n`;
     prompt += `- Keep formatting and structure\n`;
-    
+    prompt += `- Translate all provided fields; omit in JSON only if not provided\n`;
+
     if (culturalAdaptation) {
       prompt += `- Adapt culturally for ${SUPPORTED_LANGUAGES[targetLanguage] || targetLanguage} audience\n`;
       prompt += `- Use culturally appropriate references and idioms\n`;
@@ -191,7 +208,7 @@ async function translateContent(contentId, targetLanguage, options = {}) {
       prompt += `- Follow platform-specific best practices\n`;
     }
 
-    prompt += `\nRespond with JSON object containing: title, description, body, hashtags (array of translated relevant hashtags)`;
+    prompt += `\nRespond with a JSON object containing: title, description, body, transcript (if provided), tags (array of translated tags), hashtags (array of translated relevant hashtags). Use empty string or empty array for any omitted field.`;
 
     // Translate using AI
     const client = getOpenAIClient();
@@ -212,7 +229,7 @@ async function translateContent(contentId, targetLanguage, options = {}) {
         }
       ],
       temperature: 0.3,
-      max_tokens: 2000
+      max_tokens: 4000
     });
 
     const translatedText = response.choices[0].message.content;
@@ -226,32 +243,31 @@ async function translateContent(contentId, targetLanguage, options = {}) {
       if (jsonMatch) {
         translated = JSON.parse(jsonMatch[0]);
       } else {
-        // Fallback: use original content
         translated = {
           title: contentToTranslate.title,
           description: contentToTranslate.description,
           body: contentToTranslate.body,
+          transcript: contentToTranslate.transcript,
+          tags: contentToTranslate.tags || [],
           hashtags: []
         };
       }
     }
 
-    // Calculate quality score (simple heuristic)
     const qualityScore = calculateTranslationQuality(translated, contentToTranslate);
 
-    // Create or update translation
     const translation = existing || new ContentTranslation({
       contentId,
       userId: content.userId,
-      language: targetLanguage.toUpperCase()
+      language: (targetLanguage || '').toUpperCase()
     });
 
-    translation.title = translated.title || contentToTranslate.title;
-    translation.description = translated.description || contentToTranslate.description;
-    translation.body = translated.body || contentToTranslate.body;
-    translation.transcript = translated.transcript || contentToTranslate.transcript;
-    translation.hashtags = translated.hashtags || [];
-    translation.tags = contentToTranslate.tags || [];
+    translation.title = translated.title ?? contentToTranslate.title ?? '';
+    translation.description = translated.description ?? contentToTranslate.description ?? '';
+    translation.body = translated.body ?? contentToTranslate.body ?? '';
+    translation.transcript = (translated.transcript ?? contentToTranslate.transcript ?? '').trim();
+    translation.hashtags = Array.isArray(translated.hashtags) ? translated.hashtags : [];
+    translation.tags = Array.isArray(translated.tags) ? translated.tags : (contentToTranslate.tags || []);
     translation.metadata.translationMethod = translationMethod;
     translation.metadata.translatedAt = new Date();
     translation.metadata.translator = 'openai-gpt-4';
@@ -267,16 +283,25 @@ async function translateContent(contentId, targetLanguage, options = {}) {
 
     await translation.save();
 
-    // Save to translation memory
     if (useTranslationMemory && contentUserId) {
-      await saveToTranslationMemory(
-        contentUserId,
-        sourceLanguage.language,
-        targetLanguage,
-        contentToTranslate,
-        translated,
-        content.category || 'general'
-      );
+      try {
+        const src = [contentToTranslate.body, contentToTranslate.title].filter(Boolean).join('\n\n').substring(0, 2000);
+        const tgt = [translated.body, translated.title].filter(Boolean).join('\n\n').substring(0, 2000);
+        if (src && tgt) {
+          await addToTranslationMemory(contentUserId, {
+            sourceLanguage: sourceLanguage.language,
+            targetLanguage,
+            sourceText: src,
+            targetText: tgt,
+            context: 'content',
+            domain: content.category || 'general',
+            qualityScore,
+            createdBy: 'system'
+          });
+        }
+      } catch (e) {
+        logger.warn('Translation memory save skipped', { error: e?.message });
+      }
     }
 
     logger.info('Content translated', { contentId, language: targetLanguage, qualityScore });
@@ -347,28 +372,47 @@ async function translateToMultipleLanguages(contentId, languages, options = {}) 
 }
 
 /**
- * Get content in specific language
+ * Get content in specific language. Returns a consistent shape for UI: title, description, body, transcript, tags, language, isTranslation.
  */
 async function getContentInLanguage(contentId, language, fallbackToOriginal = true) {
   try {
+    const lang = (language || '').toUpperCase();
     const translation = await ContentTranslation.findOne({
       contentId,
-      language: language.toUpperCase()
+      language: lang
     }).lean();
 
     if (translation) {
       return {
-        ...translation,
-        isTranslation: true
+        _id: translation._id,
+        contentId: translation.contentId,
+        title: translation.title ?? '',
+        description: translation.description ?? '',
+        body: translation.body ?? '',
+        transcript: translation.transcript ?? '',
+        tags: translation.tags ?? [],
+        hashtags: translation.hashtags ?? [],
+        language: lang,
+        isTranslation: true,
+        metadata: translation.metadata
       };
     }
 
     if (fallbackToOriginal) {
       const original = await Content.findById(contentId).lean();
+      if (!original) return null;
       return {
-        ...original,
+        _id: original._id,
+        contentId: original._id,
+        title: original.title ?? '',
+        description: original.description ?? '',
+        body: original.body ?? original.transcript ?? '',
+        transcript: original.transcript ?? '',
+        tags: original.tags ?? [],
+        hashtags: [],
+        language: 'en',
         isTranslation: false,
-        language: 'en' // Assume English if not specified
+        metadata: {}
       };
     }
 

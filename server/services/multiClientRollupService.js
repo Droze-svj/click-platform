@@ -161,11 +161,20 @@ async function getClientRiskFlags(clientWorkspaceId) {
     });
   }
 
+  // Check MongoDB connection before querying
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    logger.warn('MongoDB not connected, skipping SLA check');
+    return 0;
+  }
+
   // Check SLA overdue
+  const approvalIds = await getClientApprovalIds(clientWorkspaceId);
   const overdueSLAs = await ApprovalSLA.countDocuments({
-    approvalId: { $in: await getClientApprovalIds(clientWorkspaceId) },
+    approvalId: { $in: approvalIds },
     status: 'overdue'
-  });
+  })
+    .maxTimeMS(5000);
 
   if (overdueSLAs > 0) {
     flags.push({

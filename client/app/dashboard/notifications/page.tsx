@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import Navbar from '../../../components/Navbar'
+// Navbar removed - provided by dashboard layout
 import LoadingSkeleton from '../../../components/LoadingSkeleton'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import EmptyState from '../../../components/EmptyState'
@@ -237,7 +237,6 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <LoadingSkeleton type="card" count={5} />
         </div>
@@ -247,7 +246,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
       <ToastContainer />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8 flex items-center justify-between">

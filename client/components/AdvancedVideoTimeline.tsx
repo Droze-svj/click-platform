@@ -28,7 +28,7 @@ interface TimelineSegment {
   startTime: number
   endTime: number
   duration: number
-  type: 'video' | 'audio' | 'text' | 'transition'
+  type: 'video' | 'audio' | 'text' | 'transition' | 'image'
   name: string
   color: string
   track: number
@@ -205,7 +205,8 @@ export default function AdvancedVideoTimeline({
       video: '#3B82F6',
       audio: '#10B981',
       text: '#F59E0B',
-      transition: '#8B5CF6'
+      transition: '#8B5CF6',
+      image: '#EC4899'
     }
     return colors[type] || '#6B7280'
   }
@@ -371,11 +372,10 @@ export default function AdvancedVideoTimeline({
               {getTrackSegments(track).map(segment => (
                 <div
                   key={segment.id}
-                  className={`absolute top-1 bottom-1 rounded cursor-move border-2 transition-all ${
-                    selectedSegment === segment.id
-                      ? 'border-white shadow-lg ring-2 ring-blue-500'
-                      : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  className={`absolute top-1 bottom-1 rounded cursor-move border-2 transition-all ${selectedSegment === segment.id
+                    ? 'border-white shadow-lg ring-2 ring-blue-500'
+                    : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   style={{
                     left: timeToPixels(segment.startTime),
                     width: Math.max(20, timeToPixels(segment.duration)),
@@ -448,6 +448,11 @@ export default function AdvancedVideoTimeline({
     </div>
   )
 }
+
+
+
+
+
 
 
 

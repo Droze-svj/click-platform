@@ -53,6 +53,88 @@ export default function PostsPage() {
       setLoading(true)
       setError(null)
 
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [Posts] Skipping posts API call in development mode')
+
+        // Provide comprehensive mock data for development
+        const mockPosts: Post[] = [
+          {
+            id: 'mock-post-1',
+            title: '10 Tips for Viral Content Creation',
+            content: 'Learn the secrets of creating content that goes viral...',
+            excerpt: 'Discover the strategies behind viral content creation that every creator should know.',
+            slug: '10-tips-viral-content-creation',
+            status: 'published',
+            featured_image: '/api/placeholder/400/250',
+            thumbnail: '/api/placeholder/200/150',
+            tags: ['content-creation', 'viral', 'tips'],
+            categories: ['Strategy', 'Tutorials'],
+            published_at: new Date(Date.now() - 86400000).toISOString(),
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            updated_at: new Date(Date.now() - 86400000).toISOString()
+          },
+          {
+            id: 'mock-post-2',
+            title: 'Behind the Scenes: Content Strategy',
+            content: 'A deep dive into our content strategy process...',
+            excerpt: 'Get an exclusive look at how we plan and execute our content strategy.',
+            slug: 'behind-scenes-content-strategy',
+            status: 'published',
+            featured_image: '/api/placeholder/400/250',
+            thumbnail: '/api/placeholder/200/150',
+            tags: ['strategy', 'behind-scenes', 'planning'],
+            categories: ['Strategy', 'Case Studies'],
+            published_at: new Date(Date.now() - 172800000).toISOString(),
+            created_at: new Date(Date.now() - 172800000).toISOString(),
+            updated_at: new Date(Date.now() - 172800000).toISOString()
+          },
+          {
+            id: 'mock-post-3',
+            title: 'Quick Tips for Better Engagement',
+            content: 'Simple but effective tips to boost engagement...',
+            excerpt: 'Learn quick and easy ways to increase engagement on your social media posts.',
+            slug: 'quick-tips-better-engagement',
+            status: 'draft',
+            featured_image: '/api/placeholder/400/250',
+            thumbnail: '/api/placeholder/200/150',
+            tags: ['engagement', 'tips', 'social-media'],
+            categories: ['Tips', 'Social Media'],
+            scheduled_at: new Date(Date.now() + 86400000).toISOString(),
+            created_at: new Date(Date.now() - 259200000).toISOString(),
+            updated_at: new Date(Date.now() - 259200000).toISOString()
+          },
+          {
+            id: 'mock-post-4',
+            title: 'Video Editing Masterclass',
+            content: 'Complete guide to professional video editing...',
+            excerpt: 'Master the art of video editing with our comprehensive guide and techniques.',
+            slug: 'video-editing-masterclass',
+            status: 'scheduled',
+            featured_image: '/api/placeholder/400/250',
+            thumbnail: '/api/placeholder/200/150',
+            tags: ['video-editing', 'tutorial', 'masterclass'],
+            categories: ['Video', 'Tutorials'],
+            scheduled_at: new Date(Date.now() + 172800000).toISOString(),
+            created_at: new Date(Date.now() - 345600000).toISOString(),
+            updated_at: new Date(Date.now() - 345600000).toISOString()
+          }
+        ]
+
+        // Filter by status and paginate
+        const filteredPosts = selectedStatus === 'all'
+          ? mockPosts
+          : mockPosts.filter(post => post.status === selectedStatus)
+
+        const startIndex = (currentPage - 1) * 20
+        const endIndex = startIndex + 20
+        const paginatedPosts = filteredPosts.slice(startIndex, endIndex)
+
+        setPosts(paginatedPosts)
+        setLoading(false)
+        return
+      }
+
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '20'
@@ -127,157 +209,202 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Posts</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your content and schedule posts</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full flex items-center justify-center">
+                <Edit className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                  Content Management
+                </h1>
+                <p className="text-gray-600 mt-1">Create, manage, and schedule your posts</p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push('/dashboard/posts/create')}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-xl flex items-center gap-2 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              Create New Post
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => router.push('/dashboard/posts/create')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Create Post
-        </button>
-      </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600"
-        >
-          <option value="all">All Posts</option>
-          <option value="draft">Drafts</option>
-          <option value="published">Published</option>
-          <option value="scheduled">Scheduled</option>
-        </select>
-      </div>
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-lg font-semibold text-gray-800">Filter Posts:</span>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white hover:border-indigo-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
+              >
+                <option value="all">📝 All Posts ({posts.length})</option>
+                <option value="draft">📄 Drafts</option>
+                <option value="published">✅ Published</option>
+                <option value="scheduled">📅 Scheduled</option>
+              </select>
+            </div>
+            <div className="text-sm text-gray-600">
+              Showing {posts.length} posts
+            </div>
+          </div>
+        </div>
 
       {/* Error Alert */}
       {error && (
         <ErrorAlert message={error} onClose={() => setError(null)} />
       )}
 
-      {/* Posts List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-        {posts.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="text-gray-400 mb-4">
-              <Edit className="w-12 h-12 mx-auto" />
+        {/* Posts List */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          {posts.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Edit className="w-10 h-10 text-indigo-500" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-3">No posts yet</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">Start creating amazing content by publishing your first post</p>
+              <button
+                onClick={() => router.push('/dashboard/posts/create')}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-xl inline-flex items-center gap-2 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="w-5 h-5" />
+                Create Your First Post
+              </button>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No posts yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Create your first post to get started</p>
-            <button
-              onClick={() => router.push('/dashboard/posts/create')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create Post
-            </button>
-          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {posts.map((post) => (
-                  <tr key={post.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {post.thumbnail && (
-                          <img
-                            src={post.thumbnail}
-                            alt=""
-                            className="w-10 h-10 rounded-lg object-cover mr-3"
-                          />
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {post.title || 'Untitled Post'}
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {post.excerpt ? post.excerpt.substring(0, 60) + '...' : 'No excerpt'}
-                          </div>
-                        </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {posts.map((post) => (
+                <div key={post.id} className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
+                  {/* Post Thumbnail */}
+                  {post.thumbnail && (
+                    <div className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 relative overflow-hidden">
+                      <img
+                        src={post.thumbnail}
+                        alt={post.title || 'Post thumbnail'}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-3 right-3">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full text-white ${
+                          post.status === 'published' ? 'bg-green-500' :
+                          post.status === 'scheduled' ? 'bg-blue-500' :
+                          'bg-gray-500'
+                        }`}>
+                          {post.status}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(post.status)}`}>
-                        {post.status}
-                      </span>
-                      {post.status === 'scheduled' && post.scheduled_at && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(post.scheduled_at)}
-                        </div>
-                      )}
-                      {post.status === 'published' && post.published_at && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          {formatDate(post.published_at)}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(post.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    </div>
+                  )}
+
+                  {/* Post Content */}
+                  <div className="p-5">
+                    <h3 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2">
+                      {post.title || 'Untitled Post'}
+                    </h3>
+
+                    {post.excerpt && (
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                        {post.excerpt}
+                      </p>
+                    )}
+
+                    {/* Status and Date Info */}
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
+                        {post.status === 'published' && post.published_at && (
+                          <>
+                            <Eye className="w-4 h-4 text-green-500" />
+                            <span className="text-xs text-gray-500">
+                              {new Date(post.published_at).toLocaleDateString()}
+                            </span>
+                          </>
+                        )}
+                        {post.status === 'scheduled' && post.scheduled_at && (
+                          <>
+                            <Clock className="w-4 h-4 text-blue-500" />
+                            <span className="text-xs text-gray-500">
+                              {new Date(post.scheduled_at).toLocaleDateString()}
+                            </span>
+                          </>
+                        )}
+                        {post.status === 'draft' && (
+                          <span className="text-xs text-gray-500">
+                            Draft • {new Date(post.created_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Categories/Tags */}
+                    {post.categories && post.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {post.categories.slice(0, 2).map((category, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                        {post.categories.length > 2 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            +{post.categories.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => router.push(`/dashboard/posts/${post.id}/edit`)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                          className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          title="Edit post"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
+
                         {post.status === 'draft' && (
-                          <button
-                            onClick={() => handleStatusChange(post.id, 'published')}
-                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                            title="Publish now"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(post.id, 'published')}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Publish now"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => router.push(`/dashboard/posts/${post.id}/schedule`)}
+                              className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                              title="Schedule post"
+                            >
+                              <Calendar className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
-                        {post.status === 'draft' && (
-                          <button
-                            onClick={() => router.push(`/dashboard/posts/${post.id}/schedule`)}
-                            className="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
-                            title="Schedule post"
-                          >
-                            <Calendar className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete post"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -307,6 +434,7 @@ export default function PostsPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

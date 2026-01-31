@@ -3,18 +3,77 @@ console.log('🚀 Starting server...');
 console.log('📝 Node version:', process.version);
 console.log('📝 Working directory:', process.cwd());
 console.log('📝 PORT environment variable:', process.env.PORT || 'NOT SET (will use 5001)');
-console.log('📝 NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
+console.log('📝 NODE_ENV (before .env):', process.env.NODE_ENV || 'NOT SET');
 
-// Global error handlers - must be first to catch all errors
+// Load environment variables FIRST before anything else.
+// Always load from project root (parent of server/) so it works when run via `node index.js` from server/ or `npm start` from root.
+console.log('📦 Loading environment variables...');
+const path = require('path');
+const rootEnv = path.join(__dirname, '..', '.env');
+require('dotenv').config({ path: rootEnv });
+// Optional: override with .env.local at root if present
+require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+console.log('✅ Environment variables loaded');
+console.log('📝 NODE_ENV (after .env):', process.env.NODE_ENV || 'NOT SET (defaulting to development behavior)');
+
+// Initialize logger early (needed for error handlers)
+const logger = require('./utils/logger');
+
+// Initialize Sentry BEFORE error handlers (if configured)
+let Sentry = null;
+try {
+  const sentryDsn = process.env.SENTRY_DSN?.trim();
+  
+  // Validate DSN format before initializing
+  // A valid Sentry DSN should start with 'https://' and contain '@'
+  const isValidDsn = sentryDsn && 
+                     sentryDsn.length > 20 && 
+                     sentryDsn.startsWith('https://') && 
+                     sentryDsn.includes('@') &&
+                     !sentryDsn.includes('your-sentry-dsn') &&
+                     !sentryDsn.includes('placeholder');
+  
+  if (isValidDsn) {
+    Sentry = require('@sentry/node');
+    Sentry.init({
+      dsn: sentryDsn,
+      sendDefaultPii: true,
+      environment: process.env.NODE_ENV || 'development',
+      tracesSampleRate: 1.0,
+    });
+    console.log('✅ Sentry initialized');
+  } else if (sentryDsn) {
+    console.log('⚠️ Sentry DSN appears to be a placeholder. Error tracking disabled.');
+    console.log('⚠️ Please set a valid SENTRY_DSN environment variable.');
+  } else {
+    console.log('⚠️ Sentry DSN not configured. Error tracking disabled.');
+  }
+} catch (sentryError) {
+  console.error('⚠️ Failed to initialize Sentry:', sentryError.message);
+}
+
+// Global error handlers - must be after Sentry initialization
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  console.error('Stack:', error.stack);
-  Sentry.captureException(error, {
-    tags: { type: 'uncaught_exception' },
-    level: 'fatal'
-  });
-  // Don't exit immediately - try to start server for health checks
-  console.error('⚠️ Attempting to start server despite error...');
+  logger.error('❌ Uncaught Exception:', { error: error.message, stack: error.stack });
+  if (Sentry) {
+    try {
+      Sentry.captureException(error, {
+        tags: { type: 'uncaught_exception' },
+        level: 'fatal'
+      });
+    } catch (sentryErr) {
+      // Ignore Sentry errors
+    }
+  }
+  
+  // In production, exit after logging to prevent undefined behavior
+  // In development, continue to allow debugging
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('⚠️ Uncaught exception in production - exiting to prevent undefined behavior');
+    process.exit(1);
+  } else {
+    logger.warn('⚠️ Attempting to start server despite error (development mode)...');
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
@@ -26,34 +85,36 @@ process.on('unhandledRejection', (reason, promise) => {
     return;
   }
 
-  console.error('❌ Unhandled Rejection at:', promise);
-  console.error('Reason:', reason);
-  Sentry.captureException(reason, {
-    tags: { type: 'unhandled_rejection' },
-    extra: { promise: promise.toString() }
+  logger.error('❌ Unhandled Rejection', { 
+    reason: reason?.message || String(reason), 
+    stack: reason?.stack,
+    promise: promise?.toString?.() || String(promise)
   });
-  // Don't exit - try to start server anyway
-  console.error('⚠️ Attempting to start server despite error...');
-});
-
-console.log('📦 Loading environment variables...');
-require('dotenv').config();
-console.log('✅ Environment variables loaded');
-
-// Initialize Sentry for error tracking
-const Sentry = require('@sentry/node');
-Sentry.init({
-  dsn: "https://a400da46f531219b7ce6f78a9d5cb6ff@o4510623214731264.ingest.de.sentry.io/4510629716033616",
-  sendDefaultPii: true,
-  environment: process.env.NODE_ENV || 'development',
-  tracesSampleRate: 1.0,
+  
+  if (Sentry) {
+    try {
+      Sentry.captureException(reason, {
+        tags: { type: 'unhandled_rejection' },
+        extra: { promise: promise?.toString?.() || String(promise) }
+      });
+    } catch (sentryErr) {
+      // Ignore Sentry errors
+    }
+  }
+  
+  // Log warning but don't exit - unhandled rejections are less critical than uncaught exceptions
+  logger.warn('⚠️ Unhandled rejection detected - server will continue');
 });
 
 // Start minimal health check server (production/staging only).
 // In local dev, this extra server can race with nodemon restarts and cause EADDRINUSE / partial startup.
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || '0.0.0.0';
-const __isHosted = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+
+// Detect if we're running locally (not on cloud platforms)
+// Health check server should ONLY run on actual cloud deployments, not localhost
+const isCloudPlatform = !!(process.env.RENDER || process.env.HEROKU || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const __isHosted = (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') && isCloudPlatform;
 
 let healthCheckServer = null;
 if (__isHosted) {
@@ -116,7 +177,6 @@ if (__isHosted) {
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const path = require('path');
 const fs = require('fs');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -131,17 +191,22 @@ const { apiLimiter } = require('./middleware/enhancedRateLimiter');
 const requestLogger = require('./middleware/requestLogger');
 const { requestTimeout, getTimeoutForRoute } = require('./middleware/requestTimeout');
 const { cleanupOldFiles } = require('./utils/fileCleanup');
-const logger = require('./utils/logger');
+// logger is already imported above (needed for error handlers)
 const { initializeSocket } = require('./services/socketService');
 const { trackResponseTime } = require('./utils/performance');
 
-// Initialize Sentry before anything else
-const { initSentry } = require('./utils/sentry');
-initSentry();
+// Sentry is already initialized at the top of the file (before error handlers)
+// Don't initialize again to avoid duplicate initialization
+// const { initSentry } = require('./utils/sentry');
+// initSentry();
 
 // Initialize Email Service
-const { initEmailService } = require('./services/emailService');
-initEmailService();
+try {
+  const { initEmailService } = require('./services/emailService');
+  initEmailService();
+} catch (error) {
+  logger.warn('Email service initialization failed', { error: error.message });
+}
 
 // Initialize Cache Service
 const { initCache } = require('./services/cacheService');
@@ -150,31 +215,64 @@ initCache().catch(err => {
 });
 
 // Initialize Intelligent Cache Service
-const { initIntelligentCache } = require('./services/intelligentCacheService');
-initIntelligentCache();
-logger.info('✅ Intelligent cache service initialized');
+try {
+  const { initIntelligentCache } = require('./services/intelligentCacheService');
+  initIntelligentCache();
+  logger.info('✅ Intelligent cache service initialized');
+} catch (error) {
+  logger.warn('Intelligent cache service initialization failed', { error: error.message });
+}
 
 // Initialize Redis Cache Service
-const redisCache = require('./utils/redisCache');
-logger.info('✅ Redis cache service initialized');
+let redisCache = null;
+try {
+  redisCache = require('./utils/redisCache');
+  logger.info('✅ Redis cache service initialized');
+} catch (error) {
+  logger.warn('Redis cache service initialization failed', { error: error.message });
+  redisCache = null;
+}
 
 // Initialize APM (Application Performance Monitoring)
-const { apmMonitor, apmMiddleware } = require('./utils/apm');
-global.apmMonitor = apmMonitor; // Make available globally for error handlers
-logger.info('✅ APM monitoring service initialized');
+let apmMiddleware = null;
+try {
+  const { apmMonitor, apmMiddleware: apmMiddlewareExport } = require('./utils/apm');
+  global.apmMonitor = apmMonitor; // Make available globally for error handlers
+  apmMiddleware = apmMiddlewareExport; // Assign to outer scope
+  logger.info('✅ APM monitoring service initialized');
+} catch (error) {
+  logger.warn('APM monitoring service initialization failed', { error: error.message });
+  global.apmMonitor = null;
+  apmMiddleware = null;
+}
 
 // Initialize Alerting System
-const alertingSystem = require('./utils/alerting');
-global.alertingSystem = alertingSystem;
-logger.info('✅ Alerting system initialized');
+try {
+  const alertingSystem = require('./utils/alerting');
+  global.alertingSystem = alertingSystem;
+  logger.info('✅ Alerting system initialized');
+} catch (error) {
+  logger.warn('Alerting system initialization failed', { error: error.message });
+  global.alertingSystem = null;
+}
 
 // Initialize API Optimization Middleware
-const apiOptimizer = require('./middleware/apiOptimizer');
-logger.info('✅ API optimization middleware loaded');
+let apiOptimizer = null;
+try {
+  apiOptimizer = require('./middleware/apiOptimizer');
+  logger.info('✅ API optimization middleware loaded');
+} catch (error) {
+  logger.warn('API optimization middleware initialization failed', { error: error.message });
+  apiOptimizer = null;
+}
 
 // Initialize Database Optimizer
-const databaseOptimizer = require('./utils/databaseOptimizer');
-logger.info('✅ Database optimizer loaded');
+try {
+  const databaseOptimizer = require('./utils/databaseOptimizer');
+  logger.info('✅ Database optimizer loaded');
+} catch (error) {
+  logger.warn('Database optimizer initialization failed', { error: error.message });
+}
 
 // Initialize Job Queue Workers (optional - non-blocking)
 // Check Redis configuration first
@@ -443,9 +541,13 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Initialize Query Performance Monitoring
-const { initQueryMonitoring } = require('./services/queryPerformanceMonitor');
-initQueryMonitoring();
-logger.info('✅ Query performance monitoring initialized');
+try {
+  const { initQueryMonitoring } = require('./services/queryPerformanceMonitor');
+  initQueryMonitoring();
+  logger.info('✅ Query performance monitoring initialized');
+} catch (error) {
+  logger.warn('Query performance monitoring initialization failed', { error: error.message });
+}
 
 // Initialize Elasticsearch (optional)
 const { initElasticsearch } = require('./services/elasticsearchService');
@@ -466,14 +568,26 @@ initSharding().catch(err => {
 });
 
 // Initialize monitoring middleware (starts system metrics collection)
-require('./middleware/monitoringMiddleware');
+try {
+  require('./middleware/monitoringMiddleware');
+} catch (error) {
+  logger.warn('Monitoring middleware initialization failed', { error: error.message });
+}
 
 // Initialize automated failover
-const { initFailoverMonitoring } = require('./services/automatedFailoverService');
-initFailoverMonitoring();
+try {
+  const { initFailoverMonitoring } = require('./services/automatedFailoverService');
+  initFailoverMonitoring();
+} catch (error) {
+  logger.warn('Automated failover initialization failed', { error: error.message });
+}
 
 // Initialize error handlers
-initErrorHandlers();
+try {
+  initErrorHandlers();
+} catch (error) {
+  logger.warn('Error handlers initialization failed', { error: error.message });
+}
 
 // Initialize alerting service monitoring
 if (process.env.NODE_ENV === 'production') {
@@ -513,6 +627,24 @@ const app = express();
 // Auth/API responses must not be served as 304 (ETag cache hits) because the client expects a JSON body.
 // Disabling ETag generation prevents Express from returning "Not Modified" for API JSON routes like /api/auth/me.
 app.set('etag', false);
+
+// EARLIEST POSSIBLE request logging - must be first to catch ALL requests
+// Note: Using console.log here for early logging before logger is fully initialized
+app.use((req, res, next) => {
+  if (req.path && req.path.startsWith('/api')) {
+    // Only log in development to avoid log spam in production
+    if (process.env.NODE_ENV !== 'production') {
+      logger.info('Early request', {
+        method: req.method,
+        path: req.path,
+        host: req.headers.host,
+        origin: req.headers.origin,
+        ip: req.ip
+      });
+    }
+  }
+  next();
+});
 
 // #region agent log
 // Backend request probe: capture high-signal browser/API traffic even if the frontend bypasses the Next.js /api proxy.
@@ -558,6 +690,12 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// Additional API request logging (this is redundant but kept for backward compatibility)
+app.use('/api', (req, res, next) => {
+  // This should already be logged by the early middleware above, but keep for safety
+  next();
+});
+
 // Compression middleware
 app.use(compression());
 
@@ -580,7 +718,7 @@ const allowedOrigins = [];
 if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
-// Always allow localhost for development
+// Always allow localhost for development and testing
 allowedOrigins.push(
   'http://localhost:3000',
   'http://localhost:3001',
@@ -588,6 +726,9 @@ allowedOrigins.push(
   'http://localhost:3010',
   'http://localhost:3011',
   'http://localhost:3012',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3002',
   'http://127.0.0.1:3010',
   'http://127.0.0.1:3011',
   'http://127.0.0.1:3012'
@@ -605,7 +746,7 @@ app.use(cors({
     if (!origin) {
       return callback(null, true);
     }
-    
+
     // Check if origin is in allowed list
     if (allowedOrigins.some(allowed => {
       if (typeof allowed === 'string') {
@@ -618,10 +759,10 @@ app.use(cors({
       callback(null, true);
     } else {
       // Log for debugging
-      console.log('⚠️ CORS blocked origin:', origin);
-      console.log('✅ Allowed origins:', allowedOrigins);
-      // In development, allow all origins for easier debugging
-      if (process.env.NODE_ENV !== 'production') {
+      logger.warn('CORS blocked origin', { origin, allowedOrigins: allowedOrigins.map(o => typeof o === 'string' ? o : o.toString()) });
+      // In development, allow all localhost origins for easier debugging
+      if (process.env.NODE_ENV !== 'production' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+        logger.info('Allowing localhost origin in development', { origin });
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -653,6 +794,8 @@ app.use(cors({
 
 // Performance tracking
 const { trackPerformance } = require('./middleware/performanceTracking');
+// Performance tracking middleware
+const trackPerformance = require('./middleware/performanceTracking');
 app.use(trackPerformance);
 
 // Feature flags middleware
@@ -709,10 +852,16 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
 }
 
 // API Optimization Middleware (compression, caching, performance)
-app.use('/api', apiOptimizer);
+// apiOptimizer is an array of middlewares - Express handles this automatically
+if (apiOptimizer && Array.isArray(apiOptimizer) && apiOptimizer.length > 0) {
+  // Express accepts arrays of middlewares - apply all at once
+  app.use('/api', apiOptimizer);
+}
 
 // APM Middleware for performance monitoring
-app.use('/api', apmMiddleware);
+if (apmMiddleware) {
+  app.use('/api', apmMiddleware);
+}
 
 // Cache middleware for GET requests (skip auth and status endpoints)
 app.use('/api', (req, res, next) => {
@@ -1589,11 +1738,12 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOpti
 
 // Redis Caching Middleware for API routes
 // Cache GET requests for better performance
-app.use('/api', redisCache.middleware({
-  ttl: 300, // 5 minutes default
-  skipCache: (req) => {
-    // Don't cache non-GET requests, auth routes, or uploads
-    return req.method !== 'GET' ||
+if (redisCache && typeof redisCache.middleware === 'function') {
+  app.use('/api', redisCache.middleware({
+    ttl: 300, // 5 minutes default
+    skipCache: (req) => {
+      // Don't cache non-GET requests, auth routes, or uploads
+      return req.method !== 'GET' ||
            req.originalUrl.includes('/auth/') ||
            req.originalUrl.includes('/upload/') ||
            req.originalUrl.includes('/admin/') ||
@@ -1604,7 +1754,11 @@ app.use('/api', redisCache.middleware({
     // Only cache for authenticated users or public routes
     return !!req.user || req.originalUrl.includes('/analytics/');
   }
-}));
+  }));
+}
+
+// Serve static files from uploads directory (for videos, images, etc.)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 // #region agent log - Route mounting
@@ -1637,11 +1791,13 @@ app.use('/api/analytics/content', require('./routes/analytics/content'));
 app.use('/api/analytics/performance', require('./routes/analytics/performance'));
 app.use('/api/analytics/growth', require('./routes/analytics/growth'));
 app.use('/api/analytics/advanced', require('./routes/analytics/advanced'));
+app.use('/api/analytics/predictions', require('./routes/analytics/predictions'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/analytics', require('./routes/analytics/advanced-features'));
 
 app.use('/api/niche', require('./routes/niche'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/export', require('./routes/export'));
 app.use('/api/batch', require('./routes/batch'));
@@ -1666,11 +1822,8 @@ app.use('/api/oauth', require('./routes/oauth'));
 app.use('/api/teams', require('./routes/teams'));
 app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/collections', require('./routes/collections'));
-app.use('/api/engagement', require('./routes/engagement'));
-app.use('/api/suggestions', require('./routes/suggestions'));
 app.use('/api/versions', require('./routes/versions'));
 app.use('/api/comments', require('./routes/comments'));
-app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/analytics/enhanced', require('./routes/analytics/enhanced'));
 app.use('/api/analytics/content-performance', require('./routes/analytics/contentPerformance'));
 app.use('/api/analytics/platform', require('./routes/analytics/platform'));
@@ -1714,7 +1867,15 @@ app.use('/api/productive/calendar', require('./routes/productive/calendar'));
 app.use('/api/productive/repurposing', require('./routes/productive/repurposing'));
 app.use('/api/productive/ab-testing', require('./routes/productive/ab-testing'));
 app.use('/api/video/ai-editing', require('./routes/video/ai-editing'));
+app.use('/api/video/manual-editing', require('./routes/video/manual-editing'));
+app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));
 app.use('/api/video/captions', require('./routes/video/captions'));
+app.use('/api/video/advanced-editing', require('./routes/video/advanced-editing'));
+app.use('/api/graphql', require('./routes/graphql'));
+app.use('/api/plugins', require('./routes/plugins'));
+app.use('/api/marketplace', require('./routes/marketplace'));
+app.use('/api/tenants', require('./routes/tenants'));
+app.use('/api/workflows/advanced-automation', require('./routes/workflows/advanced-automation'));
 app.use('/api/video/effects', require('./routes/video/effects'));
 app.use('/api/video/analytics', require('./routes/video/analytics'));
 app.use('/api/video/transcription', require('./routes/video/transcription'));
@@ -1725,6 +1886,7 @@ app.use('/api/debug', require('./routes/debug'));
 app.use('/api/ai/multi-model', require('./routes/ai/multi-model'));
 app.use('/api/ai/recommendations', require('./routes/ai/recommendations'));
 app.use('/api/ai/predictive', require('./routes/ai/predictive'));
+app.use('/api/ai/advanced', require('./routes/ai/advanced'));
 app.use('/api/ai/content-generation', require('./routes/ai/content-generation'));
 app.use('/api/ai/adapt', require('./routes/ai/adapt'));
 app.use('/api/ai', require('./routes/ai/generate-idea'));
@@ -1966,6 +2128,7 @@ app.use('/api/video/progress', require('./routes/video/progress'));
 app.use('/api/workflows/webhooks', require('./routes/workflows/webhooks'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/jobs/dashboard', require('./routes/jobs/dashboard'));
+app.use('/api/jobs', require('./routes/jobs/progress'));
 app.use('/api/upload/progress', require('./routes/upload/progress').router);
 app.use('/api/upload/chunked', require('./routes/upload/chunked'));
 app.use('/api/security', require('./routes/security'));
@@ -2070,8 +2233,10 @@ app.post('/api/monitoring/test-alert', async (req, res) => {
 // 404 handler
 app.use(notFound);
 
-// Sentry error handler - catches errors not handled by custom middleware
-app.use(Sentry.expressErrorHandler());
+// Sentry error handler - catches errors not handled by custom middleware (only if Sentry is initialized)
+if (Sentry && typeof Sentry.expressErrorHandler === 'function') {
+  app.use(Sentry.expressErrorHandler());
+}
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -2097,9 +2262,11 @@ function __installShutdownHooks() {
       // #endregion
 
       // Flush Sentry events before shutdown
-      try {
-        Sentry.close(2000).catch(() => {});
-      } catch {}
+      if (Sentry && typeof Sentry.close === 'function') {
+        try {
+          Sentry.close(2000).catch(() => {});
+        } catch {}
+      }
 
       // Close mongoose connection if it exists
       try {
@@ -2152,14 +2319,17 @@ __installShutdownHooks();
 try {
   // Close health check server before starting main server
   // This ensures the port is free for the main server
-  if (healthCheckServer) {
-    console.log('📝 Closing health check server, starting main server...');
+  if (healthCheckServer && healthCheckServer.listening) {
+    logger.info('Closing health check server, starting main server...');
+    // Wait a bit for the server to fully close before starting main server
     healthCheckServer.close(() => {
-      console.log('✅ Health check server closed, starting main server...');
+      logger.info('Health check server closed, starting main server...');
       
-      try {
-        // Start main server after health check server is closed
-        server = app.listen(PORT, HOST, () => {
+      // Add small delay to ensure port is fully released (500ms should be sufficient)
+      setTimeout(() => {
+        try {
+          // Start main server after health check server is closed
+          server = app.listen(PORT, HOST, () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
@@ -2270,39 +2440,80 @@ try {
       });
       
       logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
-      console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
-      } catch (listenError) {
-        console.error('❌ Error starting main server:', listenError.message);
-        console.error('Stack:', listenError.stack);
-        logger.error('❌ Error starting main server:', { error: listenError.message, stack: listenError.stack });
-        // Keep health check server running so port stays bound
-        logger.warn('⚠️ Keeping health check server running since main server failed to start');
-        return;
-      }
-    }); // Close healthCheckServer.close callback
+          } catch (listenError) {
+            console.error('❌ Error starting main server:', listenError.message);
+            console.error('Stack:', listenError.stack);
+            logger.error('❌ Error starting main server:', { error: listenError.message, stack: listenError.stack });
+            // Keep health check server running so port stays bound
+            logger.warn('⚠️ Keeping health check server running since main server failed to start');
+            return;
+          }
+        }, 100); // Small delay to ensure port is fully released
+      }); // Close healthCheckServer.close callback
   } else {
     // No health check server, start main server directly
-    server = app.listen(PORT, HOST, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+    // Helper function to start the server
+    function startMainServer() {
+      server = app.listen(PORT, HOST, () => {
+        logger.info(`🚀 Server running on port ${PORT}`);
+        logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+        logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+        
+        // Initialize Socket.io for real-time updates
+        initializeSocket(server);
+        logger.info(`🔌 Socket.io initialized for real-time updates`);
+        
+        logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
+        console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
+      });
       
-      // Initialize Socket.io for real-time updates
-      initializeSocket(server);
-      logger.info(`🔌 Socket.io initialized for real-time updates`);
-      
-      logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
-      console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
-    });
+      server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          logger.error(`❌ Port ${PORT} is already in use. Attempting to free it...`);
+          // Try to kill any process using this port (excluding our own PID)
+          const { execSync } = require('child_process');
+          try {
+            execSync(`lsof -ti:${PORT} | grep -v ${process.pid} | xargs kill -9 2>/dev/null || true`, { timeout: 2000 });
+            logger.info(`✅ Attempted to free port ${PORT}`);
+            logger.warn('⚠️ Please restart the server manually or wait for nodemon to restart.');
+          } catch (e) {
+            logger.error(`❌ Could not free port ${PORT}. Please manually kill processes using this port.`);
+          }
+        } else {
+          logger.error('Server error:', err);
+        }
+      });
+    }
     
-    server.on('error', (err) => {
+    // Check if port is available before attempting to bind
+    const net = require('net');
+    const tester = net.createServer();
+    tester.once('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        logger.error(`❌ Port ${PORT} is already in use.`);
-        process.exit(1);
+        logger.warn(`⚠️ Port ${PORT} is in use. Attempting to free it...`);
+        const { execSync } = require('child_process');
+        try {
+          execSync(`lsof -ti:${PORT} | grep -v ${process.pid} | xargs kill -9 2>/dev/null || true`, { timeout: 2000 });
+          logger.info(`✅ Attempted to free port ${PORT}, waiting 1 second before starting server...`);
+          setTimeout(startMainServer, 1000);
+        } catch (e) {
+          logger.error(`❌ Could not free port ${PORT}. Server will attempt to start anyway.`);
+          setTimeout(startMainServer, 2000); // Wait and try anyway
+        }
       } else {
-        logger.error('Server error:', err);
+        logger.error('Port check error:', err);
+        startMainServer(); // Try to start anyway
       }
     });
+    
+    tester.once('listening', () => {
+      tester.once('close', () => {
+        // Port is available, start server immediately
+        startMainServer();
+      }).close();
+    });
+    
+    tester.listen(PORT);
   }
 } catch (error) {
   logger.error('❌ Failed to start server:', error);

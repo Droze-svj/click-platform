@@ -172,43 +172,213 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
  */
 router.get('/', auth, async (req, res) => {
   try {
+    // Early check for dev users to avoid any database operations
+    const userId = req.user?._id || req.user?.id;
+    
+    // In development mode OR when running on localhost, return empty array for dev users
+    // This prevents MongoDB queries with invalid ObjectIds like 'dev-user-123'
+    // Check both host header and x-forwarded-host (for proxy requests)
+    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+    const referer = req.headers.referer || req.headers.origin || '';
+    const forwardedFor = req.headers['x-forwarded-for'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+                        referer.includes('localhost') || referer.includes('127.0.0.1') ||
+                        (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
+    // Always allow dev mode when NODE_ENV is not production OR when on localhost
+    // If NODE_ENV is undefined/null/empty, treat as dev mode
+    const nodeEnv = process.env.NODE_ENV;
+    const allowDevMode = !nodeEnv || nodeEnv !== 'production' || isLocalhost;
+    
+    // Enhanced logging for debugging (always log for localhost requests)
+    if (isLocalhost || !nodeEnv || nodeEnv !== 'production') {
+      console.log('🔧 [Scripts] GET request received', {
+        userId,
+        host,
+        referer,
+        isLocalhost,
+        allowDevMode,
+        nodeEnv: nodeEnv || 'undefined',
+        hasUser: !!req.user,
+        userKeys: req.user ? Object.keys(req.user) : [],
+        userAgent: req.headers['user-agent']?.substring(0, 50),
+        xForwardedHost: req.headers['x-forwarded-host'],
+        xForwardedFor: forwardedFor
+      });
+      logger.info('Scripts GET request', {
+        userId,
+        host,
+        referer,
+        isLocalhost,
+        allowDevMode,
+        nodeEnv: nodeEnv || 'undefined',
+        hasUser: !!req.user,
+        userAgent: req.headers['user-agent']?.substring(0, 50),
+        xForwardedHost: req.headers['x-forwarded-host'],
+        xForwardedFor: forwardedFor
+      });
+    }
+    
+    // Check if MongoDB is connected first
+    const mongoose = require('mongoose');
+    const isMongoConnected = mongoose.connection.readyState === 1;
+    
+    // For dev mode OR when MongoDB isn't connected, return empty array immediately
+    // This prevents any database operations that could fail
+    if (allowDevMode || !isMongoConnected) {
+      // Check for dev users FIRST, before any MongoDB operations
+      if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
+        return res.json({
+          success: true,
+          data: [],
+          pagination: {
+            page: parseInt(req.query.page || 1),
+            limit: parseInt(req.query.limit || 50),
+            total: 0,
+            pages: 0
+          }
+        });
+      }
+      // If MongoDB not connected, return empty array for dev mode anyway
+      if (!isMongoConnected && allowDevMode) {
+        logger.warn('MongoDB not connected, returning empty array for dev mode');
+        return res.json({
+          success: true,
+          data: [],
+          pagination: {
+            page: parseInt(req.query.page || 1),
+            limit: parseInt(req.query.limit || 50),
+            total: 0,
+            pages: 0
+          }
+        });
+      }
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User ID not found'
+      });
+    }
+    
+    // Final safety check: if userId is a dev user ID, return empty array
+    // This prevents CastError when Mongoose tries to cast 'dev-user-123' to ObjectId
+    if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123' || userId.toString().startsWith('test-'))) {
+      console.log('🔧 [Scripts] Dev user detected, returning empty array', { userId, allowDevMode });
+      logger.info('Dev user detected in scripts route, returning empty array', { userId, allowDevMode });
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: parseInt(req.query.page || 1),
+          limit: parseInt(req.query.limit || 50),
+          total: 0,
+          pages: 0
+        }
+      });
+    }
+
+    // At this point, we need MongoDB connected for production users
+    if (!isMongoConnected) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database connection unavailable'
+      });
+    }
+
     const { type, status, limit = 50, page = 1 } = req.query;
-    const query = { userId: req.user._id };
 
-    if (type) query.type = type;
-    if (status) query.status = status;
+    // Try to execute queries, but handle all errors gracefully
+    let scripts = [];
+    let total = 0;
+    
+    try {
+      // Validate userId is a valid ObjectId before creating query
+      const mongoose = require('mongoose');
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new Error(`Invalid userId format: ${userId}. Expected MongoDB ObjectId.`);
+      }
+      
+      const query = { userId };
+      if (type) query.type = type;
+      if (status) query.status = status;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+      const { optimizeQuery } = require('../utils/queryOptimizer');
 
-    const { optimizeQuery } = require('../utils/queryOptimizer');
-
-    const [scripts, total] = await Promise.all([
-      optimizeQuery(Script.find(query), {
+      const optimizedQuery = optimizeQuery(Script.find(query), {
         select: 'title type topic duration wordCount status createdAt',
         lean: true,
         sort: { createdAt: -1 },
         skip,
         limit: parseInt(limit)
-      }),
-      Script.countDocuments(query)
-    ]);
+      });
+
+      // Execute queries - optimizeQuery already applied lean(), just need exec()
+      [scripts, total] = await Promise.all([
+        optimizedQuery.exec(),
+        Script.countDocuments(query).exec()
+      ]);
+    } catch (dbError) {
+      // If it's a CastError (invalid ObjectId) or connection error, return empty array for dev mode
+      if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('buffering') || dbError.message?.includes('connection'))) {
+        logger.warn('Database error in scripts query, returning empty array for dev mode', { 
+          error: dbError.message,
+          errorName: dbError.name,
+          userId 
+        });
+        scripts = [];
+        total = 0;
+      } else {
+        // Re-throw if not a dev mode error
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
-      data: scripts,
+      data: scripts || [],
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit))
+        total: total || 0,
+        pages: Math.ceil((total || 0) / parseInt(limit))
       }
     });
   } catch (error) {
-    logger.error('Get scripts error', { error: error.message });
-    res.status(500).json({
-      success: false,
-      error: error.message
+    // Enhanced error logging
+    console.error('❌ [Scripts] Error in GET /api/scripts', {
+      error: error.message,
+      errorName: error.name,
+      errorCode: error.code,
+      stack: error.stack?.substring(0, 500),
+      userId: req.user?._id || req.user?.id,
+      hasUser: !!req.user,
+      nodeEnv: process.env.NODE_ENV || 'undefined'
     });
+    
+    logger.error('Get scripts error', { 
+      error: error.message, 
+      stack: error.stack, 
+      userId: req.user?._id || req.user?.id,
+      errorName: error.name,
+      errorCode: error.code,
+      hasUser: !!req.user
+    });
+    
+    // Return error response - ensure we haven't already sent a response
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: process.env.NODE_ENV === 'production' ? 'Failed to load scripts' : error.message,
+        ...(process.env.NODE_ENV !== 'production' && { 
+          details: error.name,
+          stack: error.stack?.substring(0, 200)
+        })
+      });
+    } else {
+      console.error('⚠️ [Scripts] Response already sent, cannot send error response');
+    }
   }
 });
 
@@ -333,6 +503,59 @@ router.delete('/:scriptId', auth, async (req, res) => {
     });
   } catch (error) {
     logger.error('Delete script error', { error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/scripts/{scriptId}/duplicate:
+ *   post:
+ *     summary: Duplicate a script
+ *     tags: [Scripts]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:scriptId/duplicate', auth, async (req, res) => {
+  try {
+    const script = await Script.findOne({
+      _id: req.params.scriptId,
+      userId: req.user._id
+    });
+
+    if (!script) {
+      return res.status(404).json({
+        success: false,
+        error: 'Script not found'
+      });
+    }
+
+    const copy = new Script({
+      userId: req.user._id,
+      title: (script.title || 'Untitled').replace(/\s*\(Copy(?:\s*\d*)?\)\s*$/, '') + ' (Copy)',
+      type: script.type,
+      topic: script.topic,
+      targetAudience: script.targetAudience,
+      tone: script.tone,
+      duration: script.duration,
+      wordCount: script.wordCount,
+      script: script.script,
+      structure: script.structure ? { ...script.structure } : undefined,
+      metadata: script.metadata ? { ...script.metadata } : undefined,
+      status: 'draft'
+    });
+    await copy.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Script duplicated',
+      data: copy
+    });
+  } catch (error) {
+    logger.error('Duplicate script error', { error: error.message });
     res.status(500).json({
       success: false,
       error: error.message

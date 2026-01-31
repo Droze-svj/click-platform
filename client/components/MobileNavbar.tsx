@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from '../hooks/useTranslation'
 import DarkModeToggle from './DarkModeToggle'
 import NotificationBell from './NotificationBell'
 import AdvancedSearch from './AdvancedSearch'
@@ -11,36 +12,33 @@ export default function MobileNavbar() {
   const router = useRouter()
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
-
-
-  const dbg = (message: string, data: Record<string, any>) => {
-  }
 
   if (pathname === '/login' || pathname === '/register' || pathname === '/') {
     return null
   }
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/dashboard/video', label: 'Videos', icon: '🎥' },
-    { path: '/dashboard/content', label: 'Content', icon: '✨' },
-    { path: '/dashboard/library', label: 'Library', icon: '📚' },
-    { path: '/dashboard/scripts', label: 'Scripts', icon: '📝' },
-    { path: '/dashboard/workflows', label: 'Workflows', icon: '🤖' },
-    { path: '/dashboard/jobs', label: 'Jobs', icon: '⚡' },
-    { path: '/dashboard/quotes', label: 'Quotes', icon: '💬' },
-    { path: '/dashboard/scheduler', label: 'Scheduler', icon: '📅' },
-    { path: '/dashboard/calendar', label: 'Calendar', icon: '📆' },
-    { path: '/dashboard/analytics', label: 'Analytics', icon: '📊' },
-    { path: '/dashboard/achievements', label: 'Achievements', icon: '🏆' },
-    { path: '/dashboard/teams', label: 'Teams', icon: '👥' },
-    { path: '/dashboard/approvals', label: 'Approvals', icon: '✅' },
-    { path: '/dashboard/social', label: 'Social', icon: '🌐' },
-    { path: '/dashboard/membership', label: 'Membership', icon: '💎' },
-    { path: '/dashboard/templates', label: 'Templates', icon: '📋' },
-    { path: '/dashboard/notifications', label: 'Notifications', icon: '🔔' },
-    { path: '/dashboard/settings', label: 'Settings', icon: '⚙️' }
+  const navItems: Array<{ path: string; labelKey: string; icon: string }> = [
+    { path: '/dashboard', labelKey: 'nav.dashboard', icon: '🏠' },
+    { path: '/dashboard/video', labelKey: 'nav.videos', icon: '🎥' },
+    { path: '/dashboard/content', labelKey: 'nav.content', icon: '✨' },
+    { path: '/dashboard/library', labelKey: 'nav.library', icon: '📚' },
+    { path: '/dashboard/scripts', labelKey: 'nav.scripts', icon: '📝' },
+    { path: '/dashboard/workflows', labelKey: 'nav.workflows', icon: '🤖' },
+    { path: '/dashboard/jobs', labelKey: 'nav.jobs', icon: '⚡' },
+    { path: '/dashboard/quotes', labelKey: 'nav.quotes', icon: '💬' },
+    { path: '/dashboard/scheduler', labelKey: 'nav.scheduler', icon: '📅' },
+    { path: '/dashboard/calendar', labelKey: 'nav.calendar', icon: '📆' },
+    { path: '/dashboard/analytics', labelKey: 'nav.analytics', icon: '📊' },
+    { path: '/dashboard/achievements', labelKey: 'nav.achievements', icon: '🏆' },
+    { path: '/dashboard/teams', labelKey: 'nav.teams', icon: '👥' },
+    { path: '/dashboard/approvals', labelKey: 'nav.approvals', icon: '✅' },
+    { path: '/dashboard/social', labelKey: 'nav.social', icon: '🌐' },
+    { path: '/dashboard/membership', labelKey: 'nav.membership', icon: '💎' },
+    { path: '/dashboard/templates', labelKey: 'nav.templates', icon: '📋' },
+    { path: '/dashboard/notifications', labelKey: 'nav.notifications', icon: '🔔' },
+    { path: '/dashboard/settings', labelKey: 'nav.settings', icon: '⚙️' }
   ]
 
   const isActive = (path: string) => pathname === path
@@ -60,7 +58,13 @@ export default function MobileNavbar() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-lg font-bold text-purple-600 dark:text-purple-400">Click</h1>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent hover:opacity-90 transition-opacity"
+            aria-label="Click — go to dashboard"
+          >
+            Click
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -87,7 +91,7 @@ export default function MobileNavbar() {
           <div className="fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-gray-800 z-50 overflow-y-auto shadow-xl">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Menu</h2>
+                <h2 className="text-lg font-semibold">{t('common.menu')}</h2>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -119,7 +123,7 @@ export default function MobileNavbar() {
                   }`}
                 >
                   <span className="text-xl">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium">{t(item.labelKey)}</span>
                 </button>
               ))}
             </nav>
@@ -133,7 +137,7 @@ export default function MobileNavbar() {
                   }}
                   className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                 >
-                  Logout
+                  {t('common.logout')}
                 </button>
               </div>
             )}

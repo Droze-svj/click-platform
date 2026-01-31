@@ -7,14 +7,12 @@ const supportChatSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   chatId: {
     type: String,
     unique: true,
-    required: true,
-    index: true
+    required: true
   },
   // Chat details
   category: {
@@ -97,8 +95,7 @@ const supportChatSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   updatedAt: {
     type: Date,
@@ -110,7 +107,7 @@ const supportChatSchema = new mongoose.Schema({
 
 supportChatSchema.index({ userId: 1, status: 1 });
 supportChatSchema.index({ status: 1, priority: 1, createdAt: -1 });
-supportChatSchema.index({ chatId: 1 });
+// Note: chatId already has an index from unique: true, no need for duplicate
 
 supportChatSchema.pre('save', function(next) {
   this.updatedAt = new Date();

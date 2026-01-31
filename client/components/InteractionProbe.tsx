@@ -24,6 +24,7 @@ declare global {
     }
     __interactionProbeV50?: {
       counts?: Record<string, number>
+      lastLogTime?: Record<string, number>
     }
   }
 }
@@ -32,8 +33,7 @@ function isElement(x: any): x is Element {
   return x && typeof x === 'object' && x.nodeType === 1
 }
 
-const AGENT_INGEST =
-  'http://127.0.0.1:1025/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a'
+// Removed external agent ingest - now using local debug API
 
 function describeTarget(t: EventTarget | null) {
   if (!isElement(t)) return { kind: typeof t }
@@ -98,14 +98,56 @@ export default function InteractionProbe() {
     window.__interactionProbeMounts = (window.__interactionProbeMounts || 0) + 1
     window.__interactionProbeInstalled = true
 
-    const send = (message: string, data: Record<string, any>) => {
-      // Enhanced debug logging
-      // #region agent log
-      fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+    // Batch debug logs to reduce spam and improve performance
+    let logQueue: Array<{ message: string; data: Record<string, any> }> = []
+    let logTimeout: ReturnType<typeof setTimeout> | null = null
+    
+    const flushLogs = () => {
+      if (logQueue.length === 0) return
+      
+      const logs = [...logQueue]
+      logQueue = []
+      logTimeout = null
+      
+      // Send batched logs with timeout and error handling
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+      
+      fetch('/api/debug/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          location: 'InteractionProbe.tsx',
+          component: 'InteractionProbe',
+          message: 'interaction_batch',
+          data: {
+            logs,
+            timestamp: Date.now(),
+            count: logs.length
+          }
+        }),
+        signal: controller.signal
+      }).catch((err) => {
+        // Only log errors in development to avoid console spam
+        if (process.env.NODE_ENV === 'development') {
+          // Don't log AbortError (timeout) as it's expected behavior
+          if (err.name !== 'AbortError') {
+            console.warn('InteractionProbe: Debug log send failed:', err.message || err)
+          }
+        }
+      }).finally(() => {
+        clearTimeout(timeoutId)
+      })
+    }
+    
+    const send = (message: string, data: Record<string, any>) => {
+      try {
+        // Only log important events in development to reduce console spam
+        if (process.env.NODE_ENV === 'development' && (message.includes('error') || message.includes('fail') || message === 'interaction_probe_installed')) {
+          console.log('InteractionProbe:', message, data)
+        }
+        
+        // Add to queue
+        logQueue.push({
           message: `interaction_${message}`,
           data: {
             ...data,
@@ -113,50 +155,104 @@ export default function InteractionProbe() {
             sessionId: 'debug-session',
             runId: 'run-interaction-debug'
           }
-        }),
-      }).catch(() => {})
-      // #endregion
+        })
+        
+        // Flush immediately for important messages, or batch for others
+        if (message.includes('error') || message.includes('fail') || message === 'interaction_probe_installed') {
+          // Flush immediately for errors and installation
+          if (logTimeout) {
+            clearTimeout(logTimeout)
+            logTimeout = null
+          }
+          flushLogs()
+        } else {
+          // Batch other messages - flush after 3 seconds of inactivity or when queue reaches 10 items
+          if (logQueue.length >= 10) {
+            if (logTimeout) {
+              clearTimeout(logTimeout)
+              logTimeout = null
+            }
+            flushLogs()
+          } else {
+            if (logTimeout) {
+              clearTimeout(logTimeout)
+            }
+            logTimeout = setTimeout(flushLogs, 3000)
+          }
+        }
+      } catch (err) {
+        // Silently handle any errors in the send function itself
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('InteractionProbe: Error in send function:', err)
+        }
+      }
     }
 
     const send50 = (message: string, data: Record<string, any>) => {
-      // Send only every 50 events to reduce noise
-      if (Math.random() < 0.02) { // ~2% sampling rate
-        send(message, { ...data, sampled: true })
+      try {
+        // Send only every 50 events to reduce noise
+        if (Math.random() < 0.02) { // ~2% sampling rate
+          send(message, { ...data, sampled: true })
+        }
+      } catch (err) {
+        // Silently handle errors in send50
+        console.warn('InteractionProbe: Error in send50 function:', err)
       }
     }
 
     // Component lifecycle tracking
     const trackComponentLifecycle = (componentName: string, action: 'mount' | 'unmount' | 'update', data?: any) => {
-      send('component_lifecycle', {
-        componentName,
-        action,
-        timestamp: Date.now(),
-        data: data || {},
-        memoryUsage: (performance as any).memory ? {
-          used: (performance as any).memory.usedJSHeapSize,
-          total: (performance as any).memory.totalJSHeapSize
-        } : null
-      })
+      try {
+        send('component_lifecycle', {
+          componentName,
+          action,
+          timestamp: Date.now(),
+          data: data || {},
+          memoryUsage: (performance as any).memory ? {
+            used: (performance as any).memory.usedJSHeapSize,
+            total: (performance as any).memory.totalJSHeapSize
+          } : null
+        })
+      } catch (err) {
+        // Silently handle errors in lifecycle tracking
+        console.warn('InteractionProbe: Error in trackComponentLifecycle:', err)
+      }
     }
 
-    // Page visibility tracking
+    // Page visibility tracking (reduced frequency)
+    let lastVisibilityLog = 0
     const handleVisibilityChange = () => {
-      send('page_visibility_change', {
-        hidden: document.hidden,
-        visibilityState: document.visibilityState,
-        timestamp: Date.now()
-      })
+      try {
+        const now = Date.now()
+        // Only log visibility changes every 5 seconds to reduce spam
+        if (now - lastVisibilityLog > 5000) {
+          send('page_visibility_change', {
+            hidden: document.hidden,
+            visibilityState: document.visibilityState,
+            timestamp: now
+          })
+          lastVisibilityLog = now
+        }
+      } catch (err) {
+        // Silently handle errors in visibility handler
+        console.warn('InteractionProbe: Error in visibility handler:', err)
+      }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     // Online/offline tracking
     const handleOnlineStatus = (status: 'online' | 'offline') => {
-      send('network_status_change', {
-        status,
-        timestamp: Date.now(),
-        userAgent: navigator.userAgent
-      })
+      try {
+        send('network_status_change', {
+          status,
+          timestamp: Date.now(),
+          userAgent: navigator.userAgent
+        })
+      } catch (err) {
+        // Silently handle errors in network status handler
+        console.warn('InteractionProbe: Error in network status handler:', err)
+      }
     }
 
     window.addEventListener('online', () => handleOnlineStatus('online'))
@@ -198,177 +294,228 @@ export default function InteractionProbe() {
         platform: navigator.platform
       })
     } catch (error) {
-      send('interaction_probe_installed_error', {
-        error: error instanceof Error ? error.message : String(error),
-        probeVersion: 'run39_comprehensive_debug',
-        href: window.location.href
-      })
-    }
-
-
-    // If clicks are being swallowed, this will tell us who is calling stopPropagation().
-    // Install once, remove only when no mounts remain.
-    if (!window.__interactionProbeState) window.__interactionProbeState = {}
-    if (!window.__interactionProbeState.installed) {
+      // Try to send error, but don't fail if that also errors
       try {
-        const proto: any = (window as any).Event?.prototype
-        if (proto) {
-          window.__interactionProbeState.origStopPropagation = proto.stopPropagation?.bind(proto) || null
-          window.__interactionProbeState.origStopImmediatePropagation = proto.stopImmediatePropagation?.bind(proto) || null
-
-          const safeStack = () => {
-            try {
-              return String(new Error().stack || '').split('\n').slice(0, 8).join('\n')
-            } catch {
-              return ''
-            }
-          }
-
-          proto.stopPropagation = function () {
-            try {
-              const ev: any = this
-              const t = ev?.target || null
-              send('event_stopPropagation', {
-                type: String(ev?.type || ''),
-                target: describeTarget(t),
-                href: window.location.href,
-                pathname: window.location.pathname,
-                stack: safeStack(),
-              })
-            } catch {}
-            // Call the original method to maintain functionality
-            if (window.__interactionProbeState?.origStopPropagation) {
-              window.__interactionProbeState.origStopPropagation.call(this)
-            }
-          }
-
-          proto.stopImmediatePropagation = function () {
-            try {
-              const ev: any = this
-              const t = ev?.target || null
-              send('event_stopImmediatePropagation', {
-                type: String(ev?.type || ''),
-                target: describeTarget(t),
-                href: window.location.href,
-                pathname: window.location.pathname,
-                stack: safeStack(),
-              })
-            } catch {}
-            // Call the original method to maintain functionality
-            if (window.__interactionProbeState?.origStopImmediatePropagation) {
-              window.__interactionProbeState.origStopImmediatePropagation.call(this)
-            }
-          }
-        }
-      } catch {}
-      window.__interactionProbeState.installed = true
+        send('interaction_probe_installed_error', {
+          error: error instanceof Error ? error.message : String(error),
+          probeVersion: 'run39_comprehensive_debug',
+          href: window.location.href
+        })
+      } catch (sendError) {
+        // Silently handle errors in error reporting
+        console.warn('InteractionProbe: Failed to send installation error:', sendError)
+      }
     }
+
+
+    // Disabled Event.prototype patching due to browser compatibility issues
+    // This was causing "Illegal invocation" errors with React synthetic events
 
     if (!window.__interactionProbeV50) window.__interactionProbeV50 = {}
     if (!window.__interactionProbeV50.counts) window.__interactionProbeV50.counts = {}
+    if (!window.__interactionProbeV50.lastLogTime) window.__interactionProbeV50.lastLogTime = {}
 
     const shouldLog50 = (key: string, ev: any, atPoint: any) => {
-      const counts = window.__interactionProbeV50?.counts || {}
-      const n = (counts[key] || 0) + 1
-      counts[key] = n
-      if (window.__interactionProbeV50) window.__interactionProbeV50.counts = counts
-      const overlayHit =
-        !!(describeTarget(ev?.target || null) as any)?.agentOverlay || !!(atPoint as any)?.agentOverlay
-      return overlayHit || n <= 25
+      try {
+        const counts = window.__interactionProbeV50?.counts || {}
+        const lastLogTimes = window.__interactionProbeV50?.lastLogTime || {}
+        const n = (counts[key] || 0) + 1
+        const now = Date.now()
+        const timeSinceLastLog = now - (lastLogTimes[key] || 0)
+
+        counts[key] = n
+        if (window.__interactionProbeV50) {
+          window.__interactionProbeV50.counts = counts
+          window.__interactionProbeV50.lastLogTime = lastLogTimes
+        }
+
+        const overlayHit =
+          !!(describeTarget(ev?.target || null) as any)?.agentOverlay || !!(atPoint as any)?.agentOverlay
+
+        // Log overlays immediately, otherwise limit to every 2 seconds and max 50 per session
+        const shouldLog = overlayHit || (timeSinceLastLog > 2000 && n <= 50)
+        if (shouldLog) {
+          lastLogTimes[key] = now
+        }
+        return shouldLog
+      } catch (err) {
+        // If shouldLog50 fails, default to not logging to prevent errors
+        console.warn('InteractionProbe: Error in shouldLog50 function:', err)
+        return false
+      }
     }
 
     // Install stable handlers once so add/remove is reliable across StrictMode mounts.
     if (!window.__interactionProbeHandlers) window.__interactionProbeHandlers = {}
     if (!window.__interactionProbeHandlers.pointerdown) {
       window.__interactionProbeHandlers.pointerdown = (ev: PointerEvent) => {
-        const tgt = describeTarget(ev.target)
-        const x = (ev as any).clientX
-        const y = (ev as any).clientY
-        const atPoint = atPointInfo(x, y)
-        send('pointerdown', {
-          href: window.location.href,
-          pathname: window.location.pathname,
-          isTrusted: (ev as any).isTrusted ?? null,
-          target: tgt,
-          atPoint,
-          button: (ev as any).button ?? null,
-        })
-
+        try {
+          const tgt = describeTarget(ev.target)
+          const x = (ev as any).clientX
+          const y = (ev as any).clientY
+          const atPoint = atPointInfo(x, y)
+          send('pointerdown', {
+            href: window.location.href,
+            pathname: window.location.pathname,
+            isTrusted: (ev as any).isTrusted ?? null,
+            target: tgt,
+            atPoint,
+            button: (ev as any).button ?? null,
+          })
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in pointerdown handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.pointerup) {
       window.__interactionProbeHandlers.pointerup = (ev: PointerEvent) => {
-        const tgt = describeTarget(ev.target)
-        const x = (ev as any).clientX
-        const y = (ev as any).clientY
-        const atPoint = atPointInfo(x, y)
+        try {
+          const tgt = describeTarget(ev.target)
+          const x = (ev as any).clientX
+          const y = (ev as any).clientY
+          const atPoint = atPointInfo(x, y)
+          // Only log pointerup if it's part of a click sequence (reduced frequency)
+          if (shouldLog50('pointerup', ev, atPoint)) {
+            send50('pointerup', {
+              href: window.location.href,
+              pathname: window.location.pathname,
+              isTrusted: (ev as any).isTrusted ?? null,
+              target: tgt,
+              atPoint,
+              button: (ev as any).button ?? null,
+            })
+          }
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in pointerup handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.click) {
       window.__interactionProbeHandlers.click = (ev: MouseEvent) => {
-        const tgt = describeTarget(ev.target)
-        const href = String((tgt as any).href || '')
-        const x = (ev as any).clientX
-        const y = (ev as any).clientY
-        const atPoint = atPointInfo(x, y)
-        send('click', {
-          href: window.location.href,
-          pathname: window.location.pathname,
-          isTrusted: (ev as any).isTrusted ?? null,
-          target: tgt,
-          atPoint,
-          isLoginishClick: href.includes('/login') || String((tgt as any).text || '').toLowerCase().includes('login'),
-        })
-
+        try {
+          const tgt = describeTarget(ev.target)
+          const href = String((tgt as any).href || '')
+          const x = (ev as any).clientX
+          const y = (ev as any).clientY
+          const atPoint = atPointInfo(x, y)
+          send('click', {
+            href: window.location.href,
+            pathname: window.location.pathname,
+            isTrusted: (ev as any).isTrusted ?? null,
+            target: tgt,
+            atPoint,
+            isLoginishClick: href.includes('/login') || String((tgt as any).text || '').toLowerCase().includes('login'),
+          })
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in click handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.pointerdown_bubble) {
       window.__interactionProbeHandlers.pointerdown_bubble = (ev: PointerEvent) => {
-        const tgt = describeTarget(ev.target)
-        const x = (ev as any).clientX
-        const y = (ev as any).clientY
-        const atPoint = atPointInfo(x, y)
+        try {
+          const tgt = describeTarget(ev.target)
+          const x = (ev as any).clientX
+          const y = (ev as any).clientY
+          const atPoint = atPointInfo(x, y)
+          // Bubble phase handlers - only log sampled events to reduce noise
+          if (shouldLog50('pointerdown_bubble', ev, atPoint)) {
+            send50('pointerdown_bubble', {
+              href: window.location.href,
+              pathname: window.location.pathname,
+              isTrusted: (ev as any).isTrusted ?? null,
+              target: tgt,
+              atPoint,
+            })
+          }
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in pointerdown_bubble handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.pointerup_bubble) {
       window.__interactionProbeHandlers.pointerup_bubble = (ev: PointerEvent) => {
-        const tgt = describeTarget(ev.target)
-        const x = (ev as any).clientX
-        const y = (ev as any).clientY
-        const atPoint = atPointInfo(x, y)
+        try {
+          const tgt = describeTarget(ev.target)
+          const x = (ev as any).clientX
+          const y = (ev as any).clientY
+          const atPoint = atPointInfo(x, y)
+          // Bubble phase handlers - only log sampled events to reduce noise
+          if (shouldLog50('pointerup_bubble', ev, atPoint)) {
+            send50('pointerup_bubble', {
+              href: window.location.href,
+              pathname: window.location.pathname,
+              isTrusted: (ev as any).isTrusted ?? null,
+              target: tgt,
+              atPoint,
+            })
+          }
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in pointerup_bubble handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.click_bubble) {
       window.__interactionProbeHandlers.click_bubble = (ev: MouseEvent) => {
-        const tgt = describeTarget(ev.target)
-        const x = (ev as any).clientX
-        const y = (ev as any).clientY
-        const atPoint = atPointInfo(x, y)
+        try {
+          const tgt = describeTarget(ev.target)
+          const x = (ev as any).clientX
+          const y = (ev as any).clientY
+          const atPoint = atPointInfo(x, y)
+          // Bubble phase handlers - only log sampled events to reduce noise
+          if (shouldLog50('click_bubble', ev, atPoint)) {
+            send50('click_bubble', {
+              href: window.location.href,
+              pathname: window.location.pathname,
+              isTrusted: (ev as any).isTrusted ?? null,
+              target: tgt,
+              atPoint,
+            })
+          }
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in click_bubble handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.keydown) {
       window.__interactionProbeHandlers.keydown = (ev: KeyboardEvent) => {
-        // Track keyboard-driven navigation (Enter/Space on focused links/buttons).
-        if (ev.key !== 'Enter' && ev.key !== ' ') return
-        const tgt = describeTarget(ev.target)
-        send('keydown', {
-          href: window.location.href,
-          pathname: window.location.pathname,
-          isTrusted: (ev as any).isTrusted ?? null,
-          key: ev.key,
-          target: tgt,
-        })
+        try {
+          // Track keyboard-driven navigation (Enter/Space on focused links/buttons).
+          if (ev.key !== 'Enter' && ev.key !== ' ') return
+          const tgt = describeTarget(ev.target)
+          send('keydown', {
+            href: window.location.href,
+            pathname: window.location.pathname,
+            isTrusted: (ev as any).isTrusted ?? null,
+            key: ev.key,
+            target: tgt,
+          })
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in keydown handler:', err)
+        }
       }
     }
     if (!window.__interactionProbeHandlers.submit) {
       window.__interactionProbeHandlers.submit = (ev: SubmitEvent) => {
-        const tgt = describeTarget(ev.target)
-        send('submit', {
-          href: window.location.href,
-          pathname: window.location.pathname,
-          isTrusted: (ev as any).isTrusted ?? null,
-          target: tgt,
-        })
+        try {
+          const tgt = describeTarget(ev.target)
+          send('submit', {
+            href: window.location.href,
+            pathname: window.location.pathname,
+            isTrusted: (ev as any).isTrusted ?? null,
+            target: tgt,
+          })
+        } catch (err) {
+          // Silently handle errors in event handlers to prevent breaking the app
+          console.warn('InteractionProbe: Error in submit handler:', err)
+        }
       }
     }
 
@@ -412,25 +559,23 @@ export default function InteractionProbe() {
           document.removeEventListener('submit', window.__interactionProbeHandlers.submit, true)
         }
 
-        // Restore Event.prototype patches
-        try {
-          const proto: any = (window as any).Event?.prototype
-          if (proto && window.__interactionProbeState?.installed) {
-            if (window.__interactionProbeState.origStopPropagation) {
-              proto.stopPropagation = window.__interactionProbeState.origStopPropagation
-            }
-            if (window.__interactionProbeState.origStopImmediatePropagation) {
-              proto.stopImmediatePropagation = window.__interactionProbeState.origStopImmediatePropagation
-            }
-            window.__interactionProbeState.installed = false
-          }
-        } catch {}
+        // Event.prototype patching removed due to compatibility issues
       }
       try {
         if ((window.__interactionProbeMounts || 0) === 0 && window.__interactionProbeHandlers?.probeTest) {
           document.removeEventListener('agent_probe_test', window.__interactionProbeHandlers.probeTest as any, true)
         }
       } catch {}
+      
+      // Cleanup log queue
+      if (logTimeout) {
+        clearTimeout(logTimeout)
+        logTimeout = null
+      }
+      // Flush any remaining logs
+      if (logQueue.length > 0) {
+        flushLogs()
+      }
     }
   }, [])
 

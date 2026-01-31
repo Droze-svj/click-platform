@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPut } from '../../../../lib/api'
-import Navbar from '../../../../components/Navbar'
+// Navbar removed - provided by dashboard layout
 import LoadingSkeleton from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { useAuth } from '../../../../hooks/useAuth'
@@ -107,7 +107,6 @@ export default function ProfileSettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <LoadingSkeleton type="card" count={3} />
         </div>
@@ -117,7 +116,6 @@ export default function ProfileSettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
       <ToastContainer />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">

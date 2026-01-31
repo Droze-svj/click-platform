@@ -13,8 +13,7 @@ const portalActivitySchema = new mongoose.Schema({
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   type: {
     type: String,
@@ -67,8 +66,7 @@ const portalActivitySchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   }
 });
 

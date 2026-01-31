@@ -11,8 +11,7 @@ const jobMetricsSchema = new mongoose.Schema({
   },
   jobId: {
     type: String,
-    required: true,
-    index: true,
+    required: true
   },
   duration: {
     type: Number, // milliseconds

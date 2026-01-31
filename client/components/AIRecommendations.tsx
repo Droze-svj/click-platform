@@ -44,8 +44,19 @@ export default function AIRecommendations() {
   const { handleError } = useErrorHandler();
 
   const normalizeRecommendations = (raw: any): RecommendationsData => {
+    // Ensure recommendations array and each recommendation has required fields
+    const recommendations = Array.isArray(raw?.recommendations) 
+      ? raw.recommendations.map((rec: any) => ({
+          title: rec?.title || 'Untitled Recommendation',
+          description: rec?.description || '',
+          platform: rec?.platform || 'Unknown',
+          reasoning: rec?.reasoning || '',
+          keyPoints: Array.isArray(rec?.keyPoints) ? rec.keyPoints : [],
+        }))
+      : [];
+    
     return {
-      recommendations: Array.isArray(raw?.recommendations) ? raw.recommendations : [],
+      recommendations,
       preferences: {
         categories: Array.isArray(raw?.preferences?.categories) ? raw.preferences.categories : [],
         platforms: Array.isArray(raw?.preferences?.platforms) ? raw.preferences.platforms : [],
@@ -61,20 +72,47 @@ export default function AIRecommendations() {
 
   const fetchRecommendations = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (type) params.append('type', type);
       if (platform) params.append('platform', platform);
 
       const response = await apiGet<any>(`/ai/recommendations/personalized?${params.toString()}`);
-      if (response?.success) {
-        setRecommendations(normalizeRecommendations(response.data));
+      
+      // Handle different response formats
+      if (response) {
+        // Check if response has success field and data
+        if (response.success && response.data) {
+          setRecommendations(normalizeRecommendations(response.data));
+        } 
+        // Check if response is directly the data object
+        else if (response.recommendations || response.preferences || response.basedOn) {
+          setRecommendations(normalizeRecommendations(response));
+        }
+        // Otherwise, try to normalize whatever we got
+        else {
+          setRecommendations(normalizeRecommendations(response));
+        }
+      } else {
+        // Empty response - set empty recommendations
+        setRecommendations({
+          recommendations: [],
+          preferences: { categories: [], platforms: [], topTopics: [] },
+          basedOn: { contentAnalyzed: 0, topCategories: [], topPlatforms: [] },
+        });
       }
     } catch (err) {
       const apiError = parseApiError(err);
       const errorObj = new Error(apiError.message);
       (errorObj as any).code = apiError.code;
       setError(errorObj);
+      // Set empty recommendations on error to prevent undefined state
+      setRecommendations({
+        recommendations: [],
+        preferences: { categories: [], platforms: [], topTopics: [] },
+        basedOn: { contentAnalyzed: 0, topCategories: [], topPlatforms: [] },
+      });
     } finally {
       setLoading(false);
     }
@@ -147,7 +185,7 @@ export default function AIRecommendations() {
           </div>
         )}
 
-        {recommendations && (
+        {recommendations && Array.isArray(recommendations.recommendations) && recommendations.recommendations.length > 0 && (
           <div className="space-y-4 mt-4">
             {recommendations.recommendations.map((rec, idx) => (
               <div 
@@ -160,21 +198,30 @@ export default function AIRecommendations() {
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold">{rec.title}</h3>
-                  <Badge>{rec.platform}</Badge>
+                  <h3 className="font-semibold">{rec?.title || 'Untitled Recommendation'}</h3>
+                  <Badge>{rec?.platform || 'Unknown'}</Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">{rec.description}</p>
-                <p className="text-sm mb-3">{rec.reasoning}</p>
-                <div className="space-y-1">
-                  <p className="text-xs font-medium">Key Points:</p>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    {rec.keyPoints.map((point, i) => (
-                      <li key={i}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
+                <p className="text-sm text-muted-foreground mb-2">{rec?.description || ''}</p>
+                <p className="text-sm mb-3">{rec?.reasoning || ''}</p>
+                {Array.isArray(rec?.keyPoints) && rec.keyPoints.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">Key Points:</p>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      {rec.keyPoints.map((point, i) => (
+                        <li key={i}>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ))}
+          </div>
+        )}
+        
+        {recommendations && (!Array.isArray(recommendations.recommendations) || recommendations.recommendations.length === 0) && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No recommendations available at this time.</p>
+            <p className="text-sm mt-2">Try refreshing or check back later.</p>
           </div>
         )}
       </CardContent>

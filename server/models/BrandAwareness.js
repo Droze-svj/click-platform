@@ -12,13 +12,11 @@ const brandAwarenessSchema = new mongoose.Schema({
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   platform: {
     type: String,

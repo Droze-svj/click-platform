@@ -8,8 +8,92 @@ const { sendSuccess, sendError } = require('../utils/response');
 const { analyzeContentConfidence, getContentConfidence } = require('../services/aiConfidenceService');
 const { createOrUpdateTemplate, getTemplates, generateContentWithTemplate } = require('../services/aiTemplateService');
 const { generateVariants, improveSection, rewriteForTone, generateHookVariations } = require('../services/assistedEditingService');
+const aiAgentWritingService = require('../services/aiAgentWritingService');
 const AITemplate = require('../models/AITemplate');
+const Script = require('../models/Script');
 const router = express.Router();
+
+/**
+ * POST /api/ai/generate-script
+ * Generate role-based master script
+ */
+router.post('/generate-script', auth, asyncHandler(async (req, res) => {
+  const { topic, tone, role } = req.body;
+
+  if (!topic) {
+    return sendError(res, 'Topic is required', 400);
+  }
+
+  const result = await aiAgentWritingService.generateMasterScript(topic, tone, role);
+  sendSuccess(res, 'Master script generated', 200, result);
+}));
+
+/**
+ * POST /api/ai/save-master-script
+ * Save a generated master script (hook/body/cta) to user's scripts library
+ */
+router.post('/save-master-script', auth, asyncHandler(async (req, res) => {
+  const { topic, tone, role, script } = req.body;
+  const userId = req.user?._id || req.user?.id;
+  const isDevUser = userId && String(userId).startsWith('dev-');
+
+  if (!topic || !script || typeof script !== 'object') {
+    return sendError(res, 'Topic and script (hook/body/cta) are required', 400);
+  }
+
+  const fullText = [script.hook, script.body, script.cta].filter(Boolean).join('\n\n---\n\n');
+  const wordCount = fullText.split(/\s+/).filter(Boolean).length;
+  const title = topic.slice(0, 80) + (topic.length > 80 ? '…' : '');
+  const payload = {
+    title,
+    type: 'master',
+    topic,
+    tone: tone || 'professional',
+    wordCount,
+    script: fullText,
+    structure: {
+      introduction: script.hook || '',
+      mainPoints: script.body ? [{ title: 'Value delivery', content: script.body, duration: null }] : [],
+      conclusion: '',
+      callToAction: script.cta || ''
+    },
+    metadata: {
+      keywords: Array.isArray(script.psychological_triggers) ? script.psychological_triggers : [],
+      hashtags: Array.isArray(script.hooks_used) ? script.hooks_used : [],
+      timestamps: []
+    },
+    status: 'completed'
+  };
+
+  if (isDevUser) {
+    const mock = { _id: `dev-master-${Date.now()}`, ...payload, userId };
+    return sendSuccess(res, 'Script saved locally. Sign in to sync to your library.', 201, mock);
+  }
+
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return sendError(res, 'Invalid user', 400);
+  }
+
+  const doc = new Script({ userId, ...payload });
+  await doc.save();
+  sendSuccess(res, 'Script saved', 201, doc);
+}));
+
+/**
+ * POST /api/ai/extract-quotes
+ * Extract viral quotes from transcript
+ */
+router.post('/extract-quotes', auth, asyncHandler(async (req, res) => {
+  const { transcript } = req.body;
+
+  if (!transcript) {
+    return sendError(res, 'Transcript is required', 400);
+  }
+
+  const result = await aiAgentWritingService.extractViralQuotes(transcript);
+  sendSuccess(res, 'Viral quotes extracted', 200, result);
+}));
 
 /**
  * POST /api/ai/confidence/analyze

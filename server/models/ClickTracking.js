@@ -7,8 +7,7 @@ const clickTrackingSchema = new mongoose.Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ScheduledPost',
-    required: true,
-    index: true
+    required: true
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -18,8 +17,7 @@ const clickTrackingSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   platform: {
     type: String,

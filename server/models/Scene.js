@@ -7,8 +7,8 @@ const sceneSchema = new mongoose.Schema({
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Content',
-    required: true,
-    index: true
+    required: true
+    // Indexed in compound indexes below
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,

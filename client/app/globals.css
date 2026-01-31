@@ -566,6 +566,31 @@ select:focus {
   padding: 0 1rem;
 }
 
+@media (min-width: 640px) {
+  .container-modern {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-modern {
+    padding: 0 2rem;
+  }
+}
+
+.navbar-inner {
+  width: 100%;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .section-padding {
   padding: 4rem 0;
 }
@@ -1856,3 +1881,14 @@ html {
   background: #555;
 }
 
+
+/* Video Editor Layout Styles */
+.video-editor-page {
+  display: grid;
+}
+
+.editor-layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}

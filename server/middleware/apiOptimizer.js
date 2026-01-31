@@ -187,8 +187,23 @@ const rateLimitEnhancementMiddleware = (req, res, next) => {
 // CORS enhancement for API optimization
 const corsEnhancementMiddleware = (req, res, next) => {
   // Enhanced CORS for better API performance
+  // Use same logic as main CORS configuration
+  let corsOrigin = process.env.CORS_ORIGIN;
+
+  if (!corsOrigin) {
+    if (process.env.NODE_ENV === 'production') {
+      corsOrigin = 'https://click-app.com';
+    } else {
+      // Allow localhost origins in development
+      corsOrigin = req.headers.origin && (
+        req.headers.origin.includes('localhost') ||
+        req.headers.origin.includes('127.0.0.1')
+      ) ? req.headers.origin : 'http://localhost:3000';
+    }
+  }
+
   res.set({
-    'Access-Control-Allow-Origin': process.env.CORS_ORIGIN || 'https://click-app.com',
+    'Access-Control-Allow-Origin': corsOrigin,
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-Request-ID',

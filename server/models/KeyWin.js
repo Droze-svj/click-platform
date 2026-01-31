@@ -13,19 +13,16 @@ const keyWinSchema = new mongoose.Schema({
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   postId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ScheduledPost',
-    index: true
+    ref: 'ScheduledPost'
   },
   // Win Details
   win: {

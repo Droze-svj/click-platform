@@ -32,12 +32,16 @@ export default function PerformanceMonitor() {
 
   useEffect(() => {
     const sendDebugLog = (message: string, data: any) => {
-      // #region agent log
-      fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+      // Only log performance issues, reduce spam
+      if (message.includes('slow') || message.includes('memory') || message.includes('error')) {
+        console.log('PerformanceMonitor:', message, data)
+      }
+      // Use local debug API instead of external service
+      fetch('/api/debug/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          location: 'PerformanceMonitor.tsx',
+          component: 'PerformanceMonitor',
           message,
           data: {
             ...data,
@@ -46,8 +50,7 @@ export default function PerformanceMonitor() {
             runId: 'run-perf-monitor'
           }
         }),
-      }).catch(() => {})
-      // #endregion
+      }).catch(() => {}) // Ignore errors in debug logging
     }
 
     // Enhanced performance monitoring

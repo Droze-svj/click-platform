@@ -3,7 +3,7 @@
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/useAuth';
-import Navbar from '../../../components/Navbar';
+// Navbar removed - provided by dashboard layout
 import AIMultiModelSelector from '../../../components/AIMultiModelSelector';
 import AIRecommendations from '../../../components/AIRecommendations';
 import PredictiveAnalytics from '../../../components/PredictiveAnalytics';
@@ -32,7 +32,6 @@ export default function AIFeaturesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">

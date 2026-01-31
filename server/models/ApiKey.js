@@ -8,8 +8,7 @@ const apiKeySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -28,8 +27,7 @@ const apiKeySchema = new mongoose.Schema({
   },
   keyHash: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   scopes: [{
     type: String,
@@ -61,8 +59,7 @@ const apiKeySchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true,
-    index: true
+    default: true
   },
   metadata: {
     type: mongoose.Schema.Types.Mixed

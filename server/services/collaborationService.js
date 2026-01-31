@@ -60,13 +60,35 @@ function removePresence(userId, socketId) {
 }
 
 /**
- * Update user cursor position
+ * Update user cursor position with enhanced tracking
  */
 function updateCursor(userId, cursor) {
   try {
     const userPresence = activeUsers.get(userId);
     if (userPresence) {
-      userPresence.cursor = cursor;
+      // Enhanced cursor tracking with history
+      const cursorData = {
+        x: cursor.x || cursor.position?.x || 0,
+        y: cursor.y || cursor.position?.y || 0,
+        visible: cursor.visible !== false,
+        timestamp: new Date(),
+        selection: cursor.selection || null,
+        tool: cursor.tool || 'default',
+        // Store cursor history for smooth animations
+        history: userPresence.cursor?.history || [],
+      };
+
+      // Keep last 5 cursor positions for smooth interpolation
+      cursorData.history.push({
+        x: cursorData.x,
+        y: cursorData.y,
+        timestamp: cursorData.timestamp,
+      });
+      if (cursorData.history.length > 5) {
+        cursorData.history.shift();
+      }
+
+      userPresence.cursor = cursorData;
       userPresence.lastSeen = new Date();
       return userPresence;
     }
@@ -74,6 +96,23 @@ function updateCursor(userId, cursor) {
   } catch (error) {
     logger.error('Error updating cursor', { error: error.message, userId });
     return null;
+  }
+}
+
+/**
+ * Get cursor positions for all users in a room
+ */
+function getRoomCursors(room) {
+  try {
+    const users = getRoomUsers(room);
+    return users.map((user) => ({
+      userId: user.userId,
+      cursor: user.cursor,
+      lastSeen: user.lastSeen,
+    }));
+  } catch (error) {
+    logger.error('Error getting room cursors', { error: error.message, room });
+    return [];
   }
 }
 
@@ -211,6 +250,23 @@ function cleanupStalePresence() {
 // Clean up stale presence every minute
 setInterval(cleanupStalePresence, 60 * 1000);
 
+/**
+ * Get cursor positions for all users in a room
+ */
+function getRoomCursors(room) {
+  try {
+    const users = getRoomUsers(room);
+    return users.map((user) => ({
+      userId: user.userId,
+      cursor: user.cursor,
+      lastSeen: user.lastSeen,
+    }));
+  } catch (error) {
+    logger.error('Error getting room cursors', { error: error.message, room });
+    return [];
+  }
+}
+
 module.exports = {
   trackPresence,
   removePresence,
@@ -220,7 +276,8 @@ module.exports = {
   isUserEditing,
   getEditingUsers,
   broadcastContentChange,
-  broadcastTyping
+  broadcastTyping,
+  getRoomCursors,
 };
 
 

@@ -7,14 +7,14 @@ const healthAlertSchema = new mongoose.Schema({
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
+    // Indexed in compound index below
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
+    // Indexed in compound index below
   },
   // Alert Details
   alert: {
@@ -68,8 +68,8 @@ const healthAlertSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
+    // Indexed in compound index below
   },
   acknowledgedAt: Date,
   resolvedAt: Date

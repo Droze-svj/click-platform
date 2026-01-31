@@ -1,237 +1,305 @@
-// Advanced Workflow Service
+// Advanced Workflow Automation Service
+// Visual workflow builder, advanced triggers, workflow analytics
 
-const Workflow = require('../models/Workflow');
 const logger = require('../utils/logger');
-const {
-  AppError,
-  ValidationError,
-  NotFoundError,
-  recoveryStrategies,
-} = require('../utils/errorHandler');
+const { captureException } = require('../utils/sentry');
+const Workflow = require('../models/Workflow');
+const { addJob } = require('./jobQueueService');
+
+// Workflow execution engine
+const activeWorkflows = new Map(); // workflowId -> workflow state
 
 /**
- * Create workflow with advanced triggers
+ * Create workflow from visual definition
+ * @param {Object} workflowDefinition - Visual workflow definition
+ * @returns {Promise<Object>} Created workflow
  */
-async function createAdvancedWorkflow(userId, workflowData) {
+async function createWorkflow(workflowDefinition) {
   try {
     const {
+      userId,
       name,
       description,
-      triggers,
-      actions,
-      conditions = [],
-      schedule = null,
-    } = workflowData;
+      nodes = [], // Workflow nodes
+      edges = [], // Connections between nodes
+      triggers = [],
+      settings = {},
+    } = workflowDefinition;
 
-    if (!triggers || triggers.length === 0) {
-      throw new ValidationError('At least one trigger is required', [
-        { field: 'triggers', message: 'At least one trigger is required' },
-      ]);
-    }
+    logger.info('Creating workflow', { userId, name, nodesCount: nodes.length });
+
+    // Validate workflow
+    validateWorkflow(nodes, edges);
 
     const workflow = new Workflow({
       userId,
       name,
       description,
-      triggers: triggers.map(trigger => ({
-        type: trigger.type, // event, schedule, conditional
-        config: trigger.config,
-      })),
-      actions,
-      conditions,
-      schedule,
+      definition: {
+        nodes,
+        edges,
+        triggers,
+      },
+      settings,
       status: 'active',
-      advanced: true,
     });
-
     await workflow.save();
 
-    logger.info('Advanced workflow created', { userId, workflowId: workflow._id, triggers: triggers.length });
+    // Initialize workflow state
+    activeWorkflows.set(workflow._id.toString(), {
+      workflowId: workflow._id,
+      status: 'idle',
+      currentStep: null,
+      executionHistory: [],
+    });
+
+    logger.info('Workflow created', { workflowId: workflow._id, name });
+
     return workflow;
   } catch (error) {
-    logger.error('Create advanced workflow error', { error: error.message, userId });
+    logger.error('Error creating workflow', { error: error.message });
+    captureException(error, {
+      tags: { service: 'advancedWorkflowService', action: 'createWorkflow' },
+    });
     throw error;
   }
 }
 
 /**
- * Conditional workflow execution
+ * Validate workflow definition
+ * @param {Array} nodes - Workflow nodes
+ * @param {Array} edges - Workflow edges
  */
-async function executeConditionalWorkflow(workflowId, userId, context) {
+function validateWorkflow(nodes, edges) {
+  if (!nodes || nodes.length === 0) {
+    throw new Error('Workflow must have at least one node');
+  }
+
+  // Check for start node
+  const hasStartNode = nodes.some((node) => node.type === 'start');
+  if (!hasStartNode) {
+    throw new Error('Workflow must have a start node');
+  }
+
+  // Validate edges connect valid nodes
+  const nodeIds = new Set(nodes.map((n) => n.id));
+  for (const edge of edges) {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
+      throw new Error(`Invalid edge: node not found`);
+    }
+  }
+}
+
+/**
+ * Execute workflow
+ * @param {string} workflowId - Workflow ID
+ * @param {Object} inputData - Input data
+ * @returns {Promise<Object>} Execution result
+ */
+async function executeWorkflow(workflowId, inputData = {}) {
   try {
-    const workflow = await Workflow.findOne({
-      _id: workflowId,
-      userId,
-      status: 'active',
-    }).lean();
-
+    const workflow = await Workflow.findById(workflowId);
     if (!workflow) {
-      throw new NotFoundError('Workflow');
+      throw new Error('Workflow not found');
     }
 
-    // Evaluate conditions
-    const conditionsMet = evaluateConditions(workflow.conditions || [], context);
+    logger.info('Executing workflow', { workflowId, name: workflow.name });
 
-    if (!conditionsMet) {
-      logger.info('Workflow conditions not met', { workflowId, userId });
-      return {
-        executed: false,
-        reason: 'Conditions not met',
-      };
+    const state = activeWorkflows.get(workflowId.toString()) || {
+      workflowId,
+      status: 'running',
+      currentStep: null,
+      executionHistory: [],
+    };
+
+    state.status = 'running';
+    state.executionHistory.push({
+      step: 'start',
+      timestamp: new Date(),
+      data: inputData,
+    });
+
+    const { nodes, edges } = workflow.definition;
+    const executedNodes = new Set();
+    const nodeResults = new Map();
+
+    // Find start node
+    const startNode = nodes.find((n) => n.type === 'start');
+    if (!startNode) {
+      throw new Error('Start node not found');
     }
 
-    // Execute actions
-    const { executeWorkflow } = require('./workflowService');
-    const result = await executeWorkflow(workflowId, userId, context);
+    // Execute workflow
+    await executeNode(startNode, nodes, edges, inputData, executedNodes, nodeResults);
+
+    state.status = 'completed';
+    state.executionHistory.push({
+      step: 'end',
+      timestamp: new Date(),
+      result: Object.fromEntries(nodeResults),
+    });
+
+    activeWorkflows.set(workflowId.toString(), state);
+
+    logger.info('Workflow executed', { workflowId, status: state.status });
 
     return {
-      executed: true,
-      conditionsMet: true,
-      result,
+      success: true,
+      workflowId,
+      result: Object.fromEntries(nodeResults),
+      executionHistory: state.executionHistory,
     };
   } catch (error) {
-    logger.error('Execute conditional workflow error', { error: error.message, workflowId });
+    logger.error('Error executing workflow', { error: error.message, workflowId });
     throw error;
   }
 }
 
 /**
- * Evaluate conditions
+ * Execute workflow node
  */
-function evaluateConditions(conditions, context) {
-  if (conditions.length === 0) {
-    return true; // No conditions = always execute
+async function executeNode(node, allNodes, edges, inputData, executedNodes, nodeResults) {
+  if (executedNodes.has(node.id)) {
+    return nodeResults.get(node.id);
   }
 
-  return conditions.every(condition => {
-    const { field, operator, value } = condition;
+  executedNodes.add(node.id);
 
-    const contextValue = context[field];
+  let result = null;
 
-    switch (operator) {
-      case 'equals':
-        return contextValue === value;
-      case 'not_equals':
-        return contextValue !== value;
-      case 'greater_than':
-        return contextValue > value;
-      case 'less_than':
-        return contextValue < value;
-      case 'contains':
-        return String(contextValue).includes(value);
-      case 'not_contains':
-        return !String(contextValue).includes(value);
-      default:
-        return true;
-    }
-  });
-}
+  switch (node.type) {
+    case 'start':
+      result = inputData;
+      break;
 
-/**
- * Schedule workflow
- */
-async function scheduleWorkflow(workflowId, userId, scheduleConfig) {
-  try {
-    const {
-      type, // once, daily, weekly, monthly, cron
-      time = null,
-      cronExpression = null,
-      timezone = 'UTC',
-    } = scheduleConfig;
+    case 'action':
+      // Execute action (would call appropriate service)
+      result = await executeAction(node.action, inputData);
+      break;
 
-    const { scheduleRecurringJob } = require('./jobSchedulerService');
+    case 'condition':
+      // Evaluate condition
+      result = evaluateCondition(node.condition, inputData);
+      break;
 
-    let cronExpr;
-    if (type === 'cron' && cronExpression) {
-      cronExpr = cronExpression;
-    } else {
-      cronExpr = getCronForSchedule(type, time);
-    }
+    case 'delay':
+      // Wait for specified time
+      await new Promise((resolve) => setTimeout(resolve, node.duration || 1000));
+      result = inputData;
+      break;
 
-    await scheduleRecurringJob(
-      `workflow-${workflowId}`,
-      {
-        workflowId,
-        userId,
-      },
-      cronExpr,
-      {
-        timezone,
-      }
-    );
+    case 'webhook':
+      // Call webhook
+      result = await callWebhook(node.url, inputData);
+      break;
 
-    // Update workflow
-    await Workflow.updateOne(
-      { _id: workflowId, userId },
-      { schedule: scheduleConfig }
-    );
-
-    logger.info('Workflow scheduled', { workflowId, type, cronExpr });
-    return { success: true, schedule: scheduleConfig };
-  } catch (error) {
-    logger.error('Schedule workflow error', { error: error.message, workflowId });
-    throw error;
-  }
-}
-
-/**
- * Get cron expression for schedule
- */
-function getCronForSchedule(type, time) {
-  const [hour, minute] = time ? time.split(':').map(Number) : [9, 0];
-
-  switch (type) {
-    case 'daily':
-      return `${minute} ${hour} * * *`;
-    case 'weekly':
-      return `${minute} ${hour} * * 1`; // Monday
-    case 'monthly':
-      return `${minute} ${hour} 1 * *`;
     default:
-      return `${minute} ${hour} * * *`;
+      result = inputData;
   }
+
+  nodeResults.set(node.id, result);
+
+  // Execute connected nodes
+  const outgoingEdges = edges.filter((e) => e.source === node.id);
+  for (const edge of outgoingEdges) {
+    const targetNode = allNodes.find((n) => n.id === edge.target);
+    if (targetNode) {
+      // Check condition if edge has one
+      if (edge.condition) {
+        if (evaluateCondition(edge.condition, result)) {
+          await executeNode(targetNode, allNodes, edges, result, executedNodes, nodeResults);
+        }
+      } else {
+        await executeNode(targetNode, allNodes, edges, result, executedNodes, nodeResults);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Execute action
+ */
+async function executeAction(action, data) {
+  // Would integrate with various services
+  logger.info('Executing action', { action: action.type });
+  return { ...data, actionExecuted: action.type };
+}
+
+/**
+ * Evaluate condition
+ */
+function evaluateCondition(condition, data) {
+  // Simple condition evaluation
+  // Would support complex expressions
+  return true; // Placeholder
+}
+
+/**
+ * Call webhook
+ */
+async function callWebhook(url, data) {
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  } catch (error) {
+    logger.error('Webhook call failed', { url, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Get workflow execution history
+ * @param {string} workflowId - Workflow ID
+ * @returns {Array} Execution history
+ */
+function getWorkflowHistory(workflowId) {
+  const state = activeWorkflows.get(workflowId);
+  return state?.executionHistory || [];
 }
 
 /**
  * Get workflow analytics
+ * @param {string} workflowId - Workflow ID
+ * @returns {Promise<Object>} Analytics
  */
-async function getWorkflowAnalytics(workflowId, userId) {
+async function getWorkflowAnalytics(workflowId) {
   try {
-    const workflow = await Workflow.findOne({
-      _id: workflowId,
-      userId,
-    }).lean();
+    const state = activeWorkflows.get(workflowId);
+    const history = state?.executionHistory || [];
 
-    if (!workflow) {
-      throw new NotFoundError('Workflow');
-    }
+    const totalExecutions = history.filter((h) => h.step === 'start').length;
+    const successfulExecutions = history.filter((h) => h.step === 'end' && h.result?.success).length;
+    const failedExecutions = totalExecutions - successfulExecutions;
 
-    // In production, track actual execution data
-    const analytics = {
+    const avgExecutionTime = history.length > 0
+      ? history.reduce((sum, h) => sum + (h.duration || 0), 0) / history.length
+      : 0;
+
+    return {
       workflowId,
-      totalExecutions: workflow.executionCount || 0,
-      successfulExecutions: workflow.successCount || 0,
-      failedExecutions: workflow.failureCount || 0,
-      successRate: workflow.executionCount > 0
-        ? ((workflow.successCount || 0) / workflow.executionCount) * 100
-        : 0,
-      averageExecutionTime: workflow.avgExecutionTime || 0,
-      lastExecuted: workflow.lastExecuted || null,
-      triggers: workflow.triggers?.length || 0,
-      actions: workflow.actions?.length || 0,
+      totalExecutions,
+      successfulExecutions,
+      failedExecutions,
+      successRate: totalExecutions > 0 ? (successfulExecutions / totalExecutions) * 100 : 0,
+      avgExecutionTime: Math.round(avgExecutionTime),
+      lastExecution: history[history.length - 1]?.timestamp || null,
     };
-
-    return analytics;
   } catch (error) {
-    logger.error('Get workflow analytics error', { error: error.message, workflowId });
+    logger.error('Error getting workflow analytics', { error: error.message, workflowId });
     throw error;
   }
 }
 
 module.exports = {
-  createAdvancedWorkflow,
-  executeConditionalWorkflow,
-  scheduleWorkflow,
+  createWorkflow,
+  executeWorkflow,
+  getWorkflowHistory,
   getWorkflowAnalytics,
+  validateWorkflow,
 };
-

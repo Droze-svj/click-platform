@@ -32,6 +32,13 @@ export default function NotificationBell() {
 
   const loadPendingApprovals = async () => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [NotificationBell] Skipping pending approvals API call in development mode')
+        setPendingApprovals(0)
+        return
+      }
+
       const response = await apiGet<any>('/approvals/pending-count')
       if (response?.success) {
         setPendingApprovals(response.data?.count || 0)
@@ -57,6 +64,15 @@ export default function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [NotificationBell] Skipping notifications API call in development mode')
+        setNotifications([])
+        setUnreadCount(0)
+        setLoading(false)
+        return
+      }
+
       const response = await apiGet<any>('/notifications?limit=10')
       if (response?.success) {
         setNotifications(response.data?.notifications || [])
@@ -71,6 +87,16 @@ export default function NotificationBell() {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [NotificationBell] Skipping mark as read API call in development mode')
+        setNotifications(prev =>
+          prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
+        )
+        setUnreadCount(prev => Math.max(0, prev - 1))
+        return
+      }
+
       await apiPut(`/notifications/${notificationId}/read`, {})
       setNotifications(prev =>
         prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
@@ -83,6 +109,14 @@ export default function NotificationBell() {
 
   const markAllAsRead = async () => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [NotificationBell] Skipping mark all as read API call in development mode')
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+        setUnreadCount(0)
+        return
+      }
+
       await apiPut('/notifications/read-all', {})
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
       setUnreadCount(0)

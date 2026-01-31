@@ -127,9 +127,12 @@ export default function PWAManager({ children }: PWAManagerProps) {
 
       // Show install prompt after a delay
       setTimeout(() => {
-        if (!pwaState.isInstalled) {
-          showInstallPrompt()
-        }
+        setPWAState(currentState => {
+          if (!currentState.isInstalled) {
+            showInstallPrompt()
+          }
+          return currentState
+        })
       }, 30000) // 30 seconds
     })
 
@@ -482,6 +485,10 @@ export function usePWA() {
     updateCacheSize: () => (window as any).pwaManager?.updateCacheSize?.()
   }
 }
+
+
+
+
 
 
 

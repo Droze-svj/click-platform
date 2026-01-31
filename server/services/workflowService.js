@@ -9,24 +9,39 @@ const logger = require('../utils/logger');
  */
 async function trackAction(userId, action, metadata = {}) {
   try {
-    const userAction = new UserAction({
-      userId,
-      action,
-      entityType: metadata.entityType,
-      entityId: metadata.entityId,
-      metadata: {
-        ...metadata,
-        entityType: undefined,
-        entityId: undefined
-      },
-      context: {
-        previousAction: metadata.previousAction,
-        sessionId: metadata.sessionId,
-        page: metadata.page
-      }
-    });
+    // Skip tracking for dev users to avoid MongoDB errors (works even when NODE_ENV is production on localhost)
+    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+      return null;
+    }
 
-    await userAction.save();
+    // Wrap in try-catch to handle CastErrors gracefully
+    try {
+      const userAction = new UserAction({
+        userId,
+        action,
+        entityType: metadata.entityType,
+        entityId: metadata.entityId,
+        metadata: {
+          ...metadata,
+          entityType: undefined,
+          entityId: undefined
+        },
+        context: {
+          previousAction: metadata.previousAction,
+          sessionId: metadata.sessionId,
+          page: metadata.page
+        }
+      });
+
+      await userAction.save();
+    } catch (dbError) {
+      // If it's a CastError for dev users, just skip tracking
+      if (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId')) {
+        logger.warn('CastError in trackAction, skipping for dev user', { error: dbError.message, userId, action });
+        return null;
+      }
+      throw dbError;
+    }
 
     // Analyze patterns and suggest workflows
     await analyzePatterns(userId);
@@ -115,12 +130,28 @@ async function analyzePatterns(userId, days = 30) {
  */
 async function getSuggestedNextSteps(userId, currentAction = null) {
   try {
-    // Get recent actions
-    const recentActions = await UserAction.find({
-      userId
-    })
-      .sort({ timestamp: -1 })
-      .limit(5);
+    // Handle dev users - check for dev- prefix (works even when NODE_ENV is production on localhost)
+    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+      // Return empty array for dev users to avoid MongoDB CastErrors
+      return [];
+    }
+
+    // Get recent actions - wrap in try-catch to handle CastErrors
+    let recentActions = [];
+    try {
+      recentActions = await UserAction.find({
+        userId
+      })
+        .sort({ timestamp: -1 })
+        .limit(5);
+    } catch (dbError) {
+      // If it's a CastError, return empty array
+      if (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId')) {
+        logger.warn('CastError in getSuggestedNextSteps, returning empty array', { error: dbError.message, userId });
+        return [];
+      }
+      throw dbError;
+    }
 
     if (recentActions.length === 0) {
       return getDefaultSuggestions();
@@ -196,6 +227,17 @@ function getDefaultSuggestions() {
  */
 async function getUserPreferences(userId) {
   try {
+    // In development mode, return mock preferences for dev users
+    if (process.env.NODE_ENV !== 'production' && userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-'))) {
+      return {
+        commonActions: {},
+        commonConfigs: {},
+        preferredPlatforms: [],
+        preferredEffects: [],
+        preferredMusicGenres: []
+      };
+    }
+
     const actions = await UserAction.find({ userId })
       .sort({ timestamp: -1 })
       .limit(100);

@@ -22,7 +22,8 @@ class APMMonitor {
     this.thresholds = {
       responseTime: parseInt(process.env.PERFORMANCE_RESPONSE_TIME_THRESHOLD) || 1000, // ms
       errorRate: parseFloat(process.env.PERFORMANCE_ERROR_RATE_THRESHOLD) || 0.05, // 5%
-      memoryUsage: parseFloat(process.env.PERFORMANCE_MEMORY_THRESHOLD) || 0.8, // 80% of available
+      memoryUsage: parseFloat(process.env.PERFORMANCE_MEMORY_THRESHOLD) || 0.90, // 90% of heap (was 80%, too aggressive)
+      memoryCritical: parseFloat(process.env.PERFORMANCE_MEMORY_CRITICAL_THRESHOLD) || 0.98, // 98% critical threshold
       cpuUsage: parseFloat(process.env.PERFORMANCE_CPU_THRESHOLD) || 0.7 // 70%
     };
 
@@ -36,10 +37,17 @@ class APMMonitor {
    * Initialize APM monitoring
    */
   initializeMonitoring() {
-    // Memory monitoring
-    this.memoryMonitor = setInterval(() => {
-      this.collectMemoryMetrics();
-    }, 30000); // Every 30 seconds
+    // Memory monitoring - check less frequently to reduce overhead
+    // Skip in test environment or if explicitly disabled
+    const memoryCheckInterval = process.env.APM_MEMORY_CHECK_INTERVAL 
+      ? parseInt(process.env.APM_MEMORY_CHECK_INTERVAL) 
+      : (process.env.NODE_ENV === 'production' ? 60000 : 120000); // 1 min in prod, 2 min in dev
+    
+    if (process.env.NODE_ENV !== 'test' && process.env.DISABLE_APM_MEMORY_MONITORING !== 'true') {
+      this.memoryMonitor = setInterval(() => {
+        this.collectMemoryMetrics();
+      }, memoryCheckInterval);
+    }
 
     // CPU monitoring
     this.cpuMonitor = setInterval(() => {
@@ -177,6 +185,12 @@ class APMMonitor {
     const systemMemory = os.totalmem();
     const freeMemory = os.freemem();
 
+    // Calculate heap memory utilization (what Node.js actually uses)
+    // This is the correct metric for Node.js applications, not system memory
+    const heapUtilization = memUsage.heapTotal > 0 
+      ? memUsage.heapUsed / memUsage.heapTotal 
+      : 0;
+
     const metric = {
       timestamp: Date.now(),
       heapUsed: memUsage.heapUsed,
@@ -186,7 +200,8 @@ class APMMonitor {
       systemTotal: systemMemory,
       systemFree: freeMemory,
       systemUsed: systemMemory - freeMemory,
-      utilization: (systemMemory - freeMemory) / systemMemory
+      systemUtilization: (systemMemory - freeMemory) / systemMemory,
+      utilization: heapUtilization // Use heap utilization for alerts
     };
 
     this.metrics.memoryUsage.push(metric);
@@ -196,12 +211,62 @@ class APMMonitor {
       this.metrics.memoryUsage = this.metrics.memoryUsage.slice(-100);
     }
 
-    // Alert on high memory usage
-    if (metric.utilization > this.thresholds.memoryUsage) {
+    // Check heap size limit to see if we're close to maximum
+    let heapSizeLimit = null;
+    let limitUtilization = null;
+    try {
+      const heapStats = v8.getHeapStatistics();
+      heapSizeLimit = heapStats.heap_size_limit;
+      limitUtilization = metric.heapUsed / heapSizeLimit;
+      
+      // Critical alert if we're close to the actual heap size limit (98% of limit)
+      if (limitUtilization > this.thresholds.memoryCritical) {
+        this.createAlert('critical_memory_usage', {
+          utilization: metric.utilization,
+          limitUtilization: limitUtilization,
+          threshold: this.thresholds.memoryCritical,
+          heapUsed: metric.heapUsed,
+          heapTotal: metric.heapTotal,
+          heapSizeLimit: heapSizeLimit,
+          heapUsedMB: Math.round(metric.heapUsed / 1024 / 1024),
+          heapTotalMB: Math.round(metric.heapTotal / 1024 / 1024),
+          heapLimitMB: Math.round(heapSizeLimit / 1024 / 1024)
+        });
+        
+        // Try to trigger garbage collection if available (Node.js with --expose-gc flag)
+        // Note: Use --expose-gc flag only if needed; V8's automatic GC is generally better
+        if (global.gc && typeof global.gc === 'function') {
+          try {
+            global.gc();
+            console.log('⚠️ Triggered manual GC due to critical memory usage');
+          } catch (gcError) {
+            console.warn('⚠️ Failed to trigger GC:', gcError.message);
+          }
+        }
+      } else if (limitUtilization > 0.99) {
+        // Warn if we're extremely close to limit (99%+) even if not at critical threshold
+        console.warn('⚠️ Critical: Memory usage at 99%+ of heap limit. Consider enabling --expose-gc for manual GC if needed.');
+      }
+    } catch (error) {
+      // Heap statistics not available, continue with basic check
+    }
+    
+    // Alert on high heap memory usage relative to allocated heap (only if significant)
+    // Skip alerts in development or if heap is very small
+    // Use 90% threshold for warnings (95%+ is normal for Node.js under load, but worth monitoring)
+    // Only alert if we haven't already triggered a critical alert
+    if (memUsage.heapTotal > 50 * 1024 * 1024 && // Only alert if heap > 50MB
+        metric.utilization > this.thresholds.memoryUsage &&
+        (!limitUtilization || limitUtilization < this.thresholds.memoryCritical)) {
       this.createAlert('high_memory_usage', {
         utilization: metric.utilization,
         threshold: this.thresholds.memoryUsage,
-        heapUsed: metric.heapUsed
+        heapUsed: metric.heapUsed,
+        heapTotal: metric.heapTotal,
+        heapUsedMB: Math.round(metric.heapUsed / 1024 / 1024),
+        heapTotalMB: Math.round(metric.heapTotal / 1024 / 1024),
+        heapSizeLimitMB: heapSizeLimit ? Math.round(heapSizeLimit / 1024 / 1024) : null,
+        limitUtilization: limitUtilization || null
       });
     }
   }
@@ -358,7 +423,14 @@ class APMMonitor {
         return data.errorRate > 0.1 ? 'critical' : 'high';
       case 'high_response_time':
         return data.responseTime > 5000 ? 'critical' : 'high';
+      case 'critical_memory_usage':
+        return 'critical';
       case 'high_memory_usage':
+        // Check if we're very close to the limit
+        if (data.limitUtilization && data.limitUtilization > 0.95) {
+          return 'critical';
+        }
+        return 'high';
       case 'high_cpu_usage':
         return 'high';
       case 'slow_database_query':

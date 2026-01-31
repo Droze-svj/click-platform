@@ -13,21 +13,18 @@ const supportTicketSchema = new mongoose.Schema({
   ticketNumber: {
     type: String,
     unique: true,
-    required: true,
-    index: true
+    required: true
   },
   // Ticket details
   category: {
     type: String,
     enum: ['billing', 'technical', 'feature_request', 'account', 'other'],
-    required: true,
-    index: true
+    required: true
   },
   priority: {
     type: String,
     enum: ['low', 'medium', 'high', 'urgent'],
-    default: 'medium',
-    index: true
+    default: 'medium'
   },
   subject: {
     type: String,
@@ -41,14 +38,12 @@ const supportTicketSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed'],
-    default: 'open',
-    index: true
+    default: 'open'
   },
   // Billing-specific
   billingRelated: {
     type: Boolean,
-    default: false,
-    index: true
+    default: false
   },
   subscriptionId: String,
   invoiceId: String,
@@ -90,8 +85,7 @@ const supportTicketSchema = new mongoose.Schema({
   tags: [String],
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   updatedAt: {
     type: Date,
@@ -102,7 +96,7 @@ const supportTicketSchema = new mongoose.Schema({
 
 supportTicketSchema.index({ category: 1, status: 1, billingRelated: 1 });
 supportTicketSchema.index({ priority: 1, createdAt: -1 });
-supportTicketSchema.index({ ticketNumber: 1 });
+// ticketNumber already has unique: true which creates an index
 
 supportTicketSchema.pre('save', function(next) {
   this.updatedAt = new Date();

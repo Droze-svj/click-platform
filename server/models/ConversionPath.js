@@ -18,8 +18,7 @@ const conversionPathSchema = new mongoose.Schema({
   conversionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Conversion',
-    required: true,
-    index: true
+    required: true
   },
   // Path Details
   path: {

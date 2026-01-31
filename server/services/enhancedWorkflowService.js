@@ -338,6 +338,12 @@ function evaluateCustomCondition(condition, context) {
  */
 async function getWorkflowSuggestions(userId) {
   try {
+    // In development mode, return empty array for dev users
+    if (process.env.NODE_ENV !== 'production' && userId && userId.toString().startsWith('dev-')) {
+      logger.info('Returning empty workflow suggestions in development for dev user');
+      return [];
+    }
+    
     const patterns = await analyzeUserPatterns(userId);
     const suggestions = [];
 
@@ -391,6 +397,18 @@ async function getWorkflowSuggestions(userId) {
  */
 async function analyzeUserPatterns(userId, days = 30) {
   try {
+    // In development mode, return mock data for dev users
+    if (process.env.NODE_ENV !== 'production' && userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-'))) {
+      return {
+        contentCreationFrequency: 0,
+        postingFrequency: 0,
+        mostUsedContentType: null,
+        mostUsedPlatform: null,
+        totalContent: 0,
+        totalPosts: 0
+      };
+    }
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 

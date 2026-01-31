@@ -136,11 +136,19 @@ async function getApprovalDashboard(userId, filters = {}) {
       'assignedTo.userId': userId
     });
 
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot get overdue SLA count');
+      return { ...result, summary: { ...result.summary, overdue: 0 } };
+    }
+
     // Get overdue count
     const overdueSLAs = await ApprovalSLA.countDocuments({
       status: 'overdue',
       approvalId: { $in: approvals.map(a => a._id) }
-    });
+    })
+      .maxTimeMS(5000);
 
     return {
       approvals,

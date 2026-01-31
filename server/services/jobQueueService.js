@@ -998,6 +998,96 @@ async function closeAll() {
   }
 }
 
+/**
+ * Get job progress
+ * @param {string} queueName - Queue name
+ * @param {string} jobId - Job ID
+ * @returns {Promise<Object>} Job progress
+ */
+async function getJobProgress(queueName, jobId) {
+  try {
+    const queue = getQueue(queueName);
+    const job = await queue.getJob(jobId);
+    
+    if (!job) {
+      throw new Error(`Job ${jobId} not found`);
+    }
+
+    const state = await job.getState();
+    const progress = job.progress || 0;
+    const returnvalue = job.returnvalue || null;
+    const failedReason = job.failedReason || null;
+
+    return {
+      jobId,
+      queue: queueName,
+      state,
+      progress,
+      returnvalue,
+      failedReason,
+      data: job.data,
+      opts: job.opts,
+      timestamp: job.timestamp,
+      processedOn: job.processedOn,
+      finishedOn: job.finishedOn,
+    };
+  } catch (error) {
+    logger.error('Error getting job progress', { queueName, jobId, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Get all jobs for a queue with their progress
+ * @param {string} queueName - Queue name
+ * @param {string} state - Job state filter (optional)
+ * @param {number} limit - Limit results
+ * @returns {Promise<Array>} Jobs with progress
+ */
+async function getJobsWithProgress(queueName, state = null, limit = 100) {
+  try {
+    const queue = getQueue(queueName);
+    let jobs;
+
+    if (state) {
+      jobs = await queue.getJobs([state], 0, limit);
+    } else {
+      // Get jobs from all states
+      const [waiting, active, completed, failed, delayed] = await Promise.all([
+        queue.getJobs(['waiting'], 0, limit),
+        queue.getJobs(['active'], 0, limit),
+        queue.getJobs(['completed'], 0, limit),
+        queue.getJobs(['failed'], 0, limit),
+        queue.getJobs(['delayed'], 0, limit),
+      ]);
+      jobs = [...waiting, ...active, ...completed, ...failed, ...delayed].slice(0, limit);
+    }
+
+    // Get progress for each job
+    const jobsWithProgress = await Promise.all(
+      jobs.map(async (job) => {
+        const jobState = await job.getState();
+        return {
+          id: job.id,
+          name: job.name,
+          data: job.data,
+          state: jobState,
+          progress: job.progress || 0,
+          timestamp: job.timestamp,
+          processedOn: job.processedOn,
+          finishedOn: job.finishedOn,
+          failedReason: job.failedReason,
+        };
+      })
+    );
+
+    return jobsWithProgress;
+  } catch (error) {
+    logger.error('Error getting jobs with progress', { queueName, error: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
   getQueue,
   addJob,
@@ -1009,6 +1099,8 @@ module.exports = {
   cleanQueue,
   closeAll,
   getRedisConnection, // Export for debugging
+  getJobProgress,
+  getJobsWithProgress,
 };
 
 

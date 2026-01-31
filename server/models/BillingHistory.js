@@ -7,14 +7,12 @@ const billingHistorySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   invoiceNumber: {
     type: String,
     unique: true,
-    required: true,
-    index: true
+    required: true
   },
   // Invoice details
   invoice: {
@@ -98,8 +96,7 @@ const billingHistorySchema = new mongoose.Schema({
   notes: String,
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   updatedAt: {
     type: Date,
@@ -109,7 +106,7 @@ const billingHistorySchema = new mongoose.Schema({
 
 billingHistorySchema.index({ userId: 1, 'invoice.date': -1 });
 billingHistorySchema.index({ 'payment.status': 1, 'invoice.date': -1 });
-billingHistorySchema.index({ invoiceNumber: 1 });
+// invoiceNumber already has unique: true which creates an index
 
 billingHistorySchema.pre('save', function(next) {
   this.updatedAt = new Date();

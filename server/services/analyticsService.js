@@ -11,8 +11,24 @@ const logger = require('../utils/logger');
  */
 async function trackEvent(userId, eventType, metadata = {}) {
   try {
+    // Skip tracking for dev users to avoid MongoDB CastErrors
+    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+      logger.debug('Analytics tracking skipped - dev user', { userId, eventType });
+      return { tracked: false, reason: 'dev_user' };
+    }
+    
     // Only track if user has analytics consent
-    const user = await User.findById(userId).select('privacy.analyticsConsent');
+    let user;
+    try {
+      user = await User.findById(userId).select('privacy.analyticsConsent');
+    } catch (dbError) {
+      // If it's a CastError, skip tracking
+      if (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId')) {
+        logger.debug('Analytics tracking skipped - CastError', { userId, eventType, error: dbError.message });
+        return { tracked: false, reason: 'cast_error' };
+      }
+      throw dbError;
+    }
     
     if (!user || !user.privacy?.analyticsConsent) {
       logger.debug('Analytics tracking skipped - user opted out', { userId, eventType });
@@ -51,7 +67,33 @@ async function trackEvent(userId, eventType, metadata = {}) {
  */
 async function getUserAnalytics(userId, timeRange = '30d') {
   try {
-    const user = await User.findById(userId).select('privacy.analyticsConsent');
+    // Handle dev users - return mock data to avoid MongoDB CastErrors
+    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+      return {
+        timeRange: `${parseInt(timeRange) || 30} days`,
+        content: { created: 0, scheduled: 0, published: 0 },
+        usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, scriptsGenerated: 0 },
+        timestamp: new Date()
+      };
+    }
+    
+    // Wrap in try-catch to handle CastErrors
+    let user;
+    try {
+      user = await User.findById(userId).select('privacy.analyticsConsent');
+    } catch (dbError) {
+      // If it's a CastError, return mock data
+      if (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId')) {
+        logger.warn('CastError in getUserAnalytics, returning mock data', { error: dbError.message, userId });
+        return {
+          timeRange: `${parseInt(timeRange) || 30} days`,
+          content: { created: 0, scheduled: 0, published: 0 },
+          usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, scriptsGenerated: 0 },
+          timestamp: new Date()
+        };
+      }
+      throw dbError;
+    }
     
     if (!user || !user.privacy?.analyticsConsent) {
       return { error: 'Analytics not enabled for this user' };

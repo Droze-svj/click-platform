@@ -54,10 +54,45 @@ const upload = multer({
  */
 router.get('/', auth, async (req, res) => {
   try {
+    const userId = req.user?._id || req.user?.id;
+    
+    // Check both host header and x-forwarded-host (for proxy requests)
+    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
+    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
+    
+    // For dev users, return only public music to avoid MongoDB queries with invalid ObjectIds
+    if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
+      const query = { isPublic: true };
+      if (req.query.genre) query.genre = req.query.genre;
+      if (req.query.mood) query.mood = req.query.mood;
+      if (req.query.search) {
+        query.$or = [
+          { title: { $regex: req.query.search, $options: 'i' } },
+          { artist: { $regex: req.query.search, $options: 'i' } },
+          { tags: { $in: [new RegExp(req.query.search, 'i')] } }
+        ];
+      }
+      
+      try {
+        const music = await Music.find(query)
+          .sort({ createdAt: -1 })
+          .limit(parseInt(req.query.limit || 50));
+        return res.json({ success: true, data: music || [] });
+      } catch (dbError) {
+        // If MongoDB not connected or error, return empty array for dev mode
+        if (allowDevMode) {
+          return res.json({ success: true, data: [] });
+        }
+        throw dbError;
+      }
+    }
+    
     const { genre, mood, search, limit = 50 } = req.query;
     const query = {
       $or: [
-        { userId: req.user._id },
+        { userId: userId },
         { isPublic: true }
       ]
     };
@@ -78,13 +113,35 @@ router.get('/', auth, async (req, res) => {
 
     res.json({
       success: true,
-      data: music
+      data: music || []
     });
   } catch (error) {
-    logger.error('Get music error', { error: error.message });
+    const userId = req.user?._id || req.user?.id;
+    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
+    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
+    
+    logger.error('Get music error', { 
+      error: error.message, 
+      stack: error.stack,
+      userId,
+      errorName: error.name,
+      errorCode: error.code
+    });
+    
+    // For dev mode CastErrors or connection errors, return empty array instead of 500
+    if (allowDevMode && (error.name === 'CastError' || error.message?.includes('buffering') || error.message?.includes('connection'))) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      error: error.message
+      error: process.env.NODE_ENV === 'production' ? 'Failed to load music' : error.message,
+      ...(process.env.NODE_ENV !== 'production' && { details: error.name })
     });
   }
 });

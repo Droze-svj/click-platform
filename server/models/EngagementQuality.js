@@ -8,8 +8,7 @@ const engagementQualitySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ScheduledPost',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   qualityScore: {
     type: Number,
@@ -66,7 +65,7 @@ const engagementQualitySchema = new mongoose.Schema({
   }
 });
 
-engagementQualitySchema.index({ postId: 1 });
+// postId already has unique: true which creates an index
 engagementQualitySchema.index({ qualityScore: -1 });
 
 module.exports = mongoose.model('EngagementQuality', engagementQualitySchema);

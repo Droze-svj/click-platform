@@ -77,6 +77,16 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
   }, [])
 
   const loadFacets = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [AdvancedSearch] Skipping facets API call in development mode')
+      setFacets({
+        platforms: ['Instagram', 'TikTok', 'YouTube', 'Twitter'],
+        contentTypes: ['post', 'reel', 'video', 'story'],
+        tags: ['viral', 'trending', 'music', 'dance'],
+        statuses: ['draft', 'scheduled', 'published']
+      })
+      return
+    }
     try {
       const response = await apiGet<any>('/search/facets')
       if (response?.success) {
@@ -99,6 +109,10 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
   }
 
   const loadSearchHistory = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [AdvancedSearch] Skipping search history API call in development mode')
+      return
+    }
     try {
       const response = await apiGet<any>('/search/history?limit=10')
       if (response?.success) {
@@ -110,6 +124,10 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
   }
 
   const loadSearchAlerts = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [AdvancedSearch] Skipping search alerts API call in development mode')
+      return
+    }
     try {
       const response = await apiGet<any>('/search/alerts')
       if (response?.success) {
@@ -122,6 +140,10 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
   }
 
   const loadSavedSearches = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [AdvancedSearch] Skipping saved searches API call in development mode')
+      return
+    }
     try {
       const response = await apiGet<any>('/search/saved')
       if (response?.success) {

@@ -1,5 +1,5 @@
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 
 import ErrorBoundary from '../components/ErrorBoundary'
@@ -12,6 +12,8 @@ import PWARegistration from '../components/PWARegistration'
 import RealtimeConnection from '../components/RealtimeConnection'
 import OnboardingFlow from '../components/OnboardingFlow'
 import { TranslationProvider } from '../hooks/useTranslation'
+import { PreferencesProvider } from '../hooks/usePreferences'
+import LangAttribute from '../components/LangAttribute'
 import { ToastProvider } from '../contexts/ToastContext'
 import PerformanceMonitor from '../components/PerformanceMonitor'
 import Analytics from '../components/Analytics'
@@ -21,7 +23,10 @@ import ServerPingPixel from '../components/ServerPingPixel'
 import DevDebugBanner from '../components/DevDebugBanner'
 import TokenStorageProbe from '../components/TokenStorageProbe'
 import NavigationProbe from '../components/NavigationProbe'
+import StorageProbe from '../components/StorageProbe'
+import SystemStatusProbe from '../components/SystemStatusProbe'
 import InteractionProbe from '../components/InteractionProbe'
+// import ErrorRecoverySystem, { RecoveryStatusDisplay } from '../components/ErrorRecoverySystem'
 import DebugLayout from '../components/DebugLayout'
 import ErrorDashboard from '../components/ErrorDashboard'
 import PWAManager from '../components/PWAManager'
@@ -34,20 +39,13 @@ import '../utils/rum' // Initialize RUM monitoring
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Click - AI-Powered Content Creation',
-  description: 'Transform long-form content into social-ready formats with AI-powered tools',
-  keywords: ['content creation', 'social media', 'AI', 'marketing', 'automation', 'content management'],
+  title: 'Click — AI‑Powered Content Creation',
+  description: 'Create, repurpose, and publish content across 6 platforms. AI‑powered tools, smart scheduling, and analytics in one workspace.',
+  keywords: ['content creation', 'social media', 'AI', 'marketing', 'automation', 'content management', 'Click'],
   manifest: '/manifest.json',
-  themeColor: '#667eea',
   // Removed deprecated apple-mobile-web-app-capable - using mobile-web-app-capable instead
   other: {
     'mobile-web-app-capable': 'yes',
-  },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
   },
   // Temporarily remove og-image references to prevent 404s
   // openGraph: {
@@ -72,6 +70,14 @@ export const metadata: Metadata = {
   // },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#667eea',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -81,25 +87,36 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ErrorBoundary>
-          <TranslationProvider>
-            <ToastProvider>
-              <Analytics />
-              <PerformanceMonitor />
-              <AgentClientPing />
-              <DevDebugBanner />
-              <PWARegistration />
-              <RealtimeConnection />
-              <OnboardingFlow />
-              <OfflineIndicator />
-              <PWAManager>
-                <DebugLayout>
-                  {children}
-                </DebugLayout>
-                <PWAInstallPrompt />
-                <PWAUpdateHandler />
-              </PWAManager>
-            </ToastProvider>
-          </TranslationProvider>
+          <PreferencesProvider>
+            <TranslationProvider>
+              <LangAttribute />
+              <ToastProvider>
+                <Analytics />
+                <PerformanceMonitor />
+                <AgentClientPing />
+                <DevDebugBanner />
+                {/* Temporarily disable aggressive probes to resolve 500 errors */}
+                {/* <ErrorRecoverySystem /> */}
+                <TokenStorageProbe />
+                {/* <NavigationProbe /> */}
+                {/* <StorageProbe /> */}
+                {/* <SystemStatusProbe /> */}
+                <InteractionProbe />
+                <PWARegistration />
+                <RealtimeConnection />
+                <OnboardingFlow />
+                <OfflineIndicator />
+                <PWAManager>
+                  <DebugLayout>
+                    {children}
+                    {/* <RecoveryStatusDisplay /> */}
+                  </DebugLayout>
+                  <PWAInstallPrompt />
+                  <PWAUpdateHandler />
+                </PWAManager>
+              </ToastProvider>
+            </TranslationProvider>
+          </PreferencesProvider>
         </ErrorBoundary>
       </body>
     </html>

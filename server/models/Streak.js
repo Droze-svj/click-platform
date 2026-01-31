@@ -27,7 +27,7 @@ const streakSchema = new mongoose.Schema({
   }]
 });
 
-streakSchema.index({ userId: 1 });
+// userId already has unique: true which creates an index
 
 module.exports = mongoose.model('Streak', streakSchema);
 

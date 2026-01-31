@@ -11,6 +11,13 @@ const logger = require('../utils/logger');
  */
 async function checkSLAAlerts() {
   try {
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, skipping SLA alerts check');
+      return [];
+    }
+
     const now = new Date();
     
     // Find SLAs that need alerts
@@ -19,12 +26,15 @@ async function checkSLAAlerts() {
       completedAt: null
     })
       .populate('approvalId')
+      .maxTimeMS(5000) // 5 second timeout
       .lean();
 
     const alerts = [];
 
     for (const sla of slas) {
-      const approval = await ContentApproval.findById(sla.approvalId).lean();
+      const approval = await ContentApproval.findById(sla.approvalId)
+        .maxTimeMS(5000)
+        .lean();
       if (!approval) continue;
 
       // Check if alert already sent recently (within last hour)
@@ -87,7 +97,7 @@ async function checkSLAAlerts() {
             type: alertType
           }
         }
-      });
+      }, { maxTimeMS: 5000 });
     }
 
     logger.info('SLA alerts checked', { alertsSent: alerts.length });
@@ -103,12 +113,21 @@ async function checkSLAAlerts() {
  */
 async function getUserSLAAlerts(userId) {
   try {
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot get user SLA alerts');
+      return [];
+    }
+
     // Find approvals where user is an approver
     const approvals = await ContentApproval.find({
       'stages.approvals.approverId': userId,
       'stages.approvals.status': 'pending',
       status: { $in: ['pending', 'in_progress'] }
-    }).lean();
+    })
+      .maxTimeMS(5000)
+      .lean();
 
     const approvalIds = approvals.map(a => a._id);
 
@@ -120,6 +139,7 @@ async function getUserSLAAlerts(userId) {
     })
       .populate('approvalId')
       .sort({ targetCompletionAt: 1 })
+      .maxTimeMS(5000)
       .lean();
 
     return slas.map(sla => ({

@@ -175,20 +175,32 @@ async function checkMemoryUsage() {
 }
 
 /**
- * Monitor database connection
+ * Monitor database connection.
+ * Only alert when the preferred DB (Supabase/Prisma/Mongo) is actually down.
+ * Mongoose disconnected is ignored when Supabase or Prisma is primary.
  */
 async function checkDatabaseConnection() {
-  const mongoose = require('mongoose');
-  
-  if (mongoose.connection.readyState !== 1) {
-    if (shouldSendAlert('database_disconnected')) {
-      await sendAlert(
-        'database_disconnected',
-        'critical',
-        'Database connection lost',
-        { readyState: mongoose.connection.readyState }
-      );
-    }
+  let dbHealthy = false;
+  let preferred = 'mongodb';
+
+  try {
+    const { getDatabaseHealth } = require('../config/database');
+    const health = getDatabaseHealth();
+    preferred = health.preferred || 'mongodb';
+    dbHealthy = health.status === 'connected';
+  } catch (e) {
+    const mongoose = require('mongoose');
+    dbHealthy = mongoose.connection.readyState === 1;
+  }
+
+  if (!dbHealthy && shouldSendAlert('database_disconnected')) {
+    const mongoose = require('mongoose');
+    await sendAlert(
+      'database_disconnected',
+      'critical',
+      'Database connection lost',
+      { preferred, mongoReadyState: mongoose.connection.readyState }
+    );
   }
 }
 

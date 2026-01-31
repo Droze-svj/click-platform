@@ -15,7 +15,12 @@ import {
   Settings,
   CheckCircle,
   AlertTriangle,
-  Info
+  Info,
+  Calendar,
+  Clock,
+  Globe,
+  Lock,
+  Zap
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 
@@ -47,7 +52,12 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
     addCaptions: false,
     optimizeAudio: true,
     addEndScreen: false,
-    customThumbnail: false
+    customThumbnail: false,
+    allowSmartRefit: true,
+    isScheduled: false,
+    scheduledDate: '',
+    scheduledTime: '',
+    postToAllLinked: false
   })
 
   const { showToast } = useToast()
@@ -364,6 +374,95 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
             />
             <span className="text-sm">Add end screen</span>
           </label>
+          <label className="flex items-center gap-2 group relative">
+            <input
+              type="checkbox"
+              checked={exportOptions.allowSmartRefit}
+              onChange={(e) => setExportOptions(prev => ({ ...prev, allowSmartRefit: e.target.checked }))}
+              className="rounded border-orange-300 text-orange-500 focus:ring-orange-500"
+            />
+            <span className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+              AI Smart-Refit
+              <span className="text-[8px] bg-orange-100 dark:bg-orange-900/40 px-1 rounded">BETA</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {/* Pro Scheduler & Distribution */}
+      <div className="mb-10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-3xl p-8 border border-indigo-500/10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-6 opacity-10">
+          <Globe className="w-24 h-24 text-indigo-500" />
+        </div>
+
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-indigo-500 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tighter">Pro Scheduler</h4>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">Elite distribution engine</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">Alpha Access</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="space-y-4">
+            <label className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-indigo-500/30 transition-all cursor-pointer group">
+              <div className={`p-2 rounded-xl transition-colors ${exportOptions.isScheduled ? 'bg-indigo-500 text-white' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                <Clock className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Schedule Post</p>
+                <p className="text-[9px] text-gray-500 font-bold">Pick a future pulse moment</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={exportOptions.isScheduled}
+                onChange={(e) => setExportOptions(prev => ({ ...prev, isScheduled: e.target.checked }))}
+                className="w-5 h-5 rounded-lg border-2 border-gray-200 text-indigo-600 focus:ring-indigo-500 transition-all"
+              />
+            </label>
+
+            {exportOptions.isScheduled && (
+              <div className="grid grid-cols-2 gap-3 pl-12">
+                <input
+                  type="date"
+                  className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                  value={exportOptions.scheduledDate}
+                  onChange={(e) => setExportOptions(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                />
+                <input
+                  type="time"
+                  className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                  value={exportOptions.scheduledTime}
+                  onChange={(e) => setExportOptions(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <label className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-emerald-500/30 transition-all cursor-pointer group">
+              <div className={`p-2 rounded-xl transition-colors ${exportOptions.postToAllLinked ? 'bg-emerald-500 text-white' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                <Zap className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Multi-Publish</p>
+                <p className="text-[9px] text-gray-500 font-bold">Sync across all linked accounts</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={exportOptions.postToAllLinked}
+                onChange={(e) => setExportOptions(prev => ({ ...prev, postToAllLinked: e.target.checked }))}
+                className="w-5 h-5 rounded-lg border-2 border-gray-200 text-emerald-600 focus:ring-emerald-500 transition-all"
+              />
+            </label>
+          </div>
         </div>
       </div>
 
@@ -379,11 +478,10 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               {presets.map(preset => (
                 <div
                   key={preset.id}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                    selectedPreset === preset.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
-                  }`}
+                  className={`border rounded-lg p-4 cursor-pointer transition-all ${selectedPreset === preset.id
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                    }`}
                   onClick={() => setSelectedPreset(preset.id)}
                 >
                   <div className="flex items-start justify-between mb-3">

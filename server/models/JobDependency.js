@@ -52,6 +52,8 @@ const jobDependencySchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+  // Note: timestamps: true creates indexes on createdAt/updatedAt, 
+  // but TTL index below requires explicit index - Mongoose will warn but TTL needs it
 });
 
 // Indexes
@@ -59,6 +61,8 @@ jobDependencySchema.index({ parentJobId: 1, parentQueueName: 1 });
 jobDependencySchema.index({ status: 1 });
 
 // TTL index to auto-delete old dependencies (keep for 7 days)
+// Note: This creates a duplicate index warning because timestamps: true also indexes createdAt,
+// but the explicit TTL index is required for the expiration feature to work
 jobDependencySchema.index({ createdAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
 
 module.exports = mongoose.model('JobDependency', jobDependencySchema);

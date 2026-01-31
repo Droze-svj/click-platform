@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import Navbar from '../../../components/Navbar'
 import LoadingSkeleton from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-import { extractApiData, extractApiError } from '../../../utils/apiResponse'
+import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
+import { useTranslation } from '../../../hooks/useTranslation'
+import { supportedLanguages, languageNames, type SupportedLanguage } from '../../../i18n/config'
 import ChangePasswordForm from '../../../components/ChangePasswordForm'
 import Link from 'next/link'
 
@@ -33,9 +34,14 @@ interface UserSettings {
   }
 }
 
+function isValidLang(l: string): l is SupportedLanguage {
+  return supportedLanguages.includes(l as SupportedLanguage)
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { language, setLanguage, t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [settings, setSettings] = useState<UserSettings>({
@@ -76,6 +82,9 @@ export default function SettingsPage() {
       const settingsData = extractApiData<UserSettings>(response)
       if (settingsData) {
         setSettings(settingsData)
+        if (settingsData.preferences?.language && isValidLang(settingsData.preferences.language)) {
+          setLanguage(settingsData.preferences.language)
+        }
       }
     } catch (error: any) {
       console.error('Failed to load settings:', error)
@@ -96,15 +105,14 @@ export default function SettingsPage() {
       await axios.put(`${API_URL}/user/settings`, settings, {
       })
 
-      // Show success toast
       const event = new CustomEvent('toast', {
-        detail: { message: 'Settings saved successfully', type: 'success' }
+        detail: { message: t('settings.saved'), type: 'success' }
       })
       window.dispatchEvent(event)
     } catch (error: any) {
       console.error('Failed to save settings:', error)
       const event = new CustomEvent('toast', {
-        detail: { message: 'Failed to save settings', type: 'error' }
+        detail: { message: t('settings.saveFailed'), type: 'error' }
       })
       window.dispatchEvent(event)
     } finally {
@@ -128,7 +136,6 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <LoadingSkeleton type="card" count={3} />
         </div>
@@ -139,20 +146,19 @@ export default function SettingsPage() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navbar />
         <ToastContainer />
         <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Settings</h1>
-              <p className="text-gray-600 dark:text-gray-400">Manage your account preferences</p>
+              <h1 className="text-3xl font-bold mb-2">{t('settings.title')}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{t('settings.subtitle')}</p>
             </div>
             <Link
               href="/dashboard/settings/profile"
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
             >
-              Edit Profile
+              {t('settings.editProfile')}
             </Link>
           </div>
         </div>
@@ -162,10 +168,10 @@ export default function SettingsPage() {
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               {[
-                { id: 'general', label: 'General', icon: '⚙️' },
-                { id: 'notifications', label: 'Notifications', icon: '🔔' },
-                { id: 'privacy', label: 'Privacy', icon: '🔒' },
-                { id: 'security', label: 'Security', icon: '🛡️' },
+                { id: 'general', labelKey: 'settings.general', icon: '⚙️' },
+                { id: 'notifications', labelKey: 'settings.notifications', icon: '🔔' },
+                { id: 'privacy', labelKey: 'settings.privacy', icon: '🔒' },
+                { id: 'security', labelKey: 'settings.security', icon: '🛡️' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -177,7 +183,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               ))}
             </nav>
@@ -187,35 +193,40 @@ export default function SettingsPage() {
             {/* General Settings */}
             {activeTab === 'general' && (
               <div className="space-y-6">
-                <SettingSection title="Appearance">
+                <SettingSection title={t('settings.appearance')}>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Theme</label>
+                      <label className="block text-sm font-medium mb-2">{t('settings.theme')}</label>
                       <select
                         value={settings.preferences.theme}
                         onChange={(e) => updateSetting('preferences.theme', e.target.value)}
                         className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                       >
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                        <option value="auto">Auto (System)</option>
+                        <option value="light">{t('settings.themeLight')}</option>
+                        <option value="dark">{t('settings.themeDark')}</option>
+                        <option value="auto">{t('settings.themeAuto')}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Language</label>
+                      <label className="block text-sm font-medium mb-2">{t('settings.language')}</label>
                       <select
-                        value={settings.preferences.language}
-                        onChange={(e) => updateSetting('preferences.language', e.target.value)}
+                        value={language}
+                        onChange={(e) => {
+                          const v = e.target.value as SupportedLanguage
+                          if (isValidLang(v)) {
+                            setLanguage(v)
+                            updateSetting('preferences.language', v)
+                          }
+                        }}
                         className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
                       >
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
+                        {supportedLanguages.map((lang) => (
+                          <option key={lang} value={lang}>{languageNames[lang]}</option>
+                        ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Timezone</label>
+                      <label className="block text-sm font-medium mb-2">{t('settings.timezone')}</label>
                       <select
                         value={settings.preferences.timezone}
                         onChange={(e) => updateSetting('preferences.timezone', e.target.value)}
@@ -351,7 +362,7 @@ export default function SettingsPage() {
             disabled={saving}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? 'Saving...' : 'Save Settings'}
+            {saving ? t('settings.saving') : t('settings.saveSettings')}
           </button>
         </div>
         </div>

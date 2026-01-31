@@ -25,8 +25,7 @@ const emailApprovalTokenSchema = new mongoose.Schema({
   token: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   action: {
     type: String,
@@ -58,6 +57,7 @@ const emailApprovalTokenSchema = new mongoose.Schema({
 
 emailApprovalTokenSchema.index({ token: 1, used: 1 });
 emailApprovalTokenSchema.index({ approvalId: 1, stageOrder: 1 });
+// token already has unique: true which creates an index
 
 emailApprovalTokenSchema.pre('save', function(next) {
   if (this.isNew && !this.token) {

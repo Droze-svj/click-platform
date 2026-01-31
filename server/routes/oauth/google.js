@@ -99,29 +99,45 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get Google connection status
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const { data: user, error } = await require('@supabase/supabase-js').createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
-    .from('users')
-    .select('social_links')
-    .eq('id', req.user._id)
-    .single();
-
-  if (error) {
-    return sendError(res, 'Database error', 500);
+  // Check if Supabase is configured
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(503).json({ 
+      success: false, 
+      error: 'Database not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.' 
+    });
   }
 
-  const oauthData = user?.social_links?.oauth || {};
-  const googleData = oauthData.google || {};
-  const connected = googleData.connected || false;
-  const connectedAt = googleData.connectedAt;
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
-  sendSuccess(res, 'Status retrieved', 200, {
-    connected,
-    connectedAt,
-    configured: isConfigured()
-  });
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('social_links')
+      .eq('id', req.user._id)
+      .single();
+
+    if (error) {
+      return sendError(res, 'Database error', 500);
+    }
+
+    const oauthData = user?.social_links?.oauth || {};
+    const googleData = oauthData.google || {};
+    const connected = googleData.connected || false;
+    const connectedAt = googleData.connectedAt;
+
+    sendSuccess(res, 'Status retrieved', 200, {
+      connected,
+      connectedAt,
+      configured: isConfigured()
+    });
+  } catch (dbError) {
+    logger.error('Google OAuth status error', { error: dbError.message });
+    return sendError(res, 'Database error', 500);
+  }
 }));
 
 module.exports = router;

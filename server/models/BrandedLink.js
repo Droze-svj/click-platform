@@ -7,8 +7,7 @@ const brandedLinkSchema = new mongoose.Schema({
   shortCode: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   originalUrl: {
     type: String,
@@ -16,13 +15,11 @@ const brandedLinkSchema = new mongoose.Schema({
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -91,7 +88,7 @@ const brandedLinkSchema = new mongoose.Schema({
 
 brandedLinkSchema.index({ agencyWorkspaceId: 1, createdAt: -1 });
 brandedLinkSchema.index({ clientWorkspaceId: 1, createdAt: -1 });
-brandedLinkSchema.index({ shortCode: 1 }, { unique: true });
+// shortCode already has unique: true which creates an index
 brandedLinkSchema.index({ 'analytics.lastClicked': -1 });
 
 brandedLinkSchema.pre('save', function(next) {

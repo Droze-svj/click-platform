@@ -33,6 +33,17 @@ export function useSocket(userId?: string | null): UseSocketReturn {
     const token = localStorage.getItem('token')
     if (!token) return
 
+    // In development, skip WebSocket connection entirely to prevent connection errors
+    // This prevents console spam from connection failures when backend WebSocket server is not running
+    if (process.env.NODE_ENV === 'development') {
+      // Silently skip WebSocket in development to avoid connection errors
+      // The app will work fine without real-time updates in dev mode
+      // Set connected to false and socket to null to indicate no connection
+      setSocket(null)
+      setConnected(false)
+      return
+    }
+
     globalSocketUsers += 1
     if (globalDisconnectTimer) {
       clearTimeout(globalDisconnectTimer)
@@ -60,7 +71,18 @@ export function useSocket(userId?: string | null): UseSocketReturn {
       })
 
       socketInstance.on('error', (error) => {
-        console.error('Socket error:', error)
+        // Only log errors in production to avoid console spam
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Socket error:', error)
+        }
+      })
+
+      // Suppress connection errors in development
+      socketInstance.on('connect_error', (error) => {
+        // Silently handle connection errors in development
+        if (process.env.NODE_ENV !== 'development') {
+          console.error('Socket connection error:', error)
+        }
       })
 
       globalSocket = socketInstance

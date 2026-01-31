@@ -7,19 +7,16 @@ const postCommentSchema = new mongoose.Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ScheduledPost',
-    required: true,
-    index: true
+    required: true
   },
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content',
-    index: true
+    ref: 'Content'
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   portalUserId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -92,8 +89,7 @@ const postCommentSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   updatedAt: {
     type: Date,

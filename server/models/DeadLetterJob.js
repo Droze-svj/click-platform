@@ -6,13 +6,11 @@ const mongoose = require('mongoose');
 const deadLetterJobSchema = new mongoose.Schema({
   originalQueueName: {
     type: String,
-    required: true,
-    index: true,
+    required: true
   },
   originalJobId: {
     type: String,
-    required: true,
-    index: true,
+    required: true
   },
   jobName: {
     type: String,
@@ -36,8 +34,7 @@ const deadLetterJobSchema = new mongoose.Schema({
   },
   movedAt: {
     type: Date,
-    default: Date.now,
-    index: true,
+    default: Date.now
   },
   retried: {
     type: Boolean,

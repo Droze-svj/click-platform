@@ -11,10 +11,19 @@ const logger = require('../utils/logger');
  */
 async function checkSLAStatus(approvalId) {
   try {
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot check SLA status');
+      return [];
+    }
+
     const slas = await ApprovalSLA.find({
       approvalId,
       status: { $in: ['on_time', 'at_risk', 'overdue'] }
-    });
+    })
+      .maxTimeMS(5000) // 5 second timeout
+      .lean();
 
     const now = new Date();
     const updates = [];
@@ -32,15 +41,19 @@ async function checkSLAStatus(approvalId) {
       }
 
       if (newStatus !== sla.status) {
-        sla.status = newStatus;
-        await sla.save();
+        // Update status in database
+        await ApprovalSLA.findByIdAndUpdate(sla._id, {
+          status: newStatus,
+          updatedAt: new Date()
+        }, { maxTimeMS: 5000 }).exec();
 
-        // Send notifications
-        await sendSLANotification(sla, newStatus);
+        // Send notifications (pass the updated sla object)
+        const updatedSla = { ...sla, status: newStatus };
+        await sendSLANotification(updatedSla, newStatus);
 
         // Auto-escalate if overdue
-        if (newStatus === 'overdue' && sla.escalatedTo && !sla.escalated) {
-          await escalateApproval(approvalId, sla);
+        if (newStatus === 'overdue' && updatedSla.escalatedTo && !updatedSla.escalated) {
+          await escalateApproval(approvalId, updatedSla);
         }
       }
 
@@ -63,9 +76,19 @@ async function checkSLAStatus(approvalId) {
  */
 async function sendSLANotification(sla, status) {
   try {
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot send SLA notification');
+      return;
+    }
+
     const approval = await ContentApproval.findById(sla.approvalId)
       .populate('assignedTo.userId')
+      .maxTimeMS(5000)
       .lean();
+
+    if (!approval || !sla._id) return;
 
     if (!approval) return;
 
@@ -93,13 +116,15 @@ async function sendSLANotification(sla, status) {
       });
 
       // Add reminder
-      sla.reminders.push({
-        sentAt: new Date(),
-        type: status === 'overdue' ? 'overdue' : status === 'at_risk' ? 'at_risk' : 'warning'
-      });
+      await ApprovalSLA.findByIdAndUpdate(sla._id, {
+        $push: {
+          reminders: {
+            sentAt: new Date(),
+            type: status === 'overdue' ? 'overdue' : status === 'at_risk' ? 'at_risk' : 'warning'
+          }
+        }
+      }, { maxTimeMS: 5000 }).exec();
     }
-
-    await sla.save();
   } catch (error) {
     logger.warn('Error sending SLA notification', { error: error.message });
   }
@@ -112,7 +137,15 @@ async function escalateApproval(approvalId, sla) {
   try {
     if (!sla.escalatedTo) return;
 
-    const approval = await ContentApproval.findById(approvalId);
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot escalate approval');
+      return;
+    }
+
+    const approval = await ContentApproval.findById(approvalId)
+      .maxTimeMS(5000);
     if (!approval) return;
 
     // Add escalation to history
@@ -134,12 +167,14 @@ async function escalateApproval(approvalId, sla) {
       });
     }
 
-    await approval.save();
+    await approval.save({ maxTimeMS: 5000 });
 
     // Mark SLA as escalated
-    sla.escalated = true;
-    sla.escalatedAt = new Date();
-    await sla.save();
+    await ApprovalSLA.findByIdAndUpdate(sla._id, {
+      escalated: true,
+      escalatedAt: new Date(),
+      updatedAt: new Date()
+    }, { maxTimeMS: 5000 }).exec();
 
     // Notify escalated user
     await sendNotification(sla.escalatedTo, {
@@ -176,15 +211,35 @@ async function getSLAAnalytics(agencyWorkspaceId, filters = {}) {
       query.stageOrder = stageOrder;
     }
 
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot get SLA analytics');
+      return {
+        total: 0,
+        onTime: 0,
+        atRisk: 0,
+        overdue: 0,
+        escalated: 0,
+        averageCompletionTime: 0,
+        averageTargetTime: 0
+      };
+    }
+
     // Get approvals for this agency
     const approvals = await ContentApproval.find({
       'metadata.agencyId': agencyWorkspaceId
-    }).select('_id').lean();
+    })
+      .select('_id')
+      .maxTimeMS(5000)
+      .lean();
 
     const approvalIds = approvals.map(a => a._id);
     query.approvalId = { $in: approvalIds };
 
-    const slas = await ApprovalSLA.find(query).lean();
+    const slas = await ApprovalSLA.find(query)
+      .maxTimeMS(5000)
+      .lean();
 
     // Calculate metrics
     const metrics = {
@@ -223,13 +278,22 @@ async function getSLAAnalytics(agencyWorkspaceId, filters = {}) {
  */
 async function checkAutoApprove(approvalId, stageOrder) {
   try {
-    const sla = await ApprovalSLA.findOne({ approvalId, stageOrder });
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      return false;
+    }
+
+    const sla = await ApprovalSLA.findOne({ approvalId, stageOrder })
+      .maxTimeMS(5000);
     if (!sla || !sla.targetCompletionAt) return false;
 
     const now = new Date();
     if (now > sla.targetCompletionAt) {
       // Check if auto-approve is enabled
-      const approval = await ContentApproval.findById(approvalId);
+      const approval = await ContentApproval.findById(approvalId)
+        .maxTimeMS(5000)
+        .exec();
       const stage = approval.stages.find(s => s.stageOrder === stageOrder);
       
       // This would check template settings for auto-approve

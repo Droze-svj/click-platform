@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Award, Target, BarChart3, Sparkles, AlertCircle, CheckCircle } from 'lucide-react'
-import axios from 'axios'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet } from '../lib/api'
 
 interface BenchmarkData {
   contentId: string
@@ -75,31 +73,26 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-
       if (activeTab === 'benchmark') {
-        const response = await axios.get(
-          `${API_URL}/benchmarking/content/${contentId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (response.data.success) {
-          setBenchmark(response.data.data)
+        const response = await apiGet<any>(`/benchmarking/content/${contentId}`)
+        if (response?.success && response.data) {
+          setBenchmark(response.data)
+        } else if (response?.data) {
+          setBenchmark(response.data)
         }
       } else if (activeTab === 'comparison') {
-        const response = await axios.get(
-          `${API_URL}/benchmarking/content/${contentId}/compare`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (response.data.success) {
-          setComparison(response.data.data)
+        const response = await apiGet<any>(`/benchmarking/content/${contentId}/compare`)
+        if (response?.success && response.data) {
+          setComparison(response.data)
+        } else if (response?.data) {
+          setComparison(response.data)
         }
       } else if (activeTab === 'prediction') {
-        const response = await axios.get(
-          `${API_URL}/benchmarking/content/${contentId}/predict`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (response.data.success) {
-          setPrediction(response.data.data)
+        const response = await apiGet<any>(`/benchmarking/content/${contentId}/predict`)
+        if (response?.success && response.data) {
+          setPrediction(response.data)
+        } else if (response?.data) {
+          setPrediction(response.data)
         }
       }
     } catch (error: any) {

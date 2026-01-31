@@ -105,7 +105,36 @@ const apiLimiter = createRateLimiter({
     error: 'Too many requests from this IP, please try later',
   },
   // Skip rate limiting for health checks and auth/me (called frequently by frontend)
+  // In development, skip rate limiting entirely to prevent blocking during development
   skip: (req) => {
+    // In development, disable rate limiting entirely
+    if (process.env.NODE_ENV !== 'production') {
+      const ip = (req.ip || '').toString();
+      const host = (req.hostname || req.headers?.host || '').toString();
+      const origin = (req.get && req.get('origin')) ? req.get('origin') : (req.headers?.origin || '');
+      const referer = (req.get && req.get('referer')) ? req.get('referer') : (req.headers?.referer || '');
+      
+      // Check multiple ways the request might indicate localhost
+      const isLocalhost = 
+        host === 'localhost' ||
+        host.includes('localhost:') ||
+        host === '127.0.0.1' ||
+        host.includes('127.0.0.1:') ||
+        ip === '127.0.0.1' ||
+        ip === '::1' ||
+        ip.includes('127.0.0.1') ||
+        (typeof origin === 'string' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) ||
+        (typeof referer === 'string' && (referer.includes('localhost') || referer.includes('127.0.0.1')));
+      
+      if (isLocalhost) {
+        return true;
+      }
+      
+      // Also skip if NODE_ENV is explicitly development (even if host doesn't match)
+      // This allows for testing scenarios where the host might be different
+      return true; // Always skip in development
+    }
+    
     const path = req.path || req.url || '';
     return path === '/health' || 
            path === '/health/debug-redis' || 
@@ -149,6 +178,16 @@ const uploadLimiter = createRateLimiter({
   max: 10, // 10 uploads per hour
   message: {
     error: 'Too many uploads, please try again later',
+  },
+  // In local development, don't rate limit uploads to allow testing
+  skip: (req) => {
+    // In development, skip rate limiting entirely
+    // This is critical for local testing where uploads might be frequent
+    if (process.env.NODE_ENV !== 'production') {
+      // Always skip in development - don't check host/IP to avoid edge cases
+      return true;
+    }
+    return false;
   },
 });
 
