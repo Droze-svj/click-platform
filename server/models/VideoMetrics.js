@@ -13,8 +13,7 @@ const videoMetricsSchema = new mongoose.Schema({
   },
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content',
-    index: true
+    ref: 'Content'
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
