@@ -8,7 +8,9 @@ let RedisStore;
 let redisClient;
 
 try {
-  if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+  const redisUrl = process.env.REDIS_URL;
+  const hasValidRedis = (redisUrl || process.env.REDIS_HOST) && !redisUrl?.includes('placeholder');
+  if (hasValidRedis) {
     // Try to load rate-limit-redis (optional dependency)
     try {
       RedisStore = require('rate-limit-redis').default;

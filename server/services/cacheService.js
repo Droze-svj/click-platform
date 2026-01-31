@@ -24,15 +24,20 @@ let cacheEnabled = false;
  * Initialize Redis client
  */
 async function initCache() {
-  // Skip Redis if not configured (optional service)
-  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
-    logger.info('Redis not configured, caching disabled (optional)');
+  const redisUrl = process.env.REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : null);
+
+  // Skip Redis if not configured, or if placeholder URL (e.g. redis://placeholder-redis:6379)
+  if (!redisUrl || redisUrl.includes('placeholder')) {
+    if (redisUrl?.includes('placeholder')) {
+      logger.info('Redis URL is placeholder. Set REDIS_URL in Render. Caching disabled.');
+    } else {
+      logger.info('Redis not configured, caching disabled (optional)');
+    }
     cacheEnabled = false;
     return;
   }
 
   try {
-    const redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`;
     
     redisClient = redis.createClient({
       url: redisUrl,
