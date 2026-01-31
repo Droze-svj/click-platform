@@ -5,9 +5,9 @@ services:
   - type: web
     name: click-platform
     env: node
-    region: oregon  # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
+    region: oregon # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install --legacy-peer-deps --production=false
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
