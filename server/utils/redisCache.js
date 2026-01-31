@@ -22,9 +22,14 @@ class RedisCache {
     try {
       const redisUrl = process.env.REDIS_URL || process.env.REDISCLOUD_URL || 'redis://localhost:6379';
 
-      // Skip Redis connection in test environments or when not configured
-      if (process.env.NODE_ENV === 'test' || !redisUrl || redisUrl.includes('redis://localhost:6379')) {
-        console.log('⚠️ Redis caching disabled (not configured or test environment)');
+      // Skip Redis connection in test environments, when not configured, or when placeholder
+      const isPlaceholder = redisUrl && (redisUrl.includes('placeholder') || redisUrl.includes('localhost:6379'));
+      if (process.env.NODE_ENV === 'test' || !redisUrl || isPlaceholder) {
+        if (redisUrl?.includes('placeholder')) {
+          console.log('⚠️ Redis URL appears to be a placeholder. Set REDIS_URL in Render env vars. Caching disabled.');
+        } else {
+          console.log('⚠️ Redis caching disabled (not configured or test environment)');
+        }
         return;
       }
 

@@ -23,16 +23,16 @@ const logger = require('./utils/logger');
 let Sentry = null;
 try {
   const sentryDsn = process.env.SENTRY_DSN?.trim();
-  
+
   // Validate DSN format before initializing
   // A valid Sentry DSN should start with 'https://' and contain '@'
-  const isValidDsn = sentryDsn && 
-                     sentryDsn.length > 20 && 
-                     sentryDsn.startsWith('https://') && 
-                     sentryDsn.includes('@') &&
-                     !sentryDsn.includes('your-sentry-dsn') &&
-                     !sentryDsn.includes('placeholder');
-  
+  const isValidDsn = sentryDsn &&
+    sentryDsn.length > 20 &&
+    sentryDsn.startsWith('https://') &&
+    sentryDsn.includes('@') &&
+    !sentryDsn.includes('your-sentry-dsn') &&
+    !sentryDsn.includes('placeholder');
+
   if (isValidDsn) {
     Sentry = require('@sentry/node');
     Sentry.init({
@@ -65,7 +65,7 @@ process.on('uncaughtException', (error) => {
       // Ignore Sentry errors
     }
   }
-  
+
   // In production, exit after logging to prevent undefined behavior
   // In development, continue to allow debugging
   if (process.env.NODE_ENV === 'production') {
@@ -79,18 +79,18 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
   // Filter out Redis localhost connection errors - these are expected when REDIS_URL is not set
   if (reason && typeof reason === 'object' && reason.message &&
-      reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
+    reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
     // These are expected when REDIS_URL is not configured - workers will be closed automatically
     // Don't spam logs with these errors
     return;
   }
 
-  logger.error('❌ Unhandled Rejection', { 
-    reason: reason?.message || String(reason), 
+  logger.error('❌ Unhandled Rejection', {
+    reason: reason?.message || String(reason),
     stack: reason?.stack,
     promise: promise?.toString?.() || String(promise)
   });
-  
+
   if (Sentry) {
     try {
       Sentry.captureException(reason, {
@@ -101,7 +101,7 @@ process.on('unhandledRejection', (reason, promise) => {
       // Ignore Sentry errors
     }
   }
-  
+
   // Log warning but don't exit - unhandled rejections are less critical than uncaught exceptions
   logger.warn('⚠️ Unhandled rejection detected - server will continue');
 });
@@ -122,35 +122,35 @@ if (__isHosted) {
   try {
     // Use Node's built-in http module - no dependencies, always available
     const http = require('http');
-    
+
     const healthCheckHandler = (req, res) => {
       const url = req.url || '/';
       if (url === '/api/health' || url === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          status: 'starting', 
-          message: 'Server is initializing...', 
+        res.end(JSON.stringify({
+          status: 'starting',
+          message: 'Server is initializing...',
           port: PORT,
           timestamp: new Date().toISOString()
         }));
       } else {
         res.writeHead(503, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          status: 'starting', 
-          message: 'Server is initializing...', 
-          port: PORT 
+        res.end(JSON.stringify({
+          status: 'starting',
+          message: 'Server is initializing...',
+          port: PORT
         }));
       }
     };
-    
+
     healthCheckServer = http.createServer(healthCheckHandler);
-    
+
     healthCheckServer.listen(PORT, HOST, () => {
       console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
       console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
       console.log(`✅ Health check available at http://${HOST}:${PORT}/api/health`);
     });
-    
+
     healthCheckServer.on('error', (err) => {
       console.error('❌ Health check server error:', err);
       console.error('Error code:', err.code);
@@ -160,11 +160,11 @@ if (__isHosted) {
       }
       // Don't exit - let the process continue
     });
-    
+
     // Keep server alive
     healthCheckServer.keepAliveTimeout = 65000;
     healthCheckServer.headersTimeout = 66000;
-    
+
   } catch (healthError) {
     console.error('❌ CRITICAL: Failed to start health check server:', healthError);
     console.error('Stack:', healthError.stack);
@@ -292,11 +292,11 @@ logger.info('🔍 Checking Redis for job queues...', {
 
 if (process.env.NODE_ENV !== 'test') {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  
+
   // Only initialize workers if Redis is properly configured
   // In production/staging, require REDIS_URL (not REDIS_HOST fallback)
   let shouldInitializeWorkers = false;
-  
+
   if (isProduction) {
     // Production: REDIS_URL is REQUIRED and must be valid
     if (!redisUrl || redisUrl === '') {
@@ -313,6 +313,9 @@ if (process.env.NODE_ENV !== 'test') {
       logger.error('❌ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.');
       logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
       shouldInitializeWorkers = false;
+    } else if (redisUrl.includes('placeholder')) {
+      logger.warn('⚠️ REDIS_URL appears to be a placeholder. Set a real Redis URL in Render. Workers disabled.');
+      shouldInitializeWorkers = false;
     } else {
       logger.info('✅ REDIS_URL validated for production. Proceeding with worker initialization...');
       shouldInitializeWorkers = true;
@@ -321,7 +324,7 @@ if (process.env.NODE_ENV !== 'test') {
     // Development: Allow REDIS_URL or REDIS_HOST
     shouldInitializeWorkers = (redisUrl && redisUrl !== '') || (redisHost && redisHost !== '');
   }
-  
+
   if (shouldInitializeWorkers) {
     // CRITICAL: Double-check REDIS_URL one more time before initializing workers
     // This prevents any possibility of workers being created with invalid Redis config
@@ -331,7 +334,7 @@ if (process.env.NODE_ENV !== 'test') {
       console.log(`🔍 [server/index.js] REDIS_URL exists: ${!!finalRedisUrlCheck}`);
       console.log(`🔍 [server/index.js] REDIS_URL length: ${finalRedisUrlCheck?.length || 0}`);
       console.log(`🔍 [server/index.js] REDIS_URL first 30 chars: ${finalRedisUrlCheck ? finalRedisUrlCheck.substring(0, 30) : 'NONE'}`);
-      
+
       if (!finalRedisUrlCheck || finalRedisUrlCheck === '') {
         const errorMsg = '❌ FATAL: REDIS_URL is missing or empty right before worker initialization. Aborting.';
         console.error(errorMsg);
@@ -352,11 +355,14 @@ if (process.env.NODE_ENV !== 'test') {
         logger.error(errorMsg);
         logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
         shouldInitializeWorkers = false;
+      } else if (finalRedisUrlCheck.includes('placeholder')) {
+        logger.warn('⚠️ REDIS_URL is placeholder. Skipping worker initialization.');
+        shouldInitializeWorkers = false;
       } else {
         console.log('✅ Final REDIS_URL validation passed. Proceeding with worker initialization...');
       }
     }
-    
+
     if (shouldInitializeWorkers) {
       try {
         const { initializeWorkers } = require('./queues');
@@ -484,7 +490,7 @@ if (process.env.NODE_ENV !== 'test') {
         // Get all agency workspaces
         const Workspace = require('./models/Workspace');
         const agencies = await Workspace.find({ isAgency: true }).lean();
-        
+
         for (const agency of agencies) {
           try {
             await checkBusinessAlerts(agency._id);
@@ -492,7 +498,7 @@ if (process.env.NODE_ENV !== 'test') {
             logger.warn('Error checking business alerts for agency', { agencyId: agency._id, error: error.message });
           }
         }
-        
+
         logger.info('✅ Business alerts check completed');
       } catch (error) {
         logger.warn('Business alerts check failed', { error: error.message });
@@ -662,7 +668,7 @@ app.use('/api', (req, res, next) => {
     if (should) {
       // Debug instrumentation disabled
     }
-  } catch {}
+  } catch { }
   next();
 });
 // #endregion
@@ -772,17 +778,17 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'Accept', 
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
     'Origin',
     'X-Auth-Token',
     'Cache-Control',
     'Pragma'
   ],
   exposedHeaders: [
-    'Content-Range', 
+    'Content-Range',
     'X-Content-Range',
     'X-Total-Count',
     'X-Page-Count'
@@ -1742,16 +1748,16 @@ if (redisCache && typeof redisCache.middleware === 'function') {
     skipCache: (req) => {
       // Don't cache non-GET requests, auth routes, or uploads
       return req.method !== 'GET' ||
-           req.originalUrl.includes('/auth/') ||
-           req.originalUrl.includes('/upload/') ||
-           req.originalUrl.includes('/admin/') ||
-           req.originalUrl.includes('/batch/') ||
-           req.originalUrl.includes('/export/');
-  },
-  condition: (req) => {
-    // Only cache for authenticated users or public routes
-    return !!req.user || req.originalUrl.includes('/analytics/');
-  }
+        req.originalUrl.includes('/auth/') ||
+        req.originalUrl.includes('/upload/') ||
+        req.originalUrl.includes('/admin/') ||
+        req.originalUrl.includes('/batch/') ||
+        req.originalUrl.includes('/export/');
+    },
+    condition: (req) => {
+      // Only cache for authenticated users or public routes
+      return !!req.user || req.originalUrl.includes('/analytics/');
+    }
   }));
 }
 
@@ -2250,28 +2256,28 @@ function __installShutdownHooks() {
   const shutdown = (signal, isNodemonRestart = false) => {
     // #region agent log
     try {
-    } catch {}
+    } catch { }
     // #endregion
 
     const finish = () => {
       // #region agent log
       try {
-      } catch {}
+      } catch { }
       // #endregion
 
       // Flush Sentry events before shutdown
       if (Sentry && typeof Sentry.close === 'function') {
         try {
-          Sentry.close(2000).catch(() => {});
-        } catch {}
+          Sentry.close(2000).catch(() => { });
+        } catch { }
       }
 
       // Close mongoose connection if it exists
       try {
         if (mongoose?.connection?.readyState) {
-          mongoose.connection.close(false).catch(() => {});
+          mongoose.connection.close(false).catch(() => { });
         }
-      } catch {}
+      } catch { }
 
       if (isNodemonRestart) {
         // Hand control back to nodemon
@@ -2285,18 +2291,18 @@ function __installShutdownHooks() {
       if (server && server.listening) {
         // #region agent log
         try {
-        } catch {}
+        } catch { }
         // #endregion
 
         // Force-close idle/active keep-alive connections so the port is released promptly.
         // (prevents nodemon restart races where the old process is still holding the listen socket)
-        try { server.closeIdleConnections && server.closeIdleConnections(); } catch {}
-        try { server.closeAllConnections && server.closeAllConnections(); } catch {}
+        try { server.closeIdleConnections && server.closeIdleConnections(); } catch { }
+        try { server.closeAllConnections && server.closeAllConnections(); } catch { }
 
         server.close(() => finish());
         return;
       }
-    } catch {}
+    } catch { }
     finish();
   };
 
@@ -2308,7 +2314,7 @@ function __installShutdownHooks() {
   // #region agent log
   process.once('exit', (code) => {
     try {
-    } catch {}
+    } catch { }
   });
   // #endregion
 }
@@ -2322,132 +2328,132 @@ try {
     // Wait a bit for the server to fully close before starting main server
     healthCheckServer.close(() => {
       logger.info('Health check server closed, starting main server...');
-      
+
       // Add small delay to ensure port is fully released (500ms should be sufficient)
       setTimeout(() => {
         try {
           // Start main server after health check server is closed
           server = app.listen(PORT, HOST, () => {
-        logger.info(`🚀 Server running on port ${PORT}`);
-        logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-        logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  
-  // Initialize Socket.io for real-time updates
-  initializeSocket(server);
-  logger.info(`🔌 Socket.io initialized for real-time updates`);
+            logger.info(`🚀 Server running on port ${PORT}`);
+            logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+            logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
 
-  // Job queue workers are initialized above with the new centralized system
-  
-      // Schedule file cleanup (runs daily at 2 AM)
-      if (process.env.NODE_ENV !== 'test') {
-        cron.schedule('0 2 * * *', async () => {
-          logger.info('🧹 Running scheduled file cleanup...');
-          const uploadsDir = path.join(__dirname, '../uploads');
-          await cleanupOldFiles(path.join(uploadsDir, 'videos'), 30); // Keep videos for 30 days
-          await cleanupOldFiles(path.join(uploadsDir, 'clips'), 14); // Keep clips for 14 days
-          await cleanupOldFiles(path.join(uploadsDir, 'thumbnails'), 14);
-          await cleanupOldFiles(path.join(uploadsDir, 'quotes'), 30);
-          logger.info('✅ File cleanup completed');
-        });
-        logger.info('✅ Scheduled file cleanup enabled (daily at 2 AM)');
+            // Initialize Socket.io for real-time updates
+            initializeSocket(server);
+            logger.info(`🔌 Socket.io initialized for real-time updates`);
 
-        // Schedule subscription expiration checks (runs daily at 3 AM)
-        cron.schedule('0 3 * * *', async () => {
-          logger.info('🔔 Checking subscription expirations...');
-          const { processExpiredSubscriptions, sendExpirationWarnings } = require('./services/subscriptionService');
-          await processExpiredSubscriptions();
-          await sendExpirationWarnings([7, 3, 1]); // Warn 7, 3, and 1 days before
-          logger.info('✅ Subscription expiration check completed');
-        });
-        logger.info('✅ Subscription expiration check enabled (daily at 3 AM)');
+            // Job queue workers are initialized above with the new centralized system
 
-        // Schedule expiration warnings (runs every 6 hours)
-        cron.schedule('0 */6 * * *', async () => {
-          logger.info('📧 Sending subscription expiration warnings...');
-          const { sendExpirationWarnings } = require('./services/subscriptionService');
-          await sendExpirationWarnings([7, 3, 1]);
-          logger.info('✅ Expiration warnings sent');
-        });
-        logger.info('✅ Expiration warnings enabled (every 6 hours)');
+            // Schedule file cleanup (runs daily at 2 AM)
+            if (process.env.NODE_ENV !== 'test') {
+              cron.schedule('0 2 * * *', async () => {
+                logger.info('🧹 Running scheduled file cleanup...');
+                const uploadsDir = path.join(__dirname, '../uploads');
+                await cleanupOldFiles(path.join(uploadsDir, 'videos'), 30); // Keep videos for 30 days
+                await cleanupOldFiles(path.join(uploadsDir, 'clips'), 14); // Keep clips for 14 days
+                await cleanupOldFiles(path.join(uploadsDir, 'thumbnails'), 14);
+                await cleanupOldFiles(path.join(uploadsDir, 'quotes'), 30);
+                logger.info('✅ File cleanup completed');
+              });
+              logger.info('✅ Scheduled file cleanup enabled (daily at 2 AM)');
 
-        // Schedule token refresh (runs every hour)
-        cron.schedule('0 * * * *', async () => {
-          logger.info('🔄 Refreshing social media tokens...');
-          const { refreshAllTokens } = require('./services/tokenRefreshService');
-          try {
-            const result = await refreshAllTokens();
-            logger.info(`✅ Token refresh completed: ${result.refreshed} refreshed, ${result.failed} failed`);
-          } catch (error) {
-            logger.error('❌ Token refresh error', { error: error.message });
-          }
-        });
-        logger.info('✅ Token refresh enabled (hourly)');
+              // Schedule subscription expiration checks (runs daily at 3 AM)
+              cron.schedule('0 3 * * *', async () => {
+                logger.info('🔔 Checking subscription expirations...');
+                const { processExpiredSubscriptions, sendExpirationWarnings } = require('./services/subscriptionService');
+                await processExpiredSubscriptions();
+                await sendExpirationWarnings([7, 3, 1]); // Warn 7, 3, and 1 days before
+                logger.info('✅ Subscription expiration check completed');
+              });
+              logger.info('✅ Subscription expiration check enabled (daily at 3 AM)');
 
-        // Schedule automatic backups (runs daily at 4 AM)
-        cron.schedule('0 4 * * *', async () => {
-          logger.info('💾 Running automatic backups...');
-          const { createUserBackup } = require('./services/backupService');
-          try {
-            // Backup all active users (in production, do this in batches)
-            const User = require('./models/User');
-            const activeUsers = await User.find({
-              'subscription.status': { $in: ['active', 'trial'] },
-            }).limit(100); // Process 100 at a time
+              // Schedule expiration warnings (runs every 6 hours)
+              cron.schedule('0 */6 * * *', async () => {
+                logger.info('📧 Sending subscription expiration warnings...');
+                const { sendExpirationWarnings } = require('./services/subscriptionService');
+                await sendExpirationWarnings([7, 3, 1]);
+                logger.info('✅ Expiration warnings sent');
+              });
+              logger.info('✅ Expiration warnings enabled (every 6 hours)');
 
-            let backedUp = 0;
-            for (const user of activeUsers) {
-              try {
-                await createUserBackup(user._id, {
-                  includeContent: true,
-                  includePosts: true,
-                  includeScripts: true,
-                  includeSettings: true,
-                });
-                backedUp++;
-              } catch (error) {
-                logger.error('Backup failed for user', { userId: user._id, error: error.message });
-              }
+              // Schedule token refresh (runs every hour)
+              cron.schedule('0 * * * *', async () => {
+                logger.info('🔄 Refreshing social media tokens...');
+                const { refreshAllTokens } = require('./services/tokenRefreshService');
+                try {
+                  const result = await refreshAllTokens();
+                  logger.info(`✅ Token refresh completed: ${result.refreshed} refreshed, ${result.failed} failed`);
+                } catch (error) {
+                  logger.error('❌ Token refresh error', { error: error.message });
+                }
+              });
+              logger.info('✅ Token refresh enabled (hourly)');
+
+              // Schedule automatic backups (runs daily at 4 AM)
+              cron.schedule('0 4 * * *', async () => {
+                logger.info('💾 Running automatic backups...');
+                const { createUserBackup } = require('./services/backupService');
+                try {
+                  // Backup all active users (in production, do this in batches)
+                  const User = require('./models/User');
+                  const activeUsers = await User.find({
+                    'subscription.status': { $in: ['active', 'trial'] },
+                  }).limit(100); // Process 100 at a time
+
+                  let backedUp = 0;
+                  for (const user of activeUsers) {
+                    try {
+                      await createUserBackup(user._id, {
+                        includeContent: true,
+                        includePosts: true,
+                        includeScripts: true,
+                        includeSettings: true,
+                      });
+                      backedUp++;
+                    } catch (error) {
+                      logger.error('Backup failed for user', { userId: user._id, error: error.message });
+                    }
+                  }
+                  logger.info(`✅ Automatic backups completed: ${backedUp} users backed up`);
+                } catch (error) {
+                  logger.error('Automatic backup error', { error: error.message });
+                }
+              });
+              logger.info('✅ Automatic backups enabled (daily at 4 AM)');
+
+              // Schedule cache warming (runs every 6 hours)
+              cron.schedule('0 */6 * * *', async () => {
+                logger.info('🔥 Warming caches...');
+                const { warmAllCaches } = require('./services/cacheWarmingService');
+                await warmAllCaches();
+                logger.info('✅ Cache warming completed');
+              });
+              logger.info('✅ Cache warming enabled (every 6 hours)');
             }
-            logger.info(`✅ Automatic backups completed: ${backedUp} users backed up`);
-          } catch (error) {
-            logger.error('Automatic backup error', { error: error.message });
-          }
-        });
-        logger.info('✅ Automatic backups enabled (daily at 4 AM)');
+          }); // Close app.listen callback
 
-        // Schedule cache warming (runs every 6 hours)
-        cron.schedule('0 */6 * * *', async () => {
-          logger.info('🔥 Warming caches...');
-          const { warmAllCaches } = require('./services/cacheWarmingService');
-          await warmAllCaches();
-          logger.info('✅ Cache warming completed');
-        });
-        logger.info('✅ Cache warming enabled (every 6 hours)');
-      }
-      }); // Close app.listen callback
-      
-      server.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
+          server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+              logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
+              logger.warn('⚠️ Keeping health check server running since main server failed to start');
+              // Don't exit - keep health check server running so Render.com can detect the port
+              return;
+            } else {
+              logger.error('Server error:', err);
+            }
+          });
+
+          logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
+        } catch (listenError) {
+          console.error('❌ Error starting main server:', listenError.message);
+          console.error('Stack:', listenError.stack);
+          logger.error('❌ Error starting main server:', { error: listenError.message, stack: listenError.stack });
+          // Keep health check server running so port stays bound
           logger.warn('⚠️ Keeping health check server running since main server failed to start');
-          // Don't exit - keep health check server running so Render.com can detect the port
           return;
-        } else {
-          logger.error('Server error:', err);
         }
-      });
-      
-      logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
-          } catch (listenError) {
-            console.error('❌ Error starting main server:', listenError.message);
-            console.error('Stack:', listenError.stack);
-            logger.error('❌ Error starting main server:', { error: listenError.message, stack: listenError.stack });
-            // Keep health check server running so port stays bound
-            logger.warn('⚠️ Keeping health check server running since main server failed to start');
-            return;
-          }
-        }, 100); // Small delay to ensure port is fully released
-      }); // Close healthCheckServer.close callback
+      }, 100); // Small delay to ensure port is fully released
+    }); // Close healthCheckServer.close callback
   } else {
     // No health check server, start main server directly
     // Helper function to start the server
@@ -2456,15 +2462,15 @@ try {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-        
+
         // Initialize Socket.io for real-time updates
         initializeSocket(server);
         logger.info(`🔌 Socket.io initialized for real-time updates`);
-        
+
         logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
         console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
       });
-      
+
       server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
           logger.error(`❌ Port ${PORT} is already in use. Attempting to free it...`);
@@ -2482,7 +2488,7 @@ try {
         }
       });
     }
-    
+
     // Check if port is available before attempting to bind
     const net = require('net');
     const tester = net.createServer();
@@ -2503,14 +2509,14 @@ try {
         startMainServer(); // Try to start anyway
       }
     });
-    
+
     tester.once('listening', () => {
       tester.once('close', () => {
         // Port is available, start server immediately
         startMainServer();
       }).close();
     });
-    
+
     tester.listen(PORT);
   }
 } catch (error) {
@@ -2518,45 +2524,45 @@ try {
   logger.error('Stack:', error.stack);
   console.error('❌ Failed to start main server:', error.message);
   console.error('Stack:', error.stack);
-  
+
   // Last resort: Create minimal server that just responds to health checks
   console.log('⚠️ Creating minimal fallback server for health checks...');
   logger.warn('⚠️ Creating minimal fallback server for health checks...');
   try {
     const express = require('express');
     const fallbackApp = express();
-    
+
     fallbackApp.get('/api/health', (req, res) => {
-      res.json({ 
-        status: 'degraded', 
+      res.json({
+        status: 'degraded',
         message: 'Server running in fallback mode. Check logs for errors.',
         error: error.message,
         port: PORT
       });
     });
-    
+
     fallbackApp.get('*', (req, res) => {
-      res.status(503).json({ 
-        status: 'error', 
+      res.status(503).json({
+        status: 'error',
         message: 'Server is in fallback mode. Check logs for errors.',
         port: PORT
       });
     });
-    
+
     const fallbackServer = fallbackApp.listen(PORT, HOST, () => {
       console.log(`✅ Fallback server running on port ${PORT}`);
       console.log(`✅ Server bound to ${HOST}:${PORT}`);
       console.log(`⚠️ Server is in degraded mode. Check logs for errors.`);
       logger.info(`✅ Fallback server bound to port ${PORT} on ${HOST}`);
     });
-    
+
     fallbackServer.on('error', (err) => {
       console.error('❌ Even fallback server failed:', err);
       console.error('Error code:', err.code);
       logger.error('❌ Even fallback server failed:', err);
       process.exit(1);
     });
-    
+
     // Keep process alive
     process.on('SIGTERM', () => {
       console.log('SIGTERM received, shutting down gracefully');

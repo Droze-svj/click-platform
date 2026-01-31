@@ -83,6 +83,13 @@ function getRedisConnection() {
       redisConnection = null;
       return null;
     }
+
+    // Reject placeholder URLs (e.g. redis://placeholder-redis:6379 from .env templates)
+    if (redisUrl.includes('placeholder')) {
+      logger.warn('⚠️ REDIS_URL appears to be a placeholder. Set a real Redis URL in Render env vars. Workers disabled.');
+      redisConnection = null;
+      return null;
+    }
     
     // Validate URL format in production
     if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
