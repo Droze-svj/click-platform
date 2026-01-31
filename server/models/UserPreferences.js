@@ -127,7 +127,7 @@ const userPreferencesSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+}, { suppressReservedKeysWarning: true }); // 'errors' in editAnalytics.sessions is intentional
 
 // userId already has unique: true which creates an index
 userPreferencesSchema.index({ 'proMode.enabled': 1 });
