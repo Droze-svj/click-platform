@@ -43,6 +43,7 @@
     "validate:env": "node scripts/validate-env.js",
     "validate:production": "node scripts/validate-production-env.js",
     "verify:production:env": "node scripts/verify-production-env.js",
+    "verify:phase0": "node scripts/verify-phase0.js",
     "verify:production:build": "bash scripts/test-production-build.sh",
     "verify:security": "node scripts/verify-security.js",
     "verify:production": "bash scripts/run-production-verification.sh",
@@ -77,7 +78,11 @@
     "deploy:best-practices": "bash scripts/deploy-best-practices.sh",
     "setup:free-tier": "bash scripts/setup-free-tier.sh",
     "setup:railway": "bash scripts/setup-railway.sh",
-    "setup:render": "bash scripts/setup-render.sh"
+    "setup:render": "bash scripts/setup-render.sh",
+    "sync": "./sync-to-github.sh",
+    "sync:pull": "git pull origin main",
+    "roadmap": "open -a Cursor ROADMAP_STATUS.md 2>/dev/null || open ROADMAP_STATUS.md",
+    "assign": "node scripts/assign.js"
   },
   "keywords": [
     "content",
@@ -113,7 +118,7 @@
     "express-validator": "^7.3.1",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^166.0.0",
-    "graphql": "^16.8.1",
+    "graphql": "^15.8.0",
     "helmet": "^7.2.0",
     "isomorphic-dompurify": "^2.9.0",
     "jsonwebtoken": "^9.0.2",
