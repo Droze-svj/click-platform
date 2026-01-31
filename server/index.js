@@ -2127,7 +2127,7 @@ app.use('/api/workflows/webhooks', require('./routes/workflows/webhooks'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/jobs/dashboard', require('./routes/jobs/dashboard'));
 app.use('/api/jobs', require('./routes/jobs/progress'));
-app.use('/api/upload/progress', require('./routes/upload/progress').router);
+app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/upload/chunked', require('./routes/upload/chunked'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/privacy', require('./routes/privacy'));
