@@ -20,18 +20,41 @@ const router = express.Router();
  */
 router.get('/daily', auth, asyncHandler(async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user?._id || req.user?.id;
+    
+    if (!userId) {
+      return sendSuccess(res, 'Suggestions fetched', 200, []);
+    }
 
+    // Check both host header and x-forwarded-host (for proxy requests)
+    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
+    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
+    
     // Get user's recent content to understand their niche
     let recentContent = [];
-    try {
-      recentContent = await Content.find({ userId })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select('title type tags category')
-        .lean();
-    } catch (error) {
-      logger.warn('Error fetching recent content for suggestions', { error: error.message, userId });
+    
+    // In development mode OR when on localhost, skip MongoDB query for dev users
+    if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
+      recentContent = [];
+    } else {
+      try {
+        recentContent = await Content.find({ userId })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .select('title type tags category')
+          .lean();
+      } catch (error) {
+        // Handle CastError gracefully for dev mode
+        if (allowDevMode && (error.name === 'CastError' || error.message?.includes('Cast to ObjectId'))) {
+          logger.warn('CastError in suggestions query, using empty array for dev mode', { error: error.message, userId });
+        } else {
+          logger.warn('Error fetching recent content for suggestions', { error: error.message, userId });
+        }
+        // Use empty array if database query fails
+        recentContent = [];
+      }
     }
 
     // Generate AI-powered suggestions
@@ -67,7 +90,8 @@ router.get('/daily', auth, asyncHandler(async (req, res) => {
 
     sendSuccess(res, 'Suggestions fetched', 200, suggestions);
   } catch (error) {
-    logger.error('Error fetching daily suggestions', { error: error.message, userId: req.user._id });
+    const userId = req.user?._id || req.user?.id;
+    logger.error('Error fetching daily suggestions', { error: error.message, stack: error.stack, userId });
     sendSuccess(res, 'Suggestions fetched', 200, []);
   }
 }));

@@ -7,14 +7,12 @@ const assetShareSchema = new mongoose.Schema({
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Content',
-    required: true,
-    index: true
+    required: true
   },
   ownerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   sharedWith: [{
     userId: {
@@ -80,7 +78,7 @@ const assetShareSchema = new mongoose.Schema({
 });
 
 assetShareSchema.index({ contentId: 1, ownerId: 1 });
-assetShareSchema.index({ publicLink: 1 });
+// publicLink already has unique: true which creates an index
 assetShareSchema.index({ 'sharedWith.userId': 1 });
 
 assetShareSchema.pre('save', function(next) {

@@ -8,8 +8,7 @@ const commandPaletteSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   // Commands
   commands: [{
@@ -45,7 +44,7 @@ const commandPaletteSchema = new mongoose.Schema({
   }
 });
 
-commandPaletteSchema.index({ userId: 1 });
+// userId already has unique: true which creates an index
 
 commandPaletteSchema.pre('save', function(next) {
   this.updatedAt = new Date();

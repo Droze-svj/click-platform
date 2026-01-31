@@ -1,50 +1,54 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import axios from 'axios'
+import { apiGet, handleApiError } from '@/lib/api'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
-
-export default function RegistrationSuccess() {
+function RegistrationSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const verificationRequired = searchParams?.get('verification') === 'required'
+  const email = searchParams?.get('email') || ''
 
   useEffect(() => {
+    if (verificationRequired) {
+      // Skip auth check if verification is required
+      setLoading(false)
+      return
+    }
     checkAuth()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verificationRequired])
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
       if (!token) {
         setError('No authentication token found. Please register again.')
         setLoading(false)
         return
       }
-
-      console.log('Checking auth with token:', token.substring(0, 20) + '...')
       
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        timeout: 60000
-      })
-
-      console.log('User data received:', response.data)
-      setUser(response.data.user || response.data.data?.user)
+      const response = await apiGet<any>('/auth/me')
+      setUser(response?.user || response?.data?.user)
       setError('')
     } catch (err: any) {
-      console.error('Auth check failed:', err)
-      setError(`Failed to verify authentication: ${err.message}`)
+      const errorMessage = handleApiError(err)
+      setError(`Failed to verify authentication: ${errorMessage}`)
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Auth check failed:', err)
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const goToDashboard = () => {
-    window.location.href = '/dashboard'
+    router.push('/dashboard')
   }
 
   if (loading) {
@@ -53,6 +57,52 @@ export default function RegistrationSuccess() {
         <div className="text-center">
           <div className="text-xl mb-4">Verifying your account...</div>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show email verification message if required
+  if (verificationRequired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-4">📧</div>
+            <h1 className="text-3xl font-bold mb-2 text-purple-600">Check Your Email!</h1>
+            <p className="text-gray-600 mb-4">
+              We've sent a verification link to <strong>{email}</strong>
+            </p>
+            <p className="text-sm text-gray-500">
+              Please click the link in the email to verify your account and complete registration.
+            </p>
+          </div>
+
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-purple-800">
+              <strong>Didn't receive the email?</strong>
+            </p>
+            <ul className="text-xs text-purple-700 mt-2 space-y-1 list-disc list-inside">
+              <li>Check your spam/junk folder</li>
+              <li>Wait a few minutes for delivery</li>
+              <li>Make sure you entered the correct email address</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 font-semibold text-lg"
+            >
+              Go to Login
+            </button>
+            <button
+              onClick={() => router.push('/register')}
+              className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300"
+            >
+              Back to Registration
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -125,3 +175,17 @@ export default function RegistrationSuccess() {
   )
 }
 
+export default function RegistrationSuccess() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="text-xl mb-4">Loading...</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+        </div>
+      </div>
+    }>
+      <RegistrationSuccessContent />
+    </Suspense>
+  )
+}

@@ -4,7 +4,8 @@ const contentSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -13,13 +14,11 @@ const contentSchema = new mongoose.Schema({
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   folderId: {
     type: mongoose.Schema.Types.ObjectId,

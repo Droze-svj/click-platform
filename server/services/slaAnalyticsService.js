@@ -15,10 +15,23 @@ async function getSLAAnalytics(clientWorkspaceId, filters = {}) {
       endDate
     } = filters;
 
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot get SLA analytics');
+      return {
+        summary: { total: 0, completed: 0, onTime: 0, atRisk: 0, overdue: 0, onTimeRate: 0, averageCompletionTime: 0 },
+        byStage: {},
+        trends: { daily: [] }
+      };
+    }
+
     // Get all approvals for client
     const approvals = await ContentApproval.find({
       'metadata.clientId': clientWorkspaceId
-    }).lean();
+    })
+      .maxTimeMS(5000)
+      .lean();
 
     const approvalIds = approvals.map(a => a._id);
 
@@ -30,7 +43,9 @@ async function getSLAAnalytics(clientWorkspaceId, filters = {}) {
       if (endDate) query.startedAt.$lte = new Date(endDate);
     }
 
-    const slas = await ApprovalSLA.find(query).lean();
+    const slas = await ApprovalSLA.find(query)
+      .maxTimeMS(5000)
+      .lean();
 
     // Calculate metrics
     const total = slas.length;
@@ -128,16 +143,27 @@ async function getSLAAnalytics(clientWorkspaceId, filters = {}) {
  */
 async function getSLAPredictions(clientWorkspaceId) {
   try {
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot get SLA predictions');
+      return {};
+    }
+
     // Get historical SLA data
     const approvals = await ContentApproval.find({
       'metadata.clientId': clientWorkspaceId
-    }).lean();
+    })
+      .maxTimeMS(5000)
+      .lean();
 
     const approvalIds = approvals.map(a => a._id);
     const slas = await ApprovalSLA.find({
       approvalId: { $in: approvalIds },
       status: 'completed'
-    }).lean();
+    })
+      .maxTimeMS(5000)
+      .lean();
 
     // Calculate average completion times by stage
     const stageAverages = {};

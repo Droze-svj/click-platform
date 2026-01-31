@@ -19,12 +19,70 @@ const router = express.Router();
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
   try {
+    const userId = req.user?._id || req.user?.id;
+    
+    // Check both host header and x-forwarded-host (for proxy requests)
+    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
+    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
+    
+    // Check if MongoDB is connected before attempting queries
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      if (allowDevMode) {
+        logger.warn('MongoDB not connected, returning empty array for templates');
+        return sendSuccess(res, 'Templates fetched', 200, []);
+      }
+      return sendError(res, 'Database connection unavailable', 503);
+    }
+    
+    // In development mode OR when on localhost, return only public/system templates for dev users
+    if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
+      // Return only public and system templates for dev users
+      const query = {
+        $or: [
+          { isPublic: true },
+          { isSystemTemplate: true }
+        ]
+      };
+      
+      const { category, niche, limit, sortBy, sortOrder } = req.query;
+      if (category) query.category = category;
+      if (niche) query.niche = niche;
+      
+      let sort = { usageCount: -1, rating: -1 };
+      if (sortBy === 'usageCount') {
+        sort = { usageCount: sortOrder === 'asc' ? 1 : -1 };
+      } else if (sortBy === 'rating') {
+        sort = { rating: sortOrder === 'asc' ? 1 : -1 };
+      }
+      
+      try {
+        // Add timeout to prevent buffering timeout errors
+        const templates = await ContentTemplate.find(query)
+          .sort(sort)
+          .limit(parseInt(limit) || 50)
+          .maxTimeMS(5000) // 5 second timeout (well below 10s buffering limit)
+          .lean();
+        return sendSuccess(res, 'Templates fetched', 200, templates || []);
+      } catch (dbError) {
+        // Handle timeout specifically
+        if (dbError.message && dbError.message.includes('buffering timed out')) {
+          logger.warn('Template query timeout for dev user, returning empty array', { error: dbError.message });
+        } else {
+          logger.warn('Error fetching templates for dev user, returning empty array', { error: dbError.message });
+        }
+        return sendSuccess(res, 'Templates fetched', 200, []);
+      }
+    }
+
     const { category, niche, public: publicOnly, limit, sortBy, sortOrder } = req.query;
 
     const query = {
       $or: [
         { isPublic: true },
-        { createdBy: req.user._id },
+        { createdBy: userId },
         { isSystemTemplate: true }
       ]
     };
@@ -48,14 +106,46 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       sort = { rating: sortOrder === 'asc' ? 1 : -1 };
     }
 
-    const templates = await ContentTemplate.find(query)
-      .sort(sort)
-      .limit(parseInt(limit) || 50)
-      .lean();
+    let templates = [];
+    try {
+      templates = await ContentTemplate.find(query)
+        .sort(sort)
+        .limit(parseInt(limit) || 50)
+        .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
+        .lean();
+    } catch (dbError) {
+      // Handle timeout specifically
+      if (dbError.message && (dbError.message.includes('buffering timed out') || dbError.message.includes('timed out'))) {
+        logger.warn('Templates query timeout, returning empty array', { error: dbError.message, userId });
+        templates = [];
+      }
+      // Handle CastError gracefully for dev mode
+      else if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId'))) {
+        logger.warn('CastError in templates query, returning only public templates for dev mode', { error: dbError.message, userId });
+        // Try to get only public templates
+        try {
+          const publicQuery = { isPublic: true };
+          if (category) publicQuery.category = category;
+          if (niche) publicQuery.niche = niche;
+          templates = await ContentTemplate.find(publicQuery)
+            .sort(sort)
+            .limit(parseInt(limit) || 50)
+            .maxTimeMS(5000)
+            .lean();
+        } catch (e) {
+          logger.warn('Error fetching public templates, returning empty array', { error: e.message });
+          templates = [];
+        }
+      } else {
+        logger.warn('Error fetching templates from database', { error: dbError.message, userId });
+        templates = [];
+      }
+    }
 
     sendSuccess(res, 'Templates fetched', 200, templates || []);
   } catch (error) {
-    logger.error('Error fetching templates', { error: error.message, userId: req.user._id });
+    const userId = req.user?._id || req.user?.id;
+    logger.error('Error fetching templates', { error: error.message, stack: error.stack, userId });
     sendSuccess(res, 'Templates fetched', 200, []);
   }
 }));
@@ -102,7 +192,14 @@ router.post('/', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.post('/:templateId/use', auth, asyncHandler(async (req, res) => {
-  const template = await ContentTemplate.findById(req.params.templateId);
+  // Check if MongoDB is connected before attempting queries
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return sendError(res, 'Database connection unavailable', 503);
+  }
+
+  const template = await ContentTemplate.findById(req.params.templateId)
+    .maxTimeMS(8000);
 
   if (!template) {
     return sendError(res, 'Template not found', 404);
@@ -124,7 +221,14 @@ router.post('/:templateId/use', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/:templateId', auth, asyncHandler(async (req, res) => {
-  const template = await ContentTemplate.findById(req.params.templateId);
+  // Check if MongoDB is connected before attempting queries
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return sendError(res, 'Database connection unavailable', 503);
+  }
+
+  const template = await ContentTemplate.findById(req.params.templateId)
+    .maxTimeMS(8000);
 
   if (!template) {
     return sendError(res, 'Template not found', 404);
@@ -148,7 +252,14 @@ router.get('/:templateId', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.delete('/:templateId', auth, asyncHandler(async (req, res) => {
-  const template = await ContentTemplate.findById(req.params.templateId);
+  // Check if MongoDB is connected before attempting queries
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return sendError(res, 'Database connection unavailable', 503);
+  }
+
+  const template = await ContentTemplate.findById(req.params.templateId)
+    .maxTimeMS(8000);
 
   if (!template) {
     return sendError(res, 'Template not found', 404);
@@ -172,6 +283,12 @@ router.delete('/:templateId', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.post('/:templateId/rate', auth, asyncHandler(async (req, res) => {
+  // Check if MongoDB is connected before attempting queries
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 1) {
+    return sendError(res, 'Database connection unavailable', 503);
+  }
+
   const { templateId } = req.params;
   const { rating, review } = req.body;
 
@@ -179,7 +296,8 @@ router.post('/:templateId/rate', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Rating must be between 1 and 5', 400);
   }
 
-  const template = await ContentTemplate.findById(templateId);
+  const template = await ContentTemplate.findById(templateId)
+    .maxTimeMS(8000);
   if (!template) {
     return sendError(res, 'Template not found', 404);
   }
@@ -227,37 +345,62 @@ router.post('/:templateId/rate', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/marketplace', auth, asyncHandler(async (req, res) => {
-  const { category, niche, featured, sortBy = 'popular', limit = 20, skip = 0 } = req.query;
+  try {
+    // Check if MongoDB is connected before attempting queries
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, returning empty array for marketplace templates');
+      return sendSuccess(res, 'Marketplace templates fetched', 200, []);
+    }
 
-  const query = { isPublic: true };
+    const { category, niche, featured, sortBy = 'popular', limit = 20, skip = 0 } = req.query;
 
-  if (category) query.category = category;
-  if (niche) query.niche = niche;
-  if (featured === 'true') query.isFeatured = true;
+    const query = { isPublic: true };
 
-  let sort = {};
-  switch (sortBy) {
-    case 'popular':
-      sort = { usageCount: -1, rating: -1 };
-      break;
-    case 'rating':
-      sort = { rating: -1, usageCount: -1 };
-      break;
-    case 'newest':
-      sort = { createdAt: -1 };
-      break;
-    default:
-      sort = { usageCount: -1 };
+    if (category) query.category = category;
+    if (niche) query.niche = niche;
+    if (featured === 'true') query.isFeatured = true;
+
+    let sort = {};
+    switch (sortBy) {
+      case 'popular':
+        sort = { usageCount: -1, rating: -1 };
+        break;
+      case 'rating':
+        sort = { rating: -1, usageCount: -1 };
+        break;
+      case 'newest':
+        sort = { createdAt: -1 };
+        break;
+      default:
+        sort = { usageCount: -1 };
+    }
+
+    let templates = [];
+    try {
+      templates = await ContentTemplate.find(query)
+        .populate('createdBy', 'name email')
+        .sort(sort)
+        .skip(parseInt(skip))
+        .limit(parseInt(limit))
+        .maxTimeMS(5000) // 5 second timeout to prevent buffering timeout
+        .lean();
+    } catch (dbError) {
+      // Handle timeout specifically
+      if (dbError.message && (dbError.message.includes('buffering timed out') || dbError.message.includes('timed out'))) {
+        logger.warn('Marketplace templates query timeout, returning empty array', { error: dbError.message });
+      } else {
+        logger.warn('Error fetching marketplace templates from database', { error: dbError.message });
+      }
+      // Return empty array if database query fails
+      templates = [];
+    }
+
+    sendSuccess(res, 'Marketplace templates fetched', 200, templates);
+  } catch (error) {
+    logger.error('Error fetching marketplace templates', { error: error.message, stack: error.stack });
+    sendSuccess(res, 'Marketplace templates fetched', 200, []);
   }
-
-  const templates = await ContentTemplate.find(query)
-    .populate('createdBy', 'name email')
-    .sort(sort)
-    .skip(parseInt(skip))
-    .limit(parseInt(limit))
-    .lean();
-
-  sendSuccess(res, 'Marketplace templates fetched', 200, templates);
 }));
 
 module.exports = router;

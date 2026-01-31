@@ -115,14 +115,47 @@ export default function AdvancedVisualEffects({
   const [previewMode, setPreviewMode] = useState(false)
   const { showToast } = useToast()
 
-  // Update parent component when effects change
+  // Track previous effects to prevent unnecessary updates
+  const prevEffectsRef = useRef<{
+    particleSystems: ParticleSystem[]
+    lensFlares: LensFlare[]
+    lightEffects: LightEffect[]
+    motionEffects: MotionEffect[]
+  } | null>(null)
+
+  // Update parent component when effects change (only if actually changed)
   useEffect(() => {
-    onEffectChange({
+    const currentEffects = {
       particleSystems,
       lensFlares,
       lightEffects,
       motionEffects
-    })
+    }
+
+    // Check if effects actually changed
+    if (prevEffectsRef.current) {
+      const prev = prevEffectsRef.current
+      const hasChanged = 
+        JSON.stringify(prev.particleSystems) !== JSON.stringify(currentEffects.particleSystems) ||
+        JSON.stringify(prev.lensFlares) !== JSON.stringify(currentEffects.lensFlares) ||
+        JSON.stringify(prev.lightEffects) !== JSON.stringify(currentEffects.lightEffects) ||
+        JSON.stringify(prev.motionEffects) !== JSON.stringify(currentEffects.motionEffects)
+      
+      if (!hasChanged) {
+        return // No changes, skip update
+      }
+    }
+
+    // Update ref before calling callback
+    prevEffectsRef.current = {
+      particleSystems: [...particleSystems],
+      lensFlares: [...lensFlares],
+      lightEffects: [...lightEffects],
+      motionEffects: [...motionEffects]
+    }
+
+    // Call the callback
+    onEffectChange(currentEffects)
   }, [particleSystems, lensFlares, lightEffects, motionEffects, onEffectChange])
 
   const addParticleSystem = useCallback((type: ParticleSystem['type']) => {

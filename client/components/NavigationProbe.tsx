@@ -38,6 +38,17 @@ export default function NavigationProbe() {
     }
 
     const send = (message: string, data: Record<string, any>) => {
+      console.log('NavigationProbe:', message, data)
+      // Send to debug endpoint if available (use relative path)
+      fetch('/api/debug/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          component: 'NavigationProbe',
+          message,
+          data: { ...data, timestamp: Date.now() }
+        }),
+      }).catch(() => {}) // Ignore errors in debug logging
     }
 
     const ua = (() => {

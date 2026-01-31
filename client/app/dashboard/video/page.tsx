@@ -48,19 +48,53 @@ export default function VideoPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
 
-  const loadVideos = useCallback(async () => {
+  const loadVideos = useCallback(async (isRetry = false) => {
+    if (isRetry) {
+      setIsRetrying(true)
+      setRetryCount(prev => prev + 1)
+    }
+
     try {
       const response = await apiGet<any>('/video')
       const videos = response?.data || response || []
       setVideos(Array.isArray(videos) ? videos : [])
+      setError('') // Clear any previous errors on success
+      setRetryCount(0) // Reset retry count on success
     } catch (error: any) {
       const errorObj = extractApiError(error)
-      setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load videos')
+
+      // Handle different error types
+      if (error.name === 'DatabaseTimeoutError') {
+        setError('The server is temporarily unavailable. Videos will load automatically when the service is back online.')
+        // Try to reload after a delay if not already retrying too much
+        if (retryCount < 3) {
+          setTimeout(() => loadVideos(true), 10000)
+        }
+      } else if (error.response?.status === 500) {
+        setError('Server temporarily unavailable. You can try again or refresh the page.')
+      } else if (error.response?.status === 401) {
+        setError('Authentication expired. Please log in again.')
+        router.push('/login')
+      } else {
+        setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load videos')
+      }
+
+      // Still show empty state even on error
+      setVideos([])
     } finally {
       setLoading(false)
+      setIsRetrying(false)
     }
-  }, [])
+  }, [router, retryCount])
+
+  const handleRetry = useCallback(() => {
+    setLoading(true)
+    setError('')
+    loadVideos(true)
+  }, [loadVideos])
 
   useEffect(() => {
     if (!user) {
@@ -70,17 +104,23 @@ export default function VideoPage() {
     loadVideos()
   }, [user, loadVideos])
 
-  // Listen for real-time video processing updates
+  // Listen for real-time video processing updates (global listener for any video)
+  // Note: This is a fallback for videos not currently being tracked in handleUpload
   useEffect(() => {
     if (!socket || !connected) return
 
     const handleVideoProcessed = (data: any) => {
       if (data.status === 'completed') {
-        setSuccess(`Video processing complete! ${data.clips} clips generated.`)
-        loadVideos()
+        setSuccess(`Video processing complete! ${data.clips || 0} clips generated.`)
+        // Reload videos after a short delay
+        setTimeout(() => {
+          loadVideos()
+        }, 500)
       } else if (data.status === 'failed') {
         setError('Video processing failed')
-        loadVideos()
+        setTimeout(() => {
+          loadVideos()
+        }, 500)
       }
     }
 
@@ -91,21 +131,141 @@ export default function VideoPage() {
     }
   }, [socket, connected, on, off, loadVideos])
 
+  // Auto-refresh videos every 30 seconds if there are processing videos
+  useEffect(() => {
+    const hasProcessingVideos = videos.some(v => v.status === 'processing')
+    
+    if (!hasProcessingVideos) return
 
-  const handleUpload = async (file: File, uploadResponse?: any) => {
+    const refreshInterval = setInterval(() => {
+      loadVideos()
+    }, 30000) // Refresh every 30 seconds
+
+    return () => clearInterval(refreshInterval)
+  }, [videos, loadVideos])
+
+  // Define pollVideoStatus BEFORE handleUpload since handleUpload depends on it
+  const pollVideoStatus = useCallback(async (contentId: string, onComplete?: () => void) => {
+    let pollCount = 0
+    const maxPolls = 100 // Stop after 100 polls (5 minutes at 3s interval)
+    let isPolling = true
+
+    const interval = setInterval(async () => {
+      if (!isPolling || pollCount >= maxPolls) {
+        clearInterval(interval)
+        return
+      }
+
+      pollCount++
+      
+      try {
+        const response = await apiGet<any>(`/video/${contentId}/status`)
+        
+        const status = response?.status || response?.data?.status
+        const progress = response?.progress || response?.data?.progress || 0
+        
+        if (status === 'completed') {
+          clearInterval(interval)
+          isPolling = false
+          setSuccess(`Video processing complete! ${response?.data?.clipsCount || 0} clips generated.`)
+          // Reload videos after a short delay to ensure backend has updated
+          setTimeout(() => {
+            loadVideos()
+          }, 500)
+          // Call onComplete callback if provided (for redirect)
+          if (onComplete) {
+            setTimeout(() => {
+              onComplete()
+            }, 1500)
+          }
+        } else if (status === 'failed') {
+          clearInterval(interval)
+          isPolling = false
+          setError('Video processing failed. Please try uploading again.')
+          await loadVideos()
+        } else if (status === 'processing') {
+          // Update success message with progress
+          if (progress > 0) {
+            setSuccess(`Video processing: ${progress}% complete...`)
+          }
+        }
+      } catch (error: any) {
+        // Log error but continue polling unless it's a 404 (video not found)
+        if (error.response?.status === 404) {
+          clearInterval(interval)
+          isPolling = false
+          setError('Video not found. Please try uploading again.')
+        } else if (pollCount >= 10) {
+          // After 10 failed polls, log warning but continue
+          console.warn('Video status polling encountered errors:', error)
+        }
+      }
+    }, 3000) // Poll every 3 seconds
+
+    // Stop polling after 5 minutes
+    setTimeout(() => {
+      if (isPolling) {
+        clearInterval(interval)
+        isPolling = false
+        // Final check and reload
+        loadVideos()
+      }
+    }, 300000)
+  }, [loadVideos, setSuccess, setError])
+
+  const handleUpload = useCallback(async (file: File, uploadResponse?: any) => {
     setError('')
     setSuccess('')
 
     try {
       // uploadResponse is provided from XMLHttpRequest in FileUpload component
       if (uploadResponse) {
-        setSuccess('Video uploaded! Processing will begin shortly.')
+        const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
+        
+        if (!contentId) {
+          setError('Upload response missing content ID')
+          return
+        }
+
+        setSuccess('Video uploaded! Processing will begin shortly...')
+        
+        // Reload videos immediately to show the new upload
         await loadVideos()
         
-        // Real-time updates via Socket.io, fallback to polling if not connected
-        const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
-        if (contentId && !connected) {
-          pollVideoStatus(contentId)
+        // Always start polling, socket.io will supplement it if connected
+        // Poll until video is ready, then redirect to edit page
+        pollVideoStatus(contentId, () => {
+          // Redirect to edit page after processing completes
+          router.push(`/dashboard/video/edit/${contentId}`)
+        })
+        
+        // Also set up socket listener for this specific video if connected
+        if (socket && connected) {
+          const handleVideoProcessed = (data: any) => {
+            if (data.contentId === contentId) {
+              if (data.status === 'completed') {
+                setSuccess(`Video processing complete! Redirecting to editor...`)
+                // Redirect to edit page after short delay
+                setTimeout(() => {
+                  router.push(`/dashboard/video/edit/${contentId}`)
+                }, 1500)
+                // Clean up listener when completed
+                off('video-processed', handleVideoProcessed)
+              } else if (data.status === 'failed') {
+                setError('Video processing failed')
+                loadVideos()
+                // Clean up listener on failure
+                off('video-processed', handleVideoProcessed)
+              }
+            }
+          }
+          
+          on('video-processed', handleVideoProcessed)
+          
+          // Clean up listener after 5 minutes as a safety measure
+          setTimeout(() => {
+            off('video-processed', handleVideoProcessed)
+          }, 300000)
         }
       } else {
         // This should not happen when uploadUrl is provided to FileUpload
@@ -115,31 +275,7 @@ export default function VideoPage() {
     } catch (error: any) {
       setError(error.response?.data?.error || error.message || 'Upload failed')
     }
-  }
-
-  const pollVideoStatus = async (contentId: string) => {
-    const interval = setInterval(async () => {
-      try {
-        const response = await apiGet<any>(`/video/${contentId}/status`)
-        
-        const status = response?.status || response?.data?.status
-        if (status === 'completed') {
-          clearInterval(interval)
-          setSuccess('Video processing complete!')
-          await loadVideos()
-        } else if (status === 'failed') {
-          clearInterval(interval)
-          setError('Video processing failed')
-          clearInterval(interval)
-        }
-      } catch (error) {
-        clearInterval(interval)
-      }
-    }, 3000) // Poll every 3 seconds
-
-    // Stop polling after 5 minutes
-    setTimeout(() => clearInterval(interval), 300000)
-  }
+  }, [socket, connected, on, off, loadVideos, pollVideoStatus, router])
 
   return (
     <ErrorBoundary>
@@ -166,6 +302,22 @@ export default function VideoPage() {
         {error && (
           <div className="mb-4">
             <ErrorAlert message={error} onClose={() => setError('')} />
+            {(error.includes('temporarily unavailable') || error.includes('Server temporarily unavailable')) && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleRetry}
+                  disabled={isRetrying || loading}
+                  className="btn-modern btn-modern-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRetrying ? 'Retrying...' : 'Try Again'}
+                </button>
+                {retryCount > 0 && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                    Retry attempt {retryCount}/3
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -184,7 +336,7 @@ export default function VideoPage() {
           </div>
           <FileUpload
             onUpload={handleUpload}
-            uploadUrl={`${API_URL}/video/upload`}
+            uploadUrl="/api/video/upload"
             accept={{ 'video/*': ['.mp4', '.mov', '.avi', '.mkv', '.webm'] }}
             maxSize={1073741824}
             disabled={uploading}

@@ -221,7 +221,7 @@ router.delete('/history/:id', auth, asyncHandler(async (req, res) => {
   await SearchHistory.findOneAndDelete({
     _id: id,
     userId: req.user._id
-  });
+  }).maxTimeMS(8000);
 
   sendSuccess(res, 'History item deleted', 200);
 }));
@@ -231,7 +231,7 @@ router.delete('/history/:id', auth, asyncHandler(async (req, res) => {
  * Clear all search history
  */
 router.delete('/history', auth, asyncHandler(async (req, res) => {
-  await SearchHistory.deleteMany({ userId: req.user._id });
+  await SearchHistory.deleteMany({ userId: req.user._id }).maxTimeMS(8000);
   sendSuccess(res, 'Search history cleared', 200);
 }));
 

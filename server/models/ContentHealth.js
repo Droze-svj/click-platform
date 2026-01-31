@@ -7,19 +7,16 @@ const contentHealthSchema = new mongoose.Schema({
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   analysisDate: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   overallScore: {
     type: Number,

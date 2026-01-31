@@ -21,13 +21,23 @@ function startSLAMonitoring() {
   // Run every 15 minutes
   cronJob = cron.schedule('*/15 * * * *', async () => {
     try {
+      // Check MongoDB connection before querying
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState !== 1) {
+        logger.warn('MongoDB not connected, skipping SLA status check');
+        return;
+      }
+
       logger.debug('Running SLA status check');
 
-      // Get all active SLAs
+      // Get all active SLAs with timeout
       const slas = await ApprovalSLA.find({
         status: { $in: ['on_time', 'at_risk', 'overdue'] },
         completedAt: null
-      }).select('approvalId').lean();
+      })
+        .select('approvalId')
+        .maxTimeMS(5000) // 5 second timeout
+        .lean();
 
       const approvalIds = [...new Set(slas.map(s => s.approvalId.toString()))];
 

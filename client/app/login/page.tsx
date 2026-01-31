@@ -2,20 +2,40 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { apiPost, setAuthToken, handleApiError } from '../../lib/api'
 import FormField from '../../components/FormField'
 import LoadingSpinner from '../../components/LoadingSpinner'
-
-// IMPORTANT: In local dev we want the Next rewrite proxy (`/api`) so auth tokens match the local backend.
-// If this defaults to a remote backend, you can end up with a JWT that the local server rejects → 401 → redirected back to login.
-const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function Login() {
+  const { t } = useTranslation()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Check if user is already authenticated and redirect if so
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('token')
+      if (token && token.startsWith('dev-jwt-token-')) {
+        // User has a dev token, redirect to dashboard
+        console.log('🔧 [Login] Dev token found, redirecting to dashboard')
+        router.push('/dashboard')
+        return
+      }
+
+      // In development mode, set dev credentials for easy login
+      if (process.env.NODE_ENV === 'development') {
+        setEmail('admin@example.com')
+        setPassword('admin123')
+      }
+    }
+
+    checkAuth()
+  }, [router])
   const __loginDebugPanelRenderedRef = useRef(false)
   const __stateRef = useRef<{ emailLen: number; passwordLen: number; loading: boolean }>({
     emailLen: 0,
@@ -24,10 +44,10 @@ export default function Login() {
   })
 
   const apiBase = useMemo(() => {
-    if (typeof window === 'undefined') return DEFAULT_API_URL
+    if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_API_URL || '/api'
     const host = window.location.hostname
     if (host === 'localhost' || host === '127.0.0.1') return '/api'
-    return DEFAULT_API_URL
+    return process.env.NEXT_PUBLIC_API_URL || '/api'
   }, [])
 
 
@@ -99,54 +119,46 @@ export default function Login() {
     setLoading(true)
 
     try {
+      const response = await apiPost<{ data?: { token?: string }, token?: string }>('/auth/login', {
+        email: emailToUse,
+        password: passwordToUse,
+      })
 
-      const response = await axios.post(
-        `${apiBase}/auth/login`,
-        {
-          email: emailToUse,
-          password: passwordToUse,
-        },
-        {
-          timeout: 60000 // 60 seconds - Render.com free tier can take time to wake up
-        }
-      )
+      const token = response.data?.token || response.token
+      if (!token) {
+        setError('Login successful but no token received. Please try again.')
+        return
+      }
 
-      const token = response.data.data?.token || response.data.token
-
-      localStorage.setItem('token', token)
+      setAuthToken(token)
       router.push('/dashboard')
     } catch (err: any) {
-      let errorMessage = 'Login failed'
+      const errorMessage = handleApiError(err)
       
-      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        errorMessage = 'Request timed out. The server may be waking up (this can take 30-60 seconds on free tier). Please try again in a moment.'
+      // Add specific timeout handling
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout') || err.name === 'DatabaseTimeoutError') {
+        setError('Request timed out. The server may be waking up (this can take 30-60 seconds on free tier). Please try again in a moment.')
       } else if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        const isProduction = apiBase.includes('render.com') || apiBase.includes('onrender.com')
-        if (isProduction) {
-          errorMessage = 'Cannot connect to server. The server may be sleeping (free tier). Please wait 30-60 seconds and try again.'
-        } else {
-          errorMessage = 'Cannot connect to server. Make sure the backend is running.'
-        }
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message
+        setError('Cannot connect to server. Make sure the backend is running.')
+      } else {
+        setError(errorMessage)
       }
-      
-      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4 relative">
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 hover:shadow-3xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Welcome Back
+            {t('auth.loginTitle')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">Sign in to your account</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('auth.loginSubtitle')}</p>
         </div>
 
         
@@ -162,7 +174,7 @@ export default function Login() {
         className="space-y-5"
       >
           <FormField
-            label="Email"
+            label={t('auth.email')}
             name="email"
             type="email"
             value={email}
@@ -175,13 +187,13 @@ export default function Login() {
           />
 
           <FormField
-            label="Password"
+            label={t('auth.password')}
             name="password"
             type="password"
             value={password}
             onChange={setPassword}
             error={error && error.includes('password') ? error : undefined}
-            placeholder="Enter your password"
+            placeholder={t('auth.passwordPlaceholder')}
             required
             validate={validatePassword}
             showPasswordToggle
@@ -197,22 +209,22 @@ export default function Login() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <LoadingSpinner size="sm" />
-                Logging in...
+                {t('auth.loggingIn')}
               </span>
             ) : (
-              'Sign In'
+              t('auth.login')
             )}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <a 
               href="/register" 
               className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium hover:underline transition-colors"
             >
-              Sign up
+              {t('auth.register')}
             </a>
           </p>
         </div>

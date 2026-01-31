@@ -7,14 +7,12 @@ const clientOnboardingSchema = new mongoose.Schema({
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   status: {
     type: String,
@@ -79,7 +77,7 @@ const clientOnboardingSchema = new mongoose.Schema({
 });
 
 clientOnboardingSchema.index({ agencyWorkspaceId: 1, status: 1 });
-clientOnboardingSchema.index({ clientWorkspaceId: 1 });
+// clientWorkspaceId already indexed above in compound index
 
 clientOnboardingSchema.pre('save', function(next) {
   this.updatedAt = new Date();

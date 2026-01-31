@@ -174,13 +174,17 @@ class AlertingSystem {
     try {
       const transporter = this.transporters.get('email')
       if (!transporter) return
+      const to = this.config.email.to
+      if (!to || !Array.isArray(to) || to.length === 0) {
+        return // No recipients defined; skip email to avoid "No recipients defined" error
+      }
 
       const subject = `[${alert.severity.toUpperCase()}] ${alert.type} - ${process.env.NODE_ENV || 'production'}`
       const html = this.formatEmailAlert(alert)
 
       await transporter.sendMail({
         from: this.config.email.from,
-        to: this.config.email.to,
+        to,
         subject,
         html
       })

@@ -38,14 +38,12 @@ const aiTemplateSchema = new mongoose.Schema({
   },
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   // Base prompt
   prompt: {

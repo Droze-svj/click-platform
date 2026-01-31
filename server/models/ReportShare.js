@@ -78,7 +78,7 @@ const reportShareSchema = new mongoose.Schema({
   }
 });
 
-reportShareSchema.index({ token: 1 });
+// token already has unique: true which creates an index
 reportShareSchema.index({ reportId: 1, sharedBy: 1 });
 
 reportShareSchema.pre('save', function(next) {

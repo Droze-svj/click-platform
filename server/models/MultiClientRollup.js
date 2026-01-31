@@ -94,8 +94,8 @@ const multiClientRollupSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
     required: true,
-    unique: true,
-    index: true
+    unique: true
+    // unique: true already creates an index, and it's also in compound index below
   },
   // Period
   period: {

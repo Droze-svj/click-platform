@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import LoadingSpinner from './LoadingSpinner'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 interface Workflow {
   id: string
@@ -32,7 +30,6 @@ interface WorkflowSuggestion {
 export default function EnhancedWorkflowBuilder() {
   const { user } = useAuth()
   const { showToast } = useToast()
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [suggestions, setSuggestions] = useState<WorkflowSuggestion[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,18 +44,17 @@ export default function EnhancedWorkflowBuilder() {
   })
 
   useEffect(() => {
-    if (user && token) {
+    if (user) {
       loadWorkflows()
       loadSuggestions()
     }
-  }, [user, token])
+  }, [user])
 
   const loadWorkflows = async () => {
     try {
-      const response = await axios.get(`${API_URL}/workflows`, {
-      })
-      if (response.data.success) {
-        setWorkflows(response.data.data || [])
+      const response = await apiGet<{ success: boolean; data: Workflow[] }>('/workflows')
+      if (response.success) {
+        setWorkflows(response.data || [])
       }
     } catch (error) {
       showToast('Failed to load workflows', 'error')
@@ -69,13 +65,13 @@ export default function EnhancedWorkflowBuilder() {
 
   const loadSuggestions = async () => {
     try {
-      const response = await axios.get(`${API_URL}/workflows/enhanced/suggestions`, {
-      })
-      if (response.data.success) {
-        setSuggestions(response.data.data || [])
+      const response = await apiGet<{ success: boolean; data: WorkflowSuggestion[] }>('/workflows/enhanced/suggestions')
+      if (response.success) {
+        setSuggestions(response.data || [])
       }
     } catch (error) {
-      // Silent fail
+      // Silent fail - suggestions are optional
+      console.debug('Failed to load workflow suggestions:', error)
     }
   }
 
@@ -86,12 +82,7 @@ export default function EnhancedWorkflowBuilder() {
     }
 
     try {
-      await axios.post(
-        `${API_URL}/workflows/enhanced`,
-        newWorkflow,
-        {
-        }
-      )
+      await apiPost('/workflows/enhanced', newWorkflow)
       showToast('Workflow created successfully!', 'success')
       setShowCreateModal(false)
       setNewWorkflow({
@@ -123,12 +114,7 @@ export default function EnhancedWorkflowBuilder() {
 
   const handleExecuteWorkflow = async (workflowId: string) => {
     try {
-      await axios.post(
-        `${API_URL}/workflows/enhanced/${workflowId}/execute`,
-        {},
-        {
-        }
-      )
+      await apiPost(`/workflows/enhanced/${workflowId}/execute`, {})
       showToast('Workflow executed successfully!', 'success')
     } catch (error: any) {
       showToast(error.response?.data?.error || 'Failed to execute workflow', 'error')

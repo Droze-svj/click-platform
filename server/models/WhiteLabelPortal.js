@@ -7,14 +7,12 @@ const whiteLabelPortalSchema = new mongoose.Schema({
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   clientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   subdomain: {
     type: String,
@@ -73,7 +71,7 @@ const whiteLabelPortalSchema = new mongoose.Schema({
 });
 
 whiteLabelPortalSchema.index({ workspaceId: 1, clientId: 1 });
-whiteLabelPortalSchema.index({ subdomain: 1 });
+// subdomain already has unique: true which creates an index
 
 whiteLabelPortalSchema.pre('save', function(next) {
   this.updatedAt = new Date();

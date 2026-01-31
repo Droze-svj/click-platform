@@ -39,18 +39,44 @@ async function getPersonalizedRecommendations(userId, options = {}) {
       platform = null,
     } = options;
 
-    // Get user's content history
-    const userContent = await Content.find({
-      userId,
-      status: 'published',
-    })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .select('title body tags category platform views likes')
-      .lean();
+    // Handle dev users - return empty array to avoid MongoDB CastErrors
+    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+      logger.info('Returning empty recommendations for dev user');
+      return {
+        recommendations: [],
+        insights: {},
+        topPlatforms: []
+      };
+    }
 
-    // Get user profile
-    const user = await User.findById(userId).select('name email preferences').lean();
+    // Get user's content history - wrap in try-catch to handle CastErrors
+    let userContent = [];
+    let user = null;
+    
+    try {
+      userContent = await Content.find({
+        userId,
+        status: 'published',
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .select('title body tags category platform views likes')
+        .lean();
+
+      // Get user profile
+      user = await User.findById(userId).select('name email preferences').lean();
+    } catch (dbError) {
+      // If it's a CastError, return empty recommendations
+      if (dbError.name === 'CastError' || dbError.message?.includes('Cast to ObjectId')) {
+        logger.warn('CastError in getPersonalizedRecommendations, returning empty recommendations', { error: dbError.message, userId });
+        return {
+          recommendations: [],
+          insights: {},
+          topPlatforms: []
+        };
+      }
+      throw dbError;
+    }
 
     // Analyze user preferences
     const preferences = analyzeUserPreferences(userContent);
@@ -263,6 +289,18 @@ async function learnFromBehavior(userId, behaviorData) {
  */
 async function getTrendBasedSuggestions(userId, platform) {
   try {
+    // In development mode, return mock suggestions for dev users
+    if (process.env.NODE_ENV === 'development' && userId && userId.toString().startsWith('dev-')) {
+      logger.info('Returning mock trend-based suggestions in development for dev user');
+      return {
+        suggestions: [
+          { id: 'dev-trend-1', title: 'Dev: AI Trends', description: 'Mock AI trend for dev', platform: platform || 'instagram' },
+          { id: 'dev-trend-2', title: 'Dev: Short-form Video', description: 'Mock short-form video trend', platform: platform || 'tiktok' }
+        ],
+        trends: []
+      };
+    }
+
     const { analyzeTrends } = require('./aiIdeationService');
     const trends = await analyzeTrends(platform);
 

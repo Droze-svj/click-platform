@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, lazy, Suspense } from 'react'
+import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Navbar from '../../components/Navbar'
+// Navbar removed - provided by dashboard layout
 import { extractApiData } from '../../utils/apiResponse'
 import SubscriptionBanner from '../../components/SubscriptionBanner'
 import NextStepsPanel from '../../components/NextStepsPanel'
@@ -19,18 +20,37 @@ import { useKeyboardShortcuts, defaultShortcuts } from '../../hooks/useKeyboardS
 import { useEngagement } from '../../hooks/useEngagement'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { useAuth } from '../../hooks/useAuth'
+import { useTranslation } from '../../hooks/useTranslation'
 import DashboardOverview from '../../components/DashboardOverview'
 
-// Dynamic imports for better code splitting and performance
-import { DynamicAnalytics, DynamicPredictiveAnalytics } from '../../components/DynamicImports'
+function DynamicFallback() {
+  return <LoadingSkeleton type="card" count={1} />
+}
 
-// Lazy load heavy components for better performance
-const EnhancedContentSuggestions = lazy(() => import('../../components/EnhancedContentSuggestions'))
-const AIRecommendations = lazy(() => import('../../components/AIRecommendations'))
-const SmartSuggestions = lazy(() => import('../../components/SmartSuggestions'))
-const DailyChallenges = lazy(() => import('../../components/DailyChallenges'))
-const QuickTemplateAccess = lazy(() => import('../../components/QuickTemplateAccess'))
-const AIMultiModelSelector = lazy(() => import('../../components/AIMultiModelSelector'))
+const EnhancedContentSuggestions = dynamic(
+  () => import('../../components/EnhancedContentSuggestions'),
+  { loading: DynamicFallback, ssr: false }
+)
+const AIRecommendations = dynamic(
+  () => import('../../components/AIRecommendations'),
+  { loading: DynamicFallback, ssr: false }
+)
+const SmartSuggestions = dynamic(
+  () => import('../../components/SmartSuggestions'),
+  { loading: DynamicFallback, ssr: false }
+)
+const DailyChallenges = dynamic(
+  () => import('../../components/DailyChallenges'),
+  { loading: DynamicFallback, ssr: false }
+)
+const QuickTemplateAccess = dynamic(
+  () => import('../../components/QuickTemplateAccess'),
+  { loading: DynamicFallback, ssr: false }
+)
+const AIMultiModelSelector = dynamic(
+  () => import('../../components/AIMultiModelSelector'),
+  { loading: DynamicFallback, ssr: false }
+)
 
 interface User {
   id: string
@@ -73,6 +93,7 @@ export default function Dashboard() {
 
   const router = useRouter()
   const { user, loading } = useAuth()
+  const { t } = useTranslation()
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts(defaultShortcuts(router))
@@ -85,7 +106,6 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <LoadingSkeleton type="card" count={6} />
         </div>
@@ -99,7 +119,6 @@ export default function Dashboard() {
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 bg-mesh relative">
         <div className="absolute inset-0 bg-dots"></div>
-        <Navbar />
         <SubscriptionBanner />
         <NextStepsPanel />
         <QuickActions />
@@ -121,12 +140,11 @@ export default function Dashboard() {
             <div className="text-center mb-16 animate-slide-in-up">
               <h1 className="text-hero mb-6 animate-float-subtle">
                 <span className="gradient-cosmic">
-                  Welcome to Click
+                  {t('dashboard.heroWelcome')}
                 </span>
               </h1>
               <p className="text-readable-lg max-w-3xl mx-auto text-center animate-fade-in-blur">
-                Your creative workspace for content creation, automation, and growth.
-                Transform ideas into engaging content with AI-powered tools.
+                {t('dashboard.heroDescription')}
               </p>
 
               {/* Animated accent line */}
@@ -142,11 +160,11 @@ export default function Dashboard() {
                   {user.usage?.videosProcessed ?? 0}
                 </div>
                 <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  Videos Processed
+                  {t('dashboard.stats.videosProcessed')}
                 </div>
                 <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    Click to view details →
+                    {t('dashboard.clickToView')}
                   </div>
                 </div>
               </div>
@@ -155,11 +173,11 @@ export default function Dashboard() {
                   {user.usage?.contentGenerated ?? 0}
                 </div>
                 <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  Content Created
+                  {t('dashboard.stats.contentCreated')}
                 </div>
                 <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    Click to view details →
+                    {t('dashboard.clickToView')}
                   </div>
                 </div>
               </div>
@@ -168,11 +186,11 @@ export default function Dashboard() {
                   {user.usage?.quotesCreated ?? 0}
                 </div>
                 <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  Quotes Made
+                  {t('dashboard.stats.quotesCreated')}
                 </div>
                 <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    Click to view details →
+                    {t('dashboard.clickToView')}
                   </div>
                 </div>
               </div>
@@ -181,11 +199,11 @@ export default function Dashboard() {
                   {user.usage?.postsScheduled ?? 0}
                 </div>
                 <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  Posts Scheduled
+                  {t('dashboard.stats.postsScheduled')}
                 </div>
                 <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    Click to view details →
+                    {t('dashboard.clickToView')}
                   </div>
                 </div>
               </div>
@@ -367,9 +385,7 @@ export default function Dashboard() {
               <span className="text-2xl">🧠</span>
               AI Model Selector
             </h3>
-            <Suspense fallback={<LoadingSkeleton type="card" count={1} />}>
-              <AIMultiModelSelector />
-            </Suspense>
+            <AIMultiModelSelector />
           </div>
         </div>
       </div>

@@ -95,6 +95,17 @@ async function getUserUsageSummary(userId) {
  * Get actual usage
  */
 async function getActualUsage(userId) {
+  // In development mode, return mock data for dev users
+  if (process.env.NODE_ENV === 'development' && userId && userId.toString().startsWith('dev-')) {
+    return {
+      aiMinutes: 0,
+      clients: 0,
+      profiles: 0,
+      posts: 0,
+      videos: 0
+    };
+  }
+  
   // Would query actual usage from database
   // For now, return placeholder
   return {
@@ -104,6 +115,112 @@ async function getActualUsage(userId) {
     posts: 0,
     videos: 0
   };
+}
+
+/**
+ * Get current usage for user
+ */
+async function getCurrentUsage(userId) {
+  // In development mode, return mock data for dev users
+  if (process.env.NODE_ENV === 'development' && userId && userId.toString().startsWith('dev-')) {
+    return {
+      usage: {
+        videosProcessed: 0,
+        contentGenerated: 0,
+        postsScheduled: 0,
+        storageUsed: 0
+      },
+      limits: {
+        videosProcessed: -1, // -1 means unlimited
+        contentGenerated: -1,
+        postsScheduled: -1,
+        storageUsed: -1
+      },
+      overage: {
+        videosProcessed: 0,
+        contentGenerated: 0,
+        postsScheduled: 0,
+        storageUsed: 0
+      }
+    };
+  }
+  
+  // In production, query from UsageTracking model
+  const UsageTracking = require('../models/UsageTracking');
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  try {
+    const tracking = await UsageTracking.findOne({
+      userId,
+      'period.year': now.getFullYear(),
+      'period.month': now.getMonth() + 1
+    });
+    
+    if (tracking) {
+      return {
+        usage: tracking.usage || { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 },
+        limits: tracking.limits || { videosProcessed: -1, contentGenerated: -1, postsScheduled: -1, storageUsed: -1 },
+        overage: tracking.overage || { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 }
+      };
+    }
+  } catch (error) {
+    logger.warn('Error getting current usage, returning defaults', { error: error.message, userId });
+  }
+  
+  // Return defaults if no tracking found
+  return {
+    usage: { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 },
+    limits: { videosProcessed: -1, contentGenerated: -1, postsScheduled: -1, storageUsed: -1 },
+    overage: { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 }
+  };
+}
+
+/**
+ * Get usage stats for user over a period
+ */
+async function getUsageStats(userId, months = 6) {
+  // In development mode, return mock data for dev users
+  if (process.env.NODE_ENV === 'development' && userId && userId.toString().startsWith('dev-')) {
+    return {
+      periods: []
+    };
+  }
+  
+  // In production, query from UsageTracking model
+  const UsageTracking = require('../models/UsageTracking');
+  const now = new Date();
+  const periods = [];
+  
+  try {
+    for (let i = 0; i < months; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const tracking = await UsageTracking.findOne({
+        userId,
+        'period.year': date.getFullYear(),
+        'period.month': date.getMonth() + 1
+      });
+      
+      if (tracking) {
+        periods.push({
+          period: tracking.period,
+          usage: tracking.usage || { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 },
+          limits: tracking.limits || { videosProcessed: -1, contentGenerated: -1, postsScheduled: -1, storageUsed: -1 }
+        });
+      } else {
+        // Add empty period if no tracking found
+        periods.push({
+          period: { year: date.getFullYear(), month: date.getMonth() + 1 },
+          usage: { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 },
+          limits: { videosProcessed: -1, contentGenerated: -1, postsScheduled: -1, storageUsed: -1 }
+        });
+      }
+    }
+  } catch (error) {
+    logger.warn('Error getting usage stats, returning empty periods', { error: error.message, userId });
+  }
+  
+  return { periods };
 }
 
 /**
@@ -159,5 +276,7 @@ async function checkUsageLimits(userId, action) {
 
 module.exports = {
   getUserUsageSummary,
-  checkUsageLimits
+  checkUsageLimits,
+  getCurrentUsage,
+  getUsageStats
 };

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { apiGet, apiPost } from '../../../lib/api'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import ErrorAlert from '../../../components/ErrorAlert'
 import SuccessAlert from '../../../components/SuccessAlert'
@@ -14,8 +14,6 @@ import { useAuth } from '../../../hooks/useAuth'
 // Lazy load heavy components for better performance
 const PredictiveAnalytics = lazy(() => import('../../../components/PredictiveAnalytics'))
 const AIRecommendations = lazy(() => import('../../../components/AIRecommendations'))
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
 
 interface GeneratedContent {
   socialPosts: Array<{
@@ -74,10 +72,10 @@ export default function ContentPage() {
 
   const loadGeneratedContent = async (id: string) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/content/${id}`, {
-      })
-      if (response.data.generatedContent) {
+      const response = await apiGet<any>(`/content/${id}`)
+      if (response?.generatedContent) {
+        setGeneratedContent(response.generatedContent)
+      } else if (response?.data?.generatedContent) {
         setGeneratedContent(response.data.generatedContent)
       }
     } catch (error) {
@@ -118,20 +116,13 @@ export default function ContentPage() {
     setGeneratedContent(null)
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.post(
-        `${API_URL}/content/generate`,
-        {
-          text,
-          title: title || undefined,
-          platforms
-        },
-        {
-        }
-      )
+      const response = await apiPost<{ contentId?: string, data?: { contentId?: string } }>('/content/generate', {
+        text,
+        title: title || undefined,
+        platforms
+      })
 
-      const data = extractApiData<{ contentId: string }>(response)
-      const id = data?.contentId
+      const id = response?.contentId || response?.data?.contentId
       if (id) {
         setContentId(id)
         setSuccess('Content generation started! This may take a moment...')
@@ -140,19 +131,14 @@ export default function ContentPage() {
       // Track action for workflow learning
       if (id) {
         try {
-          await axios.post(
-            `${API_URL}/workflows/track`,
-            {
-              action: 'generate_content',
-              metadata: {
-                entityType: 'content',
-                entityId: id,
-                platforms: platforms
-              }
-            },
-            {
+          await apiPost('/workflows/track', {
+            action: 'generate_content',
+            metadata: {
+              entityType: 'content',
+              entityId: id,
+              platforms: platforms
             }
-          )
+          })
         } catch (err) {
           // Silent fail for tracking
           console.error('Failed to track action', err)
@@ -174,17 +160,15 @@ export default function ContentPage() {
   }
 
   const pollContentStatus = async (id: string) => {
-    const token = localStorage.getItem('token')
     const interval = setInterval(async () => {
       try {
-        const response = await axios.get(`${API_URL}/content/${id}`, {
-        })
+        const response = await apiGet<any>(`/content/${id}/status`)
 
-        if (response.data.status === 'completed' && response.data.generatedContent) {
+        if (response?.status === 'completed' && response?.generatedContent) {
           clearInterval(interval)
-          setGeneratedContent(response.data.generatedContent)
+          setGeneratedContent(response.generatedContent)
           setSuccess('Content generated successfully!')
-        } else if (response.data.status === 'failed') {
+        } else if (response?.status === 'failed') {
           clearInterval(interval)
           setError('Content generation failed')
           clearInterval(interval)

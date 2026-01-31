@@ -13,8 +13,8 @@ const clientGuidelinesSchema = new mongoose.Schema({
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
-    index: true
+    ref: 'Workspace'
+    // Indexed below as standalone index
   },
   branding: {
     logo: String,

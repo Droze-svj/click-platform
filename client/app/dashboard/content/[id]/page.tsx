@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
 import LoadingSpinner from '../../../../components/LoadingSpinner'
@@ -8,6 +8,8 @@ import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 import { extractApiData, extractApiError } from '../../../../utils/apiResponse'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
+import { useTranslation } from '../../../../hooks/useTranslation'
+import { apiGet, apiPost, API_URL } from '../../../../lib/api'
 
 // Lazy load heavy components for better performance
 const VersionHistory = lazy(() => import('../../../../components/VersionHistory'))
@@ -21,8 +23,6 @@ const ContentDuplicator = lazy(() => import('../../../../components/ContentDupli
 const OneClickPublish = lazy(() => import('../../../../components/OneClickPublish'))
 const ContentApprovalButton = lazy(() => import('../../../../components/ContentApprovalButton'))
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
-
 interface Content {
   _id: string
   title: string
@@ -30,6 +30,7 @@ interface Content {
   type: string
   status: string
   transcript: string
+  body?: string
   generatedContent: any
   tags: string[]
   category: string
@@ -50,7 +51,14 @@ export default function ContentDetailPage() {
   const { showToast } = useToast()
   const [content, setContent] = useState<Content | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'versions' | 'comments' | 'performance'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'versions' | 'comments' | 'performance' | 'translations'>('overview')
+  const { t } = useTranslation()
+  const [translationList, setTranslationList] = useState<{ language: string; _id: string }[]>([])
+  const [supportedLangs, setSupportedLangs] = useState<{ code: string; name: string }[]>([])
+  const [viewingLang, setViewingLang] = useState<string | null>(null)
+  const [translatedContent, setTranslatedContent] = useState<{ title: string; description: string; body: string; transcript: string; tags: string[] } | null>(null)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [targetLanguage, setTargetLanguage] = useState('es')
 
   useEffect(() => {
     if (!user) {
@@ -61,6 +69,86 @@ export default function ContentDetailPage() {
       loadContent()
     }
   }, [user, router, params.id])
+
+  const loadTranslations = useCallback(async () => {
+    if (!content?._id) return
+    try {
+      const [listRes, langsRes] = await Promise.all([
+        apiGet<{ data?: { translations?: { language: string; _id: string }[] }; translations?: { language: string; _id: string }[] }>('/translation/content/' + content._id + '/translations'),
+        apiGet<{ data?: { languages?: { code: string; name: string }[] }; languages?: { code: string; name: string }[] }>('/translation/languages')
+      ])
+      const list = (listRes as any)?.data?.translations ?? (listRes as any)?.translations ?? []
+      const langs = (langsRes as any)?.data?.languages ?? (langsRes as any)?.languages ?? []
+      setTranslationList(Array.isArray(list) ? list : [])
+      setSupportedLangs(Array.isArray(langs) ? langs : [])
+    } catch {
+      setTranslationList([])
+      setSupportedLangs([])
+    }
+  }, [content?._id])
+
+  useEffect(() => {
+    if (activeTab === 'translations' && content?._id) loadTranslations()
+  }, [activeTab, content?._id, loadTranslations])
+
+  const handleTranslate = async () => {
+    if (!content?._id || !targetLanguage || isTranslating) return
+    setIsTranslating(true)
+    try {
+      await apiPost('/translation/translate', { contentId: content._id, targetLanguage })
+      showToast(t('translation.translated'), 'success')
+      await loadTranslations()
+    } catch (e: any) {
+      showToast(t('translation.translationFailed') + ': ' + (e?.response?.data?.error || e?.message || ''), 'error')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  const handleTranslateToAll = async () => {
+    if (!content?._id || isTranslating) return
+    setIsTranslating(true)
+    try {
+      const res = await apiPost<{ data?: { successful?: { length: number }; failed?: { length: number } }; successful?: { length: number }; failed?: { length: number } }>('/translation/translate-multiple', {
+        contentId: content._id,
+        languages: ['es', 'fr', 'de']
+      })
+      const d = (res as any)?.data ?? res
+      const ok = (d?.successful ?? [])?.length ?? 0
+      const fail = (d?.failed ?? [])?.length ?? 0
+      showToast(t('translation.translated') + ` (${ok} ok${fail ? `, ${fail} failed` : ''})`, fail ? 'info' : 'success')
+      await loadTranslations()
+    } catch (e: any) {
+      showToast(t('translation.translationFailed') + ': ' + (e?.response?.data?.error || e?.message || ''), 'error')
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  const handleViewInLanguage = async (lang: string) => {
+    if (!content?._id) return
+    try {
+      const res = await apiGet<{ data?: any }>('/translation/content/' + content._id + '/' + lang + '?fallbackToOriginal=true')
+      const d = (res as any)?.data ?? res
+      if (d) {
+        setViewingLang(lang)
+        setTranslatedContent({
+          title: d.title ?? '',
+          description: d.description ?? '',
+          body: d.body ?? '',
+          transcript: d.transcript ?? '',
+          tags: d.tags ?? []
+        })
+      }
+    } catch {
+      showToast(t('translation.translationFailed'), 'error')
+    }
+  }
+
+  const handleViewOriginal = () => {
+    setViewingLang(null)
+    setTranslatedContent(null)
+  }
 
   const loadContent = async () => {
     try {
@@ -239,6 +327,16 @@ export default function ContentDetailPage() {
           >
             Performance
           </button>
+          <button
+            onClick={() => setActiveTab('translations')}
+            className={`px-4 py-2 font-medium ${
+              activeTab === 'translations'
+                ? 'border-b-2 border-purple-600 text-purple-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            {t('translation.title')}
+          </button>
         </div>
 
         {activeTab === 'overview' && (
@@ -404,6 +502,113 @@ export default function ContentDetailPage() {
           <Suspense fallback={<LoadingSpinner size="md" />}>
             <ContentPerformanceAnalytics contentId={content._id} />
           </Suspense>
+        )}
+
+        {activeTab === 'translations' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">{t('translation.title')}</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {t('translation.translateTo')} {t('translation.targetLanguage')}. {t('translation.translate')} title, description, body, transcript, and tags.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <select
+                  value={targetLanguage}
+                  onChange={(e) => setTargetLanguage(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                >
+                  {(supportedLangs.length > 0 ? supportedLangs : [
+                    { code: 'es', name: 'Spanish' },
+                    { code: 'fr', name: 'French' },
+                    { code: 'de', name: 'German' }
+                  ]).map((l) => (
+                    <option key={l.code} value={l.code}>{l.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  {isTranslating ? t('translation.translating') : t('translation.translate')}
+                </button>
+                <button
+                  onClick={handleTranslateToAll}
+                  disabled={isTranslating}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  {t('translation.translateToAll')} (es, fr, de)
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {viewingLang && (
+                  <button
+                    onClick={handleViewOriginal}
+                    className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-lg text-sm font-medium"
+                  >
+                    {t('translation.viewOriginal')}
+                  </button>
+                )}
+                {translationList.map((tr) => (
+                  <button
+                    key={tr._id}
+                    onClick={() => handleViewInLanguage(tr.language)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                      viewingLang === tr.language
+                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {t('translation.viewIn')} {tr.language.toUpperCase()}
+                  </button>
+                ))}
+                {translationList.length === 0 && !viewingLang && (
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{t('translation.noTranslations')}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {(() => {
+                const display = viewingLang && translatedContent
+                  ? { ...translatedContent, _lang: viewingLang }
+                  : { title: content.title, description: content.description, body: content.body ?? content.transcript, transcript: content.transcript, tags: content.tags ?? [], _lang: null as string | null }
+                return (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <h3 className="text-lg font-semibold mb-2">{display.title || 'Untitled'}</h3>
+                    {display._lang && (
+                      <p className="text-xs text-purple-600 dark:text-purple-400 mb-3">{t('translation.viewIn')} {display._lang.toUpperCase()}</p>
+                    )}
+                    {display.description && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Description</h4>
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{display.description}</p>
+                      </div>
+                    )}
+                    {display.body && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Body</h4>
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{display.body}</p>
+                      </div>
+                    )}
+                    {display.transcript && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Transcript</h4>
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{display.transcript}</p>
+                      </div>
+                    )}
+                    {display.tags && display.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {display.tags.map((tag: string, i: number) => (
+                          <span key={i} className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded text-sm">#{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
         )}
       </div>
 

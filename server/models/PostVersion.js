@@ -7,13 +7,11 @@ const postVersionSchema = new mongoose.Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ScheduledPost',
-    required: true,
-    index: true
+    required: true
   },
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content',
-    index: true
+    ref: 'Content'
   },
   versionNumber: {
     type: Number,
@@ -78,8 +76,7 @@ const postVersionSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   }
 });
 

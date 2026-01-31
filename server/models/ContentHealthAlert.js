@@ -7,14 +7,12 @@ const contentHealthAlertSchema = new mongoose.Schema({
   clientWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   alertType: {
     type: String,
@@ -57,8 +55,7 @@ const contentHealthAlertSchema = new mongoose.Schema({
   resolvedAt: Date,
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   }
 });
 

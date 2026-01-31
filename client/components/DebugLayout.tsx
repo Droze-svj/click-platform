@@ -32,22 +32,32 @@ export default function DebugLayout({ children }: DebugLayoutProps) {
 
     // Debug logging for system initialization
     const sendDebugInitLog = (message: string, data: any) => {
-      // #region agent log
-      fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'DebugLayout.tsx',
-          message: `debug_system_${message}`,
-          data: {
-            ...data,
-            timestamp: Date.now(),
-            sessionId: 'debug-session',
-            runId: 'run-debug-system-init'
-          }
-        }),
-      }).catch(() => {})
-      // #endregion
+      try {
+        // Only log initialization, reduce spam
+        if (message === 'initialized') {
+          console.log('DebugLayout:', message, data)
+        }
+        // Use local debug API instead of external service - fire and forget
+        fetch('/api/debug/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            component: 'DebugLayout',
+            message: `debug_system_${message}`,
+            data: {
+              ...data,
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run-debug-system-init'
+            }
+          }),
+        }).catch(() => {
+          // Silently ignore debug log failures
+        })
+      } catch (err) {
+        // Silently handle any errors in debug logging
+        console.warn('DebugLayout: Error in sendDebugInitLog:', err)
+      }
     }
 
     sendDebugInitLog('initialized', {
@@ -85,6 +95,10 @@ export default function DebugLayout({ children }: DebugLayoutProps) {
     </>
   )
 }
+
+
+
+
 
 
 

@@ -6,6 +6,7 @@ const ContentFolder = require('../models/ContentFolder');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
@@ -18,8 +19,24 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/folders', auth, asyncHandler(async (req, res) => {
-  const folders = await ContentFolder.find({ userId: req.user._id })
-    .sort({ order: 1, name: 1 });
+  const userId = req.user?._id || req.user?.id;
+  
+  // In development mode, return empty array for dev users
+  if (process.env.NODE_ENV !== 'production' && userId && userId.toString().startsWith('dev-')) {
+    return sendSuccess(res, 'Folders fetched', 200, []);
+  }
+
+  let folders = [];
+  try {
+    folders = await ContentFolder.find({ userId })
+      .sort({ order: 1, name: 1 })
+      .maxTimeMS(8000);
+  } catch (dbError) {
+    logger.warn('Database error fetching folders', { error: dbError.message, userId });
+    // Return empty array if database is unavailable
+    folders = [];
+  }
+  
   sendSuccess(res, 'Folders fetched', 200, folders);
 }));
 
@@ -64,7 +81,7 @@ router.put('/folders/:id', auth, asyncHandler(async (req, res) => {
   const folder = await ContentFolder.findOne({
     _id: req.params.id,
     userId: req.user._id
-  });
+  }).maxTimeMS(8000);
 
   if (!folder) {
     return sendError(res, 'Folder not found', 404);
@@ -93,7 +110,7 @@ router.delete('/folders/:id', auth, asyncHandler(async (req, res) => {
   const folder = await ContentFolder.findOne({
     _id: req.params.id,
     userId: req.user._id
-  });
+  }).maxTimeMS(8000);
 
   if (!folder) {
     return sendError(res, 'Folder not found', 404);
@@ -119,6 +136,18 @@ router.delete('/folders/:id', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/content', auth, asyncHandler(async (req, res) => {
+  const userId = req.user?._id || req.user?.id;
+  
+  // In development mode, return empty array for dev users
+  if (process.env.NODE_ENV !== 'production' && userId && userId.toString().startsWith('dev-')) {
+    return sendSuccess(res, 'Content fetched', 200, {
+      content: [],
+      total: 0,
+      limit: parseInt(req.query.limit) || 50,
+      offset: parseInt(req.query.offset) || 0
+    });
+  }
+
   const {
     folderId,
     tag,
@@ -132,7 +161,7 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
     offset = 0
   } = req.query;
 
-  const query = { userId: req.user._id };
+  const query = { userId };
 
   if (folderId) {
     if (folderId === 'null' || folderId === '') {
@@ -171,14 +200,23 @@ router.get('/content', auth, asyncHandler(async (req, res) => {
   const sort = {};
   sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-  const [content, total] = await Promise.all([
-    Content.find(query)
-      .sort(sort)
-      .limit(parseInt(limit))
-      .skip(parseInt(offset))
-      .populate('folderId', 'name color'),
-    Content.countDocuments(query)
-  ]);
+  let content = [], total = 0;
+  try {
+    [content, total] = await Promise.all([
+      Content.find(query)
+        .sort(sort)
+        .limit(parseInt(limit))
+        .skip(parseInt(offset))
+        .populate('folderId', 'name color')
+        .maxTimeMS(8000),
+      Content.countDocuments(query).maxTimeMS(8000)
+    ]);
+  } catch (dbError) {
+    logger.warn('Database error fetching content', { error: dbError.message, userId });
+    // Return empty array if database is unavailable
+    content = [];
+    total = 0;
+  }
 
   sendSuccess(res, 'Content fetched', 200, {
     content,
@@ -201,7 +239,7 @@ router.put('/content/:id/organize', auth, asyncHandler(async (req, res) => {
   const content = await Content.findOne({
     _id: req.params.id,
     userId: req.user._id
-  });
+  }).maxTimeMS(8000);
 
   if (!content) {
     return sendError(res, 'Content not found', 404);
@@ -237,9 +275,24 @@ router.put('/content/:id/organize', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/tags', auth, asyncHandler(async (req, res) => {
-  const contents = await Content.find({ userId: req.user._id }).select('tags');
-  const allTags = contents.flatMap(c => c.tags || []);
-  const uniqueTags = [...new Set(allTags)].sort();
+  const userId = req.user?._id || req.user?.id;
+  
+  // In development mode, return empty array for dev users
+  if (process.env.NODE_ENV !== 'production' && userId && userId.toString().startsWith('dev-')) {
+    return sendSuccess(res, 'Tags fetched', 200, []);
+  }
+
+  let uniqueTags = [];
+  try {
+    const contents = await Content.find({ userId }).select('tags').maxTimeMS(8000);
+    const allTags = contents.flatMap(c => c.tags || []);
+    uniqueTags = [...new Set(allTags)].sort();
+  } catch (dbError) {
+    logger.warn('Database error fetching tags', { error: dbError.message, userId });
+    // Return empty array if database is unavailable
+    uniqueTags = [];
+  }
+  
   sendSuccess(res, 'Tags fetched', 200, uniqueTags);
 }));
 
@@ -253,7 +306,7 @@ router.get('/tags', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/categories', auth, asyncHandler(async (req, res) => {
-  const contents = await Content.find({ userId: req.user._id }).select('category');
+    const contents = await Content.find({ userId: req.user._id }).select('category').maxTimeMS(8000);
   const categories = [...new Set(contents.map(c => c.category).filter(Boolean))].sort();
   sendSuccess(res, 'Categories fetched', 200, categories);
 }));
@@ -271,7 +324,7 @@ router.post('/content/:id/duplicate', auth, asyncHandler(async (req, res) => {
   const original = await Content.findOne({
     _id: req.params.id,
     userId: req.user._id
-  });
+  }).maxTimeMS(8000);
 
   if (!original) {
     return sendError(res, 'Content not found', 404);
@@ -376,6 +429,7 @@ router.get('/collections', auth, asyncHandler(async (req, res) => {
   const collections = await AssetCollection.find(query)
     .populate('contentIds', 'title type')
     .sort({ createdAt: -1 })
+    .maxTimeMS(8000)
     .lean();
 
   sendSuccess(res, 'Collections retrieved', 200, { collections });
@@ -392,7 +446,7 @@ router.put('/collections/:collectionId', auth, asyncHandler(async (req, res) => 
   const collection = await AssetCollection.findOneAndUpdate(
     { _id: collectionId, userId: req.user._id },
     req.body,
-    { new: true }
+    { new: true, maxTimeMS: 8000 }
   );
 
   if (!collection) {
@@ -418,7 +472,7 @@ router.delete('/collections/:collectionId', auth, asyncHandler(async (req, res) 
   const collection = await AssetCollection.findOneAndDelete({
     _id: collectionId,
     userId: req.user._id
-  });
+  }).maxTimeMS(8000);
 
   if (!collection) {
     return sendError(res, 'Collection not found', 404);

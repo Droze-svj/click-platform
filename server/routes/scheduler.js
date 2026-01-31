@@ -165,14 +165,27 @@ router.get('/calendar', auth, async (req, res) => {
 
 // Process scheduled posts (runs every minute)
 const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 
 cron.schedule('* * * * *', async () => {
   try {
+    // Check if MongoDB is connected before attempting queries
+    if (mongoose.connection.readyState !== 1) {
+      // MongoDB not connected - skip this cron run silently
+      // Only log once per minute to avoid spam
+      if (Date.now() % 60000 < 1000) { // Log roughly once per minute
+        logger.debug('Skipping scheduled posts processing - MongoDB not connected', {
+          readyState: mongoose.connection.readyState
+        });
+      }
+      return;
+    }
+
     const now = new Date();
     const posts = await ScheduledPost.find({
       status: 'scheduled',
       scheduledTime: { $lte: now }
-    });
+    }).maxTimeMS(5000); // Add timeout to prevent hanging
 
     const { postToSocialMedia } = require('../services/socialMediaService');
 
@@ -233,12 +246,28 @@ cron.schedule('* * * * *', async () => {
           postId: post._id,
           error: error.message
         });
-        post.status = 'failed';
-        await post.save();
+        try {
+          post.status = 'failed';
+          await post.save();
+        } catch (saveError) {
+          // If MongoDB is disconnected, can't save - that's okay
+          logger.debug('Could not save failed post status', { error: saveError.message });
+        }
       }
     }
   } catch (error) {
-    logger.error('Scheduler cron error', { error: error.message });
+    // Handle MongoDB connection errors gracefully
+    if (error.name === 'MongoServerError' || error.message?.includes('buffering timed out') || error.message?.includes('connection')) {
+      // MongoDB connection issue - log but don't spam
+      if (Date.now() % 60000 < 1000) { // Log roughly once per minute
+        logger.debug('Scheduler cron skipped - MongoDB connection issue', { 
+          error: error.message,
+          readyState: mongoose.connection.readyState 
+        });
+      }
+    } else {
+      logger.error('Scheduler cron error', { error: error.message, stack: error.stack });
+    }
   }
 });
 

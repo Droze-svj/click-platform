@@ -33,9 +33,10 @@ const searchHistorySchema = new mongoose.Schema({
 
 searchHistorySchema.index({ userId: 1, createdAt: -1 });
 searchHistorySchema.index({ userId: 1, query: 1 });
-searchHistorySchema.index({ createdAt: -1 });
+// Note: createdAt has both descending index above and TTL index below - Mongoose handles this
 
 // Auto-delete old history (older than 90 days)
+// TTL index uses ascending order { createdAt: 1 } for expiration feature
 searchHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
 
 module.exports = mongoose.model('SearchHistory', searchHistorySchema);

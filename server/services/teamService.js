@@ -1,6 +1,7 @@
 // Team collaboration service
 
 const Team = require('../models/Team');
+const User = require('../models/User');
 const Content = require('../models/Content');
 const ContentShare = require('../models/ContentShare');
 const logger = require('../utils/logger');
@@ -79,6 +80,21 @@ async function getTeamById(teamId, userId) {
     logger.error('Error getting team by ID', { error: error.message, teamId, userId });
     throw error;
   }
+}
+
+/**
+ * Invite member by email
+ */
+async function inviteByEmail(teamId, inviterId, { email, role }) {
+  const normalized = (email || '').toLowerCase().trim();
+  if (!normalized) {
+    throw new Error('Email is required');
+  }
+  const invitedUser = await User.findOne({ email: normalized }).select('_id');
+  if (!invitedUser) {
+    throw new Error('No user found with that email. They must sign up first.');
+  }
+  return inviteMember(teamId, inviterId, { userId: invitedUser._id, role });
 }
 
 /**
@@ -284,6 +300,7 @@ module.exports = {
   getUserTeams,
   getTeamById,
   inviteMember,
+  inviteByEmail,
   updateMemberRole,
   removeMember,
   shareContent,

@@ -7,8 +7,7 @@ const businessAlertSchema = new mongoose.Schema({
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   // Alert Details
   alert: {
@@ -63,8 +62,7 @@ const businessAlertSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   acknowledgedAt: Date,
   resolvedAt: Date

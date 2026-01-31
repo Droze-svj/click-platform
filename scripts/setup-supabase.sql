@@ -445,3 +445,18 @@ WHERE email = 'dariovuma@gmail.com';
 INSERT INTO users (email, name, password, email_verified, email_verified_at, role, created_at)
 SELECT 'dariovuma@gmail.com', 'Admin User', '$2b$10$8K3lVzJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe.X5zJcQXqkJ8tH5N5rNe', true, NOW(), 'admin', NOW()
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'dariovuma@gmail.com');
+
+-- exec_sql: optional RPC for migrations (setup-supabase.js). Use only in trusted admin context.
+-- Server connection test uses auth.getSession() instead and does not require this.
+CREATE OR REPLACE FUNCTION public.exec_sql(sql text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  EXECUTE sql;
+  RETURN '[]'::jsonb;
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('error', SQLERRM);
+END;
+$$;

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Blob URL Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        video, img { max-width: 400px; max-height: 300px; border: 1px solid red; }
+    </style>
+</head>
+<body>
+    <h1>Video Blob URL Test</h1>
+
+    <div class="test-section">
+        <h2>Test 1: File Input to Blob URL</h2>
+        <input type="file" id="fileInput" accept="video/*">
+        <br><br>
+        <video id="testVideo" controls style="display: none;"></video>
+        <br>
+        <button onclick="testBlobURL()">Test Blob URL</button>
+        <button onclick="showVideoInfo()">Show Video Info</button>
+        <div id="info"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Direct Video Playback</h2>
+        <video controls>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <script>
+        function testBlobURL() {
+            const fileInput = document.getElementById('fileInput');
+            const video = document.getElementById('testVideo');
+
+            if (fileInput.files.length === 0) {
+                alert('Please select a video file first');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const blobURL = URL.createObjectURL(file);
+
+            video.src = blobURL;
+            video.style.display = 'block';
+
+            console.log('Blob URL created:', blobURL);
+            console.log('File info:', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+
+            video.load();
+        }
+
+        function showVideoInfo() {
+            const video = document.getElementById('testVideo');
+            const info = document.getElementById('info');
+
+            info.innerHTML = `
+                <strong>Video Info:</strong><br>
+                Ready State: ${video.readyState}<br>
+                Network State: ${video.networkState}<br>
+                Duration: ${video.duration}<br>
+                Video Width: ${video.videoWidth}<br>
+                Video Height: ${video.videoHeight}<br>
+                Error: ${video.error ? video.error.message : 'None'}<br>
+                Src: ${video.src}<br>
+                Current Src: ${video.currentSrc}
+            `;
+        }
+
+        // Auto-test with a known working video
+        window.addEventListener('load', () => {
+            console.log('Video test page loaded');
+        });
+    </script>
+</body>
+</html>
+
+
+

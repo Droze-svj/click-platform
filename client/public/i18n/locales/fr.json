@@ -10,25 +10,111 @@
     "loading": "Chargement...",
     "error": "Erreur",
     "success": "Succès",
-    "close": "Fermer"
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "retry": "Réessayer",
+    "more": "Plus",
+    "menu": "Menu",
+    "logout": "Déconnexion",
+    "yes": "Oui",
+    "no": "Non",
+    "redirecting": "Redirection vers la connexion…"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "videos": "Vidéos",
+    "content": "Contenu",
+    "aiFeatures": "Fonctions IA",
+    "library": "Bibliothèque",
+    "scripts": "Scripts",
+    "workflows": "Flux",
+    "jobs": "Tâches",
+    "teams": "Équipes",
+    "approvals": "Validations",
+    "quotes": "Citations",
+    "scheduler": "Planificateur",
+    "calendar": "Calendrier",
+    "social": "Réseaux sociaux",
+    "analytics": "Analytiques",
+    "achievements": "Réalisations",
+    "membership": "Abonnement",
+    "notifications": "Notifications",
+    "settings": "Paramètres",
+    "templates": "Modèles",
+    "infrastructure": "Infrastructure",
+    "clickTagline": "Contenu propulsé par l'IA"
   },
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bon retour",
+    "heroWelcome": "Bienvenue sur Click",
+    "heroTitle": "Créez, réutilisez et publiez",
+    "heroSubtitle": "Outils IA, planification intelligente et analytiques en un seul espace.",
+    "heroDescription": "Votre espace de travail IA pour créer, réutiliser et publier sur 6 plateformes. Transformez le contenu long en formats réseaux sociaux—plus rapidement.",
     "stats": {
-      "videosProcessed": "Vidéos Traitées",
-      "contentGenerated": "Contenu Généré",
-      "postsScheduled": "Publications Planifiées"
-    }
+      "videosProcessed": "Vidéos traitées",
+      "contentGenerated": "Contenu généré",
+      "contentCreated": "Contenu créé",
+      "quotesCreated": "Citations créées",
+      "postsScheduled": "Publications planifiées"
+    },
+    "clickToView": "Voir les détails →"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "loggingIn": "Connexion...",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "loginTitle": "Bienvenue sur Click",
+    "loginSubtitle": "Connectez-vous pour accéder à la création de contenu propulsée par l'IA.",
+    "registerTitle": "Créez votre compte",
+    "registerSubtitle": "Commencez avec la création de contenu propulsée par l'IA."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez les préférences de votre compte",
+    "profile": "Profil",
+    "editProfile": "Modifier le profil",
+    "general": "Général",
+    "notifications": "Notifications",
+    "privacy": "Confidentialité",
+    "security": "Sécurité",
+    "appearance": "Apparence",
+    "theme": "Thème",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeAuto": "Auto (système)",
+    "language": "Langue",
+    "timezone": "Fuseau horaire",
+    "saveSettings": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saved": "Paramètres enregistrés",
+    "saveFailed": "Échec de l'enregistrement"
   },
   "content": {
     "title": "Contenu",
-    "create": "Créer du Contenu",
-    "edit": "Modifier le Contenu",
-    "delete": "Supprimer le Contenu",
+    "create": "Créer du contenu",
+    "edit": "Modifier le contenu",
+    "delete": "Supprimer le contenu",
     "duplicate": "Dupliquer",
     "publish": "Publier",
     "schedule": "Planifier"
+  },
+  "video": {
+    "title": "Vidéos",
+    "upload": "Téléverser",
+    "edit": "Modifier",
+    "processing": "Traitement...",
+    "noVideo": "Aucune vidéo",
+    "noVideoHint": "Ajoutez une URL de vidéo pour commencer à éditer.",
+    "goToVideos": "Aller aux vidéos"
   },
   "analytics": {
     "title": "Analytiques",
@@ -41,17 +127,40 @@
     "shares": "Partages"
   },
   "moderation": {
-    "title": "Modération du Contenu",
+    "title": "Modération du contenu",
     "checking": "Vérification du contenu...",
     "approved": "Contenu approuvé",
-    "flagged": "Contenu signalé pour examen",
-    "profanity": "Grossièreté détectée",
+    "flagged": "Contenu signalé",
+    "profanity": "Langage offensant détecté",
     "spam": "Spam détecté"
+  },
+  "backup": {
+    "title": "Sauvegardes",
+    "create": "Créer une sauvegarde",
+    "download": "Télécharger",
+    "delete": "Supprimer",
+    "passwordRequired": "Mot de passe requis pour une sauvegarde chiffrée",
+    "created": "Sauvegarde créée",
+    "createFailed": "Échec de la création",
+    "downloaded": "Sauvegarde téléchargée",
+    "downloadFailed": "Échec du téléchargement",
+    "deleted": "Sauvegarde supprimée",
+    "deleteFailed": "Échec de la suppression"
+  },
+  "translation": {
+    "title": "Traduction",
+    "translate": "Traduire",
+    "translateTo": "Traduire en",
+    "translateToAll": "Tout traduire",
+    "targetLanguage": "Langue cible",
+    "viewIn": "Voir en",
+    "original": "Original",
+    "translations": "Traductions",
+    "noTranslations": "Aucune traduction",
+    "translating": "Traduction…",
+    "translated": "Traduit",
+    "translationFailed": "Échec de la traduction",
+    "viewOriginal": "Voir l'original",
+    "selectLanguage": "Choisir la langue"
   }
 }
-
-
-
-
-
-

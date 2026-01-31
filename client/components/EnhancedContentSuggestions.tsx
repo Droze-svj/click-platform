@@ -49,6 +49,11 @@ export default function EnhancedContentSuggestions() {
   }, [])
 
   const loadSuggestions = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [EnhancedContentSuggestions] Skipping suggestions API call in development mode')
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const response = await apiGet<any>('/suggestions/enhanced')
@@ -63,6 +68,10 @@ export default function EnhancedContentSuggestions() {
   }
 
   const loadGaps = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [EnhancedContentSuggestions] Skipping gaps API call in development mode')
+      return
+    }
     try {
       const response = await apiGet<any>('/suggestions/enhanced/gaps')
       if (response?.success) {
@@ -74,6 +83,10 @@ export default function EnhancedContentSuggestions() {
   }
 
   const loadTrending = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [EnhancedContentSuggestions] Skipping trending API call in development mode')
+      return
+    }
     try {
       const response = await apiGet<any>('/suggestions/enhanced/trending')
       if (response?.success) {

@@ -53,8 +53,8 @@ const webhookLogSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
+    // Indexed in compound indexes below and TTL index
   }
 });
 
@@ -63,6 +63,8 @@ webhookLogSchema.index({ userId: 1, event: 1, createdAt: -1 });
 webhookLogSchema.index({ status: 1, createdAt: -1 });
 
 // Auto-delete logs older than 90 days
+// Note: This may create a duplicate index warning if createdAt is also in compound indexes above,
+// but the TTL index is required for the expiration feature
 webhookLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // 90 days
 
 module.exports = mongoose.model('WebhookLog', webhookLogSchema);

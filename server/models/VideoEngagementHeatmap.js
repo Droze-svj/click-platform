@@ -8,8 +8,7 @@ const videoEngagementHeatmapSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ScheduledPost',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   videoMetricsId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -83,7 +82,7 @@ const videoEngagementHeatmapSchema = new mongoose.Schema({
 });
 
 videoEngagementHeatmapSchema.index({ workspaceId: 1, updatedAt: -1 });
-videoEngagementHeatmapSchema.index({ postId: 1 });
+// postId already has unique: true which creates an index
 
 videoEngagementHeatmapSchema.pre('save', function(next) {
   this.updatedAt = new Date();

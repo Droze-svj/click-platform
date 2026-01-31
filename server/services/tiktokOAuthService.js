@@ -1,360 +1,171 @@
 // TikTok OAuth Service
+// Features: OAuth 2.0, video upload/publish permissions, platform_accounts storage.
 
-const axios = require('axios');
-const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
-const User = require('../models/User');
-const { retryWithBackoff } = require('../utils/retryWithBackoff');
 
-/**
- * Check if TikTok OAuth is configured
- */
-function isConfigured() {
-  return !!(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET);
+const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
+const API_BASE = 'https://open.tiktokapis.com/v2';
+const DEFAULT_SCOPE = 'user.info.basic,video.upload,video.publish';
+const LOG_CONTEXT = { service: 'tiktok-oauth' };
+
+function defaultRedirectUri() {
+  return process.env.TIKTOK_REDIRECT_URI ||
+    `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social/connect/tiktok/callback`;
 }
 
-/**
- * Generate OAuth authorization URL
- */
-async function getAuthorizationUrl(userId, callbackUrl) {
-  try {
-    if (!isConfigured()) {
-      throw new Error('TikTok OAuth not configured');
-    }
-
-    const state = crypto.randomBytes(32).toString('hex');
-    const scope = 'user.info.basic,video.upload,video.publish';
-    const clientKey = process.env.TIKTOK_CLIENT_KEY;
-    
-    const authUrl = `https://www.tiktok.com/v2/auth/authorize/` +
-      `?client_key=${clientKey}&` +
-      `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
-      `response_type=code&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `state=${state}`;
-
-    // Store state in user's OAuth data
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.tiktok.state': state,
-      }
-    });
-
-    return { url: authUrl, state };
-  } catch (error) {
-    logger.error('TikTok OAuth URL generation error', { error: error.message, userId });
-    throw error;
-  }
-}
-
-/**
- * Exchange authorization code for access token
- */
-async function exchangeCodeForToken(userId, code, state) {
-  try {
-    if (!isConfigured()) {
-      throw new Error('TikTok OAuth not configured');
-    }
-
-    // Verify state
-    const user = await User.findById(userId);
-    if (!user || !user.oauth?.tiktok?.state || user.oauth.tiktok.state !== state) {
-      throw new Error('Invalid OAuth state');
-    }
-
-    const clientKey = process.env.TIKTOK_CLIENT_KEY;
-    const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
-    const redirectUri = process.env.TIKTOK_CALLBACK_URL || 
-      `${process.env.FRONTEND_URL || 'http://localhost:5001'}/api/oauth/tiktok/callback`;
-
-    // Exchange code for token
-    const response = await axios.post('https://open.tiktokapis.com/v2/oauth/token/', {
-      client_key: clientKey,
-      client_secret: clientSecret,
-      code: code,
-      grant_type: 'authorization_code',
-      redirect_uri: redirectUri,
-    }, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-
-    const { access_token, refresh_token, expires_in, refresh_expires_in, scope, token_type } = response.data.data;
-
-    // Get user info
-    const userInfo = await getTikTokUserInfo(access_token);
-
-    // Save tokens to user
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.tiktok.accessToken': access_token,
-        'oauth.tiktok.refreshToken': refresh_token,
-        'oauth.tiktok.connected': true,
-        'oauth.tiktok.connectedAt': new Date(),
-        'oauth.tiktok.expiresAt': expires_in 
-          ? new Date(Date.now() + expires_in * 1000) 
-          : null,
-        'oauth.tiktok.refreshExpiresAt': refresh_expires_in 
-          ? new Date(Date.now() + refresh_expires_in * 1000) 
-          : null,
-        'oauth.tiktok.platformUserId': userInfo.open_id,
-        'oauth.tiktok.platformUsername': userInfo.display_name,
-        'oauth.tiktok.scope': scope,
-      },
-      $unset: {
-        'oauth.tiktok.state': '',
-      }
-    });
-
-    logger.info('TikTok OAuth token exchange successful', { userId });
-
-    return {
-      accessToken: access_token,
-      refreshToken: refresh_token,
-      expiresIn: expires_in,
-    };
-  } catch (error) {
-    logger.error('TikTok OAuth token exchange error', { error: error.message, userId });
-    throw error;
-  }
-}
-
-/**
- * Get TikTok user info
- */
-async function getTikTokUserInfo(accessToken) {
-  try {
-    const response = await axios.get('https://open.tiktokapis.com/v2/user/info/', {
-      params: {
-        fields: 'open_id,union_id,avatar_url,display_name,bio_description,profile_deep_link,is_verified,follower_count,following_count,likes_count,video_count',
-      },
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
-
-    return response.data.data.user;
-  } catch (error) {
-    logger.error('TikTok user info error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Get TikTok client (for API calls)
- */
-async function getTikTokClient(userId) {
-  const user = await User.findById(userId).select('oauth.tiktok');
-  
-  if (!user || !user.oauth?.tiktok?.connected || !user.oauth.tiktok.accessToken) {
-    throw new Error('TikTok account not connected');
-  }
-
-  // Check if token is expired and refresh if needed
-  if (user.oauth.tiktok.expiresAt && new Date() > user.oauth.tiktok.expiresAt) {
-    if (user.oauth.tiktok.refreshToken) {
-      await refreshAccessToken(userId);
-      // Reload user after refresh
-      const refreshedUser = await User.findById(userId).select('oauth.tiktok');
-      return refreshedUser.oauth.tiktok.accessToken;
+class TikTokOAuthService {
+  constructor() {
+    this.clientKey = process.env.TIKTOK_CLIENT_KEY;
+    this.clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+    this.redirectUri = defaultRedirectUri();
+    this.supabase = null;
+    this.isConfiguredFlag = !!(this.clientKey && this.clientSecret);
+    if (this.isConfiguredFlag) {
+      logger.info('TikTok OAuth client initialized', LOG_CONTEXT);
     } else {
-      throw new Error('TikTok token expired and no refresh token available');
+      logger.warn('TikTok OAuth not configured. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET', LOG_CONTEXT);
     }
   }
 
-  return user.oauth.tiktok.accessToken;
-}
+  getSupabaseClient() {
+    if (!this.supabase) {
+      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        throw new Error('Supabase not configured');
+      }
+      this.supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+    }
+    return this.supabase;
+  }
 
-/**
- * Refresh access token
- */
-async function refreshAccessToken(userId) {
-  try {
-    const user = await User.findById(userId).select('oauth.tiktok');
-    
-    if (!user || !user.oauth?.tiktok?.refreshToken) {
-      throw new Error('No refresh token available');
+  isConfigured() {
+    return this.isConfiguredFlag;
+  }
+
+  getScope() {
+    const s = process.env.TIKTOK_SCOPE;
+    return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
+  }
+
+  getAuthorizationUrl(state) {
+    if (!this.isConfigured()) throw new Error('TikTok OAuth not configured');
+    const params = new URLSearchParams({
+      client_key: this.clientKey,
+      scope: this.getScope(),
+      response_type: 'code',
+      redirect_uri: this.redirectUri,
+      state,
+    });
+    return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
+  }
+
+  async exchangeCodeForToken(code) {
+    if (!this.isConfigured()) throw new Error('TikTok OAuth not configured');
+    const response = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_key: this.clientKey,
+        client_secret: this.clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: this.redirectUri,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(`TikTok OAuth token exchange failed: ${response.status} - ${errorData}`);
+    }
+    return await response.json();
+  }
+
+  async getUserProfile(accessToken) {
+    const response = await fetch(`${API_BASE}/user/info/?fields=open_id,union_id,avatar_url,display_name`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`TikTok API user profile fetch failed: ${response.statusText}`);
     }
 
-    const clientKey = process.env.TIKTOK_CLIENT_KEY;
-    const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
-
-    const response = await axios.post('https://open.tiktokapis.com/v2/oauth/token/', {
-      client_key: clientKey,
-      client_secret: clientSecret,
-      grant_type: 'refresh_token',
-      refresh_token: user.oauth.tiktok.refreshToken,
-    }, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-
-    const { access_token, refresh_token, expires_in, refresh_expires_in } = response.data.data;
-
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.tiktok.accessToken': access_token,
-        'oauth.tiktok.refreshToken': refresh_token || user.oauth.tiktok.refreshToken,
-        'oauth.tiktok.expiresAt': expires_in 
-          ? new Date(Date.now() + expires_in * 1000) 
-          : null,
-        'oauth.tiktok.refreshExpiresAt': refresh_expires_in 
-          ? new Date(Date.now() + refresh_expires_in * 1000) 
-          : null,
-      }
-    });
-
-    logger.info('TikTok token refreshed', { userId });
-    return access_token;
-  } catch (error) {
-    logger.error('TikTok token refresh error', { error: error.message, userId });
-    throw error;
-  }
-}
-
-/**
- * Upload video to TikTok
- */
-async function uploadVideoToTikTok(userId, videoFile, caption, options = {}, retries = 1) {
-  try {
-    const accessToken = await getTikTokClient(userId);
-    
-    // Step 1: Initialize upload
-    const initResponse = await axios.post('https://open.tiktokapis.com/v2/post/publish/video/init/', {
-      post_info: {
-        title: caption || '',
-        privacy_level: options.privacyLevel || 'PUBLIC_TO_EVERYONE', // PUBLIC_TO_EVERYONE, MUTUAL_FOLLOW_FRIENDS, SELF_ONLY
-        disable_duet: options.disableDuet || false,
-        disable_comment: options.disableComment || false,
-        disable_stitch: options.disableStitch || false,
-        video_cover_timestamp_ms: options.coverTimestamp || 1000,
-      },
-      source_info: {
-        source: 'FILE_UPLOAD',
-      },
-    }, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const { publish_id, upload_url } = initResponse.data.data;
-
-    // Step 2: Upload video file
-    await retryWithBackoff(
-      async () => {
-        return await axios.put(upload_url, videoFile, {
-          headers: {
-            'Content-Type': 'video/mp4',
-          },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        });
-      },
-      {
-        maxRetries: retries,
-        initialDelay: 2000,
-        onRetry: (attempt, error) => {
-          logger.warn('TikTok video upload retry', { attempt, error: error.message, userId });
-        },
-      }
-    );
-
-    // Step 3: Publish video
-    const publishResponse = await retryWithBackoff(
-      async () => {
-        return await axios.post(`https://open.tiktokapis.com/v2/post/publish/status/fetch/?publish_id=${publish_id}`, null, {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        });
-      },
-      {
-        maxRetries: retries,
-        initialDelay: 2000,
-        onRetry: (attempt, error) => {
-          logger.warn('TikTok publish retry', { attempt, error: error.message, userId });
-        },
-      }
-    );
-
-    logger.info('TikTok video uploaded successfully', { 
-      userId, 
-      publishId: publish_id,
-      status: publishResponse.data.data.status 
-    });
-    
+    const data = await response.json();
+    const user = data.data.user;
     return {
-      id: publish_id,
-      url: `https://www.tiktok.com/@${user.oauth.tiktok.platformUsername}/video/${publish_id}`,
-      caption: caption,
-      status: publishResponse.data.data.status,
+      id: user.open_id,
+      username: user.display_name,
+      display_name: user.display_name,
+      avatar: user.avatar_url,
+      metadata: { union_id: user.union_id },
     };
-  } catch (error) {
-    logger.error('TikTok video upload error', { error: error.message, userId });
-    
-    // Handle rate limiting
-    if (error.response?.status === 429) {
-      const retryAfter = error.response.headers['retry-after'] || 60;
-      throw new Error(`Rate limit exceeded. Please try again after ${retryAfter} seconds.`);
+  }
+
+  async connectAccount(userId, tokens, profile) {
+    const supabase = this.getSupabaseClient();
+    const accountData = {
+      user_id: userId,
+      platform: 'tiktok',
+      platform_user_id: profile.id,
+      username: profile.username,
+      display_name: profile.display_name,
+      avatar: profile.avatar,
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      token_expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
+      is_connected: true,
+      metadata: {
+        ...profile.metadata,
+        connected_at: new Date().toISOString(),
+      },
+    };
+
+    const { data, error } = await supabase
+      .from('platform_accounts')
+      .upsert(accountData, { onConflict: 'user_id,platform' })
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('TikTok connect account error', { ...LOG_CONTEXT, userId, error: error.message });
+      throw error;
     }
-    
-    throw error;
+    return data;
   }
-}
 
-/**
- * Post video URL to TikTok (if video is already uploaded elsewhere)
- */
-async function postToTikTok(userId, videoUrl, caption, options = {}) {
-  try {
-    if (!videoUrl) {
-      throw new Error('Video URL is required for TikTok posts');
+  async getConnectedAccounts(userId) {
+    const supabase = this.getSupabaseClient();
+    const { data, error } = await supabase
+      .from('platform_accounts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('platform', 'tiktok')
+      .eq('is_connected', true);
+
+    if (error) {
+      logger.error('TikTok get connected accounts error', { ...LOG_CONTEXT, userId, error: error.message });
+      throw error;
     }
+    return data || [];
+  }
 
-    // Download video from URL (if needed)
-    // Then upload using uploadVideoToTikTok
-    
-    // For now, return a placeholder response
-    // In production, implement video download and upload
-    throw new Error('Direct video URL posting not yet implemented. Please upload video file directly.');
-  } catch (error) {
-    logger.error('TikTok post error', { error: error.message, userId });
-    throw error;
+  async disconnectAccount(userId, platformUserId) {
+    const supabase = this.getSupabaseClient();
+    const { error } = await supabase
+      .from('platform_accounts')
+      .delete()
+      .eq('user_id', userId)
+      .eq('platform', 'tiktok')
+      .eq('platform_user_id', platformUserId);
+
+    if (error) {
+      logger.error('TikTok disconnect account error', { ...LOG_CONTEXT, userId, error: error.message });
+      throw error;
+    }
+    return { success: true };
   }
 }
 
-/**
- * Disconnect TikTok account
- */
-async function disconnectTikTok(userId) {
-  try {
-    await User.findByIdAndUpdate(userId, {
-      $unset: {
-        'oauth.tiktok': '',
-      }
-    });
-
-    logger.info('TikTok account disconnected', { userId });
-  } catch (error) {
-    logger.error('TikTok disconnect error', { error: error.message, userId });
-    throw error;
-  }
-}
-
-module.exports = {
-  isConfigured,
-  getAuthorizationUrl,
-  exchangeCodeForToken,
-  getTikTokUserInfo,
-  getTikTokClient,
-  refreshAccessToken,
-  uploadVideoToTikTok,
-  postToTikTok,
-  disconnectTikTok,
-};
-
-
+module.exports = new TikTokOAuthService();

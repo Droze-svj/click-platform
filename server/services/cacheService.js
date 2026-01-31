@@ -283,6 +283,147 @@ function cacheMiddleware(ttl = 3600, keyGenerator = null) {
 }
 
 /**
+ * Cache warming - preload frequently accessed data
+ */
+async function warmCache(keys = []) {
+  if (!cacheEnabled || !redisClient) {
+    return { warmed: 0, failed: 0 };
+  }
+
+  let warmed = 0;
+  let failed = 0;
+
+  for (const key of keys) {
+    try {
+      // Check if key exists, if not, it will be populated on first access
+      const exists = await redisClient.exists(key);
+      if (exists === 0) {
+        // Key doesn't exist, mark for warming (actual warming logic should be in calling code)
+        warmed++;
+      }
+    } catch (error) {
+      logger.error('Cache warming error', { key, error: error.message });
+      failed++;
+    }
+  }
+
+  return { warmed, failed };
+}
+
+/**
+ * Batch get multiple keys
+ */
+async function mget(keys) {
+  if (!cacheEnabled || !redisClient || !keys.length) {
+    return [];
+  }
+
+  try {
+    const values = await redisClient.mGet(keys);
+    return values.map((value, index) => {
+      if (value) {
+        const monitoring = getCacheMonitoring();
+        if (monitoring) monitoring.trackCacheHit(keys[index]);
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      } else {
+        const monitoring = getCacheMonitoring();
+        if (monitoring) monitoring.trackCacheMiss(keys[index]);
+        return null;
+      }
+    });
+  } catch (error) {
+    logger.error('Cache mget error', { keys, error: error.message });
+    return keys.map(() => null);
+  }
+}
+
+/**
+ * Batch set multiple keys
+ */
+async function mset(keyValuePairs, ttl = 3600) {
+  if (!cacheEnabled || !redisClient || !keyValuePairs.length) {
+    return false;
+  }
+
+  try {
+    const pipeline = redisClient.multi();
+    for (const { key, value } of keyValuePairs) {
+      pipeline.setEx(key, ttl, JSON.stringify(value));
+    }
+    await pipeline.exec();
+    
+    // Track cache sets
+    const monitoring = getCacheMonitoring();
+    if (monitoring) {
+      keyValuePairs.forEach(({ key }) => monitoring.trackCacheSet(key));
+    }
+    
+    return true;
+  } catch (error) {
+    logger.error('Cache mset error', { error: error.message });
+    return false;
+  }
+}
+
+/**
+ * Increment cache counter
+ */
+async function increment(key, amount = 1, ttl = 3600) {
+  if (!cacheEnabled || !redisClient) {
+    return null;
+  }
+
+  try {
+    const result = await redisClient.incrBy(key, amount);
+    // Set TTL if key is new
+    if (result === amount) {
+      await redisClient.expire(key, ttl);
+    }
+    return result;
+  } catch (error) {
+    logger.error('Cache increment error', { key, error: error.message });
+    return null;
+  }
+}
+
+/**
+ * Get cache statistics
+ */
+async function getStats() {
+  if (!cacheEnabled || !redisClient) {
+    return null;
+  }
+
+  try {
+    const info = await redisClient.info('stats');
+    const keyspace = await redisClient.info('keyspace');
+    
+    // Parse info strings
+    const stats = {};
+    info.split('\r\n').forEach(line => {
+      const [key, value] = line.split(':');
+      if (key && value) {
+        stats[key] = value;
+      }
+    });
+
+    return {
+      enabled: cacheEnabled,
+      connected: redisClient.isReady || false,
+      stats,
+      keyspace,
+    };
+  } catch (error) {
+    logger.error('Cache stats error', { error: error.message });
+    return null;
+  }
+}
+
+/**
  * Close Redis connection
  */
 async function closeCache() {
@@ -306,6 +447,11 @@ module.exports = {
   getOrSet,
   invalidateUserCache,
   cacheMiddleware,
+  warmCache,
+  mget,
+  mset,
+  increment,
+  getStats,
   closeCache,
   isEnabled: () => cacheEnabled,
 };

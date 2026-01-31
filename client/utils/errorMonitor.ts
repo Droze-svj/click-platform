@@ -35,6 +35,7 @@ export class ErrorMonitor {
   }
 
   private alertCooldowns = new Map<string, number>()
+  private thresholdAlertCooldowns = new Map<string, number>()
   private sessionStart = Date.now()
   private config: AlertConfig
 
@@ -218,6 +219,18 @@ export class ErrorMonitor {
    * Send threshold exceeded alerts
    */
   private sendThresholdAlert(type: string, count: number, category?: string): void {
+    const alertKey = `${type}${category ? `-${category}` : ''}`
+    const now = Date.now()
+    const cooldownMs = this.config.thresholds.alertCooldownMinutes * 60 * 1000
+
+    // Check cooldown to prevent spam
+    const lastAlert = this.thresholdAlertCooldowns.get(alertKey)
+    if (lastAlert && (now - lastAlert) < cooldownMs) {
+      return // Still in cooldown, don't send duplicate alerts
+    }
+
+    this.thresholdAlertCooldowns.set(alertKey, now)
+
     const alert = {
       type: 'threshold_exceeded',
       thresholdType: type,
@@ -272,21 +285,34 @@ export class ErrorMonitor {
 
   private async sendToDebugLog(alert: any): Promise<void> {
     try {
-      await fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'errorMonitor.ts',
-          message: `error_alert_${alert.type}`,
-          data: {
-            ...alert,
-            timestamp: Date.now(),
-            sessionId: 'debug-session',
-            runId: 'run-error-monitor'
-          }
-        }),
-        signal: AbortSignal.timeout(5000)
-      })
+      console.log('ErrorMonitor:', alert)
+      // Use local debug API instead of external service
+      // Create abort controller for timeout (AbortSignal.timeout may not be supported in all browsers)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      
+      try {
+        await fetch('/api/debug/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            component: 'ErrorMonitor',
+            message: `error_alert_${alert.type}`,
+            data: {
+              ...alert,
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run-error-monitor'
+            }
+          }),
+          signal: controller.signal
+        }).finally(() => {
+          clearTimeout(timeoutId)
+        })
+      } catch (fetchErr) {
+        clearTimeout(timeoutId)
+        // Silently fail for debug logging
+      }
     } catch (error) {
       // Silently fail for debug logging
     }

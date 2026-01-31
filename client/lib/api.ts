@@ -45,24 +45,6 @@ function resolveBaseUrl(): string {
 // This makes local development reliable even if the Render backend is down.
 export const API_URL = resolveBaseUrl()
 
-const DEBUG_RUN_ID = 'run5'
-
-function shouldDebugLogUrl(url: string): boolean {
-  const u = (url || '').trim()
-  return (
-    u === '/auth/me' ||
-    u === 'auth/me' ||
-    u.startsWith('/notifications') ||
-    u.startsWith('notifications') ||
-    u.startsWith('/approvals') ||
-    u.startsWith('approvals') ||
-    u.startsWith('/search') ||
-    u.startsWith('search') ||
-    u.startsWith('/onboarding') ||
-    u.startsWith('onboarding')
-  )
-}
-
 /**
  * Creates and configures an Axios instance with default settings.
  * 
@@ -79,6 +61,16 @@ function shouldDebugLogUrl(url: string): boolean {
 let activeRequests = 0
 const MAX_CONCURRENT_REQUESTS = 3
 let requestQueue: Array<{ fn: () => Promise<any>, resolve: (value: any) => void, reject: (error: any) => void }> = []
+
+// Retry configuration
+const MAX_RETRIES = 2
+const RETRY_DELAY_MS = 1000
+// 429 (Rate Limit) should NOT be retried immediately - it needs a longer wait
+// Only retry server errors and timeouts, not rate limits
+const RETRYABLE_STATUS_CODES = [500, 502, 503, 504, 408]
+const RATE_LIMIT_STATUS_CODE = 429
+// In development, use shorter delay; in production, respect server's retry-after header
+const RATE_LIMIT_RETRY_DELAY_MS = process.env.NODE_ENV === 'development' ? 5000 : 60000 // 5s dev, 60s prod
 
 function rateLimitRequest<T>(requestFn: () => Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -97,8 +89,8 @@ async function processQueue() {
   const { fn, resolve, reject } = requestQueue.shift()!
   activeRequests++
 
-  // Execute the request
-  fn()
+  // Execute the request with retry logic
+  executeWithRetry(fn, 0)
     .then(result => resolve(result))
     .catch(error => reject(error))
     .finally(() => {
@@ -108,28 +100,74 @@ async function processQueue() {
     })
 }
 
+async function executeWithRetry<T>(requestFn: () => Promise<T>, retryCount: number): Promise<T> {
+  try {
+    return await requestFn()
+  } catch (error: any) {
+    // Handle rate limiting (429) separately - don't retry immediately
+    if (error?.response?.status === RATE_LIMIT_STATUS_CODE) {
+      // In development, don't retry rate limits - just fail fast to avoid making it worse
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⏸️ API: Rate limited (429) in development. Skipping retry to prevent further rate limiting.')
+        throw error
+      }
+      
+      // In production, respect rate limits with appropriate delay
+      // Check for Retry-After header from server
+      const retryAfter = error?.response?.headers?.['retry-after'] || error?.response?.headers?.['Retry-After']
+      const waitTime = retryAfter ? Math.min(parseInt(retryAfter, 10) * 1000, RATE_LIMIT_RETRY_DELAY_MS) : RATE_LIMIT_RETRY_DELAY_MS
+      
+      if (retryCount === 0) {
+        console.warn(`⏸️ API: Rate limited (429). Waiting ${waitTime / 1000}s before retry...`)
+        await new Promise(resolve => setTimeout(resolve, waitTime))
+        return executeWithRetry(requestFn, retryCount + 1)
+      } else {
+        // Already retried once, don't retry again
+        console.error('⛔ API: Rate limit exceeded. Please wait before making more requests.')
+        throw error
+      }
+    }
+
+    const shouldRetry = (
+      retryCount < MAX_RETRIES &&
+      error?.response?.status &&
+      RETRYABLE_STATUS_CODES.includes(error.response.status)
+    ) || (
+      retryCount < MAX_RETRIES &&
+      error?.code === 'ECONNABORTED' // Timeout
+    )
+
+    if (shouldRetry) {
+      console.log(`🔄 API: Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES}) after ${RETRY_DELAY_MS}ms delay`)
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1))) // Exponential backoff
+      return executeWithRetry(requestFn, retryCount + 1)
+    }
+
+    throw error
+  }
+}
+
 function createApiClient(): AxiosInstance {
   // API client initialized successfully
   console.log('🔗 API Client initialized with baseURL:', resolveBaseUrl());
 
   // Enhanced debugging function
   const sendApiDebugLog = (message: string, data: any) => {
-    // #region agent log
-    fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'api.ts',
-        message,
-        data: {
-          ...data,
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run-api-debug'
-        }
-      }),
-    }).catch(() => {})
-    // #endregion
+    // Development debug logging disabled to prevent console spam
+    // fetch('http://127.0.0.1:5557/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     location: 'api.ts',
+    //     message,
+    //     data: {
+    //       ...data,
+    //       timestamp: Date.now(),
+    //       sessionId: 'debug-session',
+    //       runId: 'run-api-debug'
+    //     }
+    //   }),
+    // }).catch(() => {})
   }
 
   // Helpful runtime warning: if you're on localhost but still pointing at Render,
@@ -157,40 +195,66 @@ function createApiClient(): AxiosInstance {
     headers: {
       'Content-Type': 'application/json',
     },
-    timeout: 30000, // 30 seconds
+    timeout: 45000, // 45 seconds (increased for slow database operations)
   })
 
   // Enhanced request interceptor with comprehensive debugging
   client.interceptors.request.use(
     (config) => {
-      const startTime = Date.now()
-      ;(config as any).metadata = { startTime }
+      const requestStartTime = Date.now()
+      ;(config as any).metadata = { startTime: requestStartTime }
 
-      // Enhanced logging
-      console.log('🔍 API: Request interceptor triggered for:', config.url)
-      const token = localStorage.getItem('token')
-      console.log('🔍 API: Token available:', !!token, 'length:', token?.length || 0)
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-        console.log('🔍 API: Authorization header added')
+      // Enhanced logging (only in development to reduce spam)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 API: Request interceptor triggered for:', config.url)
+      }
+      
+      // Get auth token with SSR safety check
+      const authToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 API: Token available:', !!authToken, 'length:', authToken?.length || 0, 'isDevToken:', authToken?.startsWith('dev-jwt-token-'))
       }
 
-      // Debug logging
-      sendApiDebugLog('api_request_start', {
-        url: config.url,
-        method: config.method,
-        headers: {
-          ...config.headers,
-          authorization: config.headers.Authorization ? '[REDACTED]' : undefined
-        },
-        data: config.data ? JSON.stringify(config.data).substring(0, 500) + '...' : null,
-        timeout: config.timeout,
-        hasToken: !!token,
-        userAgent: navigator.userAgent,
-        referrer: document.referrer,
-        currentPath: window.location.pathname
-      })
+      // Always ensure token is set in development (only in browser)
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && !authToken) {
+        const devToken = 'dev-jwt-token-' + Date.now()
+        localStorage.setItem('token', devToken)
+        config.headers.Authorization = `Bearer ${devToken}`
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔧 API: Auto-generated dev token for request:', config.url)
+        }
+      } else if (authToken) {
+        config.headers.Authorization = `Bearer ${authToken}`
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 API: Authorization header added')
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ API: No token available for request:', config.url)
+        }
+
+        // Debug logging disabled to prevent console spam
+        // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
+      }
+
+      // Debug logging (with SSR safety checks)
+      if (typeof window !== 'undefined') {
+        sendApiDebugLog('api_request_start', {
+          url: config.url,
+          method: config.method,
+          headers: {
+            ...config.headers,
+            authorization: config.headers.Authorization ? '[REDACTED]' : undefined
+          },
+          data: config.data ? JSON.stringify(config.data).substring(0, 500) + '...' : null,
+          timeout: config.timeout,
+          hasToken: !!localStorage.getItem('token'),
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+          referrer: typeof document !== 'undefined' ? document.referrer : 'unknown',
+          currentPath: window.location.pathname
+        })
+      }
 
       return config
     },
@@ -207,12 +271,15 @@ function createApiClient(): AxiosInstance {
     }
   )
 
-  // Enhanced response interceptor with detailed logging
+  // Enhanced response interceptor with detailed logging and error handling
   client.interceptors.response.use(
     (response) => {
       const duration = Date.now() - (response.config as any).metadata?.startTime
 
       console.log('🔍 API: Response received for:', response.config.url, 'status:', response.status, 'duration:', duration + 'ms')
+
+      // Debug logging disabled to prevent console spam
+      // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
 
       // Debug logging
       sendApiDebugLog('api_response_success', {
@@ -231,12 +298,13 @@ function createApiClient(): AxiosInstance {
 
       return response
     },
-    (error) => {
-      const duration = error.config?.metadata?.startTime ? Date.now() - error.config.metadata.startTime : 0
+    (error: AxiosError) => {
+      const duration = (error.config as any)?.metadata?.startTime ? Date.now() - (error.config as any).metadata.startTime : 0
 
       console.error('🔍 API: Response error for:', error.config?.url, 'duration:', duration + 'ms', 'error:', error.message)
 
       // Enhanced error logging
+      const responseStatus = error.response?.status
       sendApiDebugLog('api_response_error', {
         url: error.config?.url,
         method: error.config?.method,
@@ -244,40 +312,110 @@ function createApiClient(): AxiosInstance {
         error: {
           message: error.message,
           code: error.code,
-          status: error.response?.status,
+          status: responseStatus,
           statusText: error.response?.statusText,
           data: error.response?.data,
           headers: error.response?.headers
         },
         isTimeout: error.code === 'ECONNABORTED',
         isNetworkError: !error.response,
-        isServerError: error.response?.status >= 500,
-        isClientError: error.response?.status >= 400 && error.response?.status < 500,
-        retryCount: error.config?.retryCount || 0,
-        userAgent: navigator.userAgent,
-        online: navigator.onLine,
-        connectionType: (navigator as any).connection?.effectiveType || 'unknown'
+        isServerError: responseStatus ? responseStatus >= 500 : false,
+        isClientError: responseStatus ? responseStatus >= 400 && responseStatus < 500 : false,
+        retryCount: (error.config as any)?.retryCount || 0,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+        online: typeof navigator !== 'undefined' ? navigator.onLine : true,
+        connectionType: typeof navigator !== 'undefined' ? (navigator as any).connection?.effectiveType || 'unknown' : 'unknown'
       })
 
-      return Promise.reject(error)
-    }
-  )
-
-  // Response interceptor: Handle errors globally
-  client.interceptors.response.use(
-    (response) => {
-
-      return response
-    },
-    (error: AxiosError) => {
 
 
+      // Enhanced error handling for database timeouts and server errors
+      if (error.response?.status === 500) {
+        const errorMessage = (error.response.data as any)?.error || error.message
+        const requestUrl = error.config?.url || 'unknown'
+        
+        // In development, provide detailed error information
+        if (process.env.NODE_ENV === 'development') {
+          console.error('🔧 [API] 500 Internal Server Error:', {
+            url: requestUrl,
+            method: error.config?.method,
+            error: errorMessage,
+            responseData: error.response?.data,
+            stack: error.stack
+          })
+          
+          // If it's a dev user and we get a 500, it might be a route that needs dev user handling
+          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+          const isDevToken = token && token.startsWith('dev-jwt-token-')
+          if (isDevToken) {
+            console.warn('🔧 [API] 500 error with dev token - this route might need dev user handling:', requestUrl)
+            console.warn('🔧 [API] Check server logs for more details. The route handler may need to check for dev users.')
+          }
+        }
+        
+        if (errorMessage?.includes('buffering timed out') || errorMessage?.includes('timeout')) {
+          // Create a more user-friendly error for database timeouts
+          const enhancedError = new Error('The server is experiencing temporary issues. Please try again in a moment.')
+          enhancedError.name = 'DatabaseTimeoutError'
+          ;(enhancedError as any).originalError = error
+          ;(enhancedError as any).isRetryable = true
+          return Promise.reject(enhancedError)
+        }
+        
+        // For other 500 errors, provide a user-friendly message
+        const userFriendlyError = new Error(
+          process.env.NODE_ENV === 'development' 
+            ? `Server error: ${errorMessage} (${requestUrl})`
+            : 'An error occurred on the server. Please try again later.'
+        )
+        userFriendlyError.name = 'ServerError'
+        ;(userFriendlyError as any).originalError = error
+        ;(userFriendlyError as any).response = error.response
+        ;(userFriendlyError as any).config = error.config
+        return Promise.reject(userFriendlyError)
+      }
+
+      // Handle 429 Rate Limiting - don't retry immediately, log warning
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.headers?.['retry-after'] || error.response?.headers?.['Retry-After']
+        const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : RATE_LIMIT_RETRY_DELAY_MS
+        console.warn(`⏸️ API: Rate limited (429). Server suggests waiting ${waitTime / 1000}s. Please reduce request frequency.`)
+      }
 
       // Handle 401 Unauthorized - redirect to login
+      // In development mode, don't remove dev tokens - they should always be valid
       if (error.response?.status === 401) {
-        localStorage.removeItem('token')
-        if (typeof window !== 'undefined') {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        const isDevToken = process.env.NODE_ENV === 'development' && token && token.startsWith('dev-jwt-token-')
+        const requestUrl = error.config?.url || 'unknown'
+        const requestMethod = error.config?.method || 'unknown'
+        
+        // Enhanced logging for 401 errors
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('🔧 [API] 401 Unauthorized error:', {
+            url: requestUrl,
+            method: requestMethod,
+            hasToken: !!token,
+            isDevToken,
+            tokenPrefix: token ? token.substring(0, 20) + '...' : 'none',
+            responseData: error.response?.data,
+            headers: error.config?.headers
+          })
+        }
+        
+        // Only remove token and redirect if it's not a dev token
+        // Dev tokens should always be valid in development mode
+        if (!isDevToken && typeof window !== 'undefined') {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('🔧 [API] Removing non-dev token and redirecting to login')
+          }
+          localStorage.removeItem('token')
           window.location.href = '/login'
+        } else if (isDevToken) {
+          // In development, log the 401 but don't remove the token
+          // This might indicate a server-side issue with token validation
+          console.warn('🔧 [API] 401 error with dev token - this might indicate a server issue. Token preserved for development.')
+          console.warn('🔧 [API] Check that the backend auth middleware is correctly handling dev tokens.')
         }
       }
       return Promise.reject(error)
@@ -293,11 +431,50 @@ function createApiClient(): AxiosInstance {
  */
 export const api = createApiClient()
 
+// Request caching for frequently accessed endpoints
+const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+const CACHE_DEFAULT_TTL = 5 * 60 * 1000 // 5 minutes default
+const CACHE_ENABLED_ENDPOINTS = [
+  '/subscription/status',
+  '/templates',
+  '/workflows/suggestions',
+  '/dashboard',
+  '/library/items',
+  '/analytics/dashboard'
+]
+
+function getCacheKey(endpoint: string, config?: AxiosRequestConfig): string {
+  const params = config?.params ? JSON.stringify(config.params) : ''
+  return `${endpoint}${params}`
+}
+
+function getCachedResponse<T>(key: string): T | null {
+  const cached = cache.get(key)
+  if (!cached) return null
+  
+  const now = Date.now()
+  if (now - cached.timestamp > cached.ttl) {
+    cache.delete(key)
+    return null
+  }
+  
+  return cached.data as T
+}
+
+function setCachedResponse(key: string, data: any, ttl: number = CACHE_DEFAULT_TTL): void {
+  cache.set(key, { data, timestamp: Date.now(), ttl })
+}
+
+function shouldCache(endpoint: string): boolean {
+  return CACHE_ENABLED_ENDPOINTS.some(enabledEndpoint => endpoint.startsWith(enabledEndpoint))
+}
+
 /**
- * Makes a GET request to the API.
+ * Makes a GET request to the API with optional caching.
  * 
  * @param endpoint - API endpoint (without base URL)
  * @param config - Optional Axios request configuration
+ * @param useCache - Whether to use cache (default: true for enabled endpoints)
  * @returns Promise resolving to the response data
  * 
  * @example
@@ -306,11 +483,51 @@ export const api = createApiClient()
  * const user = await apiGet('/users/123')
  * ```
  */
-export async function apiGet<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
+export async function apiGet<T = any>(
+  endpoint: string, 
+  config?: AxiosRequestConfig,
+  useCache: boolean = true
+): Promise<T> {
+  const cacheKey = getCacheKey(endpoint, config)
+  const shouldUseCache = useCache && shouldCache(endpoint)
+  
+  // Check cache first
+  if (shouldUseCache) {
+    const cached = getCachedResponse<T>(cacheKey)
+    if (cached !== null) {
+      return cached
+    }
+  }
+  
   return rateLimitRequest(async () => {
     const response = await api.get<T>(endpoint, config)
+    
+    // Cache successful GET requests
+    if (shouldUseCache && response.status === 200) {
+      setCachedResponse(cacheKey, response.data)
+    }
+    
     return response.data
   })
+}
+
+/**
+ * Clear cache for a specific endpoint or all cache
+ * 
+ * @param endpoint - Optional endpoint to clear (if not provided, clears all)
+ */
+export function clearApiCache(endpoint?: string): void {
+  if (endpoint) {
+    // Clear all cache entries that start with this endpoint
+    const keys = Array.from(cache.keys())
+    for (const key of keys) {
+      if (key.startsWith(endpoint)) {
+        cache.delete(key)
+      }
+    }
+  } else {
+    cache.clear()
+  }
 }
 
 /**
@@ -435,7 +652,9 @@ export function handleApiError(error: unknown): string {
  * ```
  */
 export function setAuthToken(token: string): void {
-  localStorage.setItem('token', token)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('token', token)
+  }
 }
 
 /**
@@ -447,7 +666,9 @@ export function setAuthToken(token: string): void {
  * ```
  */
 export function clearAuthToken(): void {
-  localStorage.removeItem('token')
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('token')
+  }
 }
 
 /**
@@ -464,7 +685,10 @@ export function clearAuthToken(): void {
  * ```
  */
 export function getAuthToken(): string | null {
-  return localStorage.getItem('token')
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('token')
+  }
+  return null
 }
 
 /**

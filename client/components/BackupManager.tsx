@@ -83,7 +83,7 @@ export default function BackupManager() {
 
   const createBackup = async () => {
     if (backupOptions.encrypt && !encryptionPassword) {
-      showToast('Password required for encrypted backup', 'error')
+      showToast(t('backup.passwordRequired'), 'error')
       return
     }
 
@@ -104,16 +104,16 @@ export default function BackupManager() {
       })
 
       if (response.ok) {
-        showToast('Backup created successfully', 'success')
+        showToast(t('backup.created'), 'success')
         setShowCreate(false)
         setEncryptionPassword('')
         loadBackups()
         loadStats()
       } else {
-        showToast('Failed to create backup', 'error')
+        showToast(t('backup.createFailed'), 'error')
       }
     } catch (error) {
-      showToast('Failed to create backup', 'error')
+      showToast(t('backup.createFailed'), 'error')
     } finally {
       setIsCreating(false)
     }
@@ -136,10 +136,10 @@ export default function BackupManager() {
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
-        showToast('Backup downloaded', 'success')
+        showToast(t('backup.downloaded'), 'success')
       }
     } catch (error) {
-      showToast('Failed to download backup', 'error')
+      showToast(t('backup.downloadFailed'), 'error')
     }
   }
 
@@ -155,14 +155,14 @@ export default function BackupManager() {
       })
 
       if (response.ok) {
-        showToast('Backup deleted', 'success')
+        showToast(t('backup.deleted'), 'success')
         loadBackups()
         loadStats()
       } else {
-        showToast('Failed to delete backup', 'error')
+        showToast(t('backup.deleteFailed'), 'error')
       }
     } catch (error) {
-      showToast('Failed to delete backup', 'error')
+      showToast(t('backup.deleteFailed'), 'error')
     }
   }
 

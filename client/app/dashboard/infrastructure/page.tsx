@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/useAuth';
-import Navbar from '../../../components/Navbar';
+// Navbar removed - provided by dashboard layout
 import InfrastructureDashboard from '../../../components/InfrastructureDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Server, Database, Cpu, HardDrive } from 'lucide-react';
@@ -51,7 +51,6 @@ export default function InfrastructurePage() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-8 text-center">
@@ -68,7 +67,6 @@ export default function InfrastructurePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">

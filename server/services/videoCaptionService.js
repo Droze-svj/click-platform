@@ -1,237 +1,226 @@
-// Video Caption Service
+// Video Caption Service - AI-powered auto-captions using OpenAI Whisper API
 
-const { OpenAI } = require('openai');
+const OpenAI = require('openai');
 const logger = require('../utils/logger');
+const { captureException } = require('../utils/sentry');
+const Content = require('../models/Content');
+const fs = require('fs').promises;
+const path = require('path');
 
-// Lazy initialization - only create client when needed and if API key is available
+// Initialize OpenAI client
 let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for video captions', { error: error.message });
-      return null;
-    }
+try {
+  if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
   }
-  return openai;
+} catch (error) {
+  logger.warn('OpenAI not configured for video captions', { error: error.message });
 }
 
 /**
- * Generate auto-captions
+ * Generate transcript from video file using Whisper API
+ * @param {string} videoFilePath - Path to video file
+ * @param {string} language - Language code (optional, auto-detect if not provided)
+ * @returns {Promise<Object>} Transcript with text and segments
  */
-async function generateAutoCaptions(videoId, options = {}) {
+async function generateTranscript(videoFilePath, language = null) {
+  if (!openai) {
+    throw new Error('OpenAI API not configured');
+  }
+
   try {
-    const {
-      language = 'en',
-      transcript = null,
-      timestamps = null,
-      style = 'default',
-      position = 'bottom',
-    } = options;
+    logger.info('Generating transcript', { videoFilePath, language });
 
-    if (!transcript) {
-      throw new Error('Transcript is required for caption generation');
-    }
+    // Read video file
+    const videoFile = await fs.readFile(videoFilePath);
+    const filename = path.basename(videoFilePath);
 
-    // Generate captions from transcript
-    const prompt = `Generate video captions from this transcript:
+    // Create file stream for OpenAI (using fs.createReadStream for Node.js)
+    const { createReadStream } = require('fs');
+    const fileStream = createReadStream(videoFilePath);
 
-Transcript:
-${transcript}
-
-Language: ${language}
-Style: ${style}
-Position: ${position}
-
-Requirements:
-- Break into readable chunks (2-3 words per line)
-- Timing should match speech pace
-- Include timestamps
-- Format for ${language} language
-
-Format as JSON array with objects containing: startTime (seconds), endTime (seconds), text (string), style (object)`;
-
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate captions');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
-
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a video captioning expert. Generate accurate, readable captions with proper timing.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 2000,
+    // Call Whisper API
+    const response = await openai.audio.transcriptions.create({
+      file: fileStream,
+      model: 'whisper-1',
+      language: language || undefined, // Auto-detect if not provided
+      response_format: 'verbose_json', // Get detailed response with segments
+      timestamp_granularities: ['segment', 'word'], // Get both segment and word-level timestamps
     });
 
-    const captionsText = response.choices[0].message.content;
-    
-    let captions;
-    try {
-      captions = JSON.parse(captionsText);
-    } catch (error) {
-      const jsonMatch = captionsText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        captions = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse captions');
-      }
-    }
+    logger.info('Transcript generated successfully', {
+      textLength: response.text?.length || 0,
+      segmentsCount: response.segments?.length || 0,
+    });
 
-    logger.info('Auto-captions generated', { videoId, language, count: captions.length });
     return {
-      videoId,
-      language,
-      captions,
-      style,
-      position,
-      format: 'srt', // SRT format
+      text: response.text,
+      language: response.language,
+      duration: response.duration,
+      segments: response.segments || [],
+      words: response.words || [],
     };
   } catch (error) {
-    logger.error('Generate auto-captions error', { error: error.message, videoId });
-    throw error;
-  }
-}
-
-/**
- * Translate captions
- */
-async function translateCaptions(captions, targetLanguage) {
-  try {
-    const captionsText = captions.map(c => c.text).join('\n');
-
-    const prompt = `Translate these video captions to ${targetLanguage}:
-
-Captions:
-${captionsText}
-
-Maintain:
-- Timing information
-- Caption breaks
-- Natural language flow
-
-Format as JSON array with same structure: startTime, endTime, text`;
-
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate captions');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
-
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional translator. Translate video captions while maintaining timing and natural flow.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 2000,
+    logger.error('Error generating transcript', {
+      videoFilePath,
+      error: error.message,
+      stack: error.stack,
     });
-
-    const translatedText = response.choices[0].message.content;
-    
-    let translated;
-    try {
-      translated = JSON.parse(translatedText);
-    } catch (error) {
-      const jsonMatch = translatedText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        translated = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse translated captions');
-      }
-    }
-
-    logger.info('Captions translated', { targetLanguage, count: translated.length });
-    return translated;
-  } catch (error) {
-    logger.error('Translate captions error', { error: error.message });
+    captureException(error, {
+      tags: { service: 'videoCaptionService', action: 'generateTranscript' },
+    });
     throw error;
   }
 }
 
 /**
- * Style captions
+ * Generate captions for video content
+ * @param {string} contentId - Content ID
+ * @param {string} videoFilePath - Path to video file
+ * @param {Object} options - Options (language, format, etc.)
+ * @returns {Promise<Object>} Caption data
  */
-function styleCaptions(captions, styleOptions = {}) {
+async function generateCaptionsForContent(contentId, videoFilePath, options = {}) {
   try {
-    const {
-      fontSize = 20,
-      fontFamily = 'Arial',
-      fontColor = '#FFFFFF',
-      backgroundColor = 'rgba(0,0,0,0.7)',
-      position = 'bottom',
-      alignment = 'center',
-      outline = true,
-      outlineColor = '#000000',
-    } = styleOptions;
+    const { language, format = 'srt' } = options;
 
-    const styled = captions.map(caption => ({
-      ...caption,
-      style: {
-        fontSize,
-        fontFamily,
-        fontColor,
-        backgroundColor,
-        position,
-        alignment,
-        outline,
-        outlineColor,
+    // Generate transcript
+    const transcript = await generateTranscript(videoFilePath, language);
+
+    // Format captions based on requested format
+    const formattedCaptions = formatCaptions(transcript, format);
+
+    // Save captions to content
+    await Content.findByIdAndUpdate(contentId, {
+      $set: {
+        transcript: transcript.text,
+        captions: {
+          text: transcript.text,
+          language: transcript.language,
+          format,
+          segments: transcript.segments,
+          words: transcript.words,
+          formatted: formattedCaptions,
+          generatedAt: new Date(),
+        },
       },
-    }));
-
-    logger.info('Captions styled', { count: styled.length });
-    return styled;
-  } catch (error) {
-    logger.error('Style captions error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Generate SRT file
- */
-function generateSRTFile(captions) {
-  try {
-    let srt = '';
-    
-    captions.forEach((caption, index) => {
-      const start = formatSRTTime(caption.startTime);
-      const end = formatSRTTime(caption.endTime);
-      
-      srt += `${index + 1}\n`;
-      srt += `${start} --> ${end}\n`;
-      srt += `${caption.text}\n\n`;
     });
 
-    return srt;
+    logger.info('Captions saved to content', { contentId, format, language: transcript.language });
+
+    return {
+      contentId,
+      transcript: transcript.text,
+      language: transcript.language,
+      format,
+      captions: formattedCaptions,
+      segments: transcript.segments,
+    };
   } catch (error) {
-    logger.error('Generate SRT file error', { error: error.message });
+    logger.error('Error generating captions for content', {
+      contentId,
+      error: error.message,
+    });
+    captureException(error, {
+      tags: { service: 'videoCaptionService', action: 'generateCaptionsForContent' },
+    });
     throw error;
   }
 }
 
 /**
- * Format time for SRT
+ * Format transcript into caption format (SRT, VTT, SSA)
+ * @param {Object} transcript - Transcript data from Whisper
+ * @param {string} format - Format (srt, vtt, ssa)
+ * @returns {string} Formatted captions
+ */
+function formatCaptions(transcript, format = 'srt') {
+  const { segments, text } = transcript;
+
+  switch (format.toLowerCase()) {
+    case 'srt':
+      return formatSRT(segments);
+    case 'vtt':
+      return formatVTT(segments);
+    case 'ssa':
+      return formatSSA(segments);
+    default:
+      return text;
+  }
+}
+
+/**
+ * Format as SRT (SubRip)
+ */
+function formatSRT(segments) {
+  if (!segments || segments.length === 0) {
+    return '';
+  }
+
+  return segments
+    .map((segment, index) => {
+      const start = formatSRTTime(segment.start);
+      const end = formatSRTTime(segment.end);
+      return `${index + 1}\n${start} --> ${end}\n${segment.text}\n`;
+    })
+    .join('\n');
+}
+
+/**
+ * Format as VTT (WebVTT)
+ */
+function formatVTT(segments) {
+  if (!segments || segments.length === 0) {
+    return '';
+  }
+
+  const header = 'WEBVTT\n\n';
+  const body = segments
+    .map((segment) => {
+      const start = formatVTTTime(segment.start);
+      const end = formatVTTTime(segment.end);
+      return `${start} --> ${end}\n${segment.text}\n`;
+    })
+    .join('\n');
+
+  return header + body;
+}
+
+/**
+ * Format as SSA (SubStation Alpha)
+ */
+function formatSSA(segments) {
+  if (!segments || segments.length === 0) {
+    return '';
+  }
+
+  const header = `[Script Info]
+Title: Generated Captions
+ScriptType: v4.00
+
+[V4 Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&Hffffff,&Hffffff,&H0,&H0,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+
+  const events = segments
+    .map((segment) => {
+      const start = formatSSATime(segment.start);
+      const end = formatSSATime(segment.end);
+      return `Dialogue: 0,${start},${end},Default,,0,0,0,,${segment.text}`;
+    })
+    .join('\n');
+
+  return header + events;
+}
+
+/**
+ * Format time for SRT (HH:MM:SS,mmm)
  */
 function formatSRTTime(seconds) {
   const hours = Math.floor(seconds / 3600);
@@ -243,29 +232,7 @@ function formatSRTTime(seconds) {
 }
 
 /**
- * Generate VTT file
- */
-function generateVTTFile(captions) {
-  try {
-    let vtt = 'WEBVTT\n\n';
-    
-    captions.forEach(caption => {
-      const start = formatVTTTime(caption.startTime);
-      const end = formatVTTTime(caption.endTime);
-      
-      vtt += `${start} --> ${end}\n`;
-      vtt += `${caption.text}\n\n`;
-    });
-
-    return vtt;
-  } catch (error) {
-    logger.error('Generate VTT file error', { error: error.message });
-    throw error;
-  }
-}
-
-/**
- * Format time for VTT
+ * Format time for VTT (HH:MM:SS.mmm)
  */
 function formatVTTTime(seconds) {
   const hours = Math.floor(seconds / 3600);
@@ -276,16 +243,106 @@ function formatVTTTime(seconds) {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
 }
 
+/**
+ * Format time for SSA (H:MM:SS.cc)
+ */
+function formatSSATime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  const centiseconds = Math.floor((seconds % 1) * 100);
+
+  return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+}
+
+/**
+ * Translate captions to another language
+ * @param {string} text - Caption text
+ * @param {string} targetLanguage - Target language code
+ * @returns {Promise<string>} Translated text
+ */
+async function translateCaptions(text, targetLanguage) {
+  if (!openai) {
+    throw new Error('OpenAI API not configured');
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a professional translator. Translate the following text to ${targetLanguage}. Maintain the same tone and style.`,
+        },
+        {
+          role: 'user',
+          content: text,
+        },
+      ],
+      temperature: 0.3,
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    logger.error('Error translating captions', {
+      targetLanguage,
+      error: error.message,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Get captions for content
+ * @param {string} contentId - Content ID
+ * @param {string} format - Caption format (srt, vtt, ssa)
+ * @returns {Promise<Object>} Caption data
+ */
+async function getCaptions(contentId, format = 'srt') {
+  try {
+    const content = await Content.findById(contentId);
+    if (!content) {
+      throw new Error('Content not found');
+    }
+
+    if (!content.captions) {
+      throw new Error('Captions not generated for this content');
+    }
+
+    // Return formatted captions in requested format
+    if (format && content.captions.format !== format) {
+      // Re-format if different format requested
+      return {
+        text: content.captions.text,
+        language: content.captions.language,
+        format,
+        captions: formatCaptions(
+          {
+            segments: content.captions.segments,
+            text: content.captions.text,
+          },
+          format
+        ),
+      };
+    }
+
+    return {
+      text: content.captions.text,
+      language: content.captions.language,
+      format: content.captions.format,
+      captions: content.captions.formatted,
+      segments: content.captions.segments,
+    };
+  } catch (error) {
+    logger.error('Error getting captions', { contentId, error: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
-  generateAutoCaptions,
+  generateTranscript,
+  generateCaptionsForContent,
+  formatCaptions,
   translateCaptions,
-  styleCaptions,
-  generateSRTFile,
-  generateVTTFile,
+  getCaptions,
 };
-
-
-
-
-
-

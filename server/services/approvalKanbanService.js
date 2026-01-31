@@ -58,6 +58,13 @@ async function getKanbanBoardWithCards(clientWorkspaceId, agencyWorkspaceId, fil
       .sort({ createdAt: -1 })
       .lean();
 
+    // Check MongoDB connection before querying
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      logger.warn('MongoDB not connected, cannot get SLA data for kanban');
+      return {};
+    }
+
     // Get SLAs for these approvals
     const approvalIds = approvals.map(a => a._id);
     const slas = await ApprovalSLA.find({
@@ -65,6 +72,7 @@ async function getKanbanBoardWithCards(clientWorkspaceId, agencyWorkspaceId, fil
       status: { $in: ['on_time', 'at_risk', 'overdue'] }
     })
       .sort({ targetCompletionAt: 1 })
+      .maxTimeMS(5000)
       .lean();
 
     // Map SLAs to approvals

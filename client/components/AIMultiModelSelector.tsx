@@ -50,6 +50,11 @@ export default function AIMultiModelSelector() {
   }, []);
 
   const fetchModels = async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 [AIMultiModelSelector] Skipping models API call in development mode')
+      setLoading(false)
+      return
+    }
     setLoading(true);
     try {
       const res = await apiGet<any>('/ai/multi-model/models');

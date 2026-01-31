@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { apiGet } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 interface SubscriptionStatus {
   status: string
@@ -33,11 +31,9 @@ export default function SubscriptionBanner() {
 
   const loadSubscriptionStatus = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/subscription/status`, {
-      })
-      if (response.data.success) {
-        setStatus(response.data.data)
+      const response = await apiGet<{ success: boolean; data: SubscriptionStatus }>('/subscription/status')
+      if (response.success) {
+        setStatus(response.data)
       }
     } catch (error) {
       console.error('Failed to load subscription status', error)

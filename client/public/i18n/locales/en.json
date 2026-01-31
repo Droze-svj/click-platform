@@ -10,16 +10,93 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "retry": "Retry",
+    "more": "More",
+    "menu": "Menu",
+    "logout": "Logout",
+    "yes": "Yes",
+    "no": "No",
+    "redirecting": "Taking you to sign in…"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "videos": "Videos",
+    "content": "Content",
+    "aiFeatures": "AI Features",
+    "library": "Library",
+    "scripts": "Scripts",
+    "workflows": "Workflows",
+    "jobs": "Jobs",
+    "teams": "Teams",
+    "approvals": "Approvals",
+    "quotes": "Quotes",
+    "scheduler": "Scheduler",
+    "calendar": "Calendar",
+    "social": "Social",
+    "analytics": "Analytics",
+    "achievements": "Achievements",
+    "membership": "Membership",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "templates": "Templates",
+    "infrastructure": "Infrastructure",
+    "clickTagline": "AI-Powered Content"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back",
+    "heroWelcome": "Welcome to Click",
+    "heroTitle": "Create, repurpose, and publish",
+    "heroSubtitle": "AI-powered tools, smart scheduling, and analytics in one workspace.",
+    "heroDescription": "Your AI‑powered workspace to create, repurpose, and publish across 6 platforms. Transform long‑form content into social‑ready formats—faster.",
     "stats": {
       "videosProcessed": "Videos Processed",
       "contentGenerated": "Content Generated",
+      "contentCreated": "Content Created",
+      "quotesCreated": "Quotes Made",
       "postsScheduled": "Posts Scheduled"
-    }
+    },
+    "clickToView": "Click to view details →"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign up",
+    "logout": "Logout",
+    "loggingIn": "Logging in...",
+    "email": "Email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginTitle": "Welcome to Click",
+    "loginSubtitle": "Sign in to your account to access AI‑powered content creation.",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "Get started with AI-powered content creation."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account preferences",
+    "profile": "Profile",
+    "editProfile": "Edit Profile",
+    "general": "General",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "security": "Security",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Auto (System)",
+    "language": "Language",
+    "timezone": "Timezone",
+    "saveSettings": "Save Settings",
+    "saving": "Saving...",
+    "saved": "Settings saved successfully",
+    "saveFailed": "Failed to save settings"
   },
   "content": {
     "title": "Content",
@@ -29,6 +106,15 @@
     "duplicate": "Duplicate",
     "publish": "Publish",
     "schedule": "Schedule"
+  },
+  "video": {
+    "title": "Videos",
+    "upload": "Upload",
+    "edit": "Edit",
+    "processing": "Processing...",
+    "noVideo": "No Video Loaded",
+    "noVideoHint": "Please provide a video URL to start editing.",
+    "goToVideos": "Go to Videos"
   },
   "analytics": {
     "title": "Analytics",
@@ -47,11 +133,34 @@
     "flagged": "Content flagged for review",
     "profanity": "Profanity detected",
     "spam": "Spam detected"
+  },
+  "backup": {
+    "title": "Backups",
+    "create": "Create Backup",
+    "download": "Download",
+    "delete": "Delete",
+    "passwordRequired": "Password required for encrypted backup",
+    "created": "Backup created successfully",
+    "createFailed": "Failed to create backup",
+    "downloaded": "Backup downloaded",
+    "downloadFailed": "Failed to download backup",
+    "deleted": "Backup deleted",
+    "deleteFailed": "Failed to delete backup"
+  },
+  "translation": {
+    "title": "Translation",
+    "translate": "Translate",
+    "translateTo": "Translate to",
+    "translateToAll": "Translate to all",
+    "targetLanguage": "Target language",
+    "viewIn": "View in",
+    "original": "Original",
+    "translations": "Translations",
+    "noTranslations": "No translations yet",
+    "translating": "Translating…",
+    "translated": "Translated",
+    "translationFailed": "Translation failed",
+    "viewOriginal": "View original",
+    "selectLanguage": "Select language"
   }
 }
-
-
-
-
-
-

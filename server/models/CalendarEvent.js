@@ -8,14 +8,12 @@ const calendarEventSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ScheduledPost',
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   agencyWorkspaceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
-    required: true,
-    index: true
+    required: true
   },
   comments: [{
     userId: {
@@ -89,6 +87,7 @@ const calendarEventSchema = new mongoose.Schema({
 
 calendarEventSchema.index({ agencyWorkspaceId: 1, createdAt: -1 });
 calendarEventSchema.index({ 'comments.userId': 1 });
+// scheduledPostId already has unique: true which creates an index
 
 calendarEventSchema.pre('save', function(next) {
   this.updatedAt = new Date();

@@ -30,8 +30,7 @@ const translationGlossarySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   name: {
     type: String,
@@ -56,8 +55,7 @@ const translationGlossarySchema = new mongoose.Schema({
   },
   domain: {
     type: String,
-    default: 'general',
-    index: true
+    default: 'general'
   },
   terms: [glossaryTermSchema],
   isActive: {

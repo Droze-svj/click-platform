@@ -163,13 +163,20 @@ async function processExpiredSubscriptions() {
  * Check subscription access
  */
 function hasSubscriptionAccess(user) {
+  // In development mode, always allow access for dev users
+  if (process.env.NODE_ENV !== 'production') {
+    if (user && (user.id?.startsWith('dev-') || user._id?.toString().startsWith('dev-'))) {
+      return true;
+    }
+  }
+
   // Admin always has access
   if (user.role === 'admin') {
     return true;
   }
 
   // Check subscription status
-  if (user.subscription.status === 'active') {
+  if (user.subscription && user.subscription.status === 'active') {
     // Check if expired
     if (isSubscriptionExpired(user)) {
       return false;
@@ -178,7 +185,7 @@ function hasSubscriptionAccess(user) {
   }
 
   // Trial users have limited access
-  if (user.subscription.status === 'trial') {
+  if (user.subscription && user.subscription.status === 'trial') {
     if (isSubscriptionExpired(user)) {
       return false;
     }
@@ -186,7 +193,7 @@ function hasSubscriptionAccess(user) {
   }
 
   // Expired or cancelled - no access (except free tier)
-  if (user.subscription.status === 'expired' || user.subscription.status === 'cancelled') {
+  if (user.subscription && (user.subscription.status === 'expired' || user.subscription.status === 'cancelled')) {
     // Free package users can still access basic features
     return user.membershipPackage && user.membershipPackage.slug === 'free';
   }
@@ -203,15 +210,29 @@ function getSubscriptionStatus(user) {
   const daysUntilExpiry = getDaysUntilExpiry(user);
   const hasAccess = hasSubscriptionAccess(user);
 
+  // Handle users without subscription (dev users, new users, etc.)
+  if (!user.subscription) {
+    return {
+      status: 'none',
+      isExpired: true,
+      isExpiringSoon: false,
+      daysUntilExpiry: 0,
+      hasAccess,
+      endDate: null,
+      startDate: null,
+      plan: null
+    };
+  }
+
   return {
-    status: user.subscription.status,
+    status: user.subscription.status || 'none',
     isExpired,
     isExpiringSoon,
     daysUntilExpiry,
     hasAccess,
-    endDate: user.subscription.endDate,
-    startDate: user.subscription.startDate,
-    plan: user.subscription.plan
+    endDate: user.subscription.endDate || null,
+    startDate: user.subscription.startDate || null,
+    plan: user.subscription.plan || null
   };
 }
 

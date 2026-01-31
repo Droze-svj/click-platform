@@ -14,7 +14,7 @@ const scriptSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['youtube', 'podcast', 'video', 'presentation', 'blog', 'social-media', 'email', 'sales'],
+    enum: ['youtube', 'podcast', 'video', 'presentation', 'blog', 'social-media', 'email', 'sales', 'master'],
     required: true
   },
   topic: String,

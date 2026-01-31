@@ -1,4 +1,5 @@
 // Facebook OAuth Service
+// Features: long-lived tokens, pages support, photo posts, rate limit handling.
 
 const axios = require('axios');
 const crypto = require('crypto');
@@ -6,193 +7,135 @@ const logger = require('../utils/logger');
 const User = require('../models/User');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
 
-/**
- * Check if Facebook OAuth is configured
- */
+const GRAPH_API_BASE = 'https://graph.facebook.com/v18.0';
+const DEFAULT_SCOPE = 'pages_manage_posts,pages_read_engagement,pages_show_list,public_profile';
+const LOG_CONTEXT = { service: 'facebook-oauth' };
+
 function isConfigured() {
   return !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
 }
 
-/**
- * Generate OAuth authorization URL
- */
+function getScope() {
+  const s = process.env.FACEBOOK_SCOPE;
+  return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
+}
+
+function defaultRedirectUri() {
+  return process.env.FACEBOOK_CALLBACK_URL ||
+    `${process.env.FRONTEND_URL || process.env.API_URL || 'http://localhost:5001'}/api/oauth/facebook/callback`;
+}
+
 async function getAuthorizationUrl(userId, callbackUrl) {
-  try {
-    if (!isConfigured()) {
-      throw new Error('Facebook OAuth not configured');
-    }
+  if (!isConfigured()) throw new Error('Facebook OAuth not configured');
+  if (!userId || !callbackUrl) throw new Error('userId and callbackUrl are required');
 
-    const state = crypto.randomBytes(32).toString('hex');
-    const scope = 'pages_manage_posts,pages_read_engagement,pages_show_list,public_profile';
-    const clientId = process.env.FACEBOOK_APP_ID;
-    
-    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
-      `state=${state}&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `response_type=code`;
+  const state = crypto.randomBytes(32).toString('hex');
+  const scope = getScope();
+  const clientId = process.env.FACEBOOK_APP_ID;
+  const authUrl = `${GRAPH_API_BASE.replace('/v18.0', '')}/v18.0/dialog/oauth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${encodeURIComponent(callbackUrl.trim())}&` +
+    `state=${encodeURIComponent(state)}&` +
+    `scope=${encodeURIComponent(scope)}&` +
+    `response_type=code`;
 
-    // Store state in user's OAuth data
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.facebook.state': state,
-      }
-    });
+  await User.findByIdAndUpdate(userId, {
+    $set: { 'oauth.facebook.state': state },
+  });
 
-    return { url: authUrl, state };
-  } catch (error) {
-    logger.error('Facebook OAuth URL generation error', { error: error.message, userId });
-    throw error;
-  }
+  logger.info('Facebook OAuth authorization URL generated', { ...LOG_CONTEXT, userId });
+  return { url: authUrl, state };
 }
 
-/**
- * Exchange authorization code for access token
- */
 async function exchangeCodeForToken(userId, code, state) {
-  try {
-    if (!isConfigured()) {
-      throw new Error('Facebook OAuth not configured');
-    }
+  if (!isConfigured()) throw new Error('Facebook OAuth not configured');
+  if (!userId || !code || !state) throw new Error('userId, code, and state are required');
 
-    // Verify state
-    const user = await User.findById(userId);
-    if (!user || !user.oauth?.facebook?.state || user.oauth.facebook.state !== state) {
-      throw new Error('Invalid OAuth state');
-    }
-
-    const clientId = process.env.FACEBOOK_APP_ID;
-    const clientSecret = process.env.FACEBOOK_APP_SECRET;
-    const redirectUri = process.env.FACEBOOK_CALLBACK_URL || 
-      `${process.env.FRONTEND_URL || 'http://localhost:5001'}/api/oauth/facebook/callback`;
-
-    // Exchange code for short-lived token
-    const response = await axios.get('https://graph.facebook.com/v18.0/oauth/access_token', {
-      params: {
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        code,
-      },
-    });
-
-    const shortLivedToken = response.data.access_token;
-
-    // Exchange for long-lived token (60 days)
-    const longLivedResponse = await axios.get('https://graph.facebook.com/v18.0/oauth/access_token', {
-      params: {
-        grant_type: 'fb_exchange_token',
-        client_id: clientId,
-        client_secret: clientSecret,
-        fb_exchange_token: shortLivedToken,
-      },
-    });
-
-    const { access_token, expires_in } = longLivedResponse.data;
-
-    // Get user info
-    const userInfo = await getFacebookUserInfo(access_token);
-
-    // Get user's pages
-    const pages = await getFacebookPages(access_token);
-
-    // Save tokens to user
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.facebook.accessToken': access_token,
-        'oauth.facebook.connected': true,
-        'oauth.facebook.connectedAt': new Date(),
-        'oauth.facebook.expiresAt': expires_in 
-          ? new Date(Date.now() + expires_in * 1000) 
-          : null,
-        'oauth.facebook.platformUserId': userInfo.id,
-        'oauth.facebook.platformUsername': userInfo.name,
-        'oauth.facebook.pages': pages,
-      },
-      $unset: {
-        'oauth.facebook.state': '',
-      }
-    });
-
-    logger.info('Facebook OAuth token exchange successful', { userId });
-
-    return {
-      accessToken: access_token,
-      expiresIn: expires_in,
-    };
-  } catch (error) {
-    logger.error('Facebook OAuth token exchange error', { error: error.message, userId });
-    throw error;
+  const user = await User.findById(userId);
+  if (!user || !user.oauth?.facebook?.state || user.oauth.facebook.state !== state) {
+    logger.warn('Facebook OAuth exchange: state mismatch', { ...LOG_CONTEXT, userId });
+    throw new Error('Invalid OAuth state');
   }
+
+  const clientId = process.env.FACEBOOK_APP_ID;
+  const clientSecret = process.env.FACEBOOK_APP_SECRET;
+  const redirectUri = defaultRedirectUri();
+
+  const shortLivedRes = await axios.get(`${GRAPH_API_BASE}/oauth/access_token`, {
+    params: { client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, code },
+  });
+
+  const longLivedRes = await axios.get(`${GRAPH_API_BASE}/oauth/access_token`, {
+    params: {
+      grant_type: 'fb_exchange_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      fb_exchange_token: shortLivedRes.data.access_token,
+    },
+  });
+
+  const { access_token, expires_in } = longLivedRes.data;
+  if (!access_token) throw new Error('Facebook did not return an access token');
+
+  const userInfo = await getFacebookUserInfo(access_token);
+  const pages = await getFacebookPages(access_token);
+
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      'oauth.facebook.accessToken': access_token,
+      'oauth.facebook.connected': true,
+      'oauth.facebook.connectedAt': new Date(),
+      'oauth.facebook.expiresAt': expires_in ? new Date(Date.now() + expires_in * 1000) : null,
+      'oauth.facebook.platformUserId': userInfo.id,
+      'oauth.facebook.platformUsername': userInfo.name,
+      'oauth.facebook.pages': pages,
+    },
+    $unset: { 'oauth.facebook.state': '' },
+  });
+
+  logger.info('Facebook OAuth token exchange successful', { ...LOG_CONTEXT, userId });
+  return { accessToken: access_token, expiresIn: expires_in };
 }
 
-/**
- * Get Facebook user info
- */
 async function getFacebookUserInfo(accessToken) {
-  try {
-    const response = await axios.get('https://graph.facebook.com/v18.0/me', {
-      params: {
-        access_token: accessToken,
-        fields: 'id,name,email,picture',
-      },
-    });
-
-    return {
-      id: response.data.id,
-      name: response.data.name,
-      email: response.data.email,
-      picture: response.data.picture?.data?.url,
-    };
-  } catch (error) {
-    logger.error('Facebook user info error', { error: error.message });
-    throw error;
-  }
+  const response = await axios.get(`${GRAPH_API_BASE}/me`, {
+    params: { access_token: accessToken, fields: 'id,name,email,picture' },
+  });
+  return {
+    id: response.data.id,
+    name: response.data.name,
+    email: response.data.email,
+    picture: response.data.picture?.data?.url,
+  };
 }
 
-/**
- * Get user's Facebook pages
- */
 async function getFacebookPages(accessToken) {
   try {
-    const response = await axios.get('https://graph.facebook.com/v18.0/me/accounts', {
-      params: {
-        access_token: accessToken,
-        fields: 'id,name,access_token',
-      },
+    const response = await axios.get(`${GRAPH_API_BASE}/me/accounts`, {
+      params: { access_token: accessToken, fields: 'id,name,access_token' },
     });
-
     return response.data.data.map(page => ({
       id: page.id,
       name: page.name,
       accessToken: page.access_token,
     }));
   } catch (error) {
-    logger.warn('Facebook pages fetch error', { error: error.message });
+    logger.warn('Facebook pages fetch error', { ...LOG_CONTEXT, error: error.message });
     return [];
   }
 }
 
-/**
- * Get Facebook client (for API calls)
- */
 async function getFacebookClient(userId, pageId = null) {
   const user = await User.findById(userId).select('oauth.facebook');
-  
   if (!user || !user.oauth?.facebook?.connected || !user.oauth.facebook.accessToken) {
     throw new Error('Facebook account not connected');
   }
 
-  // If pageId is provided, use page access token
   if (pageId && user.oauth.facebook.pages) {
     const page = user.oauth.facebook.pages.find(p => p.id === pageId);
-    if (page && page.accessToken) {
-      return page.accessToken;
-    }
+    if (page?.accessToken) return page.accessToken;
   }
 
-  // Check if token is expired (Facebook tokens are long-lived, but check anyway)
   if (user.oauth.facebook.expiresAt && new Date() > user.oauth.facebook.expiresAt) {
     throw new Error('Facebook token expired. Please reconnect your account.');
   }
@@ -200,110 +143,65 @@ async function getFacebookClient(userId, pageId = null) {
   return user.oauth.facebook.accessToken;
 }
 
-/**
- * Post to Facebook
- */
 async function postToFacebook(userId, text, options = {}, retries = 1) {
-  try {
-    const accessToken = await getFacebookClient(userId, options.pageId);
-    const targetId = options.pageId || 'me';
+  if (!userId || !text) throw new Error('userId and text are required');
 
-    const postData = {
-      message: text,
+  const accessToken = await getFacebookClient(userId, options.pageId);
+  const targetId = options.pageId || 'me';
+
+  if (options.imageUrl) {
+    const photoRes = await axios.post(`${GRAPH_API_BASE}/${targetId}/photos`, null, {
+      params: { access_token: accessToken, url: options.imageUrl, caption: text },
+    });
+    logger.info('Facebook post successful', { ...LOG_CONTEXT, userId, postId: photoRes.data.id });
+    return {
+      id: photoRes.data.id,
+      url: photoRes.data.post_id ? `https://www.facebook.com/${photoRes.data.post_id}` : null,
+      text,
     };
+  }
 
-    if (options.link) {
-      postData.link = options.link;
-    }
+  const postData = { message: text, ...(options.link && { link: options.link }) };
 
-    if (options.imageUrl) {
-      // For images, we need to use the photos endpoint
-      const photoResponse = await axios.post(
-        `https://graph.facebook.com/v18.0/${targetId}/photos`,
-        null,
-        {
-          params: {
-            access_token: accessToken,
-            url: options.imageUrl,
-            caption: text,
-          },
-        }
-      );
-
-      logger.info('Facebook post successful', { userId, postId: photoResponse.data.id });
-      
-      return {
-        id: photoResponse.data.id,
-        url: photoResponse.data.post_id 
-          ? `https://www.facebook.com/${photoResponse.data.post_id}` 
-          : null,
-        text: text,
-      };
-    }
-
-    // Regular post
+  try {
     const response = await retryWithBackoff(
-      async () => {
-        return await axios.post(
-          `https://graph.facebook.com/v18.0/${targetId}/feed`,
-          null,
-          {
-            params: {
-              access_token: accessToken,
-              ...postData,
-            },
-          }
-        );
-      },
+      () => axios.post(`${GRAPH_API_BASE}/${targetId}/feed`, null, {
+        params: { access_token: accessToken, ...postData },
+      }),
       {
         maxRetries: retries,
         initialDelay: 1000,
         onRetry: (attempt, error) => {
-          logger.warn('Facebook post retry', { attempt, error: error.message, userId });
+          logger.warn('Facebook post retry', { ...LOG_CONTEXT, attempt, error: error.message, userId });
         },
       }
     );
 
-    logger.info('Facebook post successful', { userId, postId: response.data.id });
-    
+    logger.info('Facebook post successful', { ...LOG_CONTEXT, userId, postId: response.data.id });
     return {
       id: response.data.id,
       url: `https://www.facebook.com/${response.data.id}`,
-      text: text,
+      text,
     };
   } catch (error) {
-    logger.error('Facebook post error', { error: error.message, userId });
-    
-    // Handle rate limiting
     if (error.response?.status === 429) {
       const retryAfter = error.response.headers['retry-after'] || 60;
       throw new Error(`Rate limit exceeded. Please try again after ${retryAfter} seconds.`);
     }
-    
+    logger.error('Facebook post error', { ...LOG_CONTEXT, error: error.message, userId });
     throw error;
   }
 }
 
-/**
- * Disconnect Facebook account
- */
 async function disconnectFacebook(userId) {
-  try {
-    await User.findByIdAndUpdate(userId, {
-      $unset: {
-        'oauth.facebook': '',
-      }
-    });
-
-    logger.info('Facebook account disconnected', { userId });
-  } catch (error) {
-    logger.error('Facebook disconnect error', { error: error.message, userId });
-    throw error;
-  }
+  if (!userId) throw new Error('userId is required');
+  await User.findByIdAndUpdate(userId, { $unset: { 'oauth.facebook': '' } });
+  logger.info('Facebook account disconnected', { ...LOG_CONTEXT, userId });
 }
 
 module.exports = {
   isConfigured,
+  getScope,
   getAuthorizationUrl,
   exchangeCodeForToken,
   getFacebookUserInfo,
@@ -311,8 +209,5 @@ module.exports = {
   getFacebookClient,
   postToFacebook,
   disconnectFacebook,
+  defaultRedirectUri,
 };
-
-
-
-

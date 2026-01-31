@@ -101,6 +101,32 @@ function initializeSocket(server) {
       collaborationService.broadcastTyping(io, contentId, currentUserId, false);
     });
 
+    // Subscribe to upload progress
+    socket.on('subscribe:upload', ({ uploadId }) => {
+      socket.join(`upload:${uploadId}`);
+      logger.info('Client subscribed to upload progress', { uploadId, socketId: socket.id });
+    });
+
+    // Unsubscribe from upload progress
+    socket.on('unsubscribe:upload', ({ uploadId }) => {
+      socket.leave(`upload:${uploadId}`);
+      logger.info('Client unsubscribed from upload progress', { uploadId, socketId: socket.id });
+    });
+
+    // Subscribe to job progress
+    socket.on('subscribe:job', ({ jobId, queueName }) => {
+      const room = `job:${queueName}:${jobId}`;
+      socket.join(room);
+      logger.info('Client subscribed to job progress', { jobId, queueName, socketId: socket.id });
+    });
+
+    // Unsubscribe from job progress
+    socket.on('unsubscribe:job', ({ jobId, queueName }) => {
+      const room = `job:${queueName}:${jobId}`;
+      socket.leave(room);
+      logger.info('Client unsubscribed from job progress', { jobId, queueName, socketId: socket.id });
+    });
+
     socket.on('disconnect', () => {
       if (currentUserId) {
         collaborationService.removePresence(currentUserId, socket.id);

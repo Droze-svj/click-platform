@@ -107,6 +107,15 @@ export default function WebGLVideoRenderer({
     }
 
     // HSL to RGB conversion
+    float hue2rgb(float p, float q, float t) {
+      if (t < 0.0) t += 1.0;
+      if (t > 1.0) t -= 1.0;
+      if (t < 1.0/6.0) return p + (q - p) * 6.0 * t;
+      if (t < 1.0/2.0) return q;
+      if (t < 2.0/3.0) return p + (q - p) * (2.0/3.0 - t) * 6.0;
+      return p;
+    }
+
     vec3 hsl2rgb(vec3 hsl) {
       float h = hsl.x / 360.0;
       float s = hsl.y;
@@ -124,15 +133,6 @@ export default function WebGLVideoRenderer({
       float b = hue2rgb(p, q, h - 1.0/3.0);
 
       return vec3(r, g, b);
-    }
-
-    float hue2rgb(float p, float q, float t) {
-      if (t < 0.0) t += 1.0;
-      if (t > 1.0) t -= 1.0;
-      if (t < 1.0/6.0) return p + (q - p) * 6.0 * t;
-      if (t < 1.0/2.0) return q;
-      if (t < 2.0/3.0) return p + (q - p) * (2.0/3.0 - t) * 6.0;
-      return p;
     }
 
     // Gaussian blur function
@@ -290,7 +290,6 @@ export default function WebGLVideoRenderer({
 
   // Initialize WebGL
   const initWebGL = useCallback(() => {
-
     const canvas = canvasRef.current
     if (!canvas) {
       return false
@@ -304,6 +303,21 @@ export default function WebGLVideoRenderer({
 
     const webGLContext = gl as WebGLRenderingContext
     glRef.current = webGLContext
+
+    // Add WebGL context loss/restore handlers
+    const handleContextLoss = (event: Event) => {
+      event.preventDefault()
+      console.warn('WebGL context lost, attempting to restore...')
+      setIsInitialized(false)
+    }
+
+    const handleContextRestore = () => {
+      console.log('WebGL context restored, reinitializing...')
+      initWebGL()
+    }
+
+    canvas.addEventListener('webglcontextlost', handleContextLoss)
+    canvas.addEventListener('webglcontextrestored', handleContextRestore)
 
     // Create shaders
 
@@ -412,135 +426,148 @@ export default function WebGLVideoRenderer({
         return
       }
 
-    // Update canvas size
-    const canvas = canvasRef.current
-    if (canvas) {
-      canvas.width = width
-      canvas.height = height
+      // Update canvas size
+      const canvas = canvasRef.current
+      if (canvas) {
+        canvas.width = width
+        canvas.height = height
+      }
+
+      gl.viewport(0, 0, width, height)
+
+      // Clear
+      gl.clearColor(0, 0, 0, 1)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+
+      // Check for WebGL errors after clear
+      const clearError = gl.getError()
+      if (clearError !== gl.NO_ERROR) {
+        logWebGLError('clear', clearError)
+        return
+      }
+
+      // Use program
+      gl.useProgram(program)
+
+      // Set up attributes
+      const positionLocation = gl.getAttribLocation(program, 'a_position')
+      const texCoordLocation = gl.getAttribLocation(program, 'a_texCoord')
+
+      // Position buffer
+      gl.enableVertexAttribArray(positionLocation)
+      const positionBuffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,
+         1, -1,
+        -1,  1,
+        -1,  1,
+         1, -1,
+         1,  1,
+      ]), gl.STATIC_DRAW)
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
+
+      // Texture coordinate buffer
+      gl.enableVertexAttribArray(texCoordLocation)
+      const texCoordBuffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0, 1,
+        1, 1,
+        0, 0,
+        0, 0,
+        1, 1,
+        1, 0,
+      ]), gl.STATIC_DRAW)
+      gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0)
+
+      // Update texture
+      updateTexture(gl, video)
+
+      // Set uniforms
+      const resolutionLocation = gl.getUniformLocation(program, 'u_resolution')
+      const brightnessLocation = gl.getUniformLocation(program, 'u_brightness')
+      const contrastLocation = gl.getUniformLocation(program, 'u_contrast')
+      const saturationLocation = gl.getUniformLocation(program, 'u_saturation')
+      const hueLocation = gl.getUniformLocation(program, 'u_hue')
+      const blurLocation = gl.getUniformLocation(program, 'u_blur')
+      const sepiaLocation = gl.getUniformLocation(program, 'u_sepia')
+      const vignetteLocation = gl.getUniformLocation(program, 'u_vignette')
+      const sharpenLocation = gl.getUniformLocation(program, 'u_sharpen')
+      const noiseLocation = gl.getUniformLocation(program, 'u_noise')
+      const temperatureLocation = gl.getUniformLocation(program, 'u_temperature')
+      const tintLocation = gl.getUniformLocation(program, 'u_tint')
+      const highlightsLocation = gl.getUniformLocation(program, 'u_highlights')
+      const shadowsLocation = gl.getUniformLocation(program, 'u_shadows')
+      const clarityLocation = gl.getUniformLocation(program, 'u_clarity')
+      const dehazeLocation = gl.getUniformLocation(program, 'u_dehaze')
+
+      gl.uniform2f(resolutionLocation, width, height)
+      gl.uniform1f(brightnessLocation, filters.brightness)
+      gl.uniform1f(contrastLocation, filters.contrast)
+      gl.uniform1f(saturationLocation, filters.saturation)
+      gl.uniform1f(hueLocation, filters.hue)
+      gl.uniform1f(blurLocation, filters.blur)
+      gl.uniform1f(sepiaLocation, filters.sepia)
+      gl.uniform1f(vignetteLocation, filters.vignette)
+      gl.uniform1f(sharpenLocation, filters.sharpen)
+      gl.uniform1f(noiseLocation, filters.noise)
+      gl.uniform1f(temperatureLocation, filters.temperature || 100)
+      gl.uniform1f(tintLocation, filters.tint || 0)
+      gl.uniform1f(highlightsLocation, filters.highlights || 0)
+      gl.uniform1f(shadowsLocation, filters.shadows || 0)
+      gl.uniform1f(clarityLocation, filters.clarity || 0)
+      gl.uniform1f(dehazeLocation, filters.dehaze || 0)
+
+      // Draw
+      gl.drawArrays(gl.TRIANGLES, 0, 6)
+
+      // Check for WebGL errors after draw
+      const drawError = gl.getError()
+      if (drawError !== gl.NO_ERROR) {
+        logWebGLError('drawArrays', drawError)
+        return
+      }
+
+      onFrameRendered?.()
+
+      // Performance monitoring
+      const renderTime = performance.now() - startTime
+      if (renderTime > 16.67) { // Slower than 60fps
+        // Could log slow renders if needed
+      }
+    } catch (error) {
+      logWebGLError('render', error)
     }
-
-    gl.viewport(0, 0, width, height)
-
-    // Clear
-    gl.clearColor(0, 0, 0, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-
-    // Check for WebGL errors after clear
-    const clearError = gl.getError()
-    if (clearError !== gl.NO_ERROR) {
-      logWebGLError('clear', clearError)
-      return
-    }
-
-    // Use program
-    gl.useProgram(program)
-
-    // Set up attributes
-    const positionLocation = gl.getAttribLocation(program, 'a_position')
-    const texCoordLocation = gl.getAttribLocation(program, 'a_texCoord')
-
-    // Position buffer
-    gl.enableVertexAttribArray(positionLocation)
-    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    webGLContext.bufferData(webGLContext.ARRAY_BUFFER, new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-      -1,  1,
-       1, -1,
-       1,  1,
-    ]), webGLContext.STATIC_DRAW)
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
-
-    // Texture coordinate buffer
-    gl.enableVertexAttribArray(texCoordLocation)
-    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-    webGLContext.bufferData(webGLContext.ARRAY_BUFFER, new Float32Array([
-      0, 1,
-      1, 1,
-      0, 0,
-      0, 0,
-      1, 1,
-      1, 0,
-    ]), webGLContext.STATIC_DRAW)
-    gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0)
-
-    // Update texture
-    updateTexture(gl, video)
-
-    // Set uniforms
-    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution')
-    const brightnessLocation = gl.getUniformLocation(program, 'u_brightness')
-    const contrastLocation = gl.getUniformLocation(program, 'u_contrast')
-    const saturationLocation = gl.getUniformLocation(program, 'u_saturation')
-    const hueLocation = gl.getUniformLocation(program, 'u_hue')
-    const blurLocation = gl.getUniformLocation(program, 'u_blur')
-    const sepiaLocation = gl.getUniformLocation(program, 'u_sepia')
-    const vignetteLocation = gl.getUniformLocation(program, 'u_vignette')
-    const sharpenLocation = gl.getUniformLocation(program, 'u_sharpen')
-    const noiseLocation = gl.getUniformLocation(program, 'u_noise')
-    const temperatureLocation = gl.getUniformLocation(program, 'u_temperature')
-    const tintLocation = gl.getUniformLocation(program, 'u_tint')
-    const highlightsLocation = gl.getUniformLocation(program, 'u_highlights')
-    const shadowsLocation = gl.getUniformLocation(program, 'u_shadows')
-    const clarityLocation = gl.getUniformLocation(program, 'u_clarity')
-    const dehazeLocation = gl.getUniformLocation(program, 'u_dehaze')
-
-    gl.uniform2f(resolutionLocation, width, height)
-    gl.uniform1f(brightnessLocation, filters.brightness)
-    gl.uniform1f(contrastLocation, filters.contrast)
-    gl.uniform1f(saturationLocation, filters.saturation)
-    gl.uniform1f(hueLocation, filters.hue)
-    gl.uniform1f(blurLocation, filters.blur)
-    gl.uniform1f(sepiaLocation, filters.sepia)
-    gl.uniform1f(vignetteLocation, filters.vignette)
-    gl.uniform1f(sharpenLocation, filters.sharpen)
-    gl.uniform1f(noiseLocation, filters.noise)
-    gl.uniform1f(temperatureLocation, filters.temperature || 100)
-    gl.uniform1f(tintLocation, filters.tint || 0)
-    gl.uniform1f(highlightsLocation, filters.highlights || 0)
-    gl.uniform1f(shadowsLocation, filters.shadows || 0)
-    gl.uniform1f(clarityLocation, filters.clarity || 0)
-    gl.uniform1f(dehazeLocation, filters.dehaze || 0)
-
-    // Draw
-    gl.drawArrays(gl.TRIANGLES, 0, 6)
-
-    // Check for WebGL errors after draw
-    const drawError = gl.getError()
-    if (drawError !== gl.NO_ERROR) {
-      logWebGLError('drawArrays', drawError)
-      return
-    }
-
-    onFrameRendered?.()
-
-    // Performance monitoring
-    const renderTime = performance.now() - startTime
-    if (renderTime > 16.67) { // Slower than 60fps
-    }
-  } catch (error) {
-    logWebGLError('render', error)
-  }
 }, [videoElement, filters, width, height, isInitialized, updateTexture, onFrameRendered])
 
-  // Animation loop
+  // Animation loop - continuously render to show live changes
   useEffect(() => {
     if (!isInitialized || !videoElement) return
 
+    let isAnimating = true
+
     const animate = () => {
-      render()
+      if (!isAnimating) return
+      
+      // Only render if video is playing or filters have changed
+      // This ensures smooth playback and immediate filter updates
+      if (!videoElement.paused || true) { // Always render for live preview
+        render()
+      }
+      
       animationFrameRef.current = requestAnimationFrame(animate)
     }
 
     animate()
 
     return () => {
+      isAnimating = false
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [isInitialized, videoElement, render])
+  }, [isInitialized, videoElement, render, filters])
 
   // Initialize WebGL on mount
   useEffect(() => {
@@ -562,7 +589,14 @@ export default function WebGLVideoRenderer({
       width={width}
       height={height}
       className="w-full h-full object-contain bg-black"
-      style={{ imageRendering: 'pixelated' }}
+      style={{ 
+        imageRendering: 'pixelated',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%'
+      }}
     />
   )
 }

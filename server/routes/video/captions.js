@@ -1,158 +1,153 @@
-// Video Captions Routes
+// Video Caption Routes
 
 const express = require('express');
-const auth = require('../../middleware/auth');
-const {
-  generateAutoCaptions,
-  translateCaptions,
-  styleCaptions,
-  generateSRTFile,
-  generateVTTFile,
-} = require('../../services/videoCaptionService');
-const asyncHandler = require('../../middleware/asyncHandler');
-const { sendSuccess, sendError } = require('../../utils/response');
-const logger = require('../../utils/logger');
 const router = express.Router();
+const { authenticate } = require('../../middleware/auth');
+const { sendSuccess, sendError } = require('../../utils/response');
+const videoCaptionService = require('../../services/videoCaptionService');
+const Content = require('../../models/Content');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
+
+// Configure multer for video uploads
+const upload = multer({
+  dest: 'uploads/videos/',
+  limits: {
+    fileSize: 500 * 1024 * 1024, // 500MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type. Allowed: ${allowedTypes.join(', ')}`));
+    }
+  },
+});
 
 /**
- * @swagger
- * /api/video/captions/generate:
- *   post:
- *     summary: Generate auto-captions
- *     tags: [Video]
- *     security:
- *       - bearerAuth: []
+ * POST /api/video/captions/generate
+ * Generate captions for a video content
  */
-router.post('/generate', auth, asyncHandler(async (req, res) => {
-  const { videoId, language, transcript, timestamps, style, position } = req.body;
-
-  if (!videoId || !transcript) {
-    return sendError(res, 'Video ID and transcript are required', 400);
-  }
-
+router.post('/generate', authenticate, upload.single('video'), async (req, res) => {
   try {
-    const captions = await generateAutoCaptions(videoId, {
-      language: language || 'en',
-      transcript,
-      timestamps,
-      style: style || 'default',
-      position: position || 'bottom',
-    });
-    sendSuccess(res, 'Auto-captions generated', 200, captions);
+    const { contentId, language } = req.body;
+    const userId = req.user.id;
+
+    if (!contentId) {
+      return sendError(res, 'Content ID is required', 400);
+    }
+
+    // Verify content belongs to user
+    const content = await Content.findOne({ _id: contentId, userId });
+    if (!content) {
+      return sendError(res, 'Content not found', 404);
+    }
+
+    // Get video file path
+    let videoFilePath;
+    if (req.file) {
+      videoFilePath = req.file.path;
+    } else if (content.originalFile?.url) {
+      // Use existing video file
+      videoFilePath = content.originalFile.url;
+    } else {
+      return sendError(res, 'Video file is required', 400);
+    }
+
+    // Generate captions
+    const result = await videoCaptionService.generateCaptionsForContent(
+      contentId,
+      videoFilePath,
+      { language }
+    );
+
+    // Clean up uploaded file if it was just uploaded
+    if (req.file) {
+      await fs.unlink(videoFilePath).catch(() => {});
+    }
+
+    return sendSuccess(res, result, 'Captions generated successfully');
   } catch (error) {
-    logger.error('Generate auto-captions error', { error: error.message, videoId });
-    sendError(res, error.message, 500);
+    logger.error('Error generating captions', { error: error.message });
+    return sendError(res, error.message, 500);
   }
-}));
+});
 
 /**
- * @swagger
- * /api/video/captions/translate:
- *   post:
- *     summary: Translate captions
- *     tags: [Video]
- *     security:
- *       - bearerAuth: []
+ * GET /api/video/captions/:contentId
+ * Get captions for content
  */
-router.post('/translate', auth, asyncHandler(async (req, res) => {
-  const { captions, targetLanguage } = req.body;
-
-  if (!captions || !Array.isArray(captions) || !targetLanguage) {
-    return sendError(res, 'Captions array and target language are required', 400);
-  }
-
+router.get('/:contentId', authenticate, async (req, res) => {
   try {
-    const translated = await translateCaptions(captions, targetLanguage);
-    sendSuccess(res, 'Captions translated', 200, translated);
+    const { contentId } = req.params;
+    const { format = 'srt' } = req.query;
+    const userId = req.user.id;
+
+    // Verify content belongs to user
+    const content = await Content.findOne({ _id: contentId, userId });
+    if (!content) {
+      return sendError(res, 'Content not found', 404);
+    }
+
+    // Get captions
+    const captions = await videoCaptionService.getCaptions(contentId, format);
+
+    return sendSuccess(res, captions);
   } catch (error) {
-    logger.error('Translate captions error', { error: error.message });
-    sendError(res, error.message, 500);
+    logger.error('Error getting captions', { error: error.message });
+    return sendError(res, error.message, 500);
   }
-}));
+});
 
 /**
- * @swagger
- * /api/video/captions/style:
- *   post:
- *     summary: Style captions
- *     tags: [Video]
- *     security:
- *       - bearerAuth: []
+ * POST /api/video/captions/:contentId/translate
+ * Translate captions to another language
  */
-router.post('/style', auth, asyncHandler(async (req, res) => {
-  const { captions, styleOptions } = req.body;
-
-  if (!captions || !Array.isArray(captions)) {
-    return sendError(res, 'Captions array is required', 400);
-  }
-
+router.post('/:contentId/translate', authenticate, async (req, res) => {
   try {
-    const styled = styleCaptions(captions, styleOptions || {});
-    sendSuccess(res, 'Captions styled', 200, styled);
+    const { contentId } = req.params;
+    const { targetLanguage } = req.body;
+    const userId = req.user.id;
+
+    if (!targetLanguage) {
+      return sendError(res, 'Target language is required', 400);
+    }
+
+    // Verify content belongs to user
+    const content = await Content.findOne({ _id: contentId, userId });
+    if (!content) {
+      return sendError(res, 'Content not found', 404);
+    }
+
+    if (!content.captions || !content.captions.text) {
+      return sendError(res, 'Captions not found. Generate captions first.', 400);
+    }
+
+    // Translate captions
+    const translatedText = await videoCaptionService.translateCaptions(
+      content.captions.text,
+      targetLanguage
+    );
+
+    // Update content with translated captions
+    content.captions.translations = content.captions.translations || {};
+    content.captions.translations[targetLanguage] = translatedText;
+    await content.save();
+
+    return sendSuccess(res, {
+      originalLanguage: content.captions.language,
+      targetLanguage,
+      translatedText,
+    }, 'Captions translated successfully');
   } catch (error) {
-    logger.error('Style captions error', { error: error.message });
-    sendError(res, error.message, 500);
+    logger.error('Error translating captions', { error: error.message });
+    return sendError(res, error.message, 500);
   }
-}));
+});
 
-/**
- * @swagger
- * /api/video/captions/srt:
- *   post:
- *     summary: Generate SRT file
- *     tags: [Video]
- *     security:
- *       - bearerAuth: []
- */
-router.post('/srt', auth, asyncHandler(async (req, res) => {
-  const { captions } = req.body;
-
-  if (!captions || !Array.isArray(captions)) {
-    return sendError(res, 'Captions array is required', 400);
-  }
-
-  try {
-    const srt = generateSRTFile(captions);
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Content-Disposition', 'attachment; filename="captions.srt"');
-    res.send(srt);
-  } catch (error) {
-    logger.error('Generate SRT file error', { error: error.message });
-    sendError(res, error.message, 500);
-  }
-}));
-
-/**
- * @swagger
- * /api/video/captions/vtt:
- *   post:
- *     summary: Generate VTT file
- *     tags: [Video]
- *     security:
- *       - bearerAuth: []
- */
-router.post('/vtt', auth, asyncHandler(async (req, res) => {
-  const { captions } = req.body;
-
-  if (!captions || !Array.isArray(captions)) {
-    return sendError(res, 'Captions array is required', 400);
-  }
-
-  try {
-    const vtt = generateVTTFile(captions);
-    res.setHeader('Content-Type', 'text/vtt');
-    res.setHeader('Content-Disposition', 'attachment; filename="captions.vtt"');
-    res.send(vtt);
-  } catch (error) {
-    logger.error('Generate VTT file error', { error: error.message });
-    sendError(res, error.message, 500);
-  }
-}));
+const logger = require('../../utils/logger');
 
 module.exports = router;
-
-
-
-
-
-

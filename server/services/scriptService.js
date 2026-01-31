@@ -21,8 +21,13 @@ async function generateYouTubeScript(topic, options = {}) {
     tone = 'professional',
     targetAudience = 'general audience',
     includeIntro = true,
-    includeCTA = true
+    includeCTA = true,
+    keywords = []
   } = options;
+
+  const keywordsLine = Array.isArray(keywords) && keywords.length > 0
+    ? `\n- Incorporate these keywords naturally where relevant: ${keywords.slice(0, 10).join(', ')}.`
+    : '';
 
   try {
     const prompt = `Create a ${duration}-minute YouTube video script about "${topic}".
@@ -36,7 +41,7 @@ Requirements:
 - Make it engaging and conversational
 - Include 3-5 main points
 - Add natural transitions between sections
-- Word count: approximately ${duration * 150} words (150 words per minute)
+- Word count: approximately ${duration * 150} words (150 words per minute)${keywordsLine}
 
 Format the script as JSON with this structure:
 {

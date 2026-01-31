@@ -7,14 +7,12 @@ const contentTranslationSchema = new mongoose.Schema({
   contentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Content',
-    required: true,
-    index: true
+    required: true
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   language: {
     type: String,
@@ -101,6 +99,7 @@ const contentTranslationSchema = new mongoose.Schema({
 contentTranslationSchema.index({ contentId: 1, language: 1 }, { unique: true });
 contentTranslationSchema.index({ userId: 1, language: 1, status: 1 });
 contentTranslationSchema.index({ contentId: 1, isPrimary: 1 });
+// Note: contentId and userId already have compound indexes above
 
 contentTranslationSchema.pre('save', function(next) {
   this.updatedAt = new Date();

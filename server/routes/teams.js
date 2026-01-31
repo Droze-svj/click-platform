@@ -87,6 +87,22 @@ router.post('/:teamId/invite', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/teams/:teamId/invite-by-email
+ * Invite a user to the team by email address
+ */
+router.post('/:teamId/invite-by-email', auth, asyncHandler(async (req, res) => {
+  const { teamId } = req.params;
+  const { email, role } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return sendError(res, 'Email is required', 400);
+  }
+
+  const team = await inviteByEmail(teamId, req.user._id, { email: email.trim(), role });
+  sendSuccess(res, 'Member invited', 200, team);
+}));
+
+/**
  * @swagger
  * /api/teams/{teamId}/members/{memberId}/role:
  *   put:

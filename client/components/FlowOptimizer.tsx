@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Lightbulb,
   ArrowRight,
@@ -197,11 +197,21 @@ export default function FlowOptimizer({
 
     const suggestedSteps = workflowTemplates[detectedWorkflow as keyof typeof workflowTemplates]
 
-    setUserFlow(prev => ({
-      ...prev,
-      suggestedWorkflow: suggestedSteps,
-      completedSteps: completedCategories
-    }))
+    setUserFlow(prev => {
+      // Prevent unnecessary updates if values haven't changed
+      const suggestedWorkflowChanged = JSON.stringify(prev.suggestedWorkflow) !== JSON.stringify(suggestedSteps)
+      const completedStepsChanged = JSON.stringify(prev.completedSteps) !== JSON.stringify(completedCategories)
+      
+      if (!suggestedWorkflowChanged && !completedStepsChanged) {
+        return prev
+      }
+
+      return {
+        ...prev,
+        suggestedWorkflow: suggestedSteps,
+        completedSteps: completedCategories
+      }
+    })
 
     // Suggest next step
     const currentIndex = suggestedSteps.indexOf(activeCategory)
@@ -209,27 +219,79 @@ export default function FlowOptimizer({
       const nextStepId = suggestedSteps[currentIndex + 1]
       const nextStep = workflowSteps.find(step => step.id === nextStepId)
       if (nextStep && !completedCategories.includes(nextStep.category)) {
-        setShowSuggestion(nextStep)
+        setShowSuggestion(prev => {
+          // Only update if different
+          if (prev?.id === nextStep.id) return prev
+          return nextStep
+        })
         onWorkflowSuggestion(nextStep)
       }
     }
 
     // Check if workflow is complete
-    const workflowComplete = suggestedSteps.every(stepId => {
-      const step = workflowSteps.find(s => s.id === stepId)
-      return step && completedCategories.includes(step.category)
+    setUserFlow(prev => {
+      const workflowComplete = suggestedSteps.every(stepId => {
+        const step = workflowSteps.find(s => s.id === stepId)
+        return step && completedCategories.includes(step.category)
+      })
+
+      // Only trigger completion callbacks if workflow just became complete
+      const wasComplete = prev.suggestedWorkflow.length > 0 && 
+        prev.suggestedWorkflow.every(stepId => {
+          const step = workflowSteps.find(s => s.id === stepId)
+          return step && prev.completedSteps.includes(step.category)
+        })
+
+      if (workflowComplete && !wasComplete) {
+        // Schedule callback after state update completes
+        setTimeout(() => {
+          onFlowComplete({
+            currentStep: null,
+            completedSteps: completedCategories,
+            suggestedWorkflow: suggestedSteps,
+            timeSpent: prev.timeSpent,
+            preferences: prev.preferences
+          })
+          showToast('🎉 Workflow complete! Your video is ready to export.', 'success')
+        }, 0)
+      }
+
+      return prev
     })
 
-    if (workflowComplete) {
-      onFlowComplete(userFlow)
-      showToast('🎉 Workflow complete! Your video is ready to export.', 'success')
-    }
+  }, [userActions, activeCategory, onWorkflowSuggestion, onFlowComplete, showToast])
 
-  }, [userActions, activeCategory, userFlow, onWorkflowSuggestion, onFlowComplete, showToast])
-
+  // Use ref to track if we're already analyzing to prevent infinite loops
+  const analyzingRef = useRef(false)
+  const lastAnalysisRef = useRef({ actionsLength: 0, category: '' })
+  
   useEffect(() => {
+    // Only analyze if something actually changed
+    const actionsLength = userActions.length
+    const category = activeCategory
+    
+    if (
+      lastAnalysisRef.current.actionsLength === actionsLength &&
+      lastAnalysisRef.current.category === category
+    ) {
+      return // No changes, skip analysis
+    }
+    
+    // Prevent concurrent analysis calls
+    if (analyzingRef.current) return
+    
+    analyzingRef.current = true
+    lastAnalysisRef.current = { actionsLength, category }
+    
     analyzeFlow()
-  }, [analyzeFlow])
+    
+    // Reset flag after a short delay to allow state updates to complete
+    const timeoutId = setTimeout(() => {
+      analyzingRef.current = false
+    }, 100)
+    
+    return () => clearTimeout(timeoutId)
+  }, [userActions.length, activeCategory, analyzeFlow])
 
   // Show onboarding for new users
   useEffect(() => {

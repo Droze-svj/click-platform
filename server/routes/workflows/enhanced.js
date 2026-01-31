@@ -51,7 +51,14 @@ router.post('/:workflowId/execute', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/suggestions', auth, asyncHandler(async (req, res) => {
-  const suggestions = await getWorkflowSuggestions(req.user._id);
+  const userId = req.user._id || req.user.id;
+  
+  // In development mode, return empty array for dev users
+  if (process.env.NODE_ENV !== 'production' && userId && userId.toString().startsWith('dev-')) {
+    return sendSuccess(res, 'Workflow suggestions fetched', 200, []);
+  }
+
+  const suggestions = await getWorkflowSuggestions(userId);
   sendSuccess(res, 'Workflow suggestions fetched', 200, suggestions);
 }));
 

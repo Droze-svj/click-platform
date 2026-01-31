@@ -50,6 +50,14 @@ export default function OnboardingFlow() {
 
   const loadProgress = async () => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [OnboardingFlow] Skipping onboarding API call in development mode')
+        setIsVisible(false)
+        setIsLoading(false)
+        return
+      }
+
       const response = await apiGet<any>('/onboarding', { withCredentials: true })
       if (response?.success) {
         setProgress(response.data)
@@ -64,6 +72,13 @@ export default function OnboardingFlow() {
 
   const completeStep = async (stepId: string, data?: any) => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [OnboardingFlow] Skipping complete step API call in development mode')
+        showToast('Step completed! (dev mode)', 'success')
+        return
+      }
+
       const response = await apiPost<any>('/onboarding/complete-step', { stepId, data }, { withCredentials: true })
       if (response?.success) {
         await loadProgress()
@@ -77,6 +92,14 @@ export default function OnboardingFlow() {
 
   const skipOnboarding = async () => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [OnboardingFlow] Skipping skip onboarding API call in development mode')
+        setIsVisible(false)
+        showToast('Onboarding skipped (dev mode)', 'info')
+        return
+      }
+
       const response = await apiPost<any>('/onboarding/skip', undefined, { withCredentials: true })
       if (response?.success) {
         setIsVisible(false)
@@ -89,6 +112,12 @@ export default function OnboardingFlow() {
 
   const goToStep = async (stepIndex: number) => {
     try {
+      // Skip API calls in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔧 [OnboardingFlow] Skipping go to step API call in development mode')
+        return
+      }
+
       const response = await apiPost<any>('/onboarding/goto-step', { stepIndex }, { withCredentials: true })
       if (response?.success) {
         await loadProgress()

@@ -17,7 +17,9 @@ import {
   Flame,
   Snowflake,
   Leaf,
-  Zap as Lightning
+  Zap as Lightning,
+  Type,
+  X
 } from 'lucide-react'
 
 interface VideoFilter {
@@ -30,6 +32,10 @@ interface VideoFilter {
   vignette: number
   sharpen: number
   noise: number
+  clarity?: number
+  temperature?: number
+  highlights?: number
+  shadows?: number
 }
 
 interface TextOverlay {
@@ -59,13 +65,222 @@ interface VideoTemplate {
 interface VideoTemplatesProps {
   onApplyTemplate: (filters: Partial<VideoFilter>, textOverlays?: TextOverlay[]) => void
   currentFilters: VideoFilter
+  accentColor?: string
+  brandFont?: string
 }
 
 export default function VideoTemplates({ onApplyTemplate, currentFilters }: VideoTemplatesProps) {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [personalizeId, setPersonalizeId] = useState<string | null>(null)
+  const [customColor, setCustomColor] = useState('#8B5CF6')
+  const [customFont, setCustomFont] = useState('Inter')
 
   const templates: VideoTemplate[] = [
+    // Click-Style Professional Templates - Social Media
+    {
+      id: 'click-viral-hook',
+      name: 'Viral Hook Style',
+      description: 'High-energy, attention-grabbing style perfect for opening hooks',
+      icon: <Zap className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 108,
+        contrast: 115,
+        saturation: 125,
+        sharpen: 25,
+        hue: -5
+      },
+      textOverlays: [{
+        id: 'hook-text',
+        text: 'YOU NEED TO SEE THIS',
+        x: 50,
+        y: 20,
+        fontSize: 48,
+        color: '#FFFFFF',
+        fontFamily: 'Impact',
+        startTime: 0,
+        endTime: 3
+      }],
+      recommendedFor: ['tiktok', 'reels', 'shorts', 'viral content'],
+      tags: ['viral', 'hook', 'attention', 'click-style']
+    },
+    {
+      id: 'click-educational-clean',
+      name: 'Educational Clean',
+      description: 'Professional, clean look perfect for tutorials and educational content',
+      icon: <Sparkles className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 105,
+        contrast: 110,
+        saturation: 100,
+        sharpen: 15,
+        clarity: 10
+      },
+      recommendedFor: ['youtube', 'tutorials', 'educational', 'how-to'],
+      tags: ['educational', 'clean', 'professional', 'tutorial']
+    },
+    {
+      id: 'click-lifestyle-vibrant',
+      name: 'Lifestyle Vibrant',
+      description: 'Bright, warm tones perfect for lifestyle and vlog content',
+      icon: <Sun className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 110,
+        contrast: 105,
+        saturation: 120,
+        temperature: 110,
+        hue: 8
+      },
+      recommendedFor: ['instagram', 'lifestyle', 'vlogs', 'day-in-life'],
+      tags: ['lifestyle', 'vibrant', 'warm', 'instagram']
+    },
+    {
+      id: 'click-gaming-dynamic',
+      name: 'Gaming Dynamic',
+      description: 'High contrast, cool tones perfect for gaming content',
+      icon: <Zap className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 102,
+        contrast: 125,
+        saturation: 130,
+        hue: -20,
+        sharpen: 30
+      },
+      recommendedFor: ['gaming', 'streaming', 'twitch', 'youtube gaming'],
+      tags: ['gaming', 'dynamic', 'cool', 'high-contrast']
+    },
+    {
+      id: 'click-business-professional',
+      name: 'Business Professional',
+      description: 'Clean, corporate look perfect for business and LinkedIn content',
+      icon: <Coffee className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 103,
+        contrast: 108,
+        saturation: 105,
+        sharpen: 10,
+        clarity: 5
+      },
+      recommendedFor: ['linkedin', 'business', 'corporate', 'professional'],
+      tags: ['business', 'professional', 'corporate', 'linkedin']
+    },
+    {
+      id: 'click-product-showcase',
+      name: 'Product Showcase',
+      description: 'Enhanced colors and clarity perfect for product reviews and showcases',
+      icon: <Sparkles className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 107,
+        contrast: 112,
+        saturation: 115,
+        sharpen: 20,
+        clarity: 15,
+        highlights: 5
+      },
+      recommendedFor: ['product reviews', 'unboxing', 'shopping', 'amazon'],
+      tags: ['product', 'showcase', 'review', 'shopping']
+    },
+    {
+      id: 'click-trending-reels',
+      name: 'Trending Reels Style',
+      description: 'Ultra-vibrant, high-energy style optimized for Instagram Reels',
+      icon: <Zap className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 112,
+        contrast: 120,
+        saturation: 135,
+        sharpen: 30,
+        hue: 5,
+        clarity: 20
+      },
+      textOverlays: [{
+        id: 'reels-text',
+        text: 'TRENDING NOW',
+        x: 50,
+        y: 15,
+        fontSize: 42,
+        color: '#FFFFFF',
+        fontFamily: 'Impact',
+        startTime: 0,
+        endTime: 2.5
+      }],
+      recommendedFor: ['instagram reels', 'trending', 'viral', 'short-form'],
+      tags: ['reels', 'trending', 'viral', 'instagram']
+    },
+    {
+      id: 'click-podcast-intro',
+      name: 'Podcast Intro Style',
+      description: 'Professional, clean look perfect for podcast intros and outros',
+      icon: <Music className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 104,
+        contrast: 110,
+        saturation: 100,
+        sharpen: 12,
+        clarity: 8,
+        temperature: 105
+      },
+      recommendedFor: ['podcasts', 'intros', 'outros', 'audio content'],
+      tags: ['podcast', 'professional', 'clean', 'intro']
+    },
+    {
+      id: 'click-meme-style',
+      name: 'Meme Style',
+      description: 'High contrast, saturated look perfect for meme content',
+      icon: <Flame className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 110,
+        contrast: 130,
+        saturation: 140,
+        sharpen: 35,
+        hue: -8
+      },
+      recommendedFor: ['memes', 'comedy', 'viral', 'tiktok'],
+      tags: ['meme', 'comedy', 'viral', 'high-contrast']
+    },
+    {
+      id: 'click-news-style',
+      name: 'News & Breaking',
+      description: 'Professional news-style look with enhanced clarity',
+      icon: <Star className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 106,
+        contrast: 115,
+        saturation: 105,
+        sharpen: 18,
+        clarity: 12,
+        temperature: 98
+      },
+      recommendedFor: ['news', 'breaking', 'journalism', 'reporting'],
+      tags: ['news', 'professional', 'breaking', 'journalism']
+    },
+    {
+      id: 'click-fitness-energy',
+      name: 'Fitness Energy',
+      description: 'High-energy, vibrant style perfect for fitness and workout content',
+      icon: <Zap className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        brightness: 108,
+        contrast: 118,
+        saturation: 125,
+        sharpen: 25,
+        clarity: 15,
+        temperature: 108
+      },
+      recommendedFor: ['fitness', 'workout', 'gym', 'health'],
+      tags: ['fitness', 'energy', 'workout', 'health']
+    },
     // Cinematic Templates
     {
       id: 'hollywood-blockbuster',
@@ -303,8 +518,8 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
 
   const categories = [
     { id: 'all', name: 'All Templates', count: templates.length },
+    { id: 'social', name: 'Click Style', count: templates.filter(t => t.category === 'social').length },
     { id: 'cinematic', name: 'Cinematic', count: templates.filter(t => t.category === 'cinematic').length },
-    { id: 'social', name: 'Social Media', count: templates.filter(t => t.category === 'social').length },
     { id: 'mood', name: 'Mood', count: templates.filter(t => t.category === 'mood').length },
     { id: 'creative', name: 'Creative', count: templates.filter(t => t.category === 'creative').length },
     { id: 'nature', name: 'Nature', count: templates.filter(t => t.category === 'nature').length }
@@ -313,22 +528,41 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
   const filteredTemplates = templates.filter(template => {
     const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     return matchesCategory && matchesSearch
   })
 
   const applyTemplate = (template: VideoTemplate) => {
     // Merge template filters with current filters
     const newFilters = { ...currentFilters, ...template.filters }
-    onApplyTemplate(newFilters, template.textOverlays)
+
+    // Apply personalization if this template is being personalized
+    let personalizedOverlays = template.textOverlays?.map(overlay => ({
+      ...overlay,
+      color: personalizeId === template.id ? customColor : overlay.color,
+      fontFamily: personalizeId === template.id ? customFont : overlay.fontFamily
+    }))
+
+    onApplyTemplate(newFilters, personalizedOverlays)
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
-        Video Templates
-      </h3>
+    <div className="bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-800 dark:to-purple-900/20 rounded-xl shadow-xl p-6 border border-purple-200/50 dark:border-purple-700/50">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-purple-500" />
+            Professional Templates
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Click-style templates for viral content
+          </p>
+        </div>
+        <div className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-xs font-semibold">
+          PRO
+        </div>
+      </div>
 
       {/* Search */}
       <div className="mb-4">
@@ -347,41 +581,127 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === category.id
-                ? 'bg-purple-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${selectedCategory === category.id
+              ? 'bg-purple-500 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
           >
             {category.name} ({category.count})
           </button>
         ))}
       </div>
 
+      {/* Personalization Sidebar/Modal (Dynamic) */}
+      {personalizeId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-sm">
+          <div className="w-96 h-full bg-white dark:bg-gray-900 shadow-2xl p-8 transform transition-transform duration-500 animate-slide-in-right border-l border-purple-500/20">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-bold text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Personalize Design</h3>
+              <button onClick={() => setPersonalizeId(null)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X className="w-6 h-6" /></button>
+            </div>
+
+            <div className="space-y-8">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Primary Brand Color</label>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#000000', '#FFFFFF'].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setCustomColor(color)}
+                      className={`w-10 h-10 rounded-xl border-2 transition-all transform hover:scale-110 ${customColor === color ? 'border-purple-500 ring-4 ring-purple-500/20' : 'border-transparent shadow-md'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => setCustomColor(e.target.value)}
+                  className="w-full h-12 rounded-xl cursor-pointer bg-gray-50 border-none px-1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Typography / Font</label>
+                <div className="space-y-2">
+                  {['Inter', 'Impact', 'Montserrat', 'Playfair Display', 'Oswald', 'Roboto'].map(font => (
+                    <button
+                      key={font}
+                      onClick={() => setCustomFont(font)}
+                      className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all ${customFont === font ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-lg' : 'border-gray-100 dark:border-gray-800 hover:border-purple-200 dark:hover:border-purple-800'}`}
+                      style={{ fontFamily: font }}
+                    >
+                      {font} Selection
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  onClick={() => {
+                    const template = templates.find(t => t.id === personalizeId);
+                    if (template) applyTemplate(template);
+                    setPersonalizeId(null);
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40 transition-all transform hover:scale-102 flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-5 h-5 fill-white" />
+                  Save & Apply to Video
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTemplates.map(template => (
           <div
             key={template.id}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-purple-300 dark:hover:border-purple-600 transition-colors cursor-pointer"
-            onClick={() => applyTemplate(template)}
+            className="group relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105"
           >
-            <div className="flex items-start gap-3 mb-3">
-              <div className="text-purple-600 dark:text-purple-400 mt-1">
+            {/* Action Buttons Overlay */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all rounded-xl flex items-center justify-center gap-3 z-10">
+              <button
+                onClick={(e) => { e.stopPropagation(); applyTemplate(template); }}
+                className="px-4 py-2 bg-white text-gray-900 rounded-xl font-bold hover:bg-gray-100 transition-all"
+              >
+                Quick Apply
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setPersonalizeId(template.id); }}
+                className="px-4 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-500 transition-all border border-purple-400 flex items-center gap-1.5"
+              >
+                <Palette className="w-4 h-4" />
+                Personalize
+              </button>
+            </div>
+
+            {/* Premium Badge for Click-style templates */}
+            {template.id?.startsWith('click-') && (
+              <div className="absolute top-3 right-3 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg z-20">
+                CLICK
+              </div>
+            )}
+
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg text-purple-600 dark:text-purple-400">
                 {template.icon}
               </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-gray-900 dark:text-white mb-1.5 text-base">
                   {template.name}
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
                   {template.description}
                 </p>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5 mb-3">
                   {template.tags.slice(0, 3).map(tag => (
                     <span
                       key={tag}
-                      className="inline-block px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded"
+                      className="inline-block px-2.5 py-1 text-xs font-medium bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/40 dark:to-pink-900/40 text-purple-700 dark:text-purple-300 rounded-full border border-purple-200 dark:border-purple-700"
                     >
                       {tag}
                     </span>
@@ -390,8 +710,22 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
               </div>
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              Recommended for: {template.recommendedFor.join(', ')}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <span className="font-semibold">Perfect for:</span> {template.recommendedFor.slice(0, 2).join(', ')}
+                {template.recommendedFor.length > 2 && ` +${template.recommendedFor.length - 2}`}
+              </div>
+              <div className="flex items-center justify-between">
+                <button className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm font-semibold rounded-lg transition-all transform group-hover:scale-105 shadow-md">
+                  Apply Template
+                </button>
+                {template.textOverlays && template.textOverlays.length > 0 && (
+                  <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                    <Type className="w-3 h-3" />
+                    Text Included
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -407,6 +741,11 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
     </div>
   )
 }
+
+
+
+
+
 
 
 

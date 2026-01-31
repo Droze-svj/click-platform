@@ -91,6 +91,7 @@ interface VideoFilter {
   shadows: number
   clarity: number
   dehaze: number
+  vibrance: number
 }
 
 export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onExport }: VideoEditorProps) {
@@ -123,7 +124,8 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
     highlights: 0,
     shadows: 0,
     clarity: 0,
-    dehaze: 0
+    dehaze: 0,
+    vibrance: 100
   })
   const [trimStart, setTrimStart] = useState(0)
   const [trimEnd, setTrimEnd] = useState(0)
@@ -140,7 +142,7 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
     startTime: number
     endTime: number
     duration: number
-    type: 'video' | 'audio' | 'text' | 'transition'
+    type: 'video' | 'audio' | 'text' | 'transition' | 'image'
     name: string
     color: string
     track: number

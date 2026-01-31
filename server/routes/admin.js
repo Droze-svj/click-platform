@@ -6,12 +6,20 @@ const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const router = express.Router();
 
-// Initialize Supabase client
+// Initialize Supabase client (only if configured)
 const getSupabaseClient = () => {
-  return createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
+  }
+  try {
+    return createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+  } catch (error) {
+    logger.error('Failed to create Supabase client', { error: error.message });
+    throw error;
+  }
 };
 
 /**

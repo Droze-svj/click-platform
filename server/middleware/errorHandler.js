@@ -4,38 +4,58 @@ const logger = require('../utils/logger');
 const { captureException, addBreadcrumb } = require('../utils/sentry');
 
 const errorHandler = (err, req, res, next) => {
-  // Add breadcrumb for debugging
-  addBreadcrumb('Error occurred', 'error', 'error', {
-    url: req.originalUrl,
-    method: req.method,
-    error: err.message,
-  });
-
-  // Capture exception in Sentry
-  captureException(err, {
-    userId: req.user?._id,
-    tags: {
-      route: req.originalUrl,
+  // Add breadcrumb for debugging (wrap in try-catch to prevent Sentry errors from breaking error handler)
+  try {
+    addBreadcrumb('Error occurred', 'error', 'error', {
+      url: req.originalUrl,
       method: req.method,
-    },
-    extra: {
-      ip: req.ip,
-      query: req.query,
-      // Don't include body as it may contain sensitive data
-    },
-  });
+      error: err.message,
+    });
+  } catch (sentryErr) {
+    // Ignore Sentry errors - don't let them break the error handler
+    logger.warn('Failed to add Sentry breadcrumb', { error: sentryErr.message });
+  }
 
-  // Log error with context
-  logger.error('Request error', {
-    error: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    ip: req.ip,
-    userId: req.user?._id,
-    body: req.body,
-    query: req.query
-  });
+  // Capture exception in Sentry (wrap in try-catch to prevent Sentry errors from breaking error handler)
+  try {
+    captureException(err, {
+      userId: req.user?._id,
+      tags: {
+        route: req.originalUrl,
+        method: req.method,
+      },
+      extra: {
+        ip: req.ip,
+        query: req.query,
+        // Don't include body as it may contain sensitive data
+      },
+    });
+  } catch (sentryErr) {
+    // Ignore Sentry errors - don't let them break the error handler
+    logger.warn('Failed to capture exception in Sentry', { error: sentryErr.message });
+  }
+
+  // Log error with context (wrap in try-catch to prevent logger errors from breaking error handler)
+  try {
+    logger.error('Request error', {
+      error: err.message,
+      stack: err.stack,
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      userId: req.user?._id,
+      body: req.body,
+      query: req.query
+    });
+  } catch (loggerErr) {
+    // Fallback to console if logger fails
+    console.error('Request error (logger failed):', {
+      error: err.message,
+      url: req.originalUrl,
+      method: req.method,
+      loggerError: loggerErr.message
+    });
+  }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
@@ -197,20 +217,45 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Default error
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal server error';
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Default error - wrap in try-catch to ensure we always send a response
+  try {
+    const statusCode = err.statusCode || 500;
+    const message = err.message || 'Internal server error';
+    const isProduction = process.env.NODE_ENV === 'production';
 
-  res.status(statusCode).json({
-    success: false,
-    error: isProduction ? 'An unexpected error occurred' : message,
-    code: err.code || 'INTERNAL_ERROR',
-    ...(!isProduction && { 
-      stack: err.stack,
-      details: err
-    })
-  });
+    // Check if response has already been sent
+    if (res.headersSent) {
+      return;
+    }
+
+    res.status(statusCode).json({
+      success: false,
+      error: isProduction ? 'An unexpected error occurred' : message,
+      code: err.code || 'INTERNAL_ERROR',
+      ...(!isProduction && { 
+        stack: err.stack,
+        details: err
+      })
+    });
+  } catch (finalError) {
+    // Last resort: if error handler itself fails, try to send a basic response
+    if (!res.headersSent) {
+      try {
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          code: 'ERROR_HANDLER_FAILED'
+        });
+      } catch (e) {
+        // If we can't even send a response, log and give up
+        console.error('CRITICAL: Error handler completely failed', {
+          originalError: err.message,
+          handlerError: finalError.message,
+          finalError: e.message
+        });
+      }
+    }
+  }
 };
 
 // 404 handler
