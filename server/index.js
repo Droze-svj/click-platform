@@ -792,8 +792,6 @@ app.use(cors({
   optionsSuccessStatus: 204
 }));
 
-// Performance tracking
-const { trackPerformance } = require('./middleware/performanceTracking');
 // Performance tracking middleware
 const trackPerformance = require('./middleware/performanceTracking');
 app.use(trackPerformance);
