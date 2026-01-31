@@ -193,17 +193,17 @@ async function generateLongFormContent(topic, options = {}) {
     const content = response.choices[0].message.content;
 
     // Extract sections if possible
-    const sections = content.split(/\n\n+/).filter((s) => s.trim().length > 0);
+    const contentSections = content.split(/\n\n+/).filter((s) => s.trim().length > 0);
 
     logger.info('Long-form content generated', {
       topic,
       wordCount: content.split(/\s+/).length,
-      sections: sections.length,
+      sections: contentSections.length,
     });
 
     return {
       content,
-      sections,
+      sections: contentSections,
       wordCount: content.split(/\s+/).length,
       structure,
     };
