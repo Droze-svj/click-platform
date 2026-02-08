@@ -18,6 +18,7 @@ import {
   X,
   Clock,
   Film,
+  Zap,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../../lib/api'
@@ -27,7 +28,7 @@ interface Asset {
   url: string
   title?: string
   name?: string
-  type: 'music' | 'image' | 'broll'
+  type: 'music' | 'image' | 'broll' | 'sfx'
   duration?: number
   thumbnail?: string
   source?: 'upload' | 'click'
@@ -40,7 +41,8 @@ interface AssetLibraryViewProps {
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
 }
 
-const CLICK_MUSIC: Asset[] = [
+// Fallback when API unavailable
+const FALLBACK_MUSIC: Asset[] = [
   { id: 'click-music-1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', title: 'Upbeat Creative', type: 'music', duration: 180, source: 'click' },
   { id: 'click-music-2', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', title: 'Calm Focus', type: 'music', duration: 240, source: 'click' },
   { id: 'click-music-3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', title: 'Corporate Pulse', type: 'music', duration: 200, source: 'click' },
@@ -48,18 +50,19 @@ const CLICK_MUSIC: Asset[] = [
   { id: 'click-music-5', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', title: 'Minimal Loop', type: 'music', duration: 120, source: 'click' },
 ]
 
-const CLICK_IMAGES: Asset[] = Array.from({ length: 12 }, (_, i) => ({
+const FALLBACK_IMAGES: Asset[] = Array.from({ length: 12 }, (_, i) => ({
   id: `click-img-${i + 1}`,
-  url: `https://picsum.photos/400/300?random=${100 + i}`,
-  title: `Click Stock ${i + 1}`,
+  url: `https://picsum.photos/id/${i}/800/600`,
+  title: `Stock ${i + 1}`,
   type: 'image' as const,
-  thumbnail: `https://picsum.photos/200/150?random=${100 + i}`,
+  thumbnail: `https://picsum.photos/id/${i}/400/300`,
   source: 'click' as const,
 }))
 
 const STORAGE_KEY_MUSIC = 'click-asset-library-my-music'
 const STORAGE_KEY_IMAGES = 'click-asset-library-my-images'
 const STORAGE_KEY_BROLL = 'click-asset-library-my-broll'
+const STORAGE_KEY_SFX = 'click-asset-library-my-sfx'
 const STORAGE_KEY_RECENT = 'click-asset-library-recent'
 const RECENT_MAX = 6
 
@@ -103,21 +106,29 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
   showToast,
 }) => {
   const [tab, setTab] = useState<'uploads' | 'click'>('uploads')
-  const [filter, setFilter] = useState<'all' | 'music' | 'images' | 'broll'>('all')
+  const [filter, setFilter] = useState<'all' | 'music' | 'images' | 'broll' | 'sfx'>('all')
   const [search, setSearch] = useState('')
   const [myMusic, setMyMusic] = useState<Asset[]>([])
   const [myImages, setMyImages] = useState<Asset[]>([])
   const [myBroll, setMyBroll] = useState<Asset[]>([])
+  const [mySfx, setMySfx] = useState<Asset[]>([])
   const [recent, setRecent] = useState<Asset[]>([])
-  const [clickMusic, setClickMusic] = useState<Asset[]>(CLICK_MUSIC)
+  const [clickMusic, setClickMusic] = useState<Asset[]>([])
+  const [clickImages, setClickImages] = useState<Asset[]>([])
+  const [clickBroll, setClickBroll] = useState<Asset[]>([])
+  const [clickSfx, setClickSfx] = useState<Asset[]>([])
+  const [stockPage, setStockPage] = useState(1)
+  const [stockHasMore, setStockHasMore] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [dragOver, setDragOver] = useState<'music' | 'images' | 'broll' | null>(null)
+  const [dragOver, setDragOver] = useState<'music' | 'images' | 'broll' | 'sfx' | null>(null)
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null)
   const [previewPlaying, setPreviewPlaying] = useState(false)
   const fileInputMusic = useRef<HTMLInputElement>(null)
   const fileInputImages = useRef<HTMLInputElement>(null)
   const fileInputBroll = useRef<HTMLInputElement>(null)
+  const fileInputSfx = useRef<HTMLInputElement>(null)
   const previewAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const loadStoredUploads = useCallback(() => {
@@ -125,6 +136,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
       const rawMusic = localStorage.getItem(STORAGE_KEY_MUSIC)
       const rawImages = localStorage.getItem(STORAGE_KEY_IMAGES)
       const rawBroll = localStorage.getItem(STORAGE_KEY_BROLL)
+      const rawSfx = localStorage.getItem(STORAGE_KEY_SFX)
       const rawRecent = localStorage.getItem(STORAGE_KEY_RECENT)
       if (rawMusic) {
         const parsed = JSON.parse(rawMusic)
@@ -137,6 +149,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
       if (rawBroll) {
         const parsed = JSON.parse(rawBroll)
         if (Array.isArray(parsed)) setMyBroll(parsed)
+      }
+      if (rawSfx) {
+        const parsed = JSON.parse(rawSfx)
+        if (Array.isArray(parsed)) setMySfx(parsed)
       }
       if (rawRecent) {
         const parsed = JSON.parse(rawRecent)
@@ -163,52 +179,88 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
     })
   }, [])
 
-  const loadClickMusic = useCallback(async () => {
-    setLoading(true)
+  const mapStockItem = useCallback((item: any, type: 'music' | 'image' | 'broll' | 'sfx'): Asset => ({
+    id: item.id || `stock-${type}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    url: item.url,
+    title: item.title || item.name || 'Asset',
+    name: item.name,
+    type,
+    duration: item.duration,
+    thumbnail: item.thumbnail || (type === 'image' ? item.url : undefined),
+    source: 'click',
+  }), [])
+
+  const loadClickStock = useCallback(async (page = 1, append = false, searchQuery = '') => {
+    if (append) setLoadingMore(true)
+    else setLoading(true)
+    const q = searchQuery || search
+    const typesToLoad: Array<'music' | 'images' | 'broll' | 'sfx'> = []
+    if (filter === 'all' || filter === 'music') typesToLoad.push('music')
+    if (filter === 'all' || filter === 'images') typesToLoad.push('images')
+    if (filter === 'all' || filter === 'broll') typesToLoad.push('broll')
+    if (filter === 'all' || filter === 'sfx') typesToLoad.push('sfx')
+    if (typesToLoad.length === 0) typesToLoad.push('music', 'images', 'broll', 'sfx')
+
     try {
-      const res = await apiGet<{ success?: boolean; data?: any[] }>('/music')
-      const list = res?.data
-      if (Array.isArray(list) && list.length > 0) {
-        const base = getUploadBaseUrl()
-        const mapped: Asset[] = list
-          .map((m: any) => {
-            const u = m?.file?.url || m?.url || m?.fileUrl || (m?.file?.filename ? `/uploads/music/${m.file.filename}` : (m?.filename ? `/uploads/music/${m.filename}` : ''))
-            if (!u) return null
-            const url = u.startsWith('http') ? u : `${base}${u.startsWith('/') ? '' : '/'}${u}`
-            return {
-              id: (m._id || m.id || `music-${Date.now()}`).toString(),
-              url,
-              title: m.title || m.name || 'Track',
-              type: 'music' as const,
-              duration: m.duration,
-              source: 'click' as const,
-            }
-          })
-          .filter(Boolean) as Asset[]
-        if (mapped.length) setClickMusic(mapped)
+      let hasMore = false
+      for (const type of typesToLoad) {
+        const res = await apiGet<{ data?: { items?: any[]; hasMore?: boolean; total?: number } }>(
+          `/assets/stock?type=${type}&page=${page}&limit=24&q=${encodeURIComponent(q)}`
+        )
+        const data = res?.data ?? res
+        const items = (data?.items ?? []).map((i: any) =>
+          mapStockItem(i, type === 'images' ? 'image' : type === 'sfx' ? 'sfx' : type === 'music' ? 'music' : 'broll')
+        )
+        if (data?.hasMore) hasMore = true
+        if (type === 'music') {
+          setClickMusic((prev) => (append && page > 1 ? [...prev, ...items] : items))
+        } else if (type === 'images') {
+          setClickImages((prev) => (append && page > 1 ? [...prev, ...items] : items))
+        } else if (type === 'broll') {
+          setClickBroll((prev) => (append && page > 1 ? [...prev, ...items] : items))
+        } else {
+          setClickSfx((prev) => (append && page > 1 ? [...prev, ...items] : items))
+        }
       }
+      setStockHasMore(hasMore)
+      setStockPage(page)
     } catch {
-      /* keep fallback */
+      setClickMusic(FALLBACK_MUSIC)
+      setClickImages(FALLBACK_IMAGES)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
-  }, [])
+  }, [filter, search, mapStockItem])
+
+  const loadMoreStock = useCallback(() => {
+    loadClickStock(stockPage + 1, true)
+  }, [stockPage, loadClickStock])
 
   useEffect(() => {
-    if (tab === 'click') loadClickMusic()
-  }, [tab, loadClickMusic])
+    if (tab === 'click') loadClickStock(1, false)
+  }, [tab, filter])
+
+  useEffect(() => {
+    if (tab === 'click') {
+      const t = setTimeout(() => loadClickStock(1, false, search), 300)
+      return () => clearTimeout(t)
+    }
+  }, [search, tab])
 
   const addToTimeline = useCallback(
     (asset: Asset, durationSeconds?: number) => {
       const isMusic = asset.type === 'music'
+      const isSfx = asset.type === 'sfx'
       const isBroll = asset.type === 'broll'
-      const duration = isMusic
-        ? durationSeconds ?? asset.duration ?? Math.max(30, (videoDuration || 0) - currentTime)
+      const isAudio = isMusic || isSfx
+      const duration = isAudio
+        ? durationSeconds ?? asset.duration ?? (isSfx ? 2 : Math.max(30, (videoDuration || 0) - currentTime))
         : durationSeconds ?? (isBroll ? 10 : 5)
       const start = currentTime
       const end = start + duration
-      const segType = isMusic ? 'audio' : isBroll ? 'video' : 'image'
-      const label = isMusic ? 'Music' : isBroll ? 'B-roll' : 'Image'
+      const segType = isAudio ? 'audio' : isBroll ? 'video' : 'image'
+      const label = isMusic ? 'Music' : isSfx ? 'SFX' : isBroll ? 'B-roll' : 'Image'
       const segment = {
         id: `seg-${asset.id}-${Date.now()}`,
         startTime: start,
@@ -216,8 +268,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
         duration,
         type: segType,
         name: asset.title || asset.name || label,
-        color: isMusic ? '#10B981' : isBroll ? '#F59E0B' : '#8B5CF6',
-        track: isMusic ? 2 : isBroll ? 1 : 3,
+        color: isMusic ? '#10B981' : isSfx ? '#F97316' : isBroll ? '#F59E0B' : '#8B5CF6',
+        track: isAudio ? 2 : isBroll ? 1 : 3,
         sourceUrl: asset.url,
       }
       setTimelineSegments((prev: any[]) => [...prev, segment])
@@ -280,6 +332,61 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
       } finally {
         setUploading(false)
         if (fileInputMusic.current) fileInputMusic.current.value = ''
+      }
+    },
+    [showToast]
+  )
+
+  const handleUploadSfx = useCallback(
+    async (file: File) => {
+      const allowed = /\.(mp3|wav|m4a|aac|ogg)$/i.test(file.name) || /^audio\//.test(file.type)
+      if (!allowed) {
+        showToast('Use MP3, WAV, M4A, AAC, or OGG', 'error')
+        return
+      }
+      setUploading(true)
+      try {
+        const form = new FormData()
+        form.append('music', file)
+        const res = await fetch('/api/music/upload', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: form,
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data?.error || 'Upload failed')
+        const d = data?.data
+        const url =
+          d?.file?.url ||
+          d?.url ||
+          data?.fileUrl ||
+          (d?.file?.filename ? `/uploads/music/${d.file.filename}` : d?.filename ? `/uploads/music/${d.filename}` : '')
+        if (!url) throw new Error('No file URL returned')
+        const base = getUploadBaseUrl()
+        const fullUrl = url.startsWith('http') ? url : `${base}${url.startsWith('/') ? '' : '/'}${url}`
+        const n: Asset = {
+          id: (d?._id || d?.id || `upload-sfx-${Date.now()}`).toString(),
+          url: fullUrl,
+          title: d?.title || file.name.replace(/\.[^/.]+$/, ''),
+          type: 'sfx',
+          duration: d?.duration ?? 2,
+          source: 'upload',
+        }
+        setMySfx((prev) => {
+          const next = [n, ...prev.filter((x) => x.id !== n.id)]
+          try {
+            localStorage.setItem(STORAGE_KEY_SFX, JSON.stringify(next))
+          } catch {
+            /* ignore */
+          }
+          return next
+        })
+        showToast('Sound effect uploaded', 'success')
+      } catch (err: any) {
+        showToast(err?.message || 'SFX upload failed', 'error')
+      } finally {
+        setUploading(false)
+        if (fileInputSfx.current) fileInputSfx.current.value = ''
       }
     },
     [showToast]
@@ -399,7 +506,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
   }
 
   const removeUpload = useCallback(
-    (asset: Asset, list: 'music' | 'images' | 'broll') => {
+    (asset: Asset, list: 'music' | 'images' | 'broll' | 'sfx') => {
       if (list === 'music') {
         setMyMusic((prev) => {
           const next = prev.filter((a) => a.id !== asset.id || a.url !== asset.url)
@@ -415,6 +522,16 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
           const next = prev.filter((a) => a.id !== asset.id || a.url !== asset.url)
           try {
             localStorage.setItem(STORAGE_KEY_IMAGES, JSON.stringify(next))
+          } catch {
+            /* ignore */
+          }
+          return next
+        })
+      } else if (list === 'sfx') {
+        setMySfx((prev) => {
+          const next = prev.filter((a) => a.id !== asset.id || a.url !== asset.url)
+          try {
+            localStorage.setItem(STORAGE_KEY_SFX, JSON.stringify(next))
           } catch {
             /* ignore */
           }
@@ -437,7 +554,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
   )
 
   const handleDrop = useCallback(
-    (e: React.DragEvent, zone: 'music' | 'images' | 'broll') => {
+    (e: React.DragEvent, zone: 'music' | 'images' | 'broll' | 'sfx') => {
       e.preventDefault()
       setDragOver(null)
       if (uploading) return
@@ -445,6 +562,9 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
       if (zone === 'music') {
         const f = files.find((x) => /\.(mp3|wav|m4a|aac|ogg)$/i.test(x.name) || /^audio\//.test(x.type))
         if (f) handleUploadMusic(f)
+      } else if (zone === 'sfx') {
+        const f = files.find((x) => /\.(mp3|wav|m4a|aac|ogg)$/i.test(x.name) || /^audio\//.test(x.type))
+        if (f) handleUploadSfx(f)
       } else if (zone === 'images') {
         const imgFiles = files.filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f.name) || /^image\//.test(f.type))
         if (imgFiles.length) handleUploadImages(imgFiles)
@@ -453,12 +573,13 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
         if (f) handleUploadBroll(f)
       }
     },
-    [uploading, handleUploadMusic, handleUploadImages, handleUploadBroll]
+    [uploading, handleUploadMusic, handleUploadSfx, handleUploadImages, handleUploadBroll]
   )
 
   const uploadsMusic = filter === 'all' || filter === 'music' ? myMusic : []
   const uploadsImages = filter === 'all' || filter === 'images' ? myImages : []
   const uploadsBroll = filter === 'all' || filter === 'broll' ? myBroll : []
+  const uploadsSfx = filter === 'all' || filter === 'sfx' ? mySfx : []
   const searchLower = search.trim().toLowerCase()
   const clickMusicFiltered =
     filter === 'all' || filter === 'music'
@@ -466,13 +587,22 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
       : []
   const clickImagesFiltered =
     filter === 'all' || filter === 'images'
-      ? CLICK_IMAGES.filter((a) => !searchLower || (a.title || '').toLowerCase().includes(searchLower))
+      ? clickImages.filter((a) => !searchLower || (a.title || '').toLowerCase().includes(searchLower))
+      : []
+  const clickBrollFiltered =
+    filter === 'all' || filter === 'broll'
+      ? clickBroll.filter((a) => !searchLower || (a.title || '').toLowerCase().includes(searchLower))
+      : []
+  const clickSfxFiltered =
+    filter === 'all' || filter === 'sfx'
+      ? clickSfx.filter((a) => !searchLower || (a.title || '').toLowerCase().includes(searchLower))
       : []
 
   const recentFiltered = recent.filter((a) => {
     if (filter === 'music' && a.type !== 'music') return false
     if (filter === 'images' && a.type !== 'image') return false
     if (filter === 'broll' && a.type !== 'broll') return false
+    if (filter === 'sfx' && a.type !== 'sfx') return false
     return true
   })
 
@@ -500,6 +630,12 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
                 <FileAudio className="w-7 h-7 text-emerald-500" />
               </div>
             </div>
+          ) : asset.type === 'sfx' ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-orange-500/20 flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
+                <Zap className="w-7 h-7 text-orange-500" />
+              </div>
+            </div>
           ) : asset.type === 'broll' ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center group-hover:bg-amber-500/30 transition-colors">
@@ -515,7 +651,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            {asset.type === 'music' && asset.duration != null && (
+            {(asset.type === 'music' || asset.type === 'sfx') && asset.duration != null && (
               <span className="flex items-center gap-1 text-[10px] font-medium text-white/90">
                 <Clock className="w-3 h-3" />
                 {formatDuration(asset.duration)}
@@ -539,7 +675,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onClick={(e) => {
                 e.stopPropagation()
                 const list = asset.type === 'music' ? 'music' : asset.type === 'broll' ? 'broll' : 'images'
-                if (confirm('Remove this from your library?')) removeUpload(asset, list)
+                if (confirm('Remove this from your library?')) removeUpload(asset, asset.type === 'music' ? 'music' : asset.type === 'sfx' ? 'sfx' : asset.type === 'broll' ? 'broll' : 'images')
               }}
               className="absolute top-2 right-2 p-1.5 bg-red-500/90 hover:bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
               title="Remove"
@@ -562,9 +698,11 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               ? asset.duration != null
                 ? formatDuration(asset.duration)
                 : 'Audio'
-              : asset.type === 'broll'
-                ? 'B-roll'
-                : 'Image'}
+              : asset.type === 'sfx'
+                ? 'SFX'
+                : asset.type === 'broll'
+                  ? 'B-roll'
+                  : 'Image'}
             {asset.source === 'click' && ' · Click'}
           </p>
         </div>
@@ -576,29 +714,27 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
     <div className="space-y-4 h-full flex flex-col">
       <div className="flex items-center justify-between flex-shrink-0">
         <h3 className="text-lg font-black uppercase text-gray-900 dark:text-white tracking-widest">
-          Music, Images &amp; B-Roll
+          Music, Images, B-Roll &amp; SFX
         </h3>
       </div>
 
       <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800/80 p-1 flex-shrink-0">
         <button
           onClick={() => setTab('uploads')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            tab === 'uploads'
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'uploads'
               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}
+            }`}
         >
           <FolderOpen className="w-4 h-4" />
           Your uploads
         </button>
         <button
           onClick={() => setTab('click')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
-            tab === 'click'
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'click'
               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}
+            }`}
         >
           <Sparkles className="w-4 h-4" />
           Click library
@@ -606,17 +742,16 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
       </div>
 
       <div className="flex gap-1.5 flex-wrap flex-shrink-0">
-        {(['all', 'music', 'images', 'broll'] as const).map((f) => (
+        {(['all', 'music', 'images', 'broll', 'sfx'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-              filter === f
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${filter === f
                 ? 'bg-indigo-500 text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
-            {f === 'broll' ? 'B-roll' : f}
+            {f === 'broll' ? 'B-roll' : f === 'sfx' ? 'SFX' : f}
           </button>
         ))}
       </div>
@@ -636,7 +771,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
 
       {tab === 'uploads' && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-shrink-0">
             <input
               ref={fileInputMusic}
               type="file"
@@ -659,6 +794,13 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               className="hidden"
               onChange={onBrollInputChange}
             />
+            <input
+              ref={fileInputSfx}
+              type="file"
+              accept=".mp3,.wav,.m4a,.aac,.ogg,audio/*"
+              className="hidden"
+              onChange={onSfxInputChange}
+            />
             <div
               onDragOver={(e) => {
                 e.preventDefault()
@@ -667,11 +809,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDragLeave={() => setDragOver(null)}
               onDrop={(e) => handleDrop(e, 'music')}
               onClick={() => fileInputMusic.current?.click()}
-              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
-                dragOver === 'music'
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'music'
                   ? 'border-emerald-500 bg-emerald-500/10'
                   : 'border-gray-300 dark:border-gray-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-500/5'
-              } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
+                } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (
                 <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
@@ -691,11 +832,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDragLeave={() => setDragOver(null)}
               onDrop={(e) => handleDrop(e, 'images')}
               onClick={() => fileInputImages.current?.click()}
-              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
-                dragOver === 'images'
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'images'
                   ? 'border-violet-500 bg-violet-500/10'
                   : 'border-gray-300 dark:border-gray-600 hover:border-violet-500 dark:hover:border-violet-500 hover:bg-violet-500/5'
-              } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
+                } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (
                 <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
@@ -715,11 +855,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDragLeave={() => setDragOver(null)}
               onDrop={(e) => handleDrop(e, 'broll')}
               onClick={() => fileInputBroll.current?.click()}
-              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
-                dragOver === 'broll'
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'broll'
                   ? 'border-amber-500 bg-amber-500/10'
                   : 'border-gray-300 dark:border-gray-600 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-500/5'
-              } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
+                } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (
                 <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
@@ -730,6 +869,29 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
                 {dragOver === 'broll' ? 'Drop B-roll here' : 'Upload B-roll'}
               </span>
               <span className="text-[10px] text-gray-500">MP4, MOV, MKV</span>
+            </div>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragOver('sfx')
+              }}
+              onDragLeave={() => setDragOver(null)}
+              onDrop={(e) => handleDrop(e, 'sfx')}
+              onClick={() => fileInputSfx.current?.click()}
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'sfx'
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : 'border-gray-300 dark:border-gray-600 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500/5'
+                } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
+            >
+              {uploading ? (
+                <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
+              ) : (
+                <Zap className="w-6 h-6 text-orange-500" />
+              )}
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                {dragOver === 'sfx' ? 'Drop SFX here' : 'Upload SFX'}
+              </span>
+              <span className="text-[10px] text-gray-500">MP3, WAV</span>
             </div>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
@@ -768,8 +930,9 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
                 {uploadsMusic.map((a) => renderAssetCard(a, { showAdd: true, showDelete: true }))}
                 {uploadsImages.map((a) => renderAssetCard(a, { showAdd: true, showDelete: true }))}
                 {uploadsBroll.map((a) => renderAssetCard(a, { showAdd: true, showDelete: true }))}
+                {uploadsSfx.map((a) => renderAssetCard(a, { showAdd: true, showDelete: true }))}
               </AnimatePresence>
-              {uploadsMusic.length === 0 && uploadsImages.length === 0 && uploadsBroll.length === 0 && (
+              {uploadsMusic.length === 0 && uploadsImages.length === 0 && uploadsBroll.length === 0 && uploadsSfx.length === 0 && (
                 <div className="col-span-full flex flex-col items-center justify-center py-12 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-700">
                   <Upload className="w-10 h-10 text-gray-400 mb-2" />
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No uploads yet</p>
@@ -787,24 +950,44 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
             <h4 className="text-[10px] font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider mb-2">
               Click library
             </h4>
-            {loading && clickMusicFiltered.length === 0 && clickImagesFiltered.length === 0 ? (
+            {loading && clickMusicFiltered.length === 0 && clickImagesFiltered.length === 0 && clickBrollFiltered.length === 0 && clickSfxFiltered.length === 0 ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <AnimatePresence>
-                  {clickMusicFiltered.map((a) => renderAssetCard(a))}
-                  {clickImagesFiltered.map((a) => renderAssetCard(a))}
-                </AnimatePresence>
-                {clickMusicFiltered.length === 0 && clickImagesFiltered.length === 0 && !loading && (
-                  <div className="col-span-full flex flex-col items-center justify-center py-12 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-700">
-                    <Search className="w-10 h-10 text-gray-400 mb-2" />
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No results</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Try a different search or filter</p>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <AnimatePresence>
+                    {clickMusicFiltered.map((a) => renderAssetCard(a))}
+                    {clickImagesFiltered.map((a) => renderAssetCard(a))}
+                    {clickBrollFiltered.map((a) => renderAssetCard(a))}
+                    {clickSfxFiltered.map((a) => renderAssetCard(a))}
+                  </AnimatePresence>
+                  {clickMusicFiltered.length === 0 && clickImagesFiltered.length === 0 && clickBrollFiltered.length === 0 && clickSfxFiltered.length === 0 && !loading && (
+                    <div className="col-span-full flex flex-col items-center justify-center py-12 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-700">
+                      <Search className="w-10 h-10 text-gray-400 mb-2" />
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No results</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Try a different search or filter</p>
+                    </div>
+                  )}
+                </div>
+                {stockHasMore && !loading && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={loadMoreStock}
+                      disabled={loadingMore}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 font-semibold text-sm transition-all disabled:opacity-50"
+                    >
+                      {loadingMore ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4" />
+                      )}
+                      Load more
+                    </button>
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         )}
@@ -846,10 +1029,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
                 </button>
               </div>
               <div className="p-6">
-                {previewAsset.type === 'music' ? (
+                {(previewAsset.type === 'music' || previewAsset.type === 'sfx') ? (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-center w-24 h-24 mx-auto rounded-full bg-emerald-500/20">
-                      <FileAudio className="w-12 h-12 text-emerald-500" />
+                    <div className={`flex items-center justify-center w-24 h-24 mx-auto rounded-full ${previewAsset.type === 'sfx' ? 'bg-orange-500/20' : 'bg-emerald-500/20'}`}>
+                      {previewAsset.type === 'sfx' ? <Zap className="w-12 h-12 text-orange-500" /> : <FileAudio className="w-12 h-12 text-emerald-500" />}
                     </div>
                     <audio
                       ref={previewAudioRef}

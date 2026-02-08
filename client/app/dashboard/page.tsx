@@ -105,8 +105,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-full w-full max-w-full overflow-x-hidden bg-gray-50">
+        <div className="container-readable py-8">
           <LoadingSkeleton type="card" count={6} />
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function Dashboard() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 bg-mesh relative">
+      <div className="min-h-full w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 bg-mesh relative">
         <div className="absolute inset-0 bg-dots"></div>
         <SubscriptionBanner />
         <NextStepsPanel />
@@ -127,7 +127,7 @@ export default function Dashboard() {
         <ToastContainer />
 
         {/* Enhanced Hero Section with floating elements */}
-        <section className="relative overflow-hidden section-padding">
+        <section className="relative overflow-x-hidden overflow-y-visible section-padding section-auto-fit">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-purple-600/5 to-pink-600/5"></div>
           <div className="absolute inset-0 bg-noise"></div>
 
@@ -155,7 +155,7 @@ export default function Dashboard() {
 
             {/* Stats Overview with enhanced interactivity */}
             <div className="grid-readable mb-16">
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.1s'}}>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.1s' }}>
                 <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
                   {user.usage?.videosProcessed ?? 0}
                 </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.2s'}}>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.2s' }}>
                 <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
                   {user.usage?.contentGenerated ?? 0}
                 </div>
@@ -181,7 +181,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.3s'}}>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.3s' }}>
                 <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
                   {user.usage?.quotesCreated ?? 0}
                 </div>
@@ -194,7 +194,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{animationDelay: '0.4s'}}>
+              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.4s' }}>
                 <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
                   {user.usage?.postsScheduled ?? 0}
                 </div>
@@ -212,15 +212,15 @@ export default function Dashboard() {
         </section>
 
         {/* New Dashboard Overview */}
-        <section className="py-8 bg-white dark:bg-gray-900">
+        <section className="section-auto-fit py-8 bg-white dark:bg-gray-900">
           <div className="container-readable">
             <DashboardOverview />
           </div>
         </section>
 
-        <div className="container-readable py-8" data-tour="dashboard">
+        <div className="container-readable py-8 w-full max-w-full" data-tour="dashboard">
           {/* Subscription Status with enhanced visual polish */}
-          <div className="card-elevated p-8 mb-12 animate-slide-in-up hover-lift relative overflow-hidden" style={{animationDelay: '0.5s'}}>
+          <div className="card-elevated p-8 mb-12 animate-slide-in-up hover-lift relative overflow-hidden" style={{ animationDelay: '0.5s' }}>
             {/* Subtle background pattern */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary-500/10 to-transparent rounded-full"></div>
 
@@ -231,13 +231,12 @@ export default function Dashboard() {
                   Subscription Status
                 </h3>
                 <div className="flex-readable">
-                  <span className={`px-6 py-3 rounded-full text-sm font-semibold shadow-lg ${
-                    user.subscription.status === 'active'
+                  <span className={`px-6 py-3 rounded-full text-sm font-semibold shadow-lg ${user.subscription.status === 'active'
                       ? 'status-active text-white'
                       : user.subscription.status === 'trial'
-                      ? 'status-trial text-white'
-                      : 'status-inactive text-white'
-                  }`}>
+                        ? 'status-trial text-white'
+                        : 'status-inactive text-white'
+                    }`}>
                     <span className="flex items-center">
                       <span className="w-2 h-2 bg-white/80 rounded-full mr-2 animate-pulse"></span>
                       {user.subscription.status.toUpperCase()}
@@ -261,135 +260,135 @@ export default function Dashboard() {
             </div>
           </div>
 
-        {/* Enhanced Feature Grid */}
-        <section className="grid-staggered mb-16">
-          <FeatureCard
-            title="Auto Video Clipper"
-            description="Upload long videos and get short-form clips with AI-powered editing"
-            link="/dashboard/video"
-            icon="🎥"
-            dataTour="video-upload"
-            gradient="from-blue-500 to-cyan-500"
-          />
-          <FeatureCard
-            title="Content Generator"
-            description="Transform text into engaging social media posts with AI assistance"
-            link="/dashboard/content"
-            icon="✨"
-            dataTour="content-generator"
-            gradient="from-purple-500 to-pink-500"
-          />
-          <FeatureCard
-            title="Script Generator"
-            description="Generate YouTube, podcast, and blog scripts instantly"
-            link="/dashboard/scripts"
-            icon="📝"
-            dataTour="scripts"
-            gradient="from-green-500 to-teal-500"
-          />
-          <FeatureCard
-            title="Quote Cards"
-            description="Create beautiful branded quote graphics with typography"
-            link="/dashboard/quotes"
-            icon="🎨"
-            gradient="from-orange-500 to-red-500"
-          />
-          <FeatureCard
-            title="Content Scheduler"
-            description="Schedule posts across platforms with optimal timing"
-            link="/dashboard/scheduler"
-            icon="📆"
-            gradient="from-indigo-500 to-purple-500"
-          />
-          <FeatureCard
-            title="Analytics"
-            description="View performance insights and growth metrics"
-            link="/dashboard/analytics"
-            icon="📊"
-            gradient="from-emerald-500 to-green-500"
-          />
-          <FeatureCard
-            title="Workflows"
-            description="Automate your content creation process end-to-end"
-            link="/dashboard/workflows"
-            icon="🤖"
-            gradient="from-violet-500 to-purple-500"
-          />
-          <FeatureCard
-            title="Niche Packs"
-            description="Customize your brand style with niche-specific templates"
-            link="/dashboard/niche"
-            icon="🎯"
-            gradient="from-rose-500 to-pink-500"
-          />
-        </section>
+          {/* Enhanced Feature Grid */}
+          <section className="grid-staggered mb-16">
+            <FeatureCard
+              title="Auto Video Clipper"
+              description="Upload long videos and get short-form clips with AI-powered editing"
+              link="/dashboard/video"
+              icon="🎥"
+              dataTour="video-upload"
+              gradient="from-blue-500 to-cyan-500"
+            />
+            <FeatureCard
+              title="Content Generator"
+              description="Transform text into engaging social media posts with AI assistance"
+              link="/dashboard/content"
+              icon="✨"
+              dataTour="content-generator"
+              gradient="from-purple-500 to-pink-500"
+            />
+            <FeatureCard
+              title="Script Generator"
+              description="Generate YouTube, podcast, and blog scripts instantly"
+              link="/dashboard/scripts"
+              icon="📝"
+              dataTour="scripts"
+              gradient="from-green-500 to-teal-500"
+            />
+            <FeatureCard
+              title="Quote Cards"
+              description="Create beautiful branded quote graphics with typography"
+              link="/dashboard/quotes"
+              icon="🎨"
+              gradient="from-orange-500 to-red-500"
+            />
+            <FeatureCard
+              title="Content Scheduler"
+              description="Schedule posts across platforms with optimal timing"
+              link="/dashboard/scheduler"
+              icon="📆"
+              gradient="from-indigo-500 to-purple-500"
+            />
+            <FeatureCard
+              title="Analytics"
+              description="View performance insights and growth metrics"
+              link="/dashboard/analytics"
+              icon="📊"
+              gradient="from-emerald-500 to-green-500"
+            />
+            <FeatureCard
+              title="Workflows"
+              description="Automate your content creation process end-to-end"
+              link="/dashboard/workflows"
+              icon="🤖"
+              gradient="from-violet-500 to-purple-500"
+            />
+            <FeatureCard
+              title="Niche Packs"
+              description="Customize your brand style with niche-specific templates"
+              link="/dashboard/niche"
+              icon="🎯"
+              gradient="from-rose-500 to-pink-500"
+            />
+          </section>
 
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ActivityFeed limit={5} />
-          <EnhancedContentSuggestions />
-        </div>
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ActivityFeed limit={5} />
+            <EnhancedContentSuggestions />
+          </div>
 
-        {/* New Engaging Features */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SmartSuggestions />
-          <DailyChallenges />
-        </div>
+          {/* New Engaging Features */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <SmartSuggestions />
+            <DailyChallenges />
+          </div>
 
-        {/* Quick Access Widgets */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <QuickTemplateAccess />
-        </div>
+          {/* Quick Access Widgets */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <QuickTemplateAccess />
+          </div>
 
-        <div className="mt-8">
-          <AIRecommendations />
-        </div>
+          <div className="mt-8">
+            <AIRecommendations />
+          </div>
 
-        {/* AI Features Section */}
-        <div className="mt-8">
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">🤖 AI Features</h2>
-              <Link
-                href="/dashboard/ai"
-                className="text-purple-600 hover:text-purple-700 font-medium"
-              >
-                View All →
-              </Link>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Advanced AI-powered tools to enhance your content creation
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FeatureCard
-                title="Multi-Model AI"
-                description="Choose from multiple AI providers and models"
-                link="/dashboard/ai"
-                icon="🧠"
-                gradient="from-blue-500 to-purple-500"
-              />
-              <FeatureCard
-                title="Predictive Analytics"
-                description="Predict content performance before publishing"
-                link="/dashboard/ai"
-                icon="📊"
-                gradient="from-green-500 to-teal-500"
-              />
+          {/* AI Features Section */}
+          <div className="mt-8">
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">🤖 AI Features</h2>
+                <Link
+                  href="/dashboard/ai"
+                  className="text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  View All →
+                </Link>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Advanced AI-powered tools to enhance your content creation
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FeatureCard
+                  title="Multi-Model AI"
+                  description="Choose from multiple AI providers and models"
+                  link="/dashboard/ai"
+                  icon="🧠"
+                  gradient="from-blue-500 to-purple-500"
+                />
+                <FeatureCard
+                  title="Predictive Analytics"
+                  description="Predict content performance before publishing"
+                  link="/dashboard/ai"
+                  icon="📊"
+                  gradient="from-green-500 to-teal-500"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Quick AI Tools */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-500">
-          <div className="bg-white rounded-lg shadow p-6 transition-shadow hover:shadow-lg">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="text-2xl">🧠</span>
-              AI Model Selector
-            </h3>
-            <AIMultiModelSelector />
+          {/* Quick AI Tools */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-500">
+            <div className="bg-white rounded-lg shadow p-6 transition-shadow hover:shadow-lg">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="text-2xl">🧠</span>
+                AI Model Selector
+              </h3>
+              <AIMultiModelSelector />
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </ErrorBoundary>
   )
 }

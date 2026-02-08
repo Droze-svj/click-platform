@@ -440,7 +440,7 @@ function buildCutFilter(silencePeriods, sceneChanges, duration) {
   if (segments.length === 0 || segments.length === 1) return null;
 
   // Build select filter - keep segments that are NOT in cut periods
-  const selectParts = segments.map(seg => 
+  const selectParts = segments.map(seg =>
     `between(t,${seg.start.toFixed(3)},${seg.end.toFixed(3)})`
   );
 
@@ -627,7 +627,7 @@ function applyAudioDucking(transcript, duration) {
   if (speechSegments.length === 0) return null;
 
   // Build volume filter that ducks music during speech
-  const volumeParts = speechSegments.map(seg => 
+  const volumeParts = speechSegments.map(seg =>
     `volume=enable='between(t,${seg.start},${seg.end})':volume=0.3`
   );
 
@@ -704,8 +704,13 @@ async function autoSelectMusic(videoId, sentiment, duration) {
 
 /**
  * Generate smart captions with styling and apply to video
+ * @param {string} videoId - Content ID
+ * @param {string} transcript - Full transcript text
+ * @param {number} duration - Video duration
+ * @param {string} style - modern, bold, minimal, tiktok, youtube, outline, professional
+ * @param {Object} overrides - Optional { fontFamily } from user brand/preferences
  */
-async function generateAndApplySmartCaptions(videoId, transcript, duration, style = 'modern') {
+async function generateAndApplySmartCaptions(videoId, transcript, duration, style = 'modern', overrides = {}) {
   try {
     const captionService = getVideoCaptionService();
     if (!captionService || !transcript) return null;
@@ -718,7 +723,7 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
       position: 'bottom',
     });
 
-    // Style captions based on style preference
+    // Style captions based on style preference (professional font families and platform styles)
     const styleOptions = {
       modern: {
         fontSize: 42,
@@ -727,6 +732,7 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
         outline: true,
         outlineColor: '#000000',
         position: 'bottom',
+        fontFamily: 'Inter, Arial, sans-serif',
       },
       bold: {
         fontSize: 48,
@@ -735,6 +741,7 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
         outline: true,
         outlineColor: '#000000',
         position: 'center',
+        fontFamily: 'Montserrat, Arial Black, sans-serif',
       },
       minimal: {
         fontSize: 36,
@@ -743,12 +750,134 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
         outline: true,
         outlineColor: '#000000',
         position: 'bottom',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      tiktok: {
+        fontSize: 44,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'bottom',
+        fontFamily: 'Impact, Arial Black, sans-serif',
+      },
+      youtube: {
+        fontSize: 38,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'bottom',
+        fontFamily: 'Roboto, Arial, sans-serif',
+      },
+      outline: {
+        fontSize: 40,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'transparent',
+        outline: true,
+        outlineColor: '#000000',
+        outlineWidth: 3,
+        position: 'bottom',
+        fontFamily: 'Montserrat, sans-serif',
+      },
+      professional: {
+        fontSize: 36,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'bottom',
+        fontFamily: 'Georgia, Times New Roman, serif',
+      },
+      neon: {
+        fontSize: 42,
+        fontColor: '#00FFFF',
+        backgroundColor: 'transparent',
+        outline: true,
+        outlineColor: '#000000',
+        outlineWidth: 2,
+        position: 'bottom',
+        fontFamily: 'Montserrat, Arial Black, sans-serif',
+      },
+      pill: {
+        fontSize: 38,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        outline: false,
+        position: 'bottom',
+        fontFamily: 'Inter, system-ui, sans-serif',
+      },
+      cinematic: {
+        fontSize: 36,
+        fontColor: '#E5E5E5',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        outline: true,
+        outlineColor: '#1a1a1a',
+        position: 'bottom',
+        fontFamily: 'Georgia, Times New Roman, serif',
+      },
+      retro: {
+        fontSize: 40,
+        fontColor: '#FFE4B5',
+        backgroundColor: 'rgba(40,20,0,0.7)',
+        outline: true,
+        outlineColor: '#2a1500',
+        position: 'bottom',
+        fontFamily: 'Georgia, serif',
+      },
+      subtitle: {
+        fontSize: 34,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'transparent',
+        outline: true,
+        outlineColor: '#000000',
+        outlineWidth: 2,
+        position: 'bottom',
+        fontFamily: 'Arial, sans-serif',
+      },
+      karaoke: {
+        fontSize: 44,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'center',
+        fontFamily: 'Impact, Arial Black, sans-serif',
+      },
+      gradient: {
+        fontSize: 42,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(128,0,128,0.75)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'bottom',
+        fontFamily: 'Montserrat, sans-serif',
+      },
+      serif: {
+        fontSize: 38,
+        fontColor: '#FFF8DC',
+        backgroundColor: 'rgba(0,0,0,0.65)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'bottom',
+        fontFamily: 'Playfair Display, Georgia, serif',
+      },
+      'high-contrast': {
+        fontSize: 44,
+        fontColor: '#FFFFFF',
+        backgroundColor: '#000000',
+        outline: true,
+        outlineWidth: 3,
+        outlineColor: '#FFFFFF',
+        position: 'bottom',
+        fontFamily: 'Arial Black, sans-serif',
       },
     };
 
+    const baseStyle = { ...(styleOptions[style] || styleOptions.modern), ...overrides };
     const styledCaptions = captionService.styleCaptions(
       captions.captions,
-      styleOptions[style] || styleOptions.modern
+      baseStyle
     );
 
     logger.info('Smart captions generated', { videoId, count: styledCaptions.length, style });
@@ -838,13 +967,13 @@ async function exportMultipleFormats(videoId, formats = ['mp4', 'webm']) {
 
 /**
  * Enhanced auto-edit video with creative and quality features
- * 
+ *
  * IMPORTANT: This function AUTOMATICALLY APPLIES all detected edits to the video.
  * It processes the video with FFmpeg, applies all filters and edits, saves the edited
  * video file, uploads it, and REPLACES the original video in the content model.
- * 
+ *
  * The edited video becomes the new originalFile.url - the original is preserved in metadata.
- * 
+ *
  * @param {string} videoId - The video content ID
  * @param {Object} editingOptions - Editing options (all edits are automatically applied)
  * @param {string} userId - User ID for real-time progress updates
@@ -872,10 +1001,15 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       enableAutoThumbnail = true,
       // New excellence features
       enableSmartCaptions = true,
-      captionStyle = 'modern', // modern, bold, minimal
+      captionStyle = 'modern', // modern, bold, minimal, tiktok, youtube, outline, professional
       enableMusicAutoSelect = false,
       enableMultiFormatExport = false,
       exportFormats = ['mp4'], // mp4, webm, mov
+      // Precise scene capture
+      sceneThreshold = 0.3,
+      minSceneLength = 1.0,
+      useMultiModalScenes = false, // use visual+audio fusion when true
+      workflowType = 'general', // 'tiktok', 'youtube', 'general'
     } = editingOptions;
 
     const content = await Content.findById(videoId);
@@ -954,7 +1088,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       async () => {
         if (transcript || audioLevels.length > 0) {
           const moments = await detectKeyMoments(transcript, duration, audioLevels);
-          const overlays = enableTextOverlays && transcript 
+          const overlays = enableTextOverlays && transcript
             ? generateTextOverlaySuggestions(transcript, moments, duration)
             : [];
           return { moments, overlays };
@@ -972,8 +1106,8 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     const sentiment = sentimentResult;
     const beats = beatsResult || [];
 
-    logger.info('Parallel analysis completed', { 
-      videoId, 
+    logger.info('Parallel analysis completed', {
+      videoId,
       keyMoments: Object.keys(keyMoments).length,
       textOverlays: textOverlays.length,
       faceMoments: faceMoments.length,
@@ -993,7 +1127,8 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let smartCaptions = null;
     if (enableSmartCaptions && transcript) {
       emitProgress('captions', 15, 'Generating smart captions...');
-      smartCaptions = await generateAndApplySmartCaptions(videoId, transcript, duration, captionStyle);
+      const captionOverrides = editingOptions.captionFontFamily ? { fontFamily: editingOptions.captionFontFamily } : {};
+      smartCaptions = await generateAndApplySmartCaptions(videoId, transcript, duration, captionStyle, captionOverrides);
       if (smartCaptions && smartCaptions.length > 0) {
         appliedEdits.push(`Smart Captions (${smartCaptions.length} lines, ${captionStyle} style)`);
         creativeFeatures.push('Smart Captions');
@@ -1011,14 +1146,14 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
         () => detectSilencePeriods(inputPath, silenceThreshold, minSilenceDuration),
         2
       );
-      
+
       // Get edit history to avoid repetitive cuts
       const editHistory = await getEditHistory(videoId);
       const recentCuts = editHistory.cuts || [];
-      
+
       // Filter out recently cut areas (within 2 seconds)
       silencePeriods = silencePeriods.filter(silence => {
-        return !recentCuts.some(cut => 
+        return !recentCuts.some(cut =>
           Math.abs(cut.time - silence.start) < 2
         );
       });
@@ -1026,15 +1161,44 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       logger.info('Silence periods detected', { videoId, count: silencePeriods.length });
     }
 
-    // 2. Detect scene changes (real detection) - with retry
+    // 2. Detect scene changes (precise: optional multi-modal or FFmpeg with configurable threshold)
     emitProgress('editing', 35, 'Detecting scene changes...');
     let sceneChanges = [];
     if (addTransitions || optimizePacing) {
-      logger.info('Detecting scene changes', { videoId });
-      sceneChanges = await retryWithBackoff(
-        () => detectSceneChanges(inputPath, 0.3),
-        2
-      );
+      logger.info('Detecting scene changes', { videoId, useMultiModalScenes, sceneThreshold });
+      try {
+        if (useMultiModalScenes) {
+          const multiModal = require('./multiModalSceneDetection');
+          const finalScenes = await multiModal.detectScenesMultiModal(inputPath, {
+            sensitivity: sceneThreshold,
+            minSceneLength,
+            workflowType,
+            mergeShortScenes: true,
+            shortSceneThreshold: 2.0,
+          });
+          // finalScenes = [{ start, end }, ...]; boundaries are end of each scene (except last)
+          sceneChanges = Array.isArray(finalScenes)
+            ? finalScenes.slice(0, -1).map((s) => s.end).filter((t) => typeof t === 'number').sort((a, b) => a - b)
+            : [];
+        } else {
+          sceneChanges = await retryWithBackoff(
+            () => detectSceneChanges(inputPath, sceneThreshold),
+            2
+          );
+          if (minSceneLength > 0 && sceneChanges.length > 1) {
+            const filtered = [sceneChanges[0]];
+            for (let i = 1; i < sceneChanges.length; i++) {
+              if (sceneChanges[i] - filtered[filtered.length - 1] >= minSceneLength) {
+                filtered.push(sceneChanges[i]);
+              }
+            }
+            sceneChanges = filtered;
+          }
+        }
+      } catch (multiErr) {
+        logger.warn('Multi-modal scene detection failed, using FFmpeg', { error: multiErr.message });
+        sceneChanges = await retryWithBackoff(() => detectSceneChanges(inputPath, sceneThreshold), 2);
+      }
       logger.info('Scene changes detected', { videoId, count: sceneChanges.length });
     }
 
@@ -1051,7 +1215,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       logger.info('Syncing cuts to beats', { videoId, beats: beats.length });
       // Adjust silence periods to align with nearest beats
       silencePeriods = silencePeriods.map(silence => {
-        const nearestBeat = beats.reduce((prev, curr) => 
+        const nearestBeat = beats.reduce((prev, curr) =>
           Math.abs(curr - silence.start) < Math.abs(prev - silence.start) ? curr : prev
         );
         if (Math.abs(nearestBeat - silence.start) < 0.5) {
@@ -1142,7 +1306,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     if (optimizeHook && keyMoments.hook) {
       // Slight speed increase for hook if needed
       const hookSpeed = 1.05;
-      videoFilters.push(`setpts='if(lt(t,${keyMoments.hook.end}),${1/hookSpeed}*PTS,PTS)'`);
+      videoFilters.push(`setpts='if(lt(t,${keyMoments.hook.end}),${1 / hookSpeed}*PTS,PTS)'`);
       audioFilters.push(`atempo='if(lt(t,${keyMoments.hook.end}),${hookSpeed},1)'`);
       creativeFeatures.push('Hook Optimization');
       appliedEdits.push('Hook Enhancement');
@@ -1152,7 +1316,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     if (optimizePacing && repetitivePhrases.length > 0) {
       const speedFactor = Math.min(1.1, 1 + (repetitivePhrases.length * 0.02));
       if (speedFactor > 1.01) {
-        videoFilters.push(`setpts=${1/speedFactor}*PTS`);
+        videoFilters.push(`setpts=${1 / speedFactor}*PTS`);
         audioFilters.push(`atempo=${speedFactor}`);
         appliedEdits.push('Pacing Optimization');
       }
@@ -1162,15 +1326,18 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     if (smartCaptions && smartCaptions.length > 0) {
       emitProgress('editing', 50, 'Applying smart captions...');
       // Add caption filters to video filters
-      smartCaptions.forEach((caption, index) => {
+      smartCaptions.forEach((caption) => {
         const style = caption.style || {};
         const fontSize = style.fontSize || 42;
         const fontColor = style.fontColor || '#FFFFFF';
         const bgColor = style.backgroundColor || 'rgba(0,0,0,0.75)';
+        const outlineW = style.outlineWidth ?? (style.outline ? 2 : 0);
         const x = '(w-text_w)/2';
-        const y = style.position === 'top' ? '50' : style.position === 'center' ? '(h-text_h)/2' : 'h-th-50';
-        
-        const captionFilter = `drawtext=text='${(caption.text || '').replace(/'/g, "\\'")}':fontsize=${fontSize}:fontcolor=${fontColor}:x=${x}:y=${y}:box=1:boxcolor=${bgColor}:enable='between(t,${caption.startTime || 0},${caption.endTime || duration})'`;
+        const y = style.position === 'top' ? '50' : style.position === 'center' ? '(h-text_h)/2' : 'h-text_h-50';
+        const boxPart = bgColor && bgColor !== 'transparent' ? `:box=1:boxcolor=${bgColor}` : '';
+        const borderPart = outlineW > 0 ? `:borderw=${outlineW}` : '';
+
+        const captionFilter = `drawtext=text='${(caption.text || '').replace(/'/g, "\\'")}':fontsize=${fontSize}:fontcolor=${fontColor}:x=${x}:y=${y}${boxPart}${borderPart}:enable='between(t,${caption.startTime || 0},${caption.endTime || duration})'`;
         videoFilters.push(captionFilter);
       });
     }
@@ -1189,7 +1356,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
         const bgColor = overlay.backgroundColor || 'rgba(0,0,0,0.7)';
         const x = '(w-text_w)/2';
         const y = overlay.position === 'top' ? '50' : overlay.position === 'bottom' ? 'h-th-50' : '(h-text_h)/2';
-        
+
         const textFilter = `drawtext=text='${overlay.text.replace(/'/g, "\\'")}':fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:box=1:boxcolor=${bgColor}:enable='between(t,${overlay.startTime},${overlay.endTime})'`;
         videoFilters.push(textFilter);
       });
@@ -1211,7 +1378,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
         // Complex filter chain with text overlays
         const baseFilters = videoFilters.filter(f => !f.includes('drawtext'));
         const textFilters = videoFilters.filter(f => f.includes('drawtext'));
-        
+
         if (baseFilters.length > 0) {
           command.videoFilters(baseFilters.join(','));
         }
@@ -1244,13 +1411,13 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let musicPath = null;
     if (selectedMusic) {
       // Try different possible file path fields
-      musicPath = selectedMusic.filePath || 
-                  selectedMusic.file?.path || 
-                  selectedMusic.url ||
-                  (selectedMusic.file?.url && selectedMusic.file.url.startsWith('/')
-                    ? path.join(__dirname, '../..', selectedMusic.file.url)
-                    : null);
-      
+      musicPath = selectedMusic.filePath ||
+        selectedMusic.file?.path ||
+        selectedMusic.url ||
+        (selectedMusic.file?.url && selectedMusic.file.url.startsWith('/')
+          ? path.join(__dirname, '../..', selectedMusic.file.url)
+          : null);
+
       if (musicPath && !musicPath.startsWith('http') && !fs.existsSync(musicPath)) {
         logger.warn('Music file not found, skipping music', { musicPath });
         musicPath = null;
@@ -1335,10 +1502,10 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
               });
             });
 
-            logger.info('Final metadata retrieved', { 
-              videoId, 
+            logger.info('Final metadata retrieved', {
+              videoId,
               duration: finalMetadata.format.duration,
-              size: finalMetadata.format.size 
+              size: finalMetadata.format.size
             });
 
             // Upload the edited video file
@@ -1378,7 +1545,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
                 if (!fs.existsSync(path.dirname(thumbnailPath))) {
                   fs.mkdirSync(path.dirname(thumbnailPath), { recursive: true });
                 }
-                
+
                 // Use FFmpeg to extract frame at best moment
                 await new Promise((resolve, reject) => {
                   ffmpeg(outputPath)
@@ -1402,7 +1569,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
 
             // Update content model - REPLACE original with edited version
             content.status = 'completed';
-            
+
             // Store original file info before replacing
             const originalFileInfo = {
               url: content.originalFile.url,
@@ -1542,13 +1709,13 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
           }
         })
         .on('error', (err) => {
-          logger.error('FFmpeg auto-edit error', { 
-            videoId, 
+          logger.error('FFmpeg auto-edit error', {
+            videoId,
             error: err.message,
             stack: err.stack,
             command: command._getArguments ? command._getArguments().join(' ') : 'unknown'
           });
-          
+
           // Clean up partial output file if it exists
           if (fs.existsSync(outputPath)) {
             try {
@@ -1558,7 +1725,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
               logger.warn('Failed to cleanup partial file', { videoId, error: cleanupError.message });
             }
           }
-          
+
           reject(new Error(`Video editing failed: ${err.message}`));
         })
         .run();
@@ -1569,60 +1736,226 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
   }
 }
 
+/** Timeout (ms) for silence/scene detection during analysis so we don't block too long */
+const ANALYSIS_DETECTION_TIMEOUT_MS = 25000;
+
+/**
+ * Gather accurate analysis context from DB and optional local file (duration, silence, scenes, transcript)
+ */
+async function getAccurateAnalysisContext(videoId, videoMetadata = {}) {
+  const ctx = {
+    duration: videoMetadata.duration || 0,
+    transcript: videoMetadata.transcript || null,
+    transcriptExcerpt: null,
+    repetitionSummary: null,
+    silenceSegments: [],
+    sceneTimes: [],
+    resolution: null,
+    hasLocalFile: false,
+    content: null,
+  };
+
+  if (!videoId) return ctx;
+
+  try {
+    const content = await Content.findById(videoId).select('workspaceId metadata transcript originalFile').lean();
+    if (!content) return ctx;
+    ctx.content = content;
+
+    const meta = content.metadata || {};
+    ctx.transcript = videoMetadata.transcript || content.transcript?.text || meta.transcript || null;
+    ctx.duration = videoMetadata.duration || content.originalFile?.duration || 0;
+
+    let inputPath = null;
+    const url = content.originalFile?.url;
+    if (url && !url.startsWith('http')) {
+      inputPath = path.join(__dirname, '../..', url);
+      ctx.hasLocalFile = fs.existsSync(inputPath);
+    }
+
+    // Exact duration and resolution from ffprobe when we have a local file
+    if (ctx.hasLocalFile && inputPath) {
+      try {
+        const metadata = await new Promise((resolve, reject) => {
+          ffmpeg.ffprobe(inputPath, (err, data) => { if (err) reject(err); else resolve(data); });
+        });
+        ctx.duration = metadata.format?.duration ?? ctx.duration;
+        const videoStream = metadata.streams?.find(s => s.codec_type === 'video');
+        if (videoStream) {
+          ctx.resolution = `${videoStream.width || 0}x${videoStream.height || 0}`;
+        }
+      } catch (e) {
+        logger.warn('FFprobe during analysis failed', { videoId, error: e.message });
+      }
+    }
+
+    // Transcript excerpt and repetition summary for accurate AI context
+    if (ctx.transcript) {
+      const maxExcerptLen = 2800;
+      ctx.transcriptExcerpt = ctx.transcript.length > maxExcerptLen
+        ? ctx.transcript.slice(0, maxExcerptLen) + '\n[...truncated]'
+        : ctx.transcript;
+      const repetitivePhrases = analyzeTranscriptForRepetition(ctx.transcript);
+      ctx.repetitionSummary = repetitivePhrases.length > 0
+        ? repetitivePhrases.slice(0, 15).map(p => `"${p.phrase}" (${p.count}x)`).join(', ')
+        : 'None detected';
+    }
+
+    // Silence and scene detection (with timeout) for data-driven cut suggestions
+    if (ctx.hasLocalFile && inputPath && ctx.duration > 0) {
+      const withTimeout = (promise, ms) =>
+        Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
+      try {
+        const [silence, scenes] = await Promise.all([
+          withTimeout(detectSilencePeriods(inputPath, -30, 0.5), ANALYSIS_DETECTION_TIMEOUT_MS).catch(() => []),
+          withTimeout(detectSceneChanges(inputPath, 0.3), ANALYSIS_DETECTION_TIMEOUT_MS).catch(() => []),
+        ]);
+        ctx.silenceSegments = Array.isArray(silence) ? silence : [];
+        ctx.sceneTimes = Array.isArray(scenes) ? scenes : [];
+      } catch (e) {
+        logger.warn('Silence/scene detection during analysis failed', { videoId, error: e.message });
+      }
+    }
+
+    return ctx;
+  } catch (e) {
+    logger.warn('getAccurateAnalysisContext failed', { videoId, error: e.message });
+    return ctx;
+  }
+}
+
+/**
+ * Validate and clamp analysis output to video duration; merge overlapping cuts
+ */
+function validateAndClampAnalysis(analysis, duration) {
+  const d = Number(duration) || 60;
+  const clamp = (t) => Math.max(0, Math.min(d, Number(t)));
+
+  if (Array.isArray(analysis.recommendedCuts)) {
+    analysis.recommendedCuts = analysis.recommendedCuts
+      .map(c => ({
+        start: clamp(c.start),
+        end: clamp(c.end != null ? c.end : c.start + 1),
+        reason: c.reason || 'Pause/silence',
+        confidence: Math.max(0, Math.min(1, Number(c.confidence) || 0.8)),
+      }))
+      .filter(c => c.end > c.start + 0.1)
+      .sort((a, b) => a.start - b.start);
+    // Merge overlapping or adjacent cuts
+    const merged = [];
+    for (const c of analysis.recommendedCuts) {
+      const last = merged[merged.length - 1];
+      if (last && c.start <= last.end + 0.5) {
+        last.end = Math.max(last.end, c.end);
+        last.reason = last.reason || c.reason;
+      } else {
+        merged.push({ ...c });
+      }
+    }
+    analysis.recommendedCuts = merged;
+  }
+
+  if (Array.isArray(analysis.transitions)) {
+    analysis.transitions = analysis.transitions
+      .map(t => ({ time: clamp(t.time), type: t.type || 'cut', duration: Math.max(0, Math.min(2, Number(t.duration) || 0.5)) }))
+      .filter(t => t.time >= 0 && t.time < d);
+  }
+  if (Array.isArray(analysis.highlights)) {
+    analysis.highlights = analysis.highlights
+      .map(h => ({ start: clamp(h.start), end: clamp(h.end != null ? h.end : h.start + 5), reason: h.reason || '' }))
+      .filter(h => h.end > h.start);
+  }
+  if (Array.isArray(analysis.thumbnailMoments)) {
+    analysis.thumbnailMoments = analysis.thumbnailMoments
+      .map(m => ({ time: clamp(m.time), reason: m.reason || '' }))
+      .filter(m => m.time >= 0 && m.time < d);
+  }
+  if (typeof analysis.suggestedLength === 'number') {
+    analysis.suggestedLength = Math.max(0, Math.min(d, Math.round(analysis.suggestedLength)));
+  }
+  return analysis;
+}
+
 /**
  * Analyze video for editing suggestions (enhanced)
+ * Supports videoId for profile-based insights, edit styles, and accurate data-driven analysis
  */
 async function analyzeVideoForEditing(videoMetadata) {
   try {
-    const {
-      duration,
-      scenes = [],
-      audioLevels = [],
-      transcript = null,
-    } = videoMetadata;
+    const { videoId, scenes: scenesInput = [], audioLevels = [] } = videoMetadata;
+
+    // Gather accurate context (duration, silence, scenes, transcript) when videoId present
+    const ctx = await getAccurateAnalysisContext(videoId, videoMetadata);
+    const duration = ctx.duration > 0 ? ctx.duration : (videoMetadata.duration || 60);
+    const transcript = ctx.transcript || videoMetadata.transcript || null;
+
+    let baseScore = 50;
+    let workspaceId = null;
+    if (ctx.content) {
+      workspaceId = ctx.content.workspaceId;
+      const meta = ctx.content.metadata || {};
+      const levels = audioLevels.length ? audioLevels : (meta.audioLevels || []);
+      const metadataForScore = { streams: ctx.resolution ? [{ codec_type: 'video', width: parseInt(ctx.resolution.split('x')[0], 10) || 1920, height: parseInt(ctx.resolution.split('x')[1], 10) || 1080 }] : [] };
+      baseScore = calculateQualityScore(metadataForScore, transcript, levels, duration);
+    }
+
+    const profileInsights = workspaceId ? await getProfileVideoInsights(workspaceId) : null;
+    const editStyles = getEditStylesWithScores(baseScore);
 
     const client = getOpenAIClient();
     if (!client) {
       logger.warn('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
+      return validateAndClampAnalysis({
+        suggestedEdits: ['Enable remove silence and optimize pacing for better retention.', 'Add captions for accessibility and reach.'],
+        recommendedCuts: [],
+        suggestedLength: duration,
+        contentType: inferContentType(transcript, duration),
+        profileInsights,
+        editStyles,
+        baseScore: Math.round(baseScore),
+      }, duration);
     }
 
-    // Enhanced prompt with transcript analysis
-    let transcriptSummary = 'Not available';
-    if (transcript) {
-      const repetitivePhrases = analyzeTranscriptForRepetition(transcript);
-      transcriptSummary = `Available. Found ${repetitivePhrases.length} repetitive phrases/fillers.`;
-    }
+    // Build prompt with concrete data for accuracy
+    const silenceBlock = ctx.silenceSegments.length > 0
+      ? `\nDetected silence segments (use these for recommendedCuts when possible - use exact start/end):\n${ctx.silenceSegments.slice(0, 40).map(s => `  ${s.start.toFixed(1)}s - ${(s.end || s.start).toFixed(1)}s (${((s.end || s.start) - s.start).toFixed(1)}s)`).join('\n')}`
+      : '';
+    const sceneBlock = ctx.sceneTimes.length > 0
+      ? `\nDetected scene boundaries (seconds): ${ctx.sceneTimes.slice(0, 30).map(t => t.toFixed(1)).join(', ')}${ctx.sceneTimes.length > 30 ? ' ...' : ''}`
+      : '';
+    const transcriptBlock = ctx.transcriptExcerpt
+      ? `\nTranscript excerpt (use for suggestedEdits and hook/highlights):\n---\n${ctx.transcriptExcerpt}\n---\nRepetitive/filler phrases: ${ctx.repetitionSummary}`
+      : '\nTranscript: Not available.';
 
-    const prompt = `Analyze this video and provide precise editing suggestions:
+    const prompt = `You are a precise video editor. Analyze this video and return JSON only.
 
-Duration: ${duration} seconds
-Scenes: ${scenes.length} detected
-Audio Levels: ${audioLevels.length > 0 ? 'Available' : 'Not available'}
-Transcript: ${transcriptSummary}
+VIDEO FACTS (use these exact bounds):
+- Duration: ${duration.toFixed(1)} seconds (all timestamps must be in [0, ${duration.toFixed(1)}])
+- Resolution: ${ctx.resolution || 'Unknown'}
+${silenceBlock}${sceneBlock}${transcriptBlock}
 
-Provide JSON with:
-1. recommendedCuts: Array of {start, end, reason, confidence} for dead air/pauses
-2. transitions: Array of {time, type, duration} for scene transitions
-3. audioAdjustments: Array of {time, type, value} for level adjustments
-4. pacingImprovements: Array of {start, end, speedFactor, reason}
-5. highlights: Array of {start, end, reason} for moments to keep
-6. suggestedLength: Optimal video length in seconds
-7. thumbnailMoments: Array of {time, reason} for best thumbnail frames
+RULES:
+1. recommendedCuts: Only suggest cuts within the detected silence segments above when provided; use their exact start/end. If no silence data, suggest plausible pauses with confidence < 0.7. Every cut must have start < end and both in [0, ${duration.toFixed(1)}].
+2. suggestedLength: Must be between ${Math.max(0, Math.floor(duration * 0.5))} and ${Math.ceil(duration)}.
+3. suggestedEdits: Reference specific timestamps from the transcript when possible (e.g. "Remove pause 0:45-0:52", "Add caption for hook at 0:05").
+4. contentType: One of "tutorial", "vlog", "podcast", "short_form", "ad", "general" based on content and length.
+5. thumbnailMoments: Times in [0, ${duration.toFixed(1)}].
+6. highlights / pacingImprovements / transitions: timestamps must be within duration.
 
-Be specific with timestamps and avoid repetitive suggestions.`;
+Return valid JSON with: recommendedCuts (array of {start, end, reason, confidence}), transitions, audioAdjustments, pacingImprovements, highlights, suggestedLength, thumbnailMoments, suggestedEdits (array of strings), contentType.`;
 
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are a professional video editor. Provide precise, non-repetitive editing suggestions with specific timestamps.',
+          content: 'You are a professional video editor. Return only valid JSON. All timestamps must be within the video duration. Prefer data-driven suggestions (silence segments, transcript) over invented timestamps.',
         },
         { role: 'user', content: prompt },
       ],
-      temperature: 0.3,
-      max_tokens: 2000,
+      temperature: 0.2,
+      max_tokens: 2500,
       response_format: { type: 'json_object' },
     });
 
@@ -1639,12 +1972,36 @@ Be specific with timestamps and avoid repetitive suggestions.`;
       }
     }
 
-    logger.info('Video analyzed for editing', { duration, scenes: scenes.length });
+    analysis = validateAndClampAnalysis(analysis, duration);
+    analysis.profileInsights = profileInsights;
+    analysis.editStyles = editStyles;
+    analysis.baseScore = Math.round(baseScore);
+    if (!analysis.suggestedEdits || !Array.isArray(analysis.suggestedEdits)) {
+      analysis.suggestedEdits = ['Remove silence and optimize pacing.', 'Add captions for reach.'];
+    }
+    if (!analysis.contentType) analysis.contentType = inferContentType(transcript, duration);
+
+    logger.info('Video analyzed for editing', { duration, silenceSegments: ctx.silenceSegments.length, sceneTimes: ctx.sceneTimes.length, editStyles: editStyles.length });
     return analysis;
   } catch (error) {
     logger.error('Analyze video for editing error', { error: error.message });
     throw error;
   }
+}
+
+/**
+ * Infer content type from transcript and duration (fallback when model returns general)
+ */
+function inferContentType(transcript, duration) {
+  if (!transcript && duration <= 0) return 'general';
+  const text = (transcript || '').toLowerCase();
+  const words = text.split(/\s+/).length;
+  const wps = duration > 0 ? words / duration : 0;
+  if (duration <= 60 && words < 150) return 'short_form';
+  if (text.includes('step') && (text.includes('how to') || text.includes('tutorial'))) return 'tutorial';
+  if (wps < 1.5 && duration > 120) return 'podcast';
+  if (text.includes('subscribe') || text.includes('follow') || text.includes('link in bio')) return 'ad';
+  return 'general';
 }
 
 /**
@@ -2084,6 +2441,11 @@ const EDIT_PRESETS = {
       removeSilence: true,
       enableAutoZoom: false,
       enableTextOverlays: false,
+      enableSmartCaptions: false,
+      captionStyle: 'professional',
+      useMultiModalScenes: true,
+      sceneThreshold: 0.25,
+      minSceneLength: 1.5,
     },
     videoFilters: ['curves=all=\'0/0 0.5/0.45 1/1\':preset=strong', 'eq=contrast=1.2:brightness=-0.05:saturation=0.9'],
     audioFilters: ['loudnorm=I=-16:TP=-1.5:LRA=11', 'highpass=f=80'],
@@ -2104,6 +2466,10 @@ const EDIT_PRESETS = {
       enableAutoZoom: true,
       enableTextOverlays: true,
       optimizeHook: true,
+      enableSmartCaptions: true,
+      captionStyle: 'bold',
+      useMultiModalScenes: true,
+      workflowType: 'general',
     },
     videoFilters: ['eq=contrast=1.15:brightness=0.05:saturation=1.1'],
     audioFilters: ['loudnorm=I=-14:TP=-1.5:LRA=11', 'highpass=f=100'],
@@ -2123,6 +2489,9 @@ const EDIT_PRESETS = {
       enableTextOverlays: false,
       enableNoiseReduction: true,
       enableAudioDucking: true,
+      enableSmartCaptions: true,
+      captionStyle: 'minimal',
+      useMultiModalScenes: false,
     },
     videoFilters: [],
     audioFilters: ['loudnorm=I=-16:TP=-1.5:LRA=11', 'highpass=f=80:lowpass=f=8000', 'afftdn=nr=15:nf=-30'],
@@ -2145,6 +2514,12 @@ const EDIT_PRESETS = {
       enableTextOverlays: true,
       optimizeHook: true,
       minSilenceDuration: 0.3,
+      enableSmartCaptions: true,
+      captionStyle: 'tiktok',
+      useMultiModalScenes: true,
+      workflowType: 'tiktok',
+      sceneThreshold: 0.35,
+      minSceneLength: 0.8,
     },
     videoFilters: ['eq=contrast=1.2:brightness=0.03:saturation=1.15'],
     audioFilters: ['loudnorm=I=-12:TP=-1.5:LRA=11'],
@@ -2165,11 +2540,117 @@ const EDIT_PRESETS = {
       enableAutoZoom: false,
       enableTextOverlays: true,
       enableNoiseReduction: true,
+      enableSmartCaptions: true,
+      captionStyle: 'youtube',
+      useMultiModalScenes: true,
+      workflowType: 'youtube',
+      sceneThreshold: 0.3,
+      minSceneLength: 1.2,
     },
     videoFilters: ['eq=contrast=1.1:brightness=0.02:saturation=1.05'],
     audioFilters: ['loudnorm=I=-16:TP=-1.5:LRA=11', 'highpass=f=80:lowpass=f=15000'],
   },
 };
+
+/**
+ * Edit styles with potential score bonuses and ranking (for AI auto-edit UI)
+ * Used to show users ranked options with estimated impact on video score
+ */
+const EDIT_STYLES = [
+  { id: 'tiktok', name: 'TikTok / Reels', preset: 'tiktok', captionStyle: 'tiktok', scoreBonus: 12, reason: 'Best for short-form retention and hook', rank: 1 },
+  { id: 'youtube', name: 'YouTube Optimized', preset: 'youtube', captionStyle: 'youtube', scoreBonus: 10, reason: 'Professional pacing and chapters', rank: 2 },
+  { id: 'cinematic', name: 'Cinematic', preset: 'cinematic', captionStyle: 'cinematic', scoreBonus: 9, reason: 'Strong retention and premium look', rank: 3 },
+  { id: 'vlog', name: 'Vlog Style', preset: 'vlog', captionStyle: 'modern', scoreBonus: 8, reason: 'Engaging cuts and viewer-friendly', rank: 4 },
+  { id: 'podcast', name: 'Podcast', preset: 'podcast', captionStyle: 'minimal', scoreBonus: 7, reason: 'Clean audio and clarity', rank: 5 },
+];
+
+/**
+ * Get profile video analytics for a workspace (for analysis accuracy)
+ */
+async function getProfileVideoInsights(workspaceId) {
+  if (!workspaceId) return null;
+  try {
+    const videoMetricsService = require('./videoMetricsService');
+    const analytics = await videoMetricsService.getVideoMetricsAnalytics(workspaceId, {});
+    if (!analytics || analytics.totalVideos === 0) return null;
+    return {
+      totalVideos: analytics.totalVideos,
+      averageViewThroughRate: Math.round((analytics.averageViewThroughRate || 0) * 100) / 100,
+      averageCompletionRate: Math.round((analytics.averageCompletionRate || 0) * 100) / 100,
+      averageWatchTime: Math.round(analytics.averageWatchTime || 0),
+      averageRetention: Math.round((analytics.averageRetention || 0) * 100) / 100,
+      topPerformersCount: (analytics.topPerformers || []).length,
+      message: `Based on ${analytics.totalVideos} video(s) in your workspace. Your top content averages ${Math.round(analytics.averageCompletionRate || 0)}% completion.`,
+    };
+  } catch (e) {
+    logger.warn('Profile video insights failed', { workspaceId, error: e.message });
+    return null;
+  }
+}
+
+/**
+ * Compute video score (0–100) for current or edited video; used for potential score and new score after edit
+ */
+async function computeVideoScore(videoId, options = {}) {
+  try {
+    const content = await Content.findById(videoId);
+    if (!content) throw new Error('Content not found');
+    const url = options.editedVideoUrl || content.originalFile?.url;
+    if (!url || url.startsWith('http')) {
+      // Remote or already-uploaded: use stored metadata if available
+      const meta = content.metadata?.autoEditHistory?.stats || content.originalFile || {};
+      const duration = meta.duration || content.originalFile?.duration || 60;
+      const transcript = content.transcript?.text || content.metadata?.transcript || null;
+      const audioLevels = content.metadata?.audioLevels || [];
+      const score = calculateQualityScore({ streams: [] }, transcript, audioLevels, duration);
+      const factors = [
+        { name: 'Duration', value: `${Math.round(duration)}s`, impact: duration >= 30 && duration <= 60 ? 'optimal' : 'ok' },
+        { name: 'Captions', value: transcript ? 'Yes' : 'No', impact: transcript ? 'good' : 'missing' },
+        { name: 'Pacing', value: transcript ? 'Analyzed' : 'Unknown', impact: 'ok' },
+      ];
+      return { score: Math.round(score), factors };
+    }
+    const inputPath = path.join(__dirname, '../..', url);
+    if (!fs.existsSync(inputPath)) {
+      const score = calculateQualityScore({ streams: [] }, content.transcript?.text, content.metadata?.audioLevels || [], content.originalFile?.duration || 60);
+      return { score: Math.round(score), factors: [{ name: 'Source', value: 'Metadata only', impact: 'ok' }] };
+    }
+    const metadata = await new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(inputPath, (err, data) => { if (err) reject(err); else resolve(data); });
+    });
+    const duration = metadata.format.duration || 0;
+    const transcript = content.transcript?.text || content.metadata?.transcript || null;
+    const audioLevels = content.metadata?.audioLevels || [];
+    const score = calculateQualityScore(metadata, transcript, audioLevels, duration);
+    const videoStream = metadata.streams?.find(s => s.codec_type === 'video');
+    const factors = [
+      { name: 'Duration', value: `${Math.round(duration)}s`, impact: duration >= 30 && duration <= 60 ? 'optimal' : 'ok' },
+      { name: 'Resolution', value: videoStream ? `${videoStream.width}x${videoStream.height}` : 'Unknown', impact: videoStream && videoStream.width >= 1280 ? 'good' : 'ok' },
+      { name: 'Captions', value: transcript ? 'Yes' : 'No', impact: transcript ? 'good' : 'missing' },
+      { name: 'Audio', value: audioLevels.length > 0 ? 'Levels analyzed' : 'Unknown', impact: 'ok' },
+    ];
+    return { score: Math.round(Math.min(100, Math.max(0, score))), factors };
+  } catch (error) {
+    logger.error('Compute video score error', { error: error.message, videoId });
+    throw error;
+  }
+}
+
+/**
+ * Get edit styles with potential scores (based on base score + style bonus)
+ */
+function getEditStylesWithScores(baseScore) {
+  return EDIT_STYLES.map(style => ({
+    id: style.id,
+    name: style.name,
+    description: style.reason,
+    preset: style.preset,
+    captionStyle: style.captionStyle,
+    potentialScore: Math.min(100, baseScore + style.scoreBonus),
+    scoreBonus: style.scoreBonus,
+    rank: style.rank,
+  })).sort((a, b) => (b.potentialScore - a.potentialScore) || (a.rank - b.rank));
+}
 
 /**
  * Get edit preset by name
@@ -2240,7 +2721,7 @@ async function generateEditPreview(videoId, editingOptions = {}) {
 
       await new Promise((resolve, reject) => {
         let command = ffmpeg(inputPath);
-        
+
         // Apply same filters as full edit (simplified for preview)
         if (editingOptions.enableColorGrading) {
           command.videoFilters('eq=contrast=1.1:brightness=0.02:saturation=1.05');
@@ -2288,10 +2769,10 @@ async function createComparisonVideo(videoId) {
     const content = await Content.findById(videoId);
     if (!content) throw new Error('Content not found');
 
-    const originalPath = content.metadata?.autoEditHistory?.originalFile?.url 
+    const originalPath = content.metadata?.autoEditHistory?.originalFile?.url
       ? (content.metadata.autoEditHistory.originalFile.url.startsWith('/')
-          ? path.join(__dirname, '../..', content.metadata.autoEditHistory.originalFile.url)
-          : content.metadata.autoEditHistory.originalFile.url)
+        ? path.join(__dirname, '../..', content.metadata.autoEditHistory.originalFile.url)
+        : content.metadata.autoEditHistory.originalFile.url)
       : null;
 
     const editedPath = content.originalFile.url.startsWith('/')
@@ -2382,7 +2863,7 @@ async function saveEditVersion(videoId, versionName = null) {
     };
 
     content.metadata.editVersions.push(version);
-    
+
     // Keep only last 10 versions
     if (content.metadata.editVersions.length > 10) {
       content.metadata.editVersions = content.metadata.editVersions.slice(-10);
@@ -2513,6 +2994,7 @@ async function getEditPerformanceAnalytics(videoId) {
 module.exports = {
   analyzeVideoForEditing,
   autoEditVideo,
+  computeVideoScore,
   detectScenes,
   detectSmartCuts,
   processChromaKey,

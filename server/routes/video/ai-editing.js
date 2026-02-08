@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 const {
   analyzeVideoForEditing,
   autoEditVideo,
+  computeVideoScore,
   detectScenes,
   detectSmartCuts,
   getEditPreset,
@@ -21,7 +22,64 @@ const {
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
+const User = require('../../models/User');
+const Content = require('../../models/Content');
+const ClientGuidelines = require('../../models/ClientGuidelines');
 const router = express.Router();
+
+/**
+ * Resolve editing options with user style (brand/preferences), optional preset, and client guidelines
+ */
+async function resolveEditingOptions(editingOptions, userId, videoId = null) {
+  let options = { ...editingOptions };
+  const presetName = options.preset || options.editPreset;
+  if (presetName) {
+    try {
+      const preset = getEditPreset(presetName);
+      if (preset) {
+        options = applyPresetToOptions(presetName, options);
+      }
+    } catch (e) {
+      logger.warn('Apply preset failed', { presetName, error: e.message });
+    }
+  }
+  if (userId) {
+    try {
+      const user = await User.findById(userId).lean();
+      if (user?.brandSettings?.font && !options.captionFontFamily) {
+        options.captionFontFamily = user.brandSettings.font;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  if (videoId) {
+    try {
+      const content = await Content.findById(videoId).select('workspaceId').lean();
+      const workspaceId = content?.workspaceId;
+      if (workspaceId) {
+        const guidelines = await ClientGuidelines.findOne({ workspaceId, isActive: true }).lean();
+        if (guidelines?.branding) {
+          const brandFont = guidelines.branding.font || guidelines.branding.fontFamily;
+          if (brandFont && !options.captionFontFamily) {
+            options.captionFontFamily = brandFont;
+          }
+        }
+        const platform = options.platform || 'general';
+        if (guidelines?.platformSpecific && platform !== 'all' && platform !== 'general') {
+          const platformKey = platform.replace(/\s/g, '').toLowerCase();
+          const platformGuidelines = guidelines.platformSpecific[platformKey] || guidelines.platformSpecific.instagram;
+          if (platformGuidelines?.captionStyle && !options.captionStyle) {
+            options.captionStyle = platformGuidelines.captionStyle;
+          }
+        }
+      }
+    } catch (e) {
+      logger.warn('Client guidelines resolution failed', { videoId, error: e.message });
+    }
+  }
+  return options;
+}
 
 /**
  * @swagger
@@ -33,17 +91,43 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.post('/analyze', auth, asyncHandler(async (req, res) => {
-  const { videoMetadata } = req.body;
+  const { videoMetadata, videoId } = req.body;
+  const payload = { ...(videoMetadata || {}), ...(videoId ? { videoId } : {}) };
 
-  if (!videoMetadata) {
-    return sendError(res, 'Video metadata is required', 400);
+  if (!videoId && !(payload.duration != null || payload.url)) {
+    return sendError(res, 'Video metadata or videoId is required', 400);
   }
 
   try {
-    const analysis = await analyzeVideoForEditing(videoMetadata);
+    const analysis = await analyzeVideoForEditing(payload);
     sendSuccess(res, 'Video analyzed for editing', 200, analysis);
   } catch (error) {
     logger.error('Analyze video for editing error', { error: error.message });
+    sendError(res, error.message, 500);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/video/ai-editing/score:
+ *   post:
+ *     summary: Get video score (potential or after edit)
+ *     tags: [Video]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/score', auth, asyncHandler(async (req, res) => {
+  const { videoId, editedVideoUrl } = req.body;
+
+  if (!videoId) {
+    return sendError(res, 'videoId is required', 400);
+  }
+
+  try {
+    const result = await computeVideoScore(videoId, { editedVideoUrl });
+    sendSuccess(res, 'Video score computed', 200, result);
+  } catch (error) {
+    logger.error('Video score error', { error: error.message });
     sendError(res, error.message, 500);
   }
 }));
@@ -66,15 +150,16 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
   }
 
   try {
+    const resolvedOptions = await resolveEditingOptions(editingOptions || {}, userId, videoId);
     logger.info('Starting auto-edit video processing', { videoId, userId });
-    
+
     // This function AUTOMATICALLY applies all edits and saves the edited video
     // Pass userId for real-time progress updates via WebSocket
-    const result = await autoEditVideo(videoId, editingOptions || {}, userId);
-    
+    const result = await autoEditVideo(videoId, resolvedOptions, userId);
+
     if (result.success) {
-      logger.info('Auto-edit completed successfully', { 
-        videoId, 
+      logger.info('Auto-edit completed successfully', {
+        videoId,
         editedUrl: result.editedVideoUrl,
         editsCount: result.editsApplied?.length || 0
       });

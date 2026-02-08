@@ -132,7 +132,7 @@ const userPreferencesSchema = new mongoose.Schema({
 // userId already has unique: true which creates an index
 userPreferencesSchema.index({ 'proMode.enabled': 1 });
 
-userPreferencesSchema.pre('save', function(next) {
+userPreferencesSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });

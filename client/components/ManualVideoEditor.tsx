@@ -189,7 +189,7 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
       })
 
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Processing failed')
       }
@@ -229,7 +229,7 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Professional Manual Editor
         </h2>
-        
+
         {/* Toolbar */}
         <div className="flex items-center gap-2">
           {/* Undo/Redo */}
@@ -238,11 +238,10 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
               <button
                 onClick={handleUndo}
                 disabled={!canUndo || isProcessing}
-                className={`p-2 rounded-lg border transition-all ${
-                  canUndo
+                className={`p-2 rounded-lg border transition-all ${canUndo
                     ? 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
                     : 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
-                }`}
+                  }`}
                 title="Undo"
               >
                 <RotateCcw className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -250,18 +249,17 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
               <button
                 onClick={handleRedo}
                 disabled={!canRedo || isProcessing}
-                className={`p-2 rounded-lg border transition-all ${
-                  canRedo
+                className={`p-2 rounded-lg border transition-all ${canRedo
                     ? 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
                     : 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed'
-                }`}
+                  }`}
                 title="Redo"
               >
                 <RotateCw className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               </button>
             </>
           )}
-          
+
           {/* Preview */}
           <button
             onClick={() => handleGeneratePreview()}
@@ -271,7 +269,7 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
           >
             <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
-          
+
           {/* History */}
           {videoId && editHistory && (
             <div className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
@@ -311,11 +309,10 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
             <button
               key={tab.id}
               onClick={() => setActiveTab(isActive ? null : tab.id)}
-              className={`p-4 rounded-lg border-2 transition-all ${
-                isActive
+              className={`p-4 rounded-lg border-2 transition-all ${isActive
                   ? `border-${tab.color}-500 bg-${tab.color}-50 dark:bg-${tab.color}-900/20`
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               <Icon className={`w-6 h-6 mx-auto mb-2 text-${tab.color}-600 dark:text-${tab.color}-400`} />
               <div className={`text-sm font-medium text-${tab.color}-700 dark:text-${tab.color}-300`}>
@@ -330,13 +327,13 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
       {activeTab && (
         <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           {activeTab === 'color' && (
-        <ColorGradingTab 
-          onProcess={handleProcess} 
-          videoUrl={videoUrl} 
-          savedPresets={savedPresets.filter(p => p.category === 'color-grading')}
-          onSavePreset={loadPresets}
-        />
-      )}
+            <ColorGradingTab
+              onProcess={handleProcess}
+              videoUrl={videoUrl}
+              savedPresets={savedPresets.filter(p => p.category === 'color-grading')}
+              onSavePreset={loadPresets}
+            />
+          )}
           {activeTab === 'audio' && <AudioMixingTab onProcess={handleProcess} videoUrl={videoUrl} />}
           {activeTab === 'typography' && <TypographyTab onProcess={handleProcess} videoUrl={videoUrl} />}
           {activeTab === 'motion' && <MotionGraphicsTab onProcess={handleProcess} videoUrl={videoUrl} />}
@@ -369,13 +366,13 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
 }
 
 // Color Grading Tab
-function ColorGradingTab({ 
-  onProcess, 
-  videoUrl, 
+function ColorGradingTab({
+  onProcess,
+  videoUrl,
   savedPresets = [],
-  onSavePreset 
-}: { 
-  onProcess: any, 
+  onSavePreset
+}: {
+  onProcess: any,
   videoUrl?: string,
   savedPresets?: any[],
   onSavePreset?: () => void
@@ -457,8 +454,8 @@ function ColorGradingTab({
           onChange={(e) => setPreset(e.target.value)}
           className="w-full p-2 border rounded-lg bg-white dark:bg-gray-800"
         >
-          {presets.map(p => (
-            <option key={p} value={p}>{p.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+          {allPresets.map(p => (
+            <option key={p} value={p}>{String(p).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
           ))}
         </select>
       </div>
@@ -1158,10 +1155,10 @@ function MarketplaceTab({ onProcess }: { onProcess: any }) {
   const loadTemplates = async () => {
     try {
       const token = localStorage.getItem('token')
-      const url = category === 'all' 
+      const url = category === 'all'
         ? '/api/video/manual-editing/marketplace/browse'
         : `/api/video/manual-editing/marketplace/browse?category=${category}`
-      
+
       const response = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       })

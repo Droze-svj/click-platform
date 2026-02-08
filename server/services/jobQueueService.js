@@ -28,13 +28,13 @@ if (isProduction) {
 function getRedisConnection() {
   // In production/staging, ALWAYS require REDIS_URL (no fallbacks)
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  
+
   // Check if Redis is configured (validate non-empty strings)
   // IMPORTANT: Use process.env.REDIS_URL directly first to check raw value
   const rawRedisUrl = process.env.REDIS_URL;
   const redisUrl = rawRedisUrl?.trim();
   const redisHost = process.env.REDIS_HOST?.trim();
-  
+
   // Log what we found for debugging
   logger.info('🔍 getRedisConnection() called', {
     hasRedisUrl: !!redisUrl,
@@ -52,11 +52,11 @@ function getRedisConnection() {
     hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'")) : false,
     hasSpaces: rawRedisUrl ? rawRedisUrl.includes(' ') : false,
     cachedConnectionType: redisConnection ? typeof redisConnection : 'none',
-    cachedConnectionIsLocalhost: redisConnection && typeof redisConnection === 'object' 
+    cachedConnectionIsLocalhost: redisConnection && typeof redisConnection === 'object'
       ? (redisConnection.host === 'localhost' || redisConnection.host === '127.0.0.1')
       : false
   });
-  
+
   // In production/staging, REDIS_URL is REQUIRED
   if (isProduction) {
     if (!redisUrl || redisUrl === '') {
@@ -74,7 +74,7 @@ function getRedisConnection() {
       redisConnection = null;
       return null;
     }
-    
+
     // Validate URL format in production
     if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
       logger.error('⚠️ Invalid REDIS_URL format in production. Must start with redis:// or rediss://');
@@ -83,7 +83,7 @@ function getRedisConnection() {
       redisConnection = null;
       return null;
     }
-    
+
     // Reject localhost in production
     if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
       logger.error('⚠️ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.');
@@ -91,16 +91,16 @@ function getRedisConnection() {
       redisConnection = null;
       return null;
     }
-    
+
     // Return cached IORedis instance if valid
     if (redisIORedisInstance && redisIORedisInstance.status === 'ready') {
       logger.info('Using cached IORedis instance (production)');
       return redisIORedisInstance;
     }
-    
+
     // Cache the connection string
     redisConnection = redisUrl;
-    
+
     // CRITICAL: Create IORedis instance explicitly to prevent BullMQ from defaulting to localhost
     // BullMQ might create its own connection internally, so we create one explicitly and reuse it
     // Use lazyConnect: true to prevent blocking during server startup
@@ -108,7 +108,7 @@ function getRedisConnection() {
       logger.warn('⚠️ IORedis not available, using connection string instead');
       return redisConnection;
     }
-    
+
     try {
       console.log(`[getRedisConnection] Creating IORedis instance with URL: ${redisUrl.substring(0, 50)}...`);
       redisIORedisInstance = new IORedis(redisUrl, {
@@ -127,28 +127,28 @@ function getRedisConnection() {
         // Don't throw errors on connection failures - let BullMQ handle them
         enableOfflineQueue: false,
       });
-      
+
       // Log connection events for debugging (but don't block on them)
       redisIORedisInstance.on('connect', () => {
         console.log(`[getRedisConnection] IORedis instance connected`);
         logger.info('IORedis instance connected');
       });
-      
+
       redisIORedisInstance.on('error', (err) => {
         // Don't log as fatal - connection errors are expected during startup
         console.error(`[getRedisConnection] IORedis instance error:`, err.message);
         logger.warn('IORedis instance error (non-fatal)', { error: err.message });
       });
-      
+
       redisIORedisInstance.on('ready', () => {
         console.log(`[getRedisConnection] IORedis instance ready`);
         logger.info('IORedis instance ready');
       });
-      
-      logger.info('✅ Created IORedis instance for BullMQ (production)', { 
+
+      logger.info('✅ Created IORedis instance for BullMQ (production)', {
         url: redisUrl.replace(/:[^:@]+@/, ':****@')
       });
-      
+
       // Return IORedis instance instead of connection string
       // This ensures BullMQ uses our explicit connection
       return redisIORedisInstance;
@@ -161,7 +161,7 @@ function getRedisConnection() {
       return redisConnection;
     }
   }
-  
+
   // Development mode: Support both REDIS_URL and individual config
   if ((!redisUrl || redisUrl === '') && (!redisHost || redisHost === '')) {
     logger.warn('⚠️ Redis not configured for job queues. Workers will be disabled.');
@@ -179,22 +179,22 @@ function getRedisConnection() {
       redisConnection = null;
       return null;
     }
-    
+
     // Return cached IORedis instance if valid
     if (redisIORedisInstance && redisIORedisInstance.status === 'ready') {
       logger.info('Using cached IORedis instance (development)');
       return redisIORedisInstance;
     }
-    
+
     // Cache the connection string
     redisConnection = redisUrl;
-    
+
     // Create IORedis instance for development too
     if (!IORedis) {
       logger.warn('⚠️ IORedis not available, using connection string instead');
       return redisConnection;
     }
-    
+
     try {
       redisIORedisInstance = new IORedis(redisUrl, {
         maxRetriesPerRequest: null,
@@ -203,7 +203,7 @@ function getRedisConnection() {
         connectTimeout: 10000,
         enableOfflineQueue: false,
       });
-      logger.info('✅ Created IORedis instance for BullMQ (development)', { 
+      logger.info('✅ Created IORedis instance for BullMQ (development)', {
         url: redisUrl.replace(/:[^:@]+@/, ':****@')
       });
       return redisIORedisInstance;
@@ -222,16 +222,16 @@ function getRedisConnection() {
     redisConnection = null;
     return null;
   }
-  
+
   logger.warn('⚠️ Using individual Redis config for job queue connection (development only)');
   logger.warn('⚠️ This should NOT happen in production!');
-  
+
   // Return cached if same config
-  if (redisConnection !== null && typeof redisConnection === 'object' && 
-      redisConnection.host === (redisHost || 'localhost')) {
+  if (redisConnection !== null && typeof redisConnection === 'object' &&
+    redisConnection.host === (redisHost || 'localhost')) {
     return redisConnection;
   }
-  
+
   redisConnection = {
     host: redisHost || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
@@ -344,16 +344,16 @@ function createWorker(queueName, processor, options = {}) {
     redisUrlLength: process.env.REDIS_URL?.length || 0,
     redisUrlFirst30: process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 30) : 'NONE'
   });
-  
+
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  
+
   // CRITICAL: In production, validate REDIS_URL BEFORE calling getRedisConnection()
   // This prevents any possibility of a cached localhost connection being returned
   if (isProduction) {
     console.log(`[createWorker] Production mode - validating REDIS_URL for ${queueName}`);
     const rawRedisUrl = process.env.REDIS_URL;
     const redisUrl = rawRedisUrl?.trim();
-    
+
     logger.info(`🔍 Pre-validation for ${queueName}`, {
       hasRawRedisUrl: !!rawRedisUrl,
       rawRedisUrlLength: rawRedisUrl?.length || 0,
@@ -362,37 +362,37 @@ function createWorker(queueName, processor, options = {}) {
       rawRedisUrlFirstChars: rawRedisUrl ? rawRedisUrl.substring(0, 20) : 'none',
       trimmedRedisUrlFirstChars: redisUrl ? redisUrl.substring(0, 20) : 'none'
     });
-    
+
     if (!redisUrl || redisUrl === '') {
       logger.error(`❌ FATAL: REDIS_URL is missing or empty. Cannot create worker ${queueName}.`);
       logger.error(`❌ Raw REDIS_URL exists: ${!!rawRedisUrl}, length: ${rawRedisUrl?.length || 0}`);
       logger.error(`❌ Trimmed REDIS_URL exists: ${!!redisUrl}, length: ${redisUrl?.length || 0}`);
       return null;
     }
-    
+
     if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
       logger.error(`❌ FATAL: REDIS_URL format invalid for ${queueName}. Must start with redis:// or rediss://`);
       logger.error(`❌ REDIS_URL received: ${redisUrl.substring(0, 50)}`);
       return null;
     }
-    
+
     if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
       logger.error(`❌ FATAL: REDIS_URL contains localhost for ${queueName}. Cannot create worker.`);
       logger.error(`❌ REDIS_URL: ${redisUrl.substring(0, 50)}`);
       return null;
     }
   }
-  
+
   // Get Redis connection (will return null if not configured)
   const connection = getRedisConnection();
-  
+
   // Skip worker creation if Redis is not configured
   if (!connection) {
     logger.warn(`⚠️ Skipping worker creation for ${queueName} - Redis not configured`);
     logger.warn(`⚠️ getRedisConnection() returned null for ${queueName}`);
     return null;
   }
-  
+
   // CRITICAL: Additional safety checks before creating worker
   // Note: isProduction is already declared at the top of this function
   if (isProduction) {
@@ -415,7 +415,7 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 30)}`);
         return null;
       }
-      
+
       // Must NOT contain localhost or 127.0.0.1
       if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
         logger.error(`⚠️ Rejecting localhost connection for ${queueName} in production`);
@@ -432,32 +432,32 @@ function createWorker(queueName, processor, options = {}) {
     if (typeof connection === 'object' && connection.host === 'localhost') {
       logger.warn(`⚠️ Using localhost connection for ${queueName} (development only)`);
     }
-    
+
     if (typeof connection === 'string' && !connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
       logger.error(`⚠️ Invalid Redis connection string format for ${queueName}`);
       logger.error(`⚠️ Connection string prefix: ${connection.substring(0, 20)}`);
       return null;
     }
   }
-  
+
   // Final validation: Ensure connection is valid before creating Worker
   if (!connection) {
     logger.error(`❌ Cannot create worker ${queueName}: connection is null/undefined`);
     return null;
   }
-  
+
   // In production, connection can be IORedis instance or string URL
   if (isProduction) {
     const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
     const isString = typeof connection === 'string';
-    
+
     if (!isIORedis && !isString) {
       logger.error(`❌ Cannot create worker ${queueName}: connection is not IORedis instance or string in production`);
       logger.error(`❌ Connection type: ${typeof connection}, is IORedis: ${isIORedis}`);
       return null;
     }
   }
-  
+
   logger.info(`✅ Creating worker for ${queueName} with valid Redis connection`);
 
   if (workers[queueName]) {
@@ -469,24 +469,24 @@ function createWorker(queueName, processor, options = {}) {
     // ABSOLUTE FINAL CHECK: Ensure connection is valid before passing to BullMQ
     // BullMQ will default to localhost if connection is undefined/null/invalid
     // This check happens BEFORE any Worker creation to prevent localhost connections
-    
+
     // Log what we're about to check
     logger.info(`🔍 Final validation for ${queueName}`, {
       hasConnection: !!connection,
       connectionType: typeof connection,
       isProduction,
-      connectionPreview: typeof connection === 'string' 
-        ? connection.substring(0, 50) 
+      connectionPreview: typeof connection === 'string'
+        ? connection.substring(0, 50)
         : (connection ? JSON.stringify(connection).substring(0, 50) : 'null')
     });
-    
+
     if (!connection) {
       logger.error(`❌ FATAL: Connection is null/undefined when creating Worker for ${queueName}`);
       logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
       logger.error(`❌ This should never happen. Check REDIS_URL in Render.com environment variables.`);
       return null;
     }
-    
+
     // Check for localhost connection object (development fallback that shouldn't happen in production)
     if (typeof connection === 'object') {
       if (connection.host === 'localhost' || connection.host === '127.0.0.1') {
@@ -499,7 +499,7 @@ function createWorker(queueName, processor, options = {}) {
         }
       }
     }
-    
+
     // In production, connection MUST be a valid Redis URL string
     if (isProduction) {
       if (typeof connection !== 'string') {
@@ -509,7 +509,7 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(`❌ Check REDIS_URL in Render.com - it must be a valid Redis URL string.`);
         return null;
       }
-      
+
       if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
         logger.error(`❌ FATAL: Invalid connection format for ${queueName} in production`);
         logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
@@ -517,7 +517,7 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
         return null;
       }
-      
+
       if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
         logger.error(`❌ FATAL: Connection contains localhost for ${queueName} in production`);
         logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
@@ -526,13 +526,13 @@ function createWorker(queueName, processor, options = {}) {
         return null;
       }
     }
-    
+
     // Log the exact connection being used (hide password)
-    const safeConnectionLog = typeof connection === 'string' 
+    const safeConnectionLog = typeof connection === 'string'
       ? connection.replace(/:[^:@]+@/, ':****@')
       : `{ host: ${connection.host}, port: ${connection.port} }`;
     logger.info(`✅ All validation passed. Creating Worker ${queueName} with: ${safeConnectionLog}`);
-    
+
     // CRITICAL: One final check - BullMQ will default to localhost if connection is undefined
     // Even though we've validated above, double-check right before creating Worker
     if (!connection || connection === undefined || connection === null) {
@@ -540,7 +540,7 @@ function createWorker(queueName, processor, options = {}) {
       logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
       return null;
     }
-    
+
     // In production, ensure connection is a valid string URL
     if (isProduction && typeof connection !== 'string') {
       logger.error(`❌ FATAL: Connection is not a string in production for ${queueName}`);
@@ -548,7 +548,7 @@ function createWorker(queueName, processor, options = {}) {
       logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
       return null;
     }
-    
+
     // Final check: ensure connection doesn't contain localhost
     const connectionString = typeof connection === 'string' ? connection : JSON.stringify(connection);
     if (connectionString.includes('127.0.0.1') || connectionString.includes('localhost')) {
@@ -557,9 +557,9 @@ function createWorker(queueName, processor, options = {}) {
       logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
       return null;
     }
-    
+
     logger.info(`✅ Final validation passed. Creating Worker ${queueName}...`);
-    
+
     // ABSOLUTE FINAL CHECK: Log exactly what we're passing to BullMQ
     console.log(`[${queueName}] About to create Worker with connection type: ${typeof connection}`);
     console.log(`[${queueName}] Connection preview: ${typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50)}`);
@@ -568,7 +568,7 @@ function createWorker(queueName, processor, options = {}) {
       connectionPreview: typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50),
       connectionLength: typeof connection === 'string' ? connection.length : 0
     });
-    
+
     // CRITICAL: Throw error if connection is invalid - this will prevent Worker creation entirely
     if (connection === undefined || connection === null) {
       const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is ${connection}. BullMQ would default to localhost.`);
@@ -576,19 +576,19 @@ function createWorker(queueName, processor, options = {}) {
       logger.error(error.message, { queueName, connection });
       throw error; // Throw instead of return - this will prevent Worker creation
     }
-    
+
     // In production, connection can be IORedis instance or string
     if (isProduction) {
       const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
       const isString = typeof connection === 'string';
-      
+
       if (!isIORedis && !isString) {
         const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is not IORedis instance or string in production. Type: ${typeof connection}`);
         console.error(`[${queueName}] ${error.message}`);
         logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
         throw error;
       }
-      
+
       // If it's a string, check for localhost
       if (isString && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
         const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection string contains localhost: ${connection.substring(0, 100)}`);
@@ -596,7 +596,7 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(error.message, { queueName, connection: connection.substring(0, 100) });
         throw error;
       }
-      
+
       // If it's an IORedis instance, check its options
       if (isIORedis) {
         const options = connection.options || {};
@@ -609,9 +609,9 @@ function createWorker(queueName, processor, options = {}) {
         }
       }
     }
-    
+
     logger.info(`✅ All checks passed. Creating Worker ${queueName} with valid connection.`);
-    
+
     // ABSOLUTE FINAL CHECK: Verify connection one more time right before Worker creation
     // This prevents any possibility of connection being undefined when passed to BullMQ
     if (!connection || connection === undefined || connection === null) {
@@ -620,7 +620,7 @@ function createWorker(queueName, processor, options = {}) {
       logger.error(error.message, { queueName, connection });
       throw error;
     }
-    
+
     // CRITICAL: Double-check that connection is not a localhost object
     if (typeof connection === 'object' && (connection.host === 'localhost' || connection.host === '127.0.0.1')) {
       const error = new Error(`FATAL: Connection object contains localhost for ${queueName} right before Worker creation. This should never happen in production.`);
@@ -628,10 +628,10 @@ function createWorker(queueName, processor, options = {}) {
       logger.error(error.message, { queueName, connection });
       throw error;
     }
-    
+
     // Log the exact connection being passed to BullMQ
-    const finalConnectionLog = typeof connection === 'string' 
-      ? connection.substring(0, 50) 
+    const finalConnectionLog = typeof connection === 'string'
+      ? connection.substring(0, 50)
       : JSON.stringify(connection).substring(0, 50);
     console.log(`[${queueName}] FINAL: Creating Worker with connection: ${finalConnectionLog}`);
     logger.info(`[${queueName}] FINAL: Creating Worker`, {
@@ -639,183 +639,183 @@ function createWorker(queueName, processor, options = {}) {
       connectionPreview: finalConnectionLog,
       connectionLength: typeof connection === 'string' ? connection.length : 0
     });
-    
+
     let worker;
     try {
       worker = new Worker(
-      queueName,
-      async (job) => {
-        logger.info('Processing job', {
-          queue: queueName,
-          jobId: job.id,
-          attempt: job.attemptsMade + 1,
-        });
+        queueName,
+        async (job) => {
+          logger.info('Processing job', {
+            queue: queueName,
+            jobId: job.id,
+            attempt: job.attemptsMade + 1,
+          });
 
-        try {
-          const result = await processor(job.data, job);
-          logger.info('Job processed successfully', {
-            queue: queueName,
-            jobId: job.id,
-          });
-          return result;
-        } catch (error) {
-          logger.error('Job processing error', {
-            queue: queueName,
-            jobId: job.id,
-            error: error.message,
-          });
-          throw error;
-        }
-      },
-      {
-        // CRITICAL: Ensure connection is explicitly set - never pass undefined
-        // BullMQ defaults to localhost if connection is undefined
-        connection: (() => {
-          if (!connection || connection === undefined || connection === null) {
-            const error = new Error(`FATAL: Connection is ${connection} when passing to BullMQ Worker constructor for ${queueName}`);
-            console.error(`[${queueName}] ${error.message}`);
-            logger.error(error.message, { queueName, connection });
+          try {
+            const result = await processor(job.data, job);
+            logger.info('Job processed successfully', {
+              queue: queueName,
+              jobId: job.id,
+            });
+            return result;
+          } catch (error) {
+            logger.error('Job processing error', {
+              queue: queueName,
+              jobId: job.id,
+              error: error.message,
+            });
             throw error;
           }
-          
-          // Check if it's an IORedis instance
-          const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
-          const isString = typeof connection === 'string';
-          
-          // In production, connection can be IORedis instance or string
-          if (isProduction) {
-            if (!isIORedis && !isString) {
-              const error = new Error(`FATAL: Connection is not IORedis instance or string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
+        },
+        {
+          // CRITICAL: Ensure connection is explicitly set - never pass undefined
+          // BullMQ defaults to localhost if connection is undefined
+          connection: (() => {
+            if (!connection || connection === undefined || connection === null) {
+              const error = new Error(`FATAL: Connection is ${connection} when passing to BullMQ Worker constructor for ${queueName}`);
               console.error(`[${queueName}] ${error.message}`);
-              logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
+              logger.error(error.message, { queueName, connection });
               throw error;
             }
-            
-            // If it's a string, check for localhost
-            if (isString && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
-              const error = new Error(`FATAL: Connection string contains localhost when passing to BullMQ for ${queueName}: ${connection.substring(0, 100)}`);
-              console.error(`[${queueName}] ${error.message}`);
-              logger.error(error.message, { queueName, connection: connection.substring(0, 100) });
-              throw error;
-            }
-            
-            // If it's an IORedis instance, check its options
-            if (isIORedis) {
-              const options = connection.options || {};
-              const host = options.host || options.hostname;
-              if (host === 'localhost' || host === '127.0.0.1') {
-                const error = new Error(`FATAL: IORedis instance has localhost host when passing to BullMQ for ${queueName}: ${host}`);
+
+            // Check if it's an IORedis instance
+            const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+            const isString = typeof connection === 'string';
+
+            // In production, connection can be IORedis instance or string
+            if (isProduction) {
+              if (!isIORedis && !isString) {
+                const error = new Error(`FATAL: Connection is not IORedis instance or string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
                 console.error(`[${queueName}] ${error.message}`);
-                logger.error(error.message, { queueName, host });
+                logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
                 throw error;
               }
+
+              // If it's a string, check for localhost
+              if (isString && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
+                const error = new Error(`FATAL: Connection string contains localhost when passing to BullMQ for ${queueName}: ${connection.substring(0, 100)}`);
+                console.error(`[${queueName}] ${error.message}`);
+                logger.error(error.message, { queueName, connection: connection.substring(0, 100) });
+                throw error;
+              }
+
+              // If it's an IORedis instance, check its options
+              if (isIORedis) {
+                const options = connection.options || {};
+                const host = options.host || options.hostname;
+                if (host === 'localhost' || host === '127.0.0.1') {
+                  const error = new Error(`FATAL: IORedis instance has localhost host when passing to BullMQ for ${queueName}: ${host}`);
+                  console.error(`[${queueName}] ${error.message}`);
+                  logger.error(error.message, { queueName, host });
+                  throw error;
+                }
+              }
             }
-          }
-          
-          console.log(`[${queueName}] Passing ${isIORedis ? 'IORedis instance' : 'connection string'} to BullMQ Worker`);
-          return connection;
-        })(),
-        concurrency: options.concurrency || 1,
-        limiter: options.limiter,
-        ...options,
-      }
-    );
+
+            console.log(`[${queueName}] Passing ${isIORedis ? 'IORedis instance' : 'connection string'} to BullMQ Worker`);
+            return connection;
+          })(),
+          concurrency: options.concurrency || 1,
+          limiter: options.limiter,
+          ...options,
+        }
+      );
     } catch (workerError) {
       console.error(`[${queueName}] ERROR creating Worker:`, workerError.message);
-      logger.error(`Failed to create Worker ${queueName}`, { 
-        error: workerError.message, 
+      logger.error(`Failed to create Worker ${queueName}`, {
+        error: workerError.message,
         stack: workerError.stack,
         connectionType: typeof connection,
         connectionPreview: typeof connection === 'string' ? connection.substring(0, 50) : JSON.stringify(connection).substring(0, 50)
       });
       throw workerError; // Re-throw to prevent worker creation
     }
-  
-  // Log immediately after Worker creation to see what connection was passed - use both console.log and logger
-  const workerLogMsg = `[createWorker] Worker created for ${queueName}`;
-  console.log(workerLogMsg);
-  logger.info(workerLogMsg, {
-    queueName,
-    connectionType: typeof connection,
-    connectionPreview: typeof connection === 'string' 
-      ? connection.substring(0, 50) 
-      : (connection ? JSON.stringify(connection).substring(0, 100) : 'null/undefined'),
-    connectionLength: typeof connection === 'string' ? connection.length : 0,
-    containsLocalhost: typeof connection === 'string' 
-      ? (connection.includes('localhost') || connection.includes('127.0.0.1'))
-      : false
-  });
-  
-  if (!connection || connection === undefined || connection === null) {
-    const fatalMsg = `[createWorker] FATAL: Connection is ${connection} - BullMQ will default to localhost!`;
-    console.error(fatalMsg);
-    logger.error(fatalMsg, { queueName, connection });
-  }
+
+    // Log immediately after Worker creation to see what connection was passed - use both console.log and logger
+    const workerLogMsg = `[createWorker] Worker created for ${queueName}`;
+    console.log(workerLogMsg);
+    logger.info(workerLogMsg, {
+      queueName,
+      connectionType: typeof connection,
+      connectionPreview: typeof connection === 'string'
+        ? connection.substring(0, 50)
+        : (connection ? JSON.stringify(connection).substring(0, 100) : 'null/undefined'),
+      connectionLength: typeof connection === 'string' ? connection.length : 0,
+      containsLocalhost: typeof connection === 'string'
+        ? (connection.includes('localhost') || connection.includes('127.0.0.1'))
+        : false
+    });
+
+    if (!connection || connection === undefined || connection === null) {
+      const fatalMsg = `[createWorker] FATAL: Connection is ${connection} - BullMQ will default to localhost!`;
+      console.error(fatalMsg);
+      logger.error(fatalMsg, { queueName, connection });
+    }
 
     worker.on('completed', async (job) => {
-    const duration = job.finishedOn - job.processedOn;
-    
-    logger.info('Worker completed job', {
-      queue: queueName,
-      jobId: job.id,
-      duration,
-    });
+      const duration = job.finishedOn - job.processedOn;
 
-    // Track metrics
-    try {
-      const { trackJobMetrics, calculateJobCost } = require('./jobMetricsService');
-      const processMemoryUsage = process.memoryUsage();
-      
-      await trackJobMetrics(queueName, job.id, {
+      logger.info('Worker completed job', {
+        queue: queueName,
+        jobId: job.id,
         duration,
-        memoryUsage: processMemoryUsage.heapUsed,
-        cpuUsage: 0, // Would need additional monitoring
-        cost: calculateJobCost(queueName, duration, processMemoryUsage.heapUsed),
-        success: true,
-        retries: job.attemptsMade,
       });
-    } catch (error) {
-      logger.warn('Failed to track job metrics', { error: error.message });
-    }
 
-    // Process job dependencies
-    try {
-      const { processJobDependencies } = require('./jobDependencyService');
-      await processJobDependencies(job.id, queueName);
-    } catch (error) {
-      logger.warn('Failed to process job dependencies', { error: error.message });
-    }
-  });
+      // Track metrics
+      try {
+        const { trackJobMetrics, calculateJobCost } = require('./jobMetricsService');
+        const processMemoryUsage = process.memoryUsage();
 
-  worker.on('failed', async (job, err) => {
-    logger.error('Worker failed job', {
-      queue: queueName,
-      jobId: job?.id,
-      error: err.message,
-      attempts: job?.attemptsMade,
+        await trackJobMetrics(queueName, job.id, {
+          duration,
+          memoryUsage: processMemoryUsage.heapUsed,
+          cpuUsage: 0, // Would need additional monitoring
+          cost: calculateJobCost(queueName, duration, processMemoryUsage.heapUsed),
+          success: true,
+          retries: job.attemptsMade,
+        });
+      } catch (error) {
+        logger.warn('Failed to track job metrics', { error: error.message });
+      }
+
+      // Process job dependencies
+      try {
+        const { processJobDependencies } = require('./jobDependencyService');
+        await processJobDependencies(job.id, queueName);
+      } catch (error) {
+        logger.warn('Failed to process job dependencies', { error: error.message });
+      }
     });
 
-    // Move to dead letter queue if max attempts reached
-    if (job && job.attemptsMade >= (job.opts?.attempts || 3)) {
-      try {
-        const { moveToDeadLetter } = require('./jobDeadLetterService');
-        await moveToDeadLetter(queueName, job.id, err.message);
-      } catch (error) {
-        logger.error('Failed to move job to dead letter queue', {
-          jobId: job.id,
-          error: error.message,
-        });
-      }
-    }
+    worker.on('failed', async (job, err) => {
+      logger.error('Worker failed job', {
+        queue: queueName,
+        jobId: job?.id,
+        error: err.message,
+        attempts: job?.attemptsMade,
+      });
 
-    // Process job dependencies even on failure (optional)
-    try {
-      const { processJobDependencies } = require('./jobDependencyService');
-      await processJobDependencies(job.id, queueName);
-    } catch (error) {
-      // Ignore dependency processing errors
-    }
-  });
+      // Move to dead letter queue if max attempts reached
+      if (job && job.attemptsMade >= (job.opts?.attempts || 3)) {
+        try {
+          const { moveToDeadLetter } = require('./jobDeadLetterService');
+          await moveToDeadLetter(queueName, job.id, err.message);
+        } catch (error) {
+          logger.error('Failed to move job to dead letter queue', {
+            jobId: job.id,
+            error: error.message,
+          });
+        }
+      }
+
+      // Process job dependencies even on failure (optional)
+      try {
+        const { processJobDependencies } = require('./jobDependencyService');
+        await processJobDependencies(job.id, queueName);
+      } catch (error) {
+        // Ignore dependency processing errors
+      }
+    });
 
     worker.on('error', (err) => {
       // Check if error is due to localhost connection in production
@@ -824,18 +824,18 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(`❌ This should never happen. REDIS_URL must be set in Render.com.`);
         logger.error(`❌ Error: ${err.message}`);
         logger.error(`❌ Closing worker to prevent further localhost connection attempts.`);
-        worker.close().catch(() => {});
+        worker.close().catch(() => { });
         delete workers[queueName];
         return;
       }
-      
+
       logger.error('Worker error', { queue: queueName, error: err.message });
       captureException(err, { tags: { queue: queueName, type: 'worker_error' } });
     });
 
     workers[queueName] = worker;
     logger.info(`Worker created for queue: ${queueName}`);
-    
+
     return worker;
   } catch (error) {
     logger.error(`Failed to create worker for ${queueName}`, { error: error.message });
@@ -999,7 +999,7 @@ async function getJobProgress(queueName, jobId) {
   try {
     const queue = getQueue(queueName);
     const job = await queue.getJob(jobId);
-    
+
     if (!job) {
       throw new Error(`Job ${jobId} not found`);
     }

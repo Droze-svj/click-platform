@@ -23,13 +23,13 @@ router.get('/challenges', auth, asyncHandler(async (req, res) => {
     if (!userId) {
       return sendSuccess(res, 'Challenges fetched', 200, []);
     }
-    
+
     // Check both host header and x-forwarded-host (for proxy requests)
     const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
                         (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
     const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -105,7 +105,7 @@ router.get('/challenges', auth, asyncHandler(async (req, res) => {
 
     sendSuccess(res, 'Challenges fetched', 200, challenges);
   } catch (error) {
-    logger.error('Error fetching challenges', { error: error.message, userId: req.user._id });
+    logger.error('Error fetching challenges', { error: error.message, userId: req.user?._id || req.user?.id });
     sendSuccess(res, 'Challenges fetched', 200, []);
   }
 }));
@@ -123,24 +123,24 @@ router.get('/activities', auth, asyncHandler(async (req, res) => {
   try {
     const { limit = 20 } = req.query;
     const userId = req.user?._id || req.user?.id;
-    
+
     if (!userId) {
       return sendSuccess(res, 'Activities fetched', 200, { activities: [] });
     }
-    
+
     // Check both host header and x-forwarded-host (for proxy requests)
     const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
                         (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
     const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-    
+
     // In development mode OR when on localhost, return empty array for dev users
     if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
       return sendSuccess(res, 'Activities fetched', 200, { activities: [] });
     }
-    
+
     const Activity = require('../models/Activity');
-    
+
     let activities = [];
     try {
       activities = await Activity.find({ userId })

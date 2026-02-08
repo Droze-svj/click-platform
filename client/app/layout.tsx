@@ -1,6 +1,5 @@
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 
 import ErrorBoundary from '../components/ErrorBoundary'
 import OfflineIndicator from '../components/OfflineIndicator'
@@ -36,7 +35,8 @@ import '../utils/networkDebugger' // Initialize network debugging
 import '../utils/analytics' // Initialize analytics
 import '../utils/rum' // Initialize RUM monitoring
 
-const inter = Inter({ subsets: ['latin'] })
+// Use CSS font (see globals.css) instead of next/font to avoid ETIMEDOUT on iCloud Drive
+const fontClassName = 'font-app-sans'
 
 export const metadata: Metadata = {
   title: 'Click — AI‑Powered Content Creation',
@@ -76,6 +76,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: '#667eea',
+  viewportFit: 'cover', /* Enables safe-area-inset for notches/home indicator */
 }
 
 export default function RootLayout({
@@ -85,7 +86,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={fontClassName}>
         <ErrorBoundary>
           <PreferencesProvider>
             <TranslationProvider>

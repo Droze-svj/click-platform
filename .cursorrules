@@ -1,0 +1,34 @@
+# Click Platform - Cursor AI Rules
+
+## Project Structure
+
+- `client/` - Next.js 14 frontend (React, TypeScript, Tailwind)
+- `server/` - Express backend (Node.js, Mongoose)
+- `prisma/` - Database schema
+
+## Code Style
+
+- Use 2 spaces for indentation
+- Prefer const/let over var
+- Use async/await over callbacks
+- Follow existing patterns in the file you're editing
+
+## Key Files
+
+- ROADMAP_STATUS.md - Current work status, next stages
+- ROADMAP_WORKFLOW_GUIDE.md - Collaboration workflow
+- COLLABORATION_GUIDE.md - Git + PR workflow
+
+## Conventions
+
+- API routes: server/routes/
+- Services: server/services/
+- React components: client/components/
+- Use client/lib/api.ts for API calls
+- Check server/middleware/auth.js for auth patterns
+
+## When Making Changes
+
+- Create feature branches, not direct commits to main
+- One logical change per PR
+- Update ROADMAP_STATUS.md when completing roadmap items

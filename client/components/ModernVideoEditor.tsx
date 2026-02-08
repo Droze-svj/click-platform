@@ -44,7 +44,12 @@ import SchedulingView from './editor/views/SchedulingView'
 import AchievementSystem from './AchievementSystem'
 import { useVideoEditorAutosave } from '../hooks/useVideoEditorAutosave'
 import { useToast } from '../contexts/ToastContext'
-import { VideoFilter, TextOverlay, TimelineSegment, EditorCategory, CaptionStyle, TemplateLayout, TEMPLATE_LAYOUTS } from '../types/editor'
+import { VideoFilter, TextOverlay, TimelineSegment, TimelineEffect, EditorCategory, CaptionStyle, TemplateLayout, TEMPLATE_LAYOUTS, ShapeOverlay, ImageOverlay, GradientOverlay } from '../types/editor'
+
+const NEUTRAL_FILTER: VideoFilter = {
+  brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sepia: 0, vignette: 0, sharpen: 0,
+  noise: 0, temperature: 100, tint: 0, highlights: 0, shadows: 0, clarity: 0, dehaze: 0, vibrance: 100
+}
 import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 
 const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; videoId?: string }> = ({ videoUrl, videoPath, videoId }) => {
@@ -65,7 +70,35 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
 
-  // Shortcuts Hub
+  // Clinical State Management
+  const [videoFilters, setVideoFilters] = useState<VideoFilter>({
+    brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sepia: 0, vignette: 0, sharpen: 0,
+    noise: 0, temperature: 100, tint: 0, highlights: 0, shadows: 0, clarity: 0, dehaze: 0, vibrance: 100
+  })
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
+  const [shapeOverlays, setShapeOverlays] = useState<ShapeOverlay[]>([])
+  const [imageOverlays, setImageOverlays] = useState<ImageOverlay[]>([])
+  const [gradientOverlays, setGradientOverlays] = useState<GradientOverlay[]>([])
+  const [timelineSegments, setTimelineSegments] = useState<TimelineSegment[]>([])
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null)
+  const [timelineEffects, setTimelineEffects] = useState<TimelineEffect[]>([])
+  const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null)
+  const [colorGradeSettings, setColorGradeSettings] = useState<any>({})
+  const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>({
+    enabled: false,
+    size: 'medium',
+    font: 'Inter, sans-serif',
+    layout: 'bottom-center',
+    textStyle: 'default'
+  })
+  const [templateLayout, setTemplateLayout] = useState<TemplateLayout>('standard')
+  const [videoState, setVideoState] = useState({ currentTime: 0, duration: 0, isPlaying: false, volume: 1, isMuted: false })
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [filterStrength, setFilterStrength] = useState(100)
+  const [showBeforeAfter, setShowBeforeAfter] = useState(true)
+  const [compareMode, setCompareMode] = useState<'after' | 'before' | 'split'>('after')
+
+  // Shortcuts Hub (after all state used in handlers)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -79,29 +112,27 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       if (e.key === '?') {
         setShowKeyboardHelp(prev => !prev)
       }
+      if (activeCategory === 'edit') {
+        if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+          e.preventDefault()
+          setVideoFilters(NEUTRAL_FILTER)
+          setFilterStrength(100)
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
+          e.preventDefault()
+          const idx = TEMPLATE_LAYOUTS.findIndex((l) => l.id === templateLayout)
+          if (idx > 0) setTemplateLayout(TEMPLATE_LAYOUTS[idx - 1].id)
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
+          e.preventDefault()
+          const nextIdx = TEMPLATE_LAYOUTS.findIndex((l) => l.id === templateLayout)
+          if (nextIdx >= 0 && nextIdx < TEMPLATE_LAYOUTS.length - 1) setTemplateLayout(TEMPLATE_LAYOUTS[nextIdx + 1].id)
+        }
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
-
-  // Clinical State Management
-  const [videoFilters, setVideoFilters] = useState<VideoFilter>({
-    brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sepia: 0, vignette: 0, sharpen: 0,
-    noise: 0, temperature: 100, tint: 0, highlights: 0, shadows: 0, clarity: 0, dehaze: 0, vibrance: 100
-  })
-  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
-  const [timelineSegments, setTimelineSegments] = useState<TimelineSegment[]>([])
-  const [colorGradeSettings, setColorGradeSettings] = useState<any>({})
-  const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>({
-    enabled: false,
-    size: 'medium',
-    font: 'Inter, sans-serif',
-    layout: 'bottom-center',
-    textStyle: 'default'
-  })
-  const [templateLayout, setTemplateLayout] = useState<TemplateLayout>('standard')
-  const [videoState, setVideoState] = useState({ currentTime: 0, duration: 0, isPlaying: false, volume: 1, isMuted: false })
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  }, [activeCategory, templateLayout])
 
   // AI Feature State
   const [isTranscribing, setIsTranscribing] = useState(false)
@@ -121,10 +152,26 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [historyIndex, setHistoryIndex] = useState(0)
   const isUndoRedoRef = useRef(false)
 
+  const neutralFilter: VideoFilter = useMemo(() => ({
+    brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sepia: 0, vignette: 0, sharpen: 0,
+    noise: 0, temperature: 100, tint: 0, highlights: 0, shadows: 0, clarity: 0, dehaze: 0, vibrance: 100
+  }), [])
+
+  const effectiveFilters: VideoFilter = useMemo(() => {
+    const s = filterStrength / 100
+    const out = { ...videoFilters }
+      ; (Object.keys(neutralFilter) as (keyof VideoFilter)[]).forEach((k) => {
+        const n = neutralFilter[k] as number
+        const v = videoFilters[k] as number
+        if (typeof n === 'number' && typeof v === 'number') (out as any)[k] = Math.round(n + (v - n) * s)
+      })
+    return out
+  }, [videoFilters, filterStrength, neutralFilter])
+
   const editorState: any = useMemo(() => ({
     videoFilters, textOverlays, timelineSegments, colorGradeSettings, captionStyle, templateLayout,
-    playbackSpeed: 1, filterIntensity: 100, showBeforeAfter: false, projectName, videoId: videoId || 'temp-id'
-  }), [videoFilters, textOverlays, timelineSegments, colorGradeSettings, captionStyle, templateLayout, projectName, videoId])
+    playbackSpeed: 1, filterStrength, showBeforeAfter, projectName, videoId: videoId || 'temp-id'
+  }), [videoFilters, textOverlays, timelineSegments, colorGradeSettings, captionStyle, templateLayout, filterStrength, showBeforeAfter, projectName, videoId])
 
   const { autosaveStatus, loadSavedState, getStatusIcon, retrySave, manualSave } = useVideoEditorAutosave({
     state: editorState,
@@ -203,16 +250,16 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
   const getCategoryContent = () => {
     switch (activeCategory) {
-      case 'ai-edit': return <EliteAIView videoId={videoId || ''} isTranscribing={isTranscribing} setIsTranscribing={setIsTranscribing} transcript={transcript} setTranscript={setTranscript} editingWords={editingWords} setEditingWords={setEditingWords} aiSuggestions={aiSuggestions} setTimelineSegments={setTimelineSegments} showToast={showToast} />
-      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} setTextOverlays={setTextOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} />
+      case 'ai-edit': return <EliteAIView videoId={videoId || ''} isTranscribing={isTranscribing} setIsTranscribing={setIsTranscribing} transcript={transcript} setTranscript={setTranscript} editingWords={editingWords} setEditingWords={setEditingWords} aiSuggestions={aiSuggestions} setTimelineSegments={setTimelineSegments} showToast={showToast} setActiveCategory={setActiveCategory} setTextOverlays={setTextOverlays} />
+      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} />
       case 'growth': return <GrowthInsightsView isOledTheme={preferences.isOledTheme} />
       case 'automate': return <AutomateView voiceoverText={voiceoverText} setVoiceoverText={setVoiceoverText} selectedVoice={selectedVoice} setSelectedVoice={setSelectedVoice} isGeneratingVoiceover={isGeneratingVoiceover} setIsGeneratingVoiceover={setIsGeneratingVoiceover} videoId={videoId || ''} showToast={showToast} />
       case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} />
-      case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={showAiPreviews} showToast={showToast} />
+      case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} selectedSegmentId={selectedSegmentId} onSegmentSelect={setSelectedSegmentId} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={showAiPreviews} showToast={showToast} />
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
-      case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} />
-      case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} videoFilters={videoFilters} showToast={showToast} />
+      case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} />
+      case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} timelineSegments={timelineSegments} videoFilters={videoFilters} showToast={showToast} />
       case 'scripts': return <ScriptGeneratorView showToast={showToast} />
       case 'scheduling': return <SchedulingView showToast={showToast} />
       case 'intelligence':
@@ -295,7 +342,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               {/* Content Panel - Improved flex behavior */}
               <div className={`flex-1 flex flex-col transition-all duration-500 overflow-hidden min-w-0 ${contentPanelCollapsed ? 'flex-[0.0001] opacity-0' : 'flex-1'}`}>
                 <div className="flex-1 bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700/50 overflow-hidden flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-4 lg:p-6 custom-scrollbar">
+                  <div className="editor-auto flex-1 overflow-y-auto p-4 lg:p-6 custom-scrollbar min-w-0">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={activeCategory}
@@ -321,20 +368,26 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   volume={videoState.volume}
                   isMuted={videoState.isMuted}
                   playbackSpeed={playbackSpeed}
-                  filters={videoFilters}
+                  filters={effectiveFilters}
                   textOverlays={textOverlays}
+                  shapeOverlays={shapeOverlays}
+                  imageOverlays={imageOverlays}
+                  gradientOverlays={gradientOverlays}
                   editingWords={editingWords}
                   captionStyle={captionStyle}
                   templateLayout={templateLayout}
                   onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
                   onDurationChange={(d: number) => setVideoState(prev => ({ ...prev, duration: d }))}
                   onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
+                  showBeforeAfter={showBeforeAfter}
+                  onBeforeAfterChange={setShowBeforeAfter}
+                  compareMode={compareMode}
                 />
               </div>
             </div>
 
             {/* Timeline Section - Improved spacing and sizing */}
-            <div className="h-[30%] min-h-[220px] max-h-[300px] px-3 lg:px-5 pb-3 lg:pb-5 shrink-0 flex flex-col gap-2">
+            <div className="editor-auto h-[30%] min-h-[220px] max-h-[300px] px-3 lg:px-5 pb-3 lg:pb-5 shrink-0 flex flex-col gap-2 min-w-0">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Speed</span>
                 <div className="flex gap-1">
@@ -343,11 +396,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                       key={s}
                       type="button"
                       onClick={() => setPlaybackSpeed(s)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                        playbackSpeed === s
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${playbackSpeed === s
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
                     >
                       {s}x
                     </button>
@@ -360,6 +412,42 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   currentTime={videoState.currentTime}
                   segments={timelineSegments}
                   onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
+                  onSegmentsChange={setTimelineSegments}
+                  selectedSegmentId={selectedSegmentId}
+                  onSegmentSelect={setSelectedSegmentId}
+                  onSegmentDeleted={() => showToast('Segment removed', 'info')}
+                  onDuplicateSegmentAtPlayhead={(segmentId) => {
+                    const seg = timelineSegments.find((s) => s.id === segmentId)
+                    if (!seg) return
+                    const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `seg-${Date.now()}-${Math.random().toString(36).slice(2)}`
+                    const segDur = seg.endTime - seg.startTime
+                    const newSeg: TimelineSegment = {
+                      ...seg,
+                      id: newId,
+                      startTime: seg.endTime,
+                      endTime: seg.endTime + segDur,
+                      duration: segDur,
+                      name: `${seg.name} (copy)`
+                    }
+                    setTimelineSegments((prev) =>
+                      prev.flatMap((s) => {
+                        if (s.id === segmentId) return [s, newSeg]
+                        if (s.startTime >= seg.endTime) {
+                          return [{ ...s, startTime: s.startTime + segDur, endTime: s.endTime + segDur }]
+                        }
+                        return [s]
+                      })
+                    )
+                    setSelectedSegmentId(newId)
+                    showToast('Segment duplicated', 'success')
+                  }}
+                  effects={timelineEffects}
+                  onEffectsChange={setTimelineEffects}
+                  selectedEffectId={selectedEffectId}
+                  onEffectSelect={setSelectedEffectId}
+                  onEffectDeleted={() => showToast('Effect removed', 'info')}
+                  textOverlays={textOverlays}
+                  imageOverlays={imageOverlays}
                 />
               </div>
             </div>
@@ -372,6 +460,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             setVideoFilters={setVideoFilters}
             textOverlays={textOverlays}
             setTextOverlays={setTextOverlays}
+            imageOverlays={imageOverlays}
+            setImageOverlays={setImageOverlays}
+            gradientOverlays={gradientOverlays}
+            setGradientOverlays={setGradientOverlays}
             captionStyle={captionStyle}
             setCaptionStyle={setCaptionStyle}
             isOledTheme={preferences.isOledTheme}

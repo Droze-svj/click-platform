@@ -87,11 +87,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // This avoids race-condition redirects in pages that do `if (!user) router.push('/login')`.
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
-        <Navbar />
-        <div className="container-readable py-8">
-          <LoadingSkeleton type="card" count={3} />
-        </div>
+      <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+        <header className="flex-shrink-0">
+          <Navbar />
+        </header>
+        <main className="layout-scroll flex-1 min-h-0">
+          <div className="container-readable py-8">
+            <LoadingSkeleton type="card" count={3} />
+          </div>
+        </main>
       </div>
     )
   }
@@ -105,26 +109,34 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // In development mode without user, show a message instead of returning null
   if (!user && process.env.NODE_ENV === 'development') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
-        <Navbar />
-        <div className="container-readable py-6">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <p className="text-yellow-800 dark:text-yellow-200">
-              🔧 Development Mode: Waiting for authentication to initialize...
-            </p>
+      <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+        <header className="flex-shrink-0">
+          <Navbar />
+        </header>
+        <main className="layout-scroll flex-1 min-h-0">
+          <div className="container-readable py-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-800 dark:text-yellow-200">
+                🔧 Development Mode: Waiting for authentication to initialize...
+              </p>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
-      <Navbar />
-      <div className="container-readable py-6">
-        <Breadcrumb />
-        {children}
-      </div>
+    <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+      <header className="flex-shrink-0">
+        <Navbar />
+      </header>
+      <main className="layout-scroll flex-1 min-h-0 w-full min-w-0 pt-16 lg:pt-0">
+        <div className="container-readable py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <Breadcrumb />
+          {children}
+        </div>
+      </main>
     </div>
   )
 }

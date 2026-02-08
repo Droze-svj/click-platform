@@ -183,7 +183,13 @@ const compression = require('compression');
 const { securityHeaders, customSecurityHeaders } = require('./middleware/securityHeaders');
 const cron = require('node-cron');
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
+let swaggerSpec = null;
+try {
+  swaggerSpec = require('./config/swagger');
+} catch (err) {
+  logger.warn('Swagger docs disabled (missing z-schema?). Run: npm install z-schema', { error: err.message });
+  swaggerSpec = { openapi: '3.0.0', info: { title: 'Click API', version: '1.0.0' }, paths: {} };
+}
 const validateEnv = require('./middleware/validateEnv');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { enhancedErrorHandler, notFoundHandler, initErrorHandlers } = require('./middleware/enhancedErrorHandler');
@@ -810,14 +816,11 @@ app.use(featureFlagsMiddleware);
 const { apiVersioning } = require('./middleware/apiVersioning');
 app.use('/api', apiVersioning);
 
-// Request timeout (global)
-app.use(requestTimeout(getTimeoutForRoute('default')));
+// Request timeout (global — 30s default; set REQUEST_TIMEOUT env for override)
+app.use(requestTimeout(parseInt(process.env.REQUEST_TIMEOUT, 10) || getTimeoutForRoute('default')));
 
 // Request logging (before other middleware)
 app.use(requestLogger);
-
-// Request timeout (30 seconds default)
-app.use(requestTimeout(parseInt(process.env.REQUEST_TIMEOUT) || 30000));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -1734,11 +1737,11 @@ const swaggerUiOptions = {
   customSiteTitle: 'Click API'
 };
 
-// Primary docs route (common Swagger default)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
-
-// Compatibility alias for existing scripts/docs that expect /api/docs
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+// Primary docs route (common Swagger default) - only if swagger loaded
+if (swaggerSpec) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+}
 
 // Redis Caching Middleware for API routes
 // Cache GET requests for better performance
@@ -1872,6 +1875,7 @@ app.use('/api/productive/repurposing', require('./routes/productive/repurposing'
 app.use('/api/productive/ab-testing', require('./routes/productive/ab-testing'));
 app.use('/api/video/ai-editing', require('./routes/video/ai-editing'));
 app.use('/api/video/manual-editing', require('./routes/video/manual-editing'));
+app.use('/api/assets', require('./routes/assets'));
 app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));
 app.use('/api/video/captions', require('./routes/video/captions'));
 app.use('/api/video/advanced-editing', require('./routes/video/advanced-editing'));

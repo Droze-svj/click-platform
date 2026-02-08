@@ -18,10 +18,10 @@ try {
       logger.warn('rate-limit-redis not installed, using memory store for rate limiting');
       RedisStore = null;
     }
-    
+
     if (RedisStore) {
       const redis = require('redis');
-      
+
       redisClient = redis.createClient({
         url: process.env.REDIS_URL,
         host: process.env.REDIS_HOST,
@@ -79,7 +79,7 @@ function createRateLimiter(options) {
         path: req.path,
         method: req.method,
       });
-      
+
       res.status(429).json({
         success: false,
         error: options.message?.error || 'Too many requests, please try again later',
@@ -115,9 +115,9 @@ const apiLimiter = createRateLimiter({
       const host = (req.hostname || req.headers?.host || '').toString();
       const origin = (req.get && req.get('origin')) ? req.get('origin') : (req.headers?.origin || '');
       const referer = (req.get && req.get('referer')) ? req.get('referer') : (req.headers?.referer || '');
-      
+
       // Check multiple ways the request might indicate localhost
-      const isLocalhost = 
+      const isLocalhost =
         host === 'localhost' ||
         host.includes('localhost:') ||
         host === '127.0.0.1' ||
@@ -127,26 +127,26 @@ const apiLimiter = createRateLimiter({
         ip.includes('127.0.0.1') ||
         (typeof origin === 'string' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) ||
         (typeof referer === 'string' && (referer.includes('localhost') || referer.includes('127.0.0.1')));
-      
+
       if (isLocalhost) {
         return true;
       }
-      
+
       // Also skip if NODE_ENV is explicitly development (even if host doesn't match)
       // This allows for testing scenarios where the host might be different
       return true; // Always skip in development
     }
-    
+
     const path = req.path || req.url || '';
-    return path === '/health' || 
-           path === '/health/debug-redis' || 
-           path === '/api/health' || 
-           path === '/api/health/debug-redis' ||
-           // Debug relay should never be rate limited in dev; it is used by instrumentation.
-           path.startsWith('/debug') ||
-           path.startsWith('/api/debug') ||
-           path === '/auth/me' ||
-           path === '/api/auth/me';
+    return path === '/health' ||
+      path === '/health/debug-redis' ||
+      path === '/api/health' ||
+      path === '/api/health/debug-redis' ||
+      // Debug relay should never be rate limited in dev; it is used by instrumentation.
+      path.startsWith('/debug') ||
+      path.startsWith('/api/debug') ||
+      path === '/auth/me' ||
+      path === '/api/auth/me';
   },
 });
 

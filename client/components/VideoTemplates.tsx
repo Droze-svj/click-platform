@@ -69,12 +69,18 @@ interface VideoTemplatesProps {
   brandFont?: string
 }
 
+const LAST_TEMPLATE_KEY = 'click-video-last-template-id'
+
 export default function VideoTemplates({ onApplyTemplate, currentFilters }: VideoTemplatesProps) {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [personalizeId, setPersonalizeId] = useState<string | null>(null)
   const [customColor, setCustomColor] = useState('#8B5CF6')
   const [customFont, setCustomFont] = useState('Inter')
+  const [lastUsedId, setLastUsedId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem(LAST_TEMPLATE_KEY)
+  })
 
   const templates: VideoTemplate[] = [
     // Click-Style Professional Templates - Social Media
@@ -98,7 +104,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         y: 20,
         fontSize: 48,
         color: '#FFFFFF',
-        fontFamily: 'Impact',
+        fontFamily: 'Impact, Arial Black, sans-serif',
         startTime: 0,
         endTime: 3
       }],
@@ -118,6 +124,17 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         sharpen: 15,
         clarity: 10
       },
+      textOverlays: [{
+        id: 'edu-title',
+        text: 'How it works',
+        x: 50,
+        y: 15,
+        fontSize: 36,
+        color: '#FFFFFF',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        startTime: 0,
+        endTime: 4
+      }],
       recommendedFor: ['youtube', 'tutorials', 'educational', 'how-to'],
       tags: ['educational', 'clean', 'professional', 'tutorial']
     },
@@ -166,6 +183,17 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         sharpen: 10,
         clarity: 5
       },
+      textOverlays: [{
+        id: 'biz-lower-third',
+        text: 'Your Name · Title',
+        x: 10,
+        y: 75,
+        fontSize: 28,
+        color: '#FFFFFF',
+        fontFamily: 'Georgia, Times New Roman, serif',
+        startTime: 0,
+        endTime: 5
+      }],
       recommendedFor: ['linkedin', 'business', 'corporate', 'professional'],
       tags: ['business', 'professional', 'corporate', 'linkedin']
     },
@@ -207,7 +235,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         y: 15,
         fontSize: 42,
         color: '#FFFFFF',
-        fontFamily: 'Impact',
+        fontFamily: 'Montserrat, Arial Black, sans-serif',
         startTime: 0,
         endTime: 2.5
       }],
@@ -328,6 +356,89 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
       },
       recommendedFor: ['memories', 'historical content', 'nostalgic videos'],
       tags: ['vintage', 'sepia', 'grain']
+    },
+    {
+      id: 'retro-revival',
+      name: 'Retro Revival',
+      description: 'Warm vintage look with lifted blacks and soft contrast',
+      icon: <Palette className="w-5 h-5" />,
+      category: 'cinematic',
+      filters: {
+        sepia: 25,
+        saturation: 88,
+        contrast: 105,
+        temperature: 115,
+        vignette: 20,
+        noise: 5
+      },
+      recommendedFor: ['retro', 'throwback', 'aesthetic'],
+      tags: ['retro', 'vintage', 'warm', 'aesthetic']
+    },
+    {
+      id: 'cinematic-drama',
+      name: 'Cinematic Drama',
+      description: 'Deep shadows and rich contrast for dramatic storytelling',
+      icon: <Film className="w-5 h-5" />,
+      category: 'cinematic',
+      filters: {
+        contrast: 128,
+        saturation: 92,
+        brightness: 88,
+        vignette: 45,
+        shadows: 15,
+        sharpen: 18
+      },
+      recommendedFor: ['drama', 'trailers', 'short films'],
+      tags: ['cinematic', 'drama', 'moody', 'film']
+    },
+    {
+      id: 'documentary-natural',
+      name: 'Documentary Natural',
+      description: 'Neutral, immersive look that keeps focus on the story',
+      icon: <Camera className="w-5 h-5" />,
+      category: 'cinematic',
+      filters: {
+        sepia: 10,
+        contrast: 108,
+        saturation: 95,
+        vignette: 22,
+        clarity: 8,
+        sharpen: 12
+      },
+      recommendedFor: ['documentary', 'interview', 'real-life'],
+      tags: ['documentary', 'natural', 'immersive']
+    },
+    {
+      id: 'comedy-punch',
+      name: 'Comedy Punch',
+      description: 'Bright, punchy colors for comedy and sketch content',
+      icon: <Sparkles className="w-5 h-5" />,
+      category: 'creative',
+      filters: {
+        brightness: 110,
+        saturation: 132,
+        contrast: 112,
+        vibrance: 120,
+        sharpen: 20
+      },
+      recommendedFor: ['comedy', 'sketch', 'fun', 'viral'],
+      tags: ['comedy', 'bright', 'punchy', 'fun']
+    },
+    {
+      id: 'sports-action',
+      name: 'Sports Action',
+      description: 'High clarity and contrast for fast-paced action',
+      icon: <Zap className="w-5 h-5" />,
+      category: 'social',
+      filters: {
+        contrast: 118,
+        saturation: 118,
+        sharpen: 35,
+        clarity: 18,
+        brightness: 102
+      },
+      recommendedFor: ['sports', 'action', 'fitness', 'highlights'],
+      tags: ['sports', 'action', 'dynamic', 'sharp']
     },
 
     // Social Media Templates
@@ -534,6 +645,10 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
   })
 
   const applyTemplate = (template: VideoTemplate) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LAST_TEMPLATE_KEY, template.id)
+      setLastUsedId(template.id)
+    }
     // Merge template filters with current filters
     const newFilters = { ...currentFilters, ...template.filters }
 
@@ -683,6 +798,11 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
             {template.id?.startsWith('click-') && (
               <div className="absolute top-3 right-3 px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg z-20">
                 CLICK
+              </div>
+            )}
+            {lastUsedId === template.id && (
+              <div className="absolute top-3 left-3 px-2 py-1 bg-slate-600/90 text-white text-[10px] font-semibold rounded-full z-20">
+                Recently used
               </div>
             )}
 
