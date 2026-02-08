@@ -111,7 +111,7 @@ videoMetricsSchema.index({ platform: 1, 'video.type': 1, performanceScore: -1 })
 videoMetricsSchema.index({ contentId: 1 });
 
 // Calculate performance score before save
-videoMetricsSchema.pre('save', function(next) {
+videoMetricsSchema.pre('save', function (next) {
   // Calculate view-through rate
   if (this.views.total > 0) {
     // Would need impressions from post analytics

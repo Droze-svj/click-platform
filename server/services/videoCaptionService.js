@@ -293,6 +293,106 @@ async function translateCaptions(text, targetLanguage) {
 }
 
 /**
+ * Generate auto-captions from transcript for AI editing (smart captions).
+ * Uses content.captions.segments if available, otherwise splits transcript over duration.
+ * @param {string} videoId - Content ID
+ * @param {Object} options - { language, transcript, style, position }
+ * @returns {Promise<Object>} { captions: [{ text, startTime, endTime }] }
+ */
+async function generateAutoCaptions(videoId, options = {}) {
+  const { transcript, style = 'modern', position = 'bottom' } = options;
+  if (!transcript || typeof transcript !== 'string') {
+    return { captions: [] };
+  }
+  try {
+    const content = await Content.findById(videoId);
+    let segments = [];
+    const duration = content?.originalFile?.duration || content?.metadata?.duration || 60;
+
+    const words = content?.captions?.words;
+    if (words && Array.isArray(words) && words.length > 0) {
+      // Word-level timestamps (e.g. from Whisper verbose_json): group into readable lines (~2–4s or max 6 words)
+      const maxWordsPerLine = 6;
+      const maxDuration = 3.5;
+      let lineStart = words[0].start ?? 0;
+      let lineWords = [];
+      for (let i = 0; i < words.length; i++) {
+        const w = words[i];
+        const wordStart = w.start ?? 0;
+        const wordEnd = w.end ?? wordStart + 0.3;
+        lineWords.push(typeof w.word === 'string' ? w.word : w.text || '');
+        const lineEnd = wordEnd;
+        const lineDuration = lineEnd - lineStart;
+        const shouldEmit = lineWords.length >= maxWordsPerLine || lineDuration >= maxDuration || i === words.length - 1;
+        if (shouldEmit && lineWords.length > 0) {
+          segments.push({
+            text: lineWords.join(' ').trim(),
+            startTime: lineStart,
+            endTime: lineEnd,
+          });
+          lineWords = [];
+          if (i < words.length - 1) {
+            lineStart = words[i + 1].start ?? lineEnd;
+          }
+        }
+      }
+      if (lineWords.length > 0) {
+        const lastEnd = words[words.length - 1]?.end ?? duration;
+        segments.push({
+          text: lineWords.join(' ').trim(),
+          startTime: lineStart,
+          endTime: lastEnd,
+        });
+      }
+    } else if (content?.captions?.segments && Array.isArray(content.captions.segments) && content.captions.segments.length > 0) {
+      segments = content.captions.segments.map((s) => ({
+        text: s.text || '',
+        startTime: s.start ?? 0,
+        endTime: s.end ?? 0,
+      }));
+    } else {
+      const sentences = transcript.split(/(?<=[.!?])\s+/).filter(Boolean);
+      if (sentences.length === 0) {
+        segments = [{ text: transcript.trim(), startTime: 0, endTime: Math.max(1, duration) }];
+      } else {
+        const chunkDuration = duration / sentences.length;
+        segments = sentences.map((text, i) => ({
+          text: text.trim(),
+          startTime: i * chunkDuration,
+          endTime: (i + 1) * chunkDuration,
+        }));
+      }
+    }
+
+    return { captions: segments };
+  } catch (error) {
+    logger.error('generateAutoCaptions failed', { videoId, error: error.message });
+    return { captions: [] };
+  }
+}
+
+/**
+ * Apply style options to caption segments (for burn-in). Returns same segments with .style attached.
+ * @param {Array} captions - [{ text, startTime, endTime }]
+ * @param {Object} styleOptions - { fontSize, fontColor, backgroundColor, outline, outlineColor, position, fontFamily }
+ * @returns {Array} [{ text, startTime, endTime, style }]
+ */
+function styleCaptions(captions, styleOptions = {}) {
+  if (!Array.isArray(captions)) return [];
+  const style = {
+    fontSize: styleOptions.fontSize ?? 42,
+    fontColor: styleOptions.fontColor ?? '#FFFFFF',
+    backgroundColor: styleOptions.backgroundColor ?? 'rgba(0,0,0,0.75)',
+    outline: styleOptions.outline !== false,
+    outlineColor: styleOptions.outlineColor ?? '#000000',
+    outlineWidth: styleOptions.outlineWidth ?? (styleOptions.outline ? 2 : 0),
+    position: styleOptions.position ?? 'bottom',
+    fontFamily: styleOptions.fontFamily || 'Arial',
+  };
+  return captions.map((c) => ({ ...c, style }));
+}
+
+/**
  * Get captions for content
  * @param {string} contentId - Content ID
  * @param {string} format - Caption format (srt, vtt, ssa)
@@ -345,4 +445,6 @@ module.exports = {
   formatCaptions,
   translateCaptions,
   getCaptions,
+  generateAutoCaptions,
+  styleCaptions,
 };

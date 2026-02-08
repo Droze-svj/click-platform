@@ -17,9 +17,9 @@ const auth = async (req, res, next) => {
     const host = req.headers.host || req.headers['x-forwarded-host'] || '';
     const referer = req.headers.referer || req.headers.origin || '';
     const forwardedFor = req.headers['x-forwarded-for'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
-                        referer.includes('localhost') || referer.includes('127.0.0.1') ||
-                        (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
+      referer.includes('localhost') || referer.includes('127.0.0.1') ||
+      (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
     // Always allow dev mode when NODE_ENV is not production OR when on localhost
     // If NODE_ENV is undefined/null/empty, treat as dev mode
     const nodeEnv = process.env.NODE_ENV;
@@ -67,7 +67,7 @@ const auth = async (req, res, next) => {
     // Handle development mock tokens
     // Allow dev tokens in non-production OR when running on localhost
     let decoded;
-    
+
     if (allowDevMode && token.startsWith('dev-jwt-token-')) {
       // Mock token for development - create decoded payload directly
       decoded = {
@@ -80,22 +80,25 @@ const auth = async (req, res, next) => {
       decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
     }
 
-    // Get user from Supabase
+    // Get user from Supabase (skip when unconfigured to avoid throws with dev token)
     let user = null;
     let userError = null;
+    const hasSupabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    try {
-      const supabase = getSupabaseClient();
-      const result = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name, avatar, bio, website, location, social_links, email_verified, created_at')
-        .eq('id', decoded.userId)
-        .single();
+    if (hasSupabase) {
+      try {
+        const supabase = getSupabaseClient();
+        const result = await supabase
+          .from('users')
+          .select('id, email, first_name, last_name, avatar, bio, website, location, social_links, email_verified, created_at')
+          .eq('id', decoded.userId)
+          .single();
 
-      user = result.data;
-      userError = result.error;
-    } catch (supabaseErr) {
-      console.log('Supabase not available for user lookup');
+        user = result.data;
+        userError = result.error;
+      } catch (supabaseErr) {
+        console.log('Supabase not available for user lookup');
+      }
     }
 
     // Handle development users
@@ -172,7 +175,7 @@ const auth = async (req, res, next) => {
     user._id = user.id;
 
     req.user = user;
-    
+
     // Log successful auth in development or localhost
     if (allowDevMode) {
       const path = req.path || req.url || '';
@@ -182,12 +185,12 @@ const auth = async (req, res, next) => {
         isDevUser: user.id.startsWith('dev-')
       });
     }
-    
+
     next();
   } catch (error) {
     // Enhanced error logging for development/localhost
-    const isLocalhostForErrorLogging = (req.headers.host || '').includes('localhost') || 
-                                        (req.headers.host || '').includes('127.0.0.1');
+    const isLocalhostForErrorLogging = (req.headers.host || '').includes('localhost') ||
+      (req.headers.host || '').includes('127.0.0.1');
     const allowDevModeForError = process.env.NODE_ENV !== 'production' || isLocalhostForErrorLogging;
     if (allowDevModeForError) {
       const path = req.path || req.url || '';

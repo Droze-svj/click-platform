@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
-import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, RefreshCw, Download, Eye } from 'lucide-react'
+import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, RefreshCw, Download, Eye, BarChart3, Award, Edit } from 'lucide-react'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
 
@@ -130,22 +130,54 @@ export default function VideoEditPage({ params }: PageProps) {
     enhanceColor: false,
     stabilizeVideo: false
   })
-  const [showOptions, setShowOptions] = useState(false)
-  const [editJobId, setEditJobId] = useState<string | null>(null)
+  const STORAGE_KEYS = { lastPreset: 'click-ai-edit-last-preset', lastCaptionStyle: 'click-ai-edit-last-caption-style', preciseScenes: 'click-ai-edit-precise-scenes', minSceneLength: 'click-ai-edit-min-scene-length' }
 
-  // Analyze video before editing
+  const [editPreset, setEditPreset] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.lastPreset) || '' : ''))
+  const [captionStyle, setCaptionStyle] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.lastCaptionStyle) || 'modern' : 'modern'))
+  const [outputFormat, setOutputFormat] = useState<'auto' | 'vertical' | 'square' | 'standard'>('auto')
+  const [showOptions, setShowOptions] = useState(true)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [usePreciseScenes, setUsePreciseScenes] = useState<boolean>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.preciseScenes) === 'true' : false))
+  const [minSceneLength, setMinSceneLength] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.minSceneLength) || '1' : '1'))
+  const [editJobId, setEditJobId] = useState<string | null>(null)
+  const [newVideoScore, setNewVideoScore] = useState<{ score: number; factors?: { name: string; value: string; impact: string }[] } | null>(null)
+  const videoPreviewRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (editPreset) localStorage.setItem(STORAGE_KEYS.lastPreset, editPreset)
+    localStorage.setItem(STORAGE_KEYS.lastCaptionStyle, captionStyle)
+    localStorage.setItem(STORAGE_KEYS.preciseScenes, String(usePreciseScenes))
+    localStorage.setItem(STORAGE_KEYS.minSceneLength, minSceneLength)
+  }, [editPreset, captionStyle, usePreciseScenes, minSceneLength])
+
+  // Fetch new video score when we have a successful edit result (backend has updated content)
+  useEffect(() => {
+    if (!aiEditResult || !videoId) return
+    setNewVideoScore(null)
+    apiPost('/video/ai-editing/score', { videoId })
+      .then((res: any) => {
+        const data = res?.data ?? res
+        if (data?.score != null) setNewVideoScore({ score: data.score, factors: data.factors })
+      })
+      .catch(() => { })
+  }, [aiEditResult, videoId])
+
+  // Analyze video before editing (pass duration from video element when loaded for accuracy)
   const handleAnalyzeVideo = async () => {
     setAnalyzing(true)
     setShowAnalysis(false)
     setAiAnalysis(null)
+    const durationFromVideo = videoPreviewRef.current?.duration
+    const duration = Number.isFinite(durationFromVideo) && durationFromVideo > 0 ? durationFromVideo : 0
 
     try {
       const analysis = await apiPost('/video/ai-editing/analyze', {
+        videoId,
         videoMetadata: {
-          videoId: videoId,
           url: videoUrl,
           title: video?.title,
-          duration: 0 // Could get from video element if needed
+          duration
         }
       })
 
@@ -178,13 +210,37 @@ export default function VideoEditPage({ params }: PageProps) {
     setProcessing(true)
     setProcessingError('')
     setAiEditResult(null)
+    setNewVideoScore(null)
     setEditJobId(null)
 
     try {
-      // Call the actual AI editing API
+      // Map simple toggles to full backend options and include style/preset
+      const backendOptions: Record<string, unknown> = {
+        removeSilence: editingOptions.removeSilence,
+        removePauses: editingOptions.removeSilence,
+        optimizePacing: editingOptions.optimizePacing,
+        enhanceAudio: editingOptions.enhanceAudio,
+        addTransitions: true,
+        enableColorGrading: editingOptions.enhanceColor,
+        enableStabilization: editingOptions.stabilizeVideo,
+        enableSmartCaptions: editingOptions.addCaptions,
+        captionStyle: captionStyle,
+        outputFormat,
+      }
+      if (editPreset) {
+        backendOptions.preset = editPreset
+      }
+      if (usePreciseScenes) {
+        backendOptions.useMultiModalScenes = true
+        const minSec = parseFloat(minSceneLength)
+        if (!Number.isNaN(minSec) && minSec > 0) {
+          backendOptions.minSceneLength = minSec
+        }
+      }
       const result = await apiPost('/video/ai-editing/auto-edit', {
         videoId: videoId,
-        editingOptions: editingOptions
+        editingOptions: backendOptions,
+        outputFormat
       })
 
       // Store job ID if provided for progress tracking
@@ -252,40 +308,40 @@ export default function VideoEditPage({ params }: PageProps) {
   // Show selection screen
   if (editMode === 'selection') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+        <div className="container-readable py-8 sm:py-12">
+          <div className="max-w-4xl mx-auto space-y-8">
             {/* Header */}
-            <div className="text-center mb-12">
-              <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight">
-                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Power Your Creativity</span>
+            <div className="text-center mb-10">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 sm:mb-6 tracking-tight">
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  Power Your Creativity
+                </span>
               </h1>
-              <p className="text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto">
+              <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto px-2">
                 Choose your workflow and transform your footage into professional content with ease
               </p>
             </div>
 
             {/* Video Preview */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-8">
-              <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Video Preview</h3>
-              <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                <video
-                  src={videoUrl}
-                  controls
-                  className="w-full h-full"
-                />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden p-5 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-slate-900 dark:text-white">
+                Video Preview
+              </h3>
+              <div className="aspect-video bg-gray-900 dark:bg-black rounded-xl overflow-hidden">
+                <video src={videoUrl} controls className="w-full h-full object-contain" />
               </div>
-              <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+              <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 truncate">
                 <strong>Title:</strong> {video?.title || 'Untitled Video'}
               </p>
             </div>
 
             {/* Selection Cards */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
               {/* Manual Edit Card */}
               <button
                 onClick={() => handleEditModeSelect('manual')}
-                className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-10 hover:shadow-2xl transition-all duration-500 border border-slate-200 dark:border-slate-800 hover:border-purple-500/50 text-left overflow-hidden translate-z-0"
+                className="group relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg dark:shadow-xl p-6 sm:p-8 md:p-10 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-slate-200 dark:border-slate-700 hover:border-purple-500/50 text-left overflow-hidden w-full"
               >
                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all duration-500"></div>
                 <div className="flex items-center justify-center w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-6 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors">
@@ -325,7 +381,7 @@ export default function VideoEditPage({ params }: PageProps) {
               <button
                 onClick={() => handleEditModeSelect('ai-auto')}
                 disabled={processing}
-                className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-10 hover:shadow-2xl transition-all duration-500 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 text-left overflow-hidden translate-z-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-lg dark:shadow-xl p-6 sm:p-8 md:p-10 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500/50 text-left overflow-hidden w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
                 <div className="flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-6 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
@@ -367,10 +423,10 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
 
             {/* Back Button */}
-            <div className="mt-8 text-center">
+            <div className="pt-4 text-center">
               <button
                 onClick={() => router.push('/dashboard/video')}
-                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors touch-target"
               >
                 ← Back to Videos
               </button>
@@ -424,15 +480,18 @@ export default function VideoEditPage({ params }: PageProps) {
   // Show AI auto edit interface
   if (editMode === 'ai-auto') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold gradient-text mb-2">AI Auto Editor</h1>
-                <p className="text-slate-600 dark:text-slate-400">{video?.title || 'Untitled Video'}</p>
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+        <div className="container-readable py-6 pb-10">
+          <div className="max-w-5xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
+                  AI Auto Editor
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400 truncate">{video?.title || 'Untitled Video'}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 shrink-0">
                 <button
                   onClick={() => handleAnalyzeVideo()}
                   disabled={analyzing}
@@ -452,7 +511,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 </button>
                 <button
                   onClick={() => setEditMode('selection')}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                 >
                   Change Mode
                 </button>
@@ -475,6 +534,20 @@ export default function VideoEditPage({ params }: PageProps) {
                   </button>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
+                  {((aiAnalysis.suggestedLength != null) || (aiAnalysis.recommendedCuts?.length > 0)) && (
+                    <div className="md:col-span-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3">
+                      <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1.5 text-sm">Quick suggestions</h3>
+                      <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        {aiAnalysis.suggestedLength != null && (
+                          <li>Optimal length: <strong>{Math.round(Number(aiAnalysis.suggestedLength))}s</strong>. Consider enabling &quot;Remove silence&quot; and &quot;Optimize pacing&quot;.</li>
+                        )}
+                        {aiAnalysis.recommendedCuts?.length > 0 && (
+                          <li><strong>{aiAnalysis.recommendedCuts.length}</strong> suggested cut(s) for dead air. Enable &quot;Remove silence&quot; to apply.</li>
+                        )}
+                        <li>Enable &quot;Add captions&quot; for better reach on Reels and TikTok.</li>
+                      </ul>
+                    </div>
+                  )}
                   {aiAnalysis.suggestedEdits && aiAnalysis.suggestedEdits.length > 0 && (
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Suggested Edits</h3>
@@ -495,39 +568,308 @@ export default function VideoEditPage({ params }: PageProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Profile video analytics (when available) */}
+                {aiAnalysis.profileInsights && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-indigo-500" />
+                      Your profile insights
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{aiAnalysis.profileInsights.message}</p>
+                    <div className="flex flex-wrap gap-3 text-xs">
+                      {aiAnalysis.profileInsights.averageCompletionRate != null && (
+                        <span className="px-2 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200">
+                          Avg completion: {Number(aiAnalysis.profileInsights.averageCompletionRate).toFixed(1)}%
+                        </span>
+                      )}
+                      {aiAnalysis.profileInsights.averageRetention != null && (
+                        <span className="px-2 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200">
+                          Avg retention: {Number(aiAnalysis.profileInsights.averageRetention).toFixed(1)}%
+                        </span>
+                      )}
+                      {aiAnalysis.profileInsights.totalVideos != null && (
+                        <span className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                          {aiAnalysis.profileInsights.totalVideos} video(s) in workspace
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit styles ranked with potential scores */}
+                {aiAnalysis.editStyles && aiAnalysis.editStyles.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      Edit styles (ranked by potential score)
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                      Current base score: <strong>{aiAnalysis.baseScore ?? '—'}</strong>/100. Choose a style to apply its preset and caption, then Start AI Auto Edit.
+                    </p>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {aiAnalysis.editStyles.map((style: { id: string; name: string; description: string; preset: string; captionStyle: string; potentialScore: number; rank: number }, idx: number) => (
+                        <div
+                          key={style.id}
+                          className="rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900/30 p-4 hover:border-blue-300 dark:hover:border-blue-700 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">#{style.rank ?? idx + 1}</span>
+                            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{style.potentialScore}</span>
+                          </div>
+                          <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{style.name}</h4>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{style.description}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditPreset(style.preset)
+                              setCaptionStyle(style.captionStyle)
+                              setEditingOptions({
+                                removeSilence: true,
+                                optimizePacing: true,
+                                enhanceAudio: true,
+                                generateClips: true,
+                                addCaptions: true,
+                                enhanceColor: true,
+                                stabilizeVideo: style.preset === 'tiktok' || style.preset === 'youtube'
+                              })
+                            }}
+                            className="mt-3 w-full py-2 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors"
+                          >
+                            Use this style
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Output Format */}
+            {!processing && !aiEditResult && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-2">Output format</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Choose aspect ratio for the edited video</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: 'auto' as const, label: 'Auto (match source)', desc: 'Source' },
+                    { id: 'vertical' as const, label: 'Vertical 9:16', desc: 'Reels · TikTok' },
+                    { id: 'square' as const, label: 'Square 1:1', desc: 'Feed' },
+                    { id: 'standard' as const, label: 'Standard 16:9', desc: 'YouTube' },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setOutputFormat(f.id)}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${outputFormat === f.id
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Editing Options */}
             {!processing && !aiEditResult && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Editing Options
-                  </h2>
-                  <button
-                    onClick={() => setShowOptions(!showOptions)}
-                    className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    {showOptions ? 'Hide' : 'Configure'}
-                  </button>
-                </div>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                <button
+                  onClick={() => setShowOptions(!showOptions)}
+                  className="w-full flex items-center justify-between p-5 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                      <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="text-left">
+                      <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Editing Options</h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Configure what the AI will apply to your video
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    {showOptions ? 'Collapse' : 'Expand'}
+                  </span>
+                </button>
                 {showOptions && (
-                  <div className="grid md:grid-cols-2 gap-4 mt-4">
-                    {Object.entries(editingOptions).map(([key, value]) => (
-                      <label key={key} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={value as boolean}
-                          onChange={(e) => setEditingOptions({ ...editingOptions, [key]: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-slate-700 dark:text-slate-300 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                      </label>
-                    ))}
+                  <div className="px-5 pb-5 pt-0 border-t border-gray-100 dark:border-gray-700/50">
+                    {/* Preset bundles */}
+                    <div className="pt-4 mb-4">
+                      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Quick presets</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { label: 'TikTok / Reels', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: false } },
+                          { label: 'Podcast', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: false, addCaptions: true, enhanceColor: false, stabilizeVideo: false } },
+                          { label: 'All-in-one', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true } },
+                        ].map((preset) => (
+                          <button
+                            key={preset.label}
+                            onClick={() => { setEditingOptions(preset.opts); setOutputFormat(preset.label.includes('TikTok') ? 'vertical' : outputFormat) }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Style preset</label>
+                          <select
+                            value={editPreset}
+                            onChange={(e) => setEditPreset(e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2"
+                          >
+                            <option value="">Custom (use toggles below)</option>
+                            <option value="cinematic">Cinematic</option>
+                            <option value="vlog">Vlog Style</option>
+                            <option value="podcast">Podcast</option>
+                            <option value="tiktok">TikTok Ready</option>
+                            <option value="youtube">YouTube Optimized</option>
+                          </select>
+                          <p className="text-[10px] text-slate-500 mt-1">One-click professional style (overrides some toggles)</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Caption style</label>
+                          <select
+                            value={captionStyle}
+                            onChange={(e) => setCaptionStyle(e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2"
+                          >
+                            <option value="modern">Modern</option>
+                            <option value="bold">Bold</option>
+                            <option value="minimal">Minimal</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="outline">Outline</option>
+                            <option value="professional">Professional</option>
+                            <option value="neon">Neon</option>
+                            <option value="pill">Pill</option>
+                            <option value="cinematic">Cinematic</option>
+                            <option value="retro">Retro</option>
+                            <option value="subtitle">Subtitle</option>
+                            <option value="karaoke">Karaoke</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="serif">Serif</option>
+                            <option value="high-contrast">High contrast</option>
+                          </select>
+                          <p className="text-[10px] text-slate-500 mt-1">Used when &quot;Add captions&quot; is on</p>
+                          <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">Tip: Set a font in Profile → Brand to use it for captions.</p>
+                          <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-900/80 p-2 flex items-center justify-center min-h-[36px]">
+                            <span
+                              className="text-sm font-medium max-w-full truncate px-2"
+                              style={
+                                captionStyle === 'bold'
+                                  ? { color: '#FFD700', textShadow: '0 0 2px #000' }
+                                  : captionStyle === 'minimal'
+                                    ? { color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }
+                                    : captionStyle === 'tiktok' || captionStyle === 'youtube'
+                                      ? { color: '#fff', textShadow: '0 2px 0 #000' }
+                                      : captionStyle === 'outline'
+                                        ? { color: '#fff', WebkitTextStroke: '2px #000' }
+                                        : captionStyle === 'professional'
+                                          ? { color: '#fff', fontFamily: 'Georgia, serif' }
+                                          : captionStyle === 'neon'
+                                            ? { color: '#00FFFF', textShadow: '0 0 8px #00FFFF' }
+                                            : captionStyle === 'pill'
+                                              ? { color: '#fff', background: 'rgba(0,0,0,0.85)', padding: '4px 10px', borderRadius: 9999 }
+                                              : captionStyle === 'cinematic'
+                                                ? { color: '#E5E5E5', fontFamily: 'Georgia, serif', background: 'rgba(0,0,0,0.5)' }
+                                                : captionStyle === 'retro'
+                                                  ? { color: '#FFE4B5', fontFamily: 'Georgia, serif', background: 'rgba(40,20,0,0.7)' }
+                                                  : captionStyle === 'subtitle'
+                                                    ? { color: '#fff', WebkitTextStroke: '2px #000', background: 'transparent' }
+                                                    : captionStyle === 'karaoke'
+                                                      ? { color: '#fff', fontFamily: 'Impact, sans-serif', background: 'rgba(0,0,0,0.8)' }
+                                                      : captionStyle === 'gradient'
+                                                        ? { color: '#fff', background: 'rgba(128,0,128,0.75)' }
+                                                        : captionStyle === 'serif'
+                                                          ? { color: '#FFF8DC', fontFamily: 'Georgia, serif', background: 'rgba(0,0,0,0.65)' }
+                                                          : captionStyle === 'high-contrast'
+                                                            ? { color: '#fff', background: '#000', border: '2px solid #fff' }
+                                                            : { color: '#fff', background: 'rgba(0,0,0,0.75)', padding: '2px 8px', borderRadius: 4 }
+                              }
+                            >
+                              Sample caption
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-100 dark:border-gray-700/50 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowAdvanced(!showAdvanced)}
+                          className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2"
+                        >
+                          {showAdvanced ? '▼' : '▶'} Advanced (scene detection)
+                        </button>
+                        {showAdvanced && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900/30">
+                              <input
+                                type="checkbox"
+                                checked={usePreciseScenes}
+                                onChange={(e) => setUsePreciseScenes(e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded"
+                              />
+                              <div>
+                                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">Precise scene detection</span>
+                                <span className="block text-[10px] text-slate-500">Visual + audio (slower, better cuts)</span>
+                              </div>
+                            </label>
+                            <div>
+                              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Min scene length (sec)</label>
+                              <input
+                                type="number"
+                                min="0.5"
+                                max="5"
+                                step="0.5"
+                                value={minSceneLength}
+                                onChange={(e) => setMinSceneLength(e.target.value)}
+                                className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                          { key: 'removeSilence', label: 'Remove silence', hint: 'Cut dead air' },
+                          { key: 'optimizePacing', label: 'Optimize pacing', hint: 'Smoother cuts' },
+                          { key: 'enhanceAudio', label: 'Enhance audio', hint: 'Clearer sound' },
+                          { key: 'generateClips', label: 'Generate clips', hint: 'Short-form ready' },
+                          { key: 'addCaptions', label: 'Add captions', hint: 'Auto transcript' },
+                          { key: 'enhanceColor', label: 'Enhance color', hint: 'Better look' },
+                          { key: 'stabilizeVideo', label: 'Stabilize video', hint: 'Smoother motion' },
+                        ].map(({ key, label, hint }) => (
+                          <label
+                            key={key}
+                            className={`flex items-center gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all ${(editingOptions as any)[key]
+                              ? 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 bg-gray-50/50 dark:bg-gray-900/30'
+                              }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(editingOptions as any)[key] as boolean}
+                              onChange={(e) => setEditingOptions({ ...editingOptions, [key]: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                            />
+                            <div>
+                              <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
+                              <span className="block text-[10px] text-slate-500 dark:text-slate-400">{hint}</span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -617,7 +959,7 @@ export default function VideoEditPage({ params }: PageProps) {
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                     AI Auto-Edit Results
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => {
                         const url = aiEditResult.data?.editedVideoUrl || aiEditResult.editedVideoUrl || videoUrl
@@ -634,18 +976,26 @@ export default function VideoEditPage({ params }: PageProps) {
                     <button
                       onClick={() => {
                         setAiEditResult(null)
+                        setNewVideoScore(null)
                         setProcessingError('')
                         setEditJobId(null)
                       }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
                     >
-                      Edit Again
+                      <Edit className="w-4 h-4" />
+                      Edit further
+                    </button>
+                    <button
+                      onClick={() => setEditMode('manual')}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+                    >
+                      Open in editor
                     </button>
                     <button
                       onClick={() => setEditMode('selection')}
                       className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                     >
-                      Change Mode
+                      Change mode
                     </button>
                   </div>
                 </div>
@@ -673,6 +1023,29 @@ export default function VideoEditPage({ params }: PageProps) {
                     </div>
                   </div>
                 </div>
+
+                {/* New video score (after edit) */}
+                {newVideoScore != null && (
+                  <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      New video score
+                    </h3>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-amber-600 dark:text-amber-400">{newVideoScore.score}</span>
+                      <span className="text-slate-500 dark:text-slate-400">/ 100</span>
+                    </div>
+                    {newVideoScore.factors && newVideoScore.factors.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {newVideoScore.factors.map((f: { name: string; value: string; impact: string }) => (
+                          <span key={f.name} className="text-xs px-2 py-1 rounded bg-white/60 dark:bg-black/20 text-slate-700 dark:text-slate-300">
+                            {f.name}: {f.value}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="bg-slate-50 dark:bg-gray-900 rounded-lg p-6">
                   <div className="flex items-center gap-2 mb-4">
@@ -708,39 +1081,51 @@ export default function VideoEditPage({ params }: PageProps) {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Video Preview */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6">
-                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Video Preview</h2>
-                  <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden mb-6">
-                    <video
-                      src={videoUrl}
-                      controls
-                      className="w-full h-full"
-                    />
+                {/* Video Preview - prominent card */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                  <div className="p-5 border-b border-gray-100 dark:border-gray-700/50">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      Video Preview
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                      Your source video — AI will process based on selected options
+                    </p>
+                  </div>
+                  <div className="p-4 sm:p-6">
+                    <div className="aspect-video bg-gray-900 dark:bg-black rounded-xl overflow-hidden">
+                      <video
+                        ref={videoPreviewRef}
+                        src={videoUrl}
+                        controls
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Start Editing CTA */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl shadow-xl p-8 text-center border border-blue-200 dark:border-blue-800">
-                  <Sparkles className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">
-                    Ready to Process Your Video with AI
+                <div className="bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/10 dark:to-purple-900/20 rounded-2xl shadow-xl p-6 sm:p-8 text-center border-2 border-blue-200/60 dark:border-blue-800/50">
+                  <div className="inline-flex p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white mb-4">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2 text-slate-900 dark:text-white">
+                    Ready to Process with AI
                   </h3>
-                  <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-2xl mx-auto">
-                    Configure your editing options above, then click the button below to start AI processing.
-                    The AI will automatically optimize your video based on your preferences.
+                  <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-xl mx-auto text-sm sm:text-base">
+                    Configure your editing options above, then start AI processing. The AI will optimize your video based on your preferences.
                   </p>
                   <button
                     onClick={handleStartAIEdit}
                     disabled={!Object.values(editingOptions).some(v => v)}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-semibold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                    className="px-6 py-3.5 sm:px-8 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-semibold text-base shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto touch-target"
                   >
                     <Sparkles className="w-5 h-5" />
                     Start AI Auto Edit
                   </button>
                   {!Object.values(editingOptions).some(v => v) && (
-                    <p className="text-sm text-red-500 dark:text-red-400 mt-2">
-                      Please enable at least one editing option
+                    <p className="text-sm text-amber-600 dark:text-amber-400 mt-3 flex items-center justify-center gap-2">
+                      <span>⚠</span> Enable at least one editing option above
                     </p>
                   )}
                 </div>

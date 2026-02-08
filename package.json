@@ -7,6 +7,7 @@
     "dev": "concurrently -k \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "nodemon server/index.js",
     "dev:client": "cd client && npm run dev -- --port 3010",
+    "dev:client:turbo": "cd client && npm run dev:turbo",
     "build": "npm run prisma:generate && cd client && npm run build",
     "start": "node --max-old-space-size=2048 server/index.js",
     "start:prod": "node --max-old-space-size=2048 server/index.js",
@@ -142,7 +143,8 @@
     "twitter-api-v2": "^1.28.0",
     "validator": "^13.11.0",
     "web-push": "^3.6.7",
-    "winston": "^3.18.3"
+    "winston": "^3.18.3",
+    "z-schema": "^5.0.2"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"

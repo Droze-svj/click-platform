@@ -93,8 +93,8 @@ export default function JobProgressViewer({
         ...job,
         progress: realtimeProgress.progress || job.progress,
         state: realtimeProgress.status === 'completed' ? 'completed' :
-               realtimeProgress.status === 'failed' ? 'failed' :
-               realtimeProgress.status === 'processing' ? 'active' : job.state,
+          realtimeProgress.status === 'failed' ? 'failed' :
+            realtimeProgress.status === 'processing' ? 'active' : job.state,
       })
     }
   }, [realtimeProgress])
@@ -201,11 +201,11 @@ export default function JobProgressViewer({
             </div>
           </div>
           {/* Connection Status */}
-          <div className="flex items-center gap-1 ml-2">
+          <div className="flex items-center gap-1 ml-2" title={isConnected ? 'Real-time updates active' : 'Polling mode'}>
             {isConnected ? (
-              <Wifi className="w-3 h-3 text-green-500" title="Real-time updates active" />
+              <Wifi className="w-3 h-3 text-green-500" aria-hidden />
             ) : (
-              <WifiOff className="w-3 h-3 text-gray-400" title="Polling mode" />
+              <WifiOff className="w-3 h-3 text-gray-400" aria-hidden />
             )}
           </div>
         </div>

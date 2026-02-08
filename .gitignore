@@ -13,4 +13,7 @@ logs/
 
 # Next.js build cache
 .next/
+
+# Generated assignment (ephemeral)
+ASSIGNMENT_READY.md
 node_modules/

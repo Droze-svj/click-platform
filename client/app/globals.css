@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* App font (Inter via link in layout) – avoids next/font on iCloud Drive */
+.font-app-sans {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
 /* ===== MODERN DESIGN SYSTEM ===== */
 
 :root {
@@ -142,6 +147,12 @@
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Safe area insets for mobile notches/home indicator */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
 /* ===== BASE STYLES ===== */
@@ -150,9 +161,12 @@
   box-sizing: border-box;
 }
 
+/* Viewport-safe layout: prevent horizontal overflow, enable vertical scroll */
 html {
   scroll-behavior: smooth;
   font-family: var(--font-family-sans);
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -163,6 +177,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100dvh;
+  min-height: 100vh;
 }
 
 /* ===== FOCUS STYLES ===== */
@@ -329,32 +347,36 @@ body {
   padding: var(--space-readable-xl) 0;
 }
 
-/* Enhanced Container Utilities */
+/* Enhanced Container Utilities - fit within viewport */
 .container-readable {
   width: 100%;
-  max-width: 1200px;
+  max-width: min(1200px, calc(100vw - 2rem));
   margin: 0 auto;
   padding: 0 var(--space-readable-md);
+  padding-left: max(var(--space-readable-md), env(safe-area-inset-left));
+  padding-right: max(var(--space-readable-md), env(safe-area-inset-right));
 }
 
 .container-readable-narrow {
   width: 100%;
-  max-width: 800px;
+  max-width: min(800px, calc(100vw - 2rem));
   margin: 0 auto;
   padding: 0 var(--space-readable-sm);
+  padding-left: max(var(--space-readable-sm), env(safe-area-inset-left));
+  padding-right: max(var(--space-readable-sm), env(safe-area-inset-right));
 }
 
-/* Improved Grid Systems */
+/* Improved Grid Systems - min() prevents overflow on narrow viewports */
 .grid-readable {
   display: grid;
   gap: var(--space-readable-md);
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
 }
 
 .grid-readable-dense {
   display: grid;
   gap: var(--space-readable-sm);
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
 }
 
 /* Enhanced Flex Utilities */
@@ -561,20 +583,24 @@ select:focus {
 /* ===== MODERN LAYOUT UTILITIES ===== */
 
 .container-modern {
-  max-width: 1200px;
+  width: 100%;
+  max-width: min(1200px, calc(100vw - 2rem));
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
 }
 
 @media (min-width: 640px) {
   .container-modern {
-    padding: 0 1.5rem;
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
   }
 }
 
 @media (min-width: 1024px) {
   .container-modern {
-    padding: 0 2rem;
+    padding-left: max(2rem, env(safe-area-inset-left));
+    padding-right: max(2rem, env(safe-area-inset-right));
   }
 }
 
@@ -592,32 +618,77 @@ select:focus {
 }
 
 .section-padding {
-  padding: 4rem 0;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 2rem);
 }
 
 .section-padding-sm {
-  padding: 2rem 0;
+  padding: clamp(1.5rem, 4vw, 2rem) clamp(1rem, 4vw, 2rem);
 }
 
 .section-padding-lg {
-  padding: 6rem 0;
+  padding: clamp(3rem, 6vw, 6rem) clamp(1rem, 4vw, 2rem);
 }
 
-/* Creative grid utilities */
+/* Creative grid utilities - min() ensures fit on narrow screens */
 .grid-creative {
   display: grid;
-  gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
 }
 
 .grid-staggered {
   display: grid;
-  gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
 }
 
 .grid-staggered > *:nth-child(odd) {
   transform: translateY(-1rem);
+}
+
+/* ===== AUTO LAYOUT: SECTIONS FIT & VISIBLE ===== */
+
+/* Section wrapper: ensures content fits viewport and is fully visible */
+.section-auto-fit {
+  width: 100%;
+  max-width: 100%;
+  min-height: 0; /* Allow flex children to shrink */
+  overflow: visible;
+  padding: clamp(1rem, 4vw, 2rem) clamp(0.75rem, 3vw, 1.5rem);
+}
+
+/* Main content area: scrollable when needed */
+.layout-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Page wrapper: flex column that fills viewport */
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.page-layout > * {
+  min-width: 0; /* Prevent flex children from overflowing */
+}
+
+/* Container that fits within viewport */
+.container-fit {
+  width: 100%;
+  max-width: min(1200px, calc(100vw - 2rem));
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
 }
 
 /* ===== ENHANCED CARD VARIANTS ===== */
@@ -1164,6 +1235,63 @@ select:focus {
   animation: float 4s ease-in-out infinite;
 }
 
+/* Motion graphic overlay animations (editor text/shape overlays) */
+@keyframes motion-graphic-wiggle {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-1deg); }
+  50% { transform: translate(-50%, -50%) rotate(1deg); }
+}
+
+@keyframes motion-graphic-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 8px currentColor); }
+  50% { filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 16px currentColor); }
+}
+
+@keyframes motion-graphic-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.03); }
+}
+
+.motion-graphic-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.motion-graphic-float {
+  animation: float 2.5s ease-in-out infinite;
+}
+
+.motion-graphic-wiggle {
+  animation: motion-graphic-wiggle 0.4s ease-in-out infinite;
+}
+
+.motion-graphic-glow {
+  animation: motion-graphic-glow 1.5s ease-in-out infinite;
+}
+
+.motion-graphic-breathe {
+  animation: motion-graphic-breathe 2s ease-in-out infinite;
+}
+
+@keyframes motion-graphic-shake {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -50%) rotate(-0.8deg); }
+  75% { transform: translate(-50%, -50%) rotate(0.8deg); }
+}
+
+.motion-graphic-shake {
+  animation: motion-graphic-shake 0.25s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-graphic-pulse,
+  .motion-graphic-float,
+  .motion-graphic-wiggle,
+  .motion-graphic-glow,
+  .motion-graphic-breathe,
+  .motion-graphic-shake {
+    animation: none;
+  }
+}
+
 /* Enhanced hover interactions */
 .hover-lift {
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -1328,6 +1456,53 @@ select:focus {
 
 .input-modern::placeholder {
   color: var(--color-secondary-500);
+}
+
+/* ===== EDITOR AUTO-ADJUST: TEXT & LAYOUT FOR ALL EDITING TOOLS ===== */
+
+/* Wrapper: apply to editor content area for fluid typography and layout */
+.editor-auto {
+  --editor-text-xs: clamp(0.65rem, 1.5vw + 0.5rem, 0.75rem);
+  --editor-text-sm: clamp(0.75rem, 2vw + 0.5rem, 0.875rem);
+  --editor-text-base: clamp(0.875rem, 2.5vw + 0.5rem, 1rem);
+  --editor-text-lg: clamp(1rem, 3vw + 0.5rem, 1.125rem);
+  --editor-text-xl: clamp(1.125rem, 3.5vw + 0.5rem, 1.25rem);
+  font-size: var(--editor-text-base);
+  line-height: 1.5;
+}
+
+/* Auto-adjust tiny fixed text so it scales with viewport */
+.editor-auto .text-\[10px\] { font-size: var(--editor-text-xs) !important; }
+.editor-auto .text-\[11px\] { font-size: var(--editor-text-xs) !important; }
+.editor-auto .text-\[8px\]  { font-size: var(--editor-text-xs) !important; }
+.editor-auto .text-xs      { font-size: var(--editor-text-sm) !important; }
+.editor-auto .text-sm      { font-size: var(--editor-text-base) !important; }
+
+/* Fluid headings */
+.editor-auto h3 { font-size: var(--editor-text-lg); }
+.editor-auto h2 { font-size: var(--editor-text-xl); }
+
+/* Prevent overflow: flex/grid children can shrink */
+.editor-auto .flex > *,
+.editor-auto .grid > * {
+  min-width: 0;
+}
+.editor-auto span,
+.editor-auto p {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Grids: auto-fit columns on narrow viewports for grid-cols-2/3 */
+.editor-auto .grid.grid-cols-2 { grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); }
+.editor-auto .grid.grid-cols-3 { grid-template-columns: repeat(auto-fit, minmax(min(100px, 100%), 1fr)); }
+@media (min-width: 640px) {
+  .editor-auto .grid.sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .editor-auto .grid.sm\:grid-cols-3 { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); }
+}
+@media (min-width: 768px) {
+  .editor-auto .grid.md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .editor-auto .grid.md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* ===== ANIMATIONS ===== */
@@ -1560,18 +1735,18 @@ select:focus {
 .grid-modern {
   display: grid;
   gap: var(--space-6);
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
 }
 
 @media (min-width: 768px) {
   .grid-modern {
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(350px, 100%), 1fr));
   }
 }
 
 @media (min-width: 1024px) {
   .grid-modern {
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
   }
 }
 
@@ -1776,7 +1951,7 @@ select:focus {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Larger tap targets on mobile */
   input, select, textarea {
     font-size: 16px; /* Prevents zoom on iOS */

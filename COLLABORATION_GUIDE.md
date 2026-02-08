@@ -6,7 +6,7 @@ A protected workflow where **you review and approve all changes** before they go
 
 ## Step 1: Set Up GitHub Branch Protection (One-Time)
 
-Go to: **https://github.com/Droze-svj/click-platform/settings/branches**
+Go to: **<https://github.com/Droze-svj/click-platform/settings/branches>**
 
 1. Click **Add branch protection rule**
 2. Branch name pattern: `main`
@@ -22,7 +22,7 @@ Now no one (including collaborators) can push directly to `main`. All changes mu
 
 ## Step 2: Start a Cursor Live Share Session
 
-### You (the owner) start the session:
+### You (the owner) start the session
 
 1. Open Cursor
 2. Press `Cmd + Shift + P` (Mac) or `Ctrl + Shift + P` (Windows)
@@ -30,7 +30,7 @@ Now no one (including collaborators) can push directly to `main`. All changes mu
 4. Copy the session link
 5. Send the link to your collaborator
 
-### Collaborator joins:
+### Collaborator joins
 
 1. Open Cursor
 2. Press `Cmd + Shift + P`
@@ -43,7 +43,7 @@ Now you're both editing the same workspace in real-time.
 
 ## Step 3: The Protected Workflow
 
-### When collaborator wants to make changes:
+### When collaborator wants to make changes
 
 ```bash
 # 1. Create a feature branch (NOT main)
@@ -59,14 +59,14 @@ git commit -m "Add feature X"
 git push origin feature/collaborator-changes
 ```
 
-### Then collaborator creates a Pull Request:
+### Then collaborator creates a Pull Request
 
-1. Go to: https://github.com/Droze-svj/click-platform
+1. Go to: <https://github.com/Droze-svj/click-platform>
 2. Click **Compare & pull request** (appears after pushing)
 3. Add a description of changes
 4. Click **Create pull request**
 
-### You (owner) review and approve:
+### You (owner) review and approve
 
 1. Go to the Pull Request on GitHub
 2. Click **Files changed** — review every change
@@ -112,8 +112,25 @@ git pull origin main
 
 ## Repository
 
-- **URL**: https://github.com/Droze-svj/click-platform
+- **URL**: <https://github.com/Droze-svj/click-platform>
 - **Protected branch**: `main` (requires your approval)
+
+## Collaborator Setup
+
+**New collaborator?** → Share [COLLABORATOR_TESTING_GUIDE.md](./COLLABORATOR_TESTING_GUIDE.md) — local setup, env, testing
+
+**Production issues?** → [PHASE_0_FIX_GUIDE.md](./PHASE_0_FIX_GUIDE.md) — fix MongoDB + Redis
+
+---
+
+## Roadmap Workflow
+
+For roadmap-driven work, review tracking, and seeing next stages in Cursor:
+
+- **npm run assign** — List assignments, then `npm run assign 1` → generates ASSIGNMENT_READY.md (copy-paste ready)
+- **ROADMAP_STATUS.md** — Keep open in Cursor to see what's next, in review, done
+- **ASSIGNMENT_WORKFLOW.md** — Autonomous 3-step flow with fixed templates
+- **ROADMAP_WORKFLOW_GUIDE.md** — Full setup (GitHub Projects, Issues, VS Code extensions)
 
 ---
 

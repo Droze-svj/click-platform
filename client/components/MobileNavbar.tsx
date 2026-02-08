@@ -44,7 +44,7 @@ export default function MobileNavbar() {
   const isActive = (path: string) => pathname === path
 
   return (
-    <nav className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <nav className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 pt-[env(safe-area-inset-top)]">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -116,11 +116,10 @@ export default function MobileNavbar() {
                     router.push(item.path)
                     setIsOpen(false)
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-                    isActive(item.path)
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive(item.path)
                       ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
+                    }`}
                 >
                   <span className="text-xl">{item.icon}</span>
                   <span className="font-medium">{t(item.labelKey)}</span>

@@ -12,9 +12,9 @@ interface UploadProgressProps {
   showCancel?: boolean
 }
 
-export default function UploadProgress({ 
-  uploadId, 
-  onComplete, 
+export default function UploadProgress({
+  uploadId,
+  onComplete,
   onError,
   onCancel,
   showCancel = true
@@ -97,17 +97,17 @@ export default function UploadProgress({
           )}
           <span className="text-sm font-medium text-gray-900 dark:text-white">
             {progress.status === 'uploading' ? 'Uploading...' :
-             progress.status === 'completed' ? 'Upload Complete' :
-             progress.status === 'failed' ? 'Upload Failed' :
-             progress.status === 'cancelled' ? 'Upload Cancelled' :
-             'Processing...'}
+              progress.status === 'completed' ? 'Upload Complete' :
+                progress.status === 'failed' ? 'Upload Failed' :
+                  progress.status === 'cancelled' ? 'Upload Cancelled' :
+                    'Processing...'}
           </span>
           {/* Connection Status */}
-          <div className="flex items-center gap-1 ml-2">
+          <div className="flex items-center gap-1 ml-2" title={isConnected ? 'Real-time updates active' : 'Polling mode'}>
             {isConnected ? (
-              <Wifi className="w-3 h-3 text-green-500" title="Real-time updates active" />
+              <Wifi className="w-3 h-3 text-green-500" aria-hidden />
             ) : (
-              <WifiOff className="w-3 h-3 text-gray-400" title="Polling mode" />
+              <WifiOff className="w-3 h-3 text-gray-400" aria-hidden />
             )}
           </div>
         </div>
@@ -130,20 +130,19 @@ export default function UploadProgress({
 
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
         <div
-          className={`h-2 rounded-full transition-all ${
-            progress.status === 'completed'
+          className={`h-2 rounded-full transition-all ${progress.status === 'completed'
               ? 'bg-green-500'
               : progress.status === 'failed'
-              ? 'bg-red-500'
-              : 'bg-blue-500'
-          }`}
+                ? 'bg-red-500'
+                : 'bg-blue-500'
+            }`}
           style={{ width: `${progress.progress}%` }}
         />
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
         <span>
-          {formatBytes(progress.bytesUploaded)} / {formatBytes(progress.totalBytes)}
+          {formatBytes(progress.bytesUploaded ?? 0)} / {formatBytes(progress.totalBytes ?? 0)}
         </span>
         {progress.estimatedTimeRemaining && progress.status === 'uploading' && (
           <span>~{formatTime(progress.estimatedTimeRemaining)} remaining</span>

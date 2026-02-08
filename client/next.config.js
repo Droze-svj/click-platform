@@ -12,6 +12,16 @@ const nextConfig = {
   swcMinify: true,
   poweredByHeader: false,
 
+  // Optimize for iCloud Drive: memory cache, larger chunks to reduce timeout risk
+  webpack: (config, { dev, isServer }) => {
+    config.cache = { type: 'memory' }
+    const splitChunks = config.optimization?.splitChunks
+    if (splitChunks && typeof splitChunks === 'object' && !Array.isArray(splitChunks)) {
+      config.optimization.splitChunks = { ...splitChunks, maxSize: 500000 }
+    }
+    return config
+  },
+
   images: {
     domains: ['localhost'],
   },
