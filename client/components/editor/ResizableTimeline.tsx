@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { Layers, Clock, ZoomIn, ZoomOut, Maximize2, Focus, ChevronLeft, ChevronRight, Sparkles, Trash2, Copy, Lock, Eye, EyeOff, Type, Image as ImageIcon } from 'lucide-react'
-import { TimelineSegment, TimelineEffect, EFFECT_TYPE_COLORS, SegmentTransitionType, TextOverlay, ImageOverlay } from '../../types/editor'
-import { formatTime, formatTimeDetailed, formatTimePrecise, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS } from '../../utils/editorUtils'
+import { TimelineSegment, TimelineEffect, EFFECT_TYPE_COLORS, SegmentTransitionType, TextOverlay, ImageOverlay, ALL_TIMELINE_TRACKS } from '../../types/editor'
+import { formatTime, formatTimeDetailed, formatTimePrecise, formatTimeFrames, parseTime, snapToGrid, snapToNearestEdge, SNAP_STEPS } from '../../utils/editorUtils'
 import { getSegmentColor } from '../../utils/editorUtils'
 
 interface ResizableTimelineProps {
@@ -25,16 +25,52 @@ interface ResizableTimelineProps {
   imageOverlays?: ImageOverlay[]
   /** Optional: duplicate the segment containing the playhead (called with segment id) */
   onDuplicateSegmentAtPlayhead?: (segmentId: string) => void
+  /** Optional: when timeline is focused, Space toggles play/pause */
+  isPlaying?: boolean
+  onPlayPause?: () => void
+  /** Optional: compact = tighter toolbar; expanded = more padding */
+  density?: 'compact' | 'comfortable' | 'expanded'
+  /** Track visibility (eye on/off). Key = track index, value = visible. Missing = visible. */
+  trackVisibility?: Record<number, boolean>
+  onTrackVisibilityChange?: (trackIndex: number, visible: boolean) => void
 }
 
-const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], imageOverlays = [], onDuplicateSegmentAtPlayhead }) => {
+const STORAGE_KEY_TIME_FORMAT = 'click-timeline-time-format'
+const STORAGE_KEY_FPS = 'click-timeline-fps'
+type TimeFormatPreference = 'short' | 'tenths' | 'frames'
+
+const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId, onSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange }) => {
   const [timestampInput, setTimestampInput] = useState('')
+  const [timeFormat, setTimeFormat] = useState<TimeFormatPreference>(() => {
+    if (typeof window === 'undefined') return 'short'
+    const v = localStorage.getItem(STORAGE_KEY_TIME_FORMAT) as TimeFormatPreference | null
+    return (v === 'short' || v === 'tenths' || v === 'frames') ? v : 'short'
+  })
+  const [framesPerSecond, setFramesPerSecond] = useState<24 | 30>(() => {
+    if (typeof window === 'undefined') return 30
+    const v = localStorage.getItem(STORAGE_KEY_FPS)
+    return v === '24' ? 24 : 30
+  })
   const [snapEnabled, setSnapEnabled] = useState(true)
   const [snapStepIndex, setSnapStepIndex] = useState(2)
   const [isScrubbing, setIsScrubbing] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [rulerHoverTime, setRulerHoverTime] = useState<number | null>(null)
+  const [draggingSegmentId, setDraggingSegmentId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(STORAGE_KEY_TIME_FORMAT, timeFormat)
+    localStorage.setItem(STORAGE_KEY_FPS, String(framesPerSecond))
+  }, [timeFormat, framesPerSecond])
+
+  const displayTime = useCallback((time: number) => {
+    if (timeFormat === 'short') return formatTime(time)
+    if (timeFormat === 'tenths') return formatTimePrecise(time, 1)
+    return formatTimeFrames(time, framesPerSecond)
+  }, [timeFormat, framesPerSecond])
+  const dragSegmentStartRef = useRef<{ x: number; startTime: number; endTime: number } | null>(null)
   const seekRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -53,7 +89,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   }, [maxDur, segments, effects])
 
   const segmentAtPlayhead = useMemo(() =>
-    segments.find((s) => currentTime >= s.startTime && currentTime < s.endTime)),
+    segments.find((s) => currentTime >= s.startTime && currentTime < s.endTime),
     [segments, currentTime])
 
   const seekTo = useCallback((clientX: number) => {
@@ -180,16 +216,17 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (!el) return
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === ' ') { e.preventDefault(); onPlayPause?.(); return }
       if (e.key === 'ArrowLeft') { e.preventDefault(); stepTime(-1) }
       else if (e.key === 'ArrowRight') { e.preventDefault(); stepTime(1) }
       else if (e.key === 'Home') { e.preventDefault(); userSeekRef.current = true; onTimeUpdate(0) }
       else if (e.key === 'End') { e.preventDefault(); userSeekRef.current = true; onTimeUpdate(maxDur) }
       else if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedSegmentId || selectedEffectId)) { e.preventDefault(); handleDeleteSelected() }
-      else if (e.key === 'Escape') { onSegmentSelect?.(null); onEffectSelect?.(null) }
+      else if (e.key === 'Escape') { onSegmentSelect?.(null); onEffectSelect?.(null); setDraggingSegmentId(null) }
     }
     el.addEventListener('keydown', onKeyDown)
     return () => el.removeEventListener('keydown', onKeyDown)
-  }, [stepTime, selectedSegmentId, selectedEffectId, handleDeleteSelected, onSegmentSelect, onEffectSelect, onTimeUpdate, maxDur])
+  }, [stepTime, selectedSegmentId, selectedEffectId, handleDeleteSelected, onSegmentSelect, onEffectSelect, onTimeUpdate, onPlayPause, maxDur])
 
   const handleSeekHover = (e: React.MouseEvent<HTMLDivElement>) => {
     const scrollEl = scrollRef.current
@@ -261,49 +298,101 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     }))
   }, [maxDur, snapEnabled, snapStep, onSegmentsChange])
 
+  const moveSegmentTo = useCallback((id: string, originalStart: number, originalEnd: number, deltaTime: number) => {
+    if (!onSegmentsChange) return
+    const segDur = originalEnd - originalStart
+    let newStart = originalStart + deltaTime
+    if (snapEnabled) newStart = snapToNearestEdge(newStart, magneticEdges, snapStep * 1.2) !== newStart ? snapToNearestEdge(newStart, magneticEdges, snapStep * 1.2) : snapToGrid(newStart, snapStep)
+    newStart = Math.max(0, Math.min(maxDur - segDur, newStart))
+    const newEnd = newStart + segDur
+    onSegmentsChange((prev) => prev.map((seg) => {
+      if (seg.id !== id) return seg
+      return { ...seg, startTime: newStart, endTime: Math.min(newEnd, maxDur), duration: Math.min(newEnd, maxDur) - newStart }
+    }))
+  }, [maxDur, snapEnabled, snapStep, magneticEdges, onSegmentsChange])
+
+  useEffect(() => {
+    if (!draggingSegmentId || !dragSegmentStartRef.current) return
+    const { x: startX, startTime: origStart, endTime: origEnd } = dragSegmentStartRef.current
+    const onMove = (e: MouseEvent) => {
+      const contentEl = contentRef.current
+      const w = contentEl?.offsetWidth
+      if (!w) return
+      const deltaTime = ((e.clientX - startX) / w) * maxDur
+      moveSegmentTo(draggingSegmentId, origStart, origEnd, deltaTime)
+    }
+    const onUp = () => {
+      setDraggingSegmentId(null)
+      dragSegmentStartRef.current = null
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [draggingSegmentId, maxDur, moveSegmentTo])
+
+  const handleSegmentBodyMouseDown = useCallback((e: React.MouseEvent, seg: TimelineSegment) => {
+    if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+    e.stopPropagation()
+    setDraggingSegmentId(seg.id)
+    dragSegmentStartRef.current = { x: e.clientX, startTime: seg.startTime, endTime: seg.endTime }
+  }, [])
+
+  const handleWheelZoom = useCallback((e: React.WheelEvent) => {
+    if (!(e.ctrlKey || e.metaKey)) return
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -0.25 : 0.25
+    setZoom((z) => Math.max(0.5, Math.min(4, z + delta)))
+  }, [])
+
+  const isCompact = density === 'compact'
   return (
-    <div ref={containerRef} tabIndex={0} className="h-full bg-gray-50 dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 flex flex-col overflow-hidden outline-none focus:ring-2 focus:ring-blue-500/30 shadow-sm" role="region" aria-label="Video timeline">
-      {/* Toolbar */}
-      <div className="px-3 py-2.5 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-gray-900/50">
+    <div ref={containerRef} tabIndex={0} className={`h-full bg-[#1a1d24] dark:bg-[#12151a] rounded-2xl border border-slate-700/60 flex flex-col overflow-hidden outline-none focus:ring-2 focus:ring-amber-500/40 shadow-xl shadow-black/20 ${isCompact ? 'rounded-xl' : ''}`} role="region" aria-label="Video timeline">
+      {/* Toolbar — density-aware */}
+      <div className={`border-b border-slate-700/60 flex flex-wrap items-center justify-between gap-2 bg-slate-900/80 ${isCompact ? 'px-2 py-1.5' : 'px-3 py-2'}`}>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-500 shrink-0" aria-hidden />
-            <span className="text-xs font-bold text-gray-700 dark:text-gray-200">Timeline</span>
+            <Layers className={`text-amber-400 shrink-0 ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} aria-hidden />
+            <span className={`font-bold text-slate-200 tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>Timeline</span>
           </div>
-          <span className="text-[10px] text-gray-500 dark:text-gray-400 hidden sm:inline">← → step · Home/End · Del remove</span>
+          {!isCompact && <span className="text-[10px] text-slate-500 hidden sm:inline">← → step · Space play · Ctrl+wheel zoom · Drag to move</span>}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-400 shrink-0" aria-hidden />
+            <Clock className="w-4 h-4 text-slate-500 shrink-0" aria-hidden />
             <input
               type="text"
               value={timestampInput}
               onChange={(e) => setTimestampInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleGoToTimestamp())}
               placeholder="0:00 or 1:30.5"
-              className="w-24 px-2.5 py-1.5 text-xs font-mono rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-24 px-2.5 py-1.5 text-xs font-mono rounded-md border border-slate-600 bg-slate-800 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
               title="Jump to time (e.g. 1:30, 1:30.5, 90)"
               aria-label="Go to timestamp"
             />
-            <button type="button" onClick={handleGoToTimestamp} className="px-2.5 py-1.5 text-xs font-semibold bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" aria-label="Go to time">Go</button>
-            <button type="button" onClick={() => setTimestampInput(formatTimeDetailed(currentTime))} className="px-2 py-1.5 text-xs text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Use current position">Now</button>
+            <button type="button" onClick={handleGoToTimestamp} className="px-2.5 py-1.5 text-xs font-semibold bg-amber-500 text-slate-900 rounded-md hover:bg-amber-400 transition-colors" aria-label="Go to time">Go</button>
+            <button type="button" onClick={() => setTimestampInput(formatTimeDetailed(currentTime))} className="px-2 py-1.5 text-xs text-slate-400 hover:text-amber-400 transition-colors" title="Use current position">Now</button>
           </div>
-          <div className="flex items-center gap-1.5 border-l border-gray-200 dark:border-gray-700 pl-2">
-            <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Snap</span>
-            <button type="button" onClick={() => setSnapEnabled((v) => !v)} className={`px-2 py-1 rounded-lg text-[10px] font-medium transition-colors ${snapEnabled ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'}`} title={snapEnabled ? `Snap to grid & edges (${snapStepLabel})` : 'Snap off'}>
+          <div className="flex items-center gap-1.5 border-l border-slate-700 pl-2">
+            <span className="text-[10px] font-medium text-slate-500">Snap</span>
+            <button type="button" onClick={() => setSnapEnabled((v) => !v)} className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors ${snapEnabled ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`} title={snapEnabled ? `Snap to grid & edges (${snapStepLabel})` : 'Snap off'}>
               {snapStepLabel}
             </button>
-            <select value={snapStepIndex} onChange={(e) => setSnapStepIndex(Number(e.target.value))} className="px-1.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[10px] font-mono text-gray-700 dark:text-gray-200" title="Snap grid" aria-label="Snap step">
+            <select value={snapStepIndex} onChange={(e) => setSnapStepIndex(Number(e.target.value))} className="px-1.5 py-1 rounded-md border border-slate-600 bg-slate-800 text-[10px] font-mono text-slate-200" title="Snap grid" aria-label="Snap step">
               {SNAP_STEPS.map((s, i) => (
                 <option key={i} value={i}>{s < 1 ? (s === 1 / 30 ? '1/30 s' : s === 1 / 24 ? '1/24 s' : `${s}s`) : `${s}s`}</option>
               ))}
             </select>
           </div>
-          <div className="flex items-center gap-0.5 border-l border-gray-200 dark:border-gray-700 pl-2">
-            <button type="button" onClick={() => stepTime(-1)} className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title={`Step back ${stepAmount}s (←)`} aria-label="Step back">
+          <div className="flex items-center gap-0.5 border-l border-slate-700 pl-2">
+            <button type="button" onClick={() => stepTime(-1)} className="p-1.5 rounded-md hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-200" title={`Step back ${stepAmount}s (←)`} aria-label="Step back">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <button type="button" onClick={() => stepTime(1)} className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title={`Step forward ${stepAmount}s (→)`} aria-label="Step forward">
+            <button type="button" onClick={() => stepTime(1)} className="p-1.5 rounded-md hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-200" title={`Step forward ${stepAmount}s (→)`} aria-label="Step forward">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -311,56 +400,82 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             <button
               type="button"
               onClick={() => onDuplicateSegmentAtPlayhead(segmentAtPlayhead.id)}
-              className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition-colors"
+              className="p-1.5 rounded-md hover:bg-emerald-500/20 text-emerald-400 transition-colors"
               title="Duplicate segment at playhead"
               aria-label="Duplicate segment at playhead"
             >
               <Copy className="w-4 h-4" />
             </button>
           )}
-          <div className="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-2">
-            <button type="button" onClick={() => setZoom(1)} className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Fit to view (100%)" aria-label="Fit">
+          <div className="flex items-center gap-1 border-l border-slate-700 pl-2">
+            <button type="button" onClick={() => setZoom(1)} className="p-1.5 rounded-md hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-200" title="Fit to view (100%)" aria-label="Fit">
               <Maximize2 className="w-4 h-4" />
             </button>
             {(selectedSegmentId || selectedEffectId) && (
-              <button type="button" onClick={zoomToSelection} className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors" title="Zoom to selection" aria-label="Zoom to selection">
+              <button type="button" onClick={zoomToSelection} className="p-1.5 rounded-md hover:bg-amber-500/20 text-amber-400 transition-colors" title="Zoom to selection" aria-label="Zoom to selection">
                 <Focus className="w-4 h-4" />
               </button>
             )}
-            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.5))} className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Zoom out" aria-label="Zoom out">
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.5, z - 0.5))} className="p-1.5 rounded-md hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-200" title="Zoom out" aria-label="Zoom out">
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="text-xs font-mono text-gray-600 dark:text-gray-300 min-w-[2.5rem] text-center">{Math.round(zoom * 100)}%</span>
-            <button type="button" onClick={() => setZoom((z) => Math.min(4, z + 0.5))} className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Zoom in" aria-label="Zoom in">
+            <span className="text-xs font-mono text-slate-400 min-w-[2.5rem] text-center">{Math.round(zoom * 100)}%</span>
+            <button type="button" onClick={() => setZoom((z) => Math.min(4, z + 0.5))} className="p-1.5 rounded-md hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-200" title="Zoom in" aria-label="Zoom in">
               <ZoomIn className="w-4 h-4" />
             </button>
           </div>
-          <div className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums" aria-live="polite">
-            {zoom >= 2 ? formatTimePrecise(currentTime, 1) : formatTime(currentTime)} <span className="text-gray-400 font-normal">/</span> {formatTime(duration)}
+          <div className="flex items-center gap-2 border-l border-slate-700 pl-2">
+            <span className="text-[10px] font-medium text-slate-500">Time</span>
+            <select
+              value={timeFormat}
+              onChange={(e) => setTimeFormat(e.target.value as TimeFormatPreference)}
+              className="px-2 py-1 rounded-md border border-slate-600 bg-slate-800 text-[10px] font-medium text-slate-200 focus:ring-2 focus:ring-amber-500/50"
+              title="Timestamp display format"
+              aria-label="Timestamp format"
+            >
+              <option value="short">Short (0:00)</option>
+              <option value="tenths">Tenths (0:00.0)</option>
+              <option value="frames">Frames</option>
+            </select>
+            {timeFormat === 'frames' && (
+              <select
+                value={framesPerSecond}
+                onChange={(e) => setFramesPerSecond(e.target.value === '24' ? 24 : 30)}
+                className="px-1.5 py-1 rounded-md border border-slate-600 bg-slate-800 text-[10px] font-mono text-slate-200"
+                title="Frames per second"
+                aria-label="FPS"
+              >
+                <option value={24}>24fps</option>
+                <option value={30}>30fps</option>
+              </select>
+            )}
+          </div>
+          <div className="text-xs font-mono font-bold text-amber-400 tabular-nums" aria-live="polite">
+            {displayTime(currentTime)} <span className="text-slate-500 font-normal">/</span> {displayTime(duration)}
           </div>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scrollbar">
+      <div ref={scrollRef} className="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scrollbar bg-[#15181f]" onWheel={handleWheelZoom} style={{ touchAction: 'pan-y' }}>
         <div ref={contentRef} className="relative min-w-full p-4 pb-4 space-y-3" style={{ width: zoom > 1 ? `${zoom * 100}%` : '100%' }}>
-          {/* Playhead + current time label */}
+          {/* Playhead — film-style thin line + triangular head */}
           <div
-            className="absolute top-4 bottom-4 w-0.5 bg-blue-500 z-30 pointer-events-none rounded-full shadow-[0_0_0_2px_rgba(255,255,255,0.8)] dark:shadow-[0_0_0_2px_rgba(0,0,0,0.5)]"
-            style={{ left: `${progress}%` }}
+            className={`absolute top-4 bottom-4 w-px z-30 pointer-events-none transition-transform duration-150 ${isScrubbing ? 'scale-x-150 opacity-100' : ''}`}
+            style={{ left: `${progress}%`, background: 'linear-gradient(to bottom, transparent 0%, #f59e0b 8%, #f59e0b 92%, transparent 100%)', boxShadow: '0 0 0 1px rgba(0,0,0,0.4)' }}
             aria-hidden
           />
           <div
-            className="absolute top-0 left-0 -translate-x-1/2 px-1.5 py-0.5 rounded bg-blue-500 text-white text-[9px] font-mono font-bold shadow-md pointer-events-none z-30 whitespace-nowrap"
+            className={`absolute top-0 left-0 -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-amber-500 text-slate-900 text-[9px] font-mono font-bold shadow-lg pointer-events-none z-30 whitespace-nowrap transition-all duration-150 ${isScrubbing ? 'scale-110 ring-2 ring-amber-400' : ''}`}
             style={{ left: `${progress}%` }}
             aria-hidden
           >
             {formatTimePrecise(currentTime, 1)}
           </div>
 
-          {/* Time ruler */}
+          {/* Time ruler — film-style ticks */}
           {maxDur > 0 && (
             <div
-              className="relative h-9 cursor-pointer select-none"
+              className="relative h-9 cursor-pointer select-none border-b border-slate-700/50"
               onClick={(e) => { seekTo(e.clientX) }}
               onMouseMove={handleRulerHover}
               onMouseLeave={() => setRulerHoverTime(null)}
@@ -381,17 +496,17 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       const left = (t / maxDur) * 100
                       return (
                         <div key={`tick-${i}`} className="absolute bottom-0 -translate-x-1/2" style={{ left: `${left}%` }}>
-                          <div className={`${major ? 'h-3 w-px bg-gray-400 dark:bg-gray-500' : 'h-1.5 w-px bg-gray-300 dark:bg-gray-600'}`} />
+                          <div className={`${major ? 'h-3 w-px bg-amber-500/60' : 'h-1.5 w-px bg-slate-600'}`} />
                           {major && (
-                            <span className="absolute left-1/2 -translate-x-1/2 text-[9px] font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap mt-0.5">
-                              {formatTime(t)}
+                            <span className="absolute left-1/2 -translate-x-1/2 text-[9px] font-mono text-slate-500 whitespace-nowrap mt-0.5">
+                              {displayTime(t)}
                             </span>
                           )}
                         </div>
                       )
-                    })()}
+                    })}
                     {rulerHoverTime != null && (
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-[10px] font-mono rounded shadow-lg pointer-events-none z-40 whitespace-nowrap">
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 border border-slate-600 text-amber-100 text-[10px] font-mono rounded shadow-xl pointer-events-none z-40 whitespace-nowrap">
                         {formatTimePrecise(rulerHoverTime, 1)}
                       </div>
                     )}
@@ -401,10 +516,10 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             </div>
           )}
 
-          {/* Seek track – click or drag to scrub */}
+          {/* Seek track — pill with gradient fill */}
           <div
             ref={seekRef}
-            className={`h-5 w-full bg-gray-200 dark:bg-gray-800 rounded-full relative cursor-pointer group select-none transition-shadow ${isScrubbing ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-50 dark:ring-offset-gray-950' : ''}`}
+            className={`h-6 w-full bg-slate-800 rounded-full relative cursor-pointer group select-none transition-shadow border border-slate-600/50 ${isScrubbing ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-[#15181f]' : ''}`}
             onClick={(e) => seekTo(e.clientX)}
             onMouseDown={(e) => {
               e.preventDefault()
@@ -414,7 +529,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             onMouseMove={handleSeekHover}
             onMouseLeave={() => setHoverTime(null)}
           >
-            <div className="absolute h-full bg-blue-500/20 group-hover:bg-blue-500/40 transition-colors rounded-full" style={{ width: `${progress}%` }} />
+            <div className="absolute h-full bg-gradient-to-r from-amber-500/30 to-amber-400/40 group-hover:from-amber-500/40 group-hover:to-amber-400/50 transition-colors rounded-full" style={{ width: `${progress}%` }} />
             <div className="absolute inset-0 rounded-full" style={{ cursor: isScrubbing ? 'grabbing' : undefined }} />
             <div
               role="slider"
@@ -422,7 +537,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
               aria-valuenow={currentTime}
               aria-valuemin={0}
               aria-valuemax={maxDur}
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 -translate-x-1/2 rounded-full bg-blue-500 border-2 border-white dark:border-gray-900 shadow-md cursor-grab active:cursor-grabbing z-10 hover:scale-110 transition-transform"
+              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 -translate-x-1/2 rounded-full bg-amber-500 border-2 border-slate-900 shadow-lg cursor-grab active:cursor-grabbing z-10 hover:scale-110 transition-transform"
               style={{ left: `${progress}%` }}
               onMouseDown={(e) => {
                 e.stopPropagation()
@@ -432,106 +547,157 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             />
             {hoverTime != null && (
               <div
-                className="absolute -top-6 px-2 py-1 bg-gray-800 dark:bg-gray-700 text-white text-[10px] font-mono rounded-lg shadow-lg pointer-events-none z-30 whitespace-nowrap -translate-x-1/2"
+                className="absolute -top-6 px-2 py-1 bg-slate-800 border border-slate-600 text-amber-100 text-[10px] font-mono rounded shadow-xl pointer-events-none z-30 whitespace-nowrap -translate-x-1/2"
                 style={{ left: `${Math.min(95, Math.max(5, (hoverTime / maxDur) * 100))}%` }}
               >
-                {formatTimePrecise(hoverTime, 1)}
+                {displayTime(hoverTime)}
               </div>
             )}
           </div>
 
-          {/* Segments track - with optional drag-resize handles */}
-          {segments.length > 0 && (
-            <div className="h-14 bg-gray-50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl flex items-center px-2 overflow-x-auto">
-              <span className="text-[8px] font-black uppercase text-gray-400 w-14 shrink-0">Segments</span>
-              <div className="flex-1 min-w-0 h-10 relative" style={{ minWidth: 200 }}>
-                {segments.map((s) => {
-                  const left = (s.startTime / maxDur) * 100
-                  const width = ((s.endTime - s.startTime) / maxDur) * 100
-                  const canResize = !!onSegmentsChange
-                  return (
-                    <div
-                      key={s.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        userSeekRef.current = true
-                        onTimeUpdate(s.startTime)
-                        onSegmentSelect?.(s.id)
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') { userSeekRef.current = true; onTimeUpdate(s.startTime); onSegmentSelect?.(s.id) }
-                        if (e.key === 'Escape') onSegmentSelect?.(null)
-                      }}
-                      className={`absolute h-8 rounded-lg border shadow-sm flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-white/50 hover:scale-[1.02] transition-all group/seg ${selectedSegmentId === s.id ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 dark:ring-offset-gray-950 scale-[1.02]' : 'border-white/30'}`}
-                      style={{
-                        left: `${left}%`,
-                        width: `${Math.max(width, 4)}%`,
-                        minWidth: 24,
-                        backgroundColor: getSegmentColor(s.type),
-                        color: 'white'
-                      }}
-                      title={`${s.name} ${formatTime(s.startTime)}–${formatTime(s.endTime)} — click to jump${canResize ? ', drag edges to resize' : ''}`}
-                    >
-                      {canResize && (
-                        <div
-                          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/seg:opacity-100 hover:bg-white/30 rounded-l transition-opacity"
-                          onMouseDown={(e) => {
-                            e.stopPropagation()
-                            const startX = e.clientX
-                            const startT = s.startTime
-                            const onMove = (ev: MouseEvent) => {
-                              const w = contentRef.current?.offsetWidth || seekRef.current?.getBoundingClientRect()?.width
-                              if (!w) return
-                              const dx = (ev.clientX - startX) / w * maxDur
-                              updateSegmentEdge(s.id, 'start', startT + dx)
-                            }
-                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                            window.addEventListener('mousemove', onMove)
-                            window.addEventListener('mouseup', onUp)
-                          }}
-                        />
-                      )}
-                      <span className="text-[9px] font-bold truncate px-1">{s.name}</span>
-                      <span className="absolute top-0.5 right-1 text-[7px] font-mono opacity-90 drop-shadow" title={`Duration ${formatTime(s.endTime - s.startTime)}`}>
-                        {formatTime(s.endTime - s.startTime)}
-                      </span>
-                      {selectedSegmentId === s.id && (s.transitionOut && s.transitionOut !== 'none') && (
-                        <span className="absolute bottom-0 left-0 right-0 text-[7px] opacity-90 bg-black/30 truncate px-1" title={`Transition: ${s.transitionOut} ${s.transitionDuration ?? 0.5}s`}>
-                          →{s.transitionOut}
+          {/* Multi-track segments — Video V1–V6 (A-Roll, B-Roll, Graphics) then Audio A1–A4 (Music, Dialogue, SFX) */}
+          {ALL_TIMELINE_TRACKS.map((track) => {
+            const trackSegments = segments.filter((s) => {
+              const t = Math.max(0, Math.min(9, s.track ?? 0))
+              return t === track.index
+            })
+            const trackLabel = `${track.id} ${track.name}`
+            const isAudio = track.kind === 'audio'
+            const isVisible = trackVisibility[track.index] !== false
+            return (
+              <div
+                key={track.id + track.index}
+                className={`h-14 rounded-xl flex items-center px-2 overflow-x-auto border ${isAudio ? 'bg-slate-800/40 border-slate-600/50' : 'bg-slate-800/50 border-slate-700/60'} ${!isVisible ? 'opacity-60' : ''}`}
+              >
+                {onTrackVisibilityChange && (
+                  <button
+                    type="button"
+                    onClick={() => onTrackVisibilityChange(track.index, !isVisible)}
+                    className="shrink-0 p-1 rounded hover:bg-slate-600/50 transition-colors mr-1"
+                    title={isVisible ? 'Hide track (clips not shown in preview)' : 'Show track'}
+                    aria-label={isVisible ? 'Hide track' : 'Show track'}
+                  >
+                    {isVisible ? <Eye className="w-3.5 h-3.5 text-slate-400 hover:text-amber-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-500 hover:text-amber-400" />}
+                  </button>
+                )}
+                <span className="text-[8px] font-bold uppercase tracking-wider w-14 shrink-0 text-left" title={trackLabel}>
+                  <span className={isAudio ? 'text-sky-400/90' : 'text-amber-500/80'}>{track.id}</span>
+                  <span className="text-slate-400 ml-0.5">{track.name}</span>
+                </span>
+                <div className="flex-1 min-w-0 h-10 relative" style={{ minWidth: 200 }}>
+                  {trackSegments.map((s) => {
+                    const left = (s.startTime / maxDur) * 100
+                    const width = ((s.endTime - s.startTime) / maxDur) * 100
+                    const canResize = !!onSegmentsChange
+                    const isDragging = draggingSegmentId === s.id
+                    return (
+                      <div
+                        key={s.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+                          e.stopPropagation()
+                          userSeekRef.current = true
+                          onTimeUpdate(s.startTime)
+                          onSegmentSelect?.(s.id)
+                        }}
+                        onDoubleClick={(e) => {
+                          if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+                          e.stopPropagation()
+                          onSegmentSelect?.(s.id)
+                          zoomToSelection()
+                        }}
+                        onMouseDown={(e) => {
+                          if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+                          handleSegmentBodyMouseDown(e, s)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') { userSeekRef.current = true; onTimeUpdate(s.startTime); onSegmentSelect?.(s.id) }
+                          if (e.key === 'Escape') onSegmentSelect?.(null)
+                        }}
+                        className={`absolute h-8 rounded-lg border border-white/20 shadow-md flex items-center justify-center overflow-hidden transition-all group/seg ${isDragging ? 'cursor-grabbing ring-2 ring-amber-400 scale-[1.02] z-20' : 'cursor-grab'} ${selectedSegmentId === s.id && !isDragging ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-[#15181f] scale-[1.02] hover:ring-amber-400/80' : 'hover:ring-2 hover:ring-amber-500/50 hover:scale-[1.02]'}`}
+                        style={{
+                          left: `${left}%`,
+                          width: `${Math.max(width, 4)}%`,
+                          minWidth: 24,
+                          backgroundColor: getSegmentColor(s.type),
+                          color: 'white'
+                        }}
+                        title={`${s.name} · ${trackLabel} · ${formatTime(s.startTime)}–${formatTime(s.endTime)} — click jump · double-click zoom · drag to move${canResize ? ' · drag edges to resize' : ''}`}
+                      >
+                        {canResize && (
+                          <div
+                            data-resize-handle
+                            className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/seg:opacity-100 hover:bg-white/30 rounded-l transition-opacity z-10"
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              const startX = e.clientX
+                              const startT = s.startTime
+                              const onMove = (ev: MouseEvent) => {
+                                const w = contentRef.current?.offsetWidth || seekRef.current?.getBoundingClientRect()?.width
+                                if (!w) return
+                                const dx = (ev.clientX - startX) / w * maxDur
+                                updateSegmentEdge(s.id, 'start', startT + dx)
+                              }
+                              const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                              window.addEventListener('mousemove', onMove)
+                              window.addEventListener('mouseup', onUp)
+                            }}
+                          />
+                        )}
+                        <span className="text-[9px] font-bold truncate px-1">{s.name}</span>
+                        <span className="absolute top-0.5 right-1 text-[7px] font-mono opacity-90 drop-shadow" title={`Duration ${displayTime(s.endTime - s.startTime)}`}>
+                          {displayTime(s.endTime - s.startTime)}
                         </span>
-                      )}
-                      {canResize && (
-                        <div
-                          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/seg:opacity-100 hover:bg-white/30 rounded-r transition-opacity"
-                          onMouseDown={(e) => {
-                            e.stopPropagation()
-                            const startX = e.clientX
-                            const startT = s.endTime
-                            const onMove = (ev: MouseEvent) => {
-                              const w = contentRef.current?.offsetWidth || seekRef.current?.getBoundingClientRect()?.width
-                              if (!w) return
-                              const dx = (ev.clientX - startX) / w * maxDur
-                              updateSegmentEdge(s.id, 'end', startT + dx)
-                            }
-                            const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
-                            window.addEventListener('mousemove', onMove)
-                            window.addEventListener('mouseup', onUp)
-                          }}
-                        />
-                      )}
-                    </div>
-                  )
-                })}
+                        {selectedSegmentId === s.id && (s.transitionOut && s.transitionOut !== 'none') && (
+                          <span className="absolute bottom-0 left-0 right-0 text-[7px] opacity-90 bg-black/30 truncate px-1" title={`Transition: ${s.transitionOut} ${s.transitionDuration ?? 0.5}s`}>
+                            →{s.transitionOut}
+                          </span>
+                        )}
+                        {canResize && (
+                          <div
+                            data-resize-handle
+                            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/seg:opacity-100 hover:bg-white/30 rounded-r transition-opacity z-10"
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              const startX = e.clientX
+                              const startT = s.endTime
+                              const onMove = (ev: MouseEvent) => {
+                                const w = contentRef.current?.offsetWidth || seekRef.current?.getBoundingClientRect()?.width
+                                if (!w) return
+                                const dx = (ev.clientX - startX) / w * maxDur
+                                updateSegmentEdge(s.id, 'end', startT + dx)
+                              }
+                              const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+                              window.addEventListener('mousemove', onMove)
+                              window.addEventListener('mouseup', onUp)
+                            }}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })}
 
-          {/* Segment transition & speed (when a segment is selected) */}
+          {/* Segment track, transition & speed (when a segment is selected) */}
           {selectedSegmentId && onSegmentsChange && segments.some((s) => s.id === selectedSegmentId) && (
             <div className="flex flex-wrap items-center gap-2 py-1.5 px-2 bg-gray-100 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-              <span className="text-[9px] font-bold text-gray-600 dark:text-gray-400">Transition out:</span>
+              <span className="text-[9px] font-bold text-gray-600 dark:text-gray-400">Track:</span>
+              <select
+                value={segments.find((s) => s.id === selectedSegmentId)?.track ?? 0}
+                onChange={(e) => onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, track: Number(e.target.value) } : s))}
+                className="px-2 py-1 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-[10px] font-medium min-w-[7rem]"
+                title="Move segment to another track"
+              >
+                {ALL_TIMELINE_TRACKS.map((t) => (
+                  <option key={t.index} value={t.index}>{t.id} {t.name}</option>
+                ))}
+              </select>
+              <span className="text-[9px] font-bold text-gray-600 dark:text-gray-400 ml-1">Transition out:</span>
               <select
                 value={segments.find((s) => s.id === selectedSegmentId)?.transitionOut ?? 'none'}
                 onChange={(e) => onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, transitionOut: e.target.value as SegmentTransitionType } : s))}
@@ -541,49 +707,49 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                   <option key={t} value={t}>{t === 'none' ? 'None' : t.replace(/-/g, ' ')}</option>
                 ))}
               </select>
-              <span className="text-[9px] font-bold text-gray-600 dark:text-gray-400">Duration (s):</span>
+              <span className="text-[9px] font-bold text-slate-400">Duration (s):</span>
               {[0.25, 0.5, 1].map((d) => (
                 <button
                   key={d}
                   type="button"
                   onClick={() => onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, transitionDuration: d } : s))}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${segments.find((s) => s.id === selectedSegmentId)?.transitionDuration === d ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${segments.find((s) => s.id === selectedSegmentId)?.transitionDuration === d ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                 >
                   {d}
                 </button>
               ))}
-              <span className="text-[9px] font-bold text-gray-600 dark:text-gray-400 ml-1">Speed:</span>
+              <span className="text-[9px] font-bold text-slate-400 ml-1">Speed:</span>
               {[0.5, 1, 1.5, 2].map((sp) => (
                 <button
                   key={sp}
                   type="button"
                   onClick={() => onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, playbackSpeed: sp, playbackSpeedStart: undefined, playbackSpeedEnd: undefined } : s))}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${(segments.find((s) => s.id === selectedSegmentId)?.playbackSpeed ?? 1) === sp ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${(segments.find((s) => s.id === selectedSegmentId)?.playbackSpeed ?? 1) === sp ? 'bg-amber-500 text-slate-900' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                 >
                   {sp}x
                 </button>
               ))}
-              <span className="text-[9px] font-bold text-gray-600 dark:text-gray-400 ml-1">Speed ramp:</span>
+              <span className="text-[9px] font-bold text-slate-400 ml-1">Speed ramp:</span>
               <div className="flex items-center gap-1">
-                <span className="text-[9px] text-gray-500">Start</span>
+                <span className="text-[9px] text-slate-500">Start</span>
                 {[0.5, 1, 1.5, 2].map((sp) => (
                   <button
                     key={`start-${sp}`}
                     type="button"
                     onClick={() => onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, playbackSpeedStart: sp } : s))}
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${(segments.find((s) => s.id === selectedSegmentId)?.playbackSpeedStart ?? 1) === sp ? 'bg-amber-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${(segments.find((s) => s.id === selectedSegmentId)?.playbackSpeedStart ?? 1) === sp ? 'bg-amber-600 text-slate-900' : 'bg-slate-700 text-slate-500'}`}
                   >
                     {sp}x
                   </button>
                 ))}
-                <span className="text-[9px] text-gray-500 mx-0.5">→</span>
-                <span className="text-[9px] text-gray-500">End</span>
+                <span className="text-[9px] text-slate-500 mx-0.5">→</span>
+                <span className="text-[9px] text-slate-500">End</span>
                 {[0.5, 1, 1.5, 2].map((sp) => (
                   <button
                     key={`end-${sp}`}
                     type="button"
                     onClick={() => onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, playbackSpeedEnd: sp } : s))}
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${(segments.find((s) => s.id === selectedSegmentId)?.playbackSpeedEnd ?? 1) === sp ? 'bg-amber-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${(segments.find((s) => s.id === selectedSegmentId)?.playbackSpeedEnd ?? 1) === sp ? 'bg-amber-600 text-slate-900' : 'bg-slate-700 text-slate-500'}`}
                   >
                     {sp}x
                   </button>
@@ -591,6 +757,61 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
               </div>
             </div>
           )}
+
+          {/* Transform & Crop (when image or B-roll segment selected) — scale, position, rotate, crop */}
+          {selectedSegmentId && onSegmentsChange && (() => {
+            const seg = segments.find((s) => s.id === selectedSegmentId)
+            if (!seg || (seg.type !== 'image' && seg.type !== 'video')) return null
+            const t = seg.transform ?? {}
+            const c = seg.crop ?? {}
+            const updateTransform = (patch: Partial<NonNullable<TimelineSegment['transform']>>) =>
+              onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, transform: { ...(s.transform ?? {}), ...patch } } : s))
+            const updateCrop = (patch: Partial<NonNullable<TimelineSegment['crop']>>) =>
+              onSegmentsChange((prev) => prev.map((s) => s.id === selectedSegmentId ? { ...s, crop: { ...(s.crop ?? {}), ...patch } } : s))
+            return (
+              <div className="flex flex-wrap items-center gap-3 py-2 px-2 bg-slate-700/30 dark:bg-slate-800/50 rounded-lg border border-slate-600/50">
+                <span className="text-[9px] font-bold text-amber-400 uppercase">Transform</span>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-10">Scale</span>
+                  <input type="range" min={10} max={200} value={Math.round((t.scale ?? 1) * 100)} onChange={(e) => updateTransform({ scale: Number(e.target.value) / 100 })} className="w-20 accent-amber-500" />
+                  <span className="text-[9px] font-mono w-8">{Math.round((t.scale ?? 1) * 100)}%</span>
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-10">X</span>
+                  <input type="range" min={-50} max={50} value={t.positionX ?? 0} onChange={(e) => updateTransform({ positionX: Number(e.target.value) })} className="w-20 accent-amber-500" />
+                  <span className="text-[9px] font-mono w-6">{t.positionX ?? 0}%</span>
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-10">Y</span>
+                  <input type="range" min={-50} max={50} value={t.positionY ?? 0} onChange={(e) => updateTransform({ positionY: Number(e.target.value) })} className="w-20 accent-amber-500" />
+                  <span className="text-[9px] font-mono w-6">{t.positionY ?? 0}%</span>
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-10">Rotate</span>
+                  <input type="range" min={-180} max={180} value={t.rotation ?? 0} onChange={(e) => updateTransform({ rotation: Number(e.target.value) })} className="w-20 accent-amber-500" />
+                  <span className="text-[9px] font-mono w-8">{t.rotation ?? 0}°</span>
+                </label>
+                <span className="text-[9px] font-bold text-amber-400 uppercase ml-2">Crop</span>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-6">T</span>
+                  <input type="range" min={0} max={50} value={c.top ?? 0} onChange={(e) => updateCrop({ top: Number(e.target.value) })} className="w-16 accent-amber-500" />
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-6">R</span>
+                  <input type="range" min={0} max={50} value={c.right ?? 0} onChange={(e) => updateCrop({ right: Number(e.target.value) })} className="w-16 accent-amber-500" />
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-6">B</span>
+                  <input type="range" min={0} max={50} value={c.bottom ?? 0} onChange={(e) => updateCrop({ bottom: Number(e.target.value) })} className="w-16 accent-amber-500" />
+                </label>
+                <label className="flex items-center gap-1">
+                  <span className="text-[9px] text-slate-400 w-6">L</span>
+                  <input type="range" min={0} max={50} value={c.left ?? 0} onChange={(e) => updateCrop({ left: Number(e.target.value) })} className="w-16 accent-amber-500" />
+                </label>
+                <button type="button" onClick={() => { updateTransform({ scale: 1, positionX: 0, positionY: 0, rotation: 0 }); updateCrop({ top: 0, right: 0, bottom: 0, left: 0 }) }} className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-600 text-slate-300 hover:bg-slate-500">Reset</button>
+              </div>
+            )
+          })()}
 
           {/* Effects track - with delete, resize, enable/disable, fade indicators */}
           {effects.length > 0 && (
@@ -641,7 +862,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         color: 'white',
                         zIndex: isSelected ? 20 : 10 - idx,
                       }}
-                      title={`${eff.name} (${eff.type}) ${formatTime(eff.startTime)}–${formatTime(eff.endTime)} · L${eff.layer || 0} · ${eff.intensity}%${eff.fadeIn ? ` · Fade in ${eff.fadeIn}s` : ''}${eff.fadeOut ? ` · Fade out ${eff.fadeOut}s` : ''}${eff.locked ? ' · LOCKED' : ''}${canResize ? ' · Drag to resize' : ''}`}
+                      title={`${eff.name} (${eff.type}) ${displayTime(eff.startTime)}–${displayTime(eff.endTime)} · L${eff.layer || 0} · ${eff.intensity}%${eff.fadeIn ? ` · Fade in ${eff.fadeIn}s` : ''}${eff.fadeOut ? ` · Fade out ${eff.fadeOut}s` : ''}${eff.locked ? ' · LOCKED' : ''}${canResize ? ' · Drag to resize' : ''}`}
                     >
                       {/* Fade in indicator */}
                       {fadeInWidth > 0 && (
@@ -686,8 +907,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         <span className="text-[8px] font-mono text-white/60 shrink-0">L{eff.layer || 0}</span>
                         <span className="text-[9px] font-bold truncate">{eff.name}</span>
                         <span className="text-[7px] opacity-60 hidden lg:inline shrink-0">{eff.intensity}%</span>
-                        <span className="absolute bottom-0.5 left-1 text-[7px] font-mono opacity-90 drop-shadow" title={`Duration ${formatTime(eff.endTime - eff.startTime)}`}>
-                          {formatTime(eff.endTime - eff.startTime)}
+                        <span className="absolute bottom-0.5 left-1 text-[7px] font-mono opacity-90 drop-shadow" title={`Duration ${displayTime(eff.endTime - eff.startTime)}`}>
+                          {displayTime(eff.endTime - eff.startTime)}
                         </span>
                       </div>
 
@@ -773,7 +994,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       onClick={() => { userSeekRef.current = true; onTimeUpdate(o.startTime) }}
                       className="absolute h-7 rounded-md border border-amber-400/50 bg-amber-500/90 hover:bg-amber-500 text-white shadow-sm flex items-center px-2 min-w-[40px] cursor-pointer"
                       style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
-                      title={`${o.text} · ${formatTimePrecise(o.startTime, 1)} – ${formatTimePrecise(o.endTime, 1)}`}
+                      title={`${o.text} · ${displayTime(o.startTime)} – ${displayTime(o.endTime)}`}
                     >
                       <span className="text-[8px] font-medium truncate">{o.text.slice(0, 12)}{o.text.length > 12 ? '…' : ''}</span>
                     </div>
@@ -790,7 +1011,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       onClick={() => { userSeekRef.current = true; onTimeUpdate(img.startTime) }}
                       className="absolute h-7 rounded-md border border-teal-400/50 bg-teal-500/90 hover:bg-teal-500 text-white shadow-sm flex items-center justify-center px-2 min-w-[36px] cursor-pointer"
                       style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
-                      title={`Image · ${formatTimePrecise(img.startTime, 1)} – ${formatTimePrecise(img.endTime, 1)}`}
+                      title={`Image · ${displayTime(img.startTime)} – ${displayTime(img.endTime)}`}
                     >
                       <ImageIcon className="w-3 h-3" />
                     </div>
@@ -800,15 +1021,6 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             </div>
           )}
 
-          {/* Placeholder tracks */}
-          <div className="space-y-2">
-            {['Video', 'Audio', 'Graphics'].map((track) => (
-              <div key={track} className="h-10 bg-gray-50 dark:bg-gray-900/50 border border-dashed border-gray-200 dark:border-gray-800 rounded-xl flex items-center px-4">
-                <span className="text-[8px] font-bold uppercase text-gray-400 w-14 shrink-0">{track}</span>
-                <div className="flex-1 h-6 bg-gray-200/50 dark:bg-gray-700/30 rounded-lg relative" />
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

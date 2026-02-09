@@ -1,8 +1,35 @@
 'use client'
 
 import React, { useRef, useEffect, useState } from 'react'
+
+/** Syncs B-roll video to segment time; playhead-driven. */
+function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; currentTime: number; isPlaying: boolean }) {
+  const ref = useRef<HTMLVideoElement>(null)
+  const segTime = seg.sourceStartTime != null ? seg.sourceStartTime + (currentTime - seg.startTime) * (seg.playbackSpeed ?? 1) : Math.max(0, currentTime - seg.startTime)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (Math.abs(el.currentTime - segTime) > 0.15) el.currentTime = segTime
+  }, [segTime, seg.id])
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (isPlaying) el.play().catch(() => { })
+    else el.pause()
+  }, [isPlaying])
+  return (
+    <video
+      ref={ref}
+      src={seg.sourceUrl}
+      className="max-w-full max-h-full object-contain"
+      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      muted
+      playsInline
+    />
+  )
+}
 import { Play, Pause, Eye, EyeOff } from 'lucide-react'
-import { VideoFilter, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, TemplateLayout, TEMPLATE_LAYOUTS, CaptionTextStyle, TextOverlayAnimationIn, TextOverlayAnimationOut, ShapeOverlay, MotionGraphicPreset, ImageOverlay, GradientOverlay } from '../../types/editor'
+import { VideoFilter, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, TemplateLayout, TEMPLATE_LAYOUTS, CaptionTextStyle, TextOverlayAnimationIn, TextOverlayAnimationOut, ShapeOverlay, MotionGraphicPreset, ImageOverlay, GradientOverlay, TimelineEffect, TimelineSegment } from '../../types/editor'
 
 /** Compute opacity, transform, and optional filter for text overlay animation based on currentTime */
 function getTextOverlayAnimationStyle(
@@ -146,18 +173,79 @@ interface RealTimeVideoPreviewProps {
   onBeforeAfterChange?: (showFiltered: boolean) => void
   /** When provided, use for compare: after = filtered, before = original, split = side-by-side */
   compareMode?: 'after' | 'before' | 'split'
+  /** Optional timeline effects (filter type) applied at playhead time */
+  timelineEffects?: TimelineEffect[]
+  /** Timeline segments (B-roll, images): shown when playhead inside segment and track visible */
+  timelineSegments?: TimelineSegment[]
+  /** Track visibility: key = track index, value = visible. Missing = visible. */
+  trackVisibility?: Record<number, boolean>
+}
+
+function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: number): VideoFilter {
+  let out = { ...base }
+  for (const e of effects) {
+    if (e.type !== 'filter' || !e.enabled || t < e.startTime || t > e.endTime) continue
+    const dur = e.endTime - e.startTime
+    const fadeIn = e.fadeIn ?? 0
+    const fadeOut = e.fadeOut ?? 0
+    let factor = (e.intensity ?? 100) / 100
+    if (t < e.startTime + fadeIn && fadeIn > 0) factor *= (t - e.startTime) / fadeIn
+    if (t > e.endTime - fadeOut && fadeOut > 0) factor *= (e.endTime - t) / fadeOut
+    if (factor <= 0) continue
+    const p = e.params as Record<string, number>
+    if (p.brightness != null) out.brightness = (out.brightness ?? 100) + (p.brightness - (out.brightness ?? 100)) * factor
+    if (p.contrast != null) out.contrast = (out.contrast ?? 100) + (p.contrast - (out.contrast ?? 100)) * factor
+    if (p.saturation != null) out.saturation = (out.saturation ?? 100) + (p.saturation - (out.saturation ?? 100)) * factor
+    if (p.temperature != null) out.temperature = (out.temperature ?? 100) + (p.temperature - (out.temperature ?? 100)) * factor
+    if (p.sepia != null) out.sepia = (out.sepia ?? 0) + (p.sepia - (out.sepia ?? 0)) * factor
+    if (p.blur != null) out.blur = (out.blur ?? 0) + (p.blur - (out.blur ?? 0)) * factor
+  }
+  return out
 }
 
 const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
-  videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode
+  videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoRefRight = useRef<HTMLVideoElement>(null)
+  const onTimeUpdateRef = useRef(onTimeUpdate)
+  onTimeUpdateRef.current = onTimeUpdate
   const [internalShowFilters, setInternalShowFilters] = useState(true)
   const [videoDimensions, setVideoDimensions] = useState<{ w: number; h: number } | null>(null)
   const useCompareMode = typeof compareMode === 'string'
   const isSplit = useCompareMode && compareMode === 'split'
   const showAppliedFilters = useCompareMode ? (compareMode === 'after') : (typeof showBeforeAfter === 'boolean' ? showBeforeAfter : internalShowFilters)
+
+  // Keep playhead in sync: when user seeks (timeline click/drag), sync video to currentTime
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v || !isFinite(currentTime)) return
+    const diff = Math.abs(v.currentTime - currentTime)
+    const seekThreshold = isPlaying ? 0.25 : 0.05
+    if (diff > seekThreshold) {
+      v.currentTime = currentTime
+      if (isSplit && videoRefRight.current) videoRefRight.current.currentTime = currentTime
+    }
+  }, [currentTime, isPlaying, isSplit])
+
+  // Smooth playhead during playback: drive timeline updates from video time at ~60fps
+  useEffect(() => {
+    if (!isPlaying) return
+    const v = videoRef.current
+    if (!v) return
+    let rafId: number
+    const tick = () => {
+      const t = v.currentTime
+      if (isFinite(t)) {
+        onTimeUpdateRef.current(t)
+        if (isSplit && videoRefRight.current) videoRefRight.current.currentTime = t
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafId)
+  }, [isPlaying, isSplit])
+
   const handleBeforeAfterToggle = () => {
     const next = !showAppliedFilters
     if (onBeforeAfterChange) onBeforeAfterChange(next)
@@ -207,21 +295,22 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     v.playbackRate = Math.max(0.25, Math.min(4, playbackSpeed || 1))
   }, [playbackSpeed])
 
-  /* Full filter chain: brightness, contrast, saturation, hue, sepia, blur, temperature, highlights, shadows, sharpen, clarity (approx) */
-  const temp = filters.temperature ?? 100
-  const sepiaAdj = Math.max(0, Math.min(100, (filters.sepia ?? 0) + ((temp - 100) / 100) * 15))
-  const hueAdj = (filters.hue ?? 0) + (temp < 100 ? 8 : temp > 100 ? -4 : 0)
-  const sat = filters.vibrance != null ? Math.round((filters.saturation ?? 100) * (filters.vibrance / 100)) : (filters.saturation ?? 100)
-  const bright = filters.brightness ?? 100
-  const shadowLift = (filters.shadows ?? 100) - 100  // >0 = lift shadows
-  const highCrush = 100 - (filters.highlights ?? 100) // >0 = darken highlights
-  const dehazeAdj = ((filters.dehaze ?? 100) - 100) / 100 * 0.04  // dehaze ≈ contrast/clarity boost
+  /* Full filter chain: base + any timeline effects active at currentTime */
+  const effectiveFiltersAtTime = timelineEffects.length > 0 ? blendFiltersAtTime(filters, timelineEffects, currentTime) : filters
+  const temp = effectiveFiltersAtTime.temperature ?? 100
+  const sepiaAdj = Math.max(0, Math.min(100, (effectiveFiltersAtTime.sepia ?? 0) + ((temp - 100) / 100) * 15))
+  const hueAdj = (effectiveFiltersAtTime.hue ?? 0) + (temp < 100 ? 8 : temp > 100 ? -4 : 0)
+  const sat = effectiveFiltersAtTime.vibrance != null ? Math.round((effectiveFiltersAtTime.saturation ?? 100) * (effectiveFiltersAtTime.vibrance / 100)) : (effectiveFiltersAtTime.saturation ?? 100)
+  const bright = effectiveFiltersAtTime.brightness ?? 100
+  const shadowLift = (effectiveFiltersAtTime.shadows ?? 100) - 100  // >0 = lift shadows
+  const highCrush = 100 - (effectiveFiltersAtTime.highlights ?? 100) // >0 = darken highlights
+  const dehazeAdj = ((effectiveFiltersAtTime.dehaze ?? 100) - 100) / 100 * 0.04  // dehaze ≈ contrast/clarity boost
   const brightnessAdj = bright + shadowLift * 0.2 + highCrush * 0.15
-  const contrastBase = filters.contrast ?? 100
-  const sharpenAdj = (filters.sharpen ?? 0) / 100
-  const clarityAdj = ((filters.clarity ?? 0) / 100) * 0.06
+  const contrastBase = effectiveFiltersAtTime.contrast ?? 100
+  const sharpenAdj = (effectiveFiltersAtTime.sharpen ?? 0) / 100
+  const clarityAdj = ((effectiveFiltersAtTime.clarity ?? 0) / 100) * 0.06
   const contrastAdj = Math.min(200, Math.max(50, contrastBase + sharpenAdj * 8 + clarityAdj * 100 + dehazeAdj * 100))
-  const lutId = filters.lutId
+  const lutId = effectiveFiltersAtTime.lutId
   const lutBoost = showAppliedFilters && lutId && lutId !== 'none'
     ? (lutId === 'cinematic' ? { contrast: 1.08, saturate: 0.95 } : lutId === 'bleach' ? { contrast: 1.12, saturate: 0.7 } : lutId === 'log709' ? { contrast: 1.05, brightness: 1.02 } : {})
     : {}
@@ -235,11 +324,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     saturate(${Math.min(200, Math.max(0, finalSat))}%)
     hue-rotate(${hueAdj}deg)
     sepia(${sepiaAdj}%)
-    blur(${filters.blur ?? 0}px)
+    blur(${effectiveFiltersAtTime.blur ?? 0}px)
   ` : 'none'
 
-  const vignetteOpacity = showAppliedFilters && (filters.vignette ?? 0) > 0
-    ? (filters.vignette / 100) * 0.6
+  const vignetteOpacity = showAppliedFilters && (effectiveFiltersAtTime.vignette ?? 0) > 0
+    ? (effectiveFiltersAtTime.vignette / 100) * 0.6
     : 0
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
@@ -369,6 +458,59 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             }}
           />
         )}
+
+        {/* B-roll & image clips: only when playhead inside segment and track is on (eye visible) */}
+        {timelineSegments
+          .filter((seg) => {
+            if (seg.type !== 'video' && seg.type !== 'image') return false
+            if (!seg.sourceUrl) return false
+            if (currentTime < seg.startTime || currentTime >= seg.endTime) return false
+            if (trackVisibility[seg.track ?? 0] === false) return false
+            return true
+          })
+          .sort((a, b) => (a.track ?? 0) - (b.track ?? 0))
+          .map((seg) => {
+            const t = seg.transform ?? {}
+            const scale = Math.max(0.01, Math.min(2, t.scale ?? 1))
+            const posX = t.positionX ?? 0
+            const posY = t.positionY ?? 0
+            const rotation = t.rotation ?? 0
+            const c = seg.crop ?? {}
+            const top = c.top ?? 0
+            const right = c.right ?? 0
+            const bottom = c.bottom ?? 0
+            const left = c.left ?? 0
+            const hasCrop = top > 0 || right > 0 || bottom > 0 || left > 0
+            const clipPath = hasCrop ? `inset(${top}% ${right}% ${bottom}% ${left}%)` : undefined
+            return (
+              <div
+                key={seg.id}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                style={{ zIndex: 2 }}
+              >
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{
+                    transform: `translate(${posX}%, ${posY}%) scale(${scale}) rotate(${rotation}deg)`,
+                    transformOrigin: 'center center',
+                    clipPath,
+                  }}
+                >
+                  {seg.type === 'image' ? (
+                    <img
+                      src={seg.sourceUrl}
+                      alt=""
+                      className="max-w-full max-h-full object-contain"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <BrollVideo seg={seg} currentTime={currentTime} isPlaying={isPlaying} />
+                  )}
+                </div>
+              </div>
+            )
+          })}
 
         {/* Audio Waveform Simulation Overlay */}
         <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none overflow-hidden opacity-40">

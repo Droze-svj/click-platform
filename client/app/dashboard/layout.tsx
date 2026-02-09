@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Navbar from '../../components/Navbar'
 import LoadingSkeleton from '../../components/LoadingSkeleton'
 import Breadcrumb from '../../components/Breadcrumb'
@@ -10,7 +10,11 @@ import { useAuth } from '../../hooks/useAuth'
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, loading } = useAuth()
+
+  // Hide dashboard header on video edit page so the editor has a single header
+  const isVideoEditPage = pathname != null && /^\/dashboard\/video\/edit\/[^/]+$/.test(pathname)
 
   // Enhanced debugging for DashboardLayout (commented out to prevent ERR_CONNECTION_REFUSED)
   const sendDashboardDebugLog = (message: string, data: any) => {
@@ -128,14 +132,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
-      <header className="flex-shrink-0">
-        <Navbar />
-      </header>
-      <main className="layout-scroll flex-1 min-h-0 w-full min-w-0 pt-16 lg:pt-0">
-        <div className="container-readable py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-          <Breadcrumb />
-          {children}
-        </div>
+      {!isVideoEditPage && (
+        <header className="flex-shrink-0">
+          <Navbar />
+        </header>
+      )}
+      <main className={`layout-scroll flex-1 min-h-0 w-full min-w-0 ${isVideoEditPage ? '' : 'pt-16 lg:pt-0'}`}>
+        {isVideoEditPage ? (
+          children
+        ) : (
+          <div className="container-readable py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            <Breadcrumb />
+            {children}
+          </div>
+        )}
       </main>
     </div>
   )

@@ -33,6 +33,17 @@ export const formatTimePrecise = (time: number, decimals = 1): string => {
   return `${minutes}:${secInt.toString().padStart(2, '0')}${fracStr}`
 }
 
+/** Format as M:SS:ff (frames at given fps, e.g. 1:02:15 @ 30fps) */
+export const formatTimeFrames = (time: number, fps: 24 | 30 = 30): string => {
+  if (!isFinite(time) || time < 0) return fps === 30 ? '0:00:00' : '0:00:00'
+  const totalFrames = Math.round(time * fps)
+  const minutes = Math.floor(totalFrames / (fps * 60))
+  const remainder = totalFrames % (fps * 60)
+  const seconds = Math.floor(remainder / fps)
+  const frames = remainder % fps
+  return `${minutes}:${seconds.toString().padStart(2, '0')}:${frames.toString().padStart(2, '0')}`
+}
+
 /** Snap options for timeline (seconds). Includes frame-accurate 1/24 and 1/30. */
 export const SNAP_STEPS = [1 / 30, 1 / 24, 0.25, 0.5, 1, 2, 5, 10] as const
 
@@ -43,7 +54,7 @@ export function snapToNearestEdge(
   thresholdSeconds: number
 ): number {
   if (edges.length === 0) return time
-  const sorted = [...new Set(edges)].sort((a, b) => a - b)
+  const sorted = Array.from(new Set(edges)).sort((a, b) => a - b)
   let best = time
   let bestDist = thresholdSeconds + 1
   for (const edge of sorted) {

@@ -184,6 +184,7 @@ const PLATFORM_BUNDLES = [
 ]
 
 const QUICK_NAV = [
+  { id: 'short-clips' as const, label: 'Short Clips', icon: Film, color: 'from-rose-500 to-pink-500' },
   { id: 'assets' as const, label: 'Music & B-Roll', icon: Music, color: 'from-indigo-500 to-purple-500' },
   { id: 'timeline' as const, label: 'Timeline', icon: Scissors, color: 'from-amber-500 to-orange-500' },
   { id: 'effects' as const, label: 'Effects', icon: Sparkles, color: 'from-violet-500 to-fuchsia-500' },
@@ -275,6 +276,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   gradientOverlays = [],
   setGradientOverlays,
 }) => {
+  const currentTime = videoState?.currentTime ?? 0
+  const duration = videoState?.duration ?? 60
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ platform: true, styleBundles: false, quickFilters: true, text: false, quickNav: false, currentOverlays: false })
+
   const addShape = useCallback((kind: ShapeOverlayKind) => {
     if (!setShapeOverlays) return
     const startTime = currentTime
@@ -349,9 +354,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         motionGraphic: s.motionGraphic,
       }
     })
-    setTextOverlays((prev) => [...prev, ...newTextOverlays])
-    if (setShapeOverlays && newShapeOverlays.length > 0) setShapeOverlays((prev) => [...prev, ...newShapeOverlays])
-    setOpenSections((prev) => ({ ...prev, currentOverlays: true }))
+    setTextOverlays((prev: TextOverlay[]) => [...prev, ...newTextOverlays])
+    if (setShapeOverlays && newShapeOverlays.length > 0) setShapeOverlays((prev: ShapeOverlay[]) => [...prev, ...newShapeOverlays])
+    setOpenSections((prev: Record<string, boolean>) => ({ ...prev, currentOverlays: true }))
     try {
       const key = MANUAL_EDIT_STORAGE_KEYS.recentMotionTemplates
       const prev = JSON.parse(localStorage.getItem(key) || '[]') as string[]
@@ -416,7 +421,6 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [textPresetSearch, setTextPresetSearch] = useState('')
   const [textDuration, setTextDuration] = useState<number>(5)
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ platform: true, styleBundles: false, quickFilters: true, text: false, quickNav: false, currentOverlays: false })
   const [customStyleName, setCustomStyleName] = useState('')
   const [showSaveStyle, setShowSaveStyle] = useState(false)
 
@@ -452,9 +456,6 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     })
   }, [])
   const pinnedPresets = useMemo(() => pinnedFilterNames.map((n) => FILTER_PRESETS.find((p) => p.n === n)).filter(Boolean) as typeof FILTER_PRESETS, [pinnedFilterNames])
-
-  const currentTime = videoState?.currentTime ?? 0
-  const duration = videoState?.duration ?? 60
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -526,6 +527,12 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     return END_SCREEN_TEMPLATES.filter((p) => p.label.toLowerCase().includes(q) || p.text.toLowerCase().includes(q))
   }, [textPresetSearch])
 
+  const filteredReactionCallouts = useMemo(() => {
+    if (!textPresetSearch.trim()) return REACTION_CALLOUT_PRESETS
+    const q = textPresetSearch.toLowerCase()
+    return REACTION_CALLOUT_PRESETS.filter((p) => p.label.toLowerCase().includes(q) || p.text.toLowerCase().includes(q))
+  }, [textPresetSearch])
+
   const getTextStartEnd = useCallback(() => {
     const end = textDuration === -1 ? duration : Math.min(currentTime + textDuration, duration)
     return { startTime: currentTime, endTime: Math.max(currentTime + 0.5, end) }
@@ -548,11 +555,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
   const saveMyStyle = useCallback(() => {
     if (!customStyleName.trim() || !setTemplateLayout) return
+    const filterNumeric = Object.fromEntries(
+      Object.entries(videoFilters).filter(([, v]) => typeof v === 'number') as [string, number][]
+    ) as Record<string, number>
     const bundle = {
       id: `custom-${Date.now()}`,
       name: customStyleName.trim(),
       layout: templateLayout,
-      filter: { ...videoFilters },
+      filter: filterNumeric,
       swatch: 'from-violet-400 to-fuchsia-500',
     }
     setCustomStyleBundles((prev) => {
@@ -567,10 +577,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
   const recentFiltersPresets = useMemo(() => recentFilterNames.map((n) => FILTER_PRESETS.find((p) => p.n === n)).filter(Boolean) as typeof FILTER_PRESETS, [recentFilterNames])
   const recentStyleBundlesList = useMemo(() => {
-    const list: Array<{ id: string; label: string; layout: TemplateLayout; filter: Record<string, number>; desc?: string; swatch?: string }> = []
+    type StyleItem = { id: string; label: string; layout: TemplateLayout; filter: Record<string, number>; desc?: string; swatch?: string }
+    const list: StyleItem[] = []
+    const toNumericFilter = (f: Record<string, number | undefined>): Record<string, number> =>
+      Object.fromEntries(Object.entries(f).filter(([, v]) => typeof v === 'number') as [string, number][]) as Record<string, number>
     recentStyleIds.forEach((id) => {
       const builtIn = STYLE_BUNDLES.find((b) => b.id === id)
-      if (builtIn) list.push({ ...builtIn, label: builtIn.label })
+      if (builtIn) list.push({ ...builtIn, label: builtIn.label, filter: toNumericFilter(builtIn.filter as Record<string, number | undefined>) })
       else {
         const custom = customStyleBundles.find((b) => b.id === id)
         if (custom) list.push({ ...custom, label: custom.name, desc: 'Saved' })
@@ -579,8 +592,47 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     return list.slice(0, 5)
   }, [recentStyleIds, customStyleBundles])
 
+  const applyPlatformBundle = useCallback((bundle: typeof PLATFORM_BUNDLES[0]) => {
+    pushSnapshot(templateLayout, videoFilters, textOverlays ?? [])
+    setTemplateLayout?.(bundle.layout)
+    setVideoFilters((prev: VideoFilter) => ({ ...prev, ...bundle.filter }))
+    showToast(`${bundle.label} — ${bundle.desc}`, 'success')
+  }, [templateLayout, videoFilters, textOverlays, pushSnapshot, setTemplateLayout, setVideoFilters, showToast])
+
   return (
     <div className="space-y-6 pb-4" role="region" aria-label="Manual edit">
+      {/* Short-form ready strip — one-click platform presets */}
+      <div className="bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-fuchsia-500/10 dark:from-rose-900/20 dark:to-fuchsia-900/20 rounded-xl border border-rose-200/50 dark:border-rose-800/50 p-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Film className="w-4 h-4 text-rose-500" />
+            <span className="text-xs font-bold text-gray-900 dark:text-white">Short-form ready</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PLATFORM_BUNDLES.filter((b) => ['tiktok', 'youtube', 'feed', 'portrait'].includes(b.id)).map((bundle) => (
+              <button
+                key={bundle.id}
+                type="button"
+                onClick={() => applyPlatformBundle(bundle)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${templateLayout === bundle.layout
+                  ? 'bg-rose-500 text-white shadow-md'
+                  : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20'
+                  }`}
+              >
+                {bundle.id === 'youtube' ? 'Shorts' : bundle.id === 'tiktok' ? 'TikTok / Reels' : bundle.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setActiveCategory?.('short-clips')}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-all flex items-center gap-1"
+            >
+              More formats <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Intro */}
       <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/80 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
         Set aspect ratio, style, and text. Use <button type="button" onClick={() => setActiveCategory?.('timeline')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Timeline</button> and <button type="button" onClick={() => setActiveCategory?.('effects')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Effects</button> for timing and advanced effects. <button type="button" onClick={() => setActiveCategory?.('color')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Fine-tune in Color</button> for sliders. Use the <strong>Compare</strong> button under Quick filters to see before/after.
@@ -639,9 +691,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
           })}
         </div>
         {(templateLayout === 'vertical' || templateLayout === 'portrait') && (
-          <p className="mt-3 text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2 border border-amber-200 dark:border-amber-800">
-            Thumb-safe zone: keep important text and graphics away from the bottom 20% on vertical/portrait for Reels and Stories.
-          </p>
+          <div className="mt-3 space-y-2">
+            <p className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2 border border-amber-200 dark:border-amber-800">
+              Thumb-safe zone: keep important text and graphics away from the bottom 20% on vertical/portrait for Reels and Stories.
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              Keep key action in the <strong>center 80%</strong> so nothing is covered by platform UI. Use 9:16 for Reels, TikTok, Shorts.
+            </p>
+          </div>
         )}
       </div>
 
@@ -815,8 +872,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
           <Cpu className="w-5 h-5 text-violet-500" />
           <h3 className="text-base font-bold text-gray-900 dark:text-white">Make it more engaging</h3>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          AI tips: Add a hook in the first 3 seconds. Use B-roll to break up talking heads. Add end-screen CTAs.
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+          Sharpen content: niche-specific hooks in the first 1–3s (not generic &quot;You won&apos;t believe…&quot;). One clear outcome per clip—what they learn, feel, or do. Use intentional silence and pacing; avoid wall-to-wall noise. B-roll + end CTAs.
+        </p>
+        <p className="text-xs text-violet-700 dark:text-violet-300 mb-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg px-3 py-2 border border-violet-200 dark:border-violet-800">
+          <strong>Visual polish:</strong> Lock in brand (colors, fonts, lower-third, logo, captions). Use subtle zooms/push-ins on key words or reactions—not constant movement. Keep key action in center 80%; simple, clean transitions.
+        </p>
+        <p className="text-xs text-sky-700 dark:text-sky-300 mb-3 bg-sky-50 dark:bg-sky-900/20 rounded-lg px-3 py-2 border border-sky-200 dark:border-sky-800">
+          <strong>AI as assistant:</strong> Use AI for rough clips and transcripts; you fix cuts/pacing, framing, captions, and B-roll. Choose segments by strategy, not only score. Test hook/caption variants and keep what performs.
         </p>
         <button
           onClick={() => { setActiveCategory?.('intelligence'); showToast('Check Growth & Intelligence for AI suggestions', 'info') }}
@@ -833,8 +896,11 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
           <Film className="w-5 h-5 text-indigo-500" />
           <h3 className="text-base font-bold text-gray-900 dark:text-white">Music, Images, B-Roll &amp; SFX</h3>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
           Add background music, sound effects, stock images, or B-roll clips to boost quality and engagement.
+        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-300 mb-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2 border border-amber-200 dark:border-amber-800">
+          <strong>Premium audio:</strong> Keep speech louder than music (duck). Choose music that fits the emotion; cut to the beat. SFX sparingly—whooshes on cuts, hits on key words. Mix for mobile (check on phone).
         </p>
         <button
           onClick={() => setActiveCategory?.('assets')}
@@ -958,7 +1024,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {textOverlays.map((o) => (
                     <li key={o.id} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600">
                       <span className="text-xs text-gray-800 dark:text-gray-200 truncate flex-1" title={o.text}>{o.text.slice(0, 32)}{o.text.length > 32 ? '…' : ''}</span>
-                      <button type="button" onClick={() => { pushSnapshot(templateLayout, videoFilters, textOverlays ?? []); setTextOverlays((prev) => prev.filter((x) => x.id !== o.id)); showToast('Overlay removed', 'info') }} className="p-1.5 rounded-md text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30" title="Remove overlay" aria-label={`Remove ${o.text}`}>
+                      <button type="button" onClick={() => { pushSnapshot(templateLayout, videoFilters, textOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter((x) => x.id !== o.id)); showToast('Overlay removed', 'info') }} className="p-1.5 rounded-md text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30" title="Remove overlay" aria-label={`Remove ${o.text}`}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </li>

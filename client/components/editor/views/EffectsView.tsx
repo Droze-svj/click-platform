@@ -324,6 +324,9 @@ const EffectsView: React.FC<EffectsViewProps> = ({
 
   return (
     <div className="space-y-6">
+      <p className="text-[10px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/80 rounded-xl px-3 py-2 border border-gray-200 dark:border-gray-700">
+        <strong>Visual polish:</strong> Prefer simple, clean transitions (fade, cut) that serve the message. Use motion (zooms, push-ins) to emphasize key words or reactions—not constant movement.
+      </p>
       {/* Quick navigation cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {[
@@ -525,7 +528,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg" style={{ backgroundColor: `${EFFECT_TYPE_COLORS[cat.type]}20` }}>
-                      <Icon className="w-4 h-4" style={{ color: EFFECT_TYPE_COLORS[cat.type] }} />
+                      <span style={{ color: EFFECT_TYPE_COLORS[cat.type] }}><Icon className="w-4 h-4" /></span>
                     </div>
                     <span className="text-sm font-bold text-gray-900 dark:text-white">{cat.label}</span>
                     <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{presets.length}</span>

@@ -36,6 +36,9 @@ interface VideoFilter {
   temperature?: number
   highlights?: number
   shadows?: number
+  vibrance?: number
+  tint?: number
+  dehaze?: number
 }
 
 interface TextOverlay {

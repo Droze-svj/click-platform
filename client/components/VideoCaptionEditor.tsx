@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Captions, 
-  Download, 
-  Languages, 
-  Play, 
-  Pause, 
-  Edit3, 
+import {
+  Type as Captions,
+  Download,
+  Languages,
+  Play,
+  Pause,
+  Edit3,
   Save,
   Loader2,
   CheckCircle2,
@@ -37,10 +37,10 @@ interface VideoCaptionEditorProps {
   onSave?: (captions: CaptionData) => void
 }
 
-export default function VideoCaptionEditor({ 
-  contentId, 
+export default function VideoCaptionEditor({
+  contentId,
   videoUrl,
-  onSave 
+  onSave
 }: VideoCaptionEditorProps) {
   const [captions, setCaptions] = useState<CaptionData | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)

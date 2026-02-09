@@ -48,6 +48,70 @@ export interface TimelineSegment {
   playbackSpeedStart?: number
   /** Speed at segment end (for ramping) */
   playbackSpeedEnd?: number
+  /** Transform for B-roll/image: scale (1 = 100%), position % (-50..50), rotation degrees */
+  transform?: {
+    scale?: number
+    positionX?: number
+    positionY?: number
+    rotation?: number
+  }
+  /** Crop/mask: inset from each edge in % (0 = no crop, 50 = hide half). Applied after transform. */
+  crop?: {
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
+  }
+}
+
+/** Named track definition for timeline (video V1–V6, audio A1–A4) */
+export interface TimelineTrackDef {
+  index: number
+  id: string
+  name: string
+  kind: 'video' | 'audio'
+}
+
+/** Video tracks: V1–V2 A-Roll (base), V3–V4 B-Roll (covers A-Roll), V5–V6 Graphics */
+export const VIDEO_TRACKS: TimelineTrackDef[] = [
+  { index: 0, id: 'V1', name: 'A-Roll', kind: 'video' },
+  { index: 1, id: 'V2', name: 'A-Roll', kind: 'video' },
+  { index: 2, id: 'V3', name: 'B-Roll', kind: 'video' },
+  { index: 3, id: 'V4', name: 'B-Roll', kind: 'video' },
+  { index: 4, id: 'V5', name: 'Graphics', kind: 'video' },
+  { index: 5, id: 'V6', name: 'Graphics', kind: 'video' },
+]
+
+/** Audio tracks: A1 Music, A2 Dialogue, A3–A4 SFX */
+export const AUDIO_TRACKS: TimelineTrackDef[] = [
+  { index: 6, id: 'A1', name: 'Music', kind: 'audio' },
+  { index: 7, id: 'A2', name: 'Dialogue', kind: 'audio' },
+  { index: 8, id: 'A3', name: 'SFX', kind: 'audio' },
+  { index: 9, id: 'A4', name: 'SFX', kind: 'audio' },
+]
+
+export const ALL_TIMELINE_TRACKS = [...VIDEO_TRACKS, ...AUDIO_TRACKS]
+
+/** Default track index by segment type (A-Roll for video, Dialogue for audio, Graphics for image) */
+export function getDefaultTrackForSegmentType(type: TimelineSegmentType): number {
+  switch (type) {
+    case 'video':
+    case 'transition':
+      return 0 // V1 A-Roll
+    case 'image':
+      return 4 // V5 Graphics
+    case 'audio':
+      return 7 // A2 Dialogue
+    case 'text':
+      return 4 // V5 Graphics (text as graphic)
+    default:
+      return 0
+  }
+}
+
+/** Get track definition by index */
+export function getTrackDef(trackIndex: number): TimelineTrackDef | undefined {
+  return ALL_TIMELINE_TRACKS.find((t) => t.index === trackIndex)
 }
 
 export type CaptionSize = 'small' | 'medium' | 'large'
@@ -477,7 +541,7 @@ export interface EditorProject {
   settings: any
 }
 
-export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling'
+export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips'
 
 // Timeline effects - applied effects with duration
 export type TimelineEffectType =
@@ -607,3 +671,14 @@ export const EFFECT_PRESETS: { type: TimelineEffectType; name: string; icon: str
   { type: 'audio', name: 'Bass Boost', icon: '🎸', params: { gain: 6, frequency: 100 } },
   { type: 'audio', name: 'Vocal Enhance', icon: '🎤', params: { midGain: 4, clarity: 20 } },
 ]
+
+/** Editor layout preferences (adaptable workspace) */
+export type PreviewSize = 'small' | 'medium' | 'large'
+export type TimelineDensity = 'compact' | 'comfortable' | 'expanded'
+export type FocusMode = 'balanced' | 'preview' | 'timeline'
+
+export interface EditorLayoutPreferences {
+  previewSize: PreviewSize
+  timelineDensity: TimelineDensity
+  focusMode: FocusMode
+}

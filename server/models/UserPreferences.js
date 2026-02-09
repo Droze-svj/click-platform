@@ -114,6 +114,19 @@ const userPreferencesSchema = new mongoose.Schema({
     featureUsage: mongoose.Schema.Types.Mixed,
     cacheHitRate: { type: Number, default: 0 }
   },
+  // Brand kit: lock in colors, fonts, lower-third style, logo placement, caption style
+  brandKit: {
+    primaryColor: { type: String, default: '' },
+    accentColor: { type: String, default: '' },
+    titleFont: { type: String, default: '' },
+    bodyFont: { type: String, default: '' },
+    lowerThirdStyle: { type: String, enum: ['bar', 'pill', 'minimal', 'none'], default: '' },
+    lowerThirdPosition: { type: String, enum: ['left', 'right', 'center', ''], default: '' },
+    logoPlacement: { type: String, enum: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'none', ''], default: '' },
+    logoOpacity: { type: Number, default: null },
+    captionStyle: { type: String, default: '' },
+    captionPosition: { type: String, enum: ['bottom-center', 'lower-third', 'top-center', 'full-width-bottom', ''], default: '' },
+  },
   // Downloaded templates
   downloadedTemplates: [{
     type: mongoose.Schema.Types.ObjectId,
