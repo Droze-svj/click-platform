@@ -38,15 +38,15 @@
 
 | Item | Merged | Notes |
 |------|--------|-------|
-| — | — | — |
+| Content & edit UX (sharpening, visual polish, Brand kit, premium audio, platform-native, AI-as-assistant) | branch `feat/editing-ux-guides-and-phase1-prep` | Guides + UI; commit f7771a7. PR to merge to main. |
 
 ---
 
 ## 📊 Progress Snapshot
 
-- **This week:** 0 items completed, 0 in review
+- **This week:** 1 branch completed (edit UX + guides), 0 in review
 - **Last review:** —
-- **Next focus:** Phase 0 (MongoDB/Redis) if live, else Phase 1 #2 (Testing)
+- **Next focus:** Merge feat/editing-ux-guides-and-phase1-prep; then Phase 0 verify and Phase 1 (Testing or OAuth refresh)
 
 ---
 
