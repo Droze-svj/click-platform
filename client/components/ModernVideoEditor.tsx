@@ -9,7 +9,9 @@ import {
   Edit as EditToolIcon,
   Layers as LayersIcon,
   Search,
-  MessageSquare as AiIcon
+  MessageSquare as AiIcon,
+  Film,
+  List
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -40,16 +42,45 @@ import ExportView from './editor/views/ExportView'
 import BasicEditorView from './editor/views/BasicEditorView'
 import ScriptGeneratorView from './editor/views/ScriptGeneratorView'
 import SchedulingView from './editor/views/SchedulingView'
+import ShortClipsView from './editor/views/ShortClipsView'
 
 import AchievementSystem from './AchievementSystem'
 import { useVideoEditorAutosave } from '../hooks/useVideoEditorAutosave'
 import { useToast } from '../contexts/ToastContext'
 import { VideoFilter, TextOverlay, TimelineSegment, TimelineEffect, EditorCategory, CaptionStyle, TemplateLayout, TEMPLATE_LAYOUTS, ShapeOverlay, ImageOverlay, GradientOverlay } from '../types/editor'
+import { formatTime } from '../utils/editorUtils'
 
 const NEUTRAL_FILTER: VideoFilter = {
   brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sepia: 0, vignette: 0, sharpen: 0,
   noise: 0, temperature: 100, tint: 0, highlights: 0, shadows: 0, clarity: 0, dehaze: 0, vibrance: 100
 }
+
+const LAYOUT_STORAGE_KEY = 'click-editor-layout'
+const TRACK_VISIBILITY_KEY = 'click-editor-track-visibility'
+import type { EditorLayoutPreferences } from '../types/editor'
+
+const DEFAULT_LAYOUT: EditorLayoutPreferences = {
+  previewSize: 'medium',
+  timelineDensity: 'comfortable',
+  focusMode: 'balanced',
+}
+
+function loadLayoutPreferences(): EditorLayoutPreferences {
+  if (typeof window === 'undefined') return DEFAULT_LAYOUT
+  try {
+    const raw = localStorage.getItem(LAYOUT_STORAGE_KEY)
+    if (!raw) return DEFAULT_LAYOUT
+    const parsed = JSON.parse(raw) as Partial<EditorLayoutPreferences>
+    return {
+      previewSize: ['small', 'medium', 'large'].includes(parsed.previewSize ?? '') ? parsed.previewSize! : DEFAULT_LAYOUT.previewSize,
+      timelineDensity: ['compact', 'comfortable', 'expanded'].includes(parsed.timelineDensity ?? '') ? parsed.timelineDensity! : DEFAULT_LAYOUT.timelineDensity,
+      focusMode: ['balanced', 'preview', 'timeline'].includes(parsed.focusMode ?? '') ? parsed.focusMode! : DEFAULT_LAYOUT.focusMode,
+    }
+  } catch {
+    return DEFAULT_LAYOUT
+  }
+}
+
 import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 
 const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; videoId?: string }> = ({ videoUrl, videoPath, videoId }) => {
@@ -83,6 +114,17 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null)
   const [timelineEffects, setTimelineEffects] = useState<TimelineEffect[]>([])
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null)
+  const [trackVisibility, setTrackVisibility] = useState<Record<number, boolean>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const raw = localStorage.getItem(TRACK_VISIBILITY_KEY)
+      if (!raw) return {}
+      const parsed = JSON.parse(raw) as Record<string, boolean>
+      const out: Record<number, boolean> = {}
+      Object.keys(parsed).forEach((k) => { out[Number(k)] = parsed[k] })
+      return out
+    } catch { return {} }
+  })
   const [colorGradeSettings, setColorGradeSettings] = useState<any>({})
   const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>({
     enabled: false,
@@ -98,9 +140,48 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [showBeforeAfter, setShowBeforeAfter] = useState(true)
   const [compareMode, setCompareMode] = useState<'after' | 'before' | 'split'>('after')
 
+  // Adaptable layout (persisted) — only once; must be before Shortcuts Hub so updateLayout is in scope
+  const [layoutPrefs, setLayoutPrefs] = useState<EditorLayoutPreferences>(loadLayoutPreferences)
+  const [reduceMotion, setReduceMotion] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(layoutPrefs))
+  }, [layoutPrefs])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(TRACK_VISIBILITY_KEY, JSON.stringify(trackVisibility))
+  }, [trackVisibility])
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduceMotion(mq.matches)
+    const fn = () => setReduceMotion(mq.matches)
+    mq.addEventListener('change', fn)
+    return () => mq.removeEventListener('change', fn)
+  }, [])
+  const updateLayout = useCallback((patch: Partial<EditorLayoutPreferences>) => {
+    setLayoutPrefs((p) => ({ ...p, ...patch }))
+  }, [])
+
   // Shortcuts Hub (after all state used in handlers)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      const inInput = target?.closest?.('input, textarea, [contenteditable="true"]')
+      if (!inInput && (e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        updateLayout({ focusMode: 'preview' })
+        return
+      }
+      if (!inInput && (e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        updateLayout({ focusMode: 'timeline' })
+        return
+      }
+      if (!inInput && (e.key === 'b' || e.key === 'B') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        updateLayout({ focusMode: 'balanced' })
+        return
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setCommandKOpen(prev => !prev)
@@ -132,7 +213,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeCategory, templateLayout])
+  }, [activeCategory, templateLayout, updateLayout])
 
   // AI Feature State
   const [isTranscribing, setIsTranscribing] = useState(false)
@@ -144,7 +225,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [selectedVoice, setSelectedVoice] = useState('alloy')
   const [isGeneratingVoiceover, setIsGeneratingVoiceover] = useState(false)
 
-  // System Preferences
+  // System Preferences (layout state is above — do not duplicate layoutPrefs/updateLayout here)
   const [preferences] = useState({ isOledTheme: true })
 
   // History Orchestration
@@ -252,6 +333,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     switch (activeCategory) {
       case 'ai-edit': return <EliteAIView videoId={videoId || ''} isTranscribing={isTranscribing} setIsTranscribing={setIsTranscribing} transcript={transcript} setTranscript={setTranscript} editingWords={editingWords} setEditingWords={setEditingWords} aiSuggestions={aiSuggestions} setTimelineSegments={setTimelineSegments} showToast={showToast} setActiveCategory={setActiveCategory} setTextOverlays={setTextOverlays} />
       case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} />
+      case 'short-clips': return <ShortClipsView videoState={videoState} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} />
       case 'growth': return <GrowthInsightsView isOledTheme={preferences.isOledTheme} />
       case 'automate': return <AutomateView voiceoverText={voiceoverText} setVoiceoverText={setVoiceoverText} selectedVoice={selectedVoice} setSelectedVoice={setSelectedVoice} isGeneratingVoiceover={isGeneratingVoiceover} setIsGeneratingVoiceover={setIsGeneratingVoiceover} videoId={videoId || ''} showToast={showToast} />
       case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} />
@@ -286,7 +368,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   }
 
   return (
-    <div className={`h-screen flex overflow-hidden transition-colors ${preferences.isOledTheme ? 'bg-black text-white' : 'bg-slate-50 text-slate-900 dark:bg-gray-900 dark:text-white'}`}>
+    <div className={`h-screen flex overflow-hidden transition-colors ${preferences.isOledTheme ? 'bg-black text-white' : 'bg-slate-50 text-slate-900 dark:bg-gray-900 dark:text-white'} ${reduceMotion ? 'reduce-motion-editor' : ''}`} data-reduce-motion={reduceMotion}>
       <AchievementSystem />
 
       <CommandK
@@ -333,14 +415,17 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
           contentPanelCollapsed={contentPanelCollapsed}
           setContentPanelCollapsed={setContentPanelCollapsed}
           featuresCount={CATEGORIES.find(c => c.id === activeCategory)?.features?.length || 0}
+          layoutPrefs={layoutPrefs}
+          onLayoutChange={updateLayout}
+          defaultLayout={DEFAULT_LAYOUT}
         />
 
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            {/* Improved responsive layout with better breakpoints and spacing */}
-            <div className="flex-1 flex flex-col xl:flex-row overflow-hidden p-3 lg:p-5 gap-3 lg:gap-5">
-              {/* Content Panel - Improved flex behavior */}
-              <div className={`flex-1 flex flex-col transition-all duration-500 overflow-hidden min-w-0 ${contentPanelCollapsed ? 'flex-[0.0001] opacity-0' : 'flex-1'}`}>
+            {/* Adaptable layout: focus mode can hide content panel; preview size and timeline density applied below */}
+            <div className={`flex-1 flex flex-col xl:flex-row overflow-hidden p-3 lg:p-5 gap-3 lg:gap-5 ${reduceMotion ? 'transition-none' : 'transition-all duration-300'} ${layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 'content-panel-hidden' : ''}`}>
+              {/* Content Panel - hidden when focus mode is preview or timeline */}
+              <div className={`flex-1 flex flex-col transition-all duration-500 overflow-hidden min-w-0 ${contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 'flex-[0.0001] opacity-0 pointer-events-none' : 'flex-1'}`}>
                 <div className="flex-1 bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700/50 overflow-hidden flex flex-col">
                   <div className="editor-auto flex-1 overflow-y-auto p-4 lg:p-6 custom-scrollbar min-w-0">
                     <AnimatePresence mode="wait">
@@ -359,37 +444,56 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 </div>
               </div>
 
-              {/* Video Preview - Improved responsive sizing */}
-              <div className="w-full xl:w-[480px] 2xl:w-[600px] flex shrink-0">
-                <RealTimeVideoPreview
-                  videoUrl={actualVideoUrl || ''}
-                  currentTime={videoState.currentTime}
-                  isPlaying={videoState.isPlaying}
-                  volume={videoState.volume}
-                  isMuted={videoState.isMuted}
-                  playbackSpeed={playbackSpeed}
-                  filters={effectiveFilters}
-                  textOverlays={textOverlays}
-                  shapeOverlays={shapeOverlays}
-                  imageOverlays={imageOverlays}
-                  gradientOverlays={gradientOverlays}
-                  editingWords={editingWords}
-                  captionStyle={captionStyle}
-                  templateLayout={templateLayout}
-                  onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
-                  onDurationChange={(d: number) => setVideoState(prev => ({ ...prev, duration: d }))}
-                  onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
-                  showBeforeAfter={showBeforeAfter}
-                  onBeforeAfterChange={setShowBeforeAfter}
-                  compareMode={compareMode}
-                />
+              {/* Video Preview - size from layout prefs: small 360, medium 480, large 600 */}
+              <div className={`flex shrink-0 w-full ${reduceMotion ? '' : 'transition-all duration-300'} ${layoutPrefs.previewSize === 'small' ? 'xl:w-[360px] 2xl:w-[400px]' : layoutPrefs.previewSize === 'large' ? 'xl:w-[560px] 2xl:w-[680px]' : 'xl:w-[480px] 2xl:w-[600px]'}`}>
+                <div className="h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 bg-slate-900/40 shadow-2xl shadow-black/20">
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/60 bg-slate-800/60 shrink-0">
+                    <Film className="w-4 h-4 text-amber-400/90" />
+                    <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Preview</span>
+                  </div>
+                  <div className="flex-1 min-h-0 flex items-center justify-center p-2">
+                    <RealTimeVideoPreview
+                      videoUrl={actualVideoUrl || ''}
+                      currentTime={videoState.currentTime}
+                      isPlaying={videoState.isPlaying}
+                      volume={videoState.volume}
+                      isMuted={videoState.isMuted}
+                      playbackSpeed={playbackSpeed}
+                      filters={effectiveFilters}
+                      textOverlays={textOverlays}
+                      shapeOverlays={shapeOverlays}
+                      imageOverlays={imageOverlays}
+                      gradientOverlays={gradientOverlays}
+                      editingWords={editingWords}
+                      captionStyle={captionStyle}
+                      templateLayout={templateLayout}
+                      onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
+                      onDurationChange={(d: number) => setVideoState(prev => ({ ...prev, duration: d }))}
+                      onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
+                      showBeforeAfter={showBeforeAfter}
+                      onBeforeAfterChange={setShowBeforeAfter}
+                      compareMode={compareMode}
+                      timelineEffects={timelineEffects}
+                      timelineSegments={timelineSegments}
+                      trackVisibility={trackVisibility}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Timeline Section - Improved spacing and sizing */}
-            <div className="editor-auto h-[30%] min-h-[220px] max-h-[300px] px-3 lg:px-5 pb-3 lg:pb-5 shrink-0 flex flex-col gap-2 min-w-0">
+            {/* Timeline Section - density from layout: compact 180, comfortable 240, expanded 320 */}
+            <div className={`shrink-0 flex flex-col gap-2 min-w-0 px-3 lg:px-5 pb-3 lg:pb-5 ${reduceMotion ? 'transition-none' : 'transition-all duration-300'} ${layoutPrefs.timelineDensity === 'compact' ? 'min-h-[180px] max-h-[240px] h-[28%]' : layoutPrefs.timelineDensity === 'expanded' ? 'min-h-[280px] max-h-[380px] h-[38%]' : 'min-h-[220px] max-h-[300px] h-[30%]'} ${layoutPrefs.focusMode === 'timeline' ? 'min-h-[320px] max-h-[50vh] flex-1' : ''}`}>
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Speed</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <List className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Timeline</span>
+                  </div>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-500 tabular-nums" title="Current / Duration">
+                    {formatTime(videoState.currentTime)} <span className="text-slate-400">/</span> {formatTime(videoState.duration)}
+                  </span>
+                </div>
                 <div className="flex gap-1">
                   {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((s) => (
                     <button
@@ -410,12 +514,17 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 <ResizableTimeline
                   duration={videoState.duration}
                   currentTime={videoState.currentTime}
+                  isPlaying={videoState.isPlaying}
+                  onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
+                  density={layoutPrefs.timelineDensity}
                   segments={timelineSegments}
                   onTimeUpdate={(t: number) => setVideoState(prev => ({ ...prev, currentTime: t }))}
                   onSegmentsChange={setTimelineSegments}
                   selectedSegmentId={selectedSegmentId}
                   onSegmentSelect={setSelectedSegmentId}
                   onSegmentDeleted={() => showToast('Segment removed', 'info')}
+                  trackVisibility={trackVisibility}
+                  onTrackVisibilityChange={(trackIndex, visible) => setTrackVisibility((prev) => ({ ...prev, [trackIndex]: visible }))}
                   onDuplicateSegmentAtPlayhead={(segmentId) => {
                     const seg = timelineSegments.find((s) => s.id === segmentId)
                     if (!seg) return

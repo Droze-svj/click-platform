@@ -13,7 +13,9 @@ const {
   saveKeyboardShortcut,
   getKeyboardShortcuts,
   updateConfiguration,
-  getConfiguration
+  getConfiguration,
+  getBrandKit,
+  updateBrandKit
 } = require('../services/proModeService');
 const {
   getCommandPalette,
@@ -119,6 +121,26 @@ router.get('/configuration', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const configuration = await getConfiguration(userId);
   sendSuccess(res, 'Configuration retrieved', 200, configuration);
+}));
+
+/**
+ * GET /api/pro-mode/brand-kit
+ * Get brand kit (colors, fonts, lower-third, logo, captions)
+ */
+router.get('/brand-kit', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const brandKit = await getBrandKit(userId);
+  sendSuccess(res, 'Brand kit retrieved', 200, brandKit);
+}));
+
+/**
+ * PUT /api/pro-mode/brand-kit
+ * Update brand kit
+ */
+router.put('/brand-kit', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const brandKit = await updateBrandKit(userId, req.body);
+  sendSuccess(res, 'Brand kit updated', 200, brandKit);
 }));
 
 /**
@@ -230,7 +252,7 @@ router.post('/automation', auth, asyncHandler(async (req, res) => {
 router.post('/automation/:ruleId/execute', auth, asyncHandler(async (req, res) => {
   const { ruleId } = req.params;
   const userId = req.user._id;
-  
+
   // Verify ownership
   const rule = await AutomationRule.findById(ruleId);
   if (!rule || rule.userId.toString() !== userId.toString()) {
@@ -248,7 +270,7 @@ router.post('/automation/:ruleId/execute', auth, asyncHandler(async (req, res) =
 router.put('/automation/:ruleId/toggle', auth, asyncHandler(async (req, res) => {
   const { ruleId } = req.params;
   const userId = req.user._id;
-  
+
   const rule = await AutomationRule.findOne({ _id: ruleId, userId });
   if (!rule) {
     return sendError(res, 'Rule not found', 404);

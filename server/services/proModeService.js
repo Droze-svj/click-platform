@@ -10,7 +10,7 @@ const logger = require('../utils/logger');
 async function getUserPreferences(userId) {
   try {
     let preferences = await UserPreferences.findOne({ userId }).lean();
-    
+
     if (!preferences) {
       preferences = await createDefaultPreferences(userId);
     }
@@ -106,7 +106,7 @@ async function toggleProMode(userId, enabled) {
     }
 
     preferences.proMode.enabled = enabled;
-    
+
     // Auto-enable pro features when enabling pro mode
     if (enabled) {
       preferences.proMode.features.advancedFilters = true;
@@ -263,6 +263,54 @@ async function getConfiguration(userId) {
   }
 }
 
+/**
+ * Get brand kit (for video/editor consistency)
+ */
+async function getBrandKit(userId) {
+  try {
+    const preferences = await getUserPreferences(userId);
+    return preferences.brandKit || {};
+  } catch (error) {
+    logger.error('Error getting brand kit', { error: error.message, userId });
+    throw error;
+  }
+}
+
+/**
+ * Update brand kit
+ */
+async function updateBrandKit(userId, brandKit) {
+  try {
+    let preferences = await UserPreferences.findOne({ userId });
+    if (!preferences) {
+      preferences = await createDefaultPreferences(userId);
+    }
+    if (!preferences.brandKit) {
+      preferences.brandKit = {};
+    }
+    const allowed = [
+      'primaryColor', 'accentColor', 'titleFont', 'bodyFont',
+      'lowerThirdStyle', 'lowerThirdPosition', 'logoPlacement', 'logoOpacity',
+      'captionStyle', 'captionPosition'
+    ];
+    allowed.forEach((key) => {
+      if (brandKit[key] !== undefined) {
+        if (key === 'logoOpacity' && brandKit[key] !== null) {
+          const n = Number(brandKit[key]);
+          preferences.brandKit[key] = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : null;
+        } else {
+          preferences.brandKit[key] = brandKit[key] === '' ? undefined : brandKit[key];
+        }
+      }
+    });
+    await preferences.save();
+    return preferences.brandKit;
+  } catch (error) {
+    logger.error('Error updating brand kit', { error: error.message, userId });
+    throw error;
+  }
+}
+
 module.exports = {
   getUserPreferences,
   toggleProMode,
@@ -271,7 +319,9 @@ module.exports = {
   saveKeyboardShortcut,
   getKeyboardShortcuts,
   updateConfiguration,
-  getConfiguration
+  getConfiguration,
+  getBrandKit,
+  updateBrandKit
 };
 
 

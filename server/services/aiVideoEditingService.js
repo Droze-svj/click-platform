@@ -448,23 +448,26 @@ function buildCutFilter(silencePeriods, sceneChanges, duration) {
 }
 
 /**
- * Detect key moments for creative enhancements (hook, reactions, highlights)
+ * Detect key moments for creative enhancements (hook, reactions, highlights).
+ * Hook: first 1–3 seconds — optimize for niche-specific opening, not generic clickbait.
+ * Plan one clear outcome per clip (learn/feel/do); use intentional silence and pacing.
  */
 async function detectKeyMoments(transcript, duration, audioLevels = []) {
   const moments = {
-    hook: null, // First 3 seconds optimization
+    hook: null, // First 1–3 seconds: niche-specific hook window
     reactions: [], // High energy moments
     highlights: [], // Important content moments
     bestThumbnail: null,
   };
 
   if (transcript) {
-    // Hook: First impactful sentence (usually first 3-5 seconds)
-    const firstWords = transcript.split(/\s+/).slice(0, 15).join(' ');
-    if (firstWords.length > 10) {
+    // Hook: First 1–3 seconds — refine for niche; avoid generic "You won't believe..."
+    const firstWords = transcript.split(/\s+/).slice(0, 12).join(' ');
+    if (firstWords.length > 8) {
+      const hookEnd = Math.min(3, Math.max(1, duration));
       moments.hook = {
         start: 0,
-        end: Math.min(5, duration),
+        end: hookEnd,
         text: firstWords,
         confidence: 0.9,
       };
@@ -497,17 +500,24 @@ async function detectKeyMoments(transcript, duration, audioLevels = []) {
     });
   }
 
-  // Best thumbnail: Highest audio energy moment in first 30% of video
+  // Best thumbnail: scroll-stopping = prefer first frame (0) or highest energy in first 30%
   if (audioLevels.length > 0) {
     const firstThird = Math.floor(audioLevels.length * 0.3);
     const firstThirdLevels = audioLevels.slice(0, firstThird);
     const maxIndex = firstThirdLevels.indexOf(Math.max(...firstThirdLevels));
     if (maxIndex >= 0) {
+      const energyTime = (maxIndex / audioLevels.length) * duration;
+      // Prefer first frame (0) for scroll-stopping unless we have a strong hook moment in first 2s
+      const firstFrame = 0;
+      const useFirstFrame = energyTime > 2 || firstThirdLevels[maxIndex] < (Math.max(...audioLevels) * 0.9);
       moments.bestThumbnail = {
-        time: (maxIndex / audioLevels.length) * duration,
+        time: useFirstFrame ? firstFrame : energyTime,
         confidence: 0.85,
       };
     }
+  } else {
+    // No audio levels: use first frame for scroll-stopping thumbnail
+    moments.bestThumbnail = { time: 0, confidence: 0.8 };
   }
 
   return moments;
@@ -519,7 +529,7 @@ async function detectKeyMoments(transcript, duration, audioLevels = []) {
 function generateTextOverlaySuggestions(transcript, keyMoments, duration) {
   const overlays = [];
 
-  // Hook text overlay (first 3 seconds)
+  // Hook text overlay (first 1–3 seconds — niche-specific)
   if (keyMoments.hook) {
     overlays.push({
       text: keyMoments.hook.text.substring(0, 50) + (keyMoments.hook.text.length > 50 ? '...' : ''),
@@ -553,19 +563,21 @@ function generateTextOverlaySuggestions(transcript, keyMoments, duration) {
 }
 
 /**
- * Detect faces for auto-zoom (simplified - would use ML in production)
+ * Detect key moments for meaningful zoom (faces, reactions, key beats).
+ * Use zooms only on these moments—subtle push-ins to emphasize key words or reactions, not constant random movement.
  */
 async function detectFaceMoments(inputPath, duration) {
   // In production, use face detection library (face-api.js, OpenCV, etc.)
-  // For now, return estimated moments based on scene changes
+  // For now, return estimated moments based on scene changes (treat as key-moment proxies)
   const sceneChanges = await detectSceneChanges(inputPath, 0.3);
   const faceMoments = [];
 
+  // Limit to a few meaningful zooms; avoid constant motion
   sceneChanges.slice(0, 5).forEach(time => {
     faceMoments.push({
       start: time,
       end: Math.min(time + 3, duration),
-      zoom: 1.2,
+      zoom: 1.15, // Subtle push-in (was 1.2); emphasize key moment without distraction
       confidence: 0.7,
     });
   });
@@ -574,7 +586,7 @@ async function detectFaceMoments(inputPath, duration) {
 }
 
 /**
- * Apply auto-zoom on key moments
+ * Build zoom filter for key moments only. Subtle push-ins that serve the message.
  */
 function buildZoomFilter(faceMoments, duration) {
   if (faceMoments.length === 0) return null;
@@ -1010,7 +1022,31 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       minSceneLength = 1.0,
       useMultiModalScenes = false, // use visual+audio fusion when true
       workflowType = 'general', // 'tiktok', 'youtube', 'general'
+      // Opus+ / extended creative
+      clipTargetLength, // 'short' | 'mid-3-5' | 'mid-5-10' | 'full'
+      clipCount = 1,
+      contentGenre, // 'auto' | 'tutorial' | 'vlog' | 'podcast' | 'webinar' | 'product'
+      prioritizeHook,
+      aspectFormats, // e.g. ['9:16', '1:1', '16:9'] for multi-aspect export
+      pacingIntensity, // 'gentle' | 'medium' | 'aggressive'
     } = editingOptions;
+
+    const optimizeHookOption = prioritizeHook !== undefined ? prioritizeHook : optimizeHook;
+    const aspectRatiosToExport = Array.isArray(aspectFormats) && aspectFormats.length > 0
+      ? aspectFormats
+      : (enableMultiFormatExport && exportFormats?.length ? exportFormats : null);
+    const effectiveWorkflow = contentGenre === 'product' ? 'tiktok' : (contentGenre === 'tutorial' || contentGenre === 'vlog' || contentGenre === 'webinar') ? 'youtube' : workflowType;
+
+    const pacingPresets = {
+      gentle: { minSilenceDuration: 0.8, silenceThreshold: -25 },
+      medium: { minSilenceDuration: 0.5, silenceThreshold: -30 },
+      aggressive: { minSilenceDuration: 0.3, silenceThreshold: -35 },
+    };
+    const pacing = pacingPresets[pacingIntensity] || pacingPresets.medium;
+    const effectiveMinSilence = pacingPresets[pacingIntensity] ? pacing.minSilenceDuration : minSilenceDuration;
+    const effectiveSilenceThreshold = pacingPresets[pacingIntensity] ? pacing.silenceThreshold : silenceThreshold;
+
+    logger.info('Auto-edit options (Opus+)', { clipTargetLength, clipCount, contentGenre, prioritizeHook: optimizeHookOption, aspectRatiosToExport, effectiveWorkflow, pacingIntensity: pacingIntensity || 'medium' });
 
     const content = await Content.findById(videoId);
     if (!content) throw new Error('Video content not found');
@@ -1143,7 +1179,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     if (removeSilence || removePauses) {
       logger.info('Detecting silence periods', { videoId });
       silencePeriods = await retryWithBackoff(
-        () => detectSilencePeriods(inputPath, silenceThreshold, minSilenceDuration),
+        () => detectSilencePeriods(inputPath, effectiveSilenceThreshold, effectiveMinSilence),
         2
       );
 
@@ -1172,7 +1208,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
           const finalScenes = await multiModal.detectScenesMultiModal(inputPath, {
             sensitivity: sceneThreshold,
             minSceneLength,
-            workflowType,
+            workflowType: effectiveWorkflow,
             mergeShortScenes: true,
             shortSceneThreshold: 2.0,
           });
@@ -1279,20 +1315,26 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       }
     }
 
-    // Quality: Audio enhancement
+    // Premium audio: clean voice first, then mix for mobile (short-form = phone speakers)
+    const isShortForm = clipTargetLength === 'short' || (Array.isArray(aspectFormats) && aspectFormats.includes('9:16'));
+    const targetLUFS = isShortForm ? -14 : -16; // -14 LUFS = mobile/short-form friendly
+
+    // Quality: Audio enhancement (clean voice, tame harsh, mobile-friendly level)
     if (enhanceAudio) {
-      audioFilters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
+      audioFilters.push(`loudnorm=I=${targetLUFS}:TP=-1.5:LRA=11`);
       audioFilters.push('highpass=f=80,lowpass=f=15000');
-      appliedEdits.push('Audio Enhancement');
+      // Gentle cut ~4kHz to tame harshness so voice stays clear, not brittle
+      audioFilters.push('equalizer=f=4000:width_type=o:width=1:g=-1.2');
+      appliedEdits.push(isShortForm ? 'Audio Enhancement (mobile mix)' : 'Audio Enhancement');
     }
 
-    // Quality: Noise reduction
+    // Quality: Noise reduction (clean voice)
     if (enableNoiseReduction) {
       audioFilters.push('highpass=f=200,lowpass=f=3000,afftdn=nr=10:nf=-25');
       appliedEdits.push('Noise Reduction');
     }
 
-    // Creative: Audio ducking (lower music during speech)
+    // Creative: Audio ducking (keep speech clearly louder than music)
     if (enableAudioDucking && transcript) {
       const duckingFilter = applyAudioDucking(transcript, duration);
       if (duckingFilter) {
@@ -1303,7 +1345,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     }
 
     // Creative: Hook optimization (enhance first 3 seconds)
-    if (optimizeHook && keyMoments.hook) {
+    if (optimizeHookOption && keyMoments.hook) {
       // Slight speed increase for hook if needed
       const hookSpeed = 1.05;
       videoFilters.push(`setpts='if(lt(t,${keyMoments.hook.end}),${1 / hookSpeed}*PTS,PTS)'`);
@@ -1399,10 +1441,9 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       command.audioFilters(combinedAudioFilter);
     }
 
-    // Add transitions between scenes if requested
+    // Add transitions between scenes if requested (keep simple and clean—minimalist edits that serve the message)
     if (addTransitions && sceneChanges.length > 1) {
-      // Note: xfade requires complex filter setup with multiple inputs
-      // For now, use simple fade filter
+      // Note: xfade requires complex filter setup with multiple inputs. Prefer cut/fade over flashy wipes.
       appliedEdits.push('Scene Transitions');
       logger.info('Scene transitions enabled', { videoId, sceneCount: sceneChanges.length });
     }
@@ -1907,7 +1948,7 @@ async function analyzeVideoForEditing(videoMetadata) {
     if (!client) {
       logger.warn('OpenAI API key not configured');
       return validateAndClampAnalysis({
-        suggestedEdits: ['Enable remove silence and optimize pacing for better retention.', 'Add captions for accessibility and reach.'],
+        suggestedEdits: ['Refine first 1–3s as niche-specific hook; use intentional silence and pacing.', 'Add captions for accessibility and reach.'],
         recommendedCuts: [],
         suggestedLength: duration,
         contentType: inferContentType(transcript, duration),
@@ -1938,19 +1979,20 @@ ${silenceBlock}${sceneBlock}${transcriptBlock}
 RULES:
 1. recommendedCuts: Only suggest cuts within the detected silence segments above when provided; use their exact start/end. If no silence data, suggest plausible pauses with confidence < 0.7. Every cut must have start < end and both in [0, ${duration.toFixed(1)}].
 2. suggestedLength: Must be between ${Math.max(0, Math.floor(duration * 0.5))} and ${Math.ceil(duration)}.
-3. suggestedEdits: Reference specific timestamps from the transcript when possible (e.g. "Remove pause 0:45-0:52", "Add caption for hook at 0:05").
+3. suggestedEdits: Reference specific timestamps when possible. Favor: (a) refining the first 1–3s as a niche-specific hook (not generic clickbait), (b) one clear outcome per clip (what viewer learns/feels/does)—cut ruthlessly around it, (c) intentional silence and pacing, (d) burned-in concise captions for silent viewing with key words emphasized and enough time to read.
 4. contentType: One of "tutorial", "vlog", "podcast", "short_form", "ad", "general" based on content and length.
-5. thumbnailMoments: Times in [0, ${duration.toFixed(1)}].
-6. highlights / pacingImprovements / transitions: timestamps must be within duration.
+5. thumbnailMoments: Times for scroll-stopping first frame/thumbnail. Prefer 0 (first frame) or a moment with bold text/clear visual of what's happening; not random mid-video frames. Each {time, reason} e.g. reason: "scroll-stopping hook" or "clear face + text".
+6. highlights / pacingImprovements / transitions: timestamps must be within duration. Prefer simple transitions (cut, cross-dissolve/fade); avoid flashy wipes—minimalist edits serve the message.
+7. hookSuggestion (optional): One short sentence for a niche-specific hook for the first 1–3 seconds (e.g. "Open with the one habit that fixed my sleep" for wellness). clipOutcome (optional): One short sentence for the single clear outcome of this clip—what the viewer learns, feels, or does.
 
-Return valid JSON with: recommendedCuts (array of {start, end, reason, confidence}), transitions, audioAdjustments, pacingImprovements, highlights, suggestedLength, thumbnailMoments, suggestedEdits (array of strings), contentType.`;
+Return valid JSON with: recommendedCuts (array of {start, end, reason, confidence}), transitions, audioAdjustments, pacingImprovements, highlights, suggestedLength, thumbnailMoments, suggestedEdits (array of strings), contentType, and optionally hookSuggestion, clipOutcome (strings).`;
 
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are a professional video editor. Return only valid JSON. All timestamps must be within the video duration. Prefer data-driven suggestions (silence segments, transcript) over invented timestamps.',
+          content: 'You are a professional video editor. Return only valid JSON. All timestamps must be within the video duration. Prefer data-driven suggestions (silence segments, transcript) over invented timestamps. Encourage: niche-specific hooks in first 1–3s (not generic "You won\'t believe…"), one clear outcome per clip (learn/feel/do), and intentional silence/pauses rather than wall-to-wall noise.',
         },
         { role: 'user', content: prompt },
       ],
@@ -1977,7 +2019,7 @@ Return valid JSON with: recommendedCuts (array of {start, end, reason, confidenc
     analysis.editStyles = editStyles;
     analysis.baseScore = Math.round(baseScore);
     if (!analysis.suggestedEdits || !Array.isArray(analysis.suggestedEdits)) {
-      analysis.suggestedEdits = ['Remove silence and optimize pacing.', 'Add captions for reach.'];
+      analysis.suggestedEdits = ['Refine first 1–3s as a niche-specific hook.', 'Remove dead air; use intentional silence and pacing.', 'Add captions for reach.'];
     }
     if (!analysis.contentType) analysis.contentType = inferContentType(transcript, duration);
 

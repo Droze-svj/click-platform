@@ -73,6 +73,22 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
               ))}
             </div>
           </div>
+          <div>
+            <h3 className="text-xs font-black uppercase text-emerald-500 mb-4 tracking-widest">Layout</h3>
+            <div className="space-y-4">
+              {[
+                { k: 'F', d: 'Focus preview (hide panel)' },
+                { k: 'T', d: 'Focus timeline' },
+                { k: 'B', d: 'Balanced (show all)' },
+                { k: 'View menu', d: 'Preview size, density, reset' }
+              ].map(s => (
+                <div key={s.k} className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{s.d}</span>
+                  <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-[10px] font-black">{s.k}</kbd>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="p-6 bg-blue-50 dark:bg-blue-900/10 text-center">

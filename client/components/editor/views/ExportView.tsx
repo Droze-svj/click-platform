@@ -4,12 +4,12 @@ import { apiGet, apiPost, apiPatch } from '../../../lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const EXPORT_PRESETS = [
-  { id: 'shorts', label: 'YT Shorts', icon: Youtube, color: 'text-red-500', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 4, format: 'mp4', quality: undefined },
-  { id: 'reels', label: 'IG Reels', icon: Instagram, color: 'text-pink-500', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 3.5, format: 'mp4', quality: undefined },
-  { id: 'tiktok', label: 'TikTok', icon: Smartphone, color: 'text-black dark:text-white', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 3, format: 'mp4', quality: undefined },
-  { id: '1080p', label: '1080p HD', icon: Share2, color: 'text-blue-500', res: '1920×1080', width: 1920, height: 1080, bitrateMbps: 8, format: 'mp4', quality: undefined },
-  { id: '4k', label: '4K Master', icon: Share2, color: 'text-violet-500', res: '3840×2160', width: 3840, height: 2160, bitrateMbps: 25, format: 'mp4', quality: undefined },
-  { id: 'best', label: 'Best quality', icon: Download, color: 'text-amber-500', res: 'Source +', width: 1920, height: 1080, bitrateMbps: 25, format: 'mp4', quality: 'best' as const },
+  { id: 'shorts', label: 'YT Shorts', icon: Youtube, color: 'text-red-500', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 4, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Clear value, Subscribe CTA' },
+  { id: 'reels', label: 'IG Reels', icon: Instagram, color: 'text-pink-500', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 3.5, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Aesthetic, Save/Share CTA' },
+  { id: 'tiktok', label: 'TikTok', icon: Smartphone, color: 'text-black dark:text-white', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 3, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Snappy cuts, Follow/Comment' },
+  { id: '1080p', label: '1080p HD', icon: Share2, color: 'text-blue-500', res: '1920×1080', width: 1920, height: 1080, bitrateMbps: 8, format: 'mp4', quality: undefined, fps: undefined, platformHint: undefined },
+  { id: '4k', label: '4K Master', icon: Share2, color: 'text-violet-500', res: '3840×2160', width: 3840, height: 2160, bitrateMbps: 25, format: 'mp4', quality: undefined, fps: undefined, platformHint: undefined },
+  { id: 'best', label: 'Best quality', icon: Download, color: 'text-amber-500', res: 'Source +', width: 1920, height: 1080, bitrateMbps: 25, format: 'mp4', quality: 'best' as const, fps: undefined, platformHint: undefined },
 ]
 
 interface ExportViewProps {
@@ -169,10 +169,17 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{selectedPresetConfig?.res ?? '—'}</span>
             <span className="text-gray-500">•</span>
             <span className="text-gray-700 dark:text-gray-300">~{effectiveBitrateMbps} Mbps</span>
+            {selectedPresetConfig && (selectedPresetConfig as { fps?: number }).fps && (
+              <span className="text-gray-500">• 30 fps</span>
+            )}
             {selectedPresetConfig && (
               <span className="text-[10px] text-gray-500">(quality: {exportQuality})</span>
             )}
           </div>
+          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">Platform-native: 9:16, 1080p, 30 fps. Reasonable bitrate so uploads don’t get compressed badly.</p>
+          {selectedPresetConfig && (selectedPresetConfig as { platformHint?: string }).platformHint && (
+            <p className="text-[10px] text-gray-500 mt-0.5">{(selectedPresetConfig as { platformHint?: string }).platformHint}</p>
+          )}
         </div>
 
         <div className="mb-4">
@@ -184,7 +191,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               onChange={(e) => setDuckMusicWhenVoiceover(e.target.checked)}
               className="rounded accent-blue-500"
             />
-            <span className="text-xs text-gray-700 dark:text-gray-300">Duck music when voiceover plays</span>
+            <span className="text-xs text-gray-700 dark:text-gray-300">Duck music when voiceover plays (keep speech clearly louder)</span>
           </label>
           {duckMusicWhenVoiceover && (
             <div className="mt-1.5 flex items-center gap-2">
@@ -199,6 +206,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               />
             </div>
           )}
+          <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1.5">Mix for mobile: check clarity on a phone speaker—short-form is consumed there.</p>
         </div>
 
         <div className="mb-4">
@@ -232,7 +240,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 {p.res}
               </span>
               <span className={`text-[8px] opacity-70 ${selectedPreset === p.id ? 'text-white/80' : 'text-gray-400'}`}>
-                {p.bitrateMbps} Mbps
+                {p.bitrateMbps} Mbps{(p as { fps?: number }).fps ? ' · 30fps' : ''}
               </span>
             </button>
           ))}

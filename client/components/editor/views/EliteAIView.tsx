@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Cpu, Zap, Loader2, MessageSquare, Scissors, Sparkles, TrendingUp, Copy, AlertCircle, Type } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
+import { getDefaultTrackForSegmentType } from '../../../types/editor'
 
 interface EliteAIViewProps {
   videoId: string
@@ -89,6 +90,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               Elite AI Control
             </h3>
             <p className="text-[10px] text-gray-500 font-medium">Professional automated mastery</p>
+            <p className="text-[10px] text-sky-600 dark:text-sky-400 mt-1">AI as assistant: use transcripts to find moments; choose segments by <strong>strategy</strong>, not only viral score. Refine cuts &amp; captions in the timeline.</p>
           </div>
           <div className="px-2 py-1 text-[8px] font-black uppercase text-fuchsia-500 bg-fuchsia-500/10 rounded">PRO MODE</div>
         </div>
@@ -187,7 +189,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     type: 'text' as const,
                     name: s.description || 'AI suggestion',
                     color: '#8b5cf6',
-                    track: 0
+                    track: getDefaultTrackForSegmentType('text')
                   }))
                   setTimelineSegments((prev: any[]) => [...prev, ...segments])
                   showToast(`${segments.length} AI suggestions applied to timeline`, 'success')

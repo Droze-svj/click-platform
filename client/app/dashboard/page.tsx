@@ -232,10 +232,10 @@ export default function Dashboard() {
                 </h3>
                 <div className="flex-readable">
                   <span className={`px-6 py-3 rounded-full text-sm font-semibold shadow-lg ${user.subscription.status === 'active'
-                      ? 'status-active text-white'
-                      : user.subscription.status === 'trial'
-                        ? 'status-trial text-white'
-                        : 'status-inactive text-white'
+                    ? 'status-active text-white'
+                    : user.subscription.status === 'trial'
+                      ? 'status-trial text-white'
+                      : 'status-inactive text-white'
                     }`}>
                     <span className="flex items-center">
                       <span className="w-2 h-2 bg-white/80 rounded-full mr-2 animate-pulse"></span>
@@ -260,67 +260,44 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Enhanced Feature Grid */}
-          <section className="grid-staggered mb-16">
-            <FeatureCard
-              title="Auto Video Clipper"
-              description="Upload long videos and get short-form clips with AI-powered editing"
-              link="/dashboard/video"
-              icon="🎥"
-              dataTour="video-upload"
-              gradient="from-blue-500 to-cyan-500"
-            />
-            <FeatureCard
-              title="Content Generator"
-              description="Transform text into engaging social media posts with AI assistance"
-              link="/dashboard/content"
-              icon="✨"
-              dataTour="content-generator"
-              gradient="from-purple-500 to-pink-500"
-            />
-            <FeatureCard
-              title="Script Generator"
-              description="Generate YouTube, podcast, and blog scripts instantly"
-              link="/dashboard/scripts"
-              icon="📝"
-              dataTour="scripts"
-              gradient="from-green-500 to-teal-500"
-            />
-            <FeatureCard
-              title="Quote Cards"
-              description="Create beautiful branded quote graphics with typography"
-              link="/dashboard/quotes"
-              icon="🎨"
-              gradient="from-orange-500 to-red-500"
-            />
-            <FeatureCard
-              title="Content Scheduler"
-              description="Schedule posts across platforms with optimal timing"
-              link="/dashboard/scheduler"
-              icon="📆"
-              gradient="from-indigo-500 to-purple-500"
-            />
-            <FeatureCard
-              title="Analytics"
-              description="View performance insights and growth metrics"
-              link="/dashboard/analytics"
-              icon="📊"
-              gradient="from-emerald-500 to-green-500"
-            />
-            <FeatureCard
-              title="Workflows"
-              description="Automate your content creation process end-to-end"
-              link="/dashboard/workflows"
-              icon="🤖"
-              gradient="from-violet-500 to-purple-500"
-            />
-            <FeatureCard
-              title="Niche Packs"
-              description="Customize your brand style with niche-specific templates"
-              link="/dashboard/niche"
-              icon="🎯"
-              gradient="from-rose-500 to-pink-500"
-            />
+          {/* Feature Hub — Bento-style command center */}
+          <section className="mb-16" data-tour="feature-hub">
+            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1 uppercase tracking-wider">Feature hub</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Everything in one place. Pick a category or jump straight in.</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-fr">
+              {/* Hero: Video — spans 2 cols on lg */}
+              <Link
+                href="/dashboard/video"
+                className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-gradient-to-br from-slate-50 to-blue-50/50 dark:from-slate-800/80 dark:to-blue-950/30 p-6 sm:p-8 lg:col-span-2 lg:row-span-2 flex flex-col justify-between min-h-[200px] hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300"
+                data-tour="video-upload"
+              >
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-cyan-400/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
+                <div className="relative">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 opacity-90">Create</span>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1 mb-2">Auto Video Clipper</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md">Upload long videos and get short-form clips with AI-powered editing.</p>
+                </div>
+                <div className="relative mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium text-sm">
+                  <span>Open</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </div>
+              </Link>
+
+              {/* Create */}
+              <BentoCard category="Create" title="Content Generator" description="AI social posts" href="/dashboard/content" dataTour="content-generator" />
+              <BentoCard category="Create" title="Script Generator" description="YouTube & podcast scripts" href="/dashboard/scripts" dataTour="scripts" />
+              <BentoCard category="Create" title="Quote Cards" description="Branded quote graphics" href="/dashboard/quotes" />
+              <BentoCard category="Create" title="Niche Packs" description="Templates by niche" href="/dashboard/niche" />
+
+              {/* Automate */}
+              <BentoCard category="Automate" title="Content Scheduler" description="Schedule across platforms" href="/dashboard/scheduler" />
+              <BentoCard category="Automate" title="Workflows" description="End-to-end automation" href="/dashboard/workflows" />
+
+              {/* Analyze */}
+              <BentoCard category="Analyze" title="Analytics" description="Performance & growth" href="/dashboard/analytics" />
+              <BentoCard category="Analyze" title="AI Features" description="Multi-model & predictions" href="/dashboard/ai" />
+            </div>
           </section>
 
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -404,6 +381,35 @@ function StatCard({ title, value, icon }: { title: string; value: number; icon: 
         <span className="text-4xl">{icon}</span>
       </div>
     </div>
+  )
+}
+
+function BentoCard({ category, title, description, href, dataTour }: {
+  category: string;
+  title: string;
+  description: string;
+  href: string;
+  dataTour?: string;
+}) {
+  const categoryColor: Record<string, string> = {
+    Create: 'text-violet-600 dark:text-violet-400',
+    Automate: 'text-amber-600 dark:text-amber-400',
+    Analyze: 'text-emerald-600 dark:text-emerald-400',
+    Grow: 'text-rose-600 dark:text-rose-400',
+  }
+  return (
+    <Link
+      href={href}
+      className="group relative overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 p-4 flex flex-col min-h-[120px] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition-all duration-200"
+      data-tour={dataTour}
+    >
+      <span className={`text-[10px] font-bold uppercase tracking-widest ${categoryColor[category] || 'text-slate-500'}`}>{category}</span>
+      <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-1 mb-0.5">{title}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 flex-1">{description}</p>
+      <span className="mt-2 text-xs font-medium text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 flex items-center gap-1">
+        Open <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+      </span>
+    </Link>
   )
 }
 

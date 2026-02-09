@@ -32,15 +32,24 @@ async function exportWithPreset(videoPath, outputPath, platform, options = {}) {
     },
     'instagram-reel': {
       resolution: { width: 1080, height: 1920 },
-      quality: { bitrate: '6000k', codec: 'h264', preset: 'medium' },
+      quality: { bitrate: '5000k', codec: 'h264', preset: 'medium' },
       audio: { codec: 'aac', bitrate: '128k', sampleRate: 44100 },
-      format: 'mp4'
+      format: 'mp4',
+      fps: 30
     },
     'tiktok': {
       resolution: { width: 1080, height: 1920 },
-      quality: { bitrate: '6000k', codec: 'h264', preset: 'fast' },
+      quality: { bitrate: '5000k', codec: 'h264', preset: 'fast' },
       audio: { codec: 'aac', bitrate: '128k', sampleRate: 44100 },
-      format: 'mp4'
+      format: 'mp4',
+      fps: 30
+    },
+    'shorts': {
+      resolution: { width: 1080, height: 1920 },
+      quality: { bitrate: '5000k', codec: 'h264', preset: 'medium' },
+      audio: { codec: 'aac', bitrate: '128k', sampleRate: 44100 },
+      format: 'mp4',
+      fps: 30
     },
     'twitter': {
       resolution: { width: 1280, height: 720 },
@@ -61,33 +70,37 @@ async function exportWithPreset(videoPath, outputPath, platform, options = {}) {
       format: 'mp4'
     }
   };
-  
+
   const preset = presets[platform];
   if (!preset) {
     throw new Error(`Platform preset "${platform}" not found`);
   }
-  
+
   return new Promise((resolve, reject) => {
     let command = ffmpeg(videoPath);
-    
+
     // Set resolution
     command.size(`${preset.resolution.width}x${preset.resolution.height}`);
-    
-    // Set video codec and quality
+
+    // Set video codec and quality (1080p, 30fps for short-form = platform-native)
     command.videoCodec(preset.quality.codec);
-    command.outputOptions([
+    const outputOpts = [
       `-b:v ${preset.quality.bitrate}`,
       `-preset ${preset.quality.preset}`,
-      '-movflags +faststart' // Web optimization
-    ]);
-    
+      '-movflags +faststart'
+    ];
+    if (preset.fps) {
+      outputOpts.push(`-r ${preset.fps}`);
+    }
+    command.outputOptions(outputOpts);
+
     // Set audio codec and quality
     command.audioCodec(preset.audio.codec);
     command.outputOptions([
       `-b:a ${preset.audio.bitrate}`,
       `-ar ${preset.audio.sampleRate}`
     ]);
-    
+
     // Add watermark if provided
     if (options.watermark) {
       const { image, position, opacity } = options.watermark;
@@ -96,7 +109,7 @@ async function exportWithPreset(videoPath, outputPath, platform, options = {}) {
         // Apply watermark overlay (simplified)
       }
     }
-    
+
     // Add metadata if provided
     if (options.metadata) {
       if (options.metadata.title) {
@@ -106,7 +119,7 @@ async function exportWithPreset(videoPath, outputPath, platform, options = {}) {
         command.outputOptions([`-metadata`, `description=${options.metadata.description}`]);
       }
     }
-    
+
     command
       .format(preset.format)
       .output(outputPath)
@@ -139,15 +152,15 @@ async function exportCustom(videoPath, outputPath, settings) {
     watermark,
     metadata
   } = settings;
-  
+
   return new Promise((resolve, reject) => {
     let command = ffmpeg(videoPath);
-    
+
     // Resolution
     if (resolution) {
       command.size(`${resolution.width}x${resolution.height}`);
     }
-    
+
     // Video quality
     if (quality) {
       command.videoCodec(quality.codec || 'h264');
@@ -161,7 +174,7 @@ async function exportCustom(videoPath, outputPath, settings) {
         command.outputOptions([`-crf ${quality.crf}`]);
       }
     }
-    
+
     // Audio
     if (audio) {
       command.audioCodec(audio.codec || 'aac');
@@ -172,20 +185,20 @@ async function exportCustom(videoPath, outputPath, settings) {
         command.outputOptions([`-ar ${audio.sampleRate}`]);
       }
     }
-    
+
     // Watermark
     if (watermark && watermark.image && fs.existsSync(watermark.image)) {
       command.input(watermark.image);
       // Apply overlay (simplified)
     }
-    
+
     // Metadata
     if (metadata) {
       Object.entries(metadata).forEach(([key, value]) => {
         command.outputOptions([`-metadata`, `${key}=${value}`]);
       });
     }
-    
+
     command
       .format(format)
       .output(outputPath)
@@ -203,11 +216,11 @@ async function exportCustom(videoPath, outputPath, settings) {
  */
 async function batchExport(videoPath, exports, onProgress) {
   const results = [];
-  
+
   for (const exportConfig of exports) {
     try {
       const { platform, outputPath, options } = exportConfig;
-      
+
       if (platform) {
         await exportWithPreset(videoPath, outputPath, platform, {
           ...options,
@@ -220,14 +233,14 @@ async function batchExport(videoPath, exports, onProgress) {
       } else {
         await exportCustom(videoPath, outputPath, options || {});
       }
-      
+
       results.push({ platform: platform || 'custom', outputPath, success: true });
     } catch (error) {
       logger.error('Batch export error', { error: error.message, export: exportConfig });
       results.push({ platform: exportConfig.platform || 'custom', success: false, error: error.message });
     }
   }
-  
+
   return results;
 }
 

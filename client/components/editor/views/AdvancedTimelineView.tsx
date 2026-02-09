@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react'
 import { Clock, Plus, Trash2, Play, Copy, Scissors, Pencil, ChevronUp, ChevronDown, Merge, Music2 } from 'lucide-react'
-import { TimelineSegment } from '../../../types/editor'
+import { TimelineSegment, getDefaultTrackForSegmentType } from '../../../types/editor'
 import { formatTime, parseTime } from '../../../utils/editorUtils'
 
 function SegmentRow({
@@ -278,7 +278,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
   }
 
   const updateSegmentType = (id: string, type: import('../../../types/editor').TimelineSegmentType) => {
-    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s) => (s.id === id ? { ...s, type } : s)))
+    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s) => (s.id === id ? { ...s, type, track: getDefaultTrackForSegmentType(type) } : s)))
   }
 
   const mergeWithNext = (id: string) => {
@@ -292,7 +292,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
       duration: b.endTime - a.startTime,
       name: `${a.name}+${b.name}`
     }
-    setTimelineSegments((prev) => prev.filter((_, i) => i !== idx + 1).map((seg, i) => (i === idx ? merged : seg)))
+    setTimelineSegments((prev: TimelineSegment[]) => prev.filter((_, i) => i !== idx + 1).map((seg, i) => (i === idx ? merged : seg)))
     showToast('Segments merged', 'success')
   }
 
@@ -308,7 +308,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
   }
 
   const suggestCutsToBeat = (intervalSeconds = 2) => {
-    setTimelineSegments((prev) => {
+    setTimelineSegments((prev: TimelineSegment[]) => {
       let videoSegments = prev.filter((s) => s.type === 'video' || s.type === 'image')
       let longest: TimelineSegment
       if (videoSegments.length === 0) {
@@ -320,7 +320,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           type: 'video',
           name: 'Main Video',
           color: '#3B82F6',
-          track: 0,
+          track: getDefaultTrackForSegmentType('video'),
         }
       } else {
         longest = videoSegments.reduce((a, b) => (b.duration > a.duration ? b : a))

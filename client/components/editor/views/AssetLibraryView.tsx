@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../../lib/api'
+import { AUDIO_TRACKS, VIDEO_TRACKS } from '../../../types/editor'
 
 interface Asset {
   id: string
@@ -207,11 +208,12 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
         const res = await apiGet<{ data?: { items?: any[]; hasMore?: boolean; total?: number } }>(
           `/assets/stock?type=${type}&page=${page}&limit=24&q=${encodeURIComponent(q)}`
         )
-        const data = res?.data ?? res
-        const items = (data?.items ?? []).map((i: any) =>
+        const data = (res?.data ?? res) as { items?: any[]; hasMore?: boolean; data?: { items?: any[]; hasMore?: boolean } } | undefined
+        const rawItems = data?.items ?? data?.data?.items ?? []
+        const items = rawItems.map((i: any) =>
           mapStockItem(i, type === 'images' ? 'image' : type === 'sfx' ? 'sfx' : type === 'music' ? 'music' : 'broll')
         )
-        if (data?.hasMore) hasMore = true
+        if (data?.hasMore ?? data?.data?.hasMore) hasMore = true
         if (type === 'music') {
           setClickMusic((prev) => (append && page > 1 ? [...prev, ...items] : items))
         } else if (type === 'images') {
@@ -269,7 +271,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
         type: segType,
         name: asset.title || asset.name || label,
         color: isMusic ? '#10B981' : isSfx ? '#F97316' : isBroll ? '#F59E0B' : '#8B5CF6',
-        track: isAudio ? 2 : isBroll ? 1 : 3,
+        track: isMusic ? AUDIO_TRACKS[0].index : isSfx ? AUDIO_TRACKS[2].index : isBroll ? VIDEO_TRACKS[2].index : VIDEO_TRACKS[4].index,
         sourceUrl: asset.url,
       }
       setTimelineSegments((prev: any[]) => [...prev, segment])
@@ -504,6 +506,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
     const f = e.target.files?.[0]
     if (f) handleUploadBroll(f)
   }
+  const onSfxInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    if (f) handleUploadSfx(f)
+  }
 
   const removeUpload = useCallback(
     (asset: Asset, list: 'music' | 'images' | 'broll' | 'sfx') => {
@@ -722,8 +728,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
         <button
           onClick={() => setTab('uploads')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'uploads'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
         >
           <FolderOpen className="w-4 h-4" />
@@ -732,8 +738,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
         <button
           onClick={() => setTab('click')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'click'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
         >
           <Sparkles className="w-4 h-4" />
@@ -747,14 +753,17 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${filter === f
-                ? 'bg-indigo-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-indigo-500 text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             {f === 'broll' ? 'B-roll' : f === 'sfx' ? 'SFX' : f}
           </button>
         ))}
       </div>
+      <p className="text-[10px] text-amber-600 dark:text-amber-400 flex-shrink-0">
+        <strong>Premium audio:</strong> Music—fit the emotion, cut visuals to the beat. SFX—use sparingly: whooshes on cuts, hits on key words; intentional, not spammy.
+      </p>
 
       {tab === 'click' && (
         <div className="relative flex-shrink-0">
@@ -810,8 +819,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDrop={(e) => handleDrop(e, 'music')}
               onClick={() => fileInputMusic.current?.click()}
               className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'music'
-                  ? 'border-emerald-500 bg-emerald-500/10'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-500/5'
+                ? 'border-emerald-500 bg-emerald-500/10'
+                : 'border-gray-300 dark:border-gray-600 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-500/5'
                 } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (
@@ -833,8 +842,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDrop={(e) => handleDrop(e, 'images')}
               onClick={() => fileInputImages.current?.click()}
               className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'images'
-                  ? 'border-violet-500 bg-violet-500/10'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-violet-500 dark:hover:border-violet-500 hover:bg-violet-500/5'
+                ? 'border-violet-500 bg-violet-500/10'
+                : 'border-gray-300 dark:border-gray-600 hover:border-violet-500 dark:hover:border-violet-500 hover:bg-violet-500/5'
                 } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (
@@ -856,8 +865,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDrop={(e) => handleDrop(e, 'broll')}
               onClick={() => fileInputBroll.current?.click()}
               className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'broll'
-                  ? 'border-amber-500 bg-amber-500/10'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-500/5'
+                ? 'border-amber-500 bg-amber-500/10'
+                : 'border-gray-300 dark:border-gray-600 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-500/5'
                 } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (
@@ -879,8 +888,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = ({
               onDrop={(e) => handleDrop(e, 'sfx')}
               onClick={() => fileInputSfx.current?.click()}
               className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${dragOver === 'sfx'
-                  ? 'border-orange-500 bg-orange-500/10'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500/5'
+                ? 'border-orange-500 bg-orange-500/10'
+                : 'border-gray-300 dark:border-gray-600 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500/5'
                 } ${uploading ? 'pointer-events-none opacity-70' : ''}`}
             >
               {uploading ? (

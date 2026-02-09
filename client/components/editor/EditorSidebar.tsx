@@ -44,10 +44,10 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       : sidebarCollapsed ? 'w-16' : 'w-64'
       } ${isOledTheme ? 'bg-black border-slate-800 shadow-[10px_0_40px_rgba(0,0,0,0.9)]' : 'bg-white/80 dark:bg-gray-900/80 border-slate-200/50 dark:border-slate-800/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]'} backdrop-blur-2xl border-r flex flex-col transition-all duration-500 ease-in-out flex-shrink-0 overflow-hidden`}>
       {/* Sidebar Header */}
-      <div className="p-3 border-b border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
+      <div className="p-3 border-b border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className={`font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent ${sidebarCollapsed && deviceView !== 'mobile' ? 'hidden' : ''}`}>
-            Creator Tools
+          <h2 className={`font-semibold text-sm text-slate-700 dark:text-slate-200 ${sidebarCollapsed && deviceView !== 'mobile' ? 'hidden' : ''}`}>
+            Tools
           </h2>
           {deviceView !== 'mobile' && (
             <button
@@ -71,11 +71,11 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                 setActiveCategory(category.id as any)
                 if (deviceView === 'mobile') setMobileMenuOpen(false)
               }}
-              className={`w-full group relative overflow-hidden rounded-2xl transition-all duration-300 ${activeCategory === category.id
-                ? `bg-gradient-to-r ${category.color} text-white shadow-lg scale-105`
+              className={`w-full group relative overflow-hidden rounded-xl transition-all duration-200 ${activeCategory === category.id
+                ? `bg-gradient-to-r ${category.color} text-white shadow-md`
                 : isOledTheme
                   ? 'bg-slate-950/40 text-slate-400 border border-white/5 hover:border-emerald-500/30 hover:bg-black hover:text-emerald-400'
-                  : `${category.bgColor} ${category.textColor} hover:shadow-md hover:scale-102`
+                  : `${category.bgColor} ${category.textColor} hover:bg-slate-100 dark:hover:bg-slate-800/80`
                 }`}
             >
               <div className="p-3 flex items-center gap-3">
