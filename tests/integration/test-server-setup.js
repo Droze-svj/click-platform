@@ -16,6 +16,7 @@ const infrastructureDatabaseRoutes = require('../../server/routes/infrastructure
 const infrastructureResourcesRoutes = require('../../server/routes/infrastructure/resources');
 const workflowAdvancedRoutes = require('../../server/routes/workflows/advanced');
 const workflowTemplatesRoutes = require('../../server/routes/workflows/templates');
+const healthRoutes = require('../../server/routes/health');
 
 // Mock auth middleware for testing
 const mockAuth = (req, res, next) => {
@@ -55,6 +56,7 @@ function createTestApp() {
   app.use('/api/infrastructure/resources', mockAdminAuth, infrastructureResourcesRoutes);
   app.use('/api/workflows/advanced', mockAuth, workflowAdvancedRoutes);
   app.use('/api/workflows/templates', mockAuth, workflowTemplatesRoutes);
+  app.use('/api/health', healthRoutes);
 
   // Error handler
   app.use((err, req, res, next) => {

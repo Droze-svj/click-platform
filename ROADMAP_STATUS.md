@@ -38,7 +38,7 @@
 | Item | Merged | Notes |
 |------|--------|-------|
 | Request Timeout Middleware | — | Already in server (route-aware 30s/5m/10m). |
-| Content & edit UX (sharpening, visual polish, Brand kit, premium audio, platform-native, AI-assistant) | branch `feat/editing-ux-guides-and-phase1-prep` | Guides + UI; commit 648e609. Use [PR_DESCRIPTION.md](./PR_DESCRIPTION.md) to open PR to main. |
+| Content & edit UX (sharpening, visual polish, Brand kit, premium audio, platform-native, AI-assistant) | **merged to main** (df3ff91) | Guides + UI, Phase 1 kickoff, PR description. |
 
 ---
 
@@ -46,7 +46,7 @@
 
 - **This week:** 1 branch completed (edit UX + guides), 0 in review
 - **Last review:** —
-- **Next focus:** Merge feat/editing-ux-guides-and-phase1-prep (see PR_DESCRIPTION.md). Phase 0 verified locally ✅. Then Phase 1: run `npm run assign 5|6|7` — see PHASE1_KICKOFF.md.
+- **Next focus:** Phase 1 in progress: Testing & QA (health API test added). Run `npm run assign 5|6|7` for issues — see PHASE1_KICKOFF.md.
 
 ---
 

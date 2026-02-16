@@ -39,11 +39,7 @@ Then open `ASSIGNMENT_READY.md` and create the GitHub issue; copy the row into R
 
 **Files to check:** `server/services/twitterOAuthService.js`, `server/services/linkedinOAuthService.js`, `server/routes/oauth.js`
 
-**Generate issue & ROADMAP row:**
-```bash
-npm run assign 6
-```
-Then open `ASSIGNMENT_READY.md` and create the GitHub issue; copy the row into ROADMAP_STATUS.md.
+**Generate issue & ROADMAP row:** Run `npm run assign 6`, or use the saved writeup: **[docs/ASSIGNMENT_6_OAUTH_READY.md](./docs/ASSIGNMENT_6_OAUTH_READY.md)** — create the GitHub issue and copy the row into ROADMAP_STATUS.md.
 
 ---
 
@@ -60,11 +56,7 @@ Then open `ASSIGNMENT_READY.md` and create the GitHub issue; copy the row into R
 
 **Files to check:** `server/services/cloudStorageService.js`, `server/config/storage.js`, `server/routes/upload/`
 
-**Generate issue & ROADMAP row:**
-```bash
-npm run assign 7
-```
-Then open `ASSIGNMENT_READY.md` and create the GitHub issue; copy the row into ROADMAP_STATUS.md.
+**Generate issue & ROADMAP row:** Run `npm run assign 7`, or use the saved writeup: **[docs/ASSIGNMENT_7_CLOUD_READY.md](./docs/ASSIGNMENT_7_CLOUD_READY.md)** — create the GitHub issue and copy the row into ROADMAP_STATUS.md.
 
 ---
 
