@@ -1,24 +1,7 @@
 // Brand Voice Library Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for brand voice library', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Create brand voice profile
@@ -82,30 +65,14 @@ Provide:
 
 Format as JSON object with fields: overview, toneGuidelines (array), styleRules (array), wordGuidelines (array), sentenceStructure (object), goodExamples (array), avoidExamples (array), platformAdaptations (object)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate style guide');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate style guide');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a brand voice expert. Create comprehensive style guides.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 2500,
-    });
+    const fullPrompt = `You are a brand voice expert. Create comprehensive style guides.\n\n${prompt}`;
+    const guideText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 2500 });
 
-    const guideText = response.choices[0].message.content;
-    
     let guide;
     try {
       guide = JSON.parse(guideText);
@@ -145,30 +112,14 @@ Provide:
 
 Format as JSON object with fields: consistencyScore (number), stylePreservation (object), culturalAdaptations (array), brandAlignment (object), translationSuggestions (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate style guide');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot analyze multi-language content');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a multilingual brand voice expert. Ensure brand voice consistency across languages.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 1500,
-    });
+    const fullPrompt = `You are a multilingual brand voice expert. Ensure brand voice consistency across languages.\n\n${prompt}`;
+    const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1500 });
 
-    const analysisText = response.choices[0].message.content;
-    
     let analysis;
     try {
       analysis = JSON.parse(analysisText);

@@ -1,6 +1,6 @@
 // Multi-Model AI Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
 const {
   AppError,
@@ -35,21 +35,15 @@ let currentModel = 'gpt-4';
 /**
  * Initialize AI provider
  */
-function initAIProvider(provider = 'openai', model = null) {
+function initAIProvider(provider = 'google', model = null) {
   try {
     currentProvider = provider;
 
-    if (provider === 'openai') {
-      openaiClient = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-      currentModel = model || AI_PROVIDERS.openai.defaultModel;
+    if (provider === 'google' || provider === 'openai') {
+      // Use Gemini as primary
+      currentModel = model || 'gemini-1.5-flash';
     } else if (provider === 'anthropic') {
-      // In production, initialize Anthropic client
       currentModel = model || AI_PROVIDERS.anthropic.defaultModel;
-    } else if (provider === 'google') {
-      // In production, initialize Google client
-      currentModel = model || AI_PROVIDERS.google.defaultModel;
     }
 
     logger.info('AI provider initialized', { provider, model: currentModel });
@@ -73,24 +67,24 @@ function selectModelForTask(taskType, options = {}) {
 
     const modelSelection = {
       'content-generation': {
-        high: 'gpt-4',
-        medium: 'gpt-4-turbo',
-        low: 'gpt-3.5-turbo',
+        high: 'gemini-1.5-flash',
+        medium: 'gemini-1.5-flash',
+        low: 'gemini-1.5-flash',
       },
       'content-analysis': {
-        high: 'gpt-4',
-        medium: 'gpt-4-turbo',
-        low: 'gpt-3.5-turbo',
+        high: 'gemini-1.5-flash',
+        medium: 'gemini-1.5-flash',
+        low: 'gemini-1.5-flash',
       },
       'summarization': {
-        high: 'gpt-4-turbo',
-        medium: 'gpt-3.5-turbo',
-        low: 'gpt-3.5-turbo',
+        high: 'gemini-1.5-flash',
+        medium: 'gemini-1.5-flash',
+        low: 'gemini-1.5-flash',
       },
       'translation': {
-        high: 'gpt-4',
-        medium: 'gpt-3.5-turbo',
-        low: 'gpt-3.5-turbo',
+        high: 'gemini-1.5-flash',
+        medium: 'gemini-1.5-flash',
+        low: 'gemini-1.5-flash',
       },
     };
 
@@ -100,7 +94,7 @@ function selectModelForTask(taskType, options = {}) {
     return taskModels[complexityLevel];
   } catch (error) {
     logger.error('Select model for task error', { error: error.message, taskType });
-    return 'gpt-4';
+    return 'gemini-1.5-flash';
   }
 }
 
@@ -110,30 +104,19 @@ function selectModelForTask(taskType, options = {}) {
 async function generateWithModel(prompt, taskType, options = {}) {
   try {
     const model = options.model || selectModelForTask(taskType, options);
-    
-    if (!openaiClient) {
-      initAIProvider('openai', model);
+
+    if (!geminiConfigured) {
+      throw new ServiceUnavailableError('AI (Google Gemini)');
     }
 
-    // Retry with exponential backoff for transient errors
-    const response = await retryWithBackoff(
-      async () => {
-        return await openaiClient.chat.completions.create({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: getSystemPromptForTask(taskType),
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 2000,
-        });
-      },
+    const systemPrompt = getSystemPromptForTask(taskType);
+    const fullPrompt = `${systemPrompt}\n\n${prompt}`;
+
+    const content = await retryWithBackoff(
+      async () => geminiGenerate(fullPrompt, {
+        temperature: options.temperature ?? 0.7,
+        maxTokens: options.maxTokens || 2000,
+      }),
       {
         maxRetries: 3,
         initialDelay: 1000,
@@ -145,14 +128,14 @@ async function generateWithModel(prompt, taskType, options = {}) {
     );
 
     return {
-      content: response.choices[0].message.content,
-      model,
+      content,
+      model: currentModel,
       provider: currentProvider,
       tokens: response.usage?.total_tokens || 0,
     };
   } catch (error) {
     logger.error('Generate with model error', { error: error.message, taskType });
-    
+
     // Handle OpenAI API errors
     if (error.response?.status === 429) {
       throw new AppError('AI API rate limit exceeded. Please try again later.', 429);
@@ -163,7 +146,7 @@ async function generateWithModel(prompt, taskType, options = {}) {
     if (error.response?.status === 401) {
       throw new AppError('AI API authentication failed. Please check API key.', 401);
     }
-    
+
     throw new AppError('Failed to generate content. Please try again.', 500);
   }
 }

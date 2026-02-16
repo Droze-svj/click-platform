@@ -599,14 +599,79 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     showToast(`${bundle.label} — ${bundle.desc}`, 'success')
   }, [templateLayout, videoFilters, textOverlays, pushSnapshot, setTemplateLayout, setVideoFilters, showToast])
 
+  /** One-click creativity: apply a style bundle (layout + filter) for instant look */
+  const applyStyleBundleOneClick = useCallback((bundle: typeof STYLE_BUNDLES[0]) => {
+    pushSnapshot(templateLayout, videoFilters, textOverlays ?? [])
+    setTemplateLayout?.(bundle.layout)
+    setVideoFilters((prev: VideoFilter) => ({ ...prev, ...(bundle.filter as Partial<VideoFilter>) }))
+    pushRecentStyle(bundle.id)
+    showToast(`${bundle.label} — ${bundle.desc}`, 'success')
+  }, [templateLayout, videoFilters, textOverlays, pushSnapshot, setTemplateLayout, pushRecentStyle, showToast])
+
   return (
-    <div className="space-y-6 pb-4" role="region" aria-label="Manual edit">
-      {/* Short-form ready strip — one-click platform presets */}
-      <div className="bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-fuchsia-500/10 dark:from-rose-900/20 dark:to-fuchsia-900/20 rounded-xl border border-rose-200/50 dark:border-rose-800/50 p-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Film className="w-4 h-4 text-rose-500" />
-            <span className="text-xs font-bold text-gray-900 dark:text-white">Short-form ready</span>
+    <div className="space-y-5 pb-4" role="region" aria-label="Manual edit">
+      {/* Creativity & content — quick hooks + one-click looks */}
+      <div className="rounded-2xl border border-violet-200/60 dark:border-violet-800/50 bg-gradient-to-br from-violet-50/80 to-fuchsia-50/50 dark:from-violet-950/40 dark:to-fuchsia-950/20 p-5 shadow-sm">
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="p-2 rounded-xl bg-violet-500/15 dark:bg-violet-500/20">
+            <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white">Creativity & content</h3>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">Quick hooks and one-click looks for scroll-stopping content</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">Content ideas</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'Hook', preset: VIRAL_HOOK_PRESETS[0] },
+                { label: 'CTA', preset: TEXT_PRESETS.find((p) => p.label === 'CTA')! },
+                { label: 'Lower third', preset: TEXT_PRESETS.find((p) => p.label === 'Lower third')! },
+                { label: 'End screen', preset: END_SCREEN_TEMPLATES[0] },
+              ].filter((x) => x.preset).map(({ label, preset }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleAddOverlay(preset)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 border border-violet-200/80 dark:border-violet-700/60 hover:bg-violet-100 dark:hover:bg-violet-900/30 hover:border-violet-400 dark:hover:border-violet-500 transition-all shadow-sm"
+                >
+                  + {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2">One-click look</p>
+            <div className="flex flex-wrap gap-2">
+              {[STYLE_BUNDLES[0], STYLE_BUNDLES[1], STYLE_BUNDLES[4], STYLE_BUNDLES[5]].map((bundle) => (
+                <button
+                  key={bundle.id}
+                  type="button"
+                  onClick={() => applyStyleBundleOneClick(bundle)}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 border border-amber-200/80 dark:border-amber-700/60 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-400 dark:hover:border-amber-500 transition-all shadow-sm"
+                  title={bundle.desc}
+                >
+                  {bundle.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Short-form ready — platform presets */}
+      <div className="rounded-2xl border border-rose-200/60 dark:border-rose-800/50 bg-gradient-to-br from-rose-50/80 to-pink-50/50 dark:from-rose-950/40 dark:to-pink-950/20 p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-rose-500/15 dark:bg-rose-500/20">
+              <Film className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Short-form ready</h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">One-click aspect ratio + color for social</p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {PLATFORM_BUNDLES.filter((b) => ['tiktok', 'youtube', 'feed', 'portrait'].includes(b.id)).map((bundle) => (
@@ -614,9 +679,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 key={bundle.id}
                 type="button"
                 onClick={() => applyPlatformBundle(bundle)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${templateLayout === bundle.layout
-                  ? 'bg-rose-500 text-white shadow-md'
-                  : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20'
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-sm ${templateLayout === bundle.layout
+                  ? 'bg-rose-500 text-white shadow-md ring-2 ring-rose-400/30'
+                  : 'bg-white dark:bg-gray-800/90 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 hover:border-rose-400 dark:hover:border-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20'
                   }`}
               >
                 {bundle.id === 'youtube' ? 'Shorts' : bundle.id === 'tiktok' ? 'TikTok / Reels' : bundle.label}
@@ -625,28 +690,30 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveCategory?.('short-clips')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-all flex items-center gap-1"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-all flex items-center gap-1.5 shadow-sm"
             >
-              More formats <ChevronRight className="w-3 h-3" />
+              More formats <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Intro */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/80 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
-        Set aspect ratio, style, and text. Use <button type="button" onClick={() => setActiveCategory?.('timeline')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Timeline</button> and <button type="button" onClick={() => setActiveCategory?.('effects')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Effects</button> for timing and advanced effects. <button type="button" onClick={() => setActiveCategory?.('color')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Fine-tune in Color</button> for sliders. Use the <strong>Compare</strong> button under Quick filters to see before/after.
-      </p>
+      {/* Intro / Quick tips */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-900/40 px-4 py-3">
+        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+          Set aspect ratio above, add style and text. Use <button type="button" onClick={() => setActiveCategory?.('timeline')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Timeline</button> and <button type="button" onClick={() => setActiveCategory?.('effects')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Effects</button> for timing. <button type="button" onClick={() => setActiveCategory?.('color')} className="font-semibold text-violet-600 dark:text-violet-400 hover:underline">Color</button> for fine-tuning. Use <strong>Compare</strong> under Quick filters for before/after.
+        </p>
+      </div>
 
       {/* Aspect ratio & export format */}
-      <div className="bg-white dark:bg-gray-800/80 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-5" role="group" aria-labelledby="layout-heading">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-gray-800/90 shadow-sm p-5" role="group" aria-labelledby="layout-heading">
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="p-2 rounded-xl bg-violet-500/15 dark:bg-violet-900/30">
             <LayoutGrid className="w-4 h-4 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
-            <h3 id="layout-heading" className="text-sm font-bold text-gray-900 dark:text-white">Aspect ratio & export format</h3>
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">Choose aspect ratio for export</p>
+            <h3 id="layout-heading" className="text-sm font-bold text-gray-900 dark:text-white">Aspect ratio</h3>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">Choose format for export</p>
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -703,13 +770,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       </div>
 
       {/* Quick nav - collapsible */}
-      <div className="bg-white dark:bg-gray-800/80 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden" role="group" aria-labelledby="quicknav-heading">
-        <button type="button" onClick={() => toggleSection('quickNav')} className="w-full p-4 flex items-center justify-between text-left">
-          <h3 id="quicknav-heading" className="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">Jump to</h3>
-          {openSections.quickNav ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-gray-800/90 shadow-sm overflow-hidden" role="group" aria-labelledby="quicknav-heading">
+        <button type="button" onClick={() => toggleSection('quickNav')} className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+          <h3 id="quicknav-heading" className="text-sm font-bold text-gray-700 dark:text-gray-300">Jump to tools</h3>
+          {openSections.quickNav ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
         </button>
         {openSections.quickNav && (
-          <div className="px-4 pb-4">
+          <div className="px-4 pb-4 pt-0">
+            <p className="text-[10px] text-gray-500 dark:text-gray-500 mb-2">Press <kbd className="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 font-mono text-[9px]">?</kbd> anywhere for keyboard shortcuts.</p>
             <div className="flex flex-wrap gap-1 mb-2 items-center">
               <button type="button" onClick={expandAll} className="text-[10px] font-bold text-violet-600 dark:text-violet-400 hover:underline">Expand all</button>
               <span className="text-gray-300 dark:text-gray-600">|</span>
@@ -723,10 +791,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 </>
               )}
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {QUICK_NAV.map(({ id, label, icon: Icon, color }) => (
-                <button key={id} onClick={() => setActiveCategory?.(id)} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900/80 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all text-left group">
-                  <div className={`p-1.5 rounded-lg bg-gradient-to-br ${color} text-white`}><Icon className="w-3.5 h-3.5" /></div>
+                <button key={id} onClick={() => setActiveCategory?.(id)} className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-gray-900/80 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200/80 dark:border-gray-700 transition-all text-left group shadow-sm hover:shadow">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br ${color} text-white shadow-sm`}><Icon className="w-3.5 h-3.5" /></div>
                   <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white truncate">{label}</span>
                 </button>
               ))}
@@ -1031,7 +1099,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   ))}
                 </ul>
               ) : (
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">No text overlays yet. Add one above.</p>
+                <div className="mt-2 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-800/80 border border-dashed border-gray-200 dark:border-gray-600">
+                  <p className="text-[10px] font-medium text-gray-600 dark:text-gray-400">No text overlays yet.</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-500 mt-0.5">Try: add a <strong>Hook</strong>, <strong>CTA</strong>, or pick a <strong>one-click look</strong> in Creativity &amp; content above.</p>
+                </div>
               ))}
             </div>
           </div>

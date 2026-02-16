@@ -1,24 +1,7 @@
 // Hashtag Generator Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for hashtags', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate hashtags
@@ -43,44 +26,27 @@ ${includeNiche ? '- Include niche-specific hashtags' : ''}
 - Mix of popular and less competitive tags
 - Platform-appropriate format
 
-Provide as JSON array with fields: hashtag, category (trending/niche/popular), estimatedReach (high/medium/low)`;
+Provide as JSON array with fields: hashtag, category (trending/niche/popular), estimatedReach (high/medium/low). Return only the JSON array.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate hashtags');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate hashtags');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a hashtag strategist. Generate effective hashtags that maximize reach and engagement.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.8,
-      max_tokens: 1000,
-    });
+    const fullPrompt = `You are a hashtag strategist. Generate effective hashtags that maximize reach and engagement.\n\n${prompt}`;
+    const hashtagsText = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 1000 });
 
-    const hashtagsText = response.choices[0].message.content;
-    
     let hashtags;
     try {
-      hashtags = JSON.parse(hashtagsText);
+      hashtags = JSON.parse(hashtagsText || '[]');
     } catch (error) {
-      const jsonMatch = hashtagsText.match(/\[[\s\S]*\]/);
+      const jsonMatch = (hashtagsText || '').match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         hashtags = JSON.parse(jsonMatch[0]);
       } else {
-        // Fallback: extract hashtags from text
-        hashtags = hashtagsText
+        hashtags = (hashtagsText || '')
           .match(/#\w+/g)
-          ?.map(tag => ({
+          ?.map((tag) => ({
             hashtag: tag.replace('#', ''),
             category: 'general',
             estimatedReach: 'medium',
@@ -102,8 +68,7 @@ Provide as JSON array with fields: hashtag, category (trending/niche/popular), e
 async function analyzeHashtagPerformance(userId, hashtags = []) {
   try {
     const Content = require('../models/Content');
-    
-    // Get content with these hashtags
+
     const contentWithHashtags = await Content.find({
       userId,
       tags: { $in: hashtags },
@@ -112,9 +77,9 @@ async function analyzeHashtagPerformance(userId, hashtags = []) {
       .select('tags views likes shares')
       .lean();
 
-    const performance = hashtags.map(hashtag => {
-      const content = contentWithHashtags.filter(c => c.tags?.includes(hashtag));
-      
+    const performance = hashtags.map((hashtag) => {
+      const content = contentWithHashtags.filter((c) => c.tags?.includes(hashtag));
+
       const totalViews = content.reduce((sum, c) => sum + (c.views || 0), 0);
       const totalLikes = content.reduce((sum, c) => sum + (c.likes || 0), 0);
       const totalShares = content.reduce((sum, c) => sum + (c.shares || 0), 0);
@@ -154,37 +119,21 @@ Include:
 2. Emerging hashtags (growing fast)
 3. Niche hashtags (specific to category)
 
-Format as JSON object with fields: trending (array), emerging (array), niche (array)`;
+Format as JSON object with fields: trending (array), emerging (array), niche (array). Return only valid JSON.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate hashtags');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate hashtags');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a social media trend analyst. Provide accurate trending hashtag information.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 800,
-    });
+    const fullPrompt = `You are a social media trend analyst. Provide accurate trending hashtag information.\n\n${prompt}`;
+    const trendsText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 800 });
 
-    const trendsText = response.choices[0].message.content;
-    
     let trends;
     try {
-      trends = JSON.parse(trendsText);
+      trends = JSON.parse(trendsText || '{}');
     } catch (error) {
-      const jsonMatch = trendsText.match(/\{[\s\S]*\}/);
+      const jsonMatch = (trendsText || '').match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         trends = JSON.parse(jsonMatch[0]);
       } else {
@@ -200,19 +149,13 @@ Format as JSON object with fields: trending (array), emerging (array), niche (ar
   }
 }
 
-/**
- * Calculate performance score
- */
 function calculatePerformanceScore(views, likes, shares) {
-  // Weighted score: views (40%), likes (40%), shares (20%)
   const normalizedViews = Math.min(views / 1000, 1) * 100;
   const normalizedLikes = Math.min(likes / 100, 1) * 100;
   const normalizedShares = Math.min(shares / 50, 1) * 100;
-  
+
   return Math.round(
-    normalizedViews * 0.4 +
-    normalizedLikes * 0.4 +
-    normalizedShares * 0.2
+    normalizedViews * 0.4 + normalizedLikes * 0.4 + normalizedShares * 0.2
   );
 }
 
@@ -221,9 +164,3 @@ module.exports = {
   analyzeHashtagPerformance,
   getTrendingHashtags,
 };
-
-
-
-
-
-

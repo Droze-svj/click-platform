@@ -2,25 +2,8 @@
 // Manage AI templates with guardrails and brand rules
 
 const AITemplate = require('../models/AITemplate');
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for AI templates', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Create or update AI template
@@ -125,33 +108,17 @@ async function generateContentWithTemplate(templateId, input, options = {}) {
     // Build prompt with guardrails
     const fullPrompt = buildPromptWithGuardrails(template, input, options);
 
-    // Generate content
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot create template');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate content with template');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: template.systemMessage || 'You are a professional content writer.'
-        },
-        {
-          role: 'user',
-          content: fullPrompt
-        }
-      ],
-      temperature: template.settings.temperature,
-      max_tokens: template.settings.maxTokens,
-      top_p: template.settings.topP,
-      frequency_penalty: template.settings.frequencyPenalty,
-      presence_penalty: template.settings.presencePenalty
+    const systemMsg = template.systemMessage || 'You are a professional content writer.';
+    const combinedPrompt = `${systemMsg}\n\n${fullPrompt}`;
+    const generatedContent = await geminiGenerate(combinedPrompt, {
+      temperature: template.settings?.temperature ?? 0.7,
+      maxTokens: template.settings?.maxTokens ?? 1024
     });
-
-    const generatedContent = response.choices[0].message.content;
 
     // Validate against guardrails
     const validation = validateAgainstGuardrails(generatedContent, template.guardrails);

@@ -385,7 +385,7 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
       return res.status(404).json({ success: false, error: 'Post not found' });
     }
 
-    // TODO: Implement actual scheduling logic (queue job, etc.)
+    // TODO: When using BullMQ, queue for later: jobQueueService.addJob('scheduled-posts', { postId: post.id, scheduledAt: post.scheduled_at })
 
     res.json({
       success: true,

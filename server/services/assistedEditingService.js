@@ -1,37 +1,15 @@
 // Assisted Editing Service
 // Generate variants, partial edits, tone adjustments
 
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for assisted editing', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate multiple variants
  */
 async function generateVariants(content, count = 5, options = {}) {
   try {
-    const {
-      preserveStructure = true,
-      varyTone = true,
-      varyLength = true,
-      focusArea = null // 'hook', 'body', 'cta', 'all'
-    } = options;
+    const { preserveStructure = true, varyTone = true, varyLength = true, focusArea = null } = options;
 
     const variants = [];
 
@@ -57,35 +35,25 @@ async function generateVariants(content, count = 5, options = {}) {
  * Generate single variant
  */
 async function generateSingleVariant(content, index, options) {
-  const prompt = buildVariantPrompt(content, index, options);
+  if (!geminiConfigured) {
+    throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
+  }
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a creative content writer. Generate variations of content while maintaining the core message.'
-      },
-      {
-        role: 'user',
-        content: prompt
-      }
-    ],
-    temperature: 0.8 + (index * 0.1), // Vary creativity
-    max_tokens: 500
+  const prompt = buildVariantPrompt(content, index, options);
+  const fullPrompt = `You are a creative content writer. Generate variations of content while maintaining the core message.\n\n${prompt}`;
+  const response = await geminiGenerate(fullPrompt, {
+    temperature: 0.8 + index * 0.1,
+    maxTokens: 500
   });
 
   return {
     id: `variant_${Date.now()}_${index}`,
-    content: response.choices[0].message.content,
+    content: response || content,
     index: index + 1,
     description: getVariantDescription(index, options)
   };
 }
 
-/**
- * Build variant prompt
- */
 function buildVariantPrompt(content, index, options) {
   let prompt = `Generate a variation of this content:\n\n"${content}"\n\n`;
 
@@ -111,9 +79,6 @@ function buildVariantPrompt(content, index, options) {
   return prompt;
 }
 
-/**
- * Get variant description
- */
 function getVariantDescription(index, options) {
   const descriptions = [
     'More direct and concise',
@@ -130,39 +95,20 @@ function getVariantDescription(index, options) {
  */
 async function improveSection(content, section, options = {}) {
   try {
-    const {
-      sectionType = 'hook', // 'hook', 'body', 'cta', 'middle'
-      improvementType = 'enhance', // 'enhance', 'shorten', 'expand', 'rephrase'
-      tone = null
-    } = options;
+    const { sectionType = 'hook', improvementType = 'enhance', tone = null } = options;
 
     const prompt = buildImprovementPrompt(content, section, sectionType, improvementType, tone);
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate variants');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content editor. Improve specific sections of content.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
+    const fullPrompt = `You are a content editor. Improve specific sections of content.\n\n${prompt}`;
+    const improved = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
 
     return {
       original: section,
-      improved: response.choices[0].message.content,
+      improved: improved || section,
       sectionType,
       improvementType
     };
@@ -172,9 +118,6 @@ async function improveSection(content, section, options = {}) {
   }
 }
 
-/**
- * Build improvement prompt
- */
 function buildImprovementPrompt(content, section, sectionType, improvementType, tone) {
   let prompt = `Improve the ${sectionType} section of this content:\n\nFull content: "${content}"\n\nSection to improve: "${section}"\n\n`;
 
@@ -205,10 +148,7 @@ function buildImprovementPrompt(content, section, sectionType, improvementType, 
  */
 async function rewriteForTone(content, targetTone, options = {}) {
   try {
-    const {
-      platform = null,
-      preserveLength = false
-    } = options;
+    const { platform = null, preserveLength = false } = options;
 
     let prompt = `Rewrite this content for a ${targetTone} tone:\n\n"${content}"\n\n`;
 
@@ -220,31 +160,16 @@ async function rewriteForTone(content, targetTone, options = {}) {
       prompt += '\n\nMaintain similar length.';
     }
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate variants');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a tone specialist. Rewrite content to match specific tones.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
+    const fullPrompt = `You are a tone specialist. Rewrite content to match specific tones.\n\n${prompt}`;
+    const rewritten = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
 
     return {
       original: content,
-      rewritten: response.choices[0].message.content,
+      rewritten: rewritten || content,
       targetTone,
       platform
     };
@@ -259,7 +184,6 @@ async function rewriteForTone(content, targetTone, options = {}) {
  */
 async function generateHookVariations(content, count = 5) {
   try {
-    // Extract hook (first sentence or first 100 chars)
     const hook = content.split('.')[0] || content.substring(0, 100);
 
     const variants = await generateVariants(hook, count, {
@@ -267,7 +191,7 @@ async function generateHookVariations(content, count = 5) {
       preserveStructure: false
     });
 
-    return variants.map(v => ({
+    return variants.map((v) => ({
       ...v,
       fullContent: content.replace(hook, v.content)
     }));
@@ -283,5 +207,3 @@ module.exports = {
   rewriteForTone,
   generateHookVariations
 };
-
-

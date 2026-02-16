@@ -318,14 +318,18 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const finalSat = lutBoost.saturate != null ? sat * lutBoost.saturate : sat
   const finalBright = lutBoost.brightness ? brightnessAdj * lutBoost.brightness : brightnessAdj
 
-  const filterString = showAppliedFilters ? `
+  const blurVal = effectiveFiltersAtTime.blur ?? 0
+  const isIdentityFilter = Math.abs(finalBright - 100) < 1 && Math.abs(finalContrast - 100) < 1 && Math.abs(finalSat - 100) < 1 && Math.abs(hueAdj) < 1 && Math.abs(sepiaAdj) < 1 && blurVal === 0
+  const filterString = showAppliedFilters
+    ? (isIdentityFilter ? 'blur(0px)' : `
     brightness(${Math.min(150, Math.max(50, finalBright))}%)
     contrast(${finalContrast}%)
     saturate(${Math.min(200, Math.max(0, finalSat))}%)
     hue-rotate(${hueAdj}deg)
     sepia(${sepiaAdj}%)
-    blur(${effectiveFiltersAtTime.blur ?? 0}px)
-  ` : 'none'
+    blur(${blurVal}px)
+  `)
+    : 'none'
 
   const vignetteOpacity = showAppliedFilters && (effectiveFiltersAtTime.vignette ?? 0) > 0
     ? (effectiveFiltersAtTime.vignette / 100) * 0.6
@@ -339,41 +343,29 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     }
   }
 
-  const singleVideo = (
-    <video
-      ref={videoRef}
-      src={videoUrl}
-      className="max-w-full max-h-full object-contain transition-all duration-700 ease-in-out"
-      style={{ filter: filterString }}
-      onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
-      onLoadedMetadata={handleLoadedMetadata}
-      onClick={onPlayPause}
-    />
-  )
-
   if (isSplit) {
     return (
-      <div className="w-full max-w-full flex flex-col items-center" style={{ aspectRatio: layoutSpec.aspect }}>
-        <div className="relative w-full h-full min-h-0 bg-black rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.5)] flex border border-white/10 group">
-          <div className="flex-1 relative flex flex-col items-center justify-center border-r border-white/10">
+      <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full bg-black rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.5)] flex border border-white/10 group">
+          <div className="flex-1 relative min-w-0 border-r border-white/10">
             <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase tracking-wider text-white/80 bg-black/50 px-2 py-1 rounded">Before</span>
             <video
               ref={videoRef}
               src={videoUrl}
-              className="max-w-full max-h-full object-contain w-full h-full"
-              style={{ filter: 'none' }}
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ filter: 'none', objectFit: 'contain' }}
               onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
               onLoadedMetadata={handleLoadedMetadata}
               onClick={onPlayPause}
             />
           </div>
-          <div className="flex-1 relative flex flex-col items-center justify-center">
+          <div className="flex-1 relative min-w-0">
             <span className="absolute top-2 right-2 z-10 text-[10px] font-bold uppercase tracking-wider text-white/80 bg-black/50 px-2 py-1 rounded">After</span>
             <video
               ref={videoRefRight}
               src={videoUrl}
-              className="max-w-full max-h-full object-contain w-full h-full"
-              style={{ filter: filterString }}
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ filter: filterString, objectFit: 'contain' }}
               onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
               onLoadedMetadata={handleLoadedMetadata}
               onClick={onPlayPause}
@@ -445,9 +437,17 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   }
 
   return (
-    <div className="w-full max-w-full flex flex-col items-center" style={{ aspectRatio: layoutSpec.aspect }}>
-      <div className="relative w-full h-full min-h-0 bg-black rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center border border-white/10 group">
-        {singleVideo}
+    <div className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
+      <div className="absolute inset-0 bg-black rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.5)] border border-white/10 group" style={{ width: '100%', height: '100%' }}>
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          className="absolute inset-0 w-full h-full object-contain transition-all duration-700 ease-in-out"
+          style={{ filter: filterString, width: '100%', height: '100%', objectFit: 'contain' }}
+          onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
+          onLoadedMetadata={handleLoadedMetadata}
+          onClick={onPlayPause}
+        />
 
         {/* Vignette overlay – darkens edges for film look */}
         {vignetteOpacity > 0 && (

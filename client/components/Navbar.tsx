@@ -34,6 +34,7 @@ export default function Navbar() {
     { path: '/dashboard/scheduler', labelKey: 'nav.scheduler', icon: '📅' },
     { path: '/dashboard/calendar', labelKey: 'nav.calendar', icon: '📆' },
     { path: '/dashboard/social', labelKey: 'nav.social', icon: '📱' },
+    { path: '/dashboard/insights', labelKey: 'nav.insights', icon: '📈' },
     { path: '/dashboard/analytics', labelKey: 'nav.analytics', icon: '📊' },
     { path: '/dashboard/achievements', labelKey: 'nav.achievements', icon: '🏆' },
     { path: '/dashboard/membership', labelKey: 'nav.membership', icon: '💎' },
@@ -50,7 +51,7 @@ export default function Navbar() {
       </div>
 
       {/* Enhanced Desktop Navbar — single-row auto layout */}
-      <nav className="hidden lg:block glass sticky top-0 z-50 border-b border-white/20 dark:border-white/10 bg-white/5 dark:bg-black/5 backdrop-blur-xl">
+      <nav className="hidden lg:block glass sticky top-0 z-50 border-b border-subtle bg-white/5 dark:bg-black/5 backdrop-blur-xl">
         <div className="container-modern navbar-inner">
           <div className="flex items-center justify-between gap-4 min-h-[4.5rem] flex-wrap lg:flex-nowrap">
             {/* Left: logo + nav */}
@@ -72,11 +73,10 @@ export default function Navbar() {
                     <button
                       key={item.path}
                       onClick={() => router.push(item.path)}
-                      className={`group relative px-3 xl:px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 touch-target flex-shrink-0 ${
-                        pathname === item.path
-                          ? 'text-white bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg'
-                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/10'
-                      }`}
+                      className={`group relative px-3 xl:px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 touch-target flex-shrink-0 ${pathname === item.path
+                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg'
+                        : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/10'
+                        }`}
                     >
                       <span className="flex items-center gap-2">
                         <span className="text-lg group-hover:animate-pulse">{item.icon}</span>
@@ -106,7 +106,7 @@ export default function Navbar() {
                   <LanguageSwitcher />
                   <NotificationBell />
                   <DarkModeToggle />
-                  <div className="hidden md:flex items-center gap-3 ml-2 pl-3 xl:ml-4 xl:pl-4 border-l border-slate-200/50 dark:border-white/10">
+                  <div className="hidden md:flex items-center gap-3 ml-2 pl-3 xl:ml-4 xl:pl-4 border-l border-subtle">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg flex-shrink-0">
                         {user.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -115,13 +115,12 @@ export default function Navbar() {
                         <span className="font-bold text-slate-900 dark:text-white text-sm leading-tight truncate max-w-[120px] xl:max-w-[140px]">
                           {user.name}
                         </span>
-                        <span className={`inline-flex w-fit px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          user.subscription?.status === 'active'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-700'
-                            : user.subscription?.status === 'trial'
+                        <span className={`inline-flex w-fit px-2 py-0.5 rounded-full text-xs font-semibold ${user.subscription?.status === 'active'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-700'
+                          : user.subscription?.status === 'trial'
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-700'
                             : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600'
-                        }`}>
+                          }`}>
                           {user.subscription?.status ?? 'free'}
                         </span>
                       </div>

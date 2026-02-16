@@ -1,7 +1,7 @@
 // Translation Service
 // Handles automatic content translation and language detection
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const ContentTranslation = require('../models/ContentTranslation');
 const Content = require('../models/Content');
 const TranslationMemory = require('../models/TranslationMemory');
@@ -9,23 +9,6 @@ const TranslationGlossary = require('../models/TranslationGlossary');
 const logger = require('../utils/logger');
 const { searchMemory: searchTranslationMemory, addToMemory: addToTranslationMemory } = require('./translationMemoryService');
 const { getUserGlossaries } = require('./translationGlossaryService');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for translation', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 // Supported languages with their codes
 const SUPPORTED_LANGUAGES = {
@@ -61,29 +44,14 @@ Text: ${text.substring(0, 500)}
 
 Respond with only the language code:`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, using fallback language detection');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, using fallback language detection');
       return { language: 'en', confidence: 0.5 };
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a language detection expert. Respond with only the ISO 639-1 language code.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.1,
-      max_tokens: 10
-    });
-
-    const detectedCode = response.choices[0].message.content.trim().toLowerCase();
+    const fullPrompt = `You are a language detection expert. Respond with only the ISO 639-1 language code.\n\n${prompt}`;
+    const response = await geminiGenerate(fullPrompt, { temperature: 0.1, maxTokens: 10 });
+    const detectedCode = (response || 'en').trim().toLowerCase();
     const language = SUPPORTED_LANGUAGES[detectedCode] ? detectedCode : 'en';
     const confidence = detectedCode === language ? 0.9 : 0.5;
 
@@ -211,29 +179,14 @@ async function translateContent(contentId, targetLanguage, options = {}) {
     prompt += `\nRespond with a JSON object containing: title, description, body, transcript (if provided), tags (array of translated tags), hashtags (array of translated relevant hashtags). Use empty string or empty array for any omitted field.`;
 
     // Translate using AI
-    const client = getOpenAIClient();
-    if (!client) {
-      throw new Error('OpenAI API key not configured. Translation service unavailable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Translation service unavailable. Set GOOGLE_AI_API_KEY.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a professional translator specializing in ${SUPPORTED_LANGUAGES[targetLanguage] || targetLanguage}. Provide accurate, natural translations that maintain the original meaning and tone.`
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 4000
-    });
+    const systemMsg = `You are a professional translator specializing in ${SUPPORTED_LANGUAGES[targetLanguage] || targetLanguage}. Provide accurate, natural translations that maintain the original meaning and tone.`;
+    const fullPrompt = `${systemMsg}\n\n${prompt}`;
+    const translatedText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 4000 });
 
-    const translatedText = response.choices[0].message.content;
-    
     let translated;
     try {
       translated = JSON.parse(translatedText);
@@ -270,10 +223,10 @@ async function translateContent(contentId, targetLanguage, options = {}) {
     translation.tags = Array.isArray(translated.tags) ? translated.tags : (contentToTranslate.tags || []);
     translation.metadata.translationMethod = translationMethod;
     translation.metadata.translatedAt = new Date();
-    translation.metadata.translator = 'openai-gpt-4';
+    translation.metadata.translator = 'google-gemini';
     translation.metadata.qualityScore = qualityScore;
     translation.metadata.culturalAdaptation = culturalAdaptation;
-    
+
     if (platformOptimization) {
       translation.metadata.platformOptimizations.set(platformOptimization, {
         optimized: true,

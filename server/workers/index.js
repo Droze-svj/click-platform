@@ -8,11 +8,11 @@ const logger = require('../utils/logger');
  */
 function initializeAllWorkers() {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
-  
+
   // Skip workers if Redis is not configured (validate non-empty strings)
   const redisUrl = process.env.REDIS_URL?.trim();
   const redisHost = process.env.REDIS_HOST?.trim();
-  
+
   // Log what we're checking
   logger.info('🔍 Checking Redis configuration for workers...', {
     hasRedisUrl: !!redisUrl,
@@ -27,7 +27,7 @@ function initializeAllWorkers() {
     rawRedisUrlLength: process.env.REDIS_URL?.length || 0,
     rawRedisUrlFirstChars: process.env.REDIS_URL ? process.env.REDIS_URL.substring(0, 10) : 'none'
   });
-  
+
   // CRITICAL: In production/staging, REDIS_URL is REQUIRED (no fallbacks)
   if (isProduction) {
     // Use console.log for immediate visibility (not filtered by logger)
@@ -35,7 +35,7 @@ function initializeAllWorkers() {
     console.log(`🔍 [initializeAllWorkers] REDIS_URL exists: ${!!redisUrl}`);
     console.log(`🔍 [initializeAllWorkers] REDIS_URL length: ${redisUrl?.length || 0}`);
     console.log(`🔍 [initializeAllWorkers] REDIS_URL first 30 chars: ${redisUrl ? redisUrl.substring(0, 30) : 'NONE'}`);
-    
+
     if (!redisUrl || redisUrl === '') {
       const errorMsg = '❌ REDIS_URL is REQUIRED in production/staging but is missing or empty.';
       console.error(errorMsg);
@@ -45,7 +45,7 @@ function initializeAllWorkers() {
       logger.error('❌ REDIS_URL value received:', redisUrl ? `"${redisUrl.substring(0, 30)}..." (length: ${redisUrl.length})` : 'NOT SET OR EMPTY');
       return;
     }
-    
+
     // Validate URL format
     if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
       const errorMsg = '❌ Invalid REDIS_URL format in production. Must start with redis:// or rediss://';
@@ -56,7 +56,7 @@ function initializeAllWorkers() {
       logger.error('❌ Workers will NOT be initialized until REDIS_URL is fixed.');
       return;
     }
-    
+
     // Reject localhost in production
     if (redisUrl.includes('127.0.0.1') || redisUrl.includes('localhost')) {
       const errorMsg = '❌ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.';
@@ -65,7 +65,7 @@ function initializeAllWorkers() {
       logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service (Redis Cloud, etc.).');
       return;
     }
-    
+
     console.log('✅ Redis configuration validated for production. Proceeding with worker initialization...');
     logger.info('✅ Redis configuration validated for production. Proceeding with worker initialization...', {
       redisUrlPrefix: redisUrl.substring(0, 30) + '...'
@@ -78,7 +78,7 @@ function initializeAllWorkers() {
       logger.warn('⚠️ Skipping all worker initialization.');
       return;
     }
-    
+
     // If REDIS_URL is provided in development, validate it
     if (redisUrl && redisUrl !== '') {
       if (!redisUrl.startsWith('redis://') && !redisUrl.startsWith('rediss://')) {
@@ -96,17 +96,17 @@ function initializeAllWorkers() {
 
   try {
     logger.info('🚀 Initializing all job queue workers...');
-    
+
     // CRITICAL: Verify Redis connection BEFORE creating any workers
     // This prevents BullMQ from defaulting to localhost
     const { getRedisConnection } = require('../services/jobQueueService');
     const redisConnection = getRedisConnection();
-    
+
     console.log('🔍 [initializeAllWorkers] Checking Redis connection before creating workers...');
     console.log(`🔍 [initializeAllWorkers] Connection exists: ${!!redisConnection}`);
     console.log(`🔍 [initializeAllWorkers] Connection type: ${typeof redisConnection}`);
     console.log(`🔍 [initializeAllWorkers] Connection preview: ${redisConnection ? (typeof redisConnection === 'string' ? redisConnection.substring(0, 50) : JSON.stringify(redisConnection).substring(0, 50)) : 'null/undefined'}`);
-    
+
     if (!redisConnection || redisConnection === null || redisConnection === undefined) {
       const errorMsg = '❌ FATAL: getRedisConnection() returned null/undefined. Cannot create workers.';
       console.error(errorMsg);
@@ -114,12 +114,14 @@ function initializeAllWorkers() {
       logger.error('❌ Workers will NOT be initialized. Check REDIS_URL in Render.com.');
       return;
     }
-    
+
     // In production, connection can be IORedis instance or string URL
     if (isProduction) {
-      const isIORedis = redisConnection && typeof redisConnection === 'object' && redisConnection.constructor && redisConnection.constructor.name === 'Redis';
+      const isIORedisByName = redisConnection && typeof redisConnection === 'object' && redisConnection.constructor?.name === 'Redis';
+      const isIORedisLike = redisConnection && typeof redisConnection === 'object' && redisConnection.options && (typeof redisConnection.connect === 'function' || redisConnection.status !== undefined);
+      const isIORedis = isIORedisByName || isIORedisLike;
       const isString = typeof redisConnection === 'string';
-      
+
       if (!isIORedis && !isString) {
         const errorMsg = '❌ FATAL: Redis connection is not IORedis instance or string in production. Cannot create workers.';
         console.error(errorMsg);
@@ -129,7 +131,7 @@ function initializeAllWorkers() {
         logger.error('❌ Workers will NOT be initialized. REDIS_URL must be a valid Redis URL string.');
         return;
       }
-      
+
       // If it's a string, check for localhost
       if (isString && (redisConnection.includes('127.0.0.1') || redisConnection.includes('localhost'))) {
         const errorMsg = '❌ FATAL: Redis connection string contains localhost. Cannot create workers.';
@@ -140,7 +142,7 @@ function initializeAllWorkers() {
         logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
         return;
       }
-      
+
       // If it's an IORedis instance, check its options
       if (isIORedis) {
         const options = redisConnection.options || {};
@@ -164,7 +166,7 @@ function initializeAllWorkers() {
         logger.warn('⚠️ Redis connection contains localhost (development only)');
       }
     }
-    
+
     console.log('✅ Redis connection validated. Proceeding with worker creation...');
     logger.info('✅ Redis connection validated. Proceeding with worker creation...');
 
@@ -181,15 +183,15 @@ function initializeAllWorkers() {
     const emailWorker = initializeEmailWorker();
     const transcriptWorker = initializeTranscriptWorker();
     const socialWorker = initializeSocialPostWorker();
-    
+
     // Check if any workers were actually created
     const workersCreated = [videoWorker, contentWorker, emailWorker, transcriptWorker, socialWorker].filter(w => w !== null).length;
-    
+
     if (workersCreated === 0) {
       logger.warn('⚠️ No workers were created. Redis may not be configured correctly.');
       return;
     }
-    
+
     logger.info(`✅ ${workersCreated} workers created successfully`);
 
     logger.info('✅ All workers initialized successfully');

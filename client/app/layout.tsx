@@ -38,6 +38,9 @@ import '../utils/rum' // Initialize RUM monitoring
 // Use CSS font (see globals.css) instead of next/font to avoid ETIMEDOUT on iCloud Drive
 const fontClassName = 'font-app-sans'
 
+// Avoid "Response body disturbed or locked" when reusing cached responses
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Click — AI‑Powered Content Creation',
   description: 'Create, repurpose, and publish content across 6 platforms. AI‑powered tools, smart scheduling, and analytics in one workspace.',

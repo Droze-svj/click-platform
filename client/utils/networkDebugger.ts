@@ -1,5 +1,7 @@
 // Network debugging utility for comprehensive request/response monitoring
 
+import { sendDebugLog } from './debugLog'
+
 interface NetworkRequest {
   id: string
   url: string
@@ -32,7 +34,7 @@ class NetworkDebugger {
 
     // Enable if in development or explicitly enabled
     this.enabled = process.env.NODE_ENV === 'development' ||
-                   localStorage.getItem('network_debug') === 'true'
+      localStorage.getItem('network_debug') === 'true'
 
     if (!this.enabled) return
 
@@ -41,24 +43,18 @@ class NetworkDebugger {
     this.monitorResourceTiming()
   }
 
-  private sendDebugLog(message: string, data: any) {
+  private logToDebug(message: string, data: any) {
     console.log('NetworkDebugger:', message, data)
-    // Use local debug API instead of external service
-    fetch('/api/debug/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        component: 'NetworkDebugger',
-        message: `network_${message}`,
-        data: {
-          ...data,
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run-network-debug'
-        }
-      }),
-    }).catch(() => {})
-    // #endregion
+    sendDebugLog('NetworkDebugger', `network_${message}`, {
+      ...data,
+      sessionId: 'debug-session',
+      runId: 'run-network-debug',
+    })
+  }
+
+  /** Used internally and from XHR closure; forwards to logToDebug. */
+  public sendDebugLog(message: string, data: any) {
+    this.logToDebug(message, data)
   }
 
   private generateRequestId(): string {
@@ -178,13 +174,13 @@ class NetworkDebugger {
     const originalOpen = XMLHttpRequest.prototype.open
     const originalSend = XMLHttpRequest.prototype.send
 
-    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, ...args: any[]) {
+    XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...args: any[]) {
       if (!networkDebugger.enabled) return (originalOpen as any).call(this, method, url, ...args)
 
       const requestId = networkDebugger.generateRequestId()
       const urlString = typeof url === 'string' ? url : url.href
 
-      ;(this as any).__networkRequestId = requestId
+        ; (this as any).__networkRequestId = requestId
 
       const request: NetworkRequest = {
         id: requestId,
@@ -206,7 +202,7 @@ class NetworkDebugger {
       return (originalOpen as any).apply(this, [method, url, ...args])
     }
 
-    XMLHttpRequest.prototype.send = function(body?: Document | XMLHttpRequestBodyInit | null) {
+    XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
       if (!networkDebugger.enabled || !(this as any).__networkRequestId) {
         return originalSend.call(this, body)
       }
@@ -221,7 +217,7 @@ class NetworkDebugger {
 
       // Override readyState change handler
       const originalOnReadyStateChange = this.onreadystatechange
-      this.onreadystatechange = function() {
+      this.onreadystatechange = function () {
         if (this.readyState === 4) {
           const endTime = Date.now()
           const duration = endTime - (request?.startTime || 0)

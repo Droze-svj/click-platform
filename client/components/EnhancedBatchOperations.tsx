@@ -7,18 +7,25 @@ import ExportImportModal from './ExportImportModal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
+interface Folder {
+  _id: string
+  name: string
+}
+
 interface EnhancedBatchOperationsProps {
   selectedItems: string[]
   type: 'content' | 'scripts' | 'posts'
   onComplete: () => void
   onSelectionChange?: (selected: string[]) => void
+  folders?: Folder[]
 }
 
 export default function EnhancedBatchOperations({
   selectedItems,
   type,
   onComplete,
-  onSelectionChange
+  onSelectionChange,
+  folders = []
 }: EnhancedBatchOperationsProps) {
   const { showToast } = useToast()
   const [operation, setOperation] = useState<'delete' | 'export' | 'import' | 'tag' | 'folder' | null>(null)
@@ -42,16 +49,16 @@ export default function EnhancedBatchOperations({
     try {
       const token = localStorage.getItem('token')
       const endpoint = type === 'content'
-        ? `${API_URL}/batch/delete-content`
+        ? `${API_URL}/batch/delete`
         : type === 'scripts'
-        ? `${API_URL}/batch/delete-scripts`
-        : `${API_URL}/batch/delete-posts`
-      
+          ? `${API_URL}/batch/delete-scripts`
+          : `${API_URL}/batch/delete-posts`
+
       const body = type === 'content'
         ? { contentIds: selectedItems }
         : type === 'scripts'
-        ? { scriptIds: selectedItems }
-        : { postIds: selectedItems }
+          ? { scriptIds: selectedItems }
+          : { postIds: selectedItems }
 
       await axios.post(endpoint, body, {
       })
@@ -76,17 +83,12 @@ export default function EnhancedBatchOperations({
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
-      // Update each item with the new tag
-      const promises = selectedItems.map(id =>
-        axios.put(
-          `${API_URL}/library/content/${id}/organize`,
-          { tags: [newTag.trim()] }, // Add tag
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      )
 
-      await Promise.all(promises)
+      await axios.post(
+        `${API_URL}/batch/tag`,
+        { contentIds: selectedItems, tags: [newTag.trim()], action: 'add' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       showToast(`Added tag "${newTag}" to ${selectedItems.length} items`, 'success')
       setNewTag('')
       setShowTagModal(false)
@@ -107,16 +109,15 @@ export default function EnhancedBatchOperations({
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
-      const promises = selectedItems.map(id =>
-        axios.put(
-          `${API_URL}/library/content/${id}/organize`,
-          { folderId: selectedFolder === 'none' ? null : selectedFolder },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-      )
 
-      await Promise.all(promises)
+      await axios.post(
+        `${API_URL}/batch/update`,
+        {
+          contentIds: selectedItems,
+          updates: { folderId: selectedFolder === 'none' || !selectedFolder ? null : selectedFolder }
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       showToast(`Moved ${selectedItems.length} items to folder`, 'success')
       setSelectedFolder('')
       setShowFolderModal(false)
@@ -158,7 +159,7 @@ export default function EnhancedBatchOperations({
               🏷️ Add Tag
             </button>
             <button
-              onClick={() => setShowFolderModal(true)}
+              onClick={() => { setShowFolderModal(true); setSelectedFolder('none') }}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
             >
               📁 Move to Folder
@@ -234,7 +235,9 @@ export default function EnhancedBatchOperations({
               className="w-full px-4 py-2 border rounded-lg mb-4"
             >
               <option value="none">No Folder</option>
-              {/* Folders would be loaded from API */}
+              {folders.map((f) => (
+                <option key={f._id} value={f._id}>{f.name}</option>
+              ))}
             </select>
             <div className="flex gap-2 justify-end">
               <button
@@ -248,7 +251,7 @@ export default function EnhancedBatchOperations({
               </button>
               <button
                 onClick={handleBatchFolder}
-                disabled={loading || !selectedFolder}
+                disabled={loading}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
               >
                 Move

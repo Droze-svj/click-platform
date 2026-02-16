@@ -9,15 +9,7 @@ const fs = require('fs').promises;
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
-const { OpenAI } = require('openai');
-
-let openai = null;
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return openai;
-}
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
 /**
  * Detect silence in audio and return timestamps
@@ -33,7 +25,7 @@ async function detectSilence(videoPath, options = {}) {
 
     // Use FFmpeg silencedetect filter
     const command = `ffmpeg -i "${videoPath}" -af "silencedetect=noise=${threshold}:d=${duration}" -f null - 2>&1`;
-    
+
     const { stdout, stderr } = await execAsync(command);
     const output = stdout + stderr;
 
@@ -85,28 +77,14 @@ async function detectSilence(videoPath, options = {}) {
  */
 async function detectFillerWords(transcript) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI not available for filler word detection');
+    if (!geminiConfigured) {
+      logger.warn('Google AI not available for filler word detection');
       return [];
     }
 
-    const fillerWords = ['um', 'uh', 'er', 'ah', 'like', 'you know', 'so', 'well', 'actually'];
-
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `Analyze this transcript and identify filler words and pauses. Return JSON with array of objects: {word: string, startTime: number, endTime: number, type: 'filler'|'pause'}. Estimate timestamps based on word position.`,
-        },
-        { role: 'user', content: transcript },
-      ],
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-    });
-
-    const analysis = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `Analyze this transcript and identify filler words and pauses (um, uh, er, ah, like, you know, so, well, actually). Return valid JSON only with "fillerWords" array of objects: {word: string, startTime: number, endTime: number, type: 'filler'|'pause'}. Estimate timestamps based on word position.\n\nTranscript:\n${transcript}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
+    const analysis = JSON.parse(raw || '{}');
     return analysis.fillerWords || [];
   } catch (error) {
     logger.error('Error detecting filler words', { error: error.message });
@@ -266,7 +244,7 @@ async function detectScenes(videoPath) {
 
     // Use FFmpeg scene detection
     const command = `ffmpeg -i "${videoPath}" -vf "select='gt(scene,0.3)',showinfo" -vsync vfr -f null - 2>&1`;
-    
+
     const { stdout, stderr } = await execAsync(command);
     const output = stdout + stderr;
 
@@ -526,7 +504,7 @@ async function stabilizeVideo(inputPath, outputPath, options = {}) {
 
     // Use FFmpeg vidstab filter
     const tempFile = outputPath + '.trf';
-    
+
     // Step 1: Analyze video
     await new Promise((resolve, reject) => {
       ffmpeg(inputPath)
@@ -548,7 +526,7 @@ async function stabilizeVideo(inputPath, outputPath, options = {}) {
         .output(outputPath)
         .on('end', () => {
           // Cleanup
-          fs.unlink(tempFile).catch(() => {});
+          fs.unlink(tempFile).catch(() => { });
           logger.info('Stabilization complete', { outputPath });
           resolve();
         })

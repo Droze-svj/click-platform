@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { sendDebugLogNow } from '../utils/debugLog'
 
 declare global {
   interface Window {
@@ -104,39 +105,10 @@ export default function InteractionProbe() {
     
     const flushLogs = () => {
       if (logQueue.length === 0) return
-      
       const logs = [...logQueue]
       logQueue = []
       logTimeout = null
-      
-      // Send batched logs with timeout and error handling
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
-      
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'InteractionProbe',
-          message: 'interaction_batch',
-          data: {
-            logs,
-            timestamp: Date.now(),
-            count: logs.length
-          }
-        }),
-        signal: controller.signal
-      }).catch((err) => {
-        // Only log errors in development to avoid console spam
-        if (process.env.NODE_ENV === 'development') {
-          // Don't log AbortError (timeout) as it's expected behavior
-          if (err.name !== 'AbortError') {
-            console.warn('InteractionProbe: Debug log send failed:', err.message || err)
-          }
-        }
-      }).finally(() => {
-        clearTimeout(timeoutId)
-      })
+      sendDebugLogNow('InteractionProbe', 'interaction_batch', { logs, timestamp: Date.now(), count: logs.length })
     }
     
     const send = (message: string, data: Record<string, any>) => {

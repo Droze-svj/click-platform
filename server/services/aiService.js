@@ -1,14 +1,10 @@
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-}) : null;
 
 // Generate captions for video clips
 async function generateCaptions(text, niche) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback caption');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback caption');
     return `Check this out! 🔥 #${niche} #viral #trending`;
   }
 
@@ -21,13 +17,8 @@ async function generateCaptions(text, niche) {
 
 Content context: ${text}`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 200
-    });
-
-    return response.choices[0].message.content.trim();
+    const content = await geminiGenerate(prompt, { maxTokens: 200 });
+    return content || `Check this out! 🔥 #${niche} #viral #trending`;
   } catch (error) {
     logger.error('Caption generation error', { error: error.message, niche });
     return `Check this out! 🔥 #${niche} #viral #trending`;
@@ -36,9 +27,8 @@ Content context: ${text}`;
 
 // Detect highlights in transcript
 async function detectHighlights(transcript, duration) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback highlights');
-    // Fallback highlights
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback highlights');
     const highlights = [];
     const interval = duration / 5;
     for (let i = 0; i < 5; i++) {
@@ -53,30 +43,24 @@ async function detectHighlights(transcript, duration) {
   }
 
   try {
-    const prompt = `Analyze this transcript and identify the most engaging, shareable moments. Return a JSON array of highlights with:
-- startTime (in seconds)
+    const prompt = `Analyze this transcript and identify the most engaging, shareable moments. Return a JSON object with a "highlights" array. Each highlight has:
+- startTime (number, seconds)
 - text (the quote or key phrase)
-- platform (tiktok, instagram, youtube)
+- platform (tiktok, instagram, or youtube)
 - reason (why this moment is engaging)
 
 Transcript: ${transcript}
 Total duration: ${duration} seconds
 
-Return only valid JSON array.`;
+Return only valid JSON with a "highlights" array.`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const content = await geminiGenerate(prompt, { maxTokens: 1500 });
+    const result = JSON.parse(content || '{}');
     return result.highlights || [];
   } catch (error) {
     logger.error('Highlight detection error', { error: error.message, duration });
-    // Fallback: create highlights at regular intervals
     const highlights = [];
-    const interval = duration / 5; // 5 highlights
+    const interval = duration / 5;
     for (let i = 0; i < 5; i++) {
       highlights.push({
         startTime: i * interval,
@@ -91,10 +75,10 @@ Return only valid JSON array.`;
 
 // Generate social media content from text
 async function generateSocialContent(text, niche, platforms = ['twitter', 'linkedin', 'instagram']) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback content');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback content');
     const fallback = {};
-    platforms.forEach(platform => {
+    platforms.forEach((platform) => {
       fallback[platform] = {
         text: `Check out this ${niche} content! ${text.substring(0, 100)}...`,
         hashtags: [`#${niche}`, '#content', '#social'],
@@ -106,7 +90,7 @@ async function generateSocialContent(text, niche, platforms = ['twitter', 'linke
 
   try {
     const content = {};
-    
+
     for (const platform of platforms) {
       const prompt = `Transform this ${niche} content into an engaging ${platform} post:
 - Platform-specific format and style
@@ -116,16 +100,11 @@ async function generateSocialContent(text, niche, platforms = ['twitter', 'linke
 
 Original content: ${text}`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 300
-      });
-
+      const response = await geminiGenerate(prompt, { maxTokens: 300 });
       content[platform] = {
-        text: response.choices[0].message.content.trim(),
-        hashtags: extractHashtags(response.choices[0].message.content),
-        platform: platform
+        text: response || `Check out this ${niche} content!`,
+        hashtags: extractHashtags(response || ''),
+        platform
       };
     }
 
@@ -138,8 +117,8 @@ Original content: ${text}`;
 
 // Generate blog summary
 async function generateBlogSummary(text, niche) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback summary');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback summary');
     return `Summary: ${text.substring(0, 300)}...`;
   }
 
@@ -152,13 +131,8 @@ async function generateBlogSummary(text, niche) {
 
 Content: ${text}`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500
-    });
-
-    return response.choices[0].message.content.trim();
+    const response = await geminiGenerate(prompt, { maxTokens: 500 });
+    return response || `Summary: ${text.substring(0, 300)}...`;
   } catch (error) {
     logger.error('Blog summary error', { error: error.message, niche });
     return 'Summary generation failed. Please try again.';
@@ -167,14 +141,16 @@ Content: ${text}`;
 
 // Generate viral post ideas
 async function generateViralIdeas(topic, niche, count = 5) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback ideas');
-    return Array(count).fill(0).map((_, i) => ({
-      title: `Viral Idea ${i + 1}`,
-      description: `Engaging ${niche} content idea`,
-      platform: ['tiktok', 'instagram', 'twitter'][i % 3],
-      reason: 'Auto-generated idea'
-    }));
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback ideas');
+    return Array(count)
+      .fill(0)
+      .map((_, i) => ({
+        title: `Viral Idea ${i + 1}`,
+        description: `Engaging ${niche} content idea`,
+        platform: ['tiktok', 'instagram', 'twitter'][i % 3],
+        reason: 'Auto-generated idea'
+      }));
   }
 
   try {
@@ -184,16 +160,10 @@ async function generateViralIdeas(topic, niche, count = 5) {
 - Suggested platform
 - Why it would go viral
 
-Return as JSON array with fields: title, description, platform, reason`;
+Return a JSON object with an "ideas" array. Each idea has: title, description, platform, reason. Return only valid JSON.`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 800
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const response = await geminiGenerate(prompt, { maxTokens: 800 });
+    const result = JSON.parse(response || '{}');
     return result.ideas || [];
   } catch (error) {
     logger.error('Viral ideas error', { error: error.message, topic, niche });
@@ -203,11 +173,10 @@ Return as JSON array with fields: title, description, platform, reason`;
 
 // Extract memorable quotes
 async function extractQuotes(text, niche) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback quotes');
-    // Extract sentences that look like quotes
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback quotes');
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-    return sentences.slice(0, 5).map((sentence, i) => ({
+    return sentences.slice(0, 5).map((sentence) => ({
       quote: sentence.trim(),
       context: 'Auto-extracted',
       impact: 'Memorable statement'
@@ -215,21 +184,17 @@ async function extractQuotes(text, niche) {
   }
 
   try {
-    const prompt = `Extract the most memorable, quotable statements from this ${niche} content. Return a JSON array with:
+    const prompt = `Extract the most memorable, quotable statements from this ${niche} content. Return a JSON object with a "quotes" array. Each quote has:
 - quote (the exact text)
 - context (brief explanation)
 - impact (why it's memorable)
 
-Content: ${text}`;
+Content: ${text}
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 500
-    });
+Return only valid JSON.`;
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const response = await geminiGenerate(prompt, { maxTokens: 500 });
+    const result = JSON.parse(response || '{}');
     return result.quotes || [];
   } catch (error) {
     logger.error('Quote extraction error', { error: error.message, niche });
@@ -239,9 +204,9 @@ Content: ${text}`;
 
 // Generate performance insights
 async function generatePerformanceInsights(analyticsData, niche) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback insights');
-    return 'Performance analysis requires OpenAI API key. Please configure it to get AI-powered insights.';
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback insights');
+    return 'Performance analysis requires Google AI API key. Please configure GOOGLE_AI_API_KEY.';
   }
 
   try {
@@ -254,13 +219,8 @@ async function generatePerformanceInsights(analyticsData, niche) {
 Data: ${JSON.stringify(analyticsData)}
 Niche: ${niche}`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 600
-    });
-
-    return response.choices[0].message.content.trim();
+    const response = await geminiGenerate(prompt, { maxTokens: 600 });
+    return response || 'Performance analysis unavailable.';
   } catch (error) {
     logger.error('Performance insights error', { error: error.message, niche });
     return 'Performance analysis unavailable.';
@@ -272,12 +232,10 @@ function extractHashtags(text) {
   return text.match(hashtagRegex) || [];
 }
 
-/**
- * Generate content adaptation for a platform
- */
+// Generate content adaptation for a platform
 async function generateContentAdaptation(data) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback adaptation');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback adaptation');
     return {
       content: data.text,
       hashtags: extractHashtags(data.text),
@@ -288,7 +246,7 @@ async function generateContentAdaptation(data) {
 
   try {
     const { text, title, platform, rules, examples } = data;
-    
+
     const prompt = `Adapt this content for ${platform}:
 
 Original Content:
@@ -302,24 +260,12 @@ Platform Rules:
 ${rules.visual ? '- Visual-focused content' : ''}
 ${rules.trending ? '- Use trending topics' : ''}
 
-${examples.length > 0 ? `Examples of high-performing ${platform} content:\n${examples.map(e => `- ${e.content.substring(0, 100)}... (Engagement: ${e.engagement})`).join('\n')}` : ''}
+${examples.length > 0 ? `Examples of high-performing ${platform} content:\n${examples.map((e) => `- ${e.content.substring(0, 100)}... (Engagement: ${e.engagement})`).join('\n')}` : ''}
 
-Return a JSON object with:
-- content: adapted text optimized for ${platform}
-- hashtags: array of relevant hashtags
-- score: optimization score (0-100)
-- suggestions: array of improvement suggestions
+Return a JSON object with: content, hashtags (array), score (0-100), suggestions (array). Return only valid JSON.`;
 
-Return only valid JSON.`;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 1000
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const response = await geminiGenerate(prompt, { maxTokens: 1000 });
+    const result = JSON.parse(response || '{}');
     return {
       content: result.content || text,
       hashtags: result.hashtags || extractHashtags(text),
@@ -337,12 +283,10 @@ Return only valid JSON.`;
   }
 }
 
-/**
- * Generate AI insight for growth
- */
+// Generate AI insight for growth
 async function generateAIInsight(analysisData) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback insight');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback insight');
     return {
       title: 'Growth Recommendation',
       description: 'Analyze your content performance to identify growth opportunities.',
@@ -361,24 +305,12 @@ Metrics:
 - Content count: ${analysisData.contentCount}
 
 Top Performing Posts:
-${analysisData.topPerforming.map(p => `- ${p.platform}: ${p.engagement} engagement`).join('\n')}
+${analysisData.topPerforming.map((p) => `- ${p.platform}: ${p.engagement} engagement`).join('\n')}
 
-Provide a JSON object with:
-- title: short, actionable title
-- description: detailed explanation (2-3 sentences)
-- action: suggested action button text
-- impact: "high", "medium", or "low"
+Return a JSON object with: title, description, action, impact ("high", "medium", or "low"). Return only valid JSON.`;
 
-Return only valid JSON.`;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 300
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const response = await geminiGenerate(prompt, { maxTokens: 300 });
+    const result = JSON.parse(response || '{}');
     return {
       title: result.title || 'Growth Recommendation',
       description: result.description || 'Analyze your content performance.',
@@ -396,36 +328,24 @@ Return only valid JSON.`;
   }
 }
 
-/**
- * Generate content idea
- */
+// Generate content idea
 async function generateContentIdea(platforms) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback idea');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback idea');
     return {
       title: 'Content Idea',
-      idea: 'Create engaging content that resonates with your audience.'
+      idea: 'Create engaging content that resonates with your audience.',
+      platforms
     };
   }
 
   try {
     const prompt = `Generate a creative, engaging content idea for these platforms: ${platforms.join(', ')}.
 
-Return a JSON object with:
-- title: catchy title for the content
-- idea: detailed content idea (2-3 sentences)
-- platforms: array of recommended platforms
+Return a JSON object with: title, idea, platforms (array). Return only valid JSON.`;
 
-Return only valid JSON.`;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      max_tokens: 300
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const response = await geminiGenerate(prompt, { maxTokens: 300 });
+    const result = JSON.parse(response || '{}');
     return {
       title: result.title || 'Content Idea',
       idea: result.idea || 'Create engaging content.',
@@ -436,7 +356,7 @@ Return only valid JSON.`;
     return {
       title: 'Content Idea',
       idea: 'Create engaging content that resonates with your audience.',
-      platforms: platforms
+      platforms
     };
   }
 }
@@ -453,4 +373,3 @@ module.exports = {
   generateAIInsight,
   generateContentIdea
 };
-

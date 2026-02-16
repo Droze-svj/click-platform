@@ -1,6 +1,6 @@
 // AI Recommendations Engine
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const Content = require('../models/Content');
 const User = require('../models/User');
 const logger = require('../utils/logger');
@@ -10,23 +10,6 @@ const {
   ServiceUnavailableError,
   recoveryStrategies,
 } = require('../utils/errorHandler');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for AI recommendations', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Get personalized content recommendations
@@ -52,7 +35,7 @@ async function getPersonalizedRecommendations(userId, options = {}) {
     // Get user's content history - wrap in try-catch to handle CastErrors
     let userContent = [];
     let user = null;
-    
+
     try {
       userContent = await Content.find({
         userId,
@@ -106,32 +89,19 @@ For each recommendation, provide:
 - Why it would perform well
 - Key points to cover
 
-Format as JSON array with fields: title, description, platform, reasoning, keyPoints (array)`;
+Format as JSON array with fields: title, description, platform, reasoning, keyPoints (array). Return only the JSON array.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate recommendations');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate recommendations');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content recommendation engine. Provide personalized, data-driven recommendations.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a content recommendation engine. Provide personalized, data-driven recommendations.\n\n${prompt}`;
+    const recommendationsText = await geminiGenerate(fullPrompt, { maxTokens: 2000, temperature: 0.7 });
+    if (!recommendationsText) {
+      throw new Error('No response from AI recommendations');
+    }
 
-    const recommendationsText = response.choices[0].message.content;
-    
     let recommendations;
     try {
       recommendations = JSON.parse(recommendationsText);
@@ -156,12 +126,12 @@ Format as JSON array with fields: title, description, platform, reasoning, keyPo
     };
   } catch (error) {
     logger.error('Get personalized recommendations error', { error: error.message, userId });
-    
+
     // Handle OpenAI API errors
     if (error.response?.status === 429) {
       throw new AppError('AI API rate limit exceeded. Please try again later.', 429);
     }
-    
+
     // Fallback to basic recommendations if AI fails
     try {
       return await recoveryStrategies.fallback(
@@ -177,7 +147,7 @@ Format as JSON array with fields: title, description, platform, reasoning, keyPo
             reasoning: 'Based on your content history',
             keyPoints: content.tags || [],
           }));
-          
+
           return {
             recommendations: basicRecommendations,
             preferences,
@@ -331,30 +301,14 @@ Suggest 5 content ideas that:
 
 Format as JSON array with fields: title, description, trendAlignment (string), expectedEngagement (high/medium/low), keyPoints (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate recommendations');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate trend suggestions');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a trend-based content strategist. Suggest content that aligns with trends and user history.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.8,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a trend-based content strategist. Suggest content that aligns with trends and user history.\n\n${prompt}`;
+    const suggestionsText = await geminiGenerate(fullPrompt, { maxTokens: 2000, temperature: 0.8 });
 
-    const suggestionsText = response.choices[0].message.content;
-    
     let suggestions;
     try {
       suggestions = JSON.parse(suggestionsText);

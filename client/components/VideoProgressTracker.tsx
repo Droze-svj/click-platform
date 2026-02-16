@@ -74,7 +74,7 @@ export default function VideoProgressTracker({ videoId, operation, jobId, onComp
     const interval = setInterval(pollProgress, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
-  }, [videoId, operation, isPolling, onComplete])
+  }, [videoId, operation, jobId, isPolling, onComplete])
 
   useEffect(() => {
     // Stop polling after repeated failures (backend down, auth expired, etc.)
@@ -129,13 +129,12 @@ export default function VideoProgressTracker({ videoId, operation, jobId, onComp
 
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
         <div
-          className={`h-2 rounded-full transition-all ${
-            progress.status === 'completed'
+          className={`h-2 rounded-full transition-all ${progress.status === 'completed'
               ? 'bg-green-500'
               : progress.status === 'failed'
-              ? 'bg-red-500'
-              : 'bg-blue-500'
-          }`}
+                ? 'bg-red-500'
+                : 'bg-blue-500'
+            }`}
           style={{ width: `${progress.progress}%` }}
         />
       </div>

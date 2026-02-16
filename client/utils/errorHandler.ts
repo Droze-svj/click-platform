@@ -1,5 +1,6 @@
 // Enhanced error handling and debugging system
 import { errorMonitor } from './errorMonitor'
+import { sendDebugLogNow } from './debugLog'
 
 interface ErrorData {
   stack?: string
@@ -38,11 +39,8 @@ export class AppErrorHandler {
       this.errors = this.errors.slice(-this.maxErrors)
     }
 
-    // Enhanced debug logging with error recovery
-    this.sendToDebugLog(errorData).catch(debugErr => {
-      // If debug logging fails, still log to console as fallback
-      console.warn('[AppError] Debug logging failed:', debugErr)
-    })
+    // Enhanced debug logging (uses shared util; failures are swallowed there)
+    this.sendToDebugLog(errorData)
 
     // Enhanced console logging with structured data
     if (process.env.NODE_ENV === 'development') {
@@ -71,72 +69,22 @@ export class AppErrorHandler {
     }
   }
 
-  // Enhanced debug logging with proper error handling
-  private async sendToDebugLog(errorData: ErrorData): Promise<void> {
+  private sendToDebugLog(errorData: ErrorData): void {
     try {
-      // Only send debug logs in development or when explicitly enabled
       const shouldSendDebug = process.env.NODE_ENV === 'development' ||
                              (typeof localStorage !== 'undefined' && localStorage.getItem('debug_logging') === 'enabled')
+      if (!shouldSendDebug) return
+      if (errorData.component === 'ErrorHandler' && errorData.action?.includes('debug')) return
 
-      if (!shouldSendDebug) {
-        return
-      }
-
-      // Skip logging if this is a debug log error itself to prevent infinite loops
-      if (errorData.component === 'ErrorHandler' && errorData.action?.includes('debug')) {
-        return
-      }
-
-      // Create abort controller for timeout (AbortSignal.timeout may not be supported in all browsers)
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        controller.abort()
-      }, 3000) // Reduced timeout to 3 seconds
-      
-      try {
-        const response = await fetch('/api/debug/log', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            component: 'ErrorHandler',
-            message: 'app_error',
-            data: {
-              ...errorData,
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              runId: 'run-error-handler',
-              severity: this.getErrorSeverity(errorData),
-              category: this.categorizeError(errorData),
-            }
-          }),
-          signal: controller.signal
-        })
-
-        // Check if response is ok, but don't throw on errors
-        if (!response.ok && process.env.NODE_ENV === 'development') {
-          console.warn('[AppError] Debug log response not ok:', response.status)
-        }
-      } catch (fetchErr: any) {
-        // Only log timeout/abort errors in development, and only if not already aborted
-        if (process.env.NODE_ENV === 'development') {
-          // Check if error is due to abort (timeout) vs actual network error
-          if (fetchErr.name === 'AbortError' || fetchErr.message?.includes('aborted')) {
-            // Silently ignore timeout errors - they're expected if server is slow/unavailable
-            return
-          }
-          // Only log actual network errors, not timeouts
-          if (!fetchErr.message?.includes('timeout') && !fetchErr.message?.includes('aborted')) {
-            console.warn('[AppError] Debug log network error:', fetchErr.message)
-          }
-        }
-      } finally {
-        clearTimeout(timeoutId)
-      }
-    } catch (sendErr) {
+      sendDebugLogNow('ErrorHandler', 'app_error', {
+        ...errorData,
+        sessionId: 'debug-session',
+        runId: 'run-error-handler',
+        severity: this.getErrorSeverity(errorData),
+        category: this.categorizeError(errorData),
+      })
+    } catch {
       // Never throw from error logging to prevent error loops
-      // Silently fail - don't log errors from the error handler itself
     }
   }
 

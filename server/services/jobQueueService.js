@@ -124,8 +124,8 @@ function getRedisConnection() {
         },
         // Connection timeout to prevent hanging
         connectTimeout: 10000, // 10 seconds
-        // Don't throw errors on connection failures - let BullMQ handle them
-        enableOfflineQueue: false,
+        // Queue commands when connection drops so workers don't fail with "Stream isn't writeable"
+        enableOfflineQueue: true,
       });
 
       // Log connection events for debugging (but don't block on them)
@@ -396,8 +396,12 @@ function createWorker(queueName, processor, options = {}) {
   // CRITICAL: Additional safety checks before creating worker
   // Note: isProduction is already declared at the top of this function
   if (isProduction) {
-    // In production, connection can be IORedis instance or string URL
-    if (connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis') {
+    // IORedis: constructor.name may be 'Redis' or vary by environment; also check for IORedis-like shape
+    const isIORedisInstance = connection && typeof connection === 'object' && (
+      connection.constructor?.name === 'Redis' ||
+      (connection.options && (typeof connection.connect === 'function' || connection.status !== undefined))
+    );
+    if (isIORedisInstance) {
       // It's an IORedis instance - check its options
       const options = connection.options || {};
       const host = options.host || options.hostname;
@@ -424,7 +428,7 @@ function createWorker(queueName, processor, options = {}) {
       }
     } else {
       logger.error(`⚠️ Rejecting invalid connection type for ${queueName} in production`);
-      logger.error(`⚠️ Connection type: ${typeof connection}, is IORedis: ${connection && connection.constructor && connection.constructor.name === 'Redis'}`);
+      logger.error(`⚠️ Connection type: ${typeof connection}, constructor: ${connection?.constructor?.name}`);
       return null;
     }
   } else {
@@ -448,12 +452,14 @@ function createWorker(queueName, processor, options = {}) {
 
   // In production, connection can be IORedis instance or string URL
   if (isProduction) {
-    const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+    const isIORedisByName = connection && typeof connection === 'object' && connection.constructor?.name === 'Redis';
+    const isIORedisLike = connection && typeof connection === 'object' && connection.options && (typeof connection.connect === 'function' || connection.status !== undefined);
+    const isIORedis = isIORedisByName || isIORedisLike;
     const isString = typeof connection === 'string';
 
     if (!isIORedis && !isString) {
       logger.error(`❌ Cannot create worker ${queueName}: connection is not IORedis instance or string in production`);
-      logger.error(`❌ Connection type: ${typeof connection}, is IORedis: ${isIORedis}`);
+      logger.error(`❌ Connection type: ${typeof connection}, isIORedis: ${isIORedis}`);
       return null;
     }
   }
@@ -500,17 +506,15 @@ function createWorker(queueName, processor, options = {}) {
       }
     }
 
-    // In production, connection MUST be a valid Redis URL string
+    // In production, connection can be IORedis instance or Redis URL string
     if (isProduction) {
-      if (typeof connection !== 'string') {
-        logger.error(`❌ FATAL: Connection is not a string in production for ${queueName}`);
-        logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
-        logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
-        logger.error(`❌ Check REDIS_URL in Render.com - it must be a valid Redis URL string.`);
+      const isObj = connection && typeof connection === 'object';
+      const isStr = typeof connection === 'string';
+      if (!isObj && !isStr) {
+        logger.error(`❌ FATAL: Invalid connection type for ${queueName}`);
         return null;
       }
-
-      if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+      if (isStr && (!connection.startsWith('redis://') && !connection.startsWith('rediss://'))) {
         logger.error(`❌ FATAL: Invalid connection format for ${queueName} in production`);
         logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
         logger.error(`❌ Must start with redis:// or rediss://`);
@@ -518,11 +522,8 @@ function createWorker(queueName, processor, options = {}) {
         return null;
       }
 
-      if (connection.includes('127.0.0.1') || connection.includes('localhost')) {
+      if (isStr && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
         logger.error(`❌ FATAL: Connection contains localhost for ${queueName} in production`);
-        logger.error(`❌ Connection: ${connection.substring(0, 50)}`);
-        logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
-        logger.error(`❌ Use a cloud Redis service (Redis Cloud, etc.) - not localhost.`);
         return null;
       }
     }
@@ -541,13 +542,7 @@ function createWorker(queueName, processor, options = {}) {
       return null;
     }
 
-    // In production, ensure connection is a valid string URL
-    if (isProduction && typeof connection !== 'string') {
-      logger.error(`❌ FATAL: Connection is not a string in production for ${queueName}`);
-      logger.error(`❌ Connection type: ${typeof connection}, value: ${JSON.stringify(connection)}`);
-      logger.error(`❌ BullMQ would default to localhost. Aborting worker creation.`);
-      return null;
-    }
+    // BullMQ accepts IORedis instances or Redis URL strings – both are valid
 
     // Final check: ensure connection doesn't contain localhost
     const connectionString = typeof connection === 'string' ? connection : JSON.stringify(connection);
@@ -579,7 +574,9 @@ function createWorker(queueName, processor, options = {}) {
 
     // In production, connection can be IORedis instance or string
     if (isProduction) {
-      const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+      const isIORedisByName = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+      const isIORedisLike = connection && typeof connection === 'object' && connection.options && (typeof connection.connect === 'function' || typeof connection.status !== 'undefined');
+      const isIORedis = isIORedisByName || isIORedisLike;
       const isString = typeof connection === 'string';
 
       if (!isIORedis && !isString) {
@@ -678,8 +675,10 @@ function createWorker(queueName, processor, options = {}) {
               throw error;
             }
 
-            // Check if it's an IORedis instance
-            const isIORedis = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+            // Check if it's an IORedis instance or IORedis-like (options + connect/status)
+            const isIORedisByName = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
+            const isIORedisLike = connection && typeof connection === 'object' && connection.options && (typeof connection.connect === 'function' || typeof connection.status !== 'undefined');
+            const isIORedis = isIORedisByName || isIORedisLike;
             const isString = typeof connection === 'string';
 
             // In production, connection can be IORedis instance or string

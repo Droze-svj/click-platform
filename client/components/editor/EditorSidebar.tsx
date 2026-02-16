@@ -42,17 +42,17 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       ? `fixed inset-y-0 left-0 z-50 w-72 transform transition-all duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`
       : sidebarCollapsed ? 'w-16' : 'w-64'
-      } ${isOledTheme ? 'bg-black border-slate-800 shadow-[10px_0_40px_rgba(0,0,0,0.9)]' : 'bg-white/80 dark:bg-gray-900/80 border-slate-200/50 dark:border-slate-800/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]'} backdrop-blur-2xl border-r flex flex-col transition-all duration-500 ease-in-out flex-shrink-0 overflow-hidden`}>
+      } ${isOledTheme ? 'bg-black border-slate-800 shadow-[10px_0_40px_rgba(0,0,0,0.9)]' : 'bg-surface-card border-subtle shadow-theme-card'} backdrop-blur-2xl border-r flex flex-col transition-all duration-500 ease-in-out flex-shrink-0 overflow-hidden`}>
       {/* Sidebar Header */}
-      <div className="p-3 border-b border-slate-200/50 dark:border-slate-700/50 flex-shrink-0">
+      <div className="p-3 border-b border-subtle flex-shrink-0">
         <div className="flex items-center justify-between">
-          <h2 className={`font-semibold text-sm text-slate-700 dark:text-slate-200 ${sidebarCollapsed && deviceView !== 'mobile' ? 'hidden' : ''}`}>
+          <h2 className={`font-semibold text-sm text-theme-primary ${sidebarCollapsed && deviceView !== 'mobile' ? 'hidden' : ''}`}>
             Tools
           </h2>
           {deviceView !== 'mobile' && (
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-surface-card-hover rounded-lg transition-colors text-theme-secondary"
             >
               {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
@@ -81,14 +81,14 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
               <div className="p-3 flex items-center gap-3">
                 <div className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${activeCategory === category.id
                   ? 'bg-white/20'
-                  : 'bg-white dark:bg-gray-700 group-hover:bg-gray-50 dark:group-hover:bg-gray-600'
+                  : 'bg-surface-elevated group-hover:bg-surface-card-hover'
                   }`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 {(!sidebarCollapsed || deviceView === 'mobile') && (
                   <div className="text-left flex-1 min-w-0">
                     <div className="font-semibold text-xs">{category.label}</div>
-                    <div className={`text-[10px] mt-0.5 ${activeCategory === category.id ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <div className={`text-[10px] mt-0.5 ${activeCategory === category.id ? 'text-white/80' : 'text-theme-muted'}`}>
                       {category.description}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1.5">
@@ -97,7 +97,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                           key={feature}
                           className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${activeCategory === category.id
                             ? 'bg-white/20 text-white'
-                            : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                            : 'bg-surface-elevated text-theme-secondary border border-subtle'
                             }`}
                         >
                           {feature}
@@ -118,15 +118,15 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       </div>
 
       {/* Device & Status */}
-      <div className="p-3 border-t border-gray-200/50 dark:border-gray-700/50 space-y-2 flex-shrink-0">
-        <div className="flex items-center justify-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+      <div className="p-3 border-t border-subtle space-y-2 flex-shrink-0">
+        <div className="flex items-center justify-center gap-1.5 text-xs text-theme-secondary">
           {deviceView === 'desktop' && <Monitor className="w-3 h-3" />}
           {deviceView === 'tablet' && <Tablet className="w-3 h-3" />}
           {deviceView === 'mobile' && <Smartphone className="w-3 h-3" />}
           <span className="capitalize font-medium">{deviceView} Mode</span>
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-center gap-1.5 text-[10px] text-theme-muted">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
           <span>Ready • {formatTime(videoDuration)}</span>
         </div>

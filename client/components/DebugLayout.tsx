@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import DebugDashboard from './DebugDashboard'
+import { sendDebugLog } from '../utils/debugLog'
 
 interface DebugLayoutProps {
   children: React.ReactNode
@@ -26,37 +27,20 @@ export default function DebugLayout({ children }: DebugLayoutProps) {
   // Global debug functions
   useEffect(() => {
     // Make debug functions available globally
-    ;(window as any).openDebugDashboard = () => setDebugDashboardOpen(true)
-    ;(window as any).closeDebugDashboard = () => setDebugDashboardOpen(false)
-    ;(window as any).toggleDebugDashboard = () => setDebugDashboardOpen(prev => !prev)
+    ; (window as any).openDebugDashboard = () => setDebugDashboardOpen(true)
+      ; (window as any).closeDebugDashboard = () => setDebugDashboardOpen(false)
+      ; (window as any).toggleDebugDashboard = () => setDebugDashboardOpen(prev => !prev)
 
-    // Debug logging for system initialization
-    const sendDebugInitLog = (message: string, data: any) => {
+    const sendDebugInitLog = (message: string, data: Record<string, unknown>) => {
       try {
-        // Only log initialization, reduce spam
-        if (message === 'initialized') {
-          console.log('DebugLayout:', message, data)
-        }
-        // Use local debug API instead of external service - fire and forget
-        fetch('/api/debug/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            component: 'DebugLayout',
-            message: `debug_system_${message}`,
-            data: {
-              ...data,
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              runId: 'run-debug-system-init'
-            }
-          }),
-        }).catch(() => {
-          // Silently ignore debug log failures
+        if (message === 'initialized') console.log('DebugLayout:', message, data)
+        sendDebugLog('DebugLayout', `debug_system_${message}`, {
+          ...data,
+          sessionId: 'debug-session',
+          runId: 'run-debug-system-init',
         })
-      } catch (err) {
-        // Silently handle any errors in debug logging
-        console.warn('DebugLayout: Error in sendDebugInitLog:', err)
+      } catch {
+        // Silently ignore
       }
     }
 

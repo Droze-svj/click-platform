@@ -262,27 +262,14 @@ function formatSSATime(seconds) {
  * @returns {Promise<string>} Translated text
  */
 async function translateCaptions(text, targetLanguage) {
-  if (!openai) {
-    throw new Error('OpenAI API not configured');
+  const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+  if (!geminiConfigured) {
+    throw new Error('Google AI API not configured. Set GOOGLE_AI_API_KEY.');
   }
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a professional translator. Translate the following text to ${targetLanguage}. Maintain the same tone and style.`,
-        },
-        {
-          role: 'user',
-          content: text,
-        },
-      ],
-      temperature: 0.3,
-    });
-
-    return response.choices[0].message.content;
+    const fullPrompt = `You are a professional translator. Translate the following text to ${targetLanguage}. Maintain the same tone and style. Return only the translation.\n\n${text}`;
+    return await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
   } catch (error) {
     logger.error('Error translating captions', {
       targetLanguage,

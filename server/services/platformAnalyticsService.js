@@ -7,13 +7,44 @@ const axios = require('axios');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
+/** Get access token for a platform - SocialConnection (MongoDB) or platform_accounts (Supabase) */
+async function getAccessTokenForPlatform(userId, platform) {
+  const plat = platform.toLowerCase();
+  if (['twitter', 'linkedin', 'facebook', 'instagram'].includes(plat)) {
+    return await getValidAccessToken(userId, plat);
+  }
+  if (['youtube', 'tiktok'].includes(plat)) {
+    const { createClient } = require('@supabase/supabase-js');
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error('Supabase not configured for platform analytics');
+    }
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const { data, error } = await supabase
+      .from('platform_accounts')
+      .select('access_token, token_expires_at, refresh_token')
+      .eq('user_id', userId.toString())
+      .eq('platform', plat)
+      .eq('is_connected', true)
+      .limit(1)
+      .maybeSingle();
+    if (error || !data?.access_token) {
+      throw new Error(`No active ${plat} connection found`);
+    }
+    return data.access_token;
+  }
+  throw new Error(`Unsupported platform: ${platform}`);
+}
+
 /**
  * Sync analytics from Twitter/X
  */
 async function syncTwitterAnalytics(userId, postId, platformPostId) {
   try {
     const accessToken = await getValidAccessToken(userId, 'twitter');
-    
+
     // Twitter API v2 - Get tweet metrics
     const response = await axios.get(`https://api.twitter.com/2/tweets/${platformPostId}`, {
       params: {
@@ -25,7 +56,7 @@ async function syncTwitterAnalytics(userId, postId, platformPostId) {
     });
 
     const metrics = response.data.data?.public_metrics || {};
-    
+
     const impressions = metrics.impression_count || 0;
     const likes = metrics.like_count || 0;
     const retweets = metrics.retweet_count || 0;
@@ -66,7 +97,7 @@ async function syncTwitterAnalytics(userId, postId, platformPostId) {
 async function syncLinkedInAnalytics(userId, postId, platformPostId) {
   try {
     const accessToken = await getValidAccessToken(userId, 'linkedin');
-    
+
     // LinkedIn API - Get post analytics
     // Note: LinkedIn analytics requires specific permissions
     const response = await axios.get(`https://api.linkedin.com/v2/socialActions/${platformPostId}`, {
@@ -77,7 +108,7 @@ async function syncLinkedInAnalytics(userId, postId, platformPostId) {
 
     // LinkedIn analytics structure
     const metrics = response.data || {};
-    
+
     const impressions = metrics.impressionCount || 0;
     const likes = metrics.likeCount || 0;
     const comments = metrics.commentCount || 0;
@@ -119,7 +150,7 @@ async function syncLinkedInAnalytics(userId, postId, platformPostId) {
 async function syncFacebookAnalytics(userId, postId, platformPostId) {
   try {
     const accessToken = await getValidAccessToken(userId, 'facebook');
-    
+
     // Facebook Graph API - Get post insights
     const response = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}/insights`, {
       params: {
@@ -130,7 +161,7 @@ async function syncFacebookAnalytics(userId, postId, platformPostId) {
 
     const insights = response.data.data || [];
     const metrics = {};
-    
+
     insights.forEach(insight => {
       if (insight.name === 'post_impressions') {
         metrics.impressions = parseInt(insight.values[0]?.value || 0);
@@ -188,6 +219,140 @@ async function syncFacebookAnalytics(userId, postId, platformPostId) {
 }
 
 /**
+ * Sync analytics from YouTube (Data API v3 - videos.list statistics)
+ */
+async function syncYouTubeAnalytics(userId, postId, platformPostId) {
+  try {
+    const accessToken = await getAccessTokenForPlatform(userId, 'youtube');
+
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+      params: {
+        part: 'statistics',
+        id: platformPostId,
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const items = response.data?.items || [];
+    if (items.length === 0) {
+      throw new Error(`YouTube video ${platformPostId} not found`);
+    }
+
+    const stats = items[0].statistics || {};
+    const views = parseInt(stats.viewCount || 0, 10);
+    const likes = parseInt(stats.likeCount || 0, 10);
+    const comments = parseInt(stats.commentCount || 0, 10);
+    const engagement = likes + comments;
+
+    return {
+      views,
+      likes,
+      comments,
+      engagement,
+      impressions: views,
+      reach: views,
+      uniqueReach: views,
+      engagementBreakdown: {
+        likes,
+        comments,
+        shares: 0,
+        retweets: 0,
+        saves: 0,
+        clicks: 0,
+        reactions: likes,
+      },
+      syncedAt: new Date(),
+    };
+  } catch (error) {
+    logger.error('YouTube analytics sync error', { error: error.message, userId, postId });
+    captureException(error, { tags: { platform: 'youtube', operation: 'analytics_sync' } });
+    throw error;
+  }
+}
+
+/**
+ * Sync analytics from TikTok
+ * Uses TikTok Content Posting API video list when available; otherwise returns placeholder.
+ */
+async function syncTikTokAnalytics(userId, postId, platformPostId) {
+  try {
+    const accessToken = await getAccessTokenForPlatform(userId, 'tiktok');
+
+    try {
+      const response = await axios.post(
+        'https://open.tiktokapis.com/v2/video/list/?fields=id,view_count,like_count,comment_count,share_count',
+        { max_count: 20 },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const items = response.data?.data?.videos || [];
+      const v = items.find((item) => item.id === platformPostId);
+      if (!v) {
+        throw new Error(`TikTok video ${platformPostId} not found in list`);
+      }
+      const views = parseInt(v.view_count || 0, 10);
+      const likes = parseInt(v.like_count || 0, 10);
+      const comments = parseInt(v.comment_count || 0, 10);
+      const shares = parseInt(v.share_count || 0, 10);
+      const engagement = likes + comments + shares;
+
+      return {
+        views,
+        likes,
+        comments,
+        shares,
+        engagement,
+        impressions: views,
+        reach: views,
+        uniqueReach: views,
+        engagementBreakdown: {
+          likes,
+          comments,
+          shares,
+          retweets: 0,
+          saves: 0,
+          clicks: 0,
+          reactions: likes,
+        },
+        syncedAt: new Date(),
+      };
+    } catch (apiErr) {
+      if (apiErr.response?.status === 401 || apiErr.response?.data?.error?.code === 40101) {
+        throw apiErr;
+      }
+      logger.warn('TikTok video/list API not available, using placeholder', {
+        error: apiErr.message,
+        platformPostId,
+      });
+      return {
+        views: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        engagement: 0,
+        impressions: 0,
+        reach: 0,
+        uniqueReach: 0,
+        engagementBreakdown: { likes: 0, comments: 0, shares: 0, retweets: 0, saves: 0, clicks: 0, reactions: 0 },
+        syncedAt: new Date(),
+        _note: 'TikTok analytics require video.list scope; sync when API is configured',
+      };
+    }
+  } catch (error) {
+    logger.error('TikTok analytics sync error', { error: error.message, userId, postId });
+    captureException(error, { tags: { platform: 'tiktok', operation: 'analytics_sync' } });
+    throw error;
+  }
+}
+
+/**
  * Sync analytics for a post from its platform
  */
 async function syncPostAnalytics(userId, postId) {
@@ -212,6 +377,12 @@ async function syncPostAnalytics(userId, postId) {
       case 'facebook':
       case 'instagram':
         analytics = await syncFacebookAnalytics(userId, postId, post.platformPostId);
+        break;
+      case 'youtube':
+        analytics = await syncYouTubeAnalytics(userId, postId, post.platformPostId);
+        break;
+      case 'tiktok':
+        analytics = await syncTikTokAnalytics(userId, postId, post.platformPostId);
         break;
       default:
         throw new Error(`Analytics sync not supported for platform: ${post.platform}`);
@@ -399,6 +570,8 @@ module.exports = {
   syncTwitterAnalytics,
   syncLinkedInAnalytics,
   syncFacebookAnalytics,
+  syncYouTubeAnalytics,
+  syncTikTokAnalytics,
 };
 
 

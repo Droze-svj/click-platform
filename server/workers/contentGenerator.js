@@ -1,7 +1,7 @@
 // Content generation worker
 
 const { createWorker } = require('../services/jobQueueService');
-const { generateContentFromText } = require('../routes/content');
+const { generateContentFromText } = require('../services/contentGenerationService');
 const { emitProcessingProgress, emitProcessingComplete, emitProcessingFailed } = require('../services/realtimeService');
 const logger = require('../utils/logger');
 
@@ -10,23 +10,22 @@ const logger = require('../utils/logger');
  */
 async function processContentJob(jobData, job) {
   const { contentId, text, user, platforms } = jobData;
-  const userId = user._id || user;
+  const userId = user?._id || user;
+
+  const onProgress = (percent, message) => {
+    job.updateProgress(percent).catch(() => { });
+    emitProcessingProgress(userId, job.id, percent, message);
+  };
 
   try {
-    await job.updateProgress(10);
-    emitProcessingProgress(userId, job.id, 10, 'Starting content generation...');
+    onProgress(10, 'Starting content generation...');
+    logger.info('Starting content generation', { contentId, jobId: job.id });
 
-    logger.info('Starting content generation', {
-      contentId,
-      jobId: job.id,
-    });
+    await generateContentFromText(contentId, text, user, platforms, onProgress);
 
-    // Generate content
-    await generateContentFromText(contentId, text, user, platforms);
-
-    await job.updateProgress(100);
+    onProgress(100, 'Complete');
     emitProcessingComplete(userId, job.id, { success: true, contentId });
-    
+
     logger.info('Content generation completed', {
       contentId,
       jobId: job.id,
@@ -39,7 +38,7 @@ async function processContentJob(jobData, job) {
       jobId: job.id,
       error: error.message,
     });
-    
+
     emitProcessingFailed(userId, job.id, error);
     throw error;
   }

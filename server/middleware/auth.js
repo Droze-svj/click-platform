@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { DEV_USER_OBJECTIDS, isDevUser, allowDevMode: computeAllowDevMode } = require('../utils/devUser');
 
 // Initialize Supabase client lazily
 const getSupabaseClient = () => {
@@ -14,23 +15,14 @@ const auth = async (req, res, next) => {
     // Check if running on localhost - declare once and reuse
     // Check both host header and x-forwarded-host (for proxy requests)
     // Also check the original URL or referer for localhost detection
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const referer = req.headers.referer || req.headers.origin || '';
-    const forwardedFor = req.headers['x-forwarded-for'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
-      referer.includes('localhost') || referer.includes('127.0.0.1') ||
-      (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
-    // Always allow dev mode when NODE_ENV is not production OR when on localhost
-    // If NODE_ENV is undefined/null/empty, treat as dev mode
-    const nodeEnv = process.env.NODE_ENV;
-    const allowDevMode = !nodeEnv || nodeEnv !== 'production' || isLocalhost;
+    const allowDevMode = computeAllowDevMode(req);
 
     const authHeader = String(req.header('Authorization') || '');
     const hasBearer = authHeader.startsWith('Bearer ');
     const token = hasBearer ? authHeader.slice('Bearer '.length) : '';
 
     // Enhanced logging for development/localhost to help diagnose 401 errors
-    if (allowDevMode || isLocalhost) {
+    if (allowDevMode) {
       const path = req.path || req.url || '';
       if (!token) {
         console.warn('🔧 [Auth] No token provided for:', path, {
@@ -38,7 +30,6 @@ const auth = async (req, res, next) => {
           authHeaderLength: authHeader.length,
           nodeEnv: process.env.NODE_ENV || 'undefined',
           allowDevMode,
-          isLocalhost,
           headers: {
             authorization: req.headers.authorization ? 'present' : 'missing',
             'x-forwarded-for': req.headers['x-forwarded-for'],
@@ -54,8 +45,7 @@ const auth = async (req, res, next) => {
           isDevToken,
           tokenLength: token.length,
           nodeEnv: process.env.NODE_ENV || 'undefined',
-          allowDevMode,
-          isLocalhost
+          allowDevMode
         });
       }
     }
@@ -172,9 +162,17 @@ const auth = async (req, res, next) => {
 
     // Add _id as alias for id for MongoDB compatibility
     // Many routes expect req.user._id but Supabase uses id
-    user._id = user.id;
+    // For dev users, use stable ObjectIds so Mongoose models (Workflow, Team, etc.) accept userId
+    if (allowDevMode && DEV_USER_OBJECTIDS[user.id]) {
+      user._id = DEV_USER_OBJECTIDS[user.id];
+      user.isDevUser = true;
+    } else {
+      user._id = user.id;
+      user.isDevUser = isDevUser(user);
+    }
 
     req.user = user;
+    req.allowDevMode = allowDevMode;
 
     // Log successful auth in development or localhost
     if (allowDevMode) {

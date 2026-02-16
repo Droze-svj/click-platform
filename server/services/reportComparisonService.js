@@ -143,8 +143,10 @@ function calculateSignificance(percentage) {
  */
 async function generateComparisonSummary(comparison) {
   try {
-    const OpenAI = require('openai');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured');
+    }
 
     const significantChanges = comparison.comparisons.filter(c => c.significance === 'significant');
     const improvements = significantChanges.filter(c => c.change.trend === 'up');
@@ -163,23 +165,8 @@ Declines: ${declines.length}
 
 Write a professional summary highlighting key changes and insights:`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a business analyst providing period-over-period comparison insights.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
-
-    const text = response.choices[0].message.content;
+    const fullPrompt = `You are a business analyst providing period-over-period comparison insights.\n\n${prompt}`;
+    const text = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
     const keyChanges = significantChanges.map(c => `${c.metricType} ${c.change.trend === 'up' ? 'increased' : 'decreased'} by ${Math.abs(c.change.percentage)}%`);
     const insights = extractInsights(comparison);
     const recommendations = generateRecommendations(comparison);
@@ -215,7 +202,7 @@ function formatPeriod(period) {
  */
 function extractInsights(comparison) {
   const insights = [];
-  
+
   const topImprovements = comparison.comparisons
     .filter(c => c.change.trend === 'up')
     .sort((a, b) => b.change.percentage - a.change.percentage)
@@ -233,9 +220,9 @@ function extractInsights(comparison) {
  */
 function generateRecommendations(comparison) {
   const recommendations = [];
-  
+
   const declines = comparison.comparisons.filter(c => c.change.trend === 'down' && c.significance !== 'minor');
-  
+
   declines.forEach(c => {
     recommendations.push(`Focus on improving ${c.metricType} which declined by ${Math.abs(c.change.percentage)}%`);
   });

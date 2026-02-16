@@ -35,6 +35,7 @@ export default function MobileNavbar() {
     { path: '/dashboard/teams', labelKey: 'nav.teams', icon: '👥' },
     { path: '/dashboard/approvals', labelKey: 'nav.approvals', icon: '✅' },
     { path: '/dashboard/social', labelKey: 'nav.social', icon: '🌐' },
+    { path: '/dashboard/insights', labelKey: 'nav.insights', icon: '📈' },
     { path: '/dashboard/membership', labelKey: 'nav.membership', icon: '💎' },
     { path: '/dashboard/templates', labelKey: 'nav.templates', icon: '📋' },
     { path: '/dashboard/notifications', labelKey: 'nav.notifications', icon: '🔔' },
@@ -117,8 +118,8 @@ export default function MobileNavbar() {
                     setIsOpen(false)
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive(item.path)
-                      ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     }`}
                 >
                   <span className="text-xl">{item.icon}</span>

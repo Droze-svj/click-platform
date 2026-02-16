@@ -74,14 +74,18 @@ const initMongoDB = async () => {
 const initDatabases = async () => {
   console.log('🔄 Initializing database connections...');
 
-  // Try Supabase first (preferred)
+  // Supabase (auth, users)
   const supabaseConnected = await initSupabase();
 
-  // Try Prisma second
+  // Prisma (optional)
   const prismaConnected = await initPrisma();
 
-  // Fall back to MongoDB
-  if (!supabaseConnected && !prismaConnected) {
+  // MongoDB – required for Workflow, Team, ScheduledPost, Content (Mongoose models)
+  // Always init when MONGODB_URI is set, regardless of Supabase/Prisma
+  const mongoUri = process.env.MONGODB_URI?.trim();
+  if (mongoUri) {
+    await initMongoDB();
+  } else if (!supabaseConnected && !prismaConnected) {
     console.log('⚠️ No modern database configured, falling back to MongoDB...');
     await initMongoDB();
   }

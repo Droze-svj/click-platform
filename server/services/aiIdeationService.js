@@ -1,23 +1,14 @@
 // AI Content Ideation Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
 
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for ideation', { error: error.message });
-      return null;
-    }
+async function callGemini(systemPrompt, userPrompt, options = {}) {
+  if (!geminiConfigured) {
+    throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
   }
-  return openai;
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+  return geminiGenerate(fullPrompt, { temperature: options.temperature ?? 0.7, maxTokens: options.maxTokens ?? 2000 });
 }
 
 /**
@@ -25,13 +16,7 @@ function getOpenAIClient() {
  */
 async function generateContentIdeas(userId, options = {}) {
   try {
-    const {
-      topic = null,
-      platform = 'general',
-      count = 10,
-      style = 'engaging',
-      audience = 'general',
-    } = options;
+    const { topic = null, platform = 'general', count = 10, style = 'engaging', audience = 'general' } = options;
 
     const prompt = `Generate ${count} creative and engaging content ideas for ${platform} platform.
 ${topic ? `Topic: ${topic}` : 'General content ideas'}
@@ -45,44 +30,20 @@ For each idea, provide:
 4. Key points to cover
 5. Potential hashtags
 
-Format as JSON array with fields: title, description, format, keyPoints (array), hashtags (array)`;
+Format as JSON array with fields: title, description, format, keyPoints (array), hashtags (array). Return only the JSON array.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content ideas');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const ideasText = await callGemini(
+      'You are a creative content strategist. Generate innovative and engaging content ideas that resonate with audiences.',
+      prompt,
+      { temperature: 0.9, maxTokens: 2000 }
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a creative content strategist. Generate innovative and engaging content ideas that resonate with audiences.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.9,
-      max_tokens: 2000,
-    });
-
-    const ideasText = response.choices[0].message.content;
-    
-    // Parse JSON from response
     let ideas;
     try {
-      ideas = JSON.parse(ideasText);
+      ideas = JSON.parse(ideasText || '[]');
     } catch (error) {
-      // Try to extract JSON if wrapped in markdown
-      const jsonMatch = ideasText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        ideas = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse ideas');
-      }
+      const jsonMatch = (ideasText || '').match(/\[[\s\S]*\]/);
+      ideas = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     }
 
     logger.info('Content ideas generated', { userId, count: ideas.length });
@@ -107,42 +68,20 @@ Provide:
 4. Content formats performing well
 5. Audience insights
 
-Format as JSON with fields: trendingTopics (array), emergingTrends (array), bestPostingTimes (array), topFormats (array), audienceInsights (object)`;
+Format as JSON with fields: trendingTopics (array), emergingTrends (array), bestPostingTimes (array), topFormats (array), audienceInsights (object). Return only valid JSON.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content ideas');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const trendsText = await callGemini(
+      'You are a social media trend analyst. Provide accurate and actionable trend insights.',
+      prompt,
+      { temperature: 0.7, maxTokens: 1500 }
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a social media trend analyst. Provide accurate and actionable trend insights.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
-
-    const trendsText = response.choices[0].message.content;
-    
     let trends;
     try {
-      trends = JSON.parse(trendsText);
+      trends = JSON.parse(trendsText || '{}');
     } catch (error) {
-      const jsonMatch = trendsText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        trends = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse trends');
-      }
+      const jsonMatch = (trendsText || '').match(/\{[\s\S]*\}/);
+      trends = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
     }
 
     logger.info('Trends analyzed', { platform, category });
@@ -176,42 +115,20 @@ For each variation, provide:
 3. Alternative formats
 4. Modified key points
 
-Format as JSON array with fields: angle, tone, format, keyPoints (array), description`;
+Format as JSON array with fields: angle, tone, format, keyPoints (array), description. Return only the JSON array.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content ideas');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const variationsText = await callGemini(
+      'You are a creative content strategist. Generate innovative variations that maintain the core message while exploring new angles.',
+      prompt,
+      { temperature: 0.8, maxTokens: 2000 }
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a creative content strategist. Generate innovative variations that maintain the core message while exploring new angles.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.8,
-      max_tokens: 2000,
-    });
-
-    const variationsText = response.choices[0].message.content;
-    
     let variations;
     try {
-      variations = JSON.parse(variationsText);
+      variations = JSON.parse(variationsText || '[]');
     } catch (error) {
-      const jsonMatch = variationsText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        variations = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse variations');
-      }
+      const jsonMatch = (variationsText || '').match(/\[[\s\S]*\]/);
+      variations = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     }
 
     logger.info('Content variations generated', { contentId, userId, count: variations.length });
@@ -228,8 +145,7 @@ Format as JSON array with fields: angle, tone, format, keyPoints (array), descri
 async function getPerformanceBasedSuggestions(userId, limit = 10) {
   try {
     const Content = require('../models/Content');
-    
-    // Get top performing content
+
     const topContent = await Content.find({ userId, status: 'published' })
       .sort({ views: -1 })
       .limit(5)
@@ -242,7 +158,7 @@ async function getPerformanceBasedSuggestions(userId, limit = 10) {
 
     const prompt = `Based on these top-performing content pieces, suggest ${limit} new content ideas that would likely perform well:
 
-${topContent.map((c, i) => `${i + 1}. ${c.title}\n   ${c.body.substring(0, 200)}...\n   Tags: ${c.tags?.join(', ') || 'none'}`).join('\n\n')}
+${topContent.map((c, i) => `${i + 1}. ${c.title}\n   ${c.body?.substring(0, 200) || ''}...\n   Tags: ${c.tags?.join(', ') || 'none'}`).join('\n\n')}
 
 For each suggestion, provide:
 1. Title
@@ -250,42 +166,21 @@ For each suggestion, provide:
 3. Why it would perform well
 4. Suggested tags
 
-Format as JSON array with fields: title, description, reasoning, tags (array)`;
+Format as JSON array with fields: title, description, reasoning, tags (array). Return only the JSON array.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content ideas');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const suggestionsText = await callGemini(
+      'You are a data-driven content strategist. Analyze successful content and suggest similar high-performing ideas.',
+      prompt,
+      { temperature: 0.7, maxTokens: 2000 }
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a data-driven content strategist. Analyze successful content and suggest similar high-performing ideas.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
-
-    const suggestionsText = response.choices[0].message.content;
-    
     let suggestions;
     try {
-      suggestions = JSON.parse(suggestionsText);
+      const parsed = JSON.parse(suggestionsText || '[]');
+      suggestions = Array.isArray(parsed) ? parsed : [parsed];
     } catch (error) {
-      const jsonMatch = suggestionsText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        suggestions = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse suggestions');
-      }
+      const jsonMatch = (suggestionsText || '').match(/\[[\s\S]*\]/);
+      suggestions = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
     }
 
     logger.info('Performance-based suggestions generated', { userId, count: suggestions.length });
@@ -302,9 +197,3 @@ module.exports = {
   brainstormVariations,
   getPerformanceBasedSuggestions,
 };
-
-
-
-
-
-

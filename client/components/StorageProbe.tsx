@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { sendDebugLog } from '../utils/debugLog'
 
 declare global {
   interface Window {
@@ -23,17 +24,9 @@ export default function StorageProbe() {
       }
     }
 
-    const send = (message: string, data: Record<string, any>) => {
+    const send = (message: string, data: Record<string, unknown>) => {
       console.log('StorageProbe:', message, data)
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'StorageProbe',
-          message,
-          data: { ...data, timestamp: Date.now() }
-        }),
-      }).catch(() => {})
+      sendDebugLog('StorageProbe', message, data)
     }
 
     // Track localStorage changes

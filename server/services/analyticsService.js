@@ -5,18 +5,18 @@ const User = require('../models/User');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
+const { isDevUser } = require('../utils/devUser');
 
 /**
  * Track user event (privacy-compliant)
  */
 async function trackEvent(userId, eventType, metadata = {}) {
   try {
-    // Skip tracking for dev users to avoid MongoDB CastErrors
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+    if (isDevUser(userId)) {
       logger.debug('Analytics tracking skipped - dev user', { userId, eventType });
       return { tracked: false, reason: 'dev_user' };
     }
-    
+
     // Only track if user has analytics consent
     let user;
     try {
@@ -29,7 +29,7 @@ async function trackEvent(userId, eventType, metadata = {}) {
       }
       throw dbError;
     }
-    
+
     if (!user || !user.privacy?.analyticsConsent) {
       logger.debug('Analytics tracking skipped - user opted out', { userId, eventType });
       return { tracked: false, reason: 'user_opted_out' };
@@ -67,8 +67,7 @@ async function trackEvent(userId, eventType, metadata = {}) {
  */
 async function getUserAnalytics(userId, timeRange = '30d') {
   try {
-    // Handle dev users - return mock data to avoid MongoDB CastErrors
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
+    if (isDevUser(userId)) {
       return {
         timeRange: `${parseInt(timeRange) || 30} days`,
         content: { created: 0, scheduled: 0, published: 0 },
@@ -76,7 +75,7 @@ async function getUserAnalytics(userId, timeRange = '30d') {
         timestamp: new Date()
       };
     }
-    
+
     // Wrap in try-catch to handle CastErrors
     let user;
     try {
@@ -94,7 +93,7 @@ async function getUserAnalytics(userId, timeRange = '30d') {
       }
       throw dbError;
     }
-    
+
     if (!user || !user.privacy?.analyticsConsent) {
       return { error: 'Analytics not enabled for this user' };
     }
@@ -356,11 +355,11 @@ async function getPerformanceTrends(userId, period = 30) {
     // Calculate trends
     const contentGrowth = contentTrends.length >= 2 ?
       ((contentTrends[contentTrends.length - 1]?.contentCreated || 0) -
-       (contentTrends[0]?.contentCreated || 0)) / (contentTrends.length - 1) : 0;
+        (contentTrends[0]?.contentCreated || 0)) / (contentTrends.length - 1) : 0;
 
     const postingGrowth = postingTrends.length >= 2 ?
       ((postingTrends[postingTrends.length - 1]?.postsPublished || 0) -
-       (postingTrends[0]?.postsPublished || 0)) / (postingTrends.length - 1) : 0;
+        (postingTrends[0]?.postsPublished || 0)) / (postingTrends.length - 1) : 0;
 
     return {
       period: `${period} days`,

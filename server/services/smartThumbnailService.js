@@ -1,24 +1,7 @@
 // Smart Thumbnail Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for smart thumbnails', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate smart thumbnail suggestions
@@ -48,30 +31,14 @@ Provide:
 
 Format as JSON array with objects containing: timestamp (seconds), reason (string), composition (string), textOverlay (string), colorScheme (string), confidence (number 0-1)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate thumbnail suggestions');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate thumbnail suggestions');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a video thumbnail expert. Suggest optimal thumbnail moments that maximize click-through rates.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
+    const fullPrompt = `You are a video thumbnail expert. Suggest optimal thumbnail moments that maximize click-through rates.\n\n${prompt}`;
+    const suggestionsText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 1500 });
 
-    const suggestionsText = response.choices[0].message.content;
-    
     let suggestions;
     try {
       suggestions = JSON.parse(suggestionsText);

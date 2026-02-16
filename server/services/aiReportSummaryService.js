@@ -1,25 +1,8 @@
 // AI Report Summary Service
 // Generate client-friendly, non-technical narratives
 
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate AI summary for report
@@ -48,31 +31,16 @@ async function generateReportSummary(reportData, templateConfig) {
       includeRecommendations
     );
 
-    // Get OpenAI client (lazy initialization)
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, using fallback summary');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, using fallback summary');
       return generateFallbackSummary(reportData);
     }
 
-    // Generate summary
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a business communication expert who translates technical metrics into clear, client-friendly language. Write in a professional but accessible tone.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+    const fullPrompt = `You are a business communication expert who translates technical metrics into clear, client-friendly language. Write in a professional but accessible tone.\n\n${prompt}`;
+    const summaryText = await geminiGenerate(fullPrompt, {
       temperature: 0.7,
-      max_tokens: length === 'short' ? 300 : (length === 'medium' ? 500 : 800)
+      maxTokens: length === 'short' ? 300 : (length === 'medium' ? 500 : 800)
     });
-
-    const summaryText = response.choices[0].message.content;
 
     // Extract key highlights and recommendations
     const highlights = extractHighlights(metrics);
@@ -83,7 +51,7 @@ async function generateReportSummary(reportData, templateConfig) {
       keyHighlights: highlights,
       recommendations,
       generatedAt: new Date(),
-      model: 'gpt-4'
+      model: 'gemini-1.5-flash'
     };
   } catch (error) {
     logger.error('Error generating AI summary', { error: error.message });
@@ -104,7 +72,7 @@ function formatMetricsForAI(metrics) {
     const percentage = change.percentage || 0;
 
     let description = `${metric.label || metric.metricId}: ${metric.formattedValue || metric.value}`;
-    
+
     if (change.value !== undefined) {
       const trendText = trend === 'up' ? 'increased' : (trend === 'down' ? 'decreased' : 'remained stable');
       description += ` (${trendText} by ${Math.abs(percentage)}%)`;
@@ -211,7 +179,7 @@ async function generateRecommendations(metrics) {
   const recommendations = [];
 
   // Find areas for improvement
-  const decliningMetrics = metrics.filter(m => 
+  const decliningMetrics = metrics.filter(m =>
     m.change && m.change.trend === 'down' && Math.abs(m.change.percentage) > 5
   );
 
@@ -220,7 +188,7 @@ async function generateRecommendations(metrics) {
   });
 
   // Find low performers vs benchmarks
-  const lowBenchmarks = metrics.filter(m => 
+  const lowBenchmarks = metrics.filter(m =>
     m.benchmark && m.benchmark.percentile < 50
   );
 
@@ -285,10 +253,8 @@ Top Performers:
 
 Write a ${tone} summary suitable for agency leadership:`;
 
-    // Get OpenAI client (lazy initialization)
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, using fallback rollup summary');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, using fallback rollup summary');
       return {
         text: `Agency performance summary for ${rollupData.clients.length} clients.`,
         generatedAt: new Date(),
@@ -296,26 +262,13 @@ Write a ${tone} summary suitable for agency leadership:`;
       };
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a business analyst providing insights to agency leadership.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
+    const fullPrompt = `You are a business analyst providing insights to agency leadership.\n\n${prompt}`;
+    const text = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
 
     return {
-      text: response.choices[0].message.content,
+      text,
       generatedAt: new Date(),
-      model: 'gpt-4'
+      model: 'gemini-1.5-flash'
     };
   } catch (error) {
     logger.error('Error generating rollup summary', { error: error.message });
