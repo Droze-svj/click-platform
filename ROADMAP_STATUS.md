@@ -18,11 +18,10 @@
 
 | # | Item | Issue | Effort | Notes |
 |---|------|-------|--------|-------|
-| 1 | Fix MongoDB/Redis (Phase 0) | — | 30 min | See [PHASE_0_FIX_GUIDE.md](./PHASE_0_FIX_GUIDE.md) |
-| 2 | Testing & QA | `npm run assign 5` | 3–5 days | Unit, integration, E2E |
-| 3 | OAuth Token Refresh | `npm run assign 6` | 2 days | Core posting fix |
-| 4 | Cloud Storage (S3/Cloudinary) | `npm run assign 7` | 2–3 days | Production scale |
-| 5 | Request Timeout Middleware | — | 1 day | Stop hanging requests |
+| 1 | Fix MongoDB/Redis (Phase 0) | — | 30 min | See [PHASE_0_FIX_GUIDE.md](./PHASE_0_FIX_GUIDE.md). Local Phase 0 verified ✅ |
+| 2 | Testing & QA | `npm run assign 5` | 3–5 days | Unit, integration, E2E. See [PHASE1_KICKOFF.md](./PHASE1_KICKOFF.md) |
+| 3 | OAuth Token Refresh | `npm run assign 6` | 2 days | Core posting fix. See [docs/PHASE1_OAUTH_CONTEXT.md](./docs/PHASE1_OAUTH_CONTEXT.md) |
+| 4 | Cloud Storage (S3/Cloudinary) | `npm run assign 7` | 2–3 days | Production scale. See [docs/PHASE1_CLOUD_STORAGE_CONTEXT.md](./docs/PHASE1_CLOUD_STORAGE_CONTEXT.md) |
 
 ---
 
@@ -38,7 +37,8 @@
 
 | Item | Merged | Notes |
 |------|--------|-------|
-| Content & edit UX (sharpening, visual polish, Brand kit, premium audio, platform-native, AI-as-assistant) | branch `feat/editing-ux-guides-and-phase1-prep` | Guides + UI; commit f7771a7. PR to merge to main. |
+| Request Timeout Middleware | — | Already in server (route-aware 30s/5m/10m). |
+| Content & edit UX (sharpening, visual polish, Brand kit, premium audio, platform-native, AI-assistant) | branch `feat/editing-ux-guides-and-phase1-prep` | Guides + UI; commit 648e609. Use [PR_DESCRIPTION.md](./PR_DESCRIPTION.md) to open PR to main. |
 
 ---
 
@@ -46,7 +46,7 @@
 
 - **This week:** 1 branch completed (edit UX + guides), 0 in review
 - **Last review:** —
-- **Next focus:** Merge feat/editing-ux-guides-and-phase1-prep; then Phase 0 verify and Phase 1 (Testing or OAuth refresh)
+- **Next focus:** Merge feat/editing-ux-guides-and-phase1-prep (see PR_DESCRIPTION.md). Phase 0 verified locally ✅. Then Phase 1: run `npm run assign 5|6|7` — see PHASE1_KICKOFF.md.
 
 ---
 
