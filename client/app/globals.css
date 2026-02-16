@@ -153,7 +153,67 @@
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
+
+  /* Theme-aware semantic tokens (modern creative, light mode) */
+  --surface-page: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 45%, #e2e8f0 100%);
+  --surface-page-color: #f1f5f9;
+  --surface-card: rgba(255, 255, 255, 0.92);
+  --surface-card-hover: rgba(255, 255, 255, 0.98);
+  --surface-elevated: #ffffff;
+  --border-subtle: rgba(148, 163, 184, 0.35);
+  --border-default: rgba(148, 163, 184, 0.5);
+  --border-strong: rgba(100, 116, 139, 0.6);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --accent-violet-bg: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  --accent-violet-border: rgba(139, 92, 246, 0.35);
+  --accent-blue-bg: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  --accent-blue-border: rgba(59, 130, 246, 0.35);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 12px 28px rgba(0, 0, 0, 0.06);
+  --radius-card: 1rem;
+  --radius-card-lg: 1.25rem;
 }
+
+.dark {
+  --surface-page: linear-gradient(165deg, #0f172a 0%, #0c1222 45%, #020617 100%);
+  --surface-page-color: #0f172a;
+  --surface-card: rgba(30, 41, 59, 0.85);
+  --surface-card-hover: rgba(51, 65, 85, 0.9);
+  --surface-elevated: rgba(51, 65, 85, 0.95);
+  --border-subtle: rgba(71, 85, 105, 0.4);
+  --border-default: rgba(71, 85, 105, 0.55);
+  --border-strong: rgba(100, 116, 139, 0.65);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --accent-violet-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.18) 0%, rgba(124, 58, 237, 0.12) 100%);
+  --accent-violet-border: rgba(167, 139, 250, 0.35);
+  --accent-blue-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(37, 99, 235, 0.12) 100%);
+  --accent-blue-border: rgba(96, 165, 250, 0.35);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+/* Theme-aware utility classes (use in edit flow and app shell) */
+.bg-surface-page { background: var(--surface-page); background-color: var(--surface-page-color); }
+.bg-surface-page-color { background-color: var(--surface-page-color); }
+.bg-surface-card { background: var(--surface-card); }
+.bg-surface-elevated { background: var(--surface-elevated); }
+.border-subtle { border-color: var(--border-subtle); }
+.border-default { border-color: var(--border-default); }
+.border-strong { border-color: var(--border-strong); }
+.text-theme-primary { color: var(--text-primary); }
+.text-theme-secondary { color: var(--text-secondary); }
+.text-theme-muted { color: var(--text-muted); }
+.shadow-theme-card { box-shadow: var(--shadow-card); }
+.shadow-theme-card-hover { box-shadow: var(--shadow-card-hover); }
+.radius-card { border-radius: var(--radius-card); }
+.radius-card-lg { border-radius: var(--radius-card-lg); }
+.bg-accent-violet { background: var(--accent-violet-bg); border: 1px solid var(--accent-violet-border); }
+.bg-accent-blue { background: var(--accent-blue-bg); border: 1px solid var(--accent-blue-border); }
+.bg-divider { background-color: var(--border-subtle); }
 
 /* ===== BASE STYLES ===== */
 
@@ -505,37 +565,39 @@ select:focus {
 
 /* ===== MODERN CARD STYLES ===== */
 
-/* Enhanced Card Styles for Better Readability */
+/* Theme-aware card (light + dark via CSS variables) */
 .card-modern {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-base);
+  box-shadow: var(--shadow-card);
   transition: all var(--transition-base);
   padding: var(--space-readable-md);
 }
 
 .card-modern:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-card-hover);
+  background: var(--surface-card-hover);
 }
 
+/* Legacy dark card: use .card-modern for theme-aware styling */
 .card-modern-dark {
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--surface-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-base);
+  box-shadow: var(--shadow-card);
   transition: all var(--transition-base);
 }
 
 .card-modern-dark:hover {
   transform: translateY(-2px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card-hover);
+  background: var(--surface-card-hover);
 }
 
 /* ===== GRADIENT UTILITIES ===== */

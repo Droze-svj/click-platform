@@ -57,6 +57,100 @@ export default function LibraryPage() {
   const [newFolderName, setNewFolderName] = useState('')
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [selectMode, setSelectMode] = useState(false)
+  const [tagModalIds, setTagModalIds] = useState<string[] | null>(null)
+  const [tagInput, setTagInput] = useState('')
+  const [moveModalIds, setMoveModalIds] = useState<string[] | null>(null)
+  const [moveFolderId, setMoveFolderId] = useState('')
+  const [exportModalIds, setExportModalIds] = useState<string[] | null>(null)
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json')
+  const [busy, setBusy] = useState(false)
+
+  const handleTag = async () => {
+    if (!tagModalIds?.length || !tagInput.trim()) return
+    setBusy(true)
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post(
+        `${API_URL}/batch/tag`,
+        { contentIds: tagModalIds, tags: [tagInput.trim()], action: 'add' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      showToast(`Tag added to ${tagModalIds.length} item(s)`, 'success')
+      setTagModalIds(null)
+      setTagInput('')
+      loadData()
+      setSelectedItems((prev) => prev.filter((id) => !tagModalIds.includes(id)))
+    } catch (error: any) {
+      showToast(error.response?.data?.error || 'Failed to add tag', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleMove = async () => {
+    if (!moveModalIds?.length) return
+    setBusy(true)
+    try {
+      const token = localStorage.getItem('token')
+      const folderId = moveFolderId === 'none' || !moveFolderId ? null : moveFolderId
+      await axios.post(
+        `${API_URL}/batch/update`,
+        { contentIds: moveModalIds, updates: { folderId } },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      showToast(`Moved ${moveModalIds.length} item(s)`, 'success')
+      setMoveModalIds(null)
+      setMoveFolderId('')
+      loadData()
+    } catch (error: any) {
+      showToast(error.response?.data?.error || 'Failed to move', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleExport = async () => {
+    if (!exportModalIds?.length) return
+    setBusy(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.post(
+        `${API_URL}/library/export`,
+        { assetIds: exportModalIds, format: exportFormat },
+        { headers: { Authorization: `Bearer ${token}` }, responseType: exportFormat === 'csv' ? 'blob' : 'json' }
+      )
+      if (exportFormat === 'csv') {
+        const blob = new Blob([res.data], { type: 'text/csv' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `library-export-${Date.now()}.csv`
+        a.click()
+        window.URL.revokeObjectURL(url)
+      } else {
+        const data = res.data?.data ?? res.data
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `library-export-${Date.now()}.json`
+        a.click()
+        window.URL.revokeObjectURL(url)
+      }
+      showToast(`Exported ${exportModalIds.length} item(s)`, 'success')
+      setExportModalIds(null)
+    } catch (error: any) {
+      showToast('Export failed', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
 
   useEffect(() => {
     if (!user) {
@@ -216,12 +310,20 @@ export default function LibraryPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Content Library</h1>
-          <button
-            onClick={() => setShowCreateFolder(true)}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-          >
-            + New Folder
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelectMode(!selectMode)}
+              className={`px-4 py-2 rounded-lg border ${selectMode ? 'bg-purple-100 text-purple-800 border-purple-400' : 'bg-white border-gray-300 hover:bg-gray-50'}`}
+            >
+              {selectMode ? 'Cancel select' : 'Select items'}
+            </button>
+            <button
+              onClick={() => setShowCreateFolder(true)}
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            >
+              + New Folder
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -243,9 +345,8 @@ export default function LibraryPage() {
                 <div className="space-y-1">
                   <button
                     onClick={() => setSelectedFolder(null)}
-                    className={`w-full text-left px-3 py-2 rounded ${
-                      selectedFolder === null ? 'bg-purple-100 text-purple-800' : 'hover:bg-gray-100'
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded ${selectedFolder === null ? 'bg-purple-100 text-purple-800' : 'hover:bg-gray-100'
+                      }`}
                   >
                     All Content
                   </button>
@@ -253,9 +354,8 @@ export default function LibraryPage() {
                     <button
                       key={folder._id}
                       onClick={() => setSelectedFolder(folder._id)}
-                      className={`w-full text-left px-3 py-2 rounded flex items-center gap-2 ${
-                        selectedFolder === folder._id ? 'bg-purple-100 text-purple-800' : 'hover:bg-gray-100'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded flex items-center gap-2 ${selectedFolder === folder._id ? 'bg-purple-100 text-purple-800' : 'hover:bg-gray-100'
+                        }`}
                     >
                       <div
                         className="w-3 h-3 rounded-full"
@@ -274,11 +374,10 @@ export default function LibraryPage() {
                     <button
                       key={tag}
                       onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        selectedTag === tag
+                      className={`px-3 py-1 rounded text-sm ${selectedTag === tag
                           ? 'bg-purple-600 text-white'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
+                        }`}
                     >
                       #{tag}
                     </button>
@@ -293,11 +392,10 @@ export default function LibraryPage() {
                     <button
                       key={category}
                       onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
-                      className={`w-full text-left px-3 py-2 rounded text-sm ${
-                        selectedCategory === category
+                      className={`w-full text-left px-3 py-2 rounded text-sm ${selectedCategory === category
                           ? 'bg-purple-100 text-purple-800'
                           : 'hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       {category}
                     </button>
@@ -308,9 +406,8 @@ export default function LibraryPage() {
               <div>
                 <button
                   onClick={() => setShowFavorites(!showFavorites)}
-                  className={`w-full text-left px-3 py-2 rounded ${
-                    showFavorites ? 'bg-yellow-100 text-yellow-800' : 'hover:bg-gray-100'
-                  }`}
+                  className={`w-full text-left px-3 py-2 rounded ${showFavorites ? 'bg-yellow-100 text-yellow-800' : 'hover:bg-gray-100'
+                    }`}
                 >
                   ⭐ Favorites
                 </button>
@@ -325,8 +422,18 @@ export default function LibraryPage() {
                 {content.map((item) => (
                   <div
                     key={item._id}
-                    className="border rounded-lg p-4 hover:shadow-lg transition-shadow"
+                    className={`border rounded-lg p-4 hover:shadow-lg transition-shadow ${selectMode && selectedItems.includes(item._id) ? 'ring-2 ring-purple-500' : ''}`}
                   >
+                    {selectMode && (
+                      <div className="mb-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(item._id)}
+                          onChange={() => toggleSelect(item._id)}
+                          className="rounded"
+                        />
+                      </div>
+                    )}
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
                         <h3 className="font-semibold truncate">{item.title || 'Untitled'}</h3>
@@ -393,6 +500,7 @@ export default function LibraryPage() {
             <EnhancedBatchOperations
               selectedItems={selectedItems}
               type="content"
+              folders={folders}
               onComplete={() => {
                 loadData()
                 setSelectedItems([])
@@ -406,7 +514,7 @@ export default function LibraryPage() {
                 try {
                   const token = localStorage.getItem('token')
                   await axios.post(
-                    `${API_URL}/batch/delete-content`,
+                    `${API_URL}/batch/delete`,
                     { contentIds: ids },
                     { headers: { Authorization: `Bearer ${token}` } }
                   )
@@ -417,20 +525,114 @@ export default function LibraryPage() {
                   showToast(error.response?.data?.error || 'Failed to delete', 'error')
                 }
               }}
-              onTag={(ids) => {
-                // Handle tagging
-                showToast('Tag feature coming soon', 'info')
-              }}
+              onTag={(ids) => setTagModalIds(ids)}
               onMove={(ids) => {
-                // Handle moving to folder
-                showToast('Move feature coming soon', 'info')
+                setMoveModalIds(ids)
+                setMoveFolderId('none')
               }}
               onExport={(ids) => {
-                // Handle export
-                showToast('Export feature coming soon', 'info')
+                setExportModalIds(ids)
+                setExportFormat('json')
               }}
             />
           </>
+        )}
+
+        {/* Tag Modal */}
+        {tagModalIds && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Add tag to {tagModalIds.length} item(s)</h2>
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="Tag name"
+                className="w-full px-4 py-2 border rounded-lg mb-4"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => { setTagModalIds(null); setTagInput('') }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleTag}
+                  disabled={busy || !tagInput.trim()}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {busy ? 'Adding...' : 'Add tag'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Move Modal */}
+        {moveModalIds && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Move {moveModalIds.length} item(s) to folder</h2>
+              <select
+                value={moveFolderId}
+                onChange={(e) => setMoveFolderId(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg mb-4"
+              >
+                <option value="none">No folder</option>
+                {folders.map((f) => (
+                  <option key={f._id} value={f._id}>{f.name}</option>
+                ))}
+              </select>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => { setMoveModalIds(null); setMoveFolderId('') }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleMove}
+                  disabled={busy}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {busy ? 'Moving...' : 'Move'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Export Modal */}
+        {exportModalIds && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Export {exportModalIds.length} item(s)</h2>
+              <select
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv')}
+                className="w-full px-4 py-2 border rounded-lg mb-4"
+              >
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+              </select>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setExportModalIds(null)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={busy}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {busy ? 'Exporting...' : 'Export'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {showCreateFolder && (

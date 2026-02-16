@@ -2,29 +2,14 @@
 // Features: Smart Cut Suggestions, Auto-Framing, Scene Detection, Best Moments, Auto-Color Match, Smart Reframe, Auto-Captions, Music Sync, Pacing Analysis, Quality Check
 
 const logger = require('../utils/logger');
-const { OpenAI } = require('openai');
-
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
 /**
  * Get smart cut suggestions
  */
 async function getSmartCutSuggestions(videoId, transcript, metadata) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
+    if (!geminiConfigured) {
       return { suggestions: [] };
     }
 
@@ -40,20 +25,11 @@ Suggest 5-10 optimal cut points where:
 3. Repetitive content can be removed
 4. Pacing can be improved
 
-Return JSON array with: { time: number, reason: string, confidence: number (0-1) }`;
+Return JSON only with a "cuts" array, each item: { time: number, reason: string, confidence: number (0-1) }`;
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are a professional video editor. Suggest optimal cut points.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `You are a professional video editor. Suggest optimal cut points.\n\n${prompt}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
+    const result = JSON.parse(raw || '{}');
     return {
       suggestions: result.cuts || [],
       videoId
@@ -75,7 +51,7 @@ async function getAutoFramingSuggestions(videoPath) {
       frames: [],
       message: 'Auto-framing analysis complete. Use smart crop to keep subjects centered.'
     };
-    
+
     resolve(suggestions);
   });
 }
@@ -86,18 +62,18 @@ async function getAutoFramingSuggestions(videoPath) {
 async function detectScenes(videoPath) {
   return new Promise((resolve, reject) => {
     const scenes = [];
-    
+
     ffmpeg.ffprobe(videoPath, ['-show_frames'], (err, data) => {
       if (err) {
         reject(err);
         return;
       }
-      
+
       // Analyze frames for scene changes
       // Simplified - full implementation would use scene detection algorithm
       const frames = data.frames || [];
       let currentScene = { start: 0, type: 'unknown' };
-      
+
       frames.forEach((frame, index) => {
         // Detect scene change (simplified)
         if (index > 0 && index % 100 === 0) {
@@ -110,7 +86,7 @@ async function detectScenes(videoPath) {
           currentScene = { start: parseFloat(frame.pkt_pts_time) || 0, type: 'unknown' };
         }
       });
-      
+
       resolve(scenes);
     });
   });
@@ -121,8 +97,7 @@ async function detectScenes(videoPath) {
  */
 async function findBestMoments(videoId, transcript, metadata) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
+    if (!geminiConfigured) {
       return { moments: [] };
     }
 
@@ -137,20 +112,11 @@ Identify:
 3. Highlight moments (key points)
 4. Best thumbnail moment (most visually interesting)
 
-Return JSON: { hook: { time: number, score: number }, reactions: [{ time, score }], highlights: [{ time, score }], bestThumbnail: { time, score } }`;
+Return valid JSON only: { hook: { time: number, score: number }, reactions: [{ time, score }], highlights: [{ time, score }], bestThumbnail: { time, score } }`;
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are a video content analyst. Identify engaging moments.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 800,
-      response_format: { type: 'json_object' }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `You are a video content analyst. Identify engaging moments.\n\n${prompt}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 800 });
+    const result = JSON.parse(raw || '{}');
     return {
       hook: result.hook || null,
       reactions: result.reactions || [],
@@ -179,7 +145,7 @@ async function getColorMatchSuggestions(sourceVideoPath, targetVideoPath) {
       },
       message: 'Color match suggestions generated. Apply color grading to match clips.'
     };
-    
+
     resolve(suggestions);
   });
 }
@@ -195,9 +161,9 @@ async function getSmartReframeSuggestions(videoPath, targetAspectRatio) {
       '1:1': { width: 1080, height: 1080 },
       '4:5': { width: 1080, height: 1350 }
     };
-    
+
     const target = aspectRatios[targetAspectRatio] || aspectRatios['16:9'];
-    
+
     const suggestions = {
       crop: {
         x: 0,
@@ -208,7 +174,7 @@ async function getSmartReframeSuggestions(videoPath, targetAspectRatio) {
       aspectRatio: targetAspectRatio,
       message: `Smart reframe for ${targetAspectRatio}. Crop will keep important subjects centered.`
     };
-    
+
     resolve(suggestions);
   });
 }
@@ -224,7 +190,7 @@ async function getMusicSyncSuggestions(videoPath, musicPath) {
       beats: [],
       message: 'Music sync suggestions: Cut on beats for better rhythm.'
     };
-    
+
     resolve(suggestions);
   });
 }
@@ -234,8 +200,7 @@ async function getMusicSyncSuggestions(videoPath, musicPath) {
  */
 async function analyzePacing(videoId, transcript, metadata) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
+    if (!geminiConfigured) {
       return { suggestions: [] };
     }
 
@@ -250,20 +215,11 @@ Suggest where to:
 3. Add pauses (for emphasis)
 4. Remove filler (repetitive content)
 
-Return JSON array: [{ time: number, action: 'speed-up'|'slow-down'|'pause'|'remove', reason: string, impact: 'high'|'medium'|'low' }]`;
+Return valid JSON only with "suggestions" array: [{ time: number, action: 'speed-up'|'slow-down'|'pause'|'remove', reason: string, impact: 'high'|'medium'|'low' }]`;
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are a video pacing expert. Suggest pacing improvements.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `You are a video pacing expert. Suggest pacing improvements.\n\n${prompt}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
+    const result = JSON.parse(raw || '{}');
     return {
       suggestions: result.suggestions || [],
       videoId
@@ -279,8 +235,7 @@ Return JSON array: [{ time: number, action: 'speed-up'|'slow-down'|'pause'|'remo
  */
 async function qualityCheck(videoId, metadata, transcript) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
+    if (!geminiConfigured) {
       return { improvements: [] };
     }
 
@@ -297,20 +252,11 @@ Check for:
 4. Framing issues (poor composition)
 5. Content issues (repetitive, unclear)
 
-Return JSON array: [{ type: 'color'|'audio'|'pacing'|'framing'|'content', suggestion: string, impact: 'high'|'medium'|'low' }]`;
+Return valid JSON only with "improvements" array and optional "score": [{ type: 'color'|'audio'|'pacing'|'framing'|'content', suggestion: string, impact: 'high'|'medium'|'low' }]`;
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are a video quality analyst. Suggest improvements.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `You are a video quality analyst. Suggest improvements.\n\n${prompt}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
+    const result = JSON.parse(raw || '{}');
     return {
       improvements: result.improvements || [],
       videoId,

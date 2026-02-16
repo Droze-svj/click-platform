@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import { sendDebugLog as sendDebugLogUtil } from '../utils/debugLog'
 
 interface DebugWrapperProps {
   children: React.ReactNode
@@ -40,26 +41,14 @@ export default function DebugWrapper({
   const lastPropsRef = useRef<any>(null)
   const mountTimeRef = useRef<number>(Date.now())
 
-  // Debug logging function
-  const sendDebugLog = (message: string, data: any) => {
+  const sendDebugLog = (message: string, data: Record<string, unknown>) => {
     console.log('DebugWrapper:', message, { componentName, ...data })
-    // Use local debug API instead of external service
-    fetch('/api/debug/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        component: 'DebugWrapper',
-        message: `debug_wrapper_${message}`,
-        data: {
-          componentName,
-          ...data,
-          timestamp: Date.now(),
-          sessionId: 'debug-session',
-          runId: 'run-debug-wrapper'
-        }
-      }),
-    }).catch(() => {})
-    // #endregion
+    sendDebugLogUtil('DebugWrapper', `debug_wrapper_${message}`, {
+      componentName,
+      ...data,
+      sessionId: 'debug-session',
+      runId: 'run-debug-wrapper',
+    })
   }
 
   // Component lifecycle tracking

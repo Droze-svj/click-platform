@@ -57,7 +57,7 @@ router.post('/schedule', auth, async (req, res) => {
 router.get('/', auth, async (req, res) => {
   try {
     const { platform, status, startDate, endDate } = req.query;
-    
+
     const query = { userId: req.user._id };
     if (platform) query.platform = platform;
     if (status) query.status = status;
@@ -93,7 +93,7 @@ router.put('/:postId', auth, async (req, res) => {
     }
 
     const { content, scheduledTime, status } = req.body;
-    
+
     if (content) post.content = { ...post.content, ...content };
     if (scheduledTime) post.scheduledTime = new Date(scheduledTime);
     if (status) post.status = status;
@@ -191,14 +191,32 @@ cron.schedule('* * * * *', async () => {
 
     for (const post of posts) {
       try {
-        // Check if user has connected the platform
-        const connection = await require('../models/SocialConnection').findOne({
+        // Check if user has connected the platform (SocialConnection or User.oauth for LinkedIn/Facebook)
+        let hasConnection = false;
+        const conn = await require('../models/SocialConnection').findOne({
           userId: post.userId,
           platform: post.platform,
           isActive: true
         });
+        if (conn) {
+          hasConnection = true;
+        } else if (['linkedin', 'facebook'].includes(post.platform?.toLowerCase())) {
+          const User = require('../models/User');
+          const user = await User.findById(post.userId).select('oauth').lean();
+          if (post.platform?.toLowerCase() === 'facebook') {
+            hasConnection = !!(user?.oauth?.facebook?.connected);
+          } else if (post.platform?.toLowerCase() === 'linkedin') {
+            try {
+              const { getConnectionStatus } = require('../services/linkedinOAuthService');
+              const status = await getConnectionStatus(post.userId?.toString());
+              hasConnection = !!(status?.connected);
+            } catch (_) {
+              hasConnection = !!(user?.oauth?.linkedin?.connected);
+            }
+          }
+        }
 
-        if (connection) {
+        if (hasConnection) {
           // Post directly to platform
           try {
             const result = await postToSocialMedia(
@@ -260,9 +278,9 @@ cron.schedule('* * * * *', async () => {
     if (error.name === 'MongoServerError' || error.message?.includes('buffering timed out') || error.message?.includes('connection')) {
       // MongoDB connection issue - log but don't spam
       if (Date.now() % 60000 < 1000) { // Log roughly once per minute
-        logger.debug('Scheduler cron skipped - MongoDB connection issue', { 
+        logger.debug('Scheduler cron skipped - MongoDB connection issue', {
           error: error.message,
-          readyState: mongoose.connection.readyState 
+          readyState: mongoose.connection.readyState
         });
       }
     } else {

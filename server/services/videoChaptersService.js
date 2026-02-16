@@ -1,24 +1,7 @@
 // Video Chapters Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for video chapters', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Auto-generate video chapters
@@ -49,30 +32,13 @@ Provide:
 
 Format as JSON array with objects containing: title (string), startTime (seconds), endTime (seconds), description (string), topics (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate chapters');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a video chaptering expert. Create logical, engaging chapters that help viewers navigate content.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.6,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a video chaptering expert. Create logical, engaging chapters that help viewers navigate content.\n\n${prompt}`;
+    const chaptersText = await geminiGenerate(fullPrompt, { temperature: 0.6, maxTokens: 2000 });
 
-    const chaptersText = response.choices[0].message.content;
-    
     let chapters;
     try {
       chapters = JSON.parse(chaptersText);

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
-import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, RefreshCw, Download, Eye, BarChart3, Award, Edit, Target, Zap } from 'lucide-react'
+import { useAuth } from '../../../../../hooks/useAuth'
+import { useSocket } from '../../../../../hooks/useSocket'
+import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, Palette } from 'lucide-react'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
 
@@ -35,11 +37,14 @@ type EditMode = 'selection' | 'manual' | 'ai-auto'
 export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
   const videoId = params.videoId
+  const { user } = useAuth()
+  const { socket, connected, on, off } = useSocket(user?.id || null)
   const [video, setVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editMode, setEditMode] = useState<EditMode>('selection')
   const [processing, setProcessing] = useState(false)
+  const [liveProgress, setLiveProgress] = useState<{ stage: string; percent: number; message: string } | null>(null)
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -121,6 +126,7 @@ export default function VideoEditPage({ params }: PageProps) {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [showAnalysis, setShowAnalysis] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [editingOptions, setEditingOptions] = useState({
     removeSilence: true,
     optimizePacing: true,
@@ -181,6 +187,7 @@ export default function VideoEditPage({ params }: PageProps) {
   const [minSceneLength, setMinSceneLength] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.minSceneLength) || '1' : '1'))
   const [editJobId, setEditJobId] = useState<string | null>(null)
   const [newVideoScore, setNewVideoScore] = useState<{ score: number; factors?: { name: string; value: string; impact: string }[] } | null>(null)
+  const [tipsExpanded, setTipsExpanded] = useState(false)
   const videoPreviewRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -197,6 +204,48 @@ export default function VideoEditPage({ params }: PageProps) {
     localStorage.setItem(STORAGE_KEYS.pacingIntensity, pacingIntensity)
   }, [editPreset, captionStyle, usePreciseScenes, minSceneLength, clipTargetLength, clipCount, contentGenre, prioritizeHook, exportFormats, pacingIntensity])
 
+  // Live progress from backend socket during AI auto-edit (when no jobId)
+  useEffect(() => {
+    if (!processing || !socket || !connected || !videoId) {
+      if (!processing) setLiveProgress(null)
+      return
+    }
+    const handler = (payload: { videoId?: string; stage?: string; percent?: number; message?: string }) => {
+      if (payload.videoId && payload.videoId !== videoId) return
+      setLiveProgress({
+        stage: payload.stage || 'editing',
+        percent: typeof payload.percent === 'number' ? payload.percent : 0,
+        message: payload.message || 'Processing…',
+      })
+    }
+    on('video:edit:progress', handler)
+    return () => {
+      off('video:edit:progress', handler)
+    }
+  }, [processing, socket, connected, videoId, on, off])
+
+  // Refetch video after AI edit success so state has updated originalFile.url (edited file)
+  const loadVideoOnce = useRef(false)
+  useEffect(() => {
+    if (!aiEditResult || !videoId || loadVideoOnce.current) return
+    loadVideoOnce.current = true
+    apiGet<any>(`/video/${videoId}`)
+      .then((res) => {
+        const data = res?.data || res
+        if (!data?.originalFile?.url) return
+        let url = data.originalFile.url
+        if (url.startsWith('/uploads/')) {
+          const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001'
+          url = `${backendUrl}${url}`
+        } else if (url.startsWith('/') && !url.startsWith('http')) {
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5001'
+          url = `${baseUrl}${url}`
+        }
+        setVideo((prev) => (prev ? { ...prev, originalFile: { ...prev.originalFile, url } } : null))
+      })
+      .catch(() => { })
+  }, [aiEditResult, videoId])
+
   // Fetch new video score when we have a successful edit result (backend has updated content)
   useEffect(() => {
     if (!aiEditResult || !videoId) return
@@ -209,11 +258,36 @@ export default function VideoEditPage({ params }: PageProps) {
       .catch(() => { })
   }, [aiEditResult, videoId])
 
+  // Keyboard shortcuts on selection screen: M = manual, A = AI auto (must be before any early return)
+  const handleEditModeSelect = useCallback((mode: 'manual' | 'ai-auto') => {
+    setEditMode(mode)
+    setProcessingError('')
+    setAiEditResult(null)
+    setEditJobId(null)
+  }, [])
+  useEffect(() => {
+    if (editMode !== 'selection' || !video) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      const key = e.key?.toLowerCase()
+      if (key === 'm') {
+        e.preventDefault()
+        handleEditModeSelect('manual')
+      } else if (key === 'a') {
+        e.preventDefault()
+        handleEditModeSelect('ai-auto')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [editMode, video, handleEditModeSelect])
+
   // Analyze video before editing (pass duration from video element when loaded for accuracy)
   const handleAnalyzeVideo = async () => {
     setAnalyzing(true)
     setShowAnalysis(false)
     setAiAnalysis(null)
+    setAnalysisError(null)
     const durationFromVideo = videoPreviewRef.current?.duration
     const duration = (typeof durationFromVideo === 'number' && Number.isFinite(durationFromVideo) && durationFromVideo > 0) ? durationFromVideo : 0
 
@@ -233,22 +307,7 @@ export default function VideoEditPage({ params }: PageProps) {
     } catch (error: any) {
       console.error('Video analysis failed:', error)
       setAnalyzing(false)
-      // Don't block editing if analysis fails
-    }
-  }
-
-  const handleEditModeSelect = async (mode: 'manual' | 'ai-auto') => {
-    if (mode === 'ai-auto') {
-      // Don't start editing immediately - let user configure options first
-      setEditMode(mode)
-      setProcessingError('')
-      setAiEditResult(null)
-      setEditJobId(null)
-    } else {
-      setEditMode(mode)
-      setProcessingError('')
-      setAiEditResult(null)
-      setEditJobId(null)
+      setAnalysisError(error.response?.data?.error || error.message || 'Analysis failed. You can still configure and run AI edit.')
     }
   }
 
@@ -258,6 +317,8 @@ export default function VideoEditPage({ params }: PageProps) {
     setAiEditResult(null)
     setNewVideoScore(null)
     setEditJobId(null)
+    setLiveProgress(null)
+    loadVideoOnce.current = false
 
     try {
       // Map simple toggles to full backend options and include style/preset
@@ -295,23 +356,22 @@ export default function VideoEditPage({ params }: PageProps) {
         outputFormat
       })
 
-      // Store job ID if provided for progress tracking
-      if (result.data?.jobId || result.jobId) {
-        setEditJobId(result.data?.jobId || result.jobId)
+      // Store job ID if provided for progress tracking (async flow)
+      const jobId = result.data?.jobId || result.jobId
+      if (jobId) {
+        setEditJobId(jobId)
+        // Leave processing true; VideoProgressTracker onComplete will set result and setProcessing(false)
       }
 
-      // If result is immediate (not async), set it
-      if (result.data?.editedVideoUrl || result.editedVideoUrl) {
+      // If result is immediate (sync), set it and stop loading
+      const editedUrl = result.data?.editedVideoUrl ?? result.editedVideoUrl
+      if (editedUrl) {
         setAiEditResult(result)
         setProcessing(false)
-      } else {
-        // If async, we'll track progress
-        // For now, simulate completion after a delay
-        // In production, this would poll the progress endpoint
-        setTimeout(() => {
-          setAiEditResult(result)
-          setProcessing(false)
-        }, 3000)
+      } else if (!jobId) {
+        // No video URL and no job ID: unexpected response
+        setProcessingError(result.data?.error || result.message || 'No result from server. Please try again.')
+        setProcessing(false)
       }
     } catch (error: any) {
       console.error('AI auto-edit failed:', error)
@@ -322,10 +382,10 @@ export default function VideoEditPage({ params }: PageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0f1115] flex items-center justify-center">
+      <div className="min-h-screen bg-surface-page flex items-center justify-center transition-colors duration-300">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-slate-300 dark:border-slate-600 border-t-blue-500 mx-auto mb-4" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">Loading video…</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[var(--border-default)] border-t-blue-500 dark:border-t-blue-400 mx-auto mb-4" />
+          <p className="text-sm text-theme-secondary">Loading video…</p>
         </div>
       </div>
     )
@@ -333,13 +393,13 @@ export default function VideoEditPage({ params }: PageProps) {
 
   if (error || !video) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0f1115] flex items-center justify-center p-4">
-        <div className="max-w-sm w-full bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 text-center">
-          <div className="flex items-center justify-center w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full mb-4 mx-auto">
+      <div className="min-h-screen bg-surface-page flex items-center justify-center p-4 transition-colors duration-300">
+        <div className="max-w-sm w-full bg-surface-card radius-card-lg border border-subtle shadow-theme-card p-8 text-center">
+          <div className="flex items-center justify-center w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl mb-4 mx-auto">
             <AlertCircle className="w-7 h-7 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Video not found</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <h2 className="text-lg font-bold mb-2 text-theme-primary">Video not found</h2>
+          <p className="text-sm text-theme-secondary mb-6">
             {error || 'This video could not be loaded.'}
           </p>
           <button
@@ -354,53 +414,64 @@ export default function VideoEditPage({ params }: PageProps) {
   }
 
   const videoUrl = video.originalFile?.url
+  // After AI edit, open the edited video in the manual editor (or refetched video URL)
+  const editorVideoUrl = (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl
 
-  // Show selection screen — modern, simplified
+  // Show selection screen — theme-aware modern creative
   if (editMode === 'selection') {
     return (
-      <div className="min-h-screen w-full bg-slate-50 dark:bg-[#0f1115]">
-        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <div className="min-h-screen w-full bg-surface-page transition-colors duration-300">
+        <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Edit</span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-theme-muted mb-2">
+                <span className="w-1 h-3 rounded-full bg-violet-500 dark:bg-violet-400" aria-hidden />
+                Edit
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold text-theme-primary tracking-tight">
                 Edit video
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-1 truncate max-w-md">
+              <p className="text-theme-secondary mt-1 truncate max-w-md">
                 {video?.title || 'Untitled Video'}
               </p>
             </div>
             <button
               onClick={() => router.push('/dashboard/video')}
-              className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 dark:focus:ring-offset-[#0f1115] rounded-lg"
+              className="inline-flex items-center gap-2 text-sm font-medium text-theme-secondary hover:text-theme-primary transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 focus:ring-offset-2 dark:focus:ring-offset-[#0f172a] rounded-xl px-4 py-2.5 bg-surface-card border border-subtle hover:border-default shadow-theme-card"
             >
-              ← Back to library
+              <ChevronDown className="w-4 h-4 rotate-90" aria-hidden />
+              Back to library
             </button>
           </div>
 
-          <div className="relative aspect-video max-h-[280px] sm:max-h-[320px] bg-slate-900 dark:bg-black rounded-2xl overflow-hidden mb-8 shadow-xl ring-1 ring-slate-200/50 dark:ring-slate-800">
+          <div className="relative w-full min-h-[500px] h-[70vh] max-h-[840px] bg-slate-900 dark:bg-black rounded-[var(--radius-card-lg)] overflow-hidden mb-10 shadow-theme-card-hover ring-1 border-subtle">
             <video src={videoUrl} controls className="w-full h-full object-contain" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none rounded-b-[var(--radius-card-lg)]" aria-hidden />
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
-            <span className="flex h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-            <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Choose workflow</span>
-            <span className="flex h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <div className="flex items-center gap-3 mb-3">
+            <span className="flex h-px flex-1 bg-divider" />
+            <span className="text-xs font-semibold text-theme-muted uppercase tracking-wider">Choose workflow</span>
+            <span className="flex h-px flex-1 bg-divider" />
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <p className="text-sm text-theme-secondary mb-6 text-center max-w-lg mx-auto">
+            Try <strong className="text-theme-primary">AI Auto Edit</strong> for a quick polish, then <strong className="text-theme-primary">Manual Edit</strong> to refine cuts, captions, and style.
+          </p>
+          <p className="text-[10px] text-theme-muted text-center mb-6" aria-hidden>Press <kbd className="px-1.5 py-0.5 rounded bg-surface-card border border-subtle font-mono text-theme-secondary">M</kbd> for Manual · <kbd className="px-1.5 py-0.5 rounded bg-surface-card border border-subtle font-mono text-theme-secondary">A</kbd> for AI</p>
+          <div className="grid sm:grid-cols-2 gap-5">
             <button
               onClick={() => handleEditModeSelect('manual')}
-              className="group flex items-start gap-4 p-6 rounded-2xl bg-white dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700 hover:border-violet-500/60 hover:shadow-lg hover:shadow-violet-500/10 transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:ring-offset-2 dark:focus:ring-offset-[#0f1115]"
+              className="group flex items-start gap-5 p-7 radius-card-lg bg-surface-card border border-subtle hover:border-violet-400 dark:hover:border-violet-500/60 hover:shadow-theme-card-hover hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:ring-offset-2 dark:focus:ring-offset-[var(--surface-page-color)] shadow-theme-card animate-in fade-in slide-in-from-bottom-4 duration-300"
             >
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center group-hover:bg-violet-200 dark:group-hover:bg-violet-900/60 transition-colors">
-                <Edit3 className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              <div className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-inner bg-accent-violet group-hover:opacity-90">
+                <Edit3 className="w-7 h-7 text-violet-600 dark:text-violet-400" />
               </div>
-              <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Manual edit</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Timeline, effects, captions, and full export control.
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl font-semibold text-theme-primary mb-1.5">Manual edit</h2>
+                <p className="text-sm text-theme-secondary leading-relaxed">
+                  Full timeline, effects, captions, and export control. Best when you know exactly what you want.
                 </p>
-                <span className="inline-flex items-center mt-3 text-sm font-medium text-violet-600 dark:text-violet-400 group-hover:gap-2 gap-1 transition-all">
+                <span className="inline-flex items-center mt-4 text-sm font-semibold text-violet-600 dark:text-violet-400 group-hover:gap-2 gap-1.5 transition-all">
                   Open editor
                   <Play className="w-4 h-4" />
                 </span>
@@ -410,21 +481,25 @@ export default function VideoEditPage({ params }: PageProps) {
             <button
               onClick={() => handleEditModeSelect('ai-auto')}
               disabled={processing}
-              className="group flex items-start gap-4 p-6 rounded-2xl bg-white dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500/60 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-200 text-left disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 dark:focus:ring-offset-[#0f1115]"
+              className="group relative flex items-start gap-5 p-7 radius-card-lg bg-surface-card border border-subtle hover:border-blue-400 dark:hover:border-blue-500/60 hover:shadow-theme-card-hover hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:scale-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 dark:focus:ring-offset-[var(--surface-page-color)] shadow-theme-card animate-in fade-in slide-in-from-bottom-4 duration-300"
+              style={{ animationDelay: '75ms' }}
             >
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 transition-colors">
+              <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-blue text-blue-600 dark:text-blue-400">
+                Recommended
+              </span>
+              <div className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-inner bg-accent-blue group-hover:opacity-90">
                 {processing ? (
-                  <Loader2 className="w-6 h-6 text-blue-600 dark:text-blue-400 animate-spin" />
+                  <Loader2 className="w-7 h-7 text-blue-600 dark:text-blue-400 animate-spin" />
                 ) : (
-                  <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <Sparkles className="w-7 h-7 text-blue-600 dark:text-blue-400" />
                 )}
               </div>
-              <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">AI auto edit</h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl font-semibold text-theme-primary mb-1.5">AI auto edit</h2>
+                <p className="text-sm text-theme-secondary leading-relaxed">
                   AI generates rough clips and a starting point—then refine cuts, framing, captions, and B-roll in the editor.
                 </p>
-                <span className="inline-flex items-center mt-3 text-sm font-medium text-blue-600 dark:text-blue-400 group-hover:gap-2 gap-1 transition-all">
+                <span className="inline-flex items-center mt-4 text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:gap-2 gap-1.5 transition-all">
                   {processing ? 'Processing…' : 'Configure & run'}
                   {!processing && <Play className="w-4 h-4" />}
                 </span>
@@ -438,39 +513,59 @@ export default function VideoEditPage({ params }: PageProps) {
 
   // Show manual edit interface
   if (editMode === 'manual') {
+    const urlForEditor = editorVideoUrl || videoUrl
     console.log('🎬 [Video Edit] Rendering ModernVideoEditor with:', {
       videoId,
-      videoUrl,
-      hasVideoUrl: !!videoUrl,
-      videoUrlLength: videoUrl?.length
+      videoUrl: urlForEditor,
+      hasVideoUrl: !!urlForEditor,
+      isEditedVersion: !!aiEditResult?.data?.editedVideoUrl,
     })
 
-    if (!videoUrl) {
+    if (!urlForEditor) {
       return (
-        <div className="fixed inset-0 bg-slate-50 dark:bg-[#0f1115] flex items-center justify-center p-4">
-          <div className="text-center max-w-sm bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-8">
-            <div className="text-4xl mb-4">⚠️</div>
-            <h2 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Video URL not available</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              The video could not be loaded. Check that it was uploaded correctly.
+        <div className="fixed inset-0 bg-surface-page flex items-center justify-center p-4 transition-colors duration-300">
+          <div className="text-center max-w-md w-full bg-surface-card radius-card-lg border border-subtle shadow-theme-card-hover p-8 sm:p-10">
+            <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mx-auto mb-5">
+              <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h2 className="text-xl font-bold mb-2 text-theme-primary">Video not available</h2>
+            <p className="text-sm text-theme-secondary mb-6 leading-relaxed">
+              The video could not be loaded. Check that it was uploaded correctly or try again from the library.
             </p>
-            <button
-              onClick={() => router.push('/dashboard/video')}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium text-sm hover:opacity-90 transition-opacity"
-            >
-              Back to library
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => setEditMode('selection')}
+                className="py-2.5 px-5 rounded-xl border border-subtle text-theme-primary font-medium text-sm bg-surface-elevated hover:opacity-90 transition-opacity"
+              >
+                Choose workflow
+              </button>
+              <button
+                onClick={() => router.push('/dashboard/video')}
+                className="py-2.5 px-5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium text-sm hover:opacity-90 transition-opacity shadow-theme-card"
+              >
+                Back to library
+              </button>
+            </div>
           </div>
         </div>
       )
     }
 
     return (
-      <div className="fixed inset-0 bg-slate-50 dark:bg-[#0f1115] overflow-hidden">
-        {/* Use the actual ModernVideoEditor component - full screen */}
+      <div className="fixed inset-0 bg-surface-page-color overflow-hidden transition-colors duration-300">
+        {/* Floating back to workflow — doesn't block editor */}
+        <button
+          type="button"
+          onClick={() => setEditMode('selection')}
+          className="absolute top-[5px] left-[67px] z-[100] flex items-center gap-2 px-[1px] py-[11px] rounded-xl bg-surface-card border border-subtle text-theme-primary text-sm font-medium shadow-theme-card backdrop-blur-sm hover:bg-surface-card-hover transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:ring-offset-2 dark:focus:ring-offset-[#0f172a] rotate-[360deg]"
+          aria-label="Back to workflow selection"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to workflow
+        </button>
         <DynamicModernVideoEditor
           videoId={videoId}
-          videoUrl={videoUrl}
+          videoUrl={urlForEditor}
         />
       </div>
     )
@@ -491,92 +586,171 @@ export default function VideoEditPage({ params }: PageProps) {
       })
     }
     const jsx = (
-      <div className="min-h-screen w-full bg-slate-50 dark:bg-[#0f1115] pb-28">
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          {/* Header + step */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+      <div className="min-h-screen w-full bg-surface-page pb-28 transition-colors duration-300">
+        <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="min-w-0">
-              <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">AI</span>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Auto edit</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{video?.title || 'Untitled Video'}</p>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI Auto Edit
+              </span>
+              <h1 className="text-2xl font-bold text-theme-primary tracking-tight">Configure & run</h1>
+              <p className="text-sm text-theme-secondary truncate mt-0.5">{video?.title || 'Untitled Video'}</p>
             </div>
             <div className="flex gap-2 shrink-0">
               <button
                 onClick={() => handleAnalyzeVideo()}
                 disabled={analyzing}
-                className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-50 flex items-center gap-2 transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-surface-card border border-subtle text-theme-primary text-sm font-medium hover:bg-surface-card-hover disabled:opacity-50 flex items-center gap-2 transition-colors shadow-theme-card"
               >
                 {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                 {analyzing ? 'Analyzing…' : 'Analyze'}
               </button>
               <button
                 onClick={() => setEditMode('selection')}
-                className="px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="px-4 py-2.5 rounded-xl bg-surface-card border border-subtle text-theme-secondary text-sm font-medium hover:bg-surface-card-hover transition-colors shadow-theme-card"
               >
                 Change mode
               </button>
             </div>
           </div>
+
+          {/* Step indicator: Configure → Run → Result */}
+          <div className="flex items-center gap-2 mb-6">
+            <span className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${!processing && !aiEditResult ? 'bg-accent-blue text-blue-700 dark:text-blue-300' : 'bg-surface-elevated border border-subtle text-theme-muted'}`}>
+              <span className="w-5 h-5 rounded-full bg-blue-500 dark:bg-blue-400 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+              Configure
+            </span>
+            <ChevronRight className="w-4 h-4 text-theme-muted flex-shrink-0" />
+            <span className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${processing ? 'bg-accent-blue text-blue-700 dark:text-blue-300' : 'bg-surface-elevated border border-subtle text-theme-muted'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${processing ? 'bg-blue-500 dark:bg-blue-400 text-white' : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300'}`}>2</span>
+              Run
+            </span>
+            <ChevronRight className="w-4 h-4 text-theme-muted flex-shrink-0" />
+            <span className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full ${aiEditResult ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-surface-elevated border border-subtle text-theme-muted'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${aiEditResult ? 'bg-emerald-500 dark:bg-emerald-400 text-white' : 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-300'}`}>3</span>
+              Result
+            </span>
+          </div>
+
+          {analysisError && !processing && !aiEditResult && (
+            <div className="mb-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>{analysisError}</span>
+              <button type="button" onClick={() => setAnalysisError(null)} className="ml-auto text-amber-600 dark:text-amber-400 hover:underline" aria-label="Dismiss">Dismiss</button>
+            </div>
+          )}
           {!processing && !aiEditResult && (
             <>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">Configure below, then run.</p>
-              <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50 p-3 mb-3">
-                <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Content sharpening checklist</p>
-                <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                  <li><strong>Hooks (1–3s):</strong> Niche-specific opening—not generic &quot;You won&apos;t believe…&quot;</li>
-                  <li><strong>Outcome per clip:</strong> One thing they learn, feel, or do—cut everything else.</li>
-                  <li><strong>Pacing:</strong> Intentional silence and pauses; avoid wall-to-wall noise.</li>
-                  <li><strong>Cut ruthlessly:</strong> If it doesn&apos;t serve the outcome, drop it.</li>
-                </ul>
+              {/* Analyze first callout — when user hasn't run analysis yet */}
+              {!showAnalysis && !aiAnalysis && !analyzing && (
+                <div className="mb-4 p-4 radius-card-lg border border-[var(--accent-blue-border)] bg-accent-blue flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-10 h-10 rounded-xl bg-accent-blue flex items-center justify-center flex-shrink-0">
+                      <Eye className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-theme-primary">Get suggestions before you run</p>
+                      <p className="text-xs text-theme-secondary mt-0.5">Analyze your video for clip length, cuts, and style recommendations.</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAnalyzeVideo()}
+                    className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium transition-colors flex-shrink-0"
+                  >
+                    Analyze video
+                  </button>
+                </div>
+              )}
+
+              <p className="text-sm text-theme-secondary mb-4">Configure options below, then run. Expand tips for best-practice checklists.</p>
+              <div className="radius-card-lg border border-subtle bg-surface-card overflow-hidden mb-4 shadow-theme-card">
+                <button
+                  type="button"
+                  onClick={() => setTipsExpanded((v) => !v)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-card-hover transition-colors"
+                >
+                  <span className="text-sm font-semibold text-theme-primary flex items-center gap-2">
+                    <Award className="w-4 h-4 text-amber-500" />
+                    Tips for better edits
+                  </span>
+                  {tipsExpanded ? <ChevronDown className="w-4 h-4 text-slate-500" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}
+                </button>
+                {tipsExpanded && (
+                  <div className="px-3 pb-3 space-y-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800/80 p-3">
+                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Content sharpening</p>
+                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><strong>Hooks (1–3s):</strong> Niche-specific opening—not generic &quot;You won&apos;t believe…&quot;</li>
+                        <li><strong>Outcome per clip:</strong> One thing they learn, feel, or do—cut everything else.</li>
+                        <li><strong>Pacing:</strong> Intentional silence and pauses; avoid wall-to-wall noise.</li>
+                      </ul>
+                    </div>
+                    <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50/60 dark:bg-violet-900/20 p-3 mb-3">
+                      <p className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">Visual polish</p>
+                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><strong>Brand:</strong> Lock in colors, fonts, lower-third style, logo placement, caption style in <a href="/dashboard/settings?tab=brand" className="text-violet-600 dark:text-violet-400 underline hover:no-underline">Settings → Brand kit</a>.</li>
+                        <li><strong>Motion:</strong> Use subtle zooms and push-ins to emphasize key words or reactions—not constant random movement.</li>
+                        <li><strong>Framing:</strong> 9:16 for short-form; keep key action in center 80% and text in safe area (avoid bottom 20%).</li>
+                        <li><strong>Transitions:</strong> Keep them simple and clean; minimalist edits that serve the message.</li>
+                      </ul>
+                    </div>
+                    <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/20 p-3 mb-3">
+                      <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">Premium audio</p>
+                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><strong>Clean voice:</strong> Reduce noise, tame harsh frequencies; keep speech clearly louder than music (use ducking).</li>
+                        <li><strong>Music + beat:</strong> Choose music that fits the emotion; cut visuals to the beat—don’t just let tracks run under everything.</li>
+                        <li><strong>SFX:</strong> Use sparingly but precisely—whooshes on cuts, hits on key words or transitions; intentional, not spammy.</li>
+                        <li><strong>Mix for mobile:</strong> Check clarity on a phone speaker; short-form is consumed there.</li>
+                      </ul>
+                    </div>
+                    <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-900/20 p-3 mb-3">
+                      <p className="text-[10px] font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider mb-2">AI as assistant, not replacement</p>
+                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><strong>Rough clips first:</strong> Let AI generate a draft, then manually fix awkward cuts/pacing, framing/crops, captions/colors/overlays, and replace generic B-roll with relevant or custom footage.</li>
+                        <li><strong>Transcripts + strategy:</strong> Use AI transcripts to find moments quickly—but choose segments by your strategy, not only &quot;viral score&quot;.</li>
+                        <li><strong>Test variants:</strong> Try multiple versions (hook variants, different captions or first 3s) and keep what actually performs.</li>
+                      </ul>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-900/20 p-3 mb-6">
+                      <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">Platform-native</p>
+                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                        <li><strong>Per platform:</strong> Export for each (TikTok / Reels / Shorts), not one generic export.</li>
+                        <li><strong>Format:</strong> 9:16 vertical, 1080p, 30 fps; keep file sizes reasonable so uploads don’t get compressed badly.</li>
+                        <li><strong>First frame + thumbnail:</strong> Scroll-stopping—bold text and a clear visual of what’s happening, not random frames.</li>
+                        <li><strong>Captions:</strong> Burned-in, concise, key words emphasized, enough time to read (silent viewing).</li>
+                        <li><strong>Tweaks:</strong> Slightly different cuts, titles, or CTAs per platform to feel native (TikTok vs Reels vs Shorts).</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50/60 dark:bg-violet-900/20 p-3 mb-3">
-                <p className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">Visual polish</p>
-                <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                  <li><strong>Brand:</strong> Lock in colors, fonts, lower-third style, logo placement, caption style in <a href="/dashboard/settings?tab=brand" className="text-violet-600 dark:text-violet-400 underline hover:no-underline">Settings → Brand kit</a>.</li>
-                  <li><strong>Motion:</strong> Use subtle zooms and push-ins to emphasize key words or reactions—not constant random movement.</li>
-                  <li><strong>Framing:</strong> 9:16 for short-form; keep key action in center 80% and text in safe area (avoid bottom 20%).</li>
-                  <li><strong>Transitions:</strong> Keep them simple and clean; minimalist edits that serve the message.</li>
-                </ul>
-              </div>
-              <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/20 p-3 mb-3">
-                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">Premium audio</p>
-                <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                  <li><strong>Clean voice:</strong> Reduce noise, tame harsh frequencies; keep speech clearly louder than music (use ducking).</li>
-                  <li><strong>Music + beat:</strong> Choose music that fits the emotion; cut visuals to the beat—don’t just let tracks run under everything.</li>
-                  <li><strong>SFX:</strong> Use sparingly but precisely—whooshes on cuts, hits on key words or transitions; intentional, not spammy.</li>
-                  <li><strong>Mix for mobile:</strong> Check clarity on a phone speaker; short-form is consumed there.</li>
-                </ul>
-              </div>
-              <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-900/20 p-3 mb-3">
-                <p className="text-[10px] font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider mb-2">AI as assistant, not replacement</p>
-                <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                  <li><strong>Rough clips first:</strong> Let AI generate a draft, then manually fix awkward cuts/pacing, framing/crops, captions/colors/overlays, and replace generic B-roll with relevant or custom footage.</li>
-                  <li><strong>Transcripts + strategy:</strong> Use AI transcripts to find moments quickly—but choose segments by your strategy, not only &quot;viral score&quot;.</li>
-                  <li><strong>Test variants:</strong> Try multiple versions (hook variants, different captions or first 3s) and keep what actually performs.</li>
-                </ul>
-              </div>
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-900/20 p-3 mb-6">
-                <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">Platform-native</p>
-                <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                  <li><strong>Per platform:</strong> Export for each (TikTok / Reels / Shorts), not one generic export.</li>
-                  <li><strong>Format:</strong> 9:16 vertical, 1080p, 30 fps; keep file sizes reasonable so uploads don’t get compressed badly.</li>
-                  <li><strong>First frame + thumbnail:</strong> Scroll-stopping—bold text and a clear visual of what’s happening, not random frames.</li>
-                  <li><strong>Captions:</strong> Burned-in, concise, key words emphasized, enough time to read (silent viewing).</li>
-                  <li><strong>Tweaks:</strong> Slightly different cuts, titles, or CTAs per platform to feel native (TikTok vs Reels vs Shorts).</li>
-                </ul>
+              <div className="rounded-xl border border-fuchsia-200 dark:border-fuchsia-800 bg-fuchsia-50/60 dark:bg-fuchsia-900/20 p-3 mb-6 flex items-start gap-3">
+                <div className="flex-shrink-0 p-1.5 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-900/40">
+                  <Palette className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-fuchsia-700 dark:text-fuchsia-400 uppercase tracking-wider mb-1">Creativity &amp; content</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">Refine hooks and captions in <strong>Manual Edit</strong> — use text presets, style bundles, and motion graphics for a consistent, scroll-stopping look.</p>
+                  <button type="button" onClick={() => setEditMode('manual')} className="mt-2 text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 hover:underline">Open in editor →</button>
+                </div>
               </div>
             </>
           )}
 
-          {/* Analysis — compact */}
+          {/* Analysis */}
           {showAnalysis && aiAnalysis && (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 mb-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  </span>
                   Analysis
                 </h2>
-                <button onClick={() => setShowAnalysis(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Close">
+                <button onClick={() => setShowAnalysis(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" aria-label="Close">
                   <XCircle className="w-4 h-4" />
                 </button>
               </div>
@@ -734,10 +908,13 @@ export default function VideoEditPage({ params }: PageProps) {
 
           {/* Configure — single card: output, options, style */}
           {!processing && !aiEditResult && (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6 shadow-sm">
-              <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Configure</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Output, clips, pacing, and style</p>
+            <div className="bg-surface-card radius-card-lg border border-subtle overflow-hidden mb-6 shadow-theme-card border-l-4 border-l-blue-500 dark:border-l-blue-400">
+              <div className="p-4 sm:p-5 border-b border-subtle bg-surface-elevated">
+                <h2 className="text-base font-semibold text-theme-primary flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-theme-muted" />
+                  Configure
+                </h2>
+                <p className="text-xs text-theme-secondary mt-0.5">Output, clips, pacing, and style</p>
               </div>
               <div className="p-4 space-y-5">
                 <div>
@@ -839,16 +1016,18 @@ export default function VideoEditPage({ params }: PageProps) {
 
           {/* Editing Options (collapsible) */}
           {!processing && !aiEditResult && (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+            <div className="bg-surface-card radius-card-lg border border-subtle overflow-hidden mb-6 shadow-theme-card">
               <button
                 onClick={() => setShowOptions(!showOptions)}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors"
+                className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-surface-card-hover transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Options & presets</span>
+                  <div className="w-9 h-9 rounded-xl bg-surface-elevated border border-subtle flex items-center justify-center">
+                    <Settings className="w-4 h-4 text-theme-muted" />
+                  </div>
+                  <span className="text-sm font-semibold text-theme-primary">Options & presets</span>
                 </div>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{showOptions ? 'Hide' : 'Show'}</span>
+                <span className="text-xs font-medium text-theme-muted">{showOptions ? 'Hide' : 'Show'}</span>
               </button>
               {showOptions && (
                 <div className="px-4 pb-4 pt-0 border-t border-slate-100 dark:border-slate-700">
@@ -1064,12 +1243,12 @@ export default function VideoEditPage({ params }: PageProps) {
           )}
 
           {processing ? (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 shadow-sm">
+            <div className="bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 sm:p-10 shadow-lg">
               <div className="text-center mb-6">
-                <div className="inline-flex p-4 rounded-2xl bg-blue-100 dark:bg-blue-900/30 mb-4">
-                  <Loader2 className="w-10 h-10 text-blue-600 dark:text-blue-400 animate-spin" />
+                <div className="inline-flex p-5 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200/80 dark:from-blue-900/40 dark:to-blue-800/30 mb-5 shadow-inner">
+                  <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-spin" />
                 </div>
-                <h2 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Processing your video</h2>
+                <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Processing your video</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Applying your options. Don’t close this page.
                 </p>
@@ -1081,22 +1260,39 @@ export default function VideoEditPage({ params }: PageProps) {
                   <VideoProgressTracker
                     videoId={videoId}
                     operation="ai-auto-edit"
-                    jobId={editJobId}
+                    jobId={editJobId ?? undefined}
                     onComplete={(result: any) => {
-                      setAiEditResult(result)
+                      if (result?.status === 'failed') {
+                        setProcessingError(result?.message || result?.error || 'Processing failed. Try again or use Manual Editor.')
+                        setProcessing(false)
+                        return
+                      }
+                      // Normalize: progress API may return { editedVideoUrl, editsApplied }; success UI expects result.data or result
+                      const normalized = result?.data ? result : { data: { editedVideoUrl: result?.editedVideoUrl, editsApplied: result?.editsApplied } }
+                      setAiEditResult(normalized)
                       setProcessing(false)
                     }}
                   />
                 </div>
               )}
 
-              {/* Manual Progress Indicator (fallback) */}
+              {/* Live progress (socket) or indeterminate fallback when no jobId */}
               {!editJobId && (
                 <div className="mb-6">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: liveProgress ? `${Math.min(100, Math.max(0, liveProgress.percent))}%` : '50%' }}
+                    />
                   </div>
-                  <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-2">Processing your video...</p>
+                  <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-2">
+                    {liveProgress?.message || 'Processing your video…'}
+                  </p>
+                  {liveProgress?.stage && (
+                    <p className="text-center text-xs text-slate-500 dark:text-slate-500 mt-1 capitalize">
+                      {liveProgress.stage.replace(/-/g, ' ')}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -1119,43 +1315,60 @@ export default function VideoEditPage({ params }: PageProps) {
               </div>
             </div>
           ) : processingError ? (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-              <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-4 mx-auto">
+            <div className="bg-white dark:bg-slate-800/90 rounded-2xl border border-red-200 dark:border-red-900/50 p-8 shadow-lg" role="alert" aria-live="polite">
+              <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-2xl mb-5 mx-auto">
                 <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-center text-slate-900 dark:text-white">Processing Failed</h2>
-              <p className="text-slate-600 dark:text-slate-400 text-center mb-6">
+              <h2 className="text-xl font-bold mb-2 text-center text-slate-900 dark:text-white" id="processing-failed-heading">Processing failed</h2>
+              <p className="text-slate-600 dark:text-slate-400 text-center mb-6 max-w-md mx-auto">
                 {processingError}
               </p>
-              <div className="flex justify-center gap-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 text-center">Try again with fewer options or switch to Manual Edit for full control.</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <button
+                  onClick={() => { setProcessingError('') }}
+                  className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                  aria-label="Dismiss and show options"
+                >
+                  Dismiss
+                </button>
                 <button
                   onClick={() => handleEditModeSelect('ai-auto')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
-                  Try Again
+                  Try again
+                </button>
+                <button
+                  onClick={() => setEditMode('manual')}
+                  className="px-4 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors text-sm font-medium"
+                >
+                  Open Manual Editor
                 </button>
                 <button
                   onClick={() => setEditMode('selection')}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2.5 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors text-sm font-medium"
                 >
-                  Back to Selection
+                  Back to selection
                 </button>
               </div>
             </div>
           ) : aiEditResult ? (
-            <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-              {/* Header + actions */}
-              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Edit complete</h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Compare and download your video</p>
+            <div className="bg-white dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg border-t-4 border-t-emerald-500 dark:border-t-emerald-400 animate-in fade-in slide-in-from-bottom-4 duration-300" role="region" aria-label="Edit complete">
+              {/* Header + What's next */}
+              <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-emerald-50/80 to-transparent dark:from-emerald-900/10 dark:to-transparent">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 shadow-inner" aria-hidden="true">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white" id="edit-complete-heading">Edit complete</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5" id="edit-complete-desc">Your video is ready. Choose what to do next.</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-4 mb-3 uppercase tracking-wider">What&apos;s next?</p>
+                <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => {
                       const url = aiEditResult.data?.editedVideoUrl || aiEditResult.editedVideoUrl || videoUrl
@@ -1164,10 +1377,16 @@ export default function VideoEditPage({ params }: PageProps) {
                       a.download = `${video?.title || 'edited-video'}.mp4`
                       a.click()
                     }}
-                    className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-sm font-medium flex items-center gap-2 shadow-sm"
+                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     Download
+                  </button>
+                  <button
+                    onClick={() => setEditMode('manual')}
+                    className="px-4 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors text-sm font-medium"
+                  >
+                    Open in editor
                   </button>
                   <button
                     onClick={() => {
@@ -1183,14 +1402,8 @@ export default function VideoEditPage({ params }: PageProps) {
                     Try different options
                   </button>
                   <button
-                    onClick={() => setEditMode('manual')}
-                    className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
-                  >
-                    Open in editor
-                  </button>
-                  <button
                     onClick={() => setEditMode('selection')}
-                    className="px-4 py-2.5 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-sm"
+                    className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
                   >
                     Change mode
                   </button>
@@ -1198,24 +1411,27 @@ export default function VideoEditPage({ params }: PageProps) {
                 <p className="text-[10px] text-sky-600 dark:text-sky-400 mt-2">Refine in the editor: fix cuts, framing, captions, and B-roll—AI is your assistant, not replacement.</p>
               </div>
 
-              <div className="p-4 sm:p-5 space-y-6">
+              <div className="p-5 sm:p-6 space-y-6">
                 {/* Video comparison */}
                 <div>
-                  <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Compare</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-900 dark:bg-black">
-                      <div className="px-3 py-2 border-b border-slate-700 bg-slate-800/50 dark:bg-slate-800/30">
-                        <span className="text-xs font-medium text-slate-400">Original</span>
+                  <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <Eye className="w-3.5 h-3.5" />
+                    Compare
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-900 dark:bg-black shadow-inner">
+                      <div className="px-4 py-2.5 border-b border-slate-700 bg-slate-800/60 dark:bg-slate-800/40">
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Original</span>
                       </div>
-                      <div className="aspect-video">
+                      <div className="w-full min-h-[400px] h-[52vh] max-h-[640px] bg-slate-900">
                         <video src={videoUrl} controls className="w-full h-full object-contain" />
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-900 dark:bg-black ring-2 ring-emerald-500/30">
-                      <div className="px-3 py-2 border-b border-slate-700 bg-emerald-900/20 dark:bg-emerald-900/30">
-                        <span className="text-xs font-medium text-emerald-400">Edited</span>
+                    <div className="rounded-2xl border-2 border-emerald-500/50 dark:border-emerald-400/50 overflow-hidden bg-slate-900 dark:bg-black shadow-lg shadow-emerald-500/10">
+                      <div className="px-4 py-2.5 border-b border-slate-700 bg-emerald-900/30 dark:bg-emerald-900/40">
+                        <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Edited</span>
                       </div>
-                      <div className="aspect-video">
+                      <div className="w-full min-h-[400px] h-[52vh] max-h-[640px] bg-slate-900">
                         <video
                           src={aiEditResult.data?.editedVideoUrl || aiEditResult.editedVideoUrl || videoUrl}
                           controls
@@ -1279,25 +1495,26 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
           ) : (
             <>
-              {/* Video preview — compact */}
-              <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6 shadow-sm">
-                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Source video</span>
+              {/* Source video preview */}
+              <div className="bg-surface-card radius-card-lg border border-subtle overflow-hidden mb-6 shadow-theme-card">
+                <div className="px-4 py-2.5 border-b border-subtle bg-surface-elevated flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden />
+                  <span className="text-xs font-semibold text-theme-secondary uppercase tracking-wider">Source video</span>
                 </div>
-                <div className="aspect-video max-h-[220px] bg-slate-900 dark:bg-black">
+                <div className="w-full min-h-[560px] bg-slate-900 dark:bg-black h-[72vh] max-h-[900px]">
                   <video ref={videoPreviewRef} src={videoUrl} controls className="w-full h-full object-contain" />
                 </div>
               </div>
 
-              {/* Sticky CTA — always visible when ready */}
-              <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-white/95 dark:bg-slate-900/95 border-t border-slate-200 dark:border-slate-700 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
-                <div className="max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3">
+              {/* Sticky CTA */}
+              <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-surface-card border-t border-subtle backdrop-blur-md shadow-theme-card-hover">
+                <div className="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-center gap-4">
                   {enabledCount === 0 ? (
                     <>
                       <button
                         type="button"
                         onClick={enableRecommended}
-                        className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-colors"
+                        className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all"
                       >
                         <Zap className="w-5 h-5" />
                         Enable recommended options
@@ -1309,17 +1526,17 @@ export default function VideoEditPage({ params }: PageProps) {
                       >
                         Start AI auto edit
                       </button>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">Turn on at least one option above, or use the button to enable our picks.</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400 text-center sm:text-left">Turn on at least one option above, or enable recommended.</span>
                     </>
                   ) : (
                     <>
                       <button
                         onClick={handleStartAIEdit}
-                        className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+                        className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30"
                       >
                         <Sparkles className="w-5 h-5" />
                         Start AI auto edit
-                        <span className="opacity-90">({enabledCount} on)</span>
+                        <span className="opacity-90 text-sm">({enabledCount} on)</span>
                       </button>
                       <button
                         type="button"
@@ -1329,6 +1546,11 @@ export default function VideoEditPage({ params }: PageProps) {
                         Reset to recommended
                       </button>
                     </>
+                  )}
+                  {enabledCount > 0 && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 text-center w-full mt-1">
+                      AI will apply: silence removal, pacing, {editingOptions.addCaptions ? 'captions, ' : ''}{editingOptions.enhanceAudio ? 'audio enhancement, ' : ''}{editingOptions.enhanceColor ? 'color, ' : ''}{editingOptions.generateClips ? 'clip generation' : 'single export'}.
+                    </p>
                   )}
                 </div>
               </div>

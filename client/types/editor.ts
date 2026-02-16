@@ -658,6 +658,11 @@ export const EFFECT_PRESETS: { type: TimelineEffectType; name: string; icon: str
   { type: 'overlay', name: 'Light Leak', icon: '☀️', params: { intensity: 40, position: 'top-right' } },
   { type: 'overlay', name: 'Letterbox', icon: '📽️', params: { ratio: 2.39, color: '#000000' } },
   { type: 'overlay', name: 'Dust & Scratches', icon: '🧹', params: { density: 15, opacity: 30 } },
+  { type: 'overlay', name: 'Cinematic Vignette', icon: '🎬', params: { strength: 35, softness: 60 } },
+  { type: 'overlay', name: 'Light Leak Gold', icon: '☀️', params: { intensity: 45, position: 'top-right' } },
+  { type: 'overlay', name: 'Soft Glow', icon: '✨', params: { strength: 20, softness: 80 } },
+  { type: 'motion', name: 'Cinematic Push In', icon: '📐', params: { zoom: 105, duration: 4, easing: 'ease-out' } },
+  { type: 'motion', name: 'Reveal Zoom Out', icon: '🔍', params: { zoom: 85, duration: 3, easing: 'ease-in' } },
   // Speed
   { type: 'speed', name: 'Slow Motion 50%', icon: '🐢', params: { rate: 0.5 } },
   { type: 'speed', name: 'Slow Motion 25%', icon: '🦥', params: { rate: 0.25 } },
@@ -673,7 +678,7 @@ export const EFFECT_PRESETS: { type: TimelineEffectType; name: string; icon: str
 ]
 
 /** Editor layout preferences (adaptable workspace) */
-export type PreviewSize = 'small' | 'medium' | 'large'
+export type PreviewSize = 'auto' | 'small' | 'medium' | 'large' | 'fill'
 export type TimelineDensity = 'compact' | 'comfortable' | 'expanded'
 export type FocusMode = 'balanced' | 'preview' | 'timeline'
 

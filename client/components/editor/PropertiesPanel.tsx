@@ -77,16 +77,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   const FilterSlider = ({ label, value, min, max, field, resetValue = 100 }: { label: string, value: number, min: number, max: number, field: keyof VideoFilter, resetValue?: number }) => (
     <div>
-      <label className="block text-xs text-purple-700 dark:text-purple-300 mb-1.5 flex items-center justify-between">
+      <label className="block text-xs text-theme-primary mb-1.5 flex items-center justify-between">
         <span>{label}: {value}{field === 'hue' ? '°' : '%'}</span>
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setVideoFilters((prev: any) => ({ ...prev, [field]: resetValue }))}
-            className="text-[10px] text-purple-500 hover:text-purple-700 dark:hover:text-purple-300 transition-colors px-1"
+            className="text-[10px] text-theme-muted hover:text-theme-primary transition-colors px-1"
           >
             Reset
           </button>
-          <span className="text-[10px] text-purple-500 dark:text-purple-400">● Live</span>
+          <span className="text-[10px] text-theme-muted">● Live</span>
         </div>
       </label>
       <input
@@ -102,25 +102,25 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   )
 
   return (
-    <div className={`${isOledTheme ? 'bg-black/95 border-slate-800' : 'bg-white/95 dark:bg-gray-800/95 border-gray-200/50 dark:border-gray-700/50'} backdrop-blur-lg border-l flex flex-col shadow-xl flex-shrink-0 overflow-hidden transition-all duration-300`}
+    <div className={`${isOledTheme ? 'bg-black/95 border-slate-800' : 'bg-surface-card border-subtle'} backdrop-blur-lg border-l flex flex-col shadow-theme-card flex-shrink-0 overflow-hidden transition-all duration-300`}
       style={{ width: 'clamp(280px, 20vw, 320px)' }}>
-      <div className="p-2 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between flex-shrink-0">
-        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-sm">
+      <div className="p-2 border-b border-subtle flex items-center justify-between flex-shrink-0">
+        <h3 className="font-semibold text-theme-primary flex items-center gap-2 text-sm">
           <Settings className="w-4 h-4" />
           Properties
         </h3>
         <button
           onClick={() => setIsOpen(false)}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-1 hover:bg-surface-card-hover rounded-lg transition-colors text-theme-secondary"
         >
           <X className="w-3 h-3" />
         </button>
       </div>
       <div className="editor-auto flex-1 p-3 overflow-y-auto min-w-0">
         <div className="space-y-4">
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-3 rounded-xl border border-purple-200/50 dark:border-purple-700/50">
-            <h4 className="font-semibold mb-3 text-purple-900 dark:text-purple-100 flex items-center gap-2 text-sm">
-              <Filter className="w-4 h-4" />
+          <div className="bg-surface-elevated p-3 rounded-xl border border-subtle">
+            <h4 className="font-semibold mb-3 text-theme-primary flex items-center gap-2 text-sm">
+              <Filter className="w-4 h-4 text-purple-500" />
               Global Filters
             </h4>
             <div className="space-y-3">
@@ -137,9 +137,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-800/20 p-4 rounded-xl border border-emerald-200/50 dark:border-emerald-700/50">
-            <h4 className="font-semibold mb-4 text-emerald-900 dark:text-emerald-100 flex items-center gap-2 text-sm">
-              <Subtitles className="w-4 h-4" />
+          <div className="bg-surface-elevated p-4 rounded-xl border border-subtle">
+            <h4 className="font-semibold mb-4 text-theme-primary flex items-center gap-2 text-sm">
+              <Subtitles className="w-4 h-4 text-emerald-500" />
               Transcript captions
             </h4>
             <div className="space-y-3">
@@ -226,16 +226,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </div>
 
           {textOverlays.length > 0 && (
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-xl border border-blue-200/50 dark:border-blue-700/50">
-              <h4 className="font-semibold mb-4 text-blue-900 dark:text-blue-100 flex items-center gap-2 text-sm">
-                <Type className="w-4 h-4" />
+            <div className="bg-surface-elevated p-4 rounded-xl border border-subtle">
+              <h4 className="font-semibold mb-4 text-theme-primary flex items-center gap-2 text-sm">
+                <Type className="w-4 h-4 text-blue-500" />
                 Text Overlays ({textOverlays.length})
               </h4>
               <div className="space-y-3">
                 {textOverlays.map(overlay => (
-                  <div key={overlay.id} className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 space-y-2">
-                    <div className="font-medium text-xs text-blue-900 dark:text-blue-100 truncate">{overlay.text}</div>
-                    <div className="text-[10px] text-blue-700 dark:text-blue-300">
+                  <div key={overlay.id} className="p-3 bg-surface-card rounded-lg border border-subtle space-y-2">
+                    <div className="font-medium text-xs text-theme-primary truncate">{overlay.text}</div>
+                    <div className="text-[10px] text-theme-secondary">
                       {formatTime(overlay.startTime)} - {formatTime(overlay.endTime)}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -357,11 +357,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           )}
 
           {imageOverlays.length > 0 && setImageOverlays && (
-            <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-800/20 p-4 rounded-xl border border-teal-200/50 dark:border-teal-700/50 mt-4">
-              <h4 className="font-semibold mb-3 text-teal-900 dark:text-teal-100 flex items-center gap-2 text-sm">Image Overlays ({imageOverlays.length})</h4>
+            <div className="bg-surface-elevated p-4 rounded-xl border border-subtle mt-4">
+              <h4 className="font-semibold mb-3 text-theme-primary flex items-center gap-2 text-sm">Image Overlays ({imageOverlays.length})</h4>
               <div className="space-y-3">
                 {imageOverlays.map((img) => (
-                  <div key={img.id} className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-700 space-y-2">
+                  <div key={img.id} className="p-3 bg-surface-card rounded-lg border border-subtle space-y-2">
                     <div className="text-[10px] text-teal-700 dark:text-teal-300 truncate" title={img.url}>{img.url.slice(0, 40)}…</div>
                     <div className="text-[10px] text-teal-600 dark:text-teal-400">{formatTime(img.startTime)} - {formatTime(img.endTime)}</div>
                     <div className="grid grid-cols-2 gap-1.5 text-[10px]">
@@ -384,11 +384,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           )}
 
           {gradientOverlays.length > 0 && setGradientOverlays && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-800/20 p-4 rounded-xl border border-amber-200/50 dark:border-amber-700/50 mt-4">
-              <h4 className="font-semibold mb-3 text-amber-900 dark:text-amber-100 text-sm">Gradient Overlays ({gradientOverlays.length})</h4>
+            <div className="bg-surface-elevated p-4 rounded-xl border border-subtle mt-4">
+              <h4 className="font-semibold mb-3 text-theme-primary text-sm">Gradient Overlays ({gradientOverlays.length})</h4>
               <div className="space-y-3">
                 {gradientOverlays.map((g) => (
-                  <div key={g.id} className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-700 space-y-2">
+                  <div key={g.id} className="p-3 bg-surface-card rounded-lg border border-subtle space-y-2">
                     <div className="text-[10px] text-amber-700 dark:text-amber-300">{g.region ?? 'full'} · {g.direction}</div>
                     <div className="text-[10px] text-amber-600 dark:text-amber-400">{formatTime(g.startTime)} - {formatTime(g.endTime)}</div>
                     <label className="flex items-center gap-2 text-[10px]">

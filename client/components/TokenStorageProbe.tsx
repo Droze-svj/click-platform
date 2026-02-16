@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { sendDebugLogNow } from '../utils/debugLog'
 
 declare global {
   interface Window {
@@ -27,54 +28,26 @@ export default function TokenStorageProbe() {
     // Batch debug logs to reduce spam
     let logQueue: Array<{ message: string; data: Record<string, any> }> = []
     let logTimeout: ReturnType<typeof setTimeout> | null = null
-    
+
     const flushLogs = () => {
       if (logQueue.length === 0) return
-      
+
       const logs = [...logQueue]
       logQueue = []
       logTimeout = null
-      
-          // Send batched logs with timeout
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
-          
-          fetch('/api/debug/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              component: 'TokenStorageProbe',
-              message: 'token_storage_batch',
-              data: {
-                logs,
-                timestamp: Date.now(),
-                count: logs.length
-              }
-            }),
-            signal: controller.signal
-          }).catch((err) => {
-            // Only log errors in development to avoid console spam
-            if (process.env.NODE_ENV === 'development') {
-              // Don't log AbortError (timeout) as it's expected behavior
-              if (err.name !== 'AbortError') {
-                console.warn('TokenStorageProbe: Debug log send failed:', err.message || err)
-              }
-            }
-          }).finally(() => {
-            clearTimeout(timeoutId)
-          })
+      sendDebugLogNow('TokenStorageProbe', 'token_storage_batch', { logs, timestamp: Date.now(), count: logs.length })
     }
-    
+
     const send = (message: string, data: Record<string, any>) => {
       try {
         // Only log in development to reduce console spam
         if (process.env.NODE_ENV === 'development') {
           console.log('TokenStorageProbe:', message, data)
         }
-        
+
         // Add to queue
         logQueue.push({ message, data: { ...data, timestamp: Date.now() } })
-        
+
         // Flush immediately for important messages, or batch for others
         if (message.includes('error') || message.includes('remove')) {
           // Flush immediately for errors and removals
@@ -113,7 +86,7 @@ export default function TokenStorageProbe() {
             const lastLogKey = '__tokenStorageProbe_lastLog'
             const lastLog = parseInt(origGetItem(lastLogKey) || '0', 10)
             const now = Date.now()
-            
+
             // Only log if it's been more than 1 second, or if the token length changed significantly
             const lengthChanged = Math.abs((currentValue?.length || 0) - (value?.length || 0)) > 10
             if (now - lastLog > 1000 || lengthChanged) {
@@ -160,7 +133,7 @@ export default function TokenStorageProbe() {
     localStorage.clear = (() => {
       return origClear()
     }) as any
-    
+
     // Cleanup function to flush any pending logs on unmount
     return () => {
       if (logTimeout) {

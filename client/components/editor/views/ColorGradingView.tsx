@@ -62,20 +62,20 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-xs font-black uppercase text-gray-500 mb-2 tracking-widest">Quick filters (same as Edit tab)</h3>
+      <div className="bg-surface-card rounded-xl shadow-theme-card border border-subtle p-6">
+        <h3 className="text-xs font-black uppercase text-theme-muted mb-2 tracking-widest">Quick filters (same as Edit tab)</h3>
         <div className="flex flex-wrap gap-2 mb-4">
           {QUICK_FILTERS.map((q) => (
             <button
               key={q.id}
               onClick={() => { setVideoFilters((prev: any) => ({ ...prev, ...q.f })); showToast(`${q.label} applied`, 'success') }}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-surface-elevated border border-subtle text-theme-primary hover:border-default hover:bg-surface-card-hover transition-all"
             >
               {q.label}
             </button>
           ))}
         </div>
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-500" />
           Color Presets
           <span className="ml-auto text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded font-black uppercase">Pro</span>
@@ -85,25 +85,25 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
             <button
               key={p.id}
               onClick={() => applyPreset(p)}
-              className="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all text-left group"
+              className="p-4 bg-surface-elevated border border-subtle rounded-xl hover:border-default hover:bg-surface-card-hover transition-all text-left group"
             >
               {p.swatch && (
                 <div className={`h-1.5 w-full rounded-full mb-2 bg-gradient-to-r ${p.swatch}`} />
               )}
-              <span className="block font-bold text-xs text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">{p.label}</span>
-              <span className="block text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{p.desc}</span>
+              <span className="block font-bold text-xs text-theme-primary group-hover:text-purple-600 dark:group-hover:text-purple-400">{p.label}</span>
+              <span className="block text-[10px] text-theme-muted mt-0.5">{p.desc}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-xs font-black uppercase text-gray-500 mb-2 tracking-widest">LUT (professional color)</h3>
-        <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-3">Apply a cinematic color look. Applied in preview and export.</p>
+      <div className="bg-surface-card rounded-xl shadow-theme-card border border-subtle p-6">
+        <h3 className="text-xs font-black uppercase text-theme-muted mb-2 tracking-widest">LUT (professional color)</h3>
+        <p className="text-[10px] text-theme-secondary mb-3">Apply a cinematic color look. Applied in preview and export.</p>
         <select
           value={(videoFilters as any).lutId ?? 'none'}
           onChange={(e) => setVideoFilters((prev: any) => ({ ...prev, lutId: e.target.value === 'none' ? null : e.target.value }))}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white mb-6"
+          className="w-full px-3 py-2 rounded-lg border border-subtle bg-surface-elevated text-sm text-theme-primary mb-6"
         >
           <option value="none">None</option>
           <option value="cinematic">Cinematic</option>
@@ -111,17 +111,17 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
           <option value="log709">Log to Rec.709</option>
         </select>
 
-        <h3 className="text-sm font-black mb-4 uppercase text-gray-400 tracking-[3px]">Manual Controls</h3>
+        <h3 className="text-sm font-black mb-4 uppercase text-theme-muted tracking-[3px]">Manual Controls</h3>
         <div className="space-y-4">
           {sliders.map(({ key, min, max, reset }) => (
             <div key={key} className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase text-gray-500">{key}</span>
+                <span className="text-[10px] font-black uppercase text-theme-muted">{key}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-purple-500 font-bold text-xs">{(videoFilters as any)[key] ?? reset}</span>
                   <button
                     onClick={() => setVideoFilters((prev: any) => ({ ...prev, [key]: reset }))}
-                    className="text-[9px] text-gray-400 hover:text-purple-500 transition-colors"
+                    className="text-[9px] text-theme-muted hover:text-purple-500 transition-colors"
                   >
                     Reset
                   </button>
@@ -131,7 +131,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                 type="range" min={min} max={max}
                 value={(videoFilters as any)[key] ?? reset}
                 onChange={(e) => setVideoFilters((prev: any) => ({ ...prev, [key]: parseInt(e.target.value) }))}
-                className="w-full accent-purple-500 h-2 bg-gray-100 dark:bg-gray-900 rounded-full appearance-none cursor-pointer"
+                className="w-full accent-purple-500 h-2 bg-surface-elevated rounded-full appearance-none cursor-pointer"
               />
             </div>
           ))}

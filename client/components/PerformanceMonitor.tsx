@@ -3,23 +3,24 @@
 import { useEffect, useRef } from 'react'
 import { onCLS, onFID, onFCP, onLCP, onTTFB, Metric } from 'web-vitals'
 import { reportWebVitals } from '../utils/performance'
+import { sendDebugLog } from '../utils/debugLog'
 
 /**
  * Performance Monitor Component
- * 
+ *
  * Automatically tracks and reports Core Web Vitals metrics:
  * - CLS (Cumulative Layout Shift)
  * - FID (First Input Delay)
  * - FCP (First Contentful Paint)
  * - LCP (Largest Contentful Paint)
  * - TTFB (Time to First Byte)
- * 
+ *
  * @remarks
  * - Only tracks in production or when analytics endpoint is configured
  * - Uses web-vitals library for accurate measurements
  * - Reports metrics via reportWebVitals utility
  * - Renders nothing (null component)
- * 
+ *
  * @example
  * ```tsx
  * <PerformanceMonitor />
@@ -31,26 +32,11 @@ export default function PerformanceMonitor() {
   const frameRateRef = useRef(60)
 
   useEffect(() => {
-    const sendDebugLog = (message: string, data: any) => {
-      // Only log performance issues, reduce spam
+    const send = (message: string, data: Record<string, unknown>) => {
       if (message.includes('slow') || message.includes('memory') || message.includes('error')) {
         console.log('PerformanceMonitor:', message, data)
       }
-      // Use local debug API instead of external service
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'PerformanceMonitor',
-          message,
-          data: {
-            ...data,
-            timestamp: Date.now(),
-            sessionId: 'debug-session',
-            runId: 'run-perf-monitor'
-          }
-        }),
-      }).catch(() => {}) // Ignore errors in debug logging
+      sendDebugLog('PerformanceMonitor', message, { ...data, sessionId: 'debug-session', runId: 'run-perf-monitor' })
     }
 
     // Enhanced performance monitoring
@@ -59,7 +45,7 @@ export default function PerformanceMonitor() {
         // Memory usage tracking
         if ('memory' in performance) {
           const memory = (performance as any).memory
-          sendDebugLog('memory_usage', {
+          send('memory_usage', {
             usedJSHeapSize: memory.usedJSHeapSize,
             totalJSHeapSize: memory.totalJSHeapSize,
             jsHeapSizeLimit: memory.jsHeapSizeLimit,
@@ -74,7 +60,7 @@ export default function PerformanceMonitor() {
           const domReady = timing.domContentLoadedEventEnd - timing.navigationStart
           const firstPaint = performance.getEntriesByType('paint').find(entry => entry.name === 'first-paint')
 
-          sendDebugLog('navigation_timing', {
+          send('navigation_timing', {
             loadTime,
             domReady,
             firstPaint: firstPaint ? firstPaint.startTime : null,
@@ -91,13 +77,15 @@ export default function PerformanceMonitor() {
         )
 
         if (slowResources.length > 0) {
-          sendDebugLog('slow_resources', {
+          sendDebugLog('PerformanceMonitor', 'slow_resources', {
             count: slowResources.length,
             resources: slowResources.map(r => ({
               name: r.name,
               duration: r.duration,
               size: (r as any).transferSize || 0
-            }))
+            })),
+            sessionId: 'debug-session',
+            runId: 'run-perf-monitor'
           })
         }
 
@@ -112,7 +100,7 @@ export default function PerformanceMonitor() {
           lastTimeRef.current = now
 
           if (fps < 30) {
-            sendDebugLog('low_frame_rate', {
+            send('low_frame_rate', {
               fps: fps.toFixed(2),
               warning: 'Frame rate dropped below 30 FPS'
             })
@@ -124,10 +112,12 @@ export default function PerformanceMonitor() {
           const entries = list.getEntries()
           entries.forEach((entry) => {
             if (entry.duration > 50) { // Tasks longer than 50ms
-              sendDebugLog('long_task', {
+              sendDebugLog('PerformanceMonitor', 'long_task', {
                 duration: entry.duration,
                 startTime: entry.startTime,
-                name: entry.name
+                name: entry.name,
+                sessionId: 'debug-session',
+                runId: 'run-perf-monitor'
               })
             }
           })
@@ -142,7 +132,7 @@ export default function PerformanceMonitor() {
         // JavaScript errors monitoring
         const originalOnError = window.onerror
         window.onerror = (message, source, lineno, colno, error) => {
-          sendDebugLog('javascript_error', {
+          send('javascript_error', {
             message,
             source,
             lineno,
@@ -156,16 +146,18 @@ export default function PerformanceMonitor() {
         // Unhandled promise rejections
         const originalOnUnhandledRejection = window.onunhandledrejection
         window.onunhandledrejection = (event) => {
-          sendDebugLog('unhandled_promise_rejection', {
+          sendDebugLog('PerformanceMonitor', 'unhandled_promise_rejection', {
             reason: event.reason,
             promise: event.promise?.toString(),
-            stack: event.reason?.stack
+            stack: event.reason?.stack,
+            sessionId: 'debug-session',
+            runId: 'run-perf-monitor'
           })
           return originalOnUnhandledRejection?.call(window, event) || false
         }
 
       } catch (error) {
-        sendDebugLog('performance_monitor_error', {
+        send('performance_monitor_error', {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined
         })
@@ -174,7 +166,7 @@ export default function PerformanceMonitor() {
 
     // Only track in production or when analytics endpoint is configured
     const shouldTrack = process.env.NODE_ENV === 'production' ||
-                       !!process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT
+      !!process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT
 
     if (!shouldTrack) {
       return

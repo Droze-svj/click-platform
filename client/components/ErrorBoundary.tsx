@@ -5,6 +5,7 @@ import { ErrorBoundary as ReactErrorBoundary, FallbackProps } from 'react-error-
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { logError } from '../utils/errorHandler';
+import { sendDebugLogNow } from '../utils/debugLog';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -30,23 +31,13 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
       if (!shouldSendDebug) return
 
       console.log('ErrorBoundary activated:', errorData)
-      await fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'ErrorBoundary',
-          message: 'error_boundary_activated',
-          data: {
-            ...errorData,
-            timestamp: Date.now(),
-            sessionId: 'debug-session',
-            runId: 'run-error-boundary-debug',
-            retryCount,
-            severity: 'high',
-            category: 'react'
-          }
-        }),
-        signal: AbortSignal.timeout(5000)
+      sendDebugLogNow('ErrorBoundary', 'error_boundary_activated', {
+        ...errorData,
+        sessionId: 'debug-session',
+        runId: 'run-error-boundary-debug',
+        retryCount,
+        severity: 'high',
+        category: 'react',
       })
       setHasReported(true)
     } catch (fetchErr) {

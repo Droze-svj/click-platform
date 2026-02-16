@@ -117,7 +117,7 @@ export default function Dashboard() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-full w-full max-w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 bg-mesh relative">
+      <div className="min-h-full w-full max-w-full overflow-x-hidden bg-surface-page transition-colors duration-300 bg-mesh relative">
         <div className="absolute inset-0 bg-dots"></div>
         <SubscriptionBanner />
         <NextStepsPanel />
@@ -262,8 +262,8 @@ export default function Dashboard() {
 
           {/* Feature Hub — Bento-style command center */}
           <section className="mb-16" data-tour="feature-hub">
-            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-1 uppercase tracking-wider">Feature hub</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Everything in one place. Pick a category or jump straight in.</p>
+            <h2 className="text-lg font-semibold text-theme-primary mb-1 uppercase tracking-wider">Feature hub</h2>
+            <p className="text-sm text-theme-muted mb-6">Everything in one place. Pick a category or jump straight in.</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-fr">
               {/* Hero: Video — spans 2 cols on lg */}
@@ -275,8 +275,8 @@ export default function Dashboard() {
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-cyan-400/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
                 <div className="relative">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 opacity-90">Create</span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1 mb-2">Auto Video Clipper</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md">Upload long videos and get short-form clips with AI-powered editing.</p>
+                  <h3 className="text-xl sm:text-2xl font-bold text-theme-primary mt-1 mb-2">Auto Video Clipper</h3>
+                  <p className="text-sm text-theme-secondary max-w-md">Upload long videos and get short-form clips with AI-powered editing.</p>
                 </div>
                 <div className="relative mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium text-sm">
                   <span>Open</span>
@@ -400,13 +400,13 @@ function BentoCard({ category, title, description, href, dataTour }: {
   return (
     <Link
       href={href}
-      className="group relative overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white dark:bg-slate-800/60 p-4 flex flex-col min-h-[120px] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition-all duration-200"
+      className="group relative overflow-hidden rounded-xl border border-subtle bg-surface-card p-4 flex flex-col min-h-[120px] hover:border-default hover:shadow-theme-card transition-all duration-200"
       data-tour={dataTour}
     >
-      <span className={`text-[10px] font-bold uppercase tracking-widest ${categoryColor[category] || 'text-slate-500'}`}>{category}</span>
-      <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-1 mb-0.5">{title}</h3>
-      <p className="text-xs text-slate-500 dark:text-slate-400 flex-1">{description}</p>
-      <span className="mt-2 text-xs font-medium text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 flex items-center gap-1">
+      <span className={`text-[10px] font-bold uppercase tracking-widest ${categoryColor[category] || 'text-theme-muted'}`}>{category}</span>
+      <h3 className="text-base font-semibold text-theme-primary mt-1 mb-0.5">{title}</h3>
+      <p className="text-xs text-theme-muted flex-1">{description}</p>
+      <span className="mt-2 text-xs font-medium text-theme-muted group-hover:text-theme-secondary flex items-center gap-1">
         Open <span className="group-hover:translate-x-0.5 transition-transform">→</span>
       </span>
     </Link>
@@ -449,16 +449,16 @@ function FeatureCard({ title, description, link, icon, dataTour, gradient }: {
           </div>
 
           {/* Enhanced Title and Description */}
-          <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors duration-300">
+          <h3 className="text-xl font-bold mb-3 text-theme-primary group-hover:opacity-90 transition-colors duration-300">
             {title}
           </h3>
-          <p className="text-body-enhanced mb-6 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors duration-300">
+          <p className="text-body-enhanced mb-6 text-theme-secondary group-hover:text-theme-primary transition-colors duration-300">
             {description}
           </p>
 
           {/* Enhanced Hover indicator with better animation */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center text-sm font-semibold text-slate-600 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 animate-slide-in-stagger">
+            <div className="flex items-center text-sm font-semibold text-theme-muted opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 animate-slide-in-stagger">
               <span className="relative">
                 Explore feature
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current group-hover:w-full transition-all duration-300"></span>

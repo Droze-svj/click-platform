@@ -1,24 +1,7 @@
 // Content Repurposing Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for content repurposing', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Repurpose content for platform
@@ -76,30 +59,13 @@ Provide:
 
 Format as JSON object with fields: title, body, hashtags (array), format, changes (array of key modifications)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot repurpose content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content repurposing expert. Adapt content for different platforms while maintaining core message.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a content repurposing expert. Adapt content for different platforms while maintaining core message.\n\n${prompt}`;
+    const repurposedText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
 
-    const repurposedText = response.choices[0].message.content;
-    
     let repurposed;
     try {
       repurposed = JSON.parse(repurposedText);
@@ -173,30 +139,13 @@ For each variation, provide:
 
 Format as JSON array with fields: title, body, differences (array), useCase`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot repurpose content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a creative content strategist. Create unique variations that explore different angles.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.9,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a creative content strategist. Create unique variations that explore different angles.\n\n${prompt}`;
+    const variationsText = await geminiGenerate(fullPrompt, { temperature: 0.9, maxTokens: 2000 });
 
-    const variationsText = response.choices[0].message.content;
-    
     let variations;
     try {
       variations = JSON.parse(variationsText);
@@ -243,30 +192,13 @@ Provide:
 
 Format as JSON object with fields: mainMessage, keyPoints (array), takeaways (array), supportingData (array), ctas (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot repurpose content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content analyst. Extract key insights and actionable points.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-    });
+    const fullPrompt = `You are a content analyst. Extract key insights and actionable points.\n\n${prompt}`;
+    const extractedText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
 
-    const extractedText = response.choices[0].message.content;
-    
     let extracted;
     try {
       extracted = JSON.parse(extractedText);

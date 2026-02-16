@@ -1,24 +1,7 @@
 // Video Transcription Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for video transcription', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Transcribe video
@@ -34,7 +17,7 @@ async function transcribeVideo(videoId, options = {}) {
 
     // In production, use Whisper API or similar
     // For now, provide framework
-    
+
     if (!audioFile) {
       throw new Error('Audio file required for transcription');
     }
@@ -138,30 +121,14 @@ Provide:
 
 Format as JSON object with fields: topics (array), keywords (array), keyPhrases (array), summary (string)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot transcribe video');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot extract keywords');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content analyst. Extract key topics and keywords from transcripts.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-    });
+    const fullPrompt = `You are a content analyst. Extract key topics and keywords from transcripts.\n\n${prompt}`;
+    const extractedText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
 
-    const extractedText = response.choices[0].message.content;
-    
     let extracted;
     try {
       extracted = JSON.parse(extractedText);
@@ -201,30 +168,14 @@ Provide:
 
 Format as JSON object with fields: mainPoints (array), takeaways (array), summary (string), suggestedTitle (string)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot transcribe video');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate video summary');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a video summarizer. Create concise, informative summaries.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.5,
-      max_tokens: 1000,
-    });
+    const fullPrompt = `You are a video summarizer. Create concise, informative summaries.\n\n${prompt}`;
+    const summaryText = await geminiGenerate(fullPrompt, { temperature: 0.5, maxTokens: 1000 });
 
-    const summaryText = response.choices[0].message.content;
-    
     let summary;
     try {
       summary = JSON.parse(summaryText);

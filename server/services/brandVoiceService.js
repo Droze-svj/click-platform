@@ -1,24 +1,7 @@
 // Brand Voice Analyzer Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for brand voice', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Analyze brand voice
@@ -26,7 +9,7 @@ function getOpenAIClient() {
 async function analyzeBrandVoice(userId, sampleContent = []) {
   try {
     const Content = require('../models/Content');
-    
+
     // Get user's content if no samples provided
     if (sampleContent.length === 0) {
       const userContent = await Content.find({ userId, status: 'published' })
@@ -59,30 +42,14 @@ Provide analysis in JSON format with:
 
 Format as JSON object with fields: tone, style, characteristics (array), wordChoice, sentenceStructure, consistencyScore (number), recommendations (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot analyze brand voice');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot analyze brand voice');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a brand voice analyst. Analyze writing style, tone, and consistency.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 1500,
-    });
+    const fullPrompt = `You are a brand voice analyst. Analyze writing style, tone, and consistency.\n\n${prompt}`;
+    const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1500 });
 
-    const analysisText = response.choices[0].message.content;
-    
     let analysis;
     try {
       analysis = JSON.parse(analysisText);
@@ -131,30 +98,13 @@ Provide analysis in JSON format with:
 
 Format as JSON object with fields: consistencyScore (number), matches (array), mismatches (array), suggestions (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot analyze brand voice');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a brand voice consistency checker. Ensure content aligns with brand voice.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-    });
+    const fullPrompt = `You are a brand voice consistency checker. Ensure content aligns with brand voice.\n\n${prompt}`;
+    const checkText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1000 });
 
-    const checkText = response.choices[0].message.content;
-    
     let check;
     try {
       check = JSON.parse(checkText);
@@ -192,30 +142,13 @@ Provide:
 
 Format as JSON object with fields: rewritten, keyChanges (array), toneIndicators (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot analyze brand voice');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a tone adjustment expert. Help rewrite content to match specific tones.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    const fullPrompt = `You are a tone adjustment expert. Help rewrite content to match specific tones.\n\n${prompt}`;
+    const suggestionsText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 1000 });
 
-    const suggestionsText = response.choices[0].message.content;
-    
     let suggestions;
     try {
       suggestions = JSON.parse(suggestionsText);

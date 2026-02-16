@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // This avoids race-condition redirects in pages that do `if (!user) router.push('/login')`.
   if (loading) {
     return (
-      <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+      <div className="page-layout bg-surface-page transition-colors duration-300">
         <header className="flex-shrink-0">
           <Navbar />
         </header>
@@ -113,7 +113,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // In development mode without user, show a message instead of returning null
   if (!user && process.env.NODE_ENV === 'development') {
     return (
-      <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+      <div className="page-layout bg-surface-page transition-colors duration-300">
         <header className="flex-shrink-0">
           <Navbar />
         </header>
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="page-layout bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+    <div className="page-layout bg-surface-page transition-colors duration-300">
       {!isVideoEditPage && (
         <header className="flex-shrink-0">
           <Navbar />

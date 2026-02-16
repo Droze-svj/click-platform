@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { sendDebugLog } from '../utils/debugLog'
 
 declare global {
   interface Window {
@@ -26,16 +27,7 @@ export default function TokenStorageProbe() {
 
     const send = (message: string, data: Record<string, any>) => {
       console.log('TokenStorageProbe:', message, data)
-      // Send to debug endpoint if available
-      fetch(`${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3010'}/api/debug/log`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'TokenStorageProbe',
-          message,
-          data: { ...data, timestamp: Date.now() }
-        }),
-      }).catch(() => {}) // Ignore errors in debug logging
+      sendDebugLog('TokenStorageProbe', message, data)
     }
 
     const origSetItem = localStorage.setItem.bind(localStorage)

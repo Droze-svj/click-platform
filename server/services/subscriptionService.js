@@ -1,6 +1,7 @@
 // Subscription management service
 
 const User = require('../models/User');
+const { isDevUser } = require('../utils/devUser');
 const MembershipPackage = require('../models/MembershipPackage');
 const Notification = require('../models/Notification');
 const notificationService = require('./notificationService');
@@ -163,11 +164,8 @@ async function processExpiredSubscriptions() {
  * Check subscription access
  */
 function hasSubscriptionAccess(user) {
-  // In development mode, always allow access for dev users
-  if (process.env.NODE_ENV !== 'production') {
-    if (user && (user.id?.startsWith('dev-') || user._id?.toString().startsWith('dev-'))) {
-      return true;
-    }
+  if (process.env.NODE_ENV !== 'production' && isDevUser(user)) {
+    return true;
   }
 
   // Admin always has access

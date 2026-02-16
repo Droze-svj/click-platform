@@ -62,7 +62,16 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   defaultLayout
 }) => {
   const [layoutMenuOpen, setLayoutMenuOpen] = useState(false)
+  const [showShortcutsHint, setShowShortcutsHint] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('click-editor-shortcuts-hint-dismissed') !== 'true'
+  })
   const layoutMenuRef = useRef<HTMLDivElement>(null)
+  const onOpenShortcuts = () => {
+    setShowShortcutsHint(false)
+    try { localStorage.setItem('click-editor-shortcuts-hint-dismissed', 'true') } catch { /* ignore */ }
+    setShowKeyboardHelp(true)
+  }
   useEffect(() => {
     const close = (e: MouseEvent) => {
       if (layoutMenuRef.current && !layoutMenuRef.current.contains(e.target as Node)) setLayoutMenuOpen(false)
@@ -152,14 +161,21 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               <RotateCw className="w-3.5 h-3.5" />
             </button>
           </div>
-          <button
-            onClick={() => setShowKeyboardHelp(true)}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium transition-colors"
-            title="Keyboard shortcuts (Press ?)"
-          >
-            <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-[10px]">?</kbd>
-            Shortcuts
-          </button>
+          <div className="flex items-center gap-2">
+            {showShortcutsHint && (
+              <span className="hidden sm:inline text-[10px] text-gray-500 dark:text-gray-400 animate-in fade-in duration-300">
+                New? Press <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded font-mono">?</kbd> for shortcuts
+              </span>
+            )}
+            <button
+              onClick={onOpenShortcuts}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium transition-colors"
+              title="Keyboard shortcuts (Press ?)"
+            >
+              <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-[10px]">?</kbd>
+              Shortcuts
+            </button>
+          </div>
           {/* View / Layout menu - adaptable workspace */}
           {layoutPrefs && onLayoutChange && (
             <div className="relative hidden sm:block" ref={layoutMenuRef}>
@@ -175,9 +191,11 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                 <div className="absolute right-0 top-full mt-1 py-2 w-60 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50">
                   <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Preview size</div>
                   {([
-                    { id: 'small' as const, label: 'Small', hint: '360px' },
-                    { id: 'medium' as const, label: 'Medium', hint: '480–600px' },
-                    { id: 'large' as const, label: 'Large', hint: '560–680px' },
+                    { id: 'auto' as const, label: 'Auto', hint: 'Adjust to viewport (default)' },
+                    { id: 'small' as const, label: 'Small', hint: '640px max' },
+                    { id: 'medium' as const, label: 'Medium', hint: '800px max' },
+                    { id: 'large' as const, label: 'Large', hint: '1000px max' },
+                    { id: 'fill' as const, label: 'Fill', hint: 'Use all space' },
                   ]).map(({ id, label, hint }) => (
                     <button key={id} onClick={() => onLayoutChange({ previewSize: id })} className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 text-left text-sm">
                       <span>{label} <span className="text-gray-400 dark:text-gray-500 font-normal text-xs">({hint})</span></span>

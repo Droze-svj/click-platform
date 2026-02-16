@@ -1,24 +1,7 @@
 // Content Template Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for content templates', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate content from template
@@ -63,30 +46,14 @@ For each section, provide:
 
 Format as JSON object with sections array, each containing: name, content, suggestedLength`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content from template');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate content from template');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content template expert. Generate structured content following templates.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a content template expert. Generate structured content following templates.\n\n${prompt}`;
+    const contentText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
 
-    const contentText = response.choices[0].message.content;
-    
     let content;
     try {
       content = JSON.parse(contentText);
@@ -114,7 +81,7 @@ async function analyzeCompetitorContent(competitorUrls = [], platform) {
   try {
     // In production, this would fetch actual competitor content
     // For now, provide analysis framework
-    
+
     const prompt = `Analyze competitor content strategy for ${platform}:
 
 Competitor URLs: ${competitorUrls.join(', ')}
@@ -130,30 +97,14 @@ Provide analysis:
 
 Format as JSON object with fields: themes (array), frequency, engagementStrategies (array), hashtagPatterns (array), formats (array), topPerformers (array), recommendations (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content from template');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot analyze competitor content');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a competitive analysis expert. Analyze competitor content strategies.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.5,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are a competitive analysis expert. Analyze competitor content strategies.\n\n${prompt}`;
+    const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.5, maxTokens: 2000 });
 
-    const analysisText = response.choices[0].message.content;
-    
     let analysis;
     try {
       analysis = JSON.parse(analysisText);
@@ -181,7 +132,7 @@ async function getSeasonalTrends(season, category = null) {
   try {
     const currentDate = new Date();
     const month = currentDate.getMonth() + 1;
-    
+
     const seasonMap = {
       12: 'winter', 1: 'winter', 2: 'winter',
       3: 'spring', 4: 'spring', 5: 'spring',
@@ -203,30 +154,14 @@ Include:
 
 Format as JSON object with fields: trendingTopics (array), seasonalHashtags (array), themes (array), postingTimes (array), formatRecommendations (array), audienceInsights (object)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content from template');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot fetch seasonal trends');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a seasonal trend analyst. Provide relevant seasonal content insights.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
+    const fullPrompt = `You are a seasonal trend analyst. Provide relevant seasonal content insights.\n\n${prompt}`;
+    const trendsText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 1500 });
 
-    const trendsText = response.choices[0].message.content;
-    
     let trends;
     try {
       trends = JSON.parse(trendsText);

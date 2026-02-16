@@ -22,7 +22,7 @@ class APMMonitor {
     this.thresholds = {
       responseTime: parseInt(process.env.PERFORMANCE_RESPONSE_TIME_THRESHOLD) || 1000, // ms
       errorRate: parseFloat(process.env.PERFORMANCE_ERROR_RATE_THRESHOLD) || 0.05, // 5%
-      memoryUsage: parseFloat(process.env.PERFORMANCE_MEMORY_THRESHOLD) || 0.90, // 90% of heap (was 80%, too aggressive)
+      memoryUsage: Math.max(0.97, parseFloat(process.env.PERFORMANCE_MEMORY_THRESHOLD) || 0.97), // min 97% (95%+ is normal under load)
       memoryCritical: parseFloat(process.env.PERFORMANCE_MEMORY_CRITICAL_THRESHOLD) || 0.98, // 98% critical threshold
       cpuUsage: parseFloat(process.env.PERFORMANCE_CPU_THRESHOLD) || 0.7 // 70%
     };
@@ -39,10 +39,10 @@ class APMMonitor {
   initializeMonitoring() {
     // Memory monitoring - check less frequently to reduce overhead
     // Skip in test environment or if explicitly disabled
-    const memoryCheckInterval = process.env.APM_MEMORY_CHECK_INTERVAL 
-      ? parseInt(process.env.APM_MEMORY_CHECK_INTERVAL) 
+    const memoryCheckInterval = process.env.APM_MEMORY_CHECK_INTERVAL
+      ? parseInt(process.env.APM_MEMORY_CHECK_INTERVAL)
       : (process.env.NODE_ENV === 'production' ? 60000 : 120000); // 1 min in prod, 2 min in dev
-    
+
     if (process.env.NODE_ENV !== 'test' && process.env.DISABLE_APM_MEMORY_MONITORING !== 'true') {
       this.memoryMonitor = setInterval(() => {
         this.collectMemoryMetrics();
@@ -187,8 +187,8 @@ class APMMonitor {
 
     // Calculate heap memory utilization (what Node.js actually uses)
     // This is the correct metric for Node.js applications, not system memory
-    const heapUtilization = memUsage.heapTotal > 0 
-      ? memUsage.heapUsed / memUsage.heapTotal 
+    const heapUtilization = memUsage.heapTotal > 0
+      ? memUsage.heapUsed / memUsage.heapTotal
       : 0;
 
     const metric = {
@@ -218,7 +218,7 @@ class APMMonitor {
       const heapStats = v8.getHeapStatistics();
       heapSizeLimit = heapStats.heap_size_limit;
       limitUtilization = metric.heapUsed / heapSizeLimit;
-      
+
       // Critical alert if we're close to the actual heap size limit (98% of limit)
       if (limitUtilization > this.thresholds.memoryCritical) {
         this.createAlert('critical_memory_usage', {
@@ -232,7 +232,7 @@ class APMMonitor {
           heapTotalMB: Math.round(metric.heapTotal / 1024 / 1024),
           heapLimitMB: Math.round(heapSizeLimit / 1024 / 1024)
         });
-        
+
         // Try to trigger garbage collection if available (Node.js with --expose-gc flag)
         // Note: Use --expose-gc flag only if needed; V8's automatic GC is generally better
         if (global.gc && typeof global.gc === 'function') {
@@ -250,14 +250,14 @@ class APMMonitor {
     } catch (error) {
       // Heap statistics not available, continue with basic check
     }
-    
+
     // Alert on high heap memory usage relative to allocated heap (only if significant)
     // Skip alerts in development or if heap is very small
-    // Use 90% threshold for warnings (95%+ is normal for Node.js under load, but worth monitoring)
+    // 97% threshold: 95%+ is normal for Node.js under load; alert only when near critical
     // Only alert if we haven't already triggered a critical alert
     if (memUsage.heapTotal > 50 * 1024 * 1024 && // Only alert if heap > 50MB
-        metric.utilization > this.thresholds.memoryUsage &&
-        (!limitUtilization || limitUtilization < this.thresholds.memoryCritical)) {
+      metric.utilization > this.thresholds.memoryUsage &&
+      (!limitUtilization || limitUtilization < this.thresholds.memoryCritical)) {
       this.createAlert('high_memory_usage', {
         utilization: metric.utilization,
         threshold: this.thresholds.memoryUsage,
@@ -628,7 +628,7 @@ const apmMiddleware = (req, res, next) => {
 
   // Override res.end to capture response time
   const originalEnd = res.end;
-  res.end = function(...args) {
+  res.end = function (...args) {
     const responseTime = Date.now() - startTime;
 
     // Record API call
@@ -649,22 +649,22 @@ const apmMiddleware = (req, res, next) => {
 
 // Database query monitoring (to be used with mongoose)
 const apmDatabaseMiddleware = (schema) => {
-  schema.pre('save', function(next) {
+  schema.pre('save', function (next) {
     this._startTime = Date.now();
     next();
   });
 
-  schema.post('save', function(doc) {
+  schema.post('save', function (doc) {
     const duration = Date.now() - this._startTime;
     apmMonitor.recordDatabaseQuery('save', this.constructor.modelName, duration);
   });
 
-  schema.pre('find', function(next) {
+  schema.pre('find', function (next) {
     this._startTime = Date.now();
     next();
   });
 
-  schema.post('find', function(result) {
+  schema.post('find', function (result) {
     const duration = Date.now() - this._startTime;
     apmMonitor.recordDatabaseQuery('find', this.constructor.modelName, duration);
   });

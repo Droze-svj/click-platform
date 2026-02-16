@@ -3,16 +3,14 @@
 const Workflow = require('../models/Workflow');
 const UserAction = require('../models/UserAction');
 const logger = require('../utils/logger');
+const { isDevUser } = require('../utils/devUser');
 
 /**
  * Track user action
  */
 async function trackAction(userId, action, metadata = {}) {
   try {
-    // Skip tracking for dev users to avoid MongoDB errors (works even when NODE_ENV is production on localhost)
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
-      return null;
-    }
+    if (isDevUser(userId)) return null;
 
     // Wrap in try-catch to handle CastErrors gracefully
     try {
@@ -91,7 +89,7 @@ async function analyzePatterns(userId, days = 30) {
     // Create workflow suggestions from frequent sequences
     for (const [sequence, count] of frequentSequences) {
       const [action1, action2] = sequence.split(' -> ');
-      
+
       // Check if workflow already exists
       const existing = await Workflow.findOne({
         userId,
@@ -130,11 +128,7 @@ async function analyzePatterns(userId, days = 30) {
  */
 async function getSuggestedNextSteps(userId, currentAction = null) {
   try {
-    // Handle dev users - check for dev- prefix (works even when NODE_ENV is production on localhost)
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
-      // Return empty array for dev users to avoid MongoDB CastErrors
-      return [];
-    }
+    if (isDevUser(userId)) return [];
 
     // Get recent actions - wrap in try-catch to handle CastErrors
     let recentActions = [];
@@ -158,7 +152,7 @@ async function getSuggestedNextSteps(userId, currentAction = null) {
     }
 
     const lastAction = recentActions[0];
-    
+
     // Find workflows that start with the last action
     const workflows = await Workflow.find({
       userId,
@@ -227,8 +221,7 @@ function getDefaultSuggestions() {
  */
 async function getUserPreferences(userId) {
   try {
-    // In development mode, return mock preferences for dev users
-    if (process.env.NODE_ENV !== 'production' && userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-'))) {
+    if (isDevUser(userId)) {
       return {
         commonActions: {},
         commonConfigs: {},
@@ -252,7 +245,7 @@ async function getUserPreferences(userId) {
 
     actions.forEach(action => {
       // Count action frequency
-      preferences.commonActions[action.action] = 
+      preferences.commonActions[action.action] =
         (preferences.commonActions[action.action] || 0) + 1;
 
       // Extract preferences from metadata

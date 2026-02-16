@@ -13,6 +13,7 @@ const {
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
+const { isDevUser } = require('../utils/devUser');
 const router = express.Router();
 
 /**
@@ -28,19 +29,12 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
   try {
     const { currentAction } = req.query;
     const userId = req.user?._id || req.user?.id;
-    
-    // Check both host header and x-forwarded-host (for proxy requests)
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
-                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-    // Always allow dev mode when NODE_ENV is not production OR when on localhost
-    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-    
-    // In development mode OR when on localhost, return empty array for dev users to avoid MongoDB errors
-    if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
+    const allowDevMode = req.allowDevMode ?? true;
+
+    if (req.user?.isDevUser || isDevUser(userId)) {
       return sendSuccess(res, 'Suggestions fetched (dev mode)', 200, []);
     }
-    
+
     // Wrap database call in try-catch to handle connection errors
     let suggestions = [];
     try {
@@ -48,10 +42,10 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
     } catch (dbError) {
       // Handle CastError and connection errors gracefully for dev mode
       if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('buffering') || dbError.message?.includes('connection'))) {
-        logger.warn('Database error in workflow suggestions, returning empty array for dev mode', { 
+        logger.warn('Database error in workflow suggestions, returning empty array for dev mode', {
           error: dbError.message,
           errorName: dbError.name,
-          userId 
+          userId
         });
         return sendSuccess(res, 'Suggestions fetched (dev mode)', 200, []);
       }
@@ -59,21 +53,17 @@ router.get('/suggestions', auth, asyncHandler(async (req, res) => {
       // Return empty array if database is unavailable
       return sendSuccess(res, 'Suggestions fetched', 200, []);
     }
-    
+
     sendSuccess(res, 'Suggestions fetched', 200, suggestions || []);
   } catch (error) {
-    const userId = req.user?._id || req.user?.id;
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
-                        (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-    
+    const allowDevMode = req.allowDevMode ?? true;
+
     // Handle CastError gracefully for dev mode
     if (allowDevMode && (error.name === 'CastError' || error.message?.includes('Cast to ObjectId'))) {
       logger.warn('CastError in workflow suggestions, returning empty array for dev mode', { error: error.message, userId });
       return sendSuccess(res, 'Suggestions fetched (dev mode)', 200, []);
     }
-    
+
     logger.error('Error fetching workflow suggestions', { error: error.message, stack: error.stack, userId });
     sendSuccess(res, 'Suggestions fetched', 200, []);
   }
@@ -105,20 +95,9 @@ router.get('/preferences', auth, asyncHandler(async (req, res) => {
 router.get('/', auth, asyncHandler(async (req, res) => {
   const { template = false } = req.query;
   const userId = req.user._id || req.user.id;
-  
-  // Check both host header and x-forwarded-host (for proxy requests)
-  const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
-                      (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-  const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-  
-  // In development mode OR when on localhost, return empty array for dev users to avoid MongoDB errors
-  if (allowDevMode && userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-    return sendSuccess(res, 'Workflows fetched', 200, []);
-  }
-  
-  const query = { userId: userId, isActive: true };
-  
+
+  const query = { userId, isActive: true };
+
   if (template === 'true') {
     query.isTemplate = true;
   }

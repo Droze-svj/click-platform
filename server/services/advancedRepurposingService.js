@@ -1,24 +1,7 @@
 // Advanced Repurposing Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for advanced repurposing', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Auto-format content for platform
@@ -83,30 +66,14 @@ Provide formatted content with:
 
 Format as JSON object with fields: formattedText, characterCount (number), changes (array), optimizations (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot format content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot format content');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content formatting expert. Format content for specific platforms.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.5,
-      max_tokens: 1500,
-    });
+    const fullPrompt = `You are a content formatting expert. Format content for specific platforms.\n\n${prompt}`;
+    const formattedText = await geminiGenerate(fullPrompt, { temperature: 0.5, maxTokens: 1500 });
 
-    const formattedText = response.choices[0].message.content;
-    
     let formatted;
     try {
       formatted = JSON.parse(formattedText);
@@ -189,30 +156,14 @@ Provide:
 
 Format as JSON object with fields: adaptedCaption, visualRecommendations (array), aspectRatioAdjustments (object), formatSuggestions (array), optimizationTips (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot format content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot adapt visual content');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a visual content adaptation expert. Adapt content for different visual platforms.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.6,
-      max_tokens: 1500,
-    });
+    const fullPrompt = `You are a visual content adaptation expert. Adapt content for different visual platforms.\n\n${prompt}`;
+    const adaptedText = await geminiGenerate(fullPrompt, { temperature: 0.6, maxTokens: 1500 });
 
-    const adaptedText = response.choices[0].message.content;
-    
     let adapted;
     try {
       adapted = JSON.parse(adaptedText);
@@ -256,30 +207,14 @@ Provide:
 
 Format as JSON object with fields: optimizedText, keywordDensity (object), metaDescription, titleTag, headerStructure (array), internalLinks (array), seoScore (number)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot format content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot optimize for SEO');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an SEO expert. Optimize content for search engines.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.4,
-      max_tokens: 2000,
-    });
+    const fullPrompt = `You are an SEO expert. Optimize content for search engines.\n\n${prompt}`;
+    const optimizedText = await geminiGenerate(fullPrompt, { temperature: 0.4, maxTokens: 2000 });
 
-    const optimizedText = response.choices[0].message.content;
-    
     let optimized;
     try {
       optimized = JSON.parse(optimizedText);

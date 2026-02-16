@@ -1,26 +1,9 @@
 // AI content suggestions service
 
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
 const Content = require('../models/Content');
 const User = require('../models/User');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for content suggestions', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate daily content ideas based on user niche and history
@@ -56,29 +39,13 @@ Format as JSON array with these fields: title, description, platforms (array), h
 
 Make the ideas fresh, engaging, and tailored to the ${niche} niche.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content suggestions');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate content suggestions');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a creative content strategist. Generate engaging, platform-specific content ideas.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.8,
-      max_tokens: 1500
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are a creative content strategist. Generate engaging, platform-specific content ideas.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 1500 });
     let ideas = [];
 
     try {
@@ -149,29 +116,13 @@ async function getTrendingTopics(niche) {
   try {
     const prompt = `What are the top 5 trending topics in the "${niche}" niche right now? Provide short, actionable topic ideas that content creators can use. Format as JSON array of strings.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content suggestions');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot get trending topics');
+      return [];
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a trend analyst. Provide current trending topics.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 500
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are a trend analyst. Provide current trending topics.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 500 });
     try {
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
@@ -206,29 +157,13 @@ Provide:
 
 Format as JSON: {engagementScore, viralPotential, strengths (array), suggestions (array)}`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content suggestions');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot predict content performance');
+      return null;
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a social media performance analyst.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.5,
-      max_tokens: 500
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are a social media performance analyst.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.5, maxTokens: 500 });
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {

@@ -1,6 +1,7 @@
 // Twitter/X OAuth Service
 // Features: OAuth 2.0, token refresh, tweet posting, media support, platform_accounts storage.
 
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
 
@@ -10,8 +11,9 @@ const DEFAULT_SCOPE = 'tweet.read tweet.write users.read offline.access';
 const LOG_CONTEXT = { service: 'twitter-oauth' };
 
 function defaultRedirectUri() {
-  return process.env.TWITTER_REDIRECT_URI ||
-    `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social/connect/twitter/callback`;
+  return process.env.TWITTER_CALLBACK_URL ||
+    process.env.TWITTER_REDIRECT_URI ||
+    `${process.env.API_URL || process.env.FRONTEND_URL || 'http://localhost:5001'}/api/oauth/twitter/callback`;
 }
 
 class TwitterOAuthService {
@@ -50,21 +52,24 @@ class TwitterOAuthService {
     return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
   }
 
-  getAuthorizationUrl(state) {
+  getAuthorizationUrl(state, codeVerifier) {
     if (!this.isConfigured()) throw new Error('Twitter OAuth not configured');
+    const verifier = codeVerifier || crypto.randomBytes(32).toString('base64url');
+    const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
       scope: this.getScope(),
       state,
-      code_challenge: 'challenge',
-      code_challenge_method: 'plain',
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
     });
-    return `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
+    return { url: `https://twitter.com/i/oauth2/authorize?${params.toString()}`, codeVerifier: verifier };
   }
 
-  async exchangeCodeForToken(code) {
+
+  async exchangeCodeForToken(code, codeVerifier) {
     if (!this.isConfigured()) throw new Error('Twitter OAuth not configured');
     const credentials = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
     const response = await fetch(TOKEN_URL, {
@@ -78,7 +83,7 @@ class TwitterOAuthService {
         grant_type: 'authorization_code',
         client_id: this.clientId,
         redirect_uri: this.redirectUri,
-        code_verifier: 'challenge',
+        code_verifier: codeVerifier || 'challenge',
       }),
     });
 

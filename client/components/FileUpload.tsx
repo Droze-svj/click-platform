@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useAuth } from '../hooks/useAuth'
+import { sendDebugLog } from '../utils/debugLog'
 
 interface FileUploadProps {
   onUpload: (file: File, uploadResponse?: any) => void | Promise<void>
@@ -27,29 +28,15 @@ export default function FileUpload({
   const xhrRef = useRef<XMLHttpRequest | null>(null)
 
   const uploadWithProgress = useCallback((file: File, url: string): Promise<any> => {
-      console.log('FileUpload: Upload started', { userExists: !!user, userId: user?.id })
-      // Use local debug API instead of external service - fire and forget
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'FileUpload',
-          message: 'upload_started',
-          data: {
-            userExists: !!user,
-            userId: user?.id,
-            userEmail: user?.email,
-            tokenExists: !!localStorage.getItem('token')
-          },
-          sessionId: 'debug-session',
-          runId: 'debug-userid',
-          hypothesisId: 'A',
-          timestamp: Date.now()
-        }),
-      }).catch(() => {
-        // Silently ignore debug log failures
-      })
-    // #endregion
+    console.log('FileUpload: Upload started', { userExists: !!user, userId: user?.id })
+    sendDebugLog('FileUpload', 'upload_started', {
+      userExists: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      tokenExists: !!localStorage.getItem('token'),
+      sessionId: 'debug-session',
+      runId: 'debug-userid',
+    })
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
@@ -61,69 +48,19 @@ export default function FileUpload({
       formData.append('title', file.name)
 
       console.log('FileUpload: FormData created', { userIdValue: user?.id })
-      // Use local debug API instead of external service - fire and forget
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'FileUpload',
-          message: 'formdata_created',
-          data: {
-            userIdValue: user?.id,
-            userExists: !!user
-          },
-          sessionId: 'debug-session',
-          runId: 'debug-userid',
-          hypothesisId: 'B',
-          timestamp: Date.now()
-        }),
-      }).catch(() => {
-        // Silently ignore debug log failures
-      })
-      // #endregion
+      sendDebugLog('FileUpload', 'formdata_created', { userIdValue: user?.id, userExists: !!user, sessionId: 'debug-session', runId: 'debug-userid' })
 
       // Add userId - required field for backend validation
       if (user?.id) {
-        // #region agent log
-        fetch('/api/debug/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            component: 'FileUpload',
-            message: 'using_user_id',
-            data: { userId: user.id },
-            sessionId: 'debug-session',
-            runId: 'debug-userid',
-            hypothesisId: 'C',
-            timestamp: Date.now()
-          }),
-        }).catch(() => {
-          // Silently ignore debug log failures
-        })
-        // #endregion
-
+        sendDebugLog('FileUpload', 'using_user_id', { userId: user.id, sessionId: 'debug-session', runId: 'debug-userid' })
         formData.append('userId', user.id)
       } else {
-        // #region agent log
-        fetch('/api/debug/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            component: 'FileUpload',
-            message: 'user_id_fallback',
-            data: {
-              storedUserId: localStorage.getItem('userId'),
-              willUseMock: true
-            },
-            sessionId: 'debug-session',
-            runId: 'debug-userid',
-            hypothesisId: 'D',
-            timestamp: Date.now()
-          }),
-        }).catch(() => {
-          // Silently ignore debug log failures
+        sendDebugLog('FileUpload', 'user_id_fallback', {
+          storedUserId: localStorage.getItem('userId'),
+          willUseMock: true,
+          sessionId: 'debug-session',
+          runId: 'debug-userid',
         })
-        // #endregion
 
         // Fallback to localStorage userId if user object not loaded yet
         const storedUserId = localStorage.getItem('userId')
@@ -209,7 +146,7 @@ export default function FileUpload({
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return
-    
+
     const file = acceptedFiles[0]
     setUploading(true)
     setProgress(0)
@@ -257,11 +194,10 @@ export default function FileUpload({
     <div className="w-full">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-          isDragActive
-            ? 'border-purple-500 bg-purple-50'
-            : 'border-gray-300 hover:border-purple-400'
-        } ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragActive
+          ? 'border-purple-500 bg-purple-50'
+          : 'border-gray-300 hover:border-purple-400'
+          } ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
         role="button"
         aria-label="File upload area"
         aria-disabled={disabled || uploading}

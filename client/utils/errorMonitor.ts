@@ -4,6 +4,7 @@
 
 import { errorHandler } from './errorHandler'
 import { extractApiError } from './apiResponse'
+import { sendDebugLogNow } from './debugLog'
 
 interface ErrorThresholds {
   maxErrorsPerMinute: number
@@ -283,37 +284,15 @@ export class ErrorMonitor {
     console[level](`[ErrorMonitor] ${alert.type.toUpperCase()}:`, alert)
   }
 
-  private async sendToDebugLog(alert: any): Promise<void> {
+  private sendToDebugLog(alert: any): void {
     try {
       console.log('ErrorMonitor:', alert)
-      // Use local debug API instead of external service
-      // Create abort controller for timeout (AbortSignal.timeout may not be supported in all browsers)
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000)
-      
-      try {
-        await fetch('/api/debug/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            component: 'ErrorMonitor',
-            message: `error_alert_${alert.type}`,
-            data: {
-              ...alert,
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              runId: 'run-error-monitor'
-            }
-          }),
-          signal: controller.signal
-        }).finally(() => {
-          clearTimeout(timeoutId)
-        })
-      } catch (fetchErr) {
-        clearTimeout(timeoutId)
-        // Silently fail for debug logging
-      }
-    } catch (error) {
+      sendDebugLogNow('ErrorMonitor', `error_alert_${alert.type}`, {
+        ...alert,
+        sessionId: 'debug-session',
+        runId: 'run-error-monitor',
+      })
+    } catch {
       // Silently fail for debug logging
     }
   }

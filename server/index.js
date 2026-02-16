@@ -195,7 +195,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { enhancedErrorHandler, notFoundHandler, initErrorHandlers } = require('./middleware/enhancedErrorHandler');
 const { apiLimiter } = require('./middleware/enhancedRateLimiter');
 const requestLogger = require('./middleware/requestLogger');
-const { requestTimeout, getTimeoutForRoute } = require('./middleware/requestTimeout');
+const { requestTimeoutRouteAware, getTimeoutForRoute } = require('./middleware/requestTimeout');
 const { cleanupOldFiles } = require('./utils/fileCleanup');
 // logger is already imported above (needed for error handlers)
 const { initializeSocket } = require('./services/socketService');
@@ -816,8 +816,8 @@ app.use(featureFlagsMiddleware);
 const { apiVersioning } = require('./middleware/apiVersioning');
 app.use('/api', apiVersioning);
 
-// Request timeout (global — 30s default; set REQUEST_TIMEOUT env for override)
-app.use(requestTimeout(parseInt(process.env.REQUEST_TIMEOUT, 10) || getTimeoutForRoute('default')));
+// Request timeout (route-aware: 30s default, 5min upload, 10min video/export)
+app.use(requestTimeoutRouteAware(parseInt(process.env.REQUEST_TIMEOUT, 10) || getTimeoutForRoute('default')));
 
 // Request logging (before other middleware)
 app.use(requestLogger);
@@ -829,6 +829,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request ID middleware
 const { addRequestId } = require('./middleware/requestId');
 app.use(addRequestId);
+
+// Dev mode flag – available to all routes (auth also sets it for authenticated requests)
+const { allowDevMode } = require('./utils/devUser');
+app.use((req, res, next) => {
+  req.allowDevMode = allowDevMode(req);
+  next();
+});
 
 // Targeted request timing for debugging (avoid logging secrets)
 app.use('/api', (req, res, next) => {

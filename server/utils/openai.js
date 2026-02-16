@@ -1,5 +1,6 @@
 // OpenAI client for moderation, completions, etc.
-// Used by contentModerationService and other AI features.
+// Used by contentModerationService (now uses googleAI) and legacy services.
+// Services have been migrated to use ../utils/googleAI; this is kept for any remaining references.
 
 let client = null;
 try {

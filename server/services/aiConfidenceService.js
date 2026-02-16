@@ -2,25 +2,8 @@
 // Analyze AI-generated content for confidence and edit effort
 
 const AIConfidenceScore = require('../models/AIConfidenceScore');
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for AI confidence', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Analyze content confidence
@@ -114,29 +97,14 @@ Respond with JSON:
   }
 }`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot analyze confidence');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot analyze confidence');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a content quality analyst. Analyze content and provide confidence scores.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.3,
-      response_format: { type: 'json_object' }
-    });
-
-    const analysis = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `You are a content quality analyst. Analyze content and provide confidence scores. Return valid JSON only.\n\n${prompt}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1024 });
+    const analysis = JSON.parse(raw || '{}');
 
     return {
       aspectConfidence: {
@@ -196,10 +164,10 @@ Respond with JSON:
 function calculateOverallConfidence(analysis) {
   const aspects = Object.values(analysis.aspectConfidence);
   const breakdown = Object.values(analysis.breakdown);
-  
+
   const aspectAvg = aspects.reduce((sum, val) => sum + val, 0) / aspects.length;
   const breakdownAvg = breakdown.reduce((sum, val) => sum + val, 0) / breakdown.length;
-  
+
   return Math.round((aspectAvg + breakdownAvg) / 2);
 }
 
@@ -324,8 +292,8 @@ function determineHumanReviewNeeded(overallConfidence, editEffort, uncertaintyFl
   // - Edit effort above 50
   // - Critical or high severity flags
   return overallConfidence < 70 ||
-         editEffort > 50 ||
-         uncertaintyFlags.some(f => f.severity === 'high' || f.severity === 'critical');
+    editEffort > 50 ||
+    uncertaintyFlags.some(f => f.severity === 'high' || f.severity === 'critical');
 }
 
 /**
@@ -333,15 +301,15 @@ function determineHumanReviewNeeded(overallConfidence, editEffort, uncertaintyFl
  */
 function generateReviewReason(uncertaintyFlags, overallConfidence) {
   const criticalFlags = uncertaintyFlags.filter(f => f.severity === 'critical' || f.severity === 'high');
-  
+
   if (criticalFlags.length > 0) {
     return `High priority flags: ${criticalFlags.map(f => f.type).join(', ')}`;
   }
-  
+
   if (overallConfidence < 70) {
     return `Low confidence score: ${overallConfidence}%`;
   }
-  
+
   return 'Multiple uncertainty flags detected';
 }
 

@@ -1,24 +1,7 @@
 // Advanced Content Generation Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for advanced content generation', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate content with advanced options
@@ -58,29 +41,13 @@ ${keywords.length > 0 ? `- Include keywords: ${keywords.join(', ')}` : ''}
 
 Generate high-quality content that meets all requirements.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate content');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert content writer. Generate high-quality, engaging content that meets all specified requirements.',
-        },
-        {
-          role: 'user',
-          content: enhancedPrompt,
-        },
-      ],
-      temperature: 0.8,
-      max_tokens: maxTokens * 2, // Token estimate
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are an expert content writer. Generate high-quality, engaging content that meets all specified requirements.\n\n${enhancedPrompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: maxTokens * 2 });
 
     logger.info('Advanced content generated', { style, tone, length });
     return {
@@ -121,31 +88,17 @@ Variation ${i + 1}:
 
 Provide the variation:`;
 
-      const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+      if (!geminiConfigured) {
+        logger.warn('Google AI API key not configured, cannot generate content variations');
+        throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
+      }
 
-    const response = await client.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a creative content writer. Create engaging variations while maintaining the core message.',
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.9,
-        max_tokens: 1000,
-      });
+      const fullPrompt = `You are a creative content writer. Create engaging variations while maintaining the core message.\n\n${prompt}`;
+      const variationContent = await geminiGenerate(fullPrompt, { temperature: 0.9, maxTokens: 1000 });
 
       variations.push({
         variation: i + 1,
-        content: response.choices[0].message.content,
+        content: variationContent,
         angle: getVariationAngle(i),
       });
     }
@@ -221,30 +174,14 @@ For each section, provide:
 
 Format as JSON object with sections array, each containing: name, content, keyPoints (array)`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate content');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate content');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a template-based content generator. Create structured content following templates.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 2500,
-    });
+    const fullPrompt = `You are a template-based content generator. Create structured content following templates.\n\n${prompt}`;
+    const contentText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2500 });
 
-    const contentText = response.choices[0].message.content;
-    
     let content;
     try {
       content = JSON.parse(contentText);

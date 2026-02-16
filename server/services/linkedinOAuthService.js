@@ -401,8 +401,8 @@ async function getLinkedInUserInfo(accessToken, userId = null) {
   const res = userId
     ? await linkedInRequest(doGet, { userId, action: 'getLinkedInUserInfo' })
     : await doGet().catch((err) => {
-        throw linkedInError(err);
-      });
+      throw linkedInError(err);
+    });
   const data = res.data;
   return {
     id: data.sub,
@@ -850,6 +850,44 @@ function healthCheck() {
   };
 }
 
+/**
+ * Refresh LinkedIn access token using only a refresh token (no Supabase).
+ * For use by tokenRefreshService when updating SocialConnection (MongoDB).
+ * @param {string} refreshToken - LinkedIn refresh token
+ * @returns {{ accessToken: string, refreshToken?: string, expiresIn?: number }}
+ */
+async function refreshWithRefreshToken(refreshToken) {
+  if (!refreshToken || typeof refreshToken !== 'string') {
+    throw new Error('refreshToken is required');
+  }
+  const clientId = process.env.LINKEDIN_CLIENT_ID;
+  const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error('LinkedIn OAuth not configured (LINKEDIN_CLIENT_ID/SECRET)');
+  }
+  const body = tokenRequestBody({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: clientId,
+    client_secret: clientSecret,
+  });
+  const timeout = getRequestTimeoutMs();
+  const response = await axios.post(TOKEN_URL, body, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    timeout,
+    validateStatus: (s) => s >= 200 && s < 300,
+  });
+  const { access_token, expires_in, refresh_token: newRefresh } = response.data;
+  if (!access_token) {
+    throw new Error('LinkedIn did not return an access token on refresh');
+  }
+  return {
+    accessToken: access_token,
+    refreshToken: newRefresh || refreshToken,
+    expiresIn: expires_in,
+  };
+}
+
 module.exports = {
   isConfigured,
   getScope,
@@ -861,6 +899,7 @@ module.exports = {
   getLinkedInUserInfo,
   getLinkedInClient,
   refreshAccessToken,
+  refreshWithRefreshToken,
   postToLinkedIn,
   disconnectLinkedIn,
   getConnectionStatus,

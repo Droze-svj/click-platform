@@ -1,18 +1,14 @@
 // Script generation service using AI
 
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-}) : null;
 
 /**
  * Generate YouTube video script
  */
 async function generateYouTubeScript(topic, options = {}) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, using fallback script');
+  if (!geminiConfigured) {
+    logger.warn('Google AI API key not configured, using fallback script');
     return generateFallbackScript('youtube', topic, options);
   }
 
@@ -64,19 +60,11 @@ Format the script as JSON with this structure:
   ]
 }`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are an expert scriptwriter specializing in engaging video content.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are an expert scriptwriter specializing in engaging video content.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
+    if (!content) throw new Error('No response from AI');
     const script = JSON.parse(content);
-    
+
     // Combine into full script text
     let fullScript = script.introduction + '\n\n';
     script.mainPoints.forEach((point, index) => {
@@ -103,7 +91,7 @@ Format the script as JSON with this structure:
  * Generate podcast script
  */
 async function generatePodcastScript(topic, options = {}) {
-  if (!openai) {
+  if (!geminiConfigured) {
     return generateFallbackScript('podcast', topic, options);
   }
 
@@ -130,19 +118,10 @@ Requirements:
 
 Format as JSON with structure similar to YouTube script but adapted for podcast format.`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are an expert podcast scriptwriter.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3000
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are an expert podcast scriptwriter.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 3000 });
     const script = JSON.parse(content);
-    
+
     let fullScript = script.introduction + '\n\n';
     script.mainPoints.forEach((point) => {
       fullScript += `${point.title}\n${point.content}\n\n`;
@@ -168,7 +147,7 @@ Format as JSON with structure similar to YouTube script but adapted for podcast 
  * Generate social media script
  */
 async function generateSocialMediaScript(topic, options = {}) {
-  if (!openai) {
+  if (!geminiConfigured) {
     return generateFallbackScript('social-media', topic, options);
   }
 
@@ -199,19 +178,10 @@ Requirements:
 - Include a call-to-action
 - Format as JSON with: title, content, hashtags, callToAction`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are an expert social media content creator.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 500
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are an expert social media content creator.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 500 });
     const script = JSON.parse(content);
-    
+
     let fullScript = script.content || '';
     if (script.callToAction) {
       fullScript += `\n\n${script.callToAction}`;
@@ -235,7 +205,7 @@ Requirements:
  * Generate blog post script/outline
  */
 async function generateBlogScript(topic, options = {}) {
-  if (!openai) {
+  if (!geminiConfigured) {
     return generateFallbackScript('blog', topic, options);
   }
 
@@ -256,19 +226,10 @@ Requirements:
 - Make it engaging and informative
 - Format as JSON with: title, introduction, sections (array with title and content), conclusion, keywords, metaDescription`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are an expert blog writer and SEO specialist.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are an expert blog writer and SEO specialist.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
     const script = JSON.parse(content);
-    
+
     let fullScript = script.introduction + '\n\n';
     script.sections.forEach((section) => {
       fullScript += `## ${section.title}\n\n${section.content}\n\n`;
@@ -290,7 +251,7 @@ Requirements:
  * Generate email script
  */
 async function generateEmailScript(topic, options = {}) {
-  if (!openai) {
+  if (!geminiConfigured) {
     return generateFallbackScript('email', topic, options);
   }
 
@@ -319,19 +280,10 @@ Requirements:
 - Include call-to-action
 - Format as JSON with: subject, opening, body, callToAction`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are an expert email copywriter.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 800
-    });
-
-    const content = response.choices[0].message.content;
+    const fullPrompt = `You are an expert email copywriter.\n\n${prompt}`;
+    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 800 });
     const script = JSON.parse(content);
-    
+
     const fullScript = `${script.subject}\n\n${script.opening}\n\n${script.body}\n\n${script.callToAction}`;
 
     return {

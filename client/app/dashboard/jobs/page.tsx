@@ -119,7 +119,7 @@ export default function JobsDashboard() {
       // Find which queue the job is in
       const allJobs = [...userJobs.active, ...userJobs.completed, ...userJobs.failed]
       const job = allJobs.find(j => j.id === jobId)
-      
+
       if (!job) return
 
       // Try to cancel (we'll need to find the queue)
@@ -222,11 +222,10 @@ export default function JobsDashboard() {
             {/* Auto Refresh Toggle */}
             <button
               onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
-                autoRefresh
+              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${autoRefresh
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-              }`}
+                }`}
             >
               <RefreshCw className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
               Auto Refresh
@@ -386,12 +385,12 @@ function JobCard({ job, onCancel, onViewDetails }: { job: Job; onCancel: (id: st
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <span className={`px-2 py-1 rounded text-xs font-medium ${getStateColor(job.state)}`}>
-              {job.state.toUpperCase()}
+            <span className={`px-2 py-1 rounded text-xs font-medium ${getStateColor(job.state ?? 'unknown')}`}>
+              {(job.state ?? 'unknown').toUpperCase()}
             </span>
             <span className="text-sm font-medium">{job.name}</span>
           </div>
-          
+
           {job.state === 'active' && (
             <div className="mt-2">
               <div className="flex items-center justify-between text-sm mb-1">

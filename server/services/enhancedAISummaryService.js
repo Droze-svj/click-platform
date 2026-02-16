@@ -1,25 +1,8 @@
 // Enhanced AI Summary Service
 // Custom prompts, multi-language, industry-specific insights
 
-const OpenAI = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for enhanced AI summary', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Generate enhanced AI summary with custom prompts
@@ -54,30 +37,16 @@ async function generateEnhancedSummary(reportData, options = {}) {
       prompt += `\n\nInclude predictions for next period based on current trends.`;
     }
 
-    // Generate summary
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot generate enhanced summary');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured, cannot generate enhanced summary');
+      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
     }
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a business communication expert who translates technical metrics into clear, client-friendly language.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+    const fullPrompt = `You are a business communication expert who translates technical metrics into clear, client-friendly language.\n\n${prompt}`;
+    const summaryText = await geminiGenerate(fullPrompt, {
       temperature: 0.7,
-      max_tokens: length === 'short' ? 300 : (length === 'medium' ? 500 : 800)
+      maxTokens: length === 'short' ? 300 : (length === 'medium' ? 500 : 800)
     });
-
-    const summaryText = response.choices[0].message.content;
 
     // Generate additional insights
     const insights = await generateInsights(reportData, industry);
@@ -92,7 +61,7 @@ async function generateEnhancedSummary(reportData, options = {}) {
       benchmarks,
       recommendations: await generateRecommendations(reportData),
       generatedAt: new Date(),
-      model: 'gpt-4',
+      model: 'gemini-1.5-flash',
       language,
       industry
     };
@@ -148,7 +117,7 @@ async function generateInsights(reportData, industry = null) {
     const insights = [];
 
     // Find patterns
-    const highPerformers = reportData.metrics.filter(m => 
+    const highPerformers = reportData.metrics.filter(m =>
       m.change && m.change.trend === 'up' && Math.abs(m.change.percentage) > 15
     );
 
@@ -184,7 +153,7 @@ async function generatePredictions(reportData) {
     const predictions = [];
 
     // Analyze trends
-    const trendingUp = reportData.metrics.filter(m => 
+    const trendingUp = reportData.metrics.filter(m =>
       m.change && m.change.trend === 'up' && m.change.percentage > 10
     );
 
@@ -290,8 +259,8 @@ function extractHighlights(metrics) {
  */
 async function generateRecommendations(reportData) {
   const recommendations = [];
-  
-  const declining = reportData.metrics.filter(m => 
+
+  const declining = reportData.metrics.filter(m =>
     m.change && m.change.trend === 'down' && Math.abs(m.change.percentage) > 5
   );
 

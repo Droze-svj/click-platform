@@ -43,6 +43,11 @@ import BasicEditorView from './editor/views/BasicEditorView'
 import ScriptGeneratorView from './editor/views/ScriptGeneratorView'
 import SchedulingView from './editor/views/SchedulingView'
 import ShortClipsView from './editor/views/ShortClipsView'
+import SettingsView from './editor/views/SettingsView'
+import ChromakeyView, { ChromaKeySettings } from './editor/views/ChromakeyView'
+import VisualFXView from './editor/views/VisualFXView'
+import AIAnalysisView from './editor/views/AIAnalysisView'
+import AIAssistView from './editor/views/AIAssistView'
 
 import AchievementSystem from './AchievementSystem'
 import { useVideoEditorAutosave } from '../hooks/useVideoEditorAutosave'
@@ -57,10 +62,10 @@ const NEUTRAL_FILTER: VideoFilter = {
 
 const LAYOUT_STORAGE_KEY = 'click-editor-layout'
 const TRACK_VISIBILITY_KEY = 'click-editor-track-visibility'
-import type { EditorLayoutPreferences } from '../types/editor'
+import type { EditorLayoutPreferences, PreviewSize } from '../types/editor'
 
 const DEFAULT_LAYOUT: EditorLayoutPreferences = {
-  previewSize: 'medium',
+  previewSize: 'auto', // auto-adjust based on viewport so everything stays visible
   timelineDensity: 'comfortable',
   focusMode: 'balanced',
 }
@@ -72,7 +77,7 @@ function loadLayoutPreferences(): EditorLayoutPreferences {
     if (!raw) return DEFAULT_LAYOUT
     const parsed = JSON.parse(raw) as Partial<EditorLayoutPreferences>
     return {
-      previewSize: ['small', 'medium', 'large'].includes(parsed.previewSize ?? '') ? parsed.previewSize! : DEFAULT_LAYOUT.previewSize,
+      previewSize: ['auto', 'small', 'medium', 'large', 'fill'].includes(parsed.previewSize ?? '') ? parsed.previewSize! : DEFAULT_LAYOUT.previewSize,
       timelineDensity: ['compact', 'comfortable', 'expanded'].includes(parsed.timelineDensity ?? '') ? parsed.timelineDensity! : DEFAULT_LAYOUT.timelineDensity,
       focusMode: ['balanced', 'preview', 'timeline'].includes(parsed.focusMode ?? '') ? parsed.focusMode! : DEFAULT_LAYOUT.focusMode,
     }
@@ -126,8 +131,16 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     } catch { return {} }
   })
   const [colorGradeSettings, setColorGradeSettings] = useState<any>({})
-  const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>({
+  const [chromaKey, setChromaKey] = useState<ChromaKeySettings>({
     enabled: false,
+    color: '#00ff00',
+    tolerance: 40,
+    spill: 50,
+    edge: 25,
+    opacity: 100,
+  })
+  const [captionStyle, setCaptionStyle] = useState<CaptionStyle | null>({
+    enabled: true,
     size: 'medium',
     font: 'Inter, sans-serif',
     layout: 'bottom-center',
@@ -161,6 +174,19 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const updateLayout = useCallback((patch: Partial<EditorLayoutPreferences>) => {
     setLayoutPrefs((p) => ({ ...p, ...patch }))
   }, [])
+
+  // Auto-adjust preview size based on viewport when layoutPrefs.previewSize === 'auto'
+  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1400)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleResize = () => setViewportWidth(window.innerWidth)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  const effectivePreviewSize: Exclude<PreviewSize, 'auto'> = layoutPrefs.previewSize === 'auto'
+    ? (viewportWidth < 1200 ? 'small' : viewportWidth < 1500 ? 'medium' : viewportWidth < 1800 ? 'large' : 'fill')
+    : layoutPrefs.previewSize
 
   // Shortcuts Hub (after all state used in handlers)
   useEffect(() => {
@@ -325,6 +351,24 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     }
   }, [history, historyIndex])
 
+  // Undo/Redo keyboard shortcuts (must run after handleUndo/handleRedo are defined)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      const inInput = target?.closest?.('input, textarea, [contenteditable="true"]')
+      if (inInput) return
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        handleRedo()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleUndo, handleRedo])
+
   // View Orchestration
   const [isLoading, setIsLoading] = useState(false)
   const [useProfessionalTimeline, setUseProfessionalTimeline] = useState(true)
@@ -348,27 +392,53 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       case 'accounts':
       case 'remix':
         return <SocialVaultView category={activeCategory} currentTime={videoState.currentTime} videoId={videoId || ''} setActiveCategory={setActiveCategory} showToast={showToast} />
-      default: return null
+      case 'settings':
+        return <SettingsView layoutPrefs={layoutPrefs} onLayoutChange={updateLayout} setShowKeyboardHelp={() => setShowKeyboardHelp(true)} setActiveCategory={setActiveCategory} showToast={showToast} />
+      case 'chromakey':
+        return <ChromakeyView chromaKey={chromaKey} setChromaKey={setChromaKey} showToast={showToast} />
+      case 'visual-fx':
+        return <VisualFXView videoState={videoState} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} setActiveCategory={setActiveCategory} showToast={showToast} />
+      case 'ai-analysis':
+        return <AIAnalysisView videoId={videoId || ''} videoDuration={videoState.duration} currentTime={videoState.currentTime} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} />
+      case 'ai':
+        return <AIAssistView setActiveCategory={setActiveCategory} showToast={showToast} />
+      default:
+        return (
+          <div className="rounded-2xl border border-subtle bg-surface-card p-8 text-center">
+            <div className="w-14 h-14 rounded-xl bg-accent-violet mx-auto mb-4 flex items-center justify-center">
+              <EditToolIcon className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-theme-primary mb-2">Coming soon</h3>
+            <p className="text-sm text-theme-secondary max-w-sm mx-auto">
+              This tool is in development. Use Edit, Color, Effects, Timeline, or Export in the meantime.
+            </p>
+          </div>
+        )
     }
   }
 
   if (!actualVideoUrl && !isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Video className="w-10 h-10 text-blue-600" />
+      <div className="min-h-screen bg-surface-page flex items-center justify-center p-4">
+        <div className="text-center max-w-md w-full bg-surface-card rounded-2xl border border-subtle shadow-theme-card p-8 sm:p-10">
+          <div className="w-16 h-16 bg-accent-violet rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <Video className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Video Loaded</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Please provide a video URL to start editing.</p>
-          <button onClick={() => window.location.href = '/dashboard/video'} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">Go to Videos</button>
+          <h2 className="text-xl font-bold text-theme-primary mb-2">No video loaded</h2>
+          <p className="text-theme-secondary mb-6 leading-relaxed">Open a video from the library to start editing.</p>
+          <button
+            onClick={() => window.location.href = '/dashboard/video'}
+            className="inline-flex items-center gap-2 bg-accent-violet hover:opacity-90 text-white px-6 py-3 rounded-xl font-semibold shadow-theme-card transition-all"
+          >
+            Go to videos
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={`h-screen flex overflow-hidden transition-colors ${preferences.isOledTheme ? 'bg-black text-white' : 'bg-slate-50 text-slate-900 dark:bg-gray-900 dark:text-white'} ${reduceMotion ? 'reduce-motion-editor' : ''}`} data-reduce-motion={reduceMotion}>
+    <div className={`h-screen flex overflow-hidden transition-colors ${preferences.isOledTheme ? 'bg-black text-white' : 'bg-surface-page text-theme-primary'} ${reduceMotion ? 'reduce-motion-editor' : ''}`} data-reduce-motion={reduceMotion}>
       <AchievementSystem />
 
       <CommandK
@@ -423,10 +493,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
         <div className="flex-1 flex overflow-hidden relative">
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             {/* Adaptable layout: focus mode can hide content panel; preview size and timeline density applied below */}
-            <div className={`flex-1 flex flex-col xl:flex-row overflow-hidden p-3 lg:p-5 gap-3 lg:gap-5 ${reduceMotion ? 'transition-none' : 'transition-all duration-300'} ${layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 'content-panel-hidden' : ''}`}>
-              {/* Content Panel - hidden when focus mode is preview or timeline */}
-              <div className={`flex-1 flex flex-col transition-all duration-500 overflow-hidden min-w-0 ${contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 'flex-[0.0001] opacity-0 pointer-events-none' : 'flex-1'}`}>
-                <div className="flex-1 bg-white dark:bg-gray-800/50 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700/50 overflow-hidden flex flex-col">
+            <div className={`flex-1 flex flex-col xl:flex-row overflow-hidden gap-3 lg:gap-5 ${layoutPrefs.focusMode === 'preview' ? 'p-2 lg:p-3' : 'p-3 lg:p-5'} ${reduceMotion ? 'transition-none' : 'transition-all duration-300'} ${layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 'content-panel-hidden' : ''}`}>
+              {/* Content Panel - fixed width on xl so preview column gets all remaining space */}
+              <div className={`flex flex-col transition-all duration-500 overflow-hidden min-w-0 ${contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 'flex-[0.0001] opacity-0 pointer-events-none xl:max-w-0' : 'flex-1 xl:flex-none xl:w-[400px] xl:max-w-[400px]'}`}>
+                <div className="flex-1 bg-surface-card rounded-2xl shadow-theme-card border border-subtle overflow-hidden flex flex-col">
                   <div className="editor-auto flex-1 overflow-y-auto p-4 lg:p-6 custom-scrollbar min-w-0">
                     <AnimatePresence mode="wait">
                       <motion.div
@@ -444,14 +514,14 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 </div>
               </div>
 
-              {/* Video Preview - size from layout prefs: small 360, medium 480, large 600 */}
-              <div className={`flex shrink-0 w-full ${reduceMotion ? '' : 'transition-all duration-300'} ${layoutPrefs.previewSize === 'small' ? 'xl:w-[360px] 2xl:w-[400px]' : layoutPrefs.previewSize === 'large' ? 'xl:w-[560px] 2xl:w-[680px]' : 'xl:w-[480px] 2xl:w-[600px]'}`}>
-                <div className="h-full flex flex-col rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 bg-slate-900/40 shadow-2xl shadow-black/20">
-                  <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/60 bg-slate-800/60 shrink-0">
-                    <Film className="w-4 h-4 text-amber-400/90" />
-                    <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Preview</span>
+              {/* Video Preview - size from effectivePreviewSize (auto = viewport-based); fill uses all space */}
+              <div className={`flex-1 flex min-w-0 w-full overflow-hidden ${reduceMotion ? '' : 'transition-all duration-300'} ${layoutPrefs.focusMode === 'preview' ? 'min-h-[55vh] xl:min-h-[65vh]' : 'min-h-[460px] xl:min-h-[540px]'} ${effectivePreviewSize !== 'fill' ? 'justify-center' : ''}`}>
+                <div className={`h-full min-h-0 flex flex-col rounded-2xl overflow-hidden border border-subtle bg-surface-elevated shadow-theme-card ${effectivePreviewSize === 'small' ? 'w-full max-w-[640px]' : effectivePreviewSize === 'medium' ? 'w-full max-w-[800px]' : effectivePreviewSize === 'large' ? 'w-full max-w-[1000px]' : 'w-full min-w-0'}`}>
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-subtle bg-surface-card shrink-0">
+                    <Film className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    <span className="text-xs font-semibold text-theme-secondary uppercase tracking-wider">Preview</span>
                   </div>
-                  <div className="flex-1 min-h-0 flex items-center justify-center p-2">
+                  <div className="relative flex-1 min-h-0 min-w-0 w-full" style={{ minHeight: 320 }}>
                     <RealTimeVideoPreview
                       videoUrl={actualVideoUrl || ''}
                       currentTime={videoState.currentTime}
@@ -487,11 +557,11 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <List className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Timeline</span>
+                    <List className="w-4 h-4 text-theme-muted" />
+                    <span className="text-xs font-semibold text-theme-secondary uppercase tracking-wider">Timeline</span>
                   </div>
-                  <span className="text-xs font-mono text-slate-500 dark:text-slate-500 tabular-nums" title="Current / Duration">
-                    {formatTime(videoState.currentTime)} <span className="text-slate-400">/</span> {formatTime(videoState.duration)}
+                  <span className="text-xs font-mono text-theme-muted tabular-nums" title="Current / Duration">
+                    {formatTime(videoState.currentTime)} <span className="opacity-80">/</span> {formatTime(videoState.duration)}
                   </span>
                 </div>
                 <div className="flex gap-1">
@@ -501,8 +571,8 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                       type="button"
                       onClick={() => setPlaybackSpeed(s)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${playbackSpeed === s
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        ? 'bg-accent-violet text-white'
+                        : 'bg-surface-card border border-subtle text-theme-secondary hover:bg-surface-card-hover'
                         }`}
                     >
                       {s}x

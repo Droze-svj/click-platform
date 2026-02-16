@@ -25,7 +25,7 @@ function requestTimeout(timeoutMs = 30000) {
         u.includes('/auth/me')
       ) {
       }
-    } catch {}
+    } catch { }
     // #endregion
 
     // Set timeout
@@ -39,7 +39,7 @@ function requestTimeout(timeoutMs = 30000) {
 
         // #region agent log
         try {
-        } catch {}
+        } catch { }
         // #endregion
 
         res.status(504).json({
@@ -105,9 +105,51 @@ function getTimeoutForRoute(routeType = 'default') {
   return timeoutConfig[routeType] || timeoutConfig.default;
 }
 
+/**
+ * Infer route type from path for dynamic timeout
+ */
+function getRouteTypeFromPath(path = '') {
+  const p = (path || '').toLowerCase();
+  if (p.includes('/api/video/upload') || p.includes('/upload') && p.includes('video')) return 'upload';
+  if (p.includes('/api/video') || p.includes('/api/export') || p.includes('/render')) return 'processing';
+  if (p.includes('/api/analytics') || p.includes('/report')) return 'analytics';
+  if (p.includes('/auth/') || p.includes('/oauth/')) return 'auth';
+  return 'default';
+}
+
+/**
+ * Route-aware request timeout: uses longer timeouts for video/export/upload
+ */
+function requestTimeoutRouteAware(defaultMs) {
+  const fallback = typeof defaultMs === 'number' && defaultMs > 0 ? defaultMs : timeoutConfig.default;
+  return (req, res, next) => {
+    const routeType = getRouteTypeFromPath(req.path || req.originalUrl);
+    const timeoutMs = getTimeoutForRoute(routeType);
+    req.setTimeout(timeoutMs, () => {
+      if (!res.headersSent) {
+        logger.warn('Request timeout', {
+          url: req.originalUrl,
+          method: req.method,
+          timeout: timeoutMs,
+          routeType,
+        });
+        res.status(504).json({
+          success: false,
+          error: 'Request timeout',
+          message: `Request exceeded ${timeoutMs / 1000} seconds`,
+          code: 'REQUEST_TIMEOUT',
+        });
+      }
+    });
+    next();
+  };
+}
+
 module.exports = {
   requestTimeout,
   routeTimeout,
   getTimeoutForRoute,
+  getRouteTypeFromPath,
+  requestTimeoutRouteAware,
   timeoutConfig,
 };

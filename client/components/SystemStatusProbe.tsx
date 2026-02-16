@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { sendDebugLog } from '../utils/debugLog'
 
 declare global {
   interface Window {
@@ -18,17 +19,9 @@ export default function SystemStatusProbe() {
     if (window.__systemStatusProbeInstalled) return
     window.__systemStatusProbeInstalled = true
 
-    const send = (message: string, data: Record<string, any>) => {
+    const send = (message: string, data: Record<string, unknown>) => {
       console.log('SystemStatusProbe:', message, data)
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          component: 'SystemStatusProbe',
-          message,
-          data: { ...data, timestamp: Date.now() }
-        }),
-      }).catch(() => {})
+      sendDebugLog('SystemStatusProbe', message, data)
     }
 
     // Service Worker status tracking
@@ -232,9 +225,9 @@ export default function SystemStatusProbe() {
 
   // Expose status to window for DevDebugBanner
   useEffect(() => {
-    ;(window as any).__serviceWorkerStatus = serviceWorkerStatus
-    ;(window as any).__cacheStatus = cacheStatus
-    ;(window as any).__websocketStatus = webSocketStatus
+    ; (window as any).__serviceWorkerStatus = serviceWorkerStatus
+      ; (window as any).__cacheStatus = cacheStatus
+      ; (window as any).__websocketStatus = webSocketStatus
   }, [serviceWorkerStatus, cacheStatus, webSocketStatus])
 
   return null

@@ -11,7 +11,7 @@ const { generateHashtags } = require('./hashtagService');
 async function identifyRecyclableContentForPipeline(userId, contentId) {
   try {
     const contentRecyclingService = require('./contentRecyclingService');
-    
+
     // Check if content is recyclable
     const content = await Content.findById(contentId);
     if (!content) {
@@ -530,23 +530,19 @@ async function generateTikTokTextAssets(text, title) {
  */
 async function generateThread(text, title) {
   try {
-    const { OpenAI } = require('openai');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured');
+      return [];
+    }
 
-    const prompt = `Break this content into a Twitter thread (max 280 chars per tweet, 3-5 tweets):
-    
+    const prompt = `Break this content into a Twitter thread (max 280 chars per tweet, 3-5 tweets). Return valid JSON only with "tweets" array.
+
 Title: ${title}
-Content: ${text}
+Content: ${text}`;
 
-Return as JSON array of tweets.`;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content);
+    const raw = await geminiGenerate(prompt, { temperature: 0.7, maxTokens: 1024 });
+    const result = JSON.parse(raw || '{}');
     return (result.tweets || []).map((tweet, index) => ({
       type: 'thread',
       content: tweet,
@@ -652,7 +648,7 @@ async function distributeToNetworks(userId, contentId, assets, platforms) {
 
     for (const platform of platforms) {
       const platformAssets = assets[platform] || [];
-      
+
       for (const asset of platformAssets) {
         try {
           // Create scheduled post
@@ -752,7 +748,7 @@ async function publishAllNetworks(userId, contentId, options = {}) {
 
     for (const platform of platforms) {
       const assets = pipeline.assets[platform] || [];
-      
+
       for (const asset of assets) {
         try {
           if (schedule) {
@@ -904,13 +900,14 @@ async function generateContentVariations(userId, contentId, platform, count = 3)
 
     const originalAsset = pipeline.assets[platform][0];
     const variations = [];
-
-    const { OpenAI } = require('openai');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+    if (!geminiConfigured) {
+      throw new Error('Google AI API key not configured. Set GOOGLE_AI_API_KEY.');
+    }
 
     for (let i = 0; i < count; i++) {
-      const prompt = `Create a variation of this ${platform} post for A/B testing:
-      
+      const prompt = `Create a variation of this ${platform} post for A/B testing. Return valid JSON only with content, hashtags (array), variationType, hook.
+
 Original: ${originalAsset.content || originalAsset.caption || ''}
 Hashtags: ${(originalAsset.hashtags || []).join(', ')}
 
@@ -918,17 +915,10 @@ Create variation ${i + 1} with:
 - Different angle or hook
 - Different tone/style
 - Different hashtag mix
-- Same core message
+- Same core message`;
 
-Return JSON: {content: string, hashtags: [string], variationType: string, hook: string}`;
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' }
-      });
-
-      const variation = JSON.parse(response.choices[0].message.content);
+      const raw = await geminiGenerate(prompt, { temperature: 0.8, maxTokens: 1024 });
+      const variation = JSON.parse(raw || '{}');
       variations.push({
         ...variation,
         platform,

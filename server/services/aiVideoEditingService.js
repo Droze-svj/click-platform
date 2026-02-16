@@ -3,7 +3,6 @@
 // Creative & Quality: auto-zoom, text overlays, hook optimization, color grading, stabilization, audio ducking, best moments.
 // Advanced: sentiment analysis, beat sync, quality scoring, platform optimization, parallel processing, error recovery, smart cropping.
 
-const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 const Content = require('../models/Content');
 const { uploadFile } = require('./storageService');
@@ -71,20 +70,8 @@ function getMusicModel() {
   return Music;
 }
 
-let openai = null;
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const editCache = new Map(); // Cache for edit analysis results
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client', { error: error.message });
-      return null;
-    }
-  }
-  return openai;
-}
 
 /**
  * Analyze sentiment and emotions from transcript
@@ -93,24 +80,11 @@ async function analyzeSentimentAndEmotions(transcript) {
   if (!transcript) return null;
 
   try {
-    const client = getOpenAIClient();
-    if (!client) return null;
+    if (!geminiConfigured) return null;
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'Analyze the sentiment and emotions in this transcript. Return JSON with sentiment (positive/neutral/negative), emotions (array), and energyLevel (1-10).',
-        },
-        { role: 'user', content: transcript.substring(0, 2000) },
-      ],
-      temperature: 0.3,
-      max_tokens: 200,
-      response_format: { type: 'json_object' },
-    });
-
-    const analysis = JSON.parse(response.choices[0].message.content);
+    const fullPrompt = `Analyze the sentiment and emotions in this transcript. Return valid JSON only with: sentiment (positive/neutral/negative), emotions (array), energyLevel (1-10).\n\nTranscript:\n${transcript.substring(0, 2000)}`;
+    const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 200 });
+    const analysis = JSON.parse(raw || '{}');
     return {
       sentiment: analysis.sentiment || 'neutral',
       emotions: analysis.emotions || [],
@@ -1944,9 +1918,8 @@ async function analyzeVideoForEditing(videoMetadata) {
     const profileInsights = workspaceId ? await getProfileVideoInsights(workspaceId) : null;
     const editStyles = getEditStylesWithScores(baseScore);
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured');
+    if (!geminiConfigured) {
+      logger.warn('Google AI API key not configured');
       return validateAndClampAnalysis({
         suggestedEdits: ['Refine first 1–3s as niche-specific hook; use intentional silence and pacing.', 'Add captions for accessibility and reach.'],
         recommendedCuts: [],
@@ -1987,21 +1960,9 @@ RULES:
 
 Return valid JSON with: recommendedCuts (array of {start, end, reason, confidence}), transitions, audioAdjustments, pacingImprovements, highlights, suggestedLength, thumbnailMoments, suggestedEdits (array of strings), contentType, and optionally hookSuggestion, clipOutcome (strings).`;
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional video editor. Return only valid JSON. All timestamps must be within the video duration. Prefer data-driven suggestions (silence segments, transcript) over invented timestamps. Encourage: niche-specific hooks in first 1–3s (not generic "You won\'t believe…"), one clear outcome per clip (learn/feel/do), and intentional silence/pauses rather than wall-to-wall noise.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.2,
-      max_tokens: 2500,
-      response_format: { type: 'json_object' },
-    });
-
-    const analysisText = response.choices[0].message.content;
+    const systemMsg = 'You are a professional video editor. Return only valid JSON. All timestamps must be within the video duration. Prefer data-driven suggestions (silence segments, transcript) over invented timestamps. Encourage: niche-specific hooks in first 1–3s (not generic "You won\'t believe…"), one clear outcome per clip (learn/feel/do), and intentional silence/pauses rather than wall-to-wall noise.';
+    const fullPrompt = `${systemMsg}\n\n${prompt}`;
+    const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.2, maxTokens: 2500 });
     let analysis;
     try {
       analysis = JSON.parse(analysisText);

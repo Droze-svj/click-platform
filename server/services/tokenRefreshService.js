@@ -2,6 +2,7 @@
 
 const SocialConnection = require('../models/SocialConnection');
 const { refreshTwitterToken } = require('./oauthService');
+const { refreshWithRefreshToken: refreshLinkedInWithToken } = require('./linkedinOAuthService');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
@@ -35,10 +36,14 @@ async function refreshTokenIfNeeded(connection) {
           return connection;
 
         case 'linkedin':
-          // LinkedIn token refresh logic would go here
-          // For now, return connection as-is
-          logger.warn('LinkedIn token refresh not implemented yet');
-          return connection;
+          try {
+            newTokenData = await refreshLinkedInWithToken(connection.refreshToken);
+            newTokenData.expiresIn = newTokenData.expiresIn ?? 5184000; // LinkedIn default ~60 days in seconds
+          } catch (err) {
+            logger.warn('LinkedIn token refresh failed', { connectionId: connection._id, error: err.message });
+            return connection;
+          }
+          break;
 
         case 'facebook':
         case 'instagram':

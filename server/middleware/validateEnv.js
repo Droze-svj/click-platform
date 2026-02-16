@@ -6,7 +6,7 @@ const requiredEnvVars = [
 ];
 
 const optionalEnvVars = {
-  'OPENAI_API_KEY': 'AI features will be limited',
+  'GOOGLE_AI_API_KEY': 'AI features will be limited',
   'WHOP_API_KEY': 'WHOP subscription features will be disabled',
   'PORT': 'Will use default port 5001',
   'FRONTEND_URL': 'Will use default CORS settings'
@@ -37,7 +37,7 @@ function validateEnv() {
       console.error(`   - ${varName}`);
     });
     console.error('\nPlease set these variables in your .env file or Render.com environment variables');
-    
+
     // In production, log but don't exit - let server start to show health check endpoint
     if (process.env.NODE_ENV === 'production') {
       console.error('⚠️ Continuing in production mode. Server will start but may not function correctly.');

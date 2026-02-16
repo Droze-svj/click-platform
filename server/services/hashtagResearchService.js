@@ -1,23 +1,14 @@
 // Hashtag Research Service
 
-const { OpenAI } = require('openai');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
 
-// Lazy initialization - only create client when needed and if API key is available
-let openai = null;
-
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      logger.warn('Failed to initialize OpenAI client for hashtag research', { error: error.message });
-      return null;
-    }
+async function callGemini(systemPrompt, userPrompt, maxTokens = 1500, temperature = 0.5) {
+  if (!geminiConfigured) {
+    throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
   }
-  return openai;
+  const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+  return geminiGenerate(fullPrompt, { maxTokens, temperature });
 }
 
 /**
@@ -38,37 +29,18 @@ Provide:
 6. Content type recommendations
 7. Audience insights
 
-Format as JSON object with fields: estimatedReach, competitionLevel, useCases (array), relatedHashtags (array), optimalPostingTimes (array), contentTypes (array), audienceInsights (object)`;
+Format as JSON object with fields: estimatedReach, competitionLevel, useCases (array), relatedHashtags (array), optimalPostingTimes (array), contentTypes (array), audienceInsights (object). Return only valid JSON.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot research hashtags');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const researchText = await callGemini(
+      'You are a hashtag research expert. Provide detailed hashtag insights.',
+      prompt
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a hashtag research expert. Provide detailed hashtag insights.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.5,
-      max_tokens: 1500,
-    });
-
-    const researchText = response.choices[0].message.content;
-    
     let research;
     try {
-      research = JSON.parse(researchText);
+      research = JSON.parse(researchText || '{}');
     } catch (error) {
-      const jsonMatch = researchText.match(/\{[\s\S]*\}/);
+      const jsonMatch = (researchText || '').match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         research = JSON.parse(jsonMatch[0]);
       } else {
@@ -89,9 +61,6 @@ Format as JSON object with fields: estimatedReach, competitionLevel, useCases (a
  */
 async function getCompetitorHashtags(competitorUsername, platform) {
   try {
-    // In production, fetch actual competitor hashtags
-    // For now, provide framework
-    
     const prompt = `Analyze hashtag strategy for ${competitorUsername} on ${platform}:
 
 Provide:
@@ -102,37 +71,18 @@ Provide:
 5. Hashtag mix strategy
 6. Recommendations for similar strategy
 
-Format as JSON object with fields: topHashtags (array), categories (array), frequency (object), engagementPatterns (object), mixStrategy (object), recommendations (array)`;
+Format as JSON object with fields: topHashtags (array), categories (array), frequency (object), engagementPatterns (object), mixStrategy (object), recommendations (array). Return only valid JSON.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot research hashtags');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const analysisText = await callGemini(
+      'You are a competitive hashtag analyst. Analyze competitor hashtag strategies.',
+      prompt
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a competitive hashtag analyst. Analyze competitor hashtag strategies.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.5,
-      max_tokens: 1500,
-    });
-
-    const analysisText = response.choices[0].message.content;
-    
     let analysis;
     try {
-      analysis = JSON.parse(analysisText);
+      analysis = JSON.parse(analysisText || '{}');
     } catch (error) {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      const jsonMatch = (analysisText || '').match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
       } else {
@@ -167,37 +117,18 @@ Provide:
 6. Optimal hashtag mix
 7. Performance prediction
 
-Format as JSON object with fields: expectedReach (number), engagementPotential (number), competitionLevel (number), bestHashtags (array), avoidHashtags (array), optimalMix (array), performancePrediction (object)`;
+Format as JSON object with fields: expectedReach (number), engagementPotential (number), competitionLevel (number), bestHashtags (array), avoidHashtags (array), optimalMix (array), performancePrediction (object). Return only valid JSON.`;
 
-    const client = getOpenAIClient();
-    if (!client) {
-      logger.warn('OpenAI API key not configured, cannot research hashtags');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.');
-    }
+    const predictionText = await callGemini(
+      'You are a hashtag performance predictor. Predict hashtag effectiveness.',
+      prompt
+    );
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a hashtag performance predictor. Predict hashtag effectiveness.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      temperature: 0.5,
-      max_tokens: 1500,
-    });
-
-    const predictionText = response.choices[0].message.content;
-    
     let prediction;
     try {
-      prediction = JSON.parse(predictionText);
+      prediction = JSON.parse(predictionText || '{}');
     } catch (error) {
-      const jsonMatch = predictionText.match(/\{[\s\S]*\}/);
+      const jsonMatch = (predictionText || '').match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         prediction = JSON.parse(jsonMatch[0]);
       } else {
@@ -218,9 +149,3 @@ module.exports = {
   getCompetitorHashtags,
   predictHashtagPerformance,
 };
-
-
-
-
-
-

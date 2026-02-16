@@ -33,6 +33,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
       if (!token) return
 
       const response = await axios.get(`${API_URL}/jobs/status/${queueName}/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` }
       })
 
       setJob(response.data.data)
@@ -50,6 +51,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
       if (!token) return
 
       await axios.post(`${API_URL}/jobs/retry/${queueName}/${jobId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
       })
 
       onRefresh()

@@ -15,10 +15,10 @@ const requireActiveSubscription = (req, res, next) => {
     const host = (req.headers.host || req.headers['x-forwarded-host'] || '').toLowerCase();
     const referer = (req.headers.referer || req.headers.origin || '').toLowerCase();
     const forwardedFor = req.headers['x-forwarded-for'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || 
-                        referer.includes('localhost') || referer.includes('127.0.0.1') ||
-                        (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
-    
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
+      referer.includes('localhost') || referer.includes('127.0.0.1') ||
+      (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
+
     // Enhanced logging for debugging
     if (isLocalhost || !nodeEnv || nodeEnv !== 'production') {
       console.log('🔧 [Subscription] Middleware check', {
@@ -30,21 +30,19 @@ const requireActiveSubscription = (req, res, next) => {
         referer
       });
     }
-    
+
     if (!nodeEnv || nodeEnv !== 'production') {
       // If BYPASS_SUBSCRIPTION is explicitly set, always allow
       if (process.env.BYPASS_SUBSCRIPTION === 'true') {
         return next();
       }
-      
+
       // Allow localhost requests in non-production
       if (isLocalhost) {
         return next();
       }
-      
-      // Allow dev users in non-production
-      if (req.user && (req.user.id?.toString().startsWith('dev-') || req.user._id?.toString().startsWith('dev-'))) {
-        console.log('🔧 [Subscription] Dev user detected, allowing access', { userId: req.user.id || req.user._id });
+
+      if (req.user?.isDevUser) {
         return next();
       }
     }
@@ -59,7 +57,7 @@ const requireActiveSubscription = (req, res, next) => {
 
       if (!hasAccess) {
         const status = getSubscriptionStatus(req.user);
-        
+
         logger.warn('Subscription access denied', {
           userId: req.user._id || req.user.id,
           status: status.status,
@@ -86,20 +84,20 @@ const requireActiveSubscription = (req, res, next) => {
         nodeEnv: nodeEnv || 'undefined',
         isLocalhost
       });
-      
+
       logger.error('Error checking subscription access', {
         error: error.message,
         userId: req.user?._id || req.user?.id,
         stack: error.stack
       });
-      
+
       // In development or localhost, allow access on error to prevent blocking development
       if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
         console.log('🔧 [Subscription] Allowing access in dev/localhost mode due to subscription check error');
         logger.warn('Allowing access in development mode due to subscription check error');
         return next();
       }
-      
+
       return res.status(500).json({
         success: false,
         error: 'Error checking subscription access',
@@ -113,17 +111,17 @@ const requireActiveSubscription = (req, res, next) => {
       errorName: outerError.name,
       stack: outerError.stack?.substring(0, 500)
     });
-    
+
     // In development, allow access to prevent blocking
     const nodeEnv = process.env.NODE_ENV;
     const host = (req.headers.host || req.headers['x-forwarded-host'] || '').toLowerCase();
     const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
-    
+
     if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
       console.log('🔧 [Subscription] Allowing access due to outer error in dev/localhost mode');
       return next();
     }
-    
+
     return res.status(500).json({
       success: false,
       error: 'Subscription middleware error',
@@ -144,8 +142,8 @@ const requirePremiumSubscription = (req, res, next) => {
   const status = getSubscriptionStatus(req.user);
 
   // Check if user has premium package (not free)
-  const isFree = req.user.membershipPackage && 
-                 req.user.membershipPackage.slug === 'free';
+  const isFree = req.user.membershipPackage &&
+    req.user.membershipPackage.slug === 'free';
 
   if (!hasAccess || isFree) {
     logger.warn('Premium subscription required', {
@@ -174,7 +172,7 @@ const checkSubscriptionStatus = (req, res, next) => {
   }
 
   const status = getSubscriptionStatus(req.user);
-  
+
   // Add subscription status to response headers
   res.setHeader('X-Subscription-Status', status.status);
   res.setHeader('X-Subscription-Expiring', status.isExpiringSoon ? 'true' : 'false');

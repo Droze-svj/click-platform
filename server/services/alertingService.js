@@ -10,7 +10,7 @@ const ALERT_THRESHOLDS = {
   errorRate: 5, // 5% error rate triggers alert
   responseTime: 5000, // 5 seconds average response time
   consecutiveErrors: 10, // 10 consecutive errors
-  memoryUsage: 90, // 90% memory usage
+  memoryUsage: 97, // 97% heap (95%+ is normal for Node under load; avoid noisy alerts)
   diskUsage: 90, // 90% disk usage
 };
 
@@ -77,8 +77,8 @@ async function sendAlert(alertType, severity, message, details = {}) {
   }
 
   // Send to webhooks (Slack, Discord, etc.) for critical and warning alerts
-  if ((severity === 'critical' || severity === 'warning') && 
-      (process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL)) {
+  if ((severity === 'critical' || severity === 'warning') &&
+    (process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL)) {
     try {
       await sendToAllWebhooks(alert);
     } catch (error) {
