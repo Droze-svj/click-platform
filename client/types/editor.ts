@@ -15,12 +15,110 @@ export interface VideoFilter {
   clarity: number
   dehaze: number
   vibrance: number
+  lift: { r: number, g: number, b: number }
+  gamma: { r: number, g: number, b: number }
+  gain: { r: number, g: number, b: number }
   /** Optional LUT id or URL for professional color (applied in export) */
   lutId?: string | null
   lutUrl?: string | null
 }
 
-export type TimelineSegmentType = 'video' | 'audio' | 'text' | 'transition' | 'image'
+export interface TranscriptWord {
+  text: string
+  start: number
+  end: number
+  confidence?: number
+  speaker?: string
+}
+
+export interface Transcript {
+  words: TranscriptWord[]
+  fullText: string
+  language?: string
+  scenes?: TranscriptScene[]
+}
+
+export interface TranscriptScene {
+  id: string
+  startTime: number
+  endTime: number
+  title: string
+  description?: string
+  index: number
+}
+export type AssetType = 'music' | 'image' | 'broll' | 'sfx' | 'video'
+
+export interface Asset {
+  id: string
+  url: string
+  title?: string
+  name?: string
+  type: AssetType
+  duration?: number
+  thumbnail?: string
+  source?: 'upload' | 'click'
+  createdAt?: string
+  autoTags?: string[]
+}
+
+export interface AIDirectorSuggestion {
+  id: string
+  time: number
+  duration?: number
+  type: 'cut' | 'broll' | 'hook' | 'transition' | 'audio' | 'effect'
+  label: string
+  description: string
+  confidence: number
+  impact: 'low' | 'medium' | 'high'
+}
+
+export type PlatformNiche = 'tiktok' | 'reels' | 'shorts' | 'omni'
+
+export interface PlatformInsights {
+  platform: PlatformNiche
+  retentionDropPenalty: number // How harsh the algorithm judges slow pacing
+  recommendedHashtags: string[]
+  platformSpecificAdvice: string[] // e.g. "Add a visual hook in the first 2 seconds"
+}
+
+export interface EngagementScore {
+  overall: number // 0-100
+  viralPotential: number // 0-100
+  hookStrength: number // 0-100
+  sentimentDensity: number // 0-100
+  trendAlignment: number // 0-100
+  retentionHeatmap: number[] // array of scores per second or frame region
+  platformInsights?: PlatformInsights // AI-analyzed algorithm data specific to a platform
+}
+
+export interface VideoMetadata {
+  titles: {
+    curiosityGap: string
+    seoWinner: string
+    minimalist: string
+  }
+  description: {
+    summary: string
+    timestamps: { time: number; label: string }[]
+    hashtags: string[]
+  }
+  abTestSuggestions: {
+    thumbnailTime: number
+    concept: string
+  }[]
+}
+
+export type ContentNiche = 'educational' | 'gaming' | 'b2b' | 'comedy' | 'vlog' | 'fitness'
+
+export interface AutoEditClip {
+  id: string
+  name: string
+  segments: TimelineSegment[]
+  engagementScore: EngagementScore
+  metadata: VideoMetadata
+}
+
+export type TimelineSegmentType = 'video' | 'audio' | 'text' | 'transition' | 'image' | 'cut' | 'broll' | 'gif'
 
 /** Transition at end of segment to next segment */
 export type SegmentTransitionType = 'none' | 'crossfade' | 'dip' | 'wipe-left' | 'wipe-right' | 'wipe-up' | 'wipe-down' | 'zoom'
@@ -48,6 +146,8 @@ export interface TimelineSegment {
   playbackSpeedStart?: number
   /** Speed at segment end (for ramping) */
   playbackSpeedEnd?: number
+  /** Video stabilization intensity (0 = none, 100 = full lock) */
+  stabilization?: number
   /** Transform for B-roll/image: scale (1 = 100%), position % (-50..50), rotation degrees */
   transform?: {
     scale?: number
@@ -55,6 +155,8 @@ export interface TimelineSegment {
     positionY?: number
     rotation?: number
   }
+  /** Keyframes for transform animation (position, scale, rotation, opacity). Time = absolute seconds. */
+  transformKeyframes?: TransformKeyframe[]
   /** Crop/mask: inset from each edge in % (0 = no crop, 50 = hide half). Applied after transform. */
   crop?: {
     top?: number
@@ -62,6 +164,21 @@ export interface TimelineSegment {
     bottom?: number
     left?: number
   }
+  /** Audio volume modifier 0.0 - 2.0 (1.0 = normal) */
+  volume?: number
+  /** Auto-ducking: automatically lower this track's volume if dialouge is present */
+  audioDucking?: boolean
+  /** Dynamic Audio Ducking Envelope based on Transcript. { time, volume } keyframes */
+  audioEnvelope?: { time: number; volume: number }[]
+  /** Optional transcript text associated with this segment (e.g. for cuts) */
+  transcriptText?: string
+}
+
+/** Timeline marker (named position for quick navigation) */
+export interface TimelineMarker {
+  id: string
+  time: number
+  name?: string
 }
 
 /** Named track definition for timeline (video V1–V6, audio A1–A4) */
@@ -134,6 +251,11 @@ export type CaptionTextStyle =
   | 'karaoke'      /* bold center */
   | 'serif'        /* elegant serif */
   | 'high-contrast' /* white on black, strong outline */
+  | 'gradient'     /* colorful gradient fill */
+  | 'bubble'       /* speech-bubble style background */
+  | 'sticker'      /* bold with soft rounded box */
+  | 'vintage'      /* warm sepia / typewriter feel */
+  | 'pop'          /* bright pop with strong outline */
 
 export interface CaptionStyle {
   enabled: boolean
@@ -165,22 +287,56 @@ export const TEMPLATE_LAYOUTS: { id: TemplateLayout; label: string; aspect: stri
   { id: 'classic', label: 'Classic', aspect: '4/3', desc: '4:3', platform: 'Traditional' },
 ]
 
-export const CAPTION_TEXT_STYLES: { id: CaptionTextStyle; label: string }[] = [
-  { id: 'default', label: 'Default' },
-  { id: 'uppercase', label: 'Uppercase' },
-  { id: 'bold', label: 'Bold' },
-  { id: 'outline', label: 'Outline' },
-  { id: 'shadow', label: 'Shadow' },
-  { id: 'pill', label: 'Pill' },
-  { id: 'neon', label: 'Neon' },
-  { id: 'minimal', label: 'Minimal' },
-  { id: 'kinetic', label: 'Kinetic' },
-  { id: 'cinematic', label: 'Cinematic' },
-  { id: 'retro', label: 'Retro' },
-  { id: 'subtitle', label: 'Subtitle' },
-  { id: 'karaoke', label: 'Karaoke' },
-  { id: 'serif', label: 'Serif' },
-  { id: 'high-contrast', label: 'High contrast' },
+export const CAPTION_TEXT_STYLES: { id: CaptionTextStyle; label: string; desc?: string }[] = [
+  { id: 'default', label: 'Default', desc: 'Clean, readable' },
+  { id: 'bold', label: 'Bold', desc: 'Heavy weight' },
+  { id: 'uppercase', label: 'Uppercase', desc: 'ALL CAPS' },
+  { id: 'minimal', label: 'Minimal', desc: 'Thin, subtle' },
+  { id: 'shadow', label: 'Shadow', desc: 'Strong drop shadow' },
+  { id: 'outline', label: 'Outline', desc: 'Stroked, no fill' },
+  { id: 'high-contrast', label: 'High contrast', desc: 'White on black' },
+  { id: 'pill', label: 'Pill', desc: 'Rounded pill bg' },
+  { id: 'bubble', label: 'Bubble', desc: 'Speech bubble' },
+  { id: 'sticker', label: 'Sticker', desc: 'Rounded box' },
+  { id: 'neon', label: 'Neon', desc: 'Glowing' },
+  { id: 'kinetic', label: 'Kinetic', desc: 'Scale pop on word' },
+  { id: 'karaoke', label: 'Karaoke', desc: 'Bold center' },
+  { id: 'gradient', label: 'Gradient', desc: 'Color gradient' },
+  { id: 'pop', label: 'Pop', desc: 'Bright + outline' },
+  { id: 'cinematic', label: 'Cinematic', desc: 'Film serif' },
+  { id: 'serif', label: 'Serif', desc: 'Elegant' },
+  { id: 'retro', label: 'Retro', desc: 'Vintage warm' },
+  { id: 'vintage', label: 'Vintage', desc: 'Sepia typewriter' },
+  { id: 'subtitle', label: 'Subtitle', desc: 'Classic subtitle' },
+]
+
+/** One-click creative presets: style + layout + size + font for a specific look. */
+export interface CaptionCreativePreset {
+  id: string
+  label: string
+  description: string
+  textStyle: CaptionTextStyle
+  layout: CaptionLayout
+  size: CaptionSize
+  font: string
+}
+
+export const CAPTION_CREATIVE_PRESETS: CaptionCreativePreset[] = [
+  { id: 'tiktok', label: 'TikTok', description: 'Bold, center, high impact', textStyle: 'bold', layout: 'bottom-center', size: 'large', font: 'Inter, sans-serif' },
+  { id: 'reels', label: 'Reels', description: 'Clean uppercase, trendy', textStyle: 'uppercase', layout: 'bottom-center', size: 'medium', font: '"Montserrat", sans-serif' },
+  { id: 'podcast', label: 'Podcast', description: 'Minimal, lower third', textStyle: 'minimal', layout: 'lower-third', size: 'medium', font: 'Inter, sans-serif' },
+  { id: 'cinematic', label: 'Cinematic', description: 'Film-style serif', textStyle: 'cinematic', layout: 'bottom-center', size: 'medium', font: 'Georgia, serif' },
+  { id: 'documentary', label: 'Documentary', description: 'Classic subtitle bar', textStyle: 'subtitle', layout: 'full-width-bottom', size: 'medium', font: 'Arial, sans-serif' },
+  { id: 'neon', label: 'Neon', description: 'Glowing, night vibe', textStyle: 'neon', layout: 'bottom-center', size: 'large', font: '"Montserrat", sans-serif' },
+  { id: 'karaoke', label: 'Karaoke', description: 'Bold karaoke style', textStyle: 'karaoke', layout: 'bottom-center', size: 'large', font: 'Inter, sans-serif' },
+  { id: 'pill', label: 'Pill', description: 'Rounded pill words', textStyle: 'pill', layout: 'bottom-center', size: 'medium', font: 'Inter, sans-serif' },
+  { id: 'bubble', label: 'Bubble', description: 'Speech bubble style', textStyle: 'bubble', layout: 'lower-third', size: 'medium', font: '"Open Sans", sans-serif' },
+  { id: 'gradient', label: 'Gradient', description: 'Colorful gradient text', textStyle: 'gradient', layout: 'bottom-center', size: 'large', font: '"Montserrat", sans-serif' },
+  { id: 'retro', label: 'Retro', description: 'Warm vintage look', textStyle: 'retro', layout: 'bottom-center', size: 'medium', font: 'Georgia, serif' },
+  { id: 'vintage', label: 'Vintage', description: 'Sepia typewriter', textStyle: 'vintage', layout: 'lower-third', size: 'medium', font: 'Georgia, serif' },
+  { id: 'pop', label: 'Pop', description: 'Bright and punchy', textStyle: 'pop', layout: 'bottom-center', size: 'large', font: '"Montserrat", sans-serif' },
+  { id: 'high-contrast', label: 'Accessible', description: 'High contrast, readable', textStyle: 'high-contrast', layout: 'full-width-bottom', size: 'medium', font: 'Arial, sans-serif' },
+  { id: 'kinetic', label: 'Kinetic', description: 'Words pop on beat', textStyle: 'kinetic', layout: 'bottom-center', size: 'large', font: 'Inter, sans-serif' },
 ]
 
 export const CAPTION_SIZE_PX: Record<CaptionSize, number> = {
@@ -218,6 +374,8 @@ export const MOTION_GRAPHIC_PRESETS: { id: MotionGraphicPreset; label: string }[
   { id: 'shake', label: 'Shake' },
 ]
 
+export type TextOverlayStyle = 'none' | 'neon' | 'minimal' | 'bold-kinetic' | 'outline' | 'shadow'
+
 export interface TextOverlay {
   id: string
   text: string
@@ -228,7 +386,7 @@ export interface TextOverlay {
   fontFamily: string
   startTime: number
   endTime: number
-  style?: 'none' | 'neon' | 'minimal' | 'bold-kinetic' | 'outline' | 'shadow'
+  style?: TextOverlayStyle
   shadowColor?: string
   /** Enter animation */
   animationIn?: TextOverlayAnimationIn
@@ -248,6 +406,8 @@ export interface TextOverlay {
   motionGraphic?: MotionGraphicPreset
   /** Draw order (higher = on top). Default 0. */
   layer?: number
+  /** Keyframes for position, scale, rotation, opacity. Time = absolute seconds within overlay visibility. */
+  keyframes?: TransformKeyframe[]
 }
 
 /** Shape or sticker overlay (rectangle, circle, line) */
@@ -270,6 +430,8 @@ export interface ShapeOverlay {
   motionGraphic?: MotionGraphicPreset
   /** Draw order (higher = on top). Default 0. */
   layer?: number
+  /** Keyframes for position, scale, rotation, opacity. Time = absolute seconds. */
+  keyframes?: TransformKeyframe[]
 }
 
 /** Image overlay (logo, sticker, watermark) */
@@ -296,6 +458,70 @@ export interface ImageOverlay {
   animationOutDuration?: number
   /** Draw order (higher = on top). Default 0. */
   layer?: number
+  /** Keyframes for position, scale, rotation, opacity. Time = absolute seconds. */
+  keyframes?: TransformKeyframe[]
+  /** When true, treat as vector (SVG) for scalable rendering */
+  isVector?: boolean
+}
+
+/** SVG/vector overlay — scalable graphics from SVG URL or inline; import from Illustrator/design tools */
+export interface SvgOverlay {
+  id: string
+  /** SVG URL (CORS-friendly) or inline SVG string (data URL or raw) */
+  url: string
+  x: number
+  y: number
+  /** Width as % of frame */
+  width: number
+  /** Height as % of frame */
+  height: number
+  startTime: number
+  endTime: number
+  opacity: number
+  /** Draw order (higher = on top). Default 0. */
+  layer?: number
+  /** Keyframes for position, scale, rotation, opacity. Time = absolute seconds. */
+  keyframes?: TransformKeyframe[]
+}
+
+/** One-click keyframe animation presets: apply to selected clip/effect (adds start/end keyframes) */
+export type KeyframeAnimationPresetId = 'slow-zoom' | 'fly-in-left' | 'fly-in-right' | 'fly-in-top' | 'fly-in-bottom' | 'fade-in-out'
+
+export interface KeyframeAnimationPreset {
+  id: KeyframeAnimationPresetId
+  label: string
+  description: string
+  /** Start keyframe values (positionX, positionY, scale, rotation, opacity) */
+  start: Partial<Record<'positionX' | 'positionY' | 'scale' | 'rotation' | 'opacity', number>>
+  /** End keyframe values */
+  end: Partial<Record<'positionX' | 'positionY' | 'scale' | 'rotation' | 'opacity', number>>
+  easing?: KeyframeEasing
+}
+
+export const KEYFRAME_ANIMATION_PRESETS: KeyframeAnimationPreset[] = [
+  { id: 'slow-zoom', label: 'Slow zoom', description: 'Scale 100% → 110%', start: { scale: 1 }, end: { scale: 1.1 }, easing: 'ease-in-out' },
+  { id: 'fly-in-left', label: 'Fly in from left', description: 'Position from off-screen left', start: { positionX: -50 }, end: { positionX: 0 }, easing: 'ease-out' },
+  { id: 'fly-in-right', label: 'Fly in from right', description: 'Position from off-screen right', start: { positionX: 50 }, end: { positionX: 0 }, easing: 'ease-out' },
+  { id: 'fly-in-top', label: 'Fly in from top', description: 'Position from off-screen top', start: { positionY: -40 }, end: { positionY: 0 }, easing: 'ease-out' },
+  { id: 'fly-in-bottom', label: 'Fly in from bottom', description: 'Position from off-screen bottom', start: { positionY: 40 }, end: { positionY: 0 }, easing: 'ease-out' },
+  { id: 'fade-in-out', label: 'Fade in & out', description: 'Opacity 0 → 1 → 0', start: { opacity: 0 }, end: { opacity: 1 }, easing: 'ease-in-out' },
+]
+
+/** Saved motion graphic compound: reusable group of overlays + keyframes for timeline drag-and-drop */
+export interface MotionCompound {
+  id: string
+  name: string
+  description?: string
+  /** Duration in seconds when added to timeline */
+  duration: number
+  /** Text overlays (with optional keyframes) */
+  textOverlays: TextOverlay[]
+  /** Shape overlays */
+  shapeOverlays?: ShapeOverlay[]
+  /** Image/SVG overlays */
+  imageOverlays?: ImageOverlay[]
+  svgOverlays?: SvgOverlay[]
+  createdAt: number
 }
 
 /** Gradient overlay (full or region: lower-third fade, color tint) */
@@ -511,7 +737,63 @@ export const MOTION_GRAPHIC_TEMPLATES: MotionGraphicTemplate[] = [
       { text: 'Like · Subscribe · @yourhandle', x: 50, y: 58, fontSize: 20, color: 'rgba(255,255,255,0.95)', fontFamily: 'Inter, sans-serif', animationIn: 'slide-bottom', animationOut: 'fade', motionGraphic: 'glow', startOffset: 0.3, duration: 8 },
     ],
   },
+  {
+    id: 'particle-accent',
+    name: 'Particle accent',
+    description: 'Subtle floating particles for energy',
+    icon: '✨',
+    shapeOverlays: [
+      { kind: 'circle', x: 15, y: 20, width: 1.5, height: 1.5, color: 'rgba(255,255,255,0.6)', opacity: 1, startOffset: 0, duration: 6, motionGraphic: 'float' },
+      { kind: 'circle', x: 85, y: 25, width: 1, height: 1, color: 'rgba(255,255,255,0.5)', opacity: 1, startOffset: 0.5, duration: 6, motionGraphic: 'float' },
+      { kind: 'circle', x: 90, y: 75, width: 1.2, height: 1.2, color: 'rgba(255,255,255,0.4)', opacity: 1, startOffset: 1, duration: 6, motionGraphic: 'float' },
+      { kind: 'circle', x: 10, y: 80, width: 1, height: 1, color: 'rgba(255,255,255,0.5)', opacity: 1, startOffset: 0.3, duration: 6, motionGraphic: 'float' },
+    ],
+    textOverlays: [],
+  },
 ]
+
+export interface StyleDNA {
+  cpm: number // Cuts Per Minute
+  visualDensity: number // Elements per minute (overlays, b-roll)
+  assetAffinity: Record<string, number> // Preference scores for different asset styles
+  audioDuckingPreference: number // Preferred dB offset
+  foleyFrequency: number // SFX density
+  preferredTransitions: string[]
+  preferredFonts: string[]
+  theme?: 'cinematic' | 'vlog' | 'high-octane' | 'corporate' 
+  sentimentDrift?: number
+}
+
+export interface AgenticKPIs {
+  agenticAcceptanceRate: number // % of AI suggestions kept
+  manualOverrideDelta: number // % of content manually adjusted after AI touch
+  reversionRate: number // % of "undo" on AI actions
+  sessionUtilityScore: number // 0-100 subjective/objective helpfulness
+}
+
+export interface ShadowTelemetry {
+  sessionId: string
+  timestamp: number
+  aiProposedState: any // JSON snapshot of AI's timeline suggestion
+  userExportState: any // JSON snapshot of what was actually exported
+  kpis: AgenticKPIs
+  styleDeltas: Partial<StyleDNA>
+}
+
+export interface CreatorProfile {
+  userId: string
+  dna: StyleDNA
+  history: ShadowTelemetry[]
+  totalExports: number
+}
+
+export interface StyleProfile {
+  id: string
+  name: string
+  description?: string
+  brandKitId?: string
+  isAiOptimized?: boolean
+}
 
 export interface VideoState {
   duration: number
@@ -519,12 +801,25 @@ export interface VideoState {
   isPlaying: boolean
   volume: number
   isMuted: boolean
+  transform?: {
+    scale?: number
+    positionX?: number
+    positionY?: number
+    rotation?: number
+  }
+  transformKeyframes?: TransformKeyframe[]
+  crop?: {
+    top?: number
+    bottom?: number
+    left?: number
+    right?: number
+  }
 }
 
 export interface AISuggestion {
   id: string
   time: number
-  type: 'cut' | 'transition' | 'effect' | 'text' | 'audio'
+  type: 'cut' | 'transition' | 'effect' | 'text' | 'audio' | 'broll' | 'gif'
   description: string
   confidence: number
   data?: any
@@ -539,9 +834,45 @@ export interface EditorProject {
   overlays: TextOverlay[]
   segments: TimelineSegment[]
   settings: any
+  styleDNASnapshot?: StyleDNA // Snapshot of the creator's DNA when this project was started
 }
 
-export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips'
+export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights'
+
+export interface StyleProfile {
+  id: string
+  name: string
+  description?: string
+  lastTrained: number
+  pacing: {
+    medianClipLength: number
+    jCutFrequency: 'low' | 'medium' | 'high'
+    lCutFrequency: 'low' | 'medium' | 'high'
+    cutOnSentence: boolean
+  }
+  visuals: {
+    lutId?: string
+    punchInFrequency: number // seconds
+    punchInAmount: number // percentage boost
+    defaultTransition: SegmentTransitionType
+  }
+  assets: {
+    fontFamily: string
+    fontHex: string
+    dropShadowHex: string
+    bezierCurve: string
+  }
+  audio: {
+    duckingDb: number
+    masterDb: number
+    voiceDb: number
+  }
+}
+
+export interface StyleVault {
+  models: StyleProfile[]
+  activeModelId?: string
+}
 
 // Timeline effects - applied effects with duration
 export type TimelineEffectType =
@@ -551,6 +882,7 @@ export type TimelineEffectType =
   | 'overlay'      // Vignette, film grain, light leak, etc.
   | 'speed'        // Slow motion, fast forward, reverse
   | 'audio'        // Audio effects (reverb, echo, etc.)
+  | 'retention'    // Viral hooks, zoom jumps, etc.
 
 /** Easing function for effect fade in/out */
 export type EffectEasing = 'none' | 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out'
@@ -562,6 +894,32 @@ export interface EffectKeyframe {
   params: Record<string, number | string | boolean>
   easing: EffectEasing
 }
+
+/** Easing for transform keyframes — linear for mechanical, ease-in/out for natural, custom for bounces */
+export type KeyframeEasing = 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'ease-in-out-cubic' | 'bounce-out' | 'bounce-in-out'
+
+/** Single keyframe for position, scale, rotation, opacity. Time is absolute seconds within the clip/overlay/effect range. */
+export interface TransformKeyframe {
+  id: string
+  /** Time in seconds (absolute timeline time for segments/overlays; relative 0–1 for effects) */
+  time: number
+  positionX?: number
+  positionY?: number
+  scale?: number
+  rotation?: number
+  opacity?: number
+  easing?: KeyframeEasing
+}
+
+export const KEYFRAME_EASINGS: { id: KeyframeEasing; label: string }[] = [
+  { id: 'linear', label: 'Linear' },
+  { id: 'ease-in', label: 'Ease In' },
+  { id: 'ease-out', label: 'Ease Out' },
+  { id: 'ease-in-out', label: 'Ease In-Out' },
+  { id: 'ease-in-out-cubic', label: 'Smooth' },
+  { id: 'bounce-out', label: 'Bounce Out' },
+  { id: 'bounce-in-out', label: 'Bounce' },
+]
 
 export interface TimelineEffect {
   id: string
@@ -587,6 +945,8 @@ export interface TimelineEffect {
   fadeOutEasing?: EffectEasing
   /** Keyframes for parameter animation */
   keyframes?: EffectKeyframe[]
+  /** Transform keyframes for motion/overlay effects (position, scale, rotation, opacity). time = 0..1 relative to effect. */
+  transformKeyframes?: TransformKeyframe[]
   /** Layer/priority order (higher = on top) */
   layer?: number
   /** Group ID for grouping multiple effects */
@@ -621,6 +981,7 @@ export const EFFECT_TYPE_COLORS: Record<TimelineEffectType, string> = {
   overlay: '#10B981',     // Emerald
   speed: '#3B82F6',       // Blue
   audio: '#EF4444',       // Red
+  retention: '#FCD34D',   // Yellow
 }
 
 export const EFFECT_PRESETS: { type: TimelineEffectType; name: string; icon: string; params: Record<string, number | string | boolean> }[] = [
@@ -675,6 +1036,14 @@ export const EFFECT_PRESETS: { type: TimelineEffectType; name: string; icon: str
   { type: 'audio', name: 'Fade Audio', icon: '🔉', params: { direction: 'in', duration: 1 } },
   { type: 'audio', name: 'Bass Boost', icon: '🎸', params: { gain: 6, frequency: 100 } },
   { type: 'audio', name: 'Vocal Enhance', icon: '🎤', params: { midGain: 4, clarity: 20 } },
+  // Retention Boosters (Viral/Hook & Smart Camera)
+  { type: 'retention', name: 'Viral Hook Zoom', icon: '🪝', params: { zoom: 125, duration: 0.3, easing: 'bounce-out' } },
+  { type: 'retention', name: 'Smart Camera: Follow', icon: '🎥', params: { mode: 'follow', smoothness: 80, tracking: 'head' } },
+  { type: 'retention', name: 'Dynamic Punch-In', icon: '🥊', params: { zoom: 140, duration: 0.15, easing: 'ease-out' } },
+  { type: 'retention', name: 'Glitch Pop', icon: '👾', params: { intensity: 60, speed: 80, chromatic: 15 } },
+  { type: 'retention', name: 'Viral Glow', icon: '🌟', params: { brightness: 120, blur: 15, bloom: 40 } },
+  { type: 'retention', name: 'Jump Cut', icon: '✂️', params: { type: 'hard-cut', zoom: 105 } },
+  { type: 'retention', name: 'Viral Swoosh', icon: '💨', params: { type: 'sfx', sound: 'swoosh_heavy', volume: 0.8 } },
 ]
 
 /** Editor layout preferences (adaptable workspace) */
@@ -687,3 +1056,25 @@ export interface EditorLayoutPreferences {
   timelineDensity: TimelineDensity
   focusMode: FocusMode
 }
+
+/** Content & quality preferences (export defaults, experience, first-open section) */
+export type ExportQualityPref = 'high' | 'medium' | 'low'
+export type ExportCodecPref = 'h264' | 'hevc'
+export type PreviewQualityPref = 'draft' | 'full'
+
+export interface EditorContentPreferences {
+  /** Default export preset id (e.g. '1080p', 'shorts', 'reels') */
+  defaultExportPreset?: string
+  defaultExportQuality?: ExportQualityPref
+  defaultExportCodec?: ExportCodecPref
+  /** Section to open when entering the editor */
+  defaultOpenSection?: EditorCategory
+  /** Draft = faster scrubbing; full = best preview quality */
+  previewQuality?: PreviewQualityPref
+  /** Show platform hints (e.g. Reels/Shorts tips) in Export view */
+  showExportPlatformHints?: boolean
+  /** Last N category ids for "Recent" in sidebar */
+  recentSections?: EditorCategory[]
+}
+
+export const EDITOR_CONTENT_PREFS_KEY = 'editor-content-preferences'

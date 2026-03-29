@@ -1,26 +1,20 @@
+'use client'
 
 import React from 'react'
-import { Palette, Sparkles } from 'lucide-react'
+import { Palette, Sparkles, Filter, Activity, Zap, Layers, RefreshCw, CircleDot } from 'lucide-react'
 import { VideoFilter } from '../../../types/editor'
+import { motion, AnimatePresence } from 'framer-motion'
 
 /** Color swatch hint for each preset (Tailwind gradient) */
-const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; desc: string; swatch?: string }[] = [
-  { id: 'warm', label: 'Warm', f: { saturation: 110, temperature: 115, vibrance: 108 }, desc: 'Golden hour', swatch: 'from-amber-400 to-orange-500' },
-  { id: 'cold', label: 'Cold', f: { saturation: 105, temperature: 85, tint: 8 }, desc: 'Cool tones', swatch: 'from-cyan-300 to-blue-600' },
-  { id: 'retro', label: 'Retro', f: { sepia: 35, saturation: 80, contrast: 110, vignette: 25 }, desc: 'Vintage film', swatch: 'from-amber-800 to-yellow-700' },
-  { id: 'gloom', label: 'Gloom', f: { contrast: 115, saturation: 85, vignette: 45 }, desc: 'Dark & moody', swatch: 'from-slate-700 to-slate-900' },
-  { id: 'cinematic', label: 'Cinematic', f: { contrast: 108, saturation: 95, vignette: 35, sepia: 8 }, desc: 'Film look', swatch: 'from-amber-900/60 to-slate-800' },
-  { id: 'teal-orange', label: 'Teal & Orange', f: { saturation: 120, temperature: 105, tint: -5, vibrance: 115 }, desc: 'Hollywood', swatch: 'from-teal-500 to-orange-500' },
-  { id: 'vivid', label: 'Vivid', f: { saturation: 135, contrast: 108, vibrance: 125 }, desc: 'High pop', swatch: 'from-pink-400 via-purple-500 to-cyan-400' },
-  { id: 'sunset', label: 'Sunset', f: { saturation: 120, temperature: 128, vibrance: 118, shadows: 18 }, desc: 'Golden hour', swatch: 'from-orange-400 to-rose-500' },
-  { id: 'breeze', label: 'Breeze', f: { saturation: 95, temperature: 88, tint: 10, clarity: 112 }, desc: 'Cool & crisp', swatch: 'from-sky-300 to-blue-400' },
-  { id: 'matte', label: 'Matte', f: { contrast: 92, saturation: 88, shadows: 28 }, desc: 'Flat & soft', swatch: 'from-gray-300 to-gray-500' },
-  { id: 'neon', label: 'Neon', f: { saturation: 145, contrast: 115, vibrance: 135, hue: -12 }, desc: 'Pop colors', swatch: 'from-fuchsia-400 to-cyan-400' },
-  { id: 'autumn', label: 'Autumn', f: { saturation: 118, temperature: 120, sepia: 10, vignette: 18 }, desc: 'Warm earth', swatch: 'from-amber-600 to-orange-700' },
-  { id: 'winter', label: 'Winter', f: { saturation: 92, temperature: 80, tint: 12, clarity: 115 }, desc: 'Cool & clean', swatch: 'from-sky-200 to-blue-300' },
-  { id: 'dreamy', label: 'Dreamy', f: { saturation: 82, contrast: 90, vibrance: 105, vignette: 38 }, desc: 'Soft pastel', swatch: 'from-rose-200 via-pink-200 to-amber-200' },
-  { id: 'noir', label: 'Noir', f: { saturation: 0, contrast: 135, vignette: 55, brightness: 85 }, desc: 'B&W dramatic', swatch: 'from-gray-400 to-black' },
-  { id: 'reset', label: 'Reset', f: { saturation: 100, contrast: 100, sepia: 0, vignette: 0, temperature: 100, tint: 0, vibrance: 100 }, desc: 'Default', swatch: 'from-gray-400 to-gray-600' },
+const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; desc: string; swatch?: string; group: string }[] = [
+  { id: 'warm', label: 'Warm', f: { saturation: 110, temperature: 115, vibrance: 108 }, desc: 'Golden hour', swatch: 'from-amber-400 to-orange-500', group: 'Atmosphere' },
+  { id: 'cold', label: 'Cold', f: { saturation: 105, temperature: 85, tint: 8 }, desc: 'Cool tones', swatch: 'from-cyan-300 to-blue-600', group: 'Atmosphere' },
+  { id: 'retro', label: 'Retro', f: { sepia: 35, saturation: 80, contrast: 110, vignette: 25 }, desc: 'Vintage film', swatch: 'from-amber-800 to-yellow-700', group: 'Cinematic' },
+  { id: 'cinematic', label: 'Cinematic', f: { contrast: 108, saturation: 95, vignette: 35, sepia: 8 }, desc: 'Film look', swatch: 'from-amber-900/60 to-slate-800', group: 'Cinematic' },
+  { id: 'teal-orange', label: 'Teal & Orange', f: { saturation: 120, temperature: 105, tint: -5, vibrance: 115 }, desc: 'Hollywood', swatch: 'from-teal-500 to-orange-500', group: 'Cinematic' },
+  { id: 'vivid', label: 'Vivid', f: { saturation: 135, contrast: 108, vibrance: 125 }, desc: 'High pop', swatch: 'from-pink-400 via-purple-500 to-cyan-400', group: 'Vibrance' },
+  { id: 'sunset', label: 'Sunset', f: { saturation: 120, temperature: 128, vibrance: 118, shadows: 18 }, desc: 'Golden hour', swatch: 'from-orange-400 to-rose-500', group: 'Atmosphere' },
+  { id: 'noir', label: 'Noir', f: { saturation: 0, contrast: 135, vignette: 55, brightness: 85 }, desc: 'B&W dramatic', swatch: 'from-gray-400 to-black', group: 'Stylistic' },
 ]
 
 interface ColorGradingViewProps {
@@ -29,6 +23,105 @@ interface ColorGradingViewProps {
   colorGradeSettings: any
   setColorGradeSettings: (v: any) => void
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
+}
+
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+
+interface ColorWheelProps {
+  label: string
+  desc: string
+  colorClass: string
+  value: { r: number; g: number; b: number }
+  onChange: (v: { r: number; g: number; b: number }) => void
+}
+
+const ColorWheel: React.FC<ColorWheelProps> = ({ label, desc, colorClass, value, onChange }) => {
+  const wheelRef = React.useRef<HTMLDivElement>(null)
+
+  const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!wheelRef.current) return
+    const rect = wheelRef.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+
+    // Calculate normalized distance from center (-1 to 1)
+    let dx = (clientX - centerX) / (rect.width / 2)
+    let dy = (clientY - centerY) / (rect.height / 2)
+
+    // Constrain to circle
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    if (distance > 1) {
+      dx /= distance
+      dy /= distance
+    }
+
+    // Convert X/Y to color shifts (simplified: X shifts between Cyan/Red, Y between Yellow/Blue)
+    // This is a common way to represent color wheels in simplified UIs
+    onChange({
+      r: Math.max(0, Math.min(255, 127 + dx * 127)),
+      g: Math.max(0, Math.min(255, 127 + (-dx/2 - dy/2) * 127)),
+      b: Math.max(0, Math.min(255, 127 + dy * 127)),
+    })
+  }
+
+  // Calculate joystick position from RGB values (reverse of above)
+  // Simplified: dx = (r-127)/127, dy = (b-127)/127
+  const dx = (value.r - 127) / 127
+  const dy = (value.b - 127) / 127
+
+  return (
+    <div className="flex flex-col items-center gap-6 group/wheel">
+      <div className="text-center">
+        <span className={`block text-xs font-black italic tracking-widest ${colorClass}`}>{label}</span>
+        <span className="text-[9px] text-slate-600 uppercase font-bold">{desc}</span>
+      </div>
+      <div
+        ref={wheelRef}
+        onMouseDown={(e) => {
+          handleMove(e)
+          const onMove = (me: MouseEvent) => handleMove(me as any)
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove)
+            window.removeEventListener('mouseup', onUp)
+          }
+          window.addEventListener('mousemove', onMove)
+          window.addEventListener('mouseup', onUp)
+        }}
+        className="w-48 h-48 rounded-full bg-black/40 border border-white/5 relative flex items-center justify-center shadow-2xl overflow-hidden group-hover/wheel:border-white/10 transition-colors cursor-crosshair"
+      >
+        <div className="absolute inset-0 bg-[conic-gradient(from_0deg,red,yellow,lime,aqua,blue,magenta,red)] opacity-20 blur-xl" />
+        <div className="w-40 h-40 rounded-full border border-white/5 relative bg-black/20">
+           <motion.div
+            animate={{ x: dx * 80, y: dy * 80 }}
+            className="absolute top-1/2 left-1/2 w-4 h-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)] border-2 border-slate-900 pointer-events-none"
+           />
+        </div>
+        <div className="absolute bottom-4 inset-x-0 text-center">
+          <span className="text-[10px] font-mono text-slate-500">R:{Math.round(value.r)} G:{Math.round(value.g)} B:{Math.round(value.b)}</span>
+        </div>
+      </div>
+      <div className="w-full space-y-2">
+          <input
+            type="range" min="0" max="200"
+            value={((value.r + value.g + value.b) / 3 / 127) * 100}
+            onChange={(e) => {
+               const factor = parseInt(e.target.value) / 100
+               onChange({ r: 127 * factor, g: 127 * factor, b: 127 * factor })
+            }}
+            title={`Adjust ${label} Offset`}
+            aria-label={`Adjust ${label} Offset`}
+            className="w-full h-1 bg-white/5 rounded-full appearance-none cursor-pointer accent-white/20"
+          />
+          <div className="flex justify-between">
+            <span className="text-[9px] text-slate-600 font-black italic">Master Balance</span>
+            <span className="text-[9px] text-white font-mono">{Math.round(((value.r + value.g + value.b) / 3 / 127) * 100)}%</span>
+          </div>
+      </div>
+    </div>
+  )
 }
 
 const ColorGradingView: React.FC<ColorGradingViewProps> = ({
@@ -40,101 +133,169 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
   }
 
   const sliders = [
-    { key: 'brightness', min: 0, max: 200, reset: 100 },
-    { key: 'contrast', min: 0, max: 200, reset: 100 },
-    { key: 'saturation', min: 0, max: 200, reset: 100 },
-    { key: 'temperature', min: 50, max: 150, reset: 100 },
-    { key: 'tint', min: 80, max: 120, reset: 100 },
-    { key: 'vibrance', min: 0, max: 200, reset: 100 },
-    { key: 'sepia', min: 0, max: 100, reset: 0 },
-    { key: 'vignette', min: 0, max: 100, reset: 0 },
-    { key: 'hue', min: -30, max: 30, reset: 0 },
+    { key: 'brightness', label: 'Luminosity', min: 0, max: 200, reset: 100 },
+    { key: 'contrast', label: 'Linear Contrast', min: 0, max: 200, reset: 100 },
+    { key: 'saturation', label: 'Chroma Saturation', min: 0, max: 200, reset: 100 },
+    { key: 'temperature', label: 'Kelvin Factor', min: 50, max: 150, reset: 100 },
+    { key: 'vibrance', label: 'Intelligence Vibrance', min: 0, max: 200, reset: 100 },
+    { key: 'vignette', label: 'Cinematic Falloff', min: 0, max: 100, reset: 0 },
   ]
 
-  const QUICK_FILTERS = [
-    { id: 'vibrant', label: 'Vibrant', f: { saturation: 150, contrast: 110 } },
-    { id: 'mono', label: 'Mono', f: { saturation: 0, contrast: 120 } },
-    { id: 'cinematic', label: 'Cinematic', f: { sepia: 20, vignette: 30 } },
-    { id: 'warm', label: 'Warm', f: { saturation: 110, temperature: 115 } },
-    { id: 'cool', label: 'Cool', f: { saturation: 105, temperature: 85, tint: 5 } },
-    { id: 'reset', label: 'Reset', f: { saturation: 100, contrast: 100, sepia: 0, vignette: 0, temperature: 100, tint: 0, vibrance: 100 } },
+  const wheels = [
+    { id: 'lift', label: 'LIFT', desc: 'Shadow Control', color: 'text-indigo-400' },
+    { id: 'gamma', label: 'GAMMA', desc: 'Midtone Control', color: 'text-amber-400' },
+    { id: 'gain', label: 'GAIN', desc: 'Highlight Control', color: 'text-rose-400' }
   ]
 
   return (
-    <div className="space-y-6">
-      <div className="bg-surface-card rounded-xl shadow-theme-card border border-subtle p-6">
-        <h3 className="text-xs font-black uppercase text-theme-muted mb-2 tracking-widest">Quick filters (same as Edit tab)</h3>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {QUICK_FILTERS.map((q) => (
-            <button
-              key={q.id}
-              onClick={() => { setVideoFilters((prev: any) => ({ ...prev, ...q.f })); showToast(`${q.label} applied`, 'success') }}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-surface-elevated border border-subtle text-theme-primary hover:border-default hover:bg-surface-card-hover transition-all"
-            >
-              {q.label}
-            </button>
-          ))}
+    <div className="space-y-12">
+      {/* Neural Chroma Presets */}
+      <div className={`${glassStyle} rounded-[2.5rem] p-10 overflow-hidden relative group`}>
+        <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
+          <Palette className="w-40 h-40 text-indigo-500" />
         </div>
-        <h3 className="text-lg font-semibold mb-4 text-theme-primary flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-500" />
-          Color Presets
-          <span className="ml-auto text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded font-black uppercase">Pro</span>
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {COLOR_PRESETS.map(p => (
-            <button
+
+        <div className="flex items-center justify-between mb-12 relative z-10">
+          <div className="flex items-center gap-6">
+            <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20 shadow-xl">
+              <Sparkles className="w-6 h-6 text-indigo-400" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">CHROMA MATRIX</h2>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Premium Graded Presets</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 italic">Validated</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 relative z-10">
+          {COLOR_PRESETS.map((p, idx) => (
+            <motion.button
               key={p.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
               onClick={() => applyPreset(p)}
-              className="p-4 bg-surface-elevated border border-subtle rounded-xl hover:border-default hover:bg-surface-card-hover transition-all text-left group"
+              title={`Apply ${p.label} Color Preset`}
+              className="group relative flex flex-col items-start p-6 rounded-[1.8rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:bg-white/[0.05] transition-all duration-500 text-left overflow-hidden"
             >
               {p.swatch && (
-                <div className={`h-1.5 w-full rounded-full mb-2 bg-gradient-to-r ${p.swatch}`} />
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${p.swatch} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
               )}
-              <span className="block font-bold text-xs text-theme-primary group-hover:text-purple-600 dark:group-hover:text-purple-400">{p.label}</span>
-              <span className="block text-[10px] text-theme-muted mt-0.5">{p.desc}</span>
-            </button>
+              <div className="flex items-center justify-between w-full mb-4">
+                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{p.group}</span>
+                <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${p.swatch} shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
+              </div>
+              <span className="block font-black text-xl text-white italic tracking-tight group-hover:text-indigo-400 transition-colors uppercase">{p.label}</span>
+              <span className="block text-[10px] text-slate-500 font-medium mt-1 uppercase tracking-widest opacity-60 italic">{p.desc}</span>
+            </motion.button>
           ))}
         </div>
       </div>
 
-      <div className="bg-surface-card rounded-xl shadow-theme-card border border-subtle p-6">
-        <h3 className="text-xs font-black uppercase text-theme-muted mb-2 tracking-widest">LUT (professional color)</h3>
-        <p className="text-[10px] text-theme-secondary mb-3">Apply a cinematic color look. Applied in preview and export.</p>
-        <select
-          value={(videoFilters as any).lutId ?? 'none'}
-          onChange={(e) => setVideoFilters((prev: any) => ({ ...prev, lutId: e.target.value === 'none' ? null : e.target.value }))}
-          className="w-full px-3 py-2 rounded-lg border border-subtle bg-surface-elevated text-sm text-theme-primary mb-6"
-        >
-          <option value="none">None</option>
-          <option value="cinematic">Cinematic</option>
-          <option value="bleach">Bleach Bypass</option>
-          <option value="log709">Log to Rec.709</option>
-        </select>
+      {/* Manual Synthesis Controls */}
+      <div className={`${glassStyle} rounded-[2.5rem] p-10 overflow-hidden relative`}>
+        <div className="flex items-center gap-6 mb-12">
+          <div className="p-4 rounded-[1.2rem] bg-fuchsia-500/10 border border-fuchsia-500/20 shadow-xl">
+            <Activity className="w-6 h-6 text-fuchsia-400" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">SYNTHESIS</h2>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Linear Neural Adjustments</span>
+          </div>
+        </div>
 
-        <h3 className="text-sm font-black mb-4 uppercase text-theme-muted tracking-[3px]">Manual Controls</h3>
-        <div className="space-y-4">
-          {sliders.map(({ key, min, max, reset }) => (
-            <div key={key} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black uppercase text-theme-muted">{key}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-500 font-bold text-xs">{(videoFilters as any)[key] ?? reset}</span>
+        <div className="space-y-10">
+          {sliders.map(({ key, label, min, max, reset }) => (
+            <div key={key} className="space-y-4">
+              <div className="flex justify-between items-center group/label">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover/label:bg-fuchsia-500 transition-colors" />
+                  <span className="text-[10px] font-black text-slate-500 group-hover/label:text-white transition-colors uppercase tracking-[0.2em]">{label}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-white font-black text-xs italic tabular-nums bg-white/5 px-3 py-1 rounded-lg border border-white/5">{(videoFilters as any)[key] ?? reset}</span>
                   <button
                     onClick={() => setVideoFilters((prev: any) => ({ ...prev, [key]: reset }))}
-                    className="text-[9px] text-theme-muted hover:text-purple-500 transition-colors"
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-fuchsia-500/20 text-slate-600 hover:text-fuchsia-400 transition-all border border-transparent hover:border-fuchsia-500/20"
+                    title="Reset to default"
                   >
-                    Reset
+                    <RefreshCw className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-              <input
-                type="range" min={min} max={max}
-                value={(videoFilters as any)[key] ?? reset}
-                onChange={(e) => setVideoFilters((prev: any) => ({ ...prev, [key]: parseInt(e.target.value) }))}
-                className="w-full accent-purple-500 h-2 bg-surface-elevated rounded-full appearance-none cursor-pointer"
-              />
+              <div className="relative flex items-center h-6">
+                <div className="absolute inset-x-0 h-1 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-fuchsia-600 to-indigo-500"
+                    style={{ width: `${(((videoFilters as any)[key] ?? reset) - min) / (max - min) * 100}%` }}
+                  />
+                </div>
+                <input
+                  type="range" min={min} max={max}
+                  value={(videoFilters as any)[key] ?? reset}
+                  onChange={(e) => setVideoFilters((prev: any) => ({ ...prev, [key]: parseInt(e.target.value) }))}
+                  title={`Adjust ${label}`}
+                  aria-label={`Adjust ${label}`}
+                  className="absolute inset-x-0 w-full opacity-0 cursor-pointer h-full z-10"
+                />
+                <motion.div
+                  className="absolute w-5 h-5 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.4)] pointer-events-none z-0 border-2 border-fuchsia-500"
+                  style={{ left: `calc(${(((videoFilters as any)[key] ?? reset) - min) / (max - min) * 100}% - 10px)` }}
+                />
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Neural Footer */}
+        <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Layers className="w-4 h-4 text-slate-700" />
+            <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">Core Layer: Multi-Pass Matrix</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic">Matrix Synchronized</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Pro Color Wheels (Lift, Gamma, Gain) */}
+      <div className={`${glassStyle} rounded-[2.5rem] p-10 overflow-hidden relative`}>
+        <div className="flex items-center gap-6 mb-12">
+          <div className="p-4 rounded-[1.2rem] bg-amber-500/10 border border-amber-500/20 shadow-xl">
+            <CircleDot className="w-6 h-6 text-amber-400" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">PRIMARY WHEELS</h2>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Surgical Chromatic Balance</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {wheels.map((wheel) => (
+             <ColorWheel
+              key={wheel.id}
+              label={wheel.label}
+              desc={wheel.desc}
+              colorClass={wheel.color}
+              value={(videoFilters as any)[wheel.id] ?? { r: 127, g: 127, b: 127 }}
+              onChange={(v) => setVideoFilters((prev: any) => ({ ...prev, [wheel.id]: v }))}
+             />
+          ))}
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between">
+           <p className="text-[10px] text-slate-500 font-medium italic max-w-md">Precision grading enabled. Move the central reticle to shift the color balance of specific luminance ranges. Master Balance adjusts global luminosity for the target range.</p>
+            <button
+              title="Match Color Node"
+              className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all"
+            >
+              Match Node
+            </button>
         </div>
       </div>
     </div>

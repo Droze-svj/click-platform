@@ -9,9 +9,7 @@ const {
   getVideoMetadata,
   convertVideoFormat,
   trimVideo,
-  mergeVideos,
   extractAudio,
-  batchProcessVideos,
 } = require('../../services/advancedVideoProcessingService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
@@ -21,6 +19,22 @@ const path = require('path');
 const fs = require('fs');
 const progressTracker = require('../../services/videoProgressService');
 const router = express.Router();
+
+/**
+ * Helper for consistent logging of video editing operations.
+ * @param {string} event - The event name
+ * @param {object} data - Additional data for the log
+ */
+const logVideoEditServer = (event, data = {}) => {
+  const { userId, videoId, jobId, ...rest } = data;
+  logger.info(`[VIDEO_EDIT] ${event}`, {
+    userId: userId || 'anonymous',
+    videoId: videoId || 'unknown',
+    jobId: jobId || 'none',
+    ...rest,
+    timestamp: new Date().toISOString()
+  });
+};
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -178,7 +192,7 @@ router.post('/compress', auth, upload.single('video'), asyncHandler(async (req, 
 
       // Cleanup downloaded temp input (keep uploaded file for now; user might want it)
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) {}
+        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
       }
 
       return {
@@ -232,7 +246,7 @@ router.post('/thumbnail', auth, upload.single('video'), asyncHandler(async (req,
       onProgress(95, 'Finalizing');
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) {}
+        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
       }
 
       return {
@@ -274,7 +288,7 @@ router.post('/metadata', auth, upload.single('video'), asyncHandler(async (req, 
       onProgress(100, 'Done');
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) {}
+        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
       }
 
       return { videoId, operation, metadata };
@@ -322,7 +336,7 @@ router.post('/convert', auth, upload.single('video'), asyncHandler(async (req, r
       });
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) {}
+        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
       }
 
       return { videoId, operation, format, resultUrl: toUploadsUrl(resultPath) };
@@ -370,7 +384,7 @@ router.post('/trim', auth, upload.single('video'), asyncHandler(async (req, res)
       });
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) {}
+        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
       }
 
       return { videoId, operation, startTime, duration, resultUrl: toUploadsUrl(resultPath) };
@@ -415,7 +429,7 @@ router.post('/extract-audio', auth, upload.single('video'), asyncHandler(async (
       });
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {
-        try { fs.unlinkSync(inputPath); } catch (_) {}
+        try { fs.unlinkSync(inputPath); } catch (_) { /* ignore deletion error */ }
       }
 
       return { videoId, operation, format: outFormat, resultUrl: toUploadsUrl(resultPath) };
@@ -835,7 +849,342 @@ router.post('/color-correct', auth, upload.single('video'), asyncHandler(async (
   sendSuccess(res, 'Color correction started', 202, { jobId })
 }))
 
+/**
+ * @swagger
+ * /api/video/advanced/remove-silence:
+ *   post:
+ *     summary: Detect and remove silent segments from video
+ *     tags: [Video]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/remove-silence', auth, upload.single('video'), asyncHandler(async (req, res) => {
+  logVideoEditServer('remove_silence_start', { userId: req.user._id, videoId: req.body.videoId })
+
+  const {
+    videoId: bodyVideoId,
+    videoUrl,
+    silenceThreshold = '-35dB',  // audio level below which is considered silence
+    minSilenceDuration = 0.5,    // minimum silence gap in seconds to cut
+    padding = 0.1,               // keep N seconds around cuts for natural feel
+  } = req.body
+  const videoPath = req.file ? req.file.path : null
+  const videoId = bodyVideoId || `video-${Date.now()}`
+
+  if (!videoUrl && !videoPath) {
+    return sendError(res, 'Video file or videoUrl is required', 400)
+  }
+
+  const uploadsRoot = getUploadsRoot()
+  const processedDir = path.join(uploadsRoot, 'processed')
+  ensureDir(processedDir)
+
+  runInBackground({
+    videoId,
+    operation: 'remove-silence',
+    handler: async (onProgress) => {
+      const inputPath = videoPath || await downloadToUploadsTemp(videoUrl)
+      onProgress(10, 'Analysing audio waveform')
+
+      // Step 1: Use ffmpeg silencedetect to find silence intervals
+      const { execFile } = require('child_process')
+      const { promisify } = require('util')
+      const execFileAsync = promisify(execFile)
+
+      let silenceLog = ''
+      try {
+        const { stderr } = await execFileAsync('ffmpeg', [
+          '-i', inputPath,
+          '-af', `silencedetect=noise=${silenceThreshold}:d=${minSilenceDuration}`,
+          '-f', 'null', '-'
+        ], { maxBuffer: 10 * 1024 * 1024 })
+        silenceLog = stderr
+      } catch (e) {
+        // ffmpeg writes to stderr; non-zero exit from -f null is expected
+        silenceLog = e.stderr || ''
+      }
+
+      onProgress(40, 'Calculating cut points')
+
+      // Parse silence intervals
+      const silenceStartRe = /silence_start:\s*([\d.]+)/g
+      const silenceEndRe = /silence_end:\s*([\d.]+)/g
+      const starts = [], ends = []
+      let m
+      while ((m = silenceStartRe.exec(silenceLog)) !== null) starts.push(parseFloat(m[1]))
+      while ((m = silenceEndRe.exec(silenceLog)) !== null) ends.push(parseFloat(m[1]))
+
+      // Build keep intervals (non-silent segments)
+      const keepSegments = []
+      let cursor = 0
+      for (let i = 0; i < Math.min(starts.length, ends.length); i++) {
+        const silStart = Math.max(0, starts[i] - padding)
+        const silEnd = ends[i] + padding
+        if (silStart > cursor) {
+          keepSegments.push({ start: cursor, end: silStart })
+        }
+        cursor = silEnd
+      }
+      // Always keep whatever remains after the last silence
+      keepSegments.push({ start: cursor, end: null })
+
+      if (keepSegments.length <= 1 && keepSegments[0]?.start === 0) {
+        // No silence found — return original
+        return {
+          videoId,
+          operation: 'remove-silence',
+          resultUrl: videoUrl || toUploadsUrl(inputPath),
+          cutPoints: [],
+          segmentsKept: 1,
+          message: 'No significant silence detected',
+        }
+      }
+
+      onProgress(60, 'Concatenating non-silent segments')
+
+      // Build ffmpeg concat filter
+      const tmpDir = path.join(uploadsRoot, 'tmp')
+      ensureDir(tmpDir)
+      const filterParts = []
+      const trimParts = []
+      keepSegments.forEach((seg, idx) => {
+        const endStr = seg.end !== null ? `:end=${seg.end}` : ''
+        filterParts.push(`[0:v]trim=start=${seg.start}${endStr},setpts=PTS-STARTPTS[v${idx}]`)
+        filterParts.push(`[0:a]atrim=start=${seg.start}${endStr},asetpts=PTS-STARTPTS[a${idx}]`)
+        trimParts.push(`[v${idx}][a${idx}]`)
+      })
+      const n = keepSegments.length
+      const filterComplex = [
+        ...filterParts,
+        `${trimParts.join('')}concat=n=${n}:v=1:a=1[outv][outa]`
+      ].join(';')
+
+      const outputPath = path.join(processedDir, `no-silence-${videoId}-${Date.now()}.mp4`)
+      await execFileAsync('ffmpeg', [
+        '-i', inputPath,
+        '-filter_complex', filterComplex,
+        '-map', '[outv]', '-map', '[outa]',
+        '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+        '-c:a', 'aac', '-b:a', '128k',
+        '-y', outputPath
+      ], { maxBuffer: 50 * 1024 * 1024 })
+
+      onProgress(95, 'Finalising')
+
+      if (videoPath && inputPath !== videoPath && inputPath.includes(`${path.sep}tmp${path.sep}`)) {
+        try { fs.unlinkSync(inputPath) } catch (_) { /* ignore deletion error */ }
+      }
+
+      return {
+        videoId,
+        operation: 'remove-silence',
+        resultUrl: toUploadsUrl(outputPath),
+        cutPoints: starts.map((s, i) => ({ start: s, end: ends[i] })),
+        segmentsKept: keepSegments.length,
+        silenceRemoved: starts.length,
+      }
+    },
+  })
+
+  sendSuccess(res, { videoId, operation: 'remove-silence' }, 'Silence removal started', 202)
+}))
+
+const { predictContentROI } = require('../../services/aiROIPredictorService');
+
+/**
+ * @swagger
+ * /api/video/advanced/roi-prediction:
+ *   post:
+ *     summary: Predict content ROI and Sales Score
+ *     tags: [Video]
+ */
+router.post('/roi-prediction', auth, asyncHandler(async (req, res) => {
+  const { videoId, timelineData, audiencePersona } = req.body;
+  const result = await predictContentROI(videoId, timelineData, audiencePersona);
+  sendSuccess(res, 'ROI prediction complete', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/monetization-plan
+ * @desc    Generate a monetization plan with Whop product CTAs
+ * @access  Private
+ */
+const { generateMonetizationPlan } = require('../../services/whopMonetizationService');
+router.post('/monetization-plan', auth, asyncHandler(async (req, res) => {
+  const { transcript, products } = req.body;
+  if (!transcript) {
+    return res.status(400).json({ success: false, message: 'Transcript is required for monetization planning' });
+  }
+  const result = await generateMonetizationPlan(transcript, products);
+  sendSuccess(res, 'Monetization plan generated', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/source-assets
+ * @desc    Extract visual keywords and source autonomous B-roll assets
+ * @access  Private
+ */
+const { sourceAutonomousAssets } = require('../../services/stockSourcingService');
+router.post('/source-assets', auth, asyncHandler(async (req, res) => {
+  const { transcript } = req.body;
+  if (!transcript) {
+    return res.status(400).json({ success: false, message: 'Transcript is required for sourcing' });
+  }
+  const result = await sourceAutonomousAssets(transcript);
+  sendSuccess(res, 'Autonomous sourcing complete', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/launch-test-ad
+ * @desc    Launch a low-budget test ad for high-potential video
+ * @access  Private
+ */
+const { launchTestAd } = require('../../services/adsIntegrationService');
+router.post('/launch-test-ad', auth, asyncHandler(async (req, res) => {
+  const { videoId, platform, budget } = req.body;
+  if (!videoId) {
+    return res.status(400).json({ success: false, message: 'Video ID is required' });
+  }
+  const result = await launchTestAd(videoId, platform, budget);
+  sendSuccess(res, 'Test ad launched and monitoring active', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/ingest-metrics
+ * @desc    Task 9.1: Ingest actual performance metrics from platforms
+ * @access  Private
+ */
+const { ingestPostMetrics } = require('../../services/oracleMetricIngestionService');
+router.post('/ingest-metrics', auth, asyncHandler(async (req, res) => {
+  const { workspaceId } = req.body;
+  const result = await ingestPostMetrics(workspaceId || req.user.workspaceId);
+  sendSuccess(res, 'Oracle metrics ingestion complete', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/analyze-pivots
+ * @desc    Task 9.2: Analyze winning styles and suggest strategic pivots
+ * @access  Private
+ */
+const { analyzeStrategicPivots } = require('../../services/cognitiveLoopService');
+router.post('/analyze-pivots', auth, asyncHandler(async (req, res) => {
+  const { workspaceId, niche } = req.body;
+  const result = await analyzeStrategicPivots(workspaceId || req.user.workspaceId, niche);
+  sendSuccess(res, 'Cognitive loop analysis complete', 200, result);
+}));
+
+/**
+ * @route   GET /api/video/advanced/ledger
+ * @desc    Retrieve the Sovereign Ledger audit trail
+ * @access  Private
+ */
+const sovereignLedger = require('../../services/sovereignLedgerService');
+router.get('/ledger', auth, asyncHandler(async (req, res) => {
+  const audits = sovereignLedger.getRecentAudits(20);
+  const state = sovereignLedger.getLedgerState();
+  sendSuccess(res, 'Sovereign Ledger audit trail retrieved', 200, { audits, state });
+}));
+
+/**
+ * @route   GET /api/video/advanced/synthesis-status
+ * @desc    Scale/Status for Visual Synthesis Engine
+ * @access  Private
+ */
+const visualSynthesis = require('../../services/visualSynthesisService');
+router.get('/synthesis-status', auth, asyncHandler(async (req, res) => {
+  const jobs = visualSynthesis.getAllJobs();
+  const seed = visualSynthesis.getNeuralSeed();
+  sendSuccess(res, 'Visual Synthesis status retrieved', 200, { jobs, seed });
+}));
+
+/**
+ * @route   POST /api/video/advanced/style-bridge
+ * @desc    Apply regional stylistic DNA to the Visual Synthesis Engine
+ * @access  Private
+ */
+router.post('/style-bridge', auth, asyncHandler(async (req, res) => {
+  const { regionId } = req.body;
+  const config = await visualSynthesis.applyStyleBridge(regionId);
+  sendSuccess(res, 'Style-Bridge activated', 200, config);
+}));
+
+/**
+ * @route   POST /api/video/advanced/style-fix
+ * @desc    Apply Style-Fix automation to low-retention segments
+ * @access  Private
+ */
+router.post('/style-fix', auth, asyncHandler(async (req, res) => {
+  const { jobId, heatmap } = req.body;
+  const result = await visualSynthesis.applyStyleFix(jobId, heatmap);
+  sendSuccess(res, 'Style-Fix automation applied', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/community-feedback
+ * @desc    Feed Whop engagement back into Style-DNA engine
+ * @access  Private
+ */
+router.post('/community-feedback', auth, asyncHandler(async (req, res) => {
+  const { regionId, engagementMetrics } = req.body;
+  const result = await visualSynthesis.processCommunityFeedback(regionId, engagementMetrics);
+  sendSuccess(res, 'Community Feedback Loop: Style-DNA evolved', 200, result);
+}));
+
+/**
+ * @route   POST /api/video/advanced/export-whop
+ * @desc    Render and export visual content to Whop distribution
+ * @access  Private
+ */
+router.post('/export-whop', auth, asyncHandler(async (req, res) => {
+  const { jobId, regionId } = req.body;
+  const result = await visualSynthesis.exportToWhop(jobId, regionId);
+  sendSuccess(res, 'Global Render Bridge: Export successful', 200, result);
+}));
+
+/**
+ * @route   GET /api/video/advanced/surge-ledger
+ * @desc    Fetch history of autonomous Style-DNA shifts and ROI
+ * @access  Private
+ */
+router.get('/surge-ledger', auth, asyncHandler(async (req, res) => {
+  const ledger = await visualSynthesis.getSurgeLedger();
+  sendSuccess(res, 'Surge Ledger: History retrieved', 200, ledger);
+}));
+
+/**
+ * @route   POST /api/video/advanced/auto-surge-bridge
+ * @desc    Execute autonomous Style-DNA shifts for high-probability surges
+ * @access  Private
+ */
+router.post('/auto-surge-bridge', auth, asyncHandler(async (req, res) => {
+  const bridged = await visualSynthesis.executeAutoSurgeBridge();
+  sendSuccess(res, `Auto-Surge Bridge: ${bridged.length} nodes shifted`, 200, bridged);
+}));
+
+/**
+ * @route   GET /api/video/advanced/evolution-forecast
+ * @desc    Fetch predictive Style-DNA surge forecasts
+ * @access  Private
+ */
+router.get('/evolution-forecast', auth, asyncHandler(async (req, res) => {
+  const forecast = await visualSynthesis.getPredictiveSurgeForecast();
+  sendSuccess(res, 'Predictive Evolution: Forecast retrieved', 200, forecast);
+}));
+
+/**
+ * @route   GET /api/video/advanced/financial-bridge
+ * @desc    Retrieve Payout Bridge and Fiscal Summary
+ * @access  Private
+ */
+const payoutBridge = require('../../services/payoutBridgeService');
+router.get('/financial-bridge', auth, asyncHandler(async (req, res) => {
+  const summary = payoutBridge.getFinancialSummary();
+  const bridges = payoutBridge.getBridgeStatus();
+  sendSuccess(res, 'Financial bridge summary retrieved', 200, { summary, bridges });
+}));
+
 module.exports = router;
+
 
 
 

@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const { isDevUser } = require('../utils/devUser');
 const logger = require('../utils/logger');
 const Music = require('../models/Music');
 const multer = require('multer');
@@ -133,6 +134,19 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
   } = req.query;
 
   try {
+    // For dev users, return an empty list or mock data to avoid DB errors
+    if (isDevUser(req.user)) {
+      return sendSuccess(res, 'User music retrieved (dev mode)', 200, {
+        tracks: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          totalPages: 0
+        }
+      });
+    }
+
     const query = {
       userId: req.user._id,
       provider: 'internal',

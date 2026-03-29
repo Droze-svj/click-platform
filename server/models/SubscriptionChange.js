@@ -7,8 +7,7 @@ const subscriptionChangeSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: true
   },
   changeType: {
     type: String,

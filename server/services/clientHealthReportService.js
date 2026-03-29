@@ -7,15 +7,7 @@ const CompetitorBenchmark = require('../models/CompetitorBenchmark');
 const KeyWin = require('../models/KeyWin');
 const { getClientHealthDashboard } = require('./clientHealthService');
 const { getBenchmarkComparison } = require('./competitorBenchmarkService');
-// Lazy load exceljs to prevent startup crashes if not installed
-let ExcelJS;
-try {
-  ExcelJS = require('exceljs');
-} catch (error) {
-  // ExcelJS is optional, continue without it
-  console.warn('ExcelJS not available, Excel export will be disabled');
-}
-const PDFDocument = require('pdfkit');
+// Lazy load exceljs and pdfkit to prevent startup crashes
 const logger = require('../utils/logger');
 
 /**
@@ -29,9 +21,7 @@ async function generateClientHealthReportExcel(clientWorkspaceId, agencyWorkspac
       period = 'monthly'
     } = filters;
 
-    if (!ExcelJS) {
-      throw new Error('ExcelJS is not available. Excel export is disabled.');
-    }
+    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
 
     // Health Score Sheet
@@ -132,6 +122,7 @@ async function generateClientHealthReportPDF(clientWorkspaceId, agencyWorkspaceI
       period
     });
 
+    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
     const chunks = [];
 

@@ -19,6 +19,7 @@ interface WorkflowTemplate {
 
 export default function WorkflowTemplates() {
   const [templates, setTemplates] = useState<Record<string, WorkflowTemplate>>({});
+  const [suggestedIds, setSuggestedIds] = useState<string[]>([]);
   const [categories, setCategories] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState<string | null>(null);
@@ -30,14 +31,16 @@ export default function WorkflowTemplates() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/workflows/templates', {
+      const response = await fetch('/api/workflows/templates?suggested=1', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
       const data = await response.json();
-      if (data.success) {
-        setTemplates(data.data);
+      if (data.success && data.data) {
+        const payload = data.data;
+        setTemplates(payload.templates || payload);
+        setSuggestedIds(Array.isArray(payload.suggestedIds) ? payload.suggestedIds : []);
       }
     } catch (error) {
       console.error('Fetch templates error:', error);
@@ -97,6 +100,60 @@ export default function WorkflowTemplates() {
           </CardHeader>
         <CardContent>
           <div className="space-y-6">
+            {suggestedIds.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  Suggested for you
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {suggestedIds.map((id) => {
+                    const template = templates[id];
+                    if (!template) return null;
+                    return (
+                      <Card
+                        key={id}
+                        className={cn(
+                          "transition-all hover:shadow-lg hover:scale-[1.02] border-amber-200 dark:border-amber-800",
+                          "animate-in fade-in slide-in-from-bottom-4 duration-300"
+                        )}
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-purple-500" />
+                            {template.name}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-muted-foreground">{template.description}</p>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="outline">{template.triggers?.length ?? 0} triggers</Badge>
+                            <Badge variant="outline">{template.actions?.length ?? 0} actions</Badge>
+                          </div>
+                          <Button
+                            onClick={() => createFromTemplate(id)}
+                            disabled={creating === id}
+                            className="w-full"
+                          >
+                            {creating === id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Creating...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="mr-2 h-4 w-4" />
+                                Use Template
+                              </>
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {Object.entries(categories).map(([category, items]) => (
               <div key={category}>
                 <h3 className="font-semibold mb-3 capitalize">{category}</h3>

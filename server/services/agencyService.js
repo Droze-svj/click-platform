@@ -7,6 +7,7 @@ const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const ContentApproval = require('../models/ContentApproval');
 const logger = require('../utils/logger');
+const ClientRetention = require('../models/ClientRetention');
 const mongoose = require('mongoose');
 
 /**
@@ -81,11 +82,112 @@ async function createWhiteLabelPortal(agencyWorkspaceId, clientWorkspaceId, port
       clientId: clientWorkspaceId,
       subdomain: finalSubdomain
     }, agencyWorkspaceId);
-
     logger.info('White-label portal created', { agencyWorkspaceId, clientWorkspaceId, subdomain: finalSubdomain });
     return portal;
   } catch (error) {
     logger.error('Error creating white-label portal', { error: error.message, agencyWorkspaceId });
+    throw error;
+  }
+}
+
+// SLA Auto-Fulfillment: Automatically trigger content if targets are missed
+async function monitorAndFulfillSLAs(agencyWorkspaceId) {
+  try {
+    const logger = require('../utils/logger');
+    const ClientRetention = require('../models/ClientRetention');
+    const slaTrackingService = require('./slaTrackingService');
+    const unifiedPipeline = require('./unifiedContentPipelineService');
+
+    logger.info('Running SLA Auto-Fulfillment Monitor', { agencyWorkspaceId });
+
+    const clients = await ClientRetention.find({
+      agencyWorkspaceId,
+      'subscription.status': 'active'
+    }).lean();
+
+    for (const client of clients) {
+      const slaStatus = await slaTrackingService.getSLAStatus(client.clientWorkspaceId);
+
+      if (slaStatus.status === 'at_risk' || slaStatus.status === 'missed') {
+        logger.warn('SLA at Risk: Triggering Autonomous Fulfillment', {
+          clientWorkspaceId: client.clientWorkspaceId,
+          slaStatus
+        });
+
+        // Trigger autonomous content generation from the most recent "Viral Ideas"
+        const ideas = await require('./aiService').generateViralIdeas(client.userId, 'general');
+        if (ideas && ideas.length > 0) {
+            await unifiedPipeline.processContentPipeline(client.userId, ideas[0].id, {
+                autoSchedule: true,
+                context: 'SLA_AUTO_FULFILLMENT'
+            });
+        }
+      }
+    }
+  } catch (error) {
+    logger.error('Error in monitorAndFulfillSLAs', { error: error.message });
+  }
+}
+
+/**
+ * Get SLA Status Summary for an agency
+ */
+async function getSLAStatusSummary(agencyWorkspaceId) {
+  try {
+    const slaTrackingService = require('./slaTrackingService');
+    const ClientRetention = require('../models/ClientRetention');
+
+    const clients = await ClientRetention.find({
+      agencyWorkspaceId,
+      'subscription.status': 'active'
+    }).lean();
+
+    const summary = {
+      total: clients.length,
+      healthy: 0,
+      atRisk: 0,
+      missed: 0,
+      details: []
+    };
+
+    for (const client of clients) {
+      const status = await slaTrackingService.getSLAStatus(client.clientWorkspaceId);
+      summary.details.push({
+        clientWorkspaceId: client.clientWorkspaceId,
+        clientName: client.clientName,
+        status: status.status,
+        score: status.score,
+        lastFulfillment: status.lastFulfillment
+      });
+
+      if (status.status === 'healthy') summary.healthy++;
+      else if (status.status === 'at_risk') summary.atRisk++;
+      else if (status.status === 'missed') summary.missed++;
+    }
+
+    return summary;
+  } catch (error) {
+    logger.error('Error getting SLA Status Summary', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Get latest autonomous reports across all clients
+ */
+async function getLatestAutonomousReports(agencyWorkspaceId, limit = 10) {
+  try {
+    const ClientReport = require('../models/ClientReport');
+    
+    return await ClientReport.find({
+      agencyWorkspaceId,
+      type: 'autonomous'
+    })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+  } catch (error) {
+    logger.error('Error getting latest autonomous reports', { error: error.message });
     throw error;
   }
 }
@@ -1262,6 +1364,7 @@ module.exports = {
   executeOnboardingStep,
   generateClientReport,
   trackClientUsage,
-  getClientPerformanceAlerts
+  getClientPerformanceAlerts,
+  getSLAStatusSummary,
+  getLatestAutonomousReports
 };
-

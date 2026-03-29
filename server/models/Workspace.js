@@ -1,4 +1,5 @@
 // Workspace Model
+console.log('--- ENTERING Workspace.js ---');
 // Multi-brand/multi-client workspaces
 
 const mongoose = require('mongoose');
@@ -16,15 +17,12 @@ const workspaceSchema = new mongoose.Schema({
     index: true
   },
   ownerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
+    type: String,
+    required: true
   },
   members: [{
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
       required: true
     },
     role: {
@@ -39,18 +37,18 @@ const workspaceSchema = new mongoose.Schema({
       canDelete: { type: Boolean, default: false },
       canPublish: { type: Boolean, default: false },
       canSchedule: { type: Boolean, default: false },
-      
+
       // Workspace permissions
       canManageMembers: { type: Boolean, default: false },
       canManageSettings: { type: Boolean, default: false },
       canViewAnalytics: { type: Boolean, default: true },
       canExportData: { type: Boolean, default: false },
-      
+
       // Approval permissions
       canApprove: { type: Boolean, default: false },
       canReject: { type: Boolean, default: false },
       canRequestChanges: { type: Boolean, default: false },
-      
+
       // Advanced permissions
       canManageWorkflows: { type: Boolean, default: false },
       canManageIntegrations: { type: Boolean, default: false },
@@ -103,6 +101,10 @@ const workspaceSchema = new mongoose.Schema({
       apiAccess: { type: Boolean, default: false }
     }
   },
+  userId: {
+    type: String,
+    required: true
+  },
   agencyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace',
@@ -136,10 +138,11 @@ workspaceSchema.index({ ownerId: 1, type: 1 });
 workspaceSchema.index({ 'members.userId': 1 });
 workspaceSchema.index({ 'settings.dataResidency.region': 1 });
 
-workspaceSchema.pre('save', function(next) {
+workspaceSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });
 
 module.exports = mongoose.model('Workspace', workspaceSchema);
+console.log('--- LEAVING Workspace.js ---');
 

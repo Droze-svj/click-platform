@@ -6,10 +6,36 @@ const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 const OpenAI = require('openai')
 const logger = require('../utils/logger')
+let Sentry = null
+try {
+  Sentry = require('@sentry/node')
+} catch (_) {
+  // Optional dependency in some local environments
+}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
+
+function withAgentSpan(agentName, fn, model = 'gpt-4o') {
+  return async (...args) => {
+    if (!Sentry || typeof Sentry.startSpan !== 'function') {
+      return fn(...args)
+    }
+    return Sentry.startSpan(
+      {
+        op: 'gen_ai.invoke_agent',
+        name: `invoke_agent ${agentName}`,
+        attributes: {
+          'gen_ai.agent.name': agentName,
+          'gen_ai.request.model': model,
+          'gen_ai.operation.name': 'invoke_agent',
+        },
+      },
+      () => fn(...args)
+    )
+  }
+}
 
 // Helper function to get temp path
 function getTempPath(filename) {
@@ -357,13 +383,13 @@ async function analyzeVideoContent(videoPath, options = {}) {
 }
 
 module.exports = {
-  analyzeVideoContent,
-  detectHighlights,
-  analyzePacing,
-  analyzeEngagement,
-  analyzeTechnicalQuality,
-  analyzeContent,
-  generateEditingSuggestions
+  analyzeVideoContent: withAgentSpan('Video Analysis Agent', analyzeVideoContent, 'gpt-4o'),
+  detectHighlights: withAgentSpan('Video Highlight Agent', detectHighlights, 'gpt-4o'),
+  analyzePacing: withAgentSpan('Video Pacing Agent', analyzePacing, 'gpt-4o'),
+  analyzeEngagement: withAgentSpan('Video Engagement Agent', analyzeEngagement, 'gpt-4o'),
+  analyzeTechnicalQuality: withAgentSpan('Video Technical Agent', analyzeTechnicalQuality, 'gpt-4o'),
+  analyzeContent: withAgentSpan('Video Content Agent', analyzeContent, 'gpt-4o'),
+  generateEditingSuggestions: withAgentSpan('Video Editing Suggestion Agent', generateEditingSuggestions, 'gpt-4o')
 }
 
 

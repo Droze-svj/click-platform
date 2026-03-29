@@ -16,7 +16,7 @@ async function getCompetitiveBenchmarks(userId, platform, timeframe = '30days') 
     const industryBenchmarks = getIndustryBenchmarks(platform);
 
     // Calculate user's percentile
-    const percentile = calculatePercentile(userPosts.avgEngagement, industryBenchmarks.engagement);
+    const percentile = calculatePercentile(userPosts.avgEngagement, industryBenchmarks);
 
     // Get competitor analysis (would typically come from competitor tracking)
     const competitorData = await getCompetitorData(userId, platform);
@@ -389,7 +389,7 @@ async function compareWithCompetitors(userId, platform) {
     // Compare with competitor average
     if (competitorData.avgEngagement > 0) {
       const gap = userBenchmark.user.avgEngagement - competitorData.avgEngagement;
-      
+
       if (gap > 0) {
         comparison.vsCompetitors.betterThan = 1;
         comparison.opportunities.push({

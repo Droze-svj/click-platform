@@ -1,8 +1,9 @@
-// Redis caching service
-
-const redis = require('redis');
+console.log('🏗️ cacheService: start requires');
 const logger = require('../utils/logger');
+console.log('🏗️ cacheService: logger loaded');
 const { captureException } = require('../utils/sentry');
+console.log('🏗️ cacheService: sentry loaded');
+console.log('🏗️ cacheService: requires loaded');
 
 // Lazy load cache monitoring to avoid circular dependencies
 let cacheMonitoring = null;
@@ -38,7 +39,10 @@ async function initCache() {
   }
 
   try {
-    
+    console.log('🏗️ cacheService: requiring redis inside initCache...');
+    const redis = require('redis');
+    console.log('🏗️ cacheService: redis loaded');
+
     redisClient = redis.createClient({
       url: redisUrl,
       password: process.env.REDIS_PASSWORD || undefined,
@@ -75,11 +79,11 @@ async function initCache() {
     // Connect with timeout
     await Promise.race([
       redisClient.connect(),
-      new Promise((_, reject) => 
+      new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
       )
     ]);
-    
+
     cacheEnabled = true;
     logger.info('✅ Redis cache initialized');
   } catch (error) {
@@ -88,7 +92,7 @@ async function initCache() {
     // Clean up client if it was created
     if (redisClient) {
       try {
-        await redisClient.quit().catch(() => {});
+        await redisClient.quit().catch(() => { });
       } catch (e) {
         // Ignore cleanup errors
       }
@@ -219,7 +223,7 @@ async function getOrSet(key, fetchFn, ttl = 3600) {
 
   // Fetch from source
   const value = await fetchFn();
-  
+
   // Store in cache
   if (value !== null && value !== undefined) {
     await set(key, value, ttl);
@@ -270,9 +274,9 @@ function cacheMiddleware(ttl = 3600, keyGenerator = null) {
 
     // Store original json method
     const originalJson = res.json.bind(res);
-    
+
     // Override json to cache response
-    res.json = function(data) {
+    res.json = function (data) {
       // Cache successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
         set(cacheKey, data, ttl).catch(err => {
@@ -360,13 +364,13 @@ async function mset(keyValuePairs, ttl = 3600) {
       pipeline.setEx(key, ttl, JSON.stringify(value));
     }
     await pipeline.exec();
-    
+
     // Track cache sets
     const monitoring = getCacheMonitoring();
     if (monitoring) {
       keyValuePairs.forEach(({ key }) => monitoring.trackCacheSet(key));
     }
-    
+
     return true;
   } catch (error) {
     logger.error('Cache mset error', { error: error.message });
@@ -406,7 +410,7 @@ async function getStats() {
   try {
     const info = await redisClient.info('stats');
     const keyspace = await redisClient.info('keyspace');
-    
+
     // Parse info strings
     const stats = {};
     info.split('\r\n').forEach(line => {

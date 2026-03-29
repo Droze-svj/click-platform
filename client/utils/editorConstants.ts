@@ -11,7 +11,9 @@ import {
   Download,
   Calendar,
   PenTool,
-  Film
+  Film,
+  Globe,
+  Share2
 } from 'lucide-react'
 import {
   EditToolIcon,
@@ -246,5 +248,26 @@ export const CATEGORIES: Category[] = [
     textColor: 'text-red-700 dark:text-red-300',
     description: 'Share & export',
     features: ['Social Media', 'Formats', 'Quality', 'Presets']
+  },
+  {
+    id: 'style-vault',
+    label: 'Style Vault',
+    icon: Layers,
+    color: 'from-indigo-600 to-blue-700',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/20',
+    textColor: 'text-indigo-700 dark:text-indigo-300',
+    description: 'Train your neural editing dna',
+    features: ['Neural Extraction', 'Pacing Matrix', 'Style Tuning'],
+    badge: 'NEW'
+  },
+  {
+    id: 'distribution',
+    label: 'Distribution Hub',
+    icon: Globe,
+    color: 'from-emerald-600 to-teal-600',
+    bgColor: 'bg-emerald-100 dark:bg-emerald-900/20',
+    textColor: 'text-emerald-700 dark:text-emerald-400',
+    description: 'Unified social dispatch',
+    features: ['Platform Sync', 'Metadata Injection', 'Scheduled Blast']
   }
 ]

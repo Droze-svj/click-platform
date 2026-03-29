@@ -4,7 +4,6 @@ const OpenAI = require('openai');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
-const fs = require('fs').promises;
 const path = require('path');
 
 // Initialize OpenAI client
@@ -34,9 +33,6 @@ async function generateTranscript(videoFilePath, language = null) {
     logger.info('Generating transcript', { videoFilePath, language });
 
     // Read video file
-    const videoFile = await fs.readFile(videoFilePath);
-    const filename = path.basename(videoFilePath);
-
     // Create file stream for OpenAI (using fs.createReadStream for Node.js)
     const { createReadStream } = require('fs');
     const fileStream = createReadStream(videoFilePath);
@@ -280,17 +276,19 @@ async function translateCaptions(text, targetLanguage) {
 }
 
 /**
- * Generate auto-captions from transcript for AI editing (smart captions).
- * Uses content.captions.segments if available, otherwise splits transcript over duration.
- * @param {string} videoId - Content ID
- * @param {Object} options - { language, transcript, style, position }
- * @returns {Promise<Object>} { captions: [{ text, startTime, endTime }] }
+ * Generate auto-captions from transcript with Cognitive features (Phase 11).
+ * Includes: Object-Aware Positioning, Emotion-Sync, and Auto-Highlighting.
  */
 async function generateAutoCaptions(videoId, options = {}) {
-  const { transcript, style = 'modern', position = 'bottom' } = options;
+  const { transcript, videoPath } = options;
   if (!transcript || typeof transcript !== 'string') {
     return { captions: [] };
   }
+
+  const visualAwareness = require('./visualAwarenessService');
+  const avoidanceZones = videoPath ? await visualAwareness.getAvoidanceZones(videoPath) : [];
+  const safePosition = visualAwareness.calculateSafeCaptionPosition(avoidanceZones);
+
   try {
     const content = await Content.findById(videoId);
     let segments = [];
@@ -298,7 +296,6 @@ async function generateAutoCaptions(videoId, options = {}) {
 
     const words = content?.captions?.words;
     if (words && Array.isArray(words) && words.length > 0) {
-      // Word-level timestamps (e.g. from Whisper verbose_json): group into readable lines (~2–4s or max 6 words)
       const maxWordsPerLine = 6;
       const maxDuration = 3.5;
       let lineStart = words[0].start ?? 0;
@@ -312,10 +309,12 @@ async function generateAutoCaptions(videoId, options = {}) {
         const lineDuration = lineEnd - lineStart;
         const shouldEmit = lineWords.length >= maxWordsPerLine || lineDuration >= maxDuration || i === words.length - 1;
         if (shouldEmit && lineWords.length > 0) {
+          const text = lineWords.join(' ').trim();
           segments.push({
-            text: lineWords.join(' ').trim(),
+            text,
             startTime: lineStart,
             endTime: lineEnd,
+            ...analyzeSentimentAndHighlight(text)
           });
           lineWords = [];
           if (i < words.length - 1) {
@@ -323,35 +322,23 @@ async function generateAutoCaptions(videoId, options = {}) {
           }
         }
       }
-      if (lineWords.length > 0) {
-        const lastEnd = words[words.length - 1]?.end ?? duration;
-        segments.push({
-          text: lineWords.join(' ').trim(),
-          startTime: lineStart,
-          endTime: lastEnd,
-        });
-      }
-    } else if (content?.captions?.segments && Array.isArray(content.captions.segments) && content.captions.segments.length > 0) {
-      segments = content.captions.segments.map((s) => ({
-        text: s.text || '',
-        startTime: s.start ?? 0,
-        endTime: s.end ?? 0,
-      }));
     } else {
+      // Fallback splitting...
       const sentences = transcript.split(/(?<=[.!?])\s+/).filter(Boolean);
-      if (sentences.length === 0) {
-        segments = [{ text: transcript.trim(), startTime: 0, endTime: Math.max(1, duration) }];
-      } else {
-        const chunkDuration = duration / sentences.length;
-        segments = sentences.map((text, i) => ({
-          text: text.trim(),
-          startTime: i * chunkDuration,
-          endTime: (i + 1) * chunkDuration,
-        }));
-      }
+      const chunkDuration = duration / Math.max(1, sentences.length);
+      segments = sentences.map((text, i) => ({
+        text: text.trim(),
+        startTime: i * chunkDuration,
+        endTime: (i + 1) * chunkDuration,
+        ...analyzeSentimentAndHighlight(text.trim())
+      }));
     }
 
-    return { captions: segments };
+    return {
+      captions: segments,
+      suggestedPosition: safePosition,
+      isObjectAware: avoidanceZones.length > 0
+    };
   } catch (error) {
     logger.error('generateAutoCaptions failed', { videoId, error: error.message });
     return { captions: [] };
@@ -359,24 +346,70 @@ async function generateAutoCaptions(videoId, options = {}) {
 }
 
 /**
- * Apply style options to caption segments (for burn-in). Returns same segments with .style attached.
- * @param {Array} captions - [{ text, startTime, endTime }]
- * @param {Object} styleOptions - { fontSize, fontColor, backgroundColor, outline, outlineColor, position, fontFamily }
- * @returns {Array} [{ text, startTime, endTime, style }]
+ * AI analysis of text for emotion and auto-highlighting (Phase 10/11)
+ * Now incorporates Market Velocity and Trend-Highlighting.
+ */
+function analyzeSentimentAndHighlight(text) {
+  const lowercaseText = text.toLowerCase();
+  const predictionService = require('./predictionService');
+  
+  // Real-time Trend Injection (Simulated lookup)
+  const marketTrends = predictionService.ingestMarketTrendsSync?.() || { trendingTopics: [] };
+  const hasTrendingTopic = marketTrends.trendingTopics.some(topic => lowercaseText.includes(topic.toLowerCase()));
+
+  // Emotion-Sync tokens
+  let animation = null;
+  if (/\b(wow|amazing|huge|incredible|boom)\b/.test(lowercaseText)) animation = 'shake-accent';
+  else if (/\b(wait|stop|actually|look)\b/.test(lowercaseText)) animation = 'scale-in';
+  else if (/\b(shh|quiet|secret|whisper)\b/.test(lowercaseText)) animation = 'fade-glow';
+  
+  // Phase 10: Trend-Highlighting
+  if (hasTrendingTopic) {
+    animation = 'shake-accent'; // Override for maximum visibility
+  }
+
+  // Auto-Highlighting (detect most significant word)
+  // Logic: Highlight the trending topic if present, else use heuristic
+  let pivotWord = null;
+  const trendingMatch = marketTrends.trendingTopics.find(topic => lowercaseText.includes(topic.toLowerCase()));
+  
+  if (trendingMatch) {
+    pivotWord = trendingMatch;
+  } else {
+    const highlightWords = text.split(' ').filter(w => w.length > 4); 
+    pivotWord = highlightWords.length > 0 ? highlightWords[0] : null;
+  }
+
+  return {
+    animation,
+    pivotWord,
+    sentiment: animation ? 'high-energy' : 'neutral',
+    isTrendAligned: hasTrendingTopic,
+    velocityContext: hasTrendingTopic ? 'high-growth-signal' : 'baseline'
+  };
+}
+
+/**
+ * Apply style options to caption segments.
  */
 function styleCaptions(captions, styleOptions = {}) {
   if (!Array.isArray(captions)) return [];
-  const style = {
-    fontSize: styleOptions.fontSize ?? 42,
-    fontColor: styleOptions.fontColor ?? '#FFFFFF',
-    backgroundColor: styleOptions.backgroundColor ?? 'rgba(0,0,0,0.75)',
-    outline: styleOptions.outline !== false,
-    outlineColor: styleOptions.outlineColor ?? '#000000',
-    outlineWidth: styleOptions.outlineWidth ?? (styleOptions.outline ? 2 : 0),
-    position: styleOptions.position ?? 'bottom',
-    fontFamily: styleOptions.fontFamily || 'Arial',
-  };
-  return captions.map((c) => ({ ...c, style }));
+  return captions.map((c) => {
+    const style = {
+      fontSize: styleOptions.fontSize ?? 42,
+      fontColor: styleOptions.fontColor ?? '#FFFFFF',
+      backgroundColor: styleOptions.backgroundColor ?? 'rgba(0,0,0,0.75)',
+      outline: styleOptions.outline !== false,
+      outlineColor: styleOptions.outlineColor ?? '#000000',
+      outlineWidth: styleOptions.outlineWidth ?? (styleOptions.outline ? 2 : 0),
+      position: styleOptions.position ?? 'bottom',
+      fontFamily: styleOptions.fontFamily || 'Arial',
+      // Apply emotion-sync overrides
+      ...(c.animation === 'shake-accent' && { fontSize: 52, fontColor: '#FFD700' }),
+      ...(c.animation === 'fade-glow' && { fontColor: '#ADD8E6', outline: false })
+    };
+    return { ...c, style };
+  });
 }
 
 /**

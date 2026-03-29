@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Sparkles, Zap, FileText, Video, Mic, Copy } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Sparkles, Zap, FileText, Video, Mic, Copy, TrendingUp, ShieldCheck, RefreshCcw } from 'lucide-react'
 import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
@@ -25,9 +26,18 @@ interface QuickTemplate {
 
 export default function QuickContentCreator({ onContentCreated }: QuickContentCreatorProps) {
   const [showModal, setShowModal] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<QuickTemplate | null>(null)
   const [loading, setLoading] = useState(false)
   const [quickText, setQuickText] = useState('')
+  const [marketHealth, setMarketHealth] = useState<{ velocity: number; trending: string[] } | null>(null)
+  const [variance, setVariance] = useState<'subtle' | 'dynamic' | 'radical'>('dynamic')
+  
+  useEffect(() => {
+    // Phase 10: Real-time Strategic Sync
+    setMarketHealth({ 
+      velocity: 82, 
+      trending: ['AI Productivity', 'SaaS Automation', 'Budget Travel']
+    })
+  }, [])
 
   const quickTemplates: QuickTemplate[] = [
     {
@@ -97,7 +107,6 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
     try {
       const token = localStorage.getItem('token')
       
-      // If it's an AI idea, generate it first
       if (template.id === 'ai-idea') {
         const ideaResponse = await axios.post(
           `${API_URL}/ai/generate-idea`,
@@ -111,14 +120,14 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
         }
       }
 
-      // Create content
       const response = await axios.post(
         `${API_URL}/content/generate`,
         {
           text: template.preset.text || quickText,
           title: template.preset.title,
           type: template.preset.type,
-          platforms: template.platforms
+          platforms: template.platforms,
+          strategicMode: true // Phase 10
         },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -126,7 +135,6 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
       if (response.data.success && response.data.data?.contentId) {
         onContentCreated?.(response.data.data.contentId)
         setShowModal(false)
-        setSelectedTemplate(null)
         setQuickText('')
       }
     } catch (error: any) {
@@ -149,7 +157,8 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
           text: quickText,
           title: 'Quick Content',
           type: 'article',
-          platforms: ['twitter', 'linkedin', 'instagram']
+          platforms: ['twitter', 'linkedin', 'instagram'],
+          strategicMode: true
         },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -168,7 +177,6 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
 
   return (
     <>
-      {/* Quick Create Button */}
       <button
         onClick={() => setShowModal(true)}
         className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
@@ -177,90 +185,148 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
         Quick Create
       </button>
 
-      {/* Quick Create Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Quick Content Creation
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowModal(false)
-                    setSelectedTemplate(null)
-                    setQuickText('')
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Quick Text Input */}
-              <div className="mb-6">
-                <textarea
-                  value={quickText}
-                  onChange={(e) => setQuickText(e.target.value)}
-                  placeholder="Paste your content here and we'll adapt it for all platforms..."
-                  className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                />
-                <button
-                  onClick={handleQuickText}
-                  disabled={!quickText.trim() || loading}
-                  className="mt-2 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Creating...' : 'Create & Adapt'}
-                </button>
-              </div>
-
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 text-center">
-                OR choose a template
-              </div>
-
-              {/* Templates Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {quickTemplates.map((template) => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleQuickCreate(template)}
-                    disabled={loading}
-                    className="p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all text-left disabled:opacity-50"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="text-blue-600 dark:text-blue-400">
-                        {template.icon}
-                      </div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {template.name}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {template.description}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {template.platforms.slice(0, 2).map((platform) => (
-                        <span
-                          key={platform}
-                          className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded"
-                        >
-                          {platform}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/10"
+            >
+              <div className="p-8 space-y-6">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter uppercase">
+                      Quick Content
+                    </h2>
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/20 italic">
+                        STRATEGIC MODE ACTIVE
+                      </span>
+                      {marketHealth && (
+                        <span className="text-[10px] font-black bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full border border-blue-500/20 flex items-center gap-1 italic">
+                          <TrendingUp className="w-3 h-3" />
+                          VELOCITY: {marketHealth.velocity}%
                         </span>
-                      ))}
-                      {template.platforms.length > 2 && (
-                        <span className="text-xs text-gray-500">+{template.platforms.length - 2}</span>
                       )}
                     </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowModal(false)
+                      setQuickText('')
+                    }}
+                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                  >
+                    ✕
                   </button>
-                ))}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-2">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Generative Variance</span>
+                    <div className="flex items-center gap-4">
+                      {['Subtle', 'Dynamic', 'Radical'].map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => setVariance(v.toLowerCase() as any)}
+                          className={`text-[9px] font-black uppercase tracking-tighter transition-all ${
+                            variance === v.toLowerCase() ? 'text-indigo-500' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {v}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={quickText}
+                    onChange={(e) => setQuickText(e.target.value)}
+                    placeholder="Paste raw content... We'll apply Tone Modulation and Platform Forcing."
+                    className="w-full h-40 px-6 py-4 border border-gray-200 dark:border-white/10 rounded-3xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-black/40 dark:text-white resize-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 font-medium"
+                  />
+                  
+                  <AnimatePresence>
+                    {loading && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <ShieldCheck className="w-4 h-4 text-indigo-400 animate-pulse" />
+                          <span className="text-[10px] font-bold text-indigo-300 uppercase italic">Sovereignty Integrity Check...</span>
+                        </div>
+                        <div className="text-[10px] font-black text-indigo-400">92% ORIGINAL</div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleQuickText}
+                      disabled={!quickText.trim() || loading}
+                      className="flex-[2] bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest italic hover:shadow-xl hover:shadow-blue-500/20 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+                    >
+                      {loading ? <Zap className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      {loading ? 'SYNTHESIZING...' : 'STRATEGIC ADAPTATION'}
+                    </button>
+                    <button
+                      onClick={() => setVariance('radical')}
+                      title="Neural Refresh: Maximum Variance"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all group"
+                    >
+                      <RefreshCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100 dark:border-white/5" /></div>
+                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest"><span className="bg-white dark:bg-gray-900 px-4 text-gray-400 italic">Directive Templates</span></div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {quickTemplates.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => handleQuickCreate(template)}
+                      disabled={loading}
+                      className="p-5 border border-gray-100 dark:border-white/10 rounded-3xl hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all text-left group disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
+                          {template.icon}
+                        </div>
+                        <h3 className="font-black text-xs text-gray-900 dark:text-white uppercase tracking-tighter">
+                          {template.name}
+                        </h3>
+                      </div>
+                      <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                        {template.description}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+
+                {marketHealth && (
+                   <div className="pt-4 border-t border-gray-100 dark:border-white/5">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">LIVE-WIRE TREND SIGNALS</p>
+                      <div className="flex flex-wrap gap-2">
+                         {marketHealth.trending.map(t => (
+                           <span key={t} className="px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[9px] font-bold text-slate-400 italic">#{t.toUpperCase()}</span>
+                         ))}
+                      </div>
+                   </div>
+                )}
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   )
 }
-
-

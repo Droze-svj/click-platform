@@ -1,0 +1,61 @@
+.percentileBar {
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.percentileBar[data-percentile="low"] {
+  background-color: #f43f5e;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.5);
+}
+
+.percentileBar[data-percentile="medium"] {
+  background-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.percentileBar[data-percentile="high"] {
+  background-color: #6366f1;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+.percentileBar[data-percentile="top"] {
+  background-color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.platformButtonActive {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.platformButtonActive[data-platform="tiktok"] { box-shadow: 0 0 12px rgba(105, 201, 208, 0.25); }
+.platformButtonActive[data-platform="instagram"] { box-shadow: 0 0 12px rgba(225, 48, 108, 0.25); }
+.platformButtonActive[data-platform="youtube"] { box-shadow: 0 0 12px rgba(255, 0, 0, 0.25); }
+.platformButtonActive[data-platform="linkedin"] { box-shadow: 0 0 12px rgba(10, 102, 194, 0.25); }
+.platformButtonActive[data-platform="twitter"] { box-shadow: 0 0 12px rgba(29, 161, 242, 0.25); }
+
+.dayAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-top-left-radius: 2rem;
+  border-top-right-radius: 2rem;
+}
+
+.dayAccent[data-day="0"], .dayLabel[data-day="0"] { background-color: #6366f1; color: #6366f1; }
+.dayAccent[data-day="1"], .dayLabel[data-day="1"] { background-color: #8b5cf6; color: #8b5cf6; }
+.dayAccent[data-day="2"], .dayLabel[data-day="2"] { background-color: #a855f7; color: #a855f7; }
+.dayAccent[data-day="3"], .dayLabel[data-day="3"] { background-color: #f59e0b; color: #f59e0b; }
+.dayAccent[data-day="4"], .dayLabel[data-day="4"] { background-color: #10b981; color: #10b981; }
+.dayAccent[data-day="5"], .dayLabel[data-day="5"] { background-color: #3b82f6; color: #3b82f6; }
+.dayAccent[data-day="6"], .dayLabel[data-day="6"] { background-color: #f43f5e; color: #f43f5e; }
+
+.dayLabel {
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}

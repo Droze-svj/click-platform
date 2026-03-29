@@ -69,8 +69,10 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(() => {
     // Use mock user in development mode
     if (process.env.NODE_ENV === 'development') {
-      // Debug logging disabled to prevent console spam
-      // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {});
+      // Don't auto-login if we're on the landing page so we can actually see it!
+      if (typeof window !== 'undefined' && window.location.pathname === '/') {
+        return null
+      }
 
       // Set a mock JWT token for development
       if (typeof window !== 'undefined') {
@@ -88,7 +90,7 @@ export function useAuth() {
   const [loading, setLoading] = useState(() => {
     // In development mode, we use mock user immediately, so loading should be false
     if (process.env.NODE_ENV === 'development') return false
-    
+
     if (typeof window === 'undefined') return true
     const token = localStorage.getItem('token')
     // If we have a cached user for the current token, we can render immediately and refresh in the background.
@@ -159,6 +161,12 @@ export function useAuth() {
       // Skip auth check in development mode - use mock user
       // IMPORTANT: Check this BEFORE setting authCheckInProgress to avoid blocking future checks
       if (process.env.NODE_ENV === 'development') {
+        // Don't auto-login on landing page
+        if (typeof window !== 'undefined' && window.location.pathname === '/') {
+          setLoading(false)
+          return
+        }
+
         console.log('🔧 [useAuth] Development mode - using mock user')
 
         // Ensure token is set in development mode for API calls

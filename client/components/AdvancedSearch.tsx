@@ -169,7 +169,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             matchedFields: [],
             highlights: []
           })))
-          
+
           // Cluster results
           try {
             const clusterResponse = await apiPost<any>('/search/cluster', { results: response.data?.results || [], maxClusters: 5 })
@@ -348,7 +348,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-lg border transition-colors ${
-              showFilters || Object.values(filters).some(v => 
+              showFilters || Object.values(filters).some(v =>
                 Array.isArray(v) ? v.length > 0 : v !== null
               )
                 ? 'bg-blue-600 text-white border-blue-600'
@@ -820,7 +820,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {!loading && query && results.length === 0 && (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p>No results found for "{query}"</p>
+          <p>No results found for &quot;{query}&quot;</p>
           <p className="text-sm mt-2">Try adjusting your search or filters</p>
         </div>
       )}

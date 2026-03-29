@@ -1,6 +1,12 @@
 // Supabase Configuration
 const { createClient } = require('@supabase/supabase-js');
-const { PrismaClient } = require('@prisma/client');
+let PrismaClient = null;
+try {
+  const prismaModule = require('@prisma/client');
+  PrismaClient = prismaModule.PrismaClient;
+} catch (e) {
+  console.warn('⚠️ @prisma/client failed to load (likely missing generated client).');
+}
 
 // Supabase client for real-time features and auth
 const supabaseUrl = process.env.SUPABASE_URL;

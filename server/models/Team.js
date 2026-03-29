@@ -13,14 +13,12 @@ const teamSchema = new mongoose.Schema({
     default: ''
   },
   ownerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   members: [{
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
       required: true
     },
     role: {
@@ -29,8 +27,7 @@ const teamSchema = new mongoose.Schema({
       default: 'viewer'
     },
     invitedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      type: String
     },
     joinedAt: {
       type: Date,
@@ -72,7 +69,7 @@ const teamSchema = new mongoose.Schema({
 teamSchema.index({ ownerId: 1 });
 teamSchema.index({ 'members.userId': 1 });
 
-teamSchema.pre('save', function(next) {
+teamSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

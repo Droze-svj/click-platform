@@ -82,7 +82,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                             <Users className="w-8 h-8 text-fuchsia-500" />
                             Remix Hub
                         </h2>
-                        <p className="text-sm text-gray-500 mt-1 font-medium italic">Discover and clone the community's most viral templates</p>
+                        <p className="text-sm text-gray-500 mt-1 font-medium italic">Discover and clone the community&apos;s most viral templates</p>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-fuchsia-500 text-white rounded-xl shadow-lg shadow-fuchsia-500/20">
                         <Flame className="w-4 h-4 fill-white" />

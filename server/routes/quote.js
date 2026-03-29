@@ -1,6 +1,15 @@
 const express = require('express');
 const sharp = require('sharp');
-const { createCanvas, loadImage, registerFont } = require('canvas');
+let { createCanvas, loadImage, registerFont } = {};
+try {
+  const canvasMod = require('canvas');
+  createCanvas = canvasMod.createCanvas;
+  loadImage = canvasMod.loadImage;
+  registerFont = canvasMod.registerFont;
+} catch (e) {
+  console.warn("⚠️ canvas module disabled/missing. Quote generation disabled.");
+  createCanvas = () => { throw new Error("Canvas disabled"); };
+}
 const path = require('path');
 const fs = require('fs');
 const Content = require('../models/Content');
@@ -93,7 +102,7 @@ async function generateQuoteCard(quote, author, brandSettings, style, niche) {
   // Background
   const primaryColor = brandSettings?.primaryColor || getNicheColor(niche);
   const secondaryColor = brandSettings?.secondaryColor || '#FFFFFF';
-  
+
   // Gradient background
   const gradient = ctx.createLinearGradient(0, 0, width, height);
   gradient.addColorStop(0, primaryColor);
@@ -105,13 +114,13 @@ async function generateQuoteCard(quote, author, brandSettings, style, niche) {
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  
+
   // Wrap text
   const maxWidth = width - 200;
   const lineHeight = 60;
   const fontSize = 48;
   ctx.font = `bold ${fontSize}px Arial`;
-  
+
   const words = quote.split(' ');
   const lines = [];
   let currentLine = '';
@@ -142,7 +151,7 @@ async function generateQuoteCard(quote, author, brandSettings, style, niche) {
   // Save image
   const filename = `quote-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
   const filepath = path.join(__dirname, '../../uploads/quotes', filename);
-  
+
   const quotesDir = path.dirname(filepath);
   if (!fs.existsSync(quotesDir)) {
     fs.mkdirSync(quotesDir, { recursive: true });

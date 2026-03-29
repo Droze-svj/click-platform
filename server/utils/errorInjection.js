@@ -42,13 +42,14 @@ function injectError(errorType, options = {}) {
         404
       );
 
-    case 'rateLimit':
+    case 'rateLimit': {
       const rateLimitError = new AppError(
         message || 'Rate limit error injected for testing',
         429
       );
       rateLimitError.retryAfter = options.retryAfter || 60;
       throw rateLimitError;
+    }
 
     case 'serviceUnavailable':
       throw new ServiceUnavailableError(
@@ -61,15 +62,17 @@ function injectError(errorType, options = {}) {
         500
       );
 
-    case 'timeout':
+    case 'timeout': {
       const timeoutError = new Error('Request timeout');
       timeoutError.code = 'ETIMEDOUT';
       throw timeoutError;
+    }
 
-    case 'network':
+    case 'network': {
       const networkError = new Error('Network error');
       networkError.code = 'ECONNREFUSED';
       throw networkError;
+    }
 
     default:
       throw new AppError(

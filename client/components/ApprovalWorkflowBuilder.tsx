@@ -41,12 +41,12 @@ interface Workflow {
   }
 }
 
-export default function ApprovalWorkflowBuilder({ 
-  workflowId, 
-  onSave 
-}: { 
+export default function ApprovalWorkflowBuilder({
+  workflowId,
+  onSave
+}: {
   workflowId?: string
-  onSave?: () => void 
+  onSave?: () => void
 }) {
   const [workflow, setWorkflow] = useState<Workflow>({
     name: '',
@@ -253,7 +253,7 @@ export default function ApprovalWorkflowBuilder({
 
         {workflow.stages.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <p>No stages yet. Click "Add Stage" to create your first approval stage.</p>
+            <p>No stages yet. Click &quot;Add Stage&quot; to create your first approval stage.</p>
           </div>
         ) : (
           <div className="space-y-4">

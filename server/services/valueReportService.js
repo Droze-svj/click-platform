@@ -2,8 +2,6 @@
 // Generate exportable reports (PDF, Excel) for value tracking
 
 const ClientValueTracking = require('../models/ClientValueTracking');
-const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
 const logger = require('../utils/logger');
 
 /**
@@ -22,6 +20,7 @@ async function generateExcelReport(clientWorkspaceId, filters = {}) {
       .sort({ 'period.startDate': -1 })
       .lean();
 
+    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Value Tracking');
 
@@ -111,6 +110,7 @@ async function generatePDFReport(clientWorkspaceId, filters = {}) {
       .sort({ 'period.startDate': -1 })
       .lean();
 
+    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
     const chunks = [];
 

@@ -1,17 +1,51 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { Bell, Mail, Smartphone, CheckCircle } from 'lucide-react'
+import { apiGet, apiPut } from '../lib/api'
+import { Bell, Mail, Smartphone, CheckCircle, Inbox, Filter } from 'lucide-react'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_USER_SETTINGS = '/user/settings'
+
+const CHANNEL_KEYS = ['inApp', 'email'] as const
+const CATEGORY_KEYS = ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow'] as const
+const PRIORITY_OPTIONS = [
+  { value: 'all', label: 'All notifications' },
+  { value: 'high_medium', label: 'High & medium only' },
+  { value: 'high_only', label: 'High priority only' }
+] as const
 
 interface NotificationPreferencesProps {
   onUpdate?: () => void
 }
 
+interface NotificationsShape {
+  email?: boolean
+  push?: boolean
+  contentReady?: boolean
+  weeklyDigest?: boolean
+  achievements?: boolean
+  mentions?: boolean
+  comments?: boolean
+  priorityTiers?: string
+  digestMode?: string
+  digestTime?: string
+  channels?: { inApp?: boolean; email?: boolean }
+  categories?: Record<string, boolean>
+}
+
+const defaultChannels = { inApp: true, email: true }
+const defaultCategories: Record<string, boolean> = {
+  task: true,
+  project: true,
+  content: true,
+  approval: true,
+  mention: true,
+  system: true,
+  workflow: true
+}
+
 export default function NotificationPreferences({ onUpdate }: NotificationPreferencesProps) {
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<NotificationsShape>({
     email: true,
     push: true,
     contentReady: true,
@@ -19,6 +53,9 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
     achievements: true,
     mentions: true,
     comments: false,
+    priorityTiers: 'all',
+    channels: defaultChannels,
+    categories: defaultCategories
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -29,14 +66,17 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
 
   const loadPreferences = async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-
-      const response = await axios.get(`${API_URL}/user/settings`, {
-      })
-
-      if (response.data.data?.notifications) {
-        setPreferences(response.data.data.notifications)
+      const res: any = await apiGet(API_USER_SETTINGS)
+      const data = res?.data ?? res
+      const notif = data?.notifications
+      if (notif && typeof notif === 'object') {
+        setPreferences(prev => ({
+          ...prev,
+          ...notif,
+          channels: { ...defaultChannels, ...notif.channels },
+          categories: { ...defaultCategories, ...notif.categories },
+          priorityTiers: notif.priorityTiers ?? 'all'
+        }))
       }
     } catch (error) {
       console.error('Failed to load preferences:', error)
@@ -46,14 +86,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
   const savePreferences = async () => {
     setSaving(true)
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-
-      await axios.put(`${API_URL}/user/settings`, {
-        notifications: preferences
-      }, {
-      })
-
+      await apiPut(API_USER_SETTINGS, { notifications: preferences })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
       onUpdate?.()
@@ -67,6 +100,23 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
   const updatePreference = (key: string, value: boolean) => {
     setPreferences(prev => ({ ...prev, [key]: value }))
   }
+
+  const updateChannel = (key: typeof CHANNEL_KEYS[number], value: boolean) => {
+    setPreferences(prev => ({
+      ...prev,
+      channels: { ...defaultChannels, ...prev.channels, [key]: value }
+    }))
+  }
+
+  const updateCategory = (key: string, value: boolean) => {
+    setPreferences(prev => ({
+      ...prev,
+      categories: { ...prev.categories, [key]: value }
+    }))
+  }
+
+  const channels = { ...defaultChannels, ...preferences.channels }
+  const categories = { ...defaultCategories, ...preferences.categories }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -83,91 +133,117 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         )}
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Mail className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <div>
-              <p className="font-medium">Email Notifications</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Receive notifications via email</p>
+      <div className="space-y-6">
+        <section>
+          <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+            <Inbox className="w-4 h-4" />
+            Channels
+          </h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm">In-app</span>
+              <ToggleSwitch
+                enabled={channels.inApp !== false}
+                onChange={(val) => updateChannel('inApp', val)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-gray-500" />
+                <span className="text-sm">Email</span>
+              </div>
+              <ToggleSwitch
+                enabled={channels.email !== false}
+                onChange={(val) => updateChannel('email', val)}
+              />
             </div>
           </div>
-          <ToggleSwitch
-            enabled={preferences.email}
-            onChange={(val) => updatePreference('email', val)}
-          />
-        </div>
+        </section>
 
-        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Smartphone className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <div>
-              <p className="font-medium">Push Notifications</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Receive browser push notifications</p>
-            </div>
+        <section>
+          <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            Priority
+          </h4>
+          <select
+            value={preferences.priorityTiers || 'all'}
+            onChange={(e) => setPreferences(prev => ({ ...prev, priorityTiers: e.target.value }))}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
+          >
+            {PRIORITY_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </section>
+
+        <section>
+          <h4 className="font-medium text-gray-900 dark:text-white mb-2">Categories</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Choose which types of updates you want.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {CATEGORY_KEYS.map(cat => (
+              <div key={cat} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <span className="text-sm capitalize">{cat}</span>
+                <ToggleSwitch
+                  enabled={categories[cat] !== false}
+                  onChange={(val) => updateCategory(cat, val)}
+                />
+              </div>
+            ))}
           </div>
-          <ToggleSwitch
-            enabled={preferences.push}
-            onChange={(val) => updatePreference('push', val)}
-          />
-        </div>
+        </section>
 
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+        <section className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Content Ready</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">When your content is processed</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">When your content is processed</p>
             </div>
             <ToggleSwitch
-              enabled={preferences.contentReady}
+              enabled={preferences.contentReady !== false}
               onChange={(val) => updatePreference('contentReady', val)}
             />
           </div>
-
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Weekly Digest</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Weekly summary of your activity</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Weekly summary of your activity</p>
             </div>
             <ToggleSwitch
-              enabled={preferences.weeklyDigest}
+              enabled={!!preferences.weeklyDigest}
               onChange={(val) => updatePreference('weeklyDigest', val)}
             />
           </div>
-
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Achievements</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">When you unlock achievements</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">When you unlock achievements</p>
             </div>
             <ToggleSwitch
-              enabled={preferences.achievements}
+              enabled={preferences.achievements !== false}
               onChange={(val) => updatePreference('achievements', val)}
             />
           </div>
-
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Mentions</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">When you're mentioned</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">When you&apos;re mentioned</p>
             </div>
             <ToggleSwitch
-              enabled={preferences.mentions}
+              enabled={preferences.mentions !== false}
               onChange={(val) => updatePreference('mentions', val)}
             />
           </div>
-
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Comments</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">When someone comments</p>
+              <p className="font-medium">Push</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Browser push notifications</p>
             </div>
             <ToggleSwitch
-              enabled={preferences.comments}
-              onChange={(val) => updatePreference('comments', val)}
+              enabled={preferences.push !== false}
+              onChange={(val) => updatePreference('push', val)}
             />
           </div>
-        </div>
+        </section>
       </div>
 
       <button
@@ -184,6 +260,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
 function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (val: boolean) => void }) {
   return (
     <button
+      type="button"
       onClick={() => onChange(!enabled)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
         enabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
@@ -197,6 +274,3 @@ function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (val:
     </button>
   )
 }
-
-
-

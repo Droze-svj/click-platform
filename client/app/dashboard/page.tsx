@@ -1,480 +1,419 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-// Navbar removed - provided by dashboard layout
-import { extractApiData } from '../../utils/apiResponse'
-import SubscriptionBanner from '../../components/SubscriptionBanner'
-import NextStepsPanel from '../../components/NextStepsPanel'
-import QuickActions from '../../components/QuickActions'
-import OnboardingTour from '../../components/OnboardingTour'
-import StreakDisplay from '../../components/StreakDisplay'
-import ActivityFeed from '../../components/ActivityFeed'
-import AchievementBadge from '../../components/AchievementBadge'
-import LoadingSkeleton from '../../components/LoadingSkeleton'
-import QuickActionsMenu from '../../components/QuickActionsMenu'
-import ToastContainer from '../../components/ToastContainer'
-import { useKeyboardShortcuts, defaultShortcuts } from '../../hooks/useKeyboardShortcuts'
-import { useEngagement } from '../../hooks/useEngagement'
-import { ErrorBoundary } from '../../components/ErrorBoundary'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
-import { useTranslation } from '../../hooks/useTranslation'
-import DashboardOverview from '../../components/DashboardOverview'
+import {
+  Video, Sparkles, Send, BarChart3, Brain, RefreshCw,
+  ArrowRight, Zap, TrendingUp, Flame, FileText, CalendarDays,
+  Target, CheckCircle2, Clock, Activity, Wifi, AlertTriangle, Globe, Settings,
+  Shield, Layers, Cpu, Radio, Terminal, Hexagon, ArrowLeft, Monitor, User,
+  Power, Box, ZapOff, ActivitySquare, Fingerprint, Gauge, Network, Database,
+  Scan, Orbit, Binary, Wind, Ghost, Signal, ShieldCheck, ActivityIcon,
+  CpuIcon, HardDrive, Workflow, ShieldAlert, UserCheck, Key, Anchor,
+  ChevronRight, Sparkle, Command
+} from 'lucide-react'
+import { ErrorBoundary } from '../../components/ErrorBoundary'
+import ToastContainer from '../../components/ToastContainer'
+import SubscriptionBanner from '../../components/SubscriptionBanner'
+import NeuralStrategyHub from '../../components/NeuralStrategyHub'
+import NeuralWorkspaceHub from '../../components/NeuralWorkspaceHub'
+import { useDebug } from '../../hooks/useDebug'
+import { validateFile } from '../../utils/fileValidator'
+import LiveActivityFeed from '../../components/LiveActivityFeed'
+import { useTheme } from '../../components/ThemeProvider'
 
-function DynamicFallback() {
-  return <LoadingSkeleton type="card" count={1} />
-}
+const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
 
-const EnhancedContentSuggestions = dynamic(
-  () => import('../../components/EnhancedContentSuggestions'),
-  { loading: DynamicFallback, ssr: false }
-)
-const AIRecommendations = dynamic(
-  () => import('../../components/AIRecommendations'),
-  { loading: DynamicFallback, ssr: false }
-)
-const SmartSuggestions = dynamic(
-  () => import('../../components/SmartSuggestions'),
-  { loading: DynamicFallback, ssr: false }
-)
-const DailyChallenges = dynamic(
-  () => import('../../components/DailyChallenges'),
-  { loading: DynamicFallback, ssr: false }
-)
-const QuickTemplateAccess = dynamic(
-  () => import('../../components/QuickTemplateAccess'),
-  { loading: DynamicFallback, ssr: false }
-)
-const AIMultiModelSelector = dynamic(
-  () => import('../../components/AIMultiModelSelector'),
-  { loading: DynamicFallback, ssr: false }
-)
+const MISSION_ACTIONS = [
+  { label: 'Spectral Forge',   desc: 'Neural motion synthesis',     icon: Video,        href: '/dashboard/video',              badge: 'KINETIC' },
+  { label: 'Neural Forge',     desc: 'Autonomous logic crafting',   icon: Sparkles,     href: '/dashboard/content',            badge: 'AI_LOGIC' },
+  { label: 'Temporal Matrix',  desc: 'Chronos orchestration',        icon: Send,         href: '/dashboard/scheduler',          badge: 'SYNC' },
+  { label: 'Heuristic Intel',  desc: 'Spectral surge mapping',      icon: BarChart3,    href: '/dashboard/insights',           badge: 'INTEL' },
+  { label: 'Cognitive Matrix', desc: 'Predictive trend consensus',  icon: Brain,        href: '/dashboard/ai',                 badge: 'NEURAL' },
+  { label: 'Recursive Flux',   desc: 'Lattice repurposing',         icon: RefreshCw,    href: '/dashboard/recycling',          badge: 'FLUX' },
+  { label: 'Autonomous Hub',   desc: 'Global node synchronization', icon: Globe,        href: '/dashboard/agency',             badge: 'MATRIX' },
+  { label: 'Marketing Oracle', desc: 'Global AI marketing expert',  icon: TrendingUp,   href: '/dashboard/marketing-ai',       badge: 'ORACLE' },
+]
 
-interface User {
-  id: string
-  name: string
-  email: string
-  subscription: {
-    status: string
-    plan: string
-  }
-  usage: {
-    videosProcessed: number
-    contentGenerated: number
-    quotesCreated: number
-    postsScheduled: number
-  }
-}
 
-export default function Dashboard() {
-  // Test modern design system classes are available
+type NexusView = 'overview' | 'strategy' | 'workspace'
+
+interface NexusStat { label: string; value: string | number; icon: React.ElementType; color: string; bg: string; trend?: string }
+
+function GlobalPayloadDropZone() {
+  const [dragging, setDragging] = useState(false)
+  
   useEffect(() => {
-    const testElement = document.createElement('div');
-    testElement.className = 'card-elevated gradient-cosmic animate-float';
-    testElement.style.position = 'absolute';
-    testElement.style.left = '-9999px';
-    testElement.textContent = 'Design Test';
-    document.body.appendChild(testElement);
+    const onDragOver = (e: DragEvent) => { e.preventDefault(); setDragging(true) }
+    const onDragLeave = (e: DragEvent) => { if (!e.relatedTarget) setDragging(false) }
+    const onDrop = async (e: DragEvent) => {
+      e.preventDefault(); setDragging(false)
+      const files = Array.from(e.dataTransfer?.files ?? [])
+      if (!files.length) return
+      const f = files[0]
+      const result = await validateFile(f, { allowedTypes: ['video/', 'image/', 'audio/'], maxSizeMB: 500 })
+      if (result.valid) window.location.href = '/dashboard/video'
+    }
+    document.addEventListener('dragover', onDragOver)
+    document.addEventListener('dragleave', onDragLeave)
+    document.addEventListener('drop', onDrop)
+    return () => {
+      document.removeEventListener('dragover', onDragOver)
+      document.removeEventListener('dragleave', onDragLeave)
+      document.removeEventListener('drop', onDrop)
+    }
+  }, [])
 
-    setTimeout(() => {
-      const computedStyle = window.getComputedStyle(testElement);
-      console.log('🎨 Modern Design System Test:', {
-        hasCardElevated: computedStyle.backdropFilter !== 'none',
-        hasGradient: computedStyle.background.includes('linear-gradient'),
-        hasAnimation: computedStyle.animation !== 'none',
-        borderRadius: computedStyle.borderRadius,
-        boxShadow: computedStyle.boxShadow
-      });
-      document.body.removeChild(testElement);
-    }, 100);
-  }, []);
+  return (
+    <AnimatePresence>
+      {dragging && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-indigo-500/20 backdrop-blur-3xl border-8 border-dashed border-indigo-500/40 flex items-center justify-center pointer-events-none"
+        >
+          <div className="text-center">
+            <div className={`w-64 h-64 rounded-[5rem] ${glassStyle} flex items-center justify-center mx-auto mb-16 shadow-[0_0_200px_rgba(99,102,241,0.6)] bg-indigo-500/30 scale-110 border-indigo-500/50`}>
+              <Box className="w-24 h-24 text-white animate-bounce" />
+            </div>
+            <p className="text-8xl font-black italic text-white uppercase tracking-tighter leading-none mb-8 drop-shadow-[0_0_40px_rgba(255,255,255,0.4)]">Inject Payload</p>
+            <p className="text-[18px] text-indigo-400 font-bold uppercase tracking-[1em] italic animate-pulse">Neural validation sequence initiated_v16.0</p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
-  const router = useRouter()
-  const { user, loading } = useAuth()
-  const { t } = useTranslation()
+export default function SovereignCommandConsolePage() {
+  const { user } = useAuth()
+  const [activeView, setActiveView] = useState<NexusView>('overview')
+  const [stats] = useState<NexusStat[]>([
+    { label: 'Operational Payloads', value: '14/48',    icon: Video,      color: 'text-rose-400',    bg: 'bg-rose-500/10', trend: 'SURGE +12%' },
+    { label: 'Lattice Integrity',    value: '98.4%',   icon: ShieldCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10', trend: 'AUTONOMOUS' },
+    { label: 'Recursive Swarm Flux', value: '42.8',    icon: Zap,        color: 'text-amber-400',   bg: 'bg-amber-500/10', trend: 'CONSENSUS_PEAK' },
+    { label: 'Synchronous Node Uplinks', value: '12',  icon: Signal,     color: 'text-indigo-400', bg: 'bg-indigo-500/10', trend: 'STABLE' },
+  ])
+  const [apiStatus, setApiStatus] = useState<'ok' | 'down' | 'checking'>('checking')
+  
+  const [recentManifests] = useState([
+    { text: 'Trajectory locked: TikTok Surge', time: '2h ago', icon: Radio,        color: 'text-indigo-400',  bg: 'bg-indigo-500/10' },
+    { text: 'Hook Efficiency: 94/100',         time: '4h ago', icon: Flame,        color: 'text-amber-400',  bg: 'bg-amber-500/10' },
+    { text: 'Autonomous Synthesis Complete',   time: 'Yesterday', icon: Cpu,       color: 'text-emerald-400',  bg: 'bg-emerald-500/10' },
+    { text: 'Social Sync: 5 Nodes Updated',    time: 'Yesterday', icon: Globe,     color: 'text-fuchsia-400',   bg: 'bg-fuchsia-500/10' },
+  ])
 
-  // Enable keyboard shortcuts
-  useKeyboardShortcuts(defaultShortcuts(router))
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Neural Dawn' : hour < 17 ? 'Cycle Zenith' : 'Logic Nocturne'
+  const firstName = (user as any)?.name?.split(' ')[0] || 'Sovereign'
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    router.push('/login')
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-full w-full max-w-full overflow-x-hidden bg-gray-50">
-        <div className="container-readable py-8">
-          <LoadingSkeleton type="card" count={6} />
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) return null
+  useEffect(() => {
+    fetch('/api/health').then(res => setApiStatus(res.ok ? 'ok' : 'down')).catch(() => setApiStatus('down'))
+  }, [])
 
   return (
     <ErrorBoundary>
-      <div className="min-h-full w-full max-w-full overflow-x-hidden bg-surface-page transition-colors duration-300 bg-mesh relative">
-        <div className="absolute inset-0 bg-dots"></div>
+      <GlobalPayloadDropZone />
+      <div className="fixed top-0 left-0 right-0 z-[60] pointer-events-none">
         <SubscriptionBanner />
-        <NextStepsPanel />
-        <QuickActions />
-        <OnboardingTour />
-        <QuickActionsMenu />
         <ToastContainer />
+      </div>
 
-        {/* Enhanced Hero Section with floating elements */}
-        <section className="relative overflow-x-hidden overflow-y-visible section-padding section-auto-fit">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-purple-600/5 to-pink-600/5"></div>
-          <div className="absolute inset-0 bg-noise"></div>
-
-          {/* Floating decorative elements */}
-          <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-xl float-element"></div>
-          <div className="absolute top-40 right-20 w-32 h-32 bg-gradient-to-br from-pink-400/20 to-orange-400/20 rounded-full blur-xl float-element"></div>
-          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-gradient-to-br from-green-400/20 to-teal-400/20 rounded-full blur-xl float-element"></div>
-
-          <div className="relative container-modern">
-            <div className="text-center mb-16 animate-slide-in-up">
-              <h1 className="text-hero mb-6 animate-float-subtle">
-                <span className="gradient-cosmic">
-                  {t('dashboard.heroWelcome')}
-                </span>
-              </h1>
-              <p className="text-readable-lg max-w-3xl mx-auto text-center animate-fade-in-blur">
-                {t('dashboard.heroDescription')}
-              </p>
-
-              {/* Animated accent line */}
-              <div className="mt-8 flex justify-center">
-                <div className="w-24 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent rounded-full animate-pulse-glow"></div>
-              </div>
-            </div>
-
-            {/* Stats Overview with enhanced interactivity */}
-            <div className="grid-readable mb-16">
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.1s' }}>
-                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
-                  {user.usage?.videosProcessed ?? 0}
-                </div>
-                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  {t('dashboard.stats.videosProcessed')}
-                </div>
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    {t('dashboard.clickToView')}
-                  </div>
-                </div>
-              </div>
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.2s' }}>
-                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
-                  {user.usage?.contentGenerated ?? 0}
-                </div>
-                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  {t('dashboard.stats.contentCreated')}
-                </div>
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    {t('dashboard.clickToView')}
-                  </div>
-                </div>
-              </div>
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.3s' }}>
-                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
-                  {user.usage?.quotesCreated ?? 0}
-                </div>
-                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  {t('dashboard.stats.quotesCreated')}
-                </div>
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    {t('dashboard.clickToView')}
-                  </div>
-                </div>
-              </div>
-              <div className="card-elevated p-8 text-center animate-scale-in hover-lift group cursor-pointer" style={{ animationDelay: '0.4s' }}>
-                <div className="text-display font-bold gradient-text mb-3 group-hover:animate-gentle-bounce transition-all">
-                  {user.usage?.postsScheduled ?? 0}
-                </div>
-                <div className="text-readable-sm font-medium text-secondary-600 dark:text-secondary-300 group-hover:text-secondary-800 dark:group-hover:text-secondary-100 transition-colors">
-                  {t('dashboard.stats.postsScheduled')}
-                </div>
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="text-xs text-primary-600 dark:text-primary-400 font-medium">
-                    {t('dashboard.clickToView')}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* New Dashboard Overview */}
-        <section className="section-auto-fit py-8 bg-white dark:bg-gray-900">
-          <div className="container-readable">
-            <DashboardOverview />
-          </div>
-        </section>
-
-        <div className="container-readable py-8 w-full max-w-full" data-tour="dashboard">
-          {/* Subscription Status with enhanced visual polish */}
-          <div className="card-elevated p-8 mb-12 animate-slide-in-up hover-lift relative overflow-hidden" style={{ animationDelay: '0.5s' }}>
-            {/* Subtle background pattern */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary-500/10 to-transparent rounded-full"></div>
-
-            <div className="flex-readable-column md:flex-readable md:justify-between relative">
-              <div className="flex-1">
-                <h3 className="text-xl font-bold mb-4 text-readable flex items-center">
-                  <span className="w-2 h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full mr-3 animate-pulse"></span>
-                  Subscription Status
-                </h3>
-                <div className="flex-readable">
-                  <span className={`px-6 py-3 rounded-full text-sm font-semibold shadow-lg ${user.subscription.status === 'active'
-                    ? 'status-active text-white'
-                    : user.subscription.status === 'trial'
-                      ? 'status-trial text-white'
-                      : 'status-inactive text-white'
-                    }`}>
-                    <span className="flex items-center">
-                      <span className="w-2 h-2 bg-white/80 rounded-full mr-2 animate-pulse"></span>
-                      {user.subscription.status.toUpperCase()}
-                    </span>
-                  </span>
-                  <span className="text-readable font-medium flex items-center">
-                    <span className="text-primary-600 dark:text-primary-400 mr-2">✨</span>
-                    {user.subscription.plan} Plan
-                  </span>
-                </div>
-              </div>
-              <div className="text-center md:text-right">
-                <div className="text-3xl font-bold gradient-cosmic mb-2 animate-float-subtle">{user.subscription.plan}</div>
-                <div className="text-readable-sm text-secondary-600 dark:text-secondary-400">Current Plan</div>
-
-                {/* Progress indicator */}
-                <div className="mt-4 w-24 h-2 bg-secondary-200 dark:bg-secondary-700 rounded-full mx-auto md:mx-0">
-                  <div className="h-full bg-gradient-to-r from-primary-500 to-primary-600 rounded-full progress-bar"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature Hub — Bento-style command center */}
-          <section className="mb-16" data-tour="feature-hub">
-            <h2 className="text-lg font-semibold text-theme-primary mb-1 uppercase tracking-wider">Feature hub</h2>
-            <p className="text-sm text-theme-muted mb-6">Everything in one place. Pick a category or jump straight in.</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-fr">
-              {/* Hero: Video — spans 2 cols on lg */}
-              <Link
-                href="/dashboard/video"
-                className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-gradient-to-br from-slate-50 to-blue-50/50 dark:from-slate-800/80 dark:to-blue-950/30 p-6 sm:p-8 lg:col-span-2 lg:row-span-2 flex flex-col justify-between min-h-[200px] hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300"
-                data-tour="video-upload"
-              >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-cyan-400/10 rounded-full blur-2xl group-hover:scale-110 transition-transform" />
-                <div className="relative">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 opacity-90">Create</span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-theme-primary mt-1 mb-2">Auto Video Clipper</h3>
-                  <p className="text-sm text-theme-secondary max-w-md">Upload long videos and get short-form clips with AI-powered editing.</p>
-                </div>
-                <div className="relative mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium text-sm">
-                  <span>Open</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </div>
-              </Link>
-
-              {/* Create */}
-              <BentoCard category="Create" title="Content Generator" description="AI social posts" href="/dashboard/content" dataTour="content-generator" />
-              <BentoCard category="Create" title="Script Generator" description="YouTube & podcast scripts" href="/dashboard/scripts" dataTour="scripts" />
-              <BentoCard category="Create" title="Quote Cards" description="Branded quote graphics" href="/dashboard/quotes" />
-              <BentoCard category="Create" title="Niche Packs" description="Templates by niche" href="/dashboard/niche" />
-
-              {/* Automate */}
-              <BentoCard category="Automate" title="Content Scheduler" description="Schedule across platforms" href="/dashboard/scheduler" />
-              <BentoCard category="Automate" title="Workflows" description="End-to-end automation" href="/dashboard/workflows" />
-
-              {/* Analyze */}
-              <BentoCard category="Analyze" title="Analytics" description="Performance & growth" href="/dashboard/analytics" />
-              <BentoCard category="Analyze" title="AI Features" description="Multi-model & predictions" href="/dashboard/ai" />
-            </div>
-          </section>
-
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ActivityFeed limit={5} />
-            <EnhancedContentSuggestions />
-          </div>
-
-          {/* New Engaging Features */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SmartSuggestions />
-            <DailyChallenges />
-          </div>
-
-          {/* Quick Access Widgets */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <QuickTemplateAccess />
-          </div>
-
-          <div className="mt-8">
-            <AIRecommendations />
-          </div>
-
-          {/* AI Features Section */}
-          <div className="mt-8">
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">🤖 AI Features</h2>
-                <Link
-                  href="/dashboard/ai"
-                  className="text-purple-600 hover:text-purple-700 font-medium"
-                >
-                  View All →
-                </Link>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Advanced AI-powered tools to enhance your content creation
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FeatureCard
-                  title="Multi-Model AI"
-                  description="Choose from multiple AI providers and models"
-                  link="/dashboard/ai"
-                  icon="🧠"
-                  gradient="from-blue-500 to-purple-500"
-                />
-                <FeatureCard
-                  title="Predictive Analytics"
-                  description="Predict content performance before publishing"
-                  link="/dashboard/ai"
-                  icon="📊"
-                  gradient="from-green-500 to-teal-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Quick AI Tools */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-500">
-            <div className="bg-white rounded-lg shadow p-6 transition-shadow hover:shadow-lg">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span className="text-2xl">🧠</span>
-                AI Model Selector
-              </h3>
-              <AIMultiModelSelector />
-            </div>
-          </div>
+      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1850px] mx-auto space-y-24">
+        {/* Persistent Background Layer */}
+        <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
+           <Shield size={1000} className="text-white absolute -top-40 -right-40 rotate-12 blur-[2px]" />
+           <Command size={1200} className="text-white absolute -bottom-80 -left-60 rotate-[32deg] blur-[1px]" />
         </div>
+
+        {/* Command Header Hub */}
+        <header className="flex flex-col xl:flex-row items-center justify-between gap-12 relative z-[100]">
+           <div className="flex items-center gap-12">
+              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
+                <Shield size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-1000 animate-pulse" />
+              </div>
+              <div>
+                 <div className="flex items-center gap-8 mb-4">
+                   <div className="flex items-center gap-4">
+                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Command Matrix v16.4.2</span>
+                   </div>
+                   <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
+                       <div className={`w-3 h-3 rounded-full ${apiStatus === 'ok' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,1)]' : 'bg-rose-500 animate-pulse shadow-[0_0_20px_rgba(244,63,94,1)]'} `} />
+                       <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase italic leading-none">{apiStatus === 'ok' ? 'LATTICE_SECURE' : 'SYNC_INTERRUPTED'}</span>
+                   </div>
+                 </div>
+                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+                   {greeting}, {firstName.toUpperCase()}
+                 </h1>
+                 <p className="text-slate-800 text-[15px] uppercase font-black tracking-[0.6em] italic mt-4 leading-none">Central node for mission architecture and recursive swarm resonance.</p>
+              </div>
+           </div>
+
+           <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-[5rem] bg-white/[0.02] border border-white/10 shadow-[0_100px_300px_rgba(0,0,0,1)] relative z-10 backdrop-blur-3xl bg-black/40">
+              {[
+                { id: 'overview',  label: 'Mission_Nexus', icon: Activity },
+                { id: 'strategy',  label: 'Heuristic_Logic', icon: Brain },
+                { id: 'workspace', label: 'Operational_Lattice', icon: Layers },
+              ].map(tab => (
+                <button key={tab.id} onClick={() => setActiveView(tab.id as NexusView)}
+                  className={`flex items-center gap-6 px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic active:scale-90 border-2 ${
+                    activeView === tab.id 
+                    ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' 
+                    : 'text-slate-800 border-transparent hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <tab.icon size={28} className={activeView === tab.id ? 'text-black' : 'text-slate-800'} />
+                  {tab.label}
+                </button>
+              ))}
+           </div>
+           
+           <div className="flex items-center gap-10 pl-16 border-l-2 border-white/10">
+              <Link href="/dashboard/settings" title="Calibrate" className="w-20 h-20 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-950 hover:text-white transition-all hover:scale-125 active:scale-75 shadow-3xl group relative overflow-hidden">
+                <div className="absolute inset-x-0 bottom-0 h-1 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
+                <Settings size={40} className="group-hover:rotate-180 transition-transform duration-1000 relative z-10" />
+              </Link>
+              <button title="Surveillance" className="w-20 h-20 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-950 hover:text-white transition-all hover:scale-125 active:scale-75 shadow-3xl group relative overflow-hidden">
+                 <div className="absolute inset-x-0 bottom-0 h-1 bg-indigo-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
+                 <Monitor size={40} className="group-hover:scale-110 transition-transform duration-700 relative z-10" />
+              </button>
+           </div>
+        </header>
+
+        {/* Command Matrix Interface */}
+        <section className="relative z-10">
+          <AnimatePresence mode="wait">
+            {activeView === 'overview' && (
+              <motion.div key="overview" initial={{ opacity: 0, scale: 0.98, y: 100 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 1.02, y: -100 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-24"
+              >
+                {/* Neural Flux Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
+                  {stats.map((s, idx) => (
+                    <motion.div key={idx} whileHover={{ y: -15, scale: 1.02 }} className={`${glassStyle} p-16 rounded-[5.5rem] group bg-black/40 relative overflow-hidden flex flex-col items-center text-center hover:border-indigo-500/40 shadow-[0_60px_150px_rgba(0,0,0,0.8)] border-white/5`}>
+                      <div className="absolute top-0 right-0 p-16 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-1000 pointer-events-none group-hover:rotate-12 group-hover:scale-150"><s.icon size={250} /></div>
+                      <div className="flex items-center justify-center mb-12 w-full">
+                        <div className={`w-28 h-28 rounded-[3.5rem] ${s.bg} border-2 border-white/5 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-all duration-1000 scale-110`}>
+                          <s.icon className={`w-14 h-14 ${s.color} drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]`} />
+                        </div>
+                      </div>
+                      <p className="text-[14px] font-black text-slate-900 uppercase tracking-[0.8em] mb-6 italic leading-none opacity-60 group-hover:text-white transition-colors">{s.label}</p>
+                      <h3 className="text-8xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-10 drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)] group-hover:text-indigo-400 transition-colors duration-1000">{s.value}</h3>
+                      {s.trend && (
+                        <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-indigo-400 text-[11px] font-black uppercase tracking-[0.5em] italic flex items-center gap-4 shadow-inner group-hover:border-indigo-500/30 transition-all">
+                          <ActivityIcon size={16} className="animate-pulse" /> {s.trend}
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-20">
+                   {/* Main Surveillance Monitor */}
+                   <div className="xl:col-span-2 space-y-16">
+                      <div className={`${glassStyle} rounded-[7rem] p-24 overflow-hidden relative min-h-[900px] flex flex-col border-indigo-500/20 hover:border-indigo-500/40 shadow-[inset_0_0_200px_rgba(0,0,0,1)] bg-black/40`}>
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-32 relative z-50 px-8">
+                          <div>
+                            <div className="flex items-center gap-6 mb-4">
+                               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/40 flex items-center justify-center shadow-2xl"><Fingerprint size={28} className="text-indigo-400 animate-pulse" /></div>
+                               <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none">Nexus Surveillance</h2>
+                            </div>
+                            <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic pl-16 border-l-4 border-indigo-500/20 ml-6">Heuristic trajectory mapping // Node Latency: 32μs</p>
+                          </div>
+                          <div className="flex items-center gap-10">
+                             <div className="flex items-center gap-6 px-12 py-5 rounded-[3rem] bg-indigo-500/5 border-2 border-indigo-500/30 shadow-[0_0_80px_rgba(99,102,241,0.2)]">
+                                <div className="w-4 h-4 rounded-full bg-indigo-500 animate-ping" />
+                                <span className="text-[13px] font-black text-indigo-400 uppercase tracking-[0.4em] italic">SWARM_CONSENSUS: 98.2%</span>
+                             </div>
+                             <button className="w-20 h-20 rounded-[2.24rem] bg-white/[0.03] border-2 border-white/5 flex items-center justify-center text-slate-950 hover:text-white transition-all shadow-2xl hover:bg-black/80 hover:scale-110 active:scale-75 group/refresh"><RefreshCw size={36} className="group-hover/refresh:rotate-180 transition-transform duration-1000" /></button>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 rounded-[6rem] bg-[#020205] border-4 border-white/5 relative overflow-hidden flex items-center justify-center p-32 group/monitor shadow-[0_100px_300px_rgba(0,0,0,1)] hover:border-indigo-500/20 transition-all duration-[2s]">
+                           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.08] via-transparent to-violet-500/[0.08]" />
+                           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.04] mix-blend-overlay" />
+                           <div className="absolute inset-0 border-[20px] border-black/80 rounded-[5.8rem] pointer-events-none" />
+                           
+                           {/* Neural visualization effect */}
+                           <div className="absolute inset-0 flex items-center justify-center opacity-20 blur-[100px]">
+                              <div className="w-[1200px] h-[1200px] bg-indigo-500/20 rounded-full animate-pulse" />
+                              <div className="absolute w-[900px] h-[900px] bg-violet-500/10 rounded-full animate-[ping_10s_linear_infinite]" />
+                           </div>
+                           
+                           <div className="relative text-center max-w-2xl z-10 group-hover/monitor:scale-105 transition-transform duration-[2s]">
+                              <div className="relative mb-24 w-64 h-64 mx-auto group/brain">
+                                <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.4, 0.1] }} transition={{ duration: 10, repeat: Infinity }}
+                                  className="absolute inset-0 bg-indigo-400 rounded-full blur-[100px] pointer-events-none"
+                                />
+                                <div className="relative w-64 h-64 rounded-[4.5rem] bg-gradient-to-br from-indigo-500 via-indigo-700 to-violet-900 flex items-center justify-center shadow-[0_60px_200px_rgba(99,102,241,0.6)] border-4 border-white/40 rotate-12 group-hover/brain:rotate-0 transition-all duration-[2s] group-hover:scale-110">
+                                  <Brain size={160} className="text-white -rotate-12 group-hover/brain:rotate-0 transition-all duration-[2s] drop-shadow-2xl" />
+                                </div>
+                              </div>
+                              <h3 className="text-8xl font-black text-white italic uppercase tracking-tighter mb-10 leading-none group-hover/monitor:text-indigo-400 transition-colors duration-[2s] drop-shadow-[0_0_40px_rgba(255,255,255,0.2)]">Viral Surge Detected</h3>
+                              <p className="text-[17px] text-slate-700 font-black uppercase tracking-[0.5em] leading-[1.8] mb-20 italic opacity-60 max-w-xl mx-auto">Sector 09-Beta: AI_KINETIC_FLOW. Trajectory indicates massive retention spike (92.4%) in alpha-tier markets. Swarm consensus confirmed. Node dissolution bypassed.</p>
+                              <button className="px-24 py-12 bg-white text-black rounded-[3.5rem] text-[18px] font-black uppercase tracking-[0.8em] shadow-[0_80px_200px_rgba(255,255,255,0.2)] hover:bg-indigo-500 hover:text-white transition-all duration-1000 italic scale-125 active:scale-90 group/btn border-none relative overflow-hidden">
+                                <div className="absolute inset-x-0 bottom-0 h-2 bg-indigo-300 animate-shimmer" />
+                                <div className="relative z-10 flex items-center gap-6">
+                                  <Zap size={32} className="group-hover/btn:animate-ping" /> INJECT_RECURSIVE_SWARM
+                                </div>
+                              </button>
+                           </div>
+
+                           {/* HUD Telemetry Stream */}
+                           <div className="absolute bottom-16 left-16 right-16 flex justify-between items-end bg-black/60 backdrop-blur-3xl p-12 rounded-[4rem] border-2 border-white/5 shadow-3xl">
+                              <div className="space-y-6">
+                                <div className="flex items-center gap-6">
+                                   <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center"><Gauge size={20} className="text-indigo-400 animate-pulse" /></div>
+                                   <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none opacity-60">Neural Swarm Load Capacity</p>
+                                </div>
+                                <div className="w-96 h-4 bg-black/80 rounded-full overflow-hidden border-2 border-white/5 shadow-inner p-0.5">
+                                  <motion.div initial={{ width: 0 }} animate={{ width: '84%' }} transition={{ duration: 4, ease: "circOut" }} className="h-full bg-gradient-to-r from-indigo-700 to-indigo-400 shadow-[0_0_30px_rgba(99,102,241,1)] rounded-full relative">
+                                     <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                                  </motion.div>
+                                </div>
+                              </div>
+                              <div className="space-y-4 text-right pr-4 pb-2">
+                                <div className="flex items-center justify-end gap-3 text-[12px] font-black text-slate-900 uppercase tracking-widest italic opacity-40">
+                                   <Wifi size={14} /> CROSS_LATTICE_LATENCY
+                                </div>
+                                <div className="flex items-end gap-2 group/lat transition-all duration-700">
+                                   <p className="text-7xl font-black text-emerald-400 italic tabular-nums tracking-tighter leading-none glow-text drop-shadow-[0_0_20px_rgba(16,185,129,0.5)]">0.032</p>
+                                   <span className="text-2xl font-black text-emerald-400/40 italic mb-1 uppercase tracking-tighter decoration-emerald-500/20 leading-none">ms</span>
+                                </div>
+                              </div>
+                           </div>
+                        </div>
+                      </div>
+                   </div>
+
+                   {/* Heuristic Intelligence Feed */}
+                   <div className="space-y-20">
+                      <div className={`${glassStyle} rounded-[6rem] p-16 relative overflow-hidden border-white/5 group min-h-[450px] flex flex-col justify-center bg-black/60 shadow-[0_100px_300px_rgba(0,0,0,1)]`}>
+                         <div className="absolute top-0 right-0 p-16 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-[3s] pointer-events-none group-hover:rotate-45 group-hover:scale-150"><Sparkles className="text-indigo-400" size={300} /></div>
+                         <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center mb-16 shadow-[0_40px_100px_rgba(99,102,241,0.2)] transition-all duration-1000 group-hover:rotate-12 group-hover:scale-110">
+                            <Sparkle className="text-indigo-400 animate-pulse" size={64} />
+                         </div>
+                         <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-10 leading-none border-l-8 border-indigo-500/40 pl-8">Consensus Protocol</h3>
+                         <p className="text-2xl text-slate-800 italic font-black leading-[1.6] mb-16 uppercase tracking-tight opacity-80 group-hover:text-white transition-colors duration-1000">
+                           &quot;Pattern-interrupt triggers drive 3.2× more retention than high-fidelity hooks. Traversal bypass required for logic-heavy segments. Shift resonance.&quot;
+                         </p>
+                         <div className="p-12 rounded-[4rem] bg-[#020205] border-2 border-white/5 relative overflow-hidden shadow-inner group-hover:border-indigo-500/40 transition-all duration-1000">
+                            <div className="absolute inset-0 bg-indigo-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="flex items-center gap-6 mb-8 relative z-10">
+                               <Terminal size={20} className="text-indigo-400 animate-pulse" />
+                               <p className="text-[13px] font-black text-indigo-400 uppercase tracking-[0.8em] italic leading-none">AUTO_MISSION_OVERRIDE_12.4</p>
+                            </div>
+                            <p className="text-[15px] text-slate-900 font-black leading-[1.8] uppercase tracking-[0.2em] italic relative z-10 opacity-70 group-hover:opacity-100 transition-opacity">
+                              Execute 12 synthesis cycles with hyper-kinetic visuals (1-frame lattice cuts). Suppress neural audio signatures until frame 0042.
+                            </p>
+                         </div>
+                      </div>
+
+                      {/* Operation Node Lattice Grid */}
+                      <div className="grid grid-cols-2 gap-12">
+                         {MISSION_ACTIONS.slice(0, 4).map((act, i) => (
+                           <Link key={i} href={act.href} className={`${glassStyle} group relative p-12 rounded-[4.5rem] bg-black/40 hover:bg-black/80 transition-all duration-1000 overflow-hidden border-white/5 hover:border-indigo-500/50 shadow-[0_40px_100px_rgba(0,0,0,0.6)] flex flex-col justify-between min-h-[220px]`}>
+                              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                              <div className="flex justify-between items-start w-full relative z-10">
+                                 <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/[0.03] border-2 border-white/5 flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000 shadow-[0_40px_80px_rgba(0,0,0,0.6)] group-hover:text-indigo-400 text-slate-950">
+                                    <act.icon size={40} />
+                                 </div>
+                                 {act.badge && (
+                                   <div className="p-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 shadow-2xl">
+                                      <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] px-5 py-2 rounded-full bg-black/60 block italic leading-none">{act.badge}</span>
+                                   </div>
+                                 )}
+                              </div>
+                              <div className="relative z-10 mt-12 pl-4">
+                                <p className="text-[20px] font-black text-white uppercase tracking-[0.4em] italic group-hover:translate-x-4 transition-transform duration-1000 leading-none mb-3 drop-shadow-2xl">{act.label}</p>
+                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic mt-4 opacity-40 group-hover:opacity-100 transition-opacity duration-1000">{act.desc}</p>
+                              </div>
+                           </Link>
+                         ))}
+                      </div>
+                   </div>
+                </div>
+
+                {/* Mission Integrity Ledger (Recent activity) */}
+                <footer className={`${glassStyle} rounded-[7rem] p-24 border-emerald-500/10 hover:border-emerald-500/40 group shadow-[0_100px_300px_rgba(0,0,0,1)] bg-black/40 transition-all duration-1000`}>
+                   <div className="flex flex-col xl:flex-row items-center justify-between gap-12 mb-32 px-8">
+                      <div className="flex items-center gap-12">
+                        <div className="w-24 h-24 rounded-[3.5rem] bg-emerald-500/5 border-2 border-emerald-500/20 flex items-center justify-center shadow-[0_0_100px_rgba(16,185,129,0.1)] group-hover:rotate-[30deg] transition-all duration-1000 animate-pulse">
+                          <ActivitySquare className="text-emerald-500" size={56} />
+                        </div>
+                        <div>
+                           <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Integrity Ledger</h2>
+                           <p className="text-[15px] font-black text-slate-800 uppercase tracking-[1em] italic leading-none border-l-4 border-emerald-500/20 pl-8 ml-4">Autonomous Node Saturation // Operational Resonance Feed</p>
+                        </div>
+                      </div>
+                      <button className="px-24 py-12 rounded-[4rem] bg-white text-black text-[18px] font-black uppercase tracking-[0.8em] italic shadow-[0_40px_100px_rgba(0,0,0,0.6)] hover:bg-emerald-600 hover:text-white transition-all duration-1000 scale-110 active:scale-90 group border-none relative overflow-hidden">
+                        <div className="absolute inset-x-0 bottom-0 h-2 bg-emerald-300 animate-shimmer" />
+                        <div className="relative z-10 flex items-center gap-8">
+                          MONITOR_SYNC_NODE <ArrowRight size={28} className="group-hover:translate-x-6 transition-transform duration-1000" />
+                        </div>
+                      </button>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 px-4 pb-4">
+                      {recentManifests.map((item, i) => (
+                        <motion.div key={i} whileHover={{ scale: 1.05, y: -10 }} className="p-16 rounded-[4.5rem] bg-black/80 border-2 border-white/5 hover:border-emerald-500/50 transition-all duration-1000 group/item flex flex-col justify-between min-h-[280px] shadow-[inset_0_0_100px_rgba(255,255,255,0.02)] relative overflow-hidden">
+                           <div className="absolute inset-0 bg-emerald-500/[0.04] opacity-0 group-hover/item:opacity-100 transition-opacity duration-1000" />
+                           <div className="flex items-center justify-between mb-12 w-full relative z-10">
+                              <div className={`p-6 rounded-[2.5rem] ${item.bg} border-2 border-white/10 shadow-3xl transition-all duration-1000 group-hover/item:scale-125 group-hover:rotate-12`}>
+                                 <item.icon className={`${item.color} drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]`} size={40} />
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                 <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest italic opacity-40">{item.time.toUpperCase()}</span>
+                                 <div className="w-12 h-1 bg-white/5 rounded-full" />
+                              </div>
+                           </div>
+                           <p className="text-[18px] font-black text-slate-800 uppercase tracking-[0.2em] italic group-hover/item:text-white transition-colors duration-1000 leading-relaxed mb-12 relative z-10 drop-shadow-2xl">{item.text.toUpperCase()}</p>
+                           <div className="flex justify-end relative z-10">
+                              <div className="w-16 h-16 rounded-[2rem] bg-white/[0.02] border-2 border-white/5 flex items-center justify-center group-hover/item:bg-emerald-500/20 group-hover/item:border-emerald-500/50 transition-all duration-1000 shadow-3xl hover:scale-110 active:scale-75 cursor-pointer">
+                                <ArrowUpRight size={32} className="text-slate-950 group-hover/item:text-emerald-400 group-hover/item:translate-x-2 group-hover/item:-translate-y-2 transition-all duration-1000" />
+                              </div>
+                           </div>
+                        </motion.div>
+                      ))}
+                   </div>
+                </footer>
+              </motion.div>
+            )}
+
+            {activeView === 'strategy' && (
+              <motion.div key="strategy" initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 1.1, y: -50 }} transition={{ duration: 0.8, ease: "anticipate" }}>
+                <NeuralStrategyHub />
+              </motion.div>
+            )}
+
+            {activeView === 'workspace' && (
+              <motion.div key="workspace" initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 1.1, y: -50 }} transition={{ duration: 0.8, ease: "anticipate" }}>
+                <NeuralWorkspaceHub />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+
+        <style jsx global>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+          
+          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          .glow-text { text-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 10px; }
+          @keyframes shimmer-fast { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+          .animate-shimmer { animation: shimmer-fast 2s infinite linear; }
+        `}</style>
       </div>
     </ErrorBoundary>
   )
 }
 
-function StatCard({ title, value, icon }: { title: string; value: number; icon: string }) {
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-3xl font-bold mt-2">{value}</p>
-        </div>
-        <span className="text-4xl">{icon}</span>
-      </div>
-    </div>
-  )
-}
-
-function BentoCard({ category, title, description, href, dataTour }: {
-  category: string;
-  title: string;
-  description: string;
-  href: string;
-  dataTour?: string;
-}) {
-  const categoryColor: Record<string, string> = {
-    Create: 'text-violet-600 dark:text-violet-400',
-    Automate: 'text-amber-600 dark:text-amber-400',
-    Analyze: 'text-emerald-600 dark:text-emerald-400',
-    Grow: 'text-rose-600 dark:text-rose-400',
-  }
-  return (
-    <Link
-      href={href}
-      className="group relative overflow-hidden rounded-xl border border-subtle bg-surface-card p-4 flex flex-col min-h-[120px] hover:border-default hover:shadow-theme-card transition-all duration-200"
-      data-tour={dataTour}
-    >
-      <span className={`text-[10px] font-bold uppercase tracking-widest ${categoryColor[category] || 'text-theme-muted'}`}>{category}</span>
-      <h3 className="text-base font-semibold text-theme-primary mt-1 mb-0.5">{title}</h3>
-      <p className="text-xs text-theme-muted flex-1">{description}</p>
-      <span className="mt-2 text-xs font-medium text-theme-muted group-hover:text-theme-secondary flex items-center gap-1">
-        Open <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-      </span>
-    </Link>
-  )
-}
-
-function FeatureCard({ title, description, link, icon, dataTour, gradient }: {
-  title: string;
-  description: string;
-  link: string;
-  icon: string;
-  dataTour?: string;
-  gradient: string;
-}) {
-  const dbg = (message: string, data: Record<string, any>) => {
-  }
-
-  return (
-    <Link
-      href={link}
-      onClick={() => {
-      }}
-    >
-      <div
-        className="card-elevated group touch-target animate-scale-in hover-lift hover-glow interactive-press relative overflow-hidden"
-        role="link"
-        aria-label={`Navigate to ${title}: ${description}`}
-        tabIndex={0}
-        data-tour={dataTour}
-      >
-        {/* Subtle background effect */}
-        <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-300 from-current to-transparent"></div>
-
-        <div className="relative p-8">
-          {/* Enhanced Icon with gradient background */}
-          <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${gradient} text-white mb-6 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl transition-all duration-300 shadow-lg relative`}>
-            <span className="text-3xl animate-float-subtle" aria-hidden="true">{icon}</span>
-            {/* Subtle glow effect */}
-            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300`}></div>
-          </div>
-
-          {/* Enhanced Title and Description */}
-          <h3 className="text-xl font-bold mb-3 text-theme-primary group-hover:opacity-90 transition-colors duration-300">
-            {title}
-          </h3>
-          <p className="text-body-enhanced mb-6 text-theme-secondary group-hover:text-theme-primary transition-colors duration-300">
-            {description}
-          </p>
-
-          {/* Enhanced Hover indicator with better animation */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-sm font-semibold text-theme-muted opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 animate-slide-in-stagger">
-              <span className="relative">
-                Explore feature
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-current group-hover:w-full transition-all duration-300"></span>
-              </span>
-              <svg className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 opacity-0 group-hover:opacity-100 transition-all duration-300 animate-scale-in group-hover:animate-gentle-bounce"></div>
-          </div>
-
-          {/* Subtle progress indicator */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
+const ArrowUpRight = (props: any) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="7" y1="17" x2="17" y2="7" />
+    <polyline points="7 7 17 7 17 17" />
+  </svg>
+)

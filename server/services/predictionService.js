@@ -2,10 +2,9 @@
 
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
-const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const ContentPerformance = require('../models/ContentPerformance');
-const { get } = require('./cacheService');
+const { get, set } = require('./cacheService');
 
 /**
  * Predict content performance based on historical data
@@ -27,19 +26,25 @@ async function predictContentPerformance(contentId, contentData) {
     // Get historical performance data
     const historicalData = await getHistoricalPerformance(contentData);
 
+    // Generate market velocity score
+    const velocityScore = await getVelocityScore(contentData);
+
+    // Apply algorithmic self-correction for this creator
+    const correctionFactor = await applyAlgorithmicSelfCorrection(contentData.userId, contentData);
+
     // Calculate predictions
     const predictions = {
-      estimatedViews: predictViews(contentData, historicalData),
-      estimatedEngagement: predictEngagement(contentData, historicalData),
-      estimatedReach: predictReach(contentData, historicalData),
+      estimatedViews: predictViews(contentData, historicalData, velocityScore, correctionFactor),
+      estimatedEngagement: predictEngagement(contentData, historicalData, velocityScore, correctionFactor),
+      estimatedReach: predictReach(contentData, historicalData, velocityScore),
       optimalPostingTime: await predictOptimalPostingTime(contentData),
-      performanceScore: calculatePerformanceScore(contentData, historicalData),
+      performanceScore: calculatePerformanceScore(contentData, historicalData, velocityScore, correctionFactor),
       confidence: calculateConfidence(historicalData),
-      recommendations: generateRecommendations(contentData, historicalData),
+      recommendations: generateRecommendations(contentData, historicalData, velocityScore),
+      marketVelocity: velocityScore,
     };
 
     // Cache predictions (1 hour TTL)
-    const { set } = require('./cacheService');
     await set(cacheKey, predictions, 3600);
 
     logger.info('Content performance predicted', {
@@ -111,13 +116,14 @@ async function getHistoricalPerformance(contentData) {
 /**
  * Predict views based on content data and historical performance
  */
-function predictViews(contentData, historicalData) {
+function predictViews(contentData, historicalData, velocityScore = 0, correctionFactor = 1.0) {
   if (historicalData.count === 0) {
-    // No historical data, use default estimates
+    // No historical data, use default estimates boosted by velocity
+    const baseExpected = 200 + (velocityScore * 5); // Each velocity point adds 5 views
     return {
-      min: 50,
-      max: 500,
-      expected: 200,
+      min: Math.round(baseExpected * 0.25),
+      max: Math.round(baseExpected * 2.5),
+      expected: Math.round(baseExpected),
     };
   }
 
@@ -137,11 +143,14 @@ function predictViews(contentData, historicalData) {
   const titleMultiplier =
     titleLength >= 40 && titleLength <= 60 ? 1.2 : titleLength > 0 ? 1.0 : 0.8;
 
-  const expected = baseViews * typeMultiplier * titleMultiplier;
+  // Market velocity multiplier (0.5 to 2.0 based on 0-100 score)
+  const velocityMultiplier = 0.5 + (velocityScore / 100) * 1.5;
+
+  const expected = baseViews * typeMultiplier * titleMultiplier * velocityMultiplier * correctionFactor;
 
   return {
     min: Math.max(0, expected - variance),
-    max: expected + variance,
+    max: expected + (variance * velocityMultiplier),
     expected: Math.round(expected),
   };
 }
@@ -149,13 +158,13 @@ function predictViews(contentData, historicalData) {
 /**
  * Predict engagement based on content data
  */
-function predictEngagement(contentData, historicalData) {
+function predictEngagement(contentData, historicalData, velocityScore = 0, correctionFactor = 1.0) {
   if (historicalData.count === 0) {
     return {
       min: 5,
       max: 50,
-      expected: 20,
-      rate: 0.05, // 5% engagement rate
+      expected: Math.round(20 + (velocityScore / 10)),
+      rate: 0.05 + (velocityScore / 1000), 
     };
   }
 
@@ -166,14 +175,18 @@ function predictEngagement(contentData, historicalData) {
   // Adjust based on content quality indicators
   const hasDescription = contentData.description && contentData.description.length > 100;
   const hasTags = contentData.tags && contentData.tags.length > 0;
+  
+  // Velocity increases engagement rate as trending topics attract more interaction
+  const velocityBonus = (velocityScore / 100) * 0.05; // Up to 5% bonus rate
+  
   const qualityMultiplier = (hasDescription ? 1.1 : 1.0) * (hasTags ? 1.1 : 1.0);
 
-  const expectedEngagement = baseEngagement * qualityMultiplier;
-  const expectedRate = baseEngagementRate * qualityMultiplier;
+  const expectedEngagement = baseEngagement * qualityMultiplier * correctionFactor;
+  const expectedRate = (baseEngagementRate + velocityBonus) * qualityMultiplier;
 
   return {
     min: Math.max(0, expectedEngagement * 0.7),
-    max: expectedEngagement * 1.3,
+    max: expectedEngagement * 1.5,
     expected: Math.round(expectedEngagement),
     rate: Math.min(1.0, expectedRate),
   };
@@ -274,40 +287,44 @@ async function predictOptimalPostingTime(contentData) {
 /**
  * Calculate overall performance score (0-100)
  */
-function calculatePerformanceScore(contentData, historicalData) {
-  let score = 50; // Base score
+function calculatePerformanceScore(contentData, historicalData, velocityScore = 0, correctionFactor = 1.0) {
+  let score = 40; // Base score lowered to allow for more dynamic range
 
-  // Title quality (0-20 points)
+  // Market Velocity (The "Live-Wire" Engine Impact) (0-30 points)
+  // Highly trending topics get a massive boost
+  score += (velocityScore / 100) * 30;
+
+  // Title quality (0-15 points)
   const titleLength = contentData.title?.length || 0;
   if (titleLength >= 40 && titleLength <= 60) {
-    score += 20;
+    score += 15;
   } else if (titleLength > 0) {
-    score += 10;
+    score += 5;
   }
 
-  // Description quality (0-15 points)
+  // Description quality (0-10 points)
   if (contentData.description && contentData.description.length > 100) {
-    score += 15;
+    score += 10;
   } else if (contentData.description) {
     score += 5;
   }
 
-  // Tags (0-10 points)
+  // Tags (0-5 points)
   if (contentData.tags && contentData.tags.length >= 3) {
-    score += 10;
-  } else if (contentData.tags && contentData.tags.length > 0) {
     score += 5;
   }
 
-  // Historical performance (0-15 points)
+  // Historical performance & Self-Correction (0-20 points)
   if (historicalData.count > 0) {
     const avgEngagementRate =
       historicalData.avgViews > 0
-        ? historicalData.avgEngagement / historicalData.avgViews
+        ? (historicalData.avgEngagement / historicalData.avgViews) * correctionFactor
         : 0;
-    if (avgEngagementRate > 0.1) {
+    if (avgEngagementRate > 0.15) {
+      score += 20;
+    } else if (avgEngagementRate > 0.08) {
       score += 15;
-    } else if (avgEngagementRate > 0.05) {
+    } else if (avgEngagementRate > 0.04) {
       score += 10;
     } else {
       score += 5;
@@ -317,13 +334,17 @@ function calculatePerformanceScore(contentData, historicalData) {
   // Content type (0-10 points)
   const typeScores = {
     video: 10,
-    article: 8,
-    podcast: 7,
-    transcript: 5,
+    article: 5,
+    podcast: 8,
+    transcript: 3,
   };
   score += typeScores[contentData.type] || 5;
 
-  return Math.min(100, Math.max(0, score));
+  // Final score weighted by correction factor
+  // If the AI previously overestimated, this will dampen the overall score
+  const finalScore = score * Math.min(1.2, correctionFactor);
+
+  return Math.min(100, Math.max(0, Math.round(finalScore)));
 }
 
 /**
@@ -449,8 +470,187 @@ async function predictAudienceGrowth(userId, days = 30) {
   }
 }
 
+/**
+ * Ingest market trends from external APIs (TikTok, YT, IG)
+ * Simulates real-time ingestion for the "Live-Wire" engine
+ */
+async function ingestMarketTrends() {
+  try {
+    logger.info('Live-Wire: Ingesting latest market trends...');
+    // In a real scenario, this would call TikTok Research API, YouTube Data API, etc.
+    const trends = [
+      { topic: 'AI Productivity', velocity: 0.85, platform: 'tiktok' },
+      { topic: 'Budget Travel', velocity: 0.92, platform: 'instagram' },
+      { topic: 'Mental Health 2026', velocity: 0.78, platform: 'youtube' },
+      { topic: 'SaaS Automation', velocity: 0.65, platform: 'linkedin' }
+    ];
+
+    const cacheKey = 'market:trends:velocity';
+    await set(cacheKey, trends, 3600 * 24); // Cache for 24 hours
+    return trends;
+  } catch (error) {
+    logger.error('Error ingesting market trends', { error: error.message });
+    return [];
+  }
+}
+
+/**
+ * Synchronous trend lookup for real-time services (Phase 10)
+ */
+function ingestMarketTrendsSync() {
+  // In a real environment, this would read from a shared memory buffer or fast local cache
+  // For simulation, we return high-velocity topics
+  return {
+    trendingTopics: ['AI Productivity', 'SaaS Automation', 'Budget Travel', 'Mental Health 2026'],
+    lastUpdate: new Date()
+  };
+}
+
+/**
+ * Calculate velocity score for a specific content piece
+ */
+async function getVelocityScore(contentData) {
+  try {
+    const cacheKey = 'market:trends:velocity';
+    let trends = await get(cacheKey);
+    
+    if (!trends) {
+      trends = await ingestMarketTrends();
+    }
+
+    const { title = '', tags = [] } = contentData;
+    const combinedTokens = (title + ' ' + tags.join(' ')).toLowerCase();
+
+    let maxVelocity = 0;
+    trends.forEach(trend => {
+      if (combinedTokens.includes(trend.topic.toLowerCase())) {
+        maxVelocity = Math.max(maxVelocity, trend.velocity);
+      }
+    });
+
+    // If no specific trend match, return a baseline "market heat" (randomized for simulation)
+    if (maxVelocity === 0) {
+      maxVelocity = 0.3 + (Math.random() * 0.2); 
+    }
+
+    return Math.round(maxVelocity * 100);
+  } catch (error) {
+    return 40; // Default fallback
+  }
+}
+
+/**
+ * Apply Algorithmic Self-Correction
+ * Adjusts weights based on previous prediction vs actual performance
+ */
+async function applyAlgorithmicSelfCorrection(userId, contentData) {
+  try {
+    // Look at last 5 pieces of performance data for this user
+    const perfHistory = await ContentPerformance.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    if (perfHistory.length < 2) return 1.0; // Not enough data to correct
+
+    let totalDiff = 0;
+    perfHistory.forEach(perf => {
+      const predicted = perf.predictedViews || perf.scores.overall * 10; // Fallback
+      const actual = perf.performance.reach || perf.performance.impressions;
+      
+      if (predicted > 0 && actual > 0) {
+        // Ratio of actual to predicted
+        totalDiff += (actual / predicted);
+      }
+    });
+
+    const avgCorrection = totalDiff / perfHistory.length;
+    
+    // Clamp the correction factor to prevent wild swings (0.5x to 2.0x)
+    const factor = Math.min(2.0, Math.max(0.5, avgCorrection));
+    
+    logger.info('Algorithmic Self-Correction applied', { userId, factor });
+    return factor;
+  } catch (error) {
+    return 1.0;
+  }
+}
+
+/**
+ * Autonomous Niche and Content Type Detection (Phase 11)
+ * Uses semantic analysis to identify vertical and format.
+ */
+async function detectNicheAndType(contentData) {
+  try {
+    const { title = '', tags = [], transcription = '' } = contentData;
+    const text = `${title} ${tags.join(' ')} ${transcription}`.toLowerCase();
+    
+    // Niche Mapping (Unlimited Expansion Pattern)
+    const niches = {
+      'saas': ['software', 'saas', 'automation', 'productivity', 'workflow'],
+      'fitness': ['workout', 'gym', 'fitness', 'health', 'muscle', 'diet'],
+      'tech': ['developer', 'coding', 'ai', 'review', 'engineering', 'hardware'],
+      'finance': ['investing', 'crypto', 'stocks', 'bitcoin', 'wealth', 'budget'],
+      'lifestyle': ['vlog', 'daily', 'routine', 'travel', 'fashion']
+    };
+
+    let detectedNiche = 'General';
+    for (const [niche, keywords] of Object.entries(niches)) {
+      if (keywords.some(k => text.includes(k))) {
+        detectedNiche = niche.charAt(0).toUpperCase() + niche.slice(1);
+        break;
+      }
+    }
+
+    // Content Type Mapping
+    let contentType = 'educational';
+    if (text.includes('vlog') || text.includes('day in') || text.includes('lifestyle')) {
+      contentType = 'lifestyle';
+    } else if (text.includes('tutorial') || text.includes('how to') || text.includes('guide')) {
+      contentType = 'tutorial';
+    } else if (text.includes('short') || text.includes('quick tip')) {
+      contentType = 'short-form';
+    }
+
+    return { niche: detectedNiche, type: contentType };
+  } catch (error) {
+    return { niche: 'General', type: 'educational' };
+  }
+}
+
+/**
+ * Verify Trend Alignment (Phase 12 Sovereignty)
+ * Cross-references AI claims against ingested market trends.
+ */
+async function verifyTrendAlignment(niche, claims) {
+  try {
+    const trends = await ingestMarketTrends();
+    const trendingTopics = trends.trendingTopics.map(t => t.toLowerCase());
+    
+    const results = claims.map(claim => {
+      const tokens = claim.toLowerCase().split(' ');
+      const match = tokens.some(token => trendingTopics.some(topic => topic.includes(token)));
+      return {
+        claim,
+        aligned: match,
+        confidence: match ? 95 : 40
+      };
+    });
+
+    return results;
+  } catch (error) {
+    return claims.map(c => ({ claim: c, aligned: false, confidence: 50 }));
+  }
+}
+
 module.exports = {
   predictContentPerformance,
   predictAudienceGrowth,
   getHistoricalPerformance,
+  ingestMarketTrends,
+  ingestMarketTrendsSync,
+  getVelocityScore,
+  applyAlgorithmicSelfCorrection,
+  detectNicheAndType,
+  verifyTrendAlignment
 };

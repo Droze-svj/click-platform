@@ -83,6 +83,12 @@ class NetworkDebugger {
 
       this.requests.set(requestId, request)
 
+      // Prune old requests to prevent memory leak
+      if (this.requests.size > this.maxRequests) {
+        const firstKey = this.requests.keys().next().value;
+        if (firstKey) this.requests.delete(firstKey);
+      }
+
       this.sendDebugLog('request_start', {
         id: requestId,
         url,
@@ -110,6 +116,13 @@ class NetworkDebugger {
           }
         } catch (e) {
           // Ignore body parsing errors
+        }
+
+        // Memory Guard: If response is huge (>1MB), don't store it in the debugger
+        if (typeof responseBody === 'string' && responseBody.length > 1024 * 1024) {
+          responseBody = `[Response too large: ${(responseBody.length / 1024 / 1024).toFixed(2)}MB]`;
+        } else if (responseBody && typeof responseBody === 'object' && JSON.stringify(responseBody).length > 1024 * 1024) {
+          responseBody = `[JSON response too large]`;
         }
 
         const updatedRequest: NetworkRequest = {
@@ -233,6 +246,12 @@ class NetworkDebugger {
           }
 
           networkDebugger.requests.set(requestId, updatedRequest)
+
+          // Prune old requests to prevent memory leak
+          if (networkDebugger.requests.size > networkDebugger.maxRequests) {
+            const firstKey = networkDebugger.requests.keys().next().value;
+            if (firstKey) networkDebugger.requests.delete(firstKey);
+          }
 
           if (this.status >= 200 && this.status < 300) {
             networkDebugger.sendDebugLog('xhr_request_success', {

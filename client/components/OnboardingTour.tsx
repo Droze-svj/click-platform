@@ -36,14 +36,20 @@ const tourSteps: TourStep[] = [
   }
 ]
 
-export default function OnboardingTour() {
+interface OnboardingTourProps {
+  openByRequest?: boolean
+  onClose?: () => void
+}
+
+export default function OnboardingTour({ openByRequest, onClose }: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isActive, setIsActive] = useState(false)
 
-
   useEffect(() => {
-    // In local dev, the tour overlay can block all interactions; disable unless explicitly opted-in.
-
+    if (openByRequest) {
+      setIsActive(true)
+      return
+    }
     try {
       const host =
         typeof window !== 'undefined' && window.location && window.location.host ? String(window.location.host) : null
@@ -57,13 +63,9 @@ export default function OnboardingTour() {
       }
     } catch {}
 
-    // Check if user has completed onboarding
     const hasCompleted = localStorage.getItem('onboarding_completed')
-    if (!hasCompleted) {
-      setIsActive(true)
-    } else {
-    }
-  }, [])
+    if (!hasCompleted) setIsActive(true)
+  }, [openByRequest])
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -79,7 +81,8 @@ export default function OnboardingTour() {
 
   const handleComplete = () => {
     setIsActive(false)
-    localStorage.setItem('onboarding_completed', 'true')
+    if (!openByRequest) localStorage.setItem('onboarding_completed', 'true')
+    onClose?.()
   }
 
   if (!isActive || currentStep >= tourSteps.length) {

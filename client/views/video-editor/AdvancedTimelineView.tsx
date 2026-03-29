@@ -70,12 +70,12 @@ export const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                     duration={videoState.duration || 0}
                     currentTime={videoState.currentTime}
                     isPlaying={videoState.isPlaying}
-                    clips={timelineSegments.map(seg => ({
+                    clips={timelineSegments.map((seg: any) => ({
                         ...seg,
                         sourceStartTime: seg.sourceStartTime ?? seg.startTime,
                         sourceEndTime: seg.sourceEndTime ?? seg.endTime,
                         sourceUrl: seg.sourceUrl || videoUrl
-                    }))}
+                    })) as any}
                     onTimeUpdate={(time) => {
                         setVideoState((prev: any) => ({ ...prev, currentTime: time }))
                         const videoElement = document.querySelector('.preview-video') as HTMLVideoElement
@@ -145,7 +145,7 @@ export const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                         })
                         showToast('Clip split', 'success')
                     }}
-                    aiSuggestions={aiSuggestions}
+                    aiSuggestions={aiSuggestions as any}
                     showAiPreviews={showAiPreviews}
                     onApplyAiSuggestion={(suggestion) => {
                         if (suggestion.type === 'cut') {
@@ -168,7 +168,7 @@ export const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 <AdvancedVideoTimeline
                     duration={videoState.duration || 0}
                     currentTime={videoState.currentTime}
-                    segments={timelineSegments}
+                    segments={timelineSegments as any}
                     keyframes={[]}
                     onTimeUpdate={(time) => {
                         setVideoState((prev: any) => ({ ...prev, currentTime: time }))

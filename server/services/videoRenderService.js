@@ -145,17 +145,23 @@ async function renderFromEditorState(options) {
   const width = exportOptions.width ?? 1920
   const height = exportOptions.height ?? 1080
   const isBestQuality = exportOptions.quality === 'best'
+  const isProres = exportOptions.codec === 'prores'
   let bitrateMbps = exportOptions.bitrateMbps ?? 8
-  let codec = exportOptions.codec === 'hevc' ? 'libx265' : 'libx264'
+  let codec = 'libx264'
+  if (exportOptions.codec === 'hevc') codec = 'libx265'
+  else if (isProres) codec = 'prores_ks'
   let crf = 23
   let preset = 'medium'
   let audioBitrate = '192k'
 
-  if (isBestQuality) {
+  if (isBestQuality && !isProres) {
     bitrateMbps = Math.max(bitrateMbps, 20)
     crf = 18
     preset = 'slow'
     audioBitrate = '320k'
+  }
+  if (isProres) {
+    bitrateMbps = Math.max(bitrateMbps, 50) // ProRes is high bitrate
   }
 
   const inputPath = await resolveInputPath(videoId, videoUrl)
@@ -166,7 +172,8 @@ async function renderFromEditorState(options) {
 
   const outputDir = path.join(__dirname, '../../uploads/exports')
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
-  const outputFilename = `render-${videoId || 'export'}-${Date.now()}.mp4`
+  const ext = isProres ? 'mov' : 'mp4'
+  const outputFilename = `render-${videoId || 'export'}-${Date.now()}.${ext}`
   const outputPath = path.join(outputDir, outputFilename)
 
   const videoFilters_ff = buildVideoFilterChain(videoFilters)
@@ -190,7 +197,12 @@ async function renderFromEditorState(options) {
 
   const allVideoFilters = [...videoFilters_ff, ...lutFilters, ...overlayFilters]
   const filterStr = allVideoFilters.length > 0 ? allVideoFilters.join(',') : null
-  const hasMusic = firstMusic && firstMusic.sourceUrl
+
+  const firstMusic = timelineSegments.find(s => s.type === 'audio' && s.sourceUrl)
+  const musicVolume = firstMusic?.properties?.volume ?? 0.5
+  const hasMusic = !!firstMusic
+
+  const { renderQueue, optimizeFFmpegCommand } = require('./performanceOptimizationService')
 
   return new Promise((resolve, reject) => {
     let command = ffmpeg(inputPath)
@@ -199,46 +211,85 @@ async function renderFromEditorState(options) {
     }
 
     if (hasMusic) {
-      const vidPart = filterStr ? `[0:v]${filterStr}[vout]` : '[0:v]copy[vout]'
-      const audPart = `[1:a]volume=${musicVolume}[music];[0:a][music]amix=inputs=2:duration=first:dropout_transition=1[aout]`
+      const duckMusicWhenVoiceover = exportOptions.duckMusicWhenVoiceover ?? false
+      const duckLevel = exportOptions.duckLevel ?? -12
+      
+      const vidFilterPart = filterStr ? `,${filterStr}` : ''
+      const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[vout]`
+      
+      let audPart = ''
+      if (duckMusicWhenVoiceover) {
+        audPart = `[1:a]volume=${musicVolume}[music];[music][0:a]sidechaincompress=threshold=${duckLevel}dB:ratio=4:attack=50:release=200[ducked];[0:a][ducked]amix=inputs=2:duration=first:dropout_transition=1[aout]`
+      } else {
+        audPart = `[1:a]volume=${musicVolume}[music];[0:a][music]amix=inputs=2:duration=first:dropout_transition=1[aout]`
+      }
+      
       const complexStr = `${vidPart};${audPart}`
       command = command
         .complexFilter(complexStr)
         .outputOptions(['-map', '[vout]', '-map', '[aout]'])
-    } else if (filterStr) {
-      command = command.videoFilters(filterStr)
+    } else {
+      if (filterStr) {
+        command = command.videoFilters(filterStr)
+      }
     }
 
-    command
+    const videoOutputOptions = isProres
+      ? ['-profile:v', '3', '-vendor', 'apl0'] // ProRes 422 HQ
+      : [`-b:v ${bitrateMbps}M`, `-preset ${preset}`, `-crf ${crf}`, '-movflags +faststart']
+
+    const commandChain = command
       .size(`${width}x${height}`)
       .videoCodec(codec)
-      .outputOptions([
-        `-b:v ${bitrateMbps}M`,
-        `-preset ${preset}`,
-        `-crf ${crf}`,
-        '-movflags +faststart',
-      ])
+      .outputOptions(videoOutputOptions)
       .audioCodec('aac')
       .outputOptions(['-b:a', audioBitrate])
       .output(outputPath)
-      .on('start', (cmd) => logger.info('Render started', { videoId, outputPath }))
-      .on('progress', (p) => {
-        if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
-      })
-      .on('end', () => {
-        if (fs.existsSync(outputPath)) {
-          const url = `/uploads/exports/${outputFilename}`
-          logger.info('Render completed', { videoId, outputPath, url })
-          resolve({ outputPath, url })
-        } else {
-          reject(new Error('Output file was not created'))
-        }
-      })
-      .on('error', (err) => {
-        logger.error('Render failed', { error: err.message, videoId })
-        reject(err)
-      })
-      .run()
+
+    // Optimize for this specific machine
+    optimizeFFmpegCommand(commandChain)
+
+    const job = {
+      execute: () => {
+        return new Promise((jobResolve, jobReject) => {
+          commandChain
+            .on('start', () => {
+              logger.info('Neural Node Dispatch: Render Process Initialized', {
+                videoId,
+                outputPath,
+                node: 'Alpha-1'
+              })
+            })
+            .on('progress', (p) => {
+              if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
+            })
+            .on('end', () => {
+              if (fs.existsSync(outputPath)) {
+                const url = `/uploads/exports/${outputFilename}`
+                logger.info('Neural Node Handoff: Render Complete', { videoId, url })
+                jobResolve({ outputPath, url })
+              } else {
+                jobReject(new Error('Neural Node Error: Output Fragment Missing'))
+              }
+            })
+            .on('error', (err) => {
+              logger.error('Neural Node Failure', { error: err.message, videoId })
+              jobReject(err)
+            })
+            .run()
+        })
+      }
+    }
+
+    renderQueue.add({
+      ...job,
+      execute: async () => {
+        const res = await job.execute()
+        return res
+      },
+      onComplete: (res) => resolve(res),
+      onError: (err) => reject(err)
+    })
   })
 }
 

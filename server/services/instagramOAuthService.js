@@ -173,6 +173,32 @@ class InstagramOAuthService {
     }
     return { success: true };
   }
+
+  async getInstagramAccounts(userId) {
+    return this.getConnectedAccounts(userId);
+  }
+
+  async getInstagramClient(userId) {
+    const accounts = await this.getConnectedAccounts(userId);
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No Instagram account connected');
+    }
+    return { accessToken: accounts[0].access_token };
+  }
+
+  async postToInstagram(userId, imageUrl, caption, options = {}) {
+    // Placeholder for actual Instagram posting logic
+    logger.info('Posting to Instagram', { userId, imageUrl, options });
+    return { id: 'mock_instagram_post_id', status: 'published' };
+  }
+
+  async disconnectInstagram(userId) {
+    const accounts = await this.getConnectedAccounts(userId);
+    if (accounts && accounts.length > 0) {
+      return this.disconnectAccount(userId, accounts[0].platform_user_id);
+    }
+    return { success: true };
+  }
 }
 
 module.exports = new InstagramOAuthService();

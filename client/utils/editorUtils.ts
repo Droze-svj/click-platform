@@ -1,4 +1,4 @@
-import { TimelineSegmentType } from '../types/editor'
+import { TimelineSegmentType, EditorContentPreferences, EditorCategory, EDITOR_CONTENT_PREFS_KEY } from '../types/editor'
 
 /** Format seconds as M:SS, or H:MM:SS for long videos */
 export const formatTime = (time: number): string => {
@@ -131,4 +131,61 @@ export const getStatusColor = (status: string): string => {
     case 'error': return 'text-red-500'
     default: return 'text-gray-400'
   }
+}
+
+const VALID_PRESETS = ['shorts', 'reels', 'tiktok', '1080p', '4k', 'best']
+const VALID_QUALITY = ['high', 'medium', 'low'] as const
+const VALID_CODEC = ['h264', 'hevc'] as const
+const VALID_PREVIEW = ['draft', 'full'] as const
+
+const DEFAULT_CONTENT_PREFS: EditorContentPreferences = {
+  defaultExportPreset: '1080p',
+  defaultExportQuality: 'high',
+  defaultExportCodec: 'h264',
+  defaultOpenSection: 'ai-edit',
+  previewQuality: 'full',
+  showExportPlatformHints: true,
+  recentSections: [],
+}
+
+/** Load editor content/quality preferences from localStorage */
+export function loadEditorContentPreferences(): EditorContentPreferences {
+  if (typeof window === 'undefined') return { ...DEFAULT_CONTENT_PREFS }
+  try {
+    const raw = localStorage.getItem(EDITOR_CONTENT_PREFS_KEY)
+    if (!raw) return { ...DEFAULT_CONTENT_PREFS }
+    const parsed = JSON.parse(raw) as Partial<EditorContentPreferences>
+    return {
+      ...DEFAULT_CONTENT_PREFS,
+      ...parsed,
+      defaultExportPreset: VALID_PRESETS.includes(parsed.defaultExportPreset ?? '') ? parsed.defaultExportPreset : DEFAULT_CONTENT_PREFS.defaultExportPreset,
+      defaultExportQuality: VALID_QUALITY.includes(parsed.defaultExportQuality as any) ? parsed.defaultExportQuality : DEFAULT_CONTENT_PREFS.defaultExportQuality,
+      defaultExportCodec: VALID_CODEC.includes(parsed.defaultExportCodec as any) ? parsed.defaultExportCodec : DEFAULT_CONTENT_PREFS.defaultExportCodec,
+      previewQuality: VALID_PREVIEW.includes(parsed.previewQuality as any) ? parsed.previewQuality : DEFAULT_CONTENT_PREFS.previewQuality,
+      recentSections: Array.isArray(parsed.recentSections) ? parsed.recentSections.slice(0, 5) : DEFAULT_CONTENT_PREFS.recentSections,
+    }
+  } catch {
+    return { ...DEFAULT_CONTENT_PREFS }
+  }
+}
+
+/** Save editor content preferences to localStorage */
+export function saveEditorContentPreferences(patch: Partial<EditorContentPreferences>): void {
+  if (typeof window === 'undefined') return
+  try {
+    const current = loadEditorContentPreferences()
+    const next = { ...current, ...patch }
+    localStorage.setItem(EDITOR_CONTENT_PREFS_KEY, JSON.stringify(next))
+  } catch {
+    // ignore
+  }
+}
+
+/** Push a category to recent list (max 5), persist */
+export function pushRecentSection(category: EditorCategory): void {
+  const prefs = loadEditorContentPreferences()
+  const recent = prefs.recentSections ?? []
+  const filtered = recent.filter(c => c !== category)
+  const next = [category, ...filtered].slice(0, 5)
+  saveEditorContentPreferences({ recentSections: next })
 }

@@ -6,12 +6,13 @@ import { useAuth } from '../hooks/useAuth'
 import { apiGet, apiPost } from '../lib/api'
 
 interface Suggestion {
-  type: 'workflow' | 'action'
+  type: 'workflow' | 'action' | 'onboarding'
   title: string
   description: string
   action?: string
   workflowId?: string
   steps?: any[]
+  route?: string
 }
 
 export default function NextStepsPanel() {
@@ -32,10 +33,32 @@ export default function NextStepsPanel() {
 
   const loadSuggestions = async () => {
     try {
-      const res = await apiGet<any>('/workflows/suggestions')
-      if (res?.success) {
-        setSuggestions(Array.isArray(res.data) ? res.data : [])
+      const [workflowRes, onboardingRes] = await Promise.all([
+        apiGet<any>('/workflows/suggestions'),
+        apiGet<any>('/onboarding').catch(() => null),
+      ])
+      let list: Suggestion[] = Array.isArray(workflowRes?.data) ? workflowRes.data : []
+      // AI-guided onboarding: prepend suggested next step when onboarding is not complete
+      const onboarding = onboardingRes?.data
+      if (onboarding && !onboarding.isComplete && onboarding.currentStepData) {
+        const step = onboarding.currentStepData
+        const routeByComponent: Record<string, string> = {
+          ConnectSocialStep: '/dashboard/social',
+          FirstContentStep: '/dashboard/content',
+          ExploreFeaturesStep: '/dashboard',
+          ProfileStep: '/dashboard/settings/profile',
+        }
+        list = [
+          {
+            type: 'onboarding',
+            title: step.title || 'Next step',
+            description: step.description || 'Continue setup',
+            route: routeByComponent[step.component] || '/dashboard',
+          },
+          ...list,
+        ]
       }
+      setSuggestions(list)
     } catch (error) {
       console.error('Failed to load suggestions', error)
     } finally {
@@ -44,11 +67,13 @@ export default function NextStepsPanel() {
   }
 
   const handleSuggestionClick = async (suggestion: Suggestion) => {
+    if (suggestion.type === 'onboarding' && suggestion.route) {
+      router.push(suggestion.route)
+      return
+    }
     if (suggestion.type === 'workflow' && suggestion.workflowId) {
-      // Execute workflow
       try {
         await apiPost<any>(`/workflows/${suggestion.workflowId}/execute`, { data: {} })
-        // Navigate based on workflow steps
         if (suggestion.steps && suggestion.steps.length > 0) {
           const nextAction = suggestion.steps[1]?.action
           navigateToAction(nextAction)

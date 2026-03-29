@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 
 class DatabaseOptimizer {
   constructor() {
+    console.log('🏗️ DatabaseOptimizer: constructor start');
     this.connectionPool = null
     this.performanceMetrics = {
       queryCount: 0,
@@ -15,6 +16,7 @@ class DatabaseOptimizer {
       activeConnections: 0,
       indexesCreated: 0
     }
+    console.log('🏗️ DatabaseOptimizer: constructor end');
   }
 
   /**

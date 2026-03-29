@@ -146,6 +146,11 @@ export default function PerformanceMonitor() {
         // Unhandled promise rejections
         const originalOnUnhandledRejection = window.onunhandledrejection
         window.onunhandledrejection = (event) => {
+          const msg = event.reason instanceof Error ? event.reason.message : String(event.reason)
+          if (msg.includes('MetaMask') || msg.includes('extension') || msg.includes('inpage.js')) {
+            return false
+          }
+
           sendDebugLog('PerformanceMonitor', 'unhandled_promise_rejection', {
             reason: event.reason,
             promise: event.promise?.toString(),

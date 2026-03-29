@@ -12,7 +12,7 @@ const logger = require('../utils/logger');
 async function getWorkloadDashboard(userId, clientId, period = 'month') {
   try {
     const { startDate, endDate } = getPeriodDates(period);
-    
+
     // Get or create dashboard
     let dashboard = await WorkloadDashboard.findOne({
       userId,
@@ -39,13 +39,13 @@ async function calculateWorkloadDashboard(userId, clientId, startDate, endDate, 
   try {
     // Get content metrics
     const contentMetrics = await getContentMetrics(userId, clientId, startDate, endDate);
-    
+
     // Get efficiency metrics
     const efficiencyMetrics = await getEfficiencyMetrics(userId, clientId, startDate, endDate);
-    
+
     // Get content gaps
     const contentGaps = await getContentGaps(userId, clientId, startDate, endDate);
-    
+
     // Get profit indicators
     const profitIndicators = await getProfitIndicators(userId, clientId, startDate, endDate);
 
@@ -132,7 +132,7 @@ async function getEfficiencyMetrics(userId, clientId, startDate, endDate) {
 
     // Get execution stats
     const tasksAutomated = automationRules.reduce((sum, rule) => sum + (rule.stats.executions || 0), 0);
-    
+
     // Estimate time saved (would calculate from actual automation)
     const averageTimePerPost = 30; // minutes (placeholder)
     const timeSaved = (tasksAutomated * averageTimePerPost) / 60; // hours
@@ -239,7 +239,7 @@ async function getProfitIndicators(userId, clientId, startDate, endDate) {
   try {
     // Get client billing (would come from billing system)
     const revenue = 0; // placeholder
-    
+
     // Calculate costs
     const contents = await Content.find({
       userId,
@@ -338,11 +338,12 @@ function getPeriodDates(period) {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       endDate = now;
       break;
-    case 'quarter':
+    case 'quarter': {
       const quarter = Math.floor(now.getMonth() / 3);
       startDate = new Date(now.getFullYear(), quarter * 3, 1);
       endDate = now;
       break;
+    }
     case 'year':
       startDate = new Date(now.getFullYear(), 0, 1);
       endDate = now;
@@ -361,7 +362,7 @@ function getPeriodDates(period) {
 async function getAggregatedDashboard(userId, period = 'month') {
   try {
     const { startDate, endDate } = getPeriodDates(period);
-    
+
     const dashboards = await WorkloadDashboard.find({
       userId,
       'period.start': startDate,
@@ -379,7 +380,7 @@ async function getAggregatedDashboard(userId, period = 'month') {
     const aggregated = {
       workload: {
         totalPosts: dashboards.reduce((sum, d) => sum + d.workload.postsCreated, 0),
-        averagePostsPerClient: dashboards.length > 0 
+        averagePostsPerClient: dashboards.length > 0
           ? Math.round(dashboards.reduce((sum, d) => sum + d.workload.postsCreated, 0) / dashboards.length)
           : 0,
         totalPublished: dashboards.reduce((sum, d) => sum + d.workload.postsPublished, 0)

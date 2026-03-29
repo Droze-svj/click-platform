@@ -84,26 +84,28 @@ export default function FormField({
   const inputType = type === 'password' && showPassword ? 'text' : type
 
   const baseInputClasses = `
-    w-full px-4 py-2.5 border rounded-lg transition-all duration-200
-    focus:outline-none focus:ring-2 focus:ring-offset-1
-    disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60
-    ${hasError 
-      ? 'border-red-300 focus:border-red-500 focus:ring-red-200' 
+    w-full px-4 py-3 bg-black/40 text-white border rounded-xl transition-all duration-300
+    focus:outline-none focus:bg-indigo-500/5
+    disabled:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 text-sm font-medium tracking-wide
+    ${hasError
+      ? 'border-red-500/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
       : hasSuccess
-      ? 'border-green-300 focus:border-green-500 focus:ring-green-200'
-      : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
+        ? 'border-emerald-500/50 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10'
+        : 'border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10'
     }
   `
 
   return (
     <div className="mb-4">
-      <label 
-        htmlFor={inputId}
-        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-      >
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2"
+        >
+          {label}
+          {required && <span className="text-red-500/80 ml-1">*</span>}
+        </label>
+      )}
 
       <div className="relative">
         {type === 'textarea' ? (
@@ -150,10 +152,10 @@ export default function FormField({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-400 transition-colors"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         )}
 
@@ -178,7 +180,7 @@ export default function FormField({
 
       {/* Error message */}
       {hasError && (
-        <p 
+        <p
           id={`${inputId}-error`}
           className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
           role="alert"
@@ -190,7 +192,7 @@ export default function FormField({
 
       {/* Hint */}
       {!hasError && hint && (
-        <p 
+        <p
           id={`${inputId}-hint`}
           className="mt-1.5 text-sm text-gray-500 dark:text-gray-400"
         >

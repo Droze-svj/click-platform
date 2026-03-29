@@ -2,8 +2,6 @@
 // Generate exportable business reports
 
 const { getAgencyBusinessDashboard } = require('./agencyBusinessDashboardService');
-const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
 const logger = require('../utils/logger');
 
 /**
@@ -11,6 +9,7 @@ const logger = require('../utils/logger');
  */
 async function generateAgencyBusinessReportExcel(agencyWorkspaceId, filters = {}) {
   try {
+    const ExcelJS = require('exceljs');
     const dashboard = await getAgencyBusinessDashboard(agencyWorkspaceId, filters);
 
     const workbook = new ExcelJS.Workbook();
@@ -112,6 +111,7 @@ async function generateAgencyBusinessReportExcel(agencyWorkspaceId, filters = {}
  */
 async function generateAgencyBusinessReportPDF(agencyWorkspaceId, filters = {}) {
   try {
+    const PDFDocument = require('pdfkit');
     const dashboard = await getAgencyBusinessDashboard(agencyWorkspaceId, filters);
 
     const doc = new PDFDocument({ margin: 50 });

@@ -32,20 +32,23 @@ async function processScheduledPosts() {
     const now = new Date();
     const upcomingPosts = await ScheduledPost.find({
       status: 'scheduled',
-      scheduledAt: { $lte: now },
-    }).limit(100);
+      scheduledTime: { $lte: now },
+    })
+      .limit(100)
+      .maxTimeMS(5000)
+      .lean();
 
     logger.info('Processing scheduled posts', { count: upcomingPosts.length });
 
     for (const post of upcomingPosts) {
       try {
-        // Add to social posting queue
+        // Add to social posting queue (ScheduledPost has platform singular, not platforms)
         await addJob(QUEUE_NAMES.SOCIAL_POSTING, {
           name: 'scheduled-post',
           data: {
             userId: post.userId,
             contentId: post.contentId,
-            platforms: post.platforms,
+            platform: post.platform,
             content: post.content,
             scheduledPostId: post._id,
             options: post.options || {},

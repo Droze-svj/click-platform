@@ -227,7 +227,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
 
               <div className="bg-yellow-50 dark:bg-yellow-900 p-3 rounded-lg">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  ⚠️ Importing will add new items. Existing items won't be overwritten.
+                  ⚠️ Importing will add new items. Existing items won&apos;t be overwritten.
                 </p>
               </div>
 

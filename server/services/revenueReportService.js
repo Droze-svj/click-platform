@@ -6,8 +6,6 @@ const Conversion = require('../models/Conversion');
 const CustomerLTV = require('../models/CustomerLTV');
 const { getROASROIDashboard } = require('./roasRoiService');
 const { getConversionAnalytics } = require('./conversionTrackingService');
-const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
 const logger = require('../utils/logger');
 
 /**
@@ -21,6 +19,7 @@ async function generateRevenueReportExcel(workspaceId, filters = {}) {
       platform = null
     } = filters;
 
+    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
 
     // Summary Sheet
@@ -124,6 +123,7 @@ async function generateRevenueReportPDF(workspaceId, filters = {}) {
     const dashboard = await getROASROIDashboard(workspaceId, { startDate, endDate, platform });
     const conversionAnalytics = await getConversionAnalytics(workspaceId, { startDate, endDate, platform });
 
+    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
     const chunks = [];
 

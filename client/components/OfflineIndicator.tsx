@@ -52,7 +52,7 @@ export default function OfflineIndicator() {
       ) : (
         <>
           <WifiOff size={18} />
-          <span>You're offline. Some features may be unavailable.</span>
+          <span>You&apos;re offline. Some features may be unavailable.</span>
         </>
       )}
     </div>

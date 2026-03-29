@@ -67,7 +67,7 @@ export default function ContentLibrary() {
     setFilteredItems(filtered)
   }
 
-  const useItem = async (item: LibraryItem) => {
+  const handleUseItem = async (item: LibraryItem) => {
     try {
       // Create new content from library item
       const response = await apiPost<any>('/content/generate', {
@@ -80,7 +80,7 @@ export default function ContentLibrary() {
       if (response?.success || response) {
         // Increment usage count
         await apiPost(`/library/items/${item.id}/use`, {})
-        
+
         // Reload library
         loadLibrary()
       }
@@ -160,7 +160,7 @@ export default function ContentLibrary() {
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400 mb-2">
-            {searchQuery || filterType !== 'all' 
+            {searchQuery || filterType !== 'all'
               ? 'No items match your search'
               : 'Your content library is empty'}
           </p>
@@ -183,7 +183,7 @@ export default function ContentLibrary() {
                   {item.type}
                 </span>
               </div>
-              
+
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
                 {item.text.substring(0, 100)}...
               </p>
@@ -208,7 +208,7 @@ export default function ContentLibrary() {
                 </span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => useItem(item)}
+                    onClick={() => handleUseItem(item)}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                     title="Use this content"
                   >

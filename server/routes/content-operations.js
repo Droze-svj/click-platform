@@ -9,6 +9,10 @@ const {
   performContentHealthCheck,
   getFutureContentSuggestions
 } = require('../services/contentHealthService');
+
+console.log('performContentHealthCheck defined:', !!performContentHealthCheck);
+console.log('getFutureContentSuggestions defined:', !!getFutureContentSuggestions);
+
 const {
   getAdaptivePerformancePrediction,
   updatePredictionsWithNewData
@@ -55,7 +59,7 @@ router.get('/health/suggestions', auth, asyncHandler(async (req, res) => {
     suggestions,
     basedOn: {
       gaps: healthCheck.gaps,
-      healthScore: healthCheck.overall.score
+      healthScore: healthCheck.overallScore
     }
   });
 }));

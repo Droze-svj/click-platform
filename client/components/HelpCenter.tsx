@@ -166,7 +166,7 @@ export default function HelpCenter() {
           </h2>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mb-4">
-          Can't find what you're looking for? Contact our support team.
+          Can&apos;t find what you&apos;re looking for? Contact our support team.
         </p>
         <a
           href="/help/support"

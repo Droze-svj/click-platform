@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Command, Zap, Video, Cpu, Palette, Sliders, Type, Download, X, Film } from 'lucide-react'
+import { Search, Command, Zap, Video, Cpu, Palette, Sliders, Type, Download, X, Film, Layers as LayersIcon, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface CommandKProps {
@@ -15,6 +15,8 @@ const COMMANDS = [
   { id: 'transcribe', label: 'Analyze Audio & transcribe', icon: Zap, category: 'AI', shortcut: 'T' },
   { id: 'color', label: 'Apply Cinema Grade', icon: Palette, category: 'Visuals', shortcut: 'C' },
   { id: 'text', label: 'Add Motion Title', icon: Type, category: 'Visuals', shortcut: 'M' },
+  { id: 'style-vault', label: 'Open Style DNA Vault', icon: LayersIcon, category: 'Vault', shortcut: 'V' },
+  { id: 'apply-style', label: 'Apply Neural Style Template', icon: Sparkles, category: 'Vault', shortcut: 'S' },
   { id: 'export', label: 'Initialize 4K Render', icon: Download, category: 'Production', shortcut: 'E' },
 ]
 
@@ -69,15 +71,15 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute }) => {
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="w-full max-w-2xl bg-gray-900 border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden"
+            className="w-full max-w-2xl editor-card relative overflow-hidden"
           >
-            <div className="p-4 flex items-center gap-4 border-b border-white/5">
-              <Search className="w-5 h-5 text-gray-500" />
+            <div className="p-4 flex items-center gap-4 border-b border-subtle">
+              <Search className="w-5 h-5 text-theme-muted" />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Type a command or search..."
-                className="flex-1 bg-transparent border-none text-white text-lg focus:ring-0 placeholder:text-gray-600 font-medium"
+                className="flex-1 bg-transparent border-none text-theme-primary text-lg focus:ring-0 placeholder:text-theme-muted font-medium"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value)
@@ -85,8 +87,8 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute }) => {
                 }}
                 onKeyDown={handleKeyDown}
               />
-              <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded-lg border border-white/10">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ESC</span>
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-surface-elevated border border-subtle">
+                <span className="text-[10px] font-bold text-theme-muted uppercase tracking-widest">ESC</span>
               </div>
             </div>
 
@@ -97,18 +99,18 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute }) => {
                     <button
                       key={cmd.id}
                       onClick={() => { onExecute(cmd.id); onClose() }}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedIndex === idx ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${selectedIndex === idx ? 'bg-accent-violet-solid text-white shadow-sm' : 'text-theme-secondary hover:bg-surface-card-hover hover:text-theme-primary'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${selectedIndex === idx ? 'bg-white/20' : 'bg-gray-800'}`}>
+                        <div className={`p-2 rounded-xl ${selectedIndex === idx ? 'bg-white/20' : 'bg-surface-elevated'}`}>
                           <cmd.icon className="w-4 h-4" />
                         </div>
                         <div className="text-left">
                           <p className="text-sm font-bold">{cmd.label}</p>
-                          <p className={`text-[10px] uppercase font-black tracking-widest opacity-60 ${selectedIndex === idx ? 'text-white' : 'text-gray-500'}`}>{cmd.category}</p>
+                          <p className={`text-[10px] uppercase font-bold tracking-widest opacity-80 ${selectedIndex === idx ? 'text-white/90' : 'text-theme-muted'}`}>{cmd.category}</p>
                         </div>
                       </div>
-                      <kbd className={`px-2 py-1 rounded border text-[10px] font-black ${selectedIndex === idx ? 'bg-white/20 border-white/20 text-white' : 'bg-gray-800 border-white/5 text-gray-500'}`}>
+                      <kbd className={`px-2 py-1 rounded-lg text-[10px] font-bold ${selectedIndex === idx ? 'bg-white/20 text-white' : 'bg-surface-elevated border border-subtle text-theme-muted'}`}>
                         {cmd.shortcut}
                       </kbd>
                     </button>
@@ -116,7 +118,7 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute }) => {
                 </div>
               ) : (
                 <div className="p-12 text-center">
-                  <p className="text-gray-500 text-sm font-medium italic">No commands found for "{query}"</p>
+                  <p className="text-theme-muted text-sm font-medium italic">No commands found for &quot;{query}&quot;</p>
                 </div>
               )}
             </div>

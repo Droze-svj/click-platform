@@ -11,7 +11,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Zap,
-  Loader2
+  Loader2,
+  Flame,
+  Eye,
 } from 'lucide-react'
 import { extractApiData } from '../utils/apiResponse'
 
@@ -57,18 +59,36 @@ interface PredictiveAnalyticsDashboardProps {
   contentId?: string
   userId?: string
   showAudienceGrowth?: boolean
+  /** When provided, renders the Pre-Export Retention Heatmap section */
+  timelineSegments?: any[]
+  /** Total video duration in seconds for heatmap analysis */
+  videoDuration?: number
+}
+
+// ── Pre-Export Heatmap Types ────────────────────────────────────────────────
+interface RetentionZone {
+  timeStart: number
+  timeEnd: number
+  score: number
+  level: 'high' | 'medium' | 'low'
+  warnings: string[]
 }
 
 export default function PredictiveAnalyticsDashboard({
   contentId,
   userId,
-  showAudienceGrowth = true
+  showAudienceGrowth = true,
+  timelineSegments,
+  videoDuration = 60,
 }: PredictiveAnalyticsDashboardProps) {
   const [prediction, setPrediction] = useState<PerformancePrediction | null>(null)
   const [audienceGrowth, setAudienceGrowth] = useState<AudienceGrowthPrediction | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingGrowth, setIsLoadingGrowth] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retentionHeatmap, setRetentionHeatmap] = useState<RetentionZone[]>([])
+  const [heatmapLoading, setHeatmapLoading] = useState(false)
+  const [heatmapSummary, setHeatmapSummary] = useState<any>(null)
 
   useEffect(() => {
     if (contentId) {
@@ -77,7 +97,11 @@ export default function PredictiveAnalyticsDashboard({
     if (userId && showAudienceGrowth) {
       loadAudienceGrowth()
     }
-  }, [contentId, userId, showAudienceGrowth])
+    if (timelineSegments && timelineSegments.length > 0) {
+      loadRetentionHeatmap()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentId, userId, showAudienceGrowth, timelineSegments])
 
   const loadPrediction = async () => {
     if (!contentId) return
@@ -133,6 +157,32 @@ export default function PredictiveAnalyticsDashboard({
       console.error('Failed to load audience growth:', err)
     } finally {
       setIsLoadingGrowth(false)
+    }
+  }
+
+  const loadRetentionHeatmap = async () => {
+    setHeatmapLoading(true)
+    try {
+      const response = await fetch('/api/retention-heatmap/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          segments: timelineSegments ?? [],
+          effects: [],
+          captions: [],
+          duration: videoDuration,
+        }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setRetentionHeatmap(data.heatmap ?? [])
+        setHeatmapSummary(data.summary ?? null)
+      }
+    } catch (err) {
+      console.error('Retention heatmap failed:', err)
+    } finally {
+      setHeatmapLoading(false)
     }
   }
 
@@ -390,6 +440,113 @@ export default function PredictiveAnalyticsDashboard({
             ) : (
               <div className="text-center py-8 text-gray-600 dark:text-gray-400">
                 No growth data available
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Pre-Export Retention Heatmap ── */}
+      {timelineSegments && timelineSegments.length > 0 && (
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Pre-Export Retention Heatmap
+                </h3>
+              </div>
+              {heatmapSummary && (
+                <div className="flex items-center gap-3">
+                  <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    heatmapSummary.avgScore >= 75 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' :
+                    heatmapSummary.avgScore >= 55 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                    'bg-red-100 dark:bg-red-900/30 text-red-600'
+                  }`}>
+                    Avg {heatmapSummary.avgScore}%
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              AI scores each timeline window for predicted viewer drop-off before you export.
+            </p>
+          </div>
+
+          <div className="p-6">
+            {heatmapLoading ? (
+              <div className="flex items-center gap-3 py-8 justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+                <span className="text-sm text-gray-500">Analyzing retention…</span>
+              </div>
+            ) : retentionHeatmap.length > 0 ? (
+              <div className="space-y-4">
+                {/* SVG Heatmap Bar */}
+                <div className="relative w-full h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <svg width="100%" height="100%" preserveAspectRatio="none">
+                    {retentionHeatmap.map((zone, i) => {
+                      const pct = 100 / retentionHeatmap.length
+                      const fill = zone.level === 'high' ? '#34d399' : zone.level === 'medium' ? '#fbbf24' : '#f87171'
+                      return (
+                        <rect
+                          key={i}
+                          x={`${i * pct}%`}
+                          y="0"
+                          width={`${pct}%`}
+                          height="100%"
+                          fill={fill}
+                          opacity={zone.level === 'low' ? 0.85 : 0.55}
+                        >
+                          <title>{zone.timeStart}s–{zone.timeEnd}s: {zone.score}% retention</title>
+                        </rect>
+                      )
+                    })}
+                  </svg>
+                  {/* Score labels */}
+                  <div className="absolute inset-0 flex items-center justify-around px-2 pointer-events-none">
+                    {retentionHeatmap.filter((_, i) => i % 2 === 0).map((zone, i) => (
+                      <span key={i} className="text-[9px] font-black text-white/80 drop-shadow">
+                        {zone.score}%
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Timeline labels */}
+                <div className="flex justify-between">
+                  <span className="text-[9px] text-gray-500">0:00</span>
+                  <span className="text-[9px] text-gray-500">
+                    {Math.floor(videoDuration / 60)}:{String(Math.round(videoDuration % 60)).padStart(2, '0')}
+                  </span>
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-4 text-[10px] text-gray-500">
+                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-400 inline-block" />High retention</div>
+                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />Medium</div>
+                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-400 inline-block" />Drop zone</div>
+                </div>
+
+                {/* Warnings */}
+                {retentionHeatmap.filter(z => z.warnings.length > 0).map((zone, i) => (
+                  <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                        ⚠ {zone.timeStart}s–{zone.timeEnd}s ({zone.score}% retention)
+                      </span>
+                      {zone.warnings.map((w, wi) => (
+                        <p key={wi} className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">{w}</p>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <Eye className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Add timeline segments to see the heatmap</p>
               </div>
             )}
           </div>

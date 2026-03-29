@@ -53,6 +53,43 @@ function getTemplateCategories() {
   return categories;
 }
 
+/**
+ * Suggest template IDs for the user based on workflow history (auto-adapt to user workflows).
+ * Returns template IDs in suggested order; use when no history, returns default order.
+ */
+async function getSuggestedTemplateIds(userId) {
+  const defaultOrder = ['content-to-posts', 'video-to-clips', 'script-to-quote'];
+  try {
+    const UserSettings = require('../models/UserSettings');
+    const lastUsed = await UserSettings.findOne({ userId: String(userId) }).lean();
+    const lastId = lastUsed?.preferences?.lastUsedWorkflowTemplateId;
+    if (lastId && WORKFLOW_TEMPLATES[lastId]) {
+      const rest = defaultOrder.filter(id => id !== lastId);
+      return [lastId, ...rest];
+    }
+  } catch (_) { /* ignore */ }
+  try {
+    const { getUserPreferences } = require('./workflowService');
+    const prefs = await getUserPreferences(userId);
+    const actions = prefs?.commonActions || {};
+    const platforms = prefs?.preferredPlatforms || [];
+    let ordered = [];
+    const contentScore = (actions.generate_content || 0) + (platforms.length > 1 ? 2 : 0);
+    const videoScore = actions.upload_video || actions.export || 0;
+    const scriptScore = actions.generate_script || actions.create_quote || 0;
+    if (videoScore >= contentScore && videoScore >= scriptScore) {
+      ordered = ['video-to-clips', 'content-to-posts', 'script-to-quote'];
+    } else if (scriptScore >= contentScore && scriptScore >= videoScore) {
+      ordered = ['script-to-quote', 'content-to-posts', 'video-to-clips'];
+    } else {
+      ordered = [...defaultOrder];
+    }
+    return ordered.filter(id => WORKFLOW_TEMPLATES[id]);
+  } catch (e) {
+    return defaultOrder;
+  }
+}
+
 async function createFromTemplate(userId, templateId, customizations = {}) {
   const template = WORKFLOW_TEMPLATES[templateId];
   if (!template) {
@@ -93,6 +130,7 @@ module.exports = {
   getWorkflowTemplates,
   getTemplateCategories,
   createFromTemplate,
+  getSuggestedTemplateIds,
 };
 
 

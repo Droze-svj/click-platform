@@ -4,8 +4,7 @@ const mongoose = require('mongoose');
 
 const workflowSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   teamId: {
@@ -116,7 +115,7 @@ workflowSchema.index({ userId: 1, frequency: -1 });
 workflowSchema.index({ isTemplate: true, frequency: -1 });
 workflowSchema.index({ teamId: 1 });
 
-workflowSchema.pre('save', function(next) {
+workflowSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

@@ -989,7 +989,7 @@ export default function CustomTemplateCreator({
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <Type className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p>No text overlays added yet</p>
-                      <p className="text-sm">Click "Add Text Overlay" to create custom text elements</p>
+                      <p className="text-sm">Click &quot;Add Text Overlay&quot; to create custom text elements</p>
                     </div>
                   )}
                 </div>

@@ -1,456 +1,487 @@
 'use client'
 
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import FileUpload from '../../../components/FileUpload'
-import LoadingSpinner from '../../../components/LoadingSpinner'
 import LoadingSkeleton from '../../../components/LoadingSkeleton'
-import ErrorAlert from '../../../components/ErrorAlert'
-import SuccessAlert from '../../../components/SuccessAlert'
-import EmptyState from '../../../components/EmptyState'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-import BatchVideoProcessor from '../../../components/BatchVideoProcessor'
-import { extractApiData, extractApiError } from '../../../utils/apiResponse'
+import { extractApiError } from '../../../utils/apiResponse'
 import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
-import { apiGet, API_URL } from '../../../lib/api'
-import { DynamicModernVideoEditor, DynamicEnhancedVideoEditor } from '../../../components/DynamicImports'
+import { apiGet } from '../../../lib/api'
+import {
+  Video, Upload, Edit, Play, Loader2, CheckCircle, AlertCircle,
+  RefreshCw, Layers, Clock, ArrowLeft, ArrowRight, ChevronRight,
+  Scissors, Zap, Sparkles, Activity, Fingerprint, Terminal, Cpu,
+  Globe, Target, Radio, Hexagon, X, ZapOff, Film, Gauge, ActivitySquare,
+  Monitor
+} from 'lucide-react'
+import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
+import { motion, AnimatePresence } from 'framer-motion'
+import ToastContainer from '../../../components/ToastContainer'
 
-// Lazy load heavy video components
-const ModernVideoEditor = lazy(() => import('../../../components/ModernVideoEditor'))
-const EnhancedVideoEditor = lazy(() => import('../../../components/EnhancedVideoEditor'))
-
-interface Video {
+interface VideoItem {
   _id: string
   title: string
-  status: string
-  originalFile: {
-    url: string
-  }
-  generatedContent?: {
-    shortVideos: Array<{
-      url: string
-      thumbnail: string
-      caption: string
-      duration: number
-      platform: string
-    }>
-  }
+  status: 'pending' | 'processing' | 'completed' | 'failed' | string
+  originalFile?: { url: string; filename?: string }
+  generatedContent?: { shortVideos: Array<{ url: string; thumbnail: string; caption: string; duration: number; platform: string }> }
   createdAt: string
 }
 
-export default function VideoPage() {
+const STATUS_CFG: Record<string, { label: string; dot: string; badge: string; icon: any; color: string }> = {
+  completed:  { label: 'KINETIC_MANIFESTED',    dot: 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: CheckCircle, color: 'text-emerald-400' },
+  processing: { label: 'KINETIC_SYNTHESIS',     dot: 'bg-indigo-500 animate-pulse shadow-[0_0_20px_rgba(99,102,241,0.5)]', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', icon: Loader2, color: 'text-indigo-400' },
+  pending:    { label: 'SYNTHESIS_QUEUE',      dot: 'bg-amber-500 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.5)]', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: Clock, color: 'text-amber-400' },
+  failed:     { label: 'KINETIC_COLLAPSE',      dot: 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20', icon: AlertCircle, color: 'text-rose-400' },
+}
+
+const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-1000'
+
+export default function KineticSynthesisHubPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
-  const [videos, setVideos] = useState<Video[]>([])
+  const [videos, setVideos] = useState<VideoItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [retryCount, setRetryCount] = useState(0)
-  const [isRetrying, setIsRetrying] = useState(false)
+  const [showSwarmHUD, setShowSwarmHUD] = useState(false)
+  const [swarmHUDTask, setSwarmHUDTask] = useState('')
 
-  const loadVideos = useCallback(async (isRetry = false) => {
-    if (isRetry) {
-      setIsRetrying(true)
-      setRetryCount(prev => prev + 1)
-    }
-
+  const loadSpectralInventory = useCallback(async () => {
     try {
-      const response = await apiGet<any>('/video')
-      const videos = response?.data || response || []
-      setVideos(Array.isArray(videos) ? videos : [])
-      setError('') // Clear any previous errors on success
-      setRetryCount(0) // Reset retry count on success
-    } catch (error: any) {
-      const errorObj = extractApiError(error)
-
-      // Handle different error types
-      if (error.name === 'DatabaseTimeoutError') {
-        setError('The server is temporarily unavailable. Videos will load automatically when the service is back online.')
-        // Try to reload after a delay if not already retrying too much
-        if (retryCount < 3) {
-          setTimeout(() => loadVideos(true), 10000)
-        }
-      } else if (error.response?.status === 500) {
-        setError('Server temporarily unavailable. You can try again or refresh the page.')
-      } else if (error.response?.status === 401) {
-        setError('Authentication expired. Please log in again.')
-        router.push('/login')
-      } else {
-        setError(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load videos')
-      }
-
-      // Still show empty state even on error
+      const res = await apiGet<any>('/video')
+      const body = res?.data ?? res
+      const videosData = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : []
+      setVideos(videosData)
+      setError('')
+      setRetryCount(0)
+    } catch (err: any) {
+      const e = extractApiError(err)
+      if (err?.response?.status === 401) { router.push('/login'); return }
+      setError(typeof e === 'string' ? e : e?.message || 'SPECTRAL_ERR: UPLINK_DIFFRACTION')
       setVideos([])
-    } finally {
-      setLoading(false)
-      setIsRetrying(false)
-    }
-  }, [router, retryCount])
-
-  const handleRetry = useCallback(() => {
-    setLoading(true)
-    setError('')
-    loadVideos(true)
-  }, [loadVideos])
+    } finally { setLoading(false) }
+  }, [router])
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
-    loadVideos()
-  }, [user, loadVideos])
+    if (authLoading) return
+    if (!user) { router.push('/login'); return }
+    loadSpectralInventory()
+  }, [user, authLoading, loadSpectralInventory, router])
 
-  // Listen for real-time video processing updates (global listener for any video)
-  // Note: This is a fallback for videos not currently being tracked in handleUpload
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 8000)
+    return () => clearTimeout(t)
+  }, [])
+
   useEffect(() => {
     if (!socket || !connected) return
-
-    const handleVideoProcessed = (data: any) => {
-      if (data.status === 'completed') {
-        setSuccess(`Video processing complete! ${data.clips || 0} clips generated.`)
-        // Reload videos after a short delay
-        setTimeout(() => {
-          loadVideos()
-        }, 500)
-      } else if (data.status === 'failed') {
-        setError('Video processing failed')
-        setTimeout(() => {
-          loadVideos()
-        }, 500)
-      }
+    const handler = (data: any) => {
+      if (data.status === 'completed') { setSuccess(`AXIOM_MANIFEST_COMPLETE: ${data.clips || 0} SPECTRAL_FRAGMENTS`); setTimeout(loadSpectralInventory, 500) }
+      else if (data.status === 'failed') { setError('NEURAL_SYNTHESIS_ABORTED: LOGIC_VOID'); setTimeout(loadSpectralInventory, 500) }
     }
+    on('video-processed', handler)
+    return () => off('video-processed', handler)
+  }, [socket, connected, on, off, loadSpectralInventory])
 
-    on('video-processed', handleVideoProcessed)
-
-    return () => {
-      off('video-processed', handleVideoProcessed)
-    }
-  }, [socket, connected, on, off, loadVideos])
-
-  // Auto-refresh videos every 30 seconds if there are processing videos
   useEffect(() => {
-    const hasProcessingVideos = videos.some(v => v.status === 'processing')
+    if (!videos.some(v => v.status === 'processing')) return
+    const id = setInterval(() => loadSpectralInventory(), 15000)
+    return () => clearInterval(id)
+  }, [videos, loadSpectralInventory])
 
-    if (!hasProcessingVideos) return
-
-    const refreshInterval = setInterval(() => {
-      loadVideos()
-    }, 30000) // Refresh every 30 seconds
-
-    return () => clearInterval(refreshInterval)
-  }, [videos, loadVideos])
-
-  // Define pollVideoStatus BEFORE handleUpload since handleUpload depends on it
-  const pollVideoStatus = useCallback(async (contentId: string, onComplete?: () => void) => {
-    let pollCount = 0
-    const maxPolls = 100 // Stop after 100 polls (5 minutes at 3s interval)
-    let isPolling = true
-
-    const interval = setInterval(async () => {
-      if (!isPolling || pollCount >= maxPolls) {
-        clearInterval(interval)
-        return
-      }
-
-      pollCount++
-
+  const pollSpectralStatus = useCallback(async (contentId: string, onComplete?: () => void) => {
+    let polls = 0; let active = true
+    const iv = setInterval(async () => {
+      if (!active || polls >= 100) { clearInterval(iv); return }
+      polls++
       try {
-        const response = await apiGet<any>(`/video/${contentId}/status`)
-
-        const status = response?.status || response?.data?.status
-        const progress = response?.progress || response?.data?.progress || 0
-
+        const res = await apiGet<any>(`/video/${contentId}/status`)
+        const status = res?.status || res?.data?.status
+        const progress = res?.progress || res?.data?.progress || 0
         if (status === 'completed') {
-          clearInterval(interval)
-          isPolling = false
-          setSuccess(`Video processing complete! ${response?.data?.clipsCount || 0} clips generated.`)
-          // Reload videos after a short delay to ensure backend has updated
-          setTimeout(() => {
-            loadVideos()
-          }, 500)
-          // Call onComplete callback if provided (for redirect)
-          if (onComplete) {
-            setTimeout(() => {
-              onComplete()
-            }, 1500)
-          }
+          clearInterval(iv); active = false
+          setSuccess(`MANIFEST_COMPLETE: ${res?.data?.clipsCount || 0} FRAGMENTS READY`)
+          setTimeout(loadSpectralInventory, 500)
+          if (onComplete) setTimeout(onComplete, 1500)
         } else if (status === 'failed') {
-          clearInterval(interval)
-          isPolling = false
-          setError('Video processing failed. Please try uploading again.')
-          await loadVideos()
-        } else if (status === 'processing') {
-          // Update success message with progress
-          if (progress > 0) {
-            setSuccess(`Video processing: ${progress}% complete...`)
-          }
-        }
-      } catch (error: any) {
-        // Log error but continue polling unless it's a 404 (video not found)
-        if (error.response?.status === 404) {
-          clearInterval(interval)
-          isPolling = false
-          setError('Video not found. Please try uploading again.')
-        } else if (pollCount >= 10) {
-          // After 10 failed polls, log warning but continue
-          console.warn('Video status polling encountered errors:', error)
-        }
+          clearInterval(iv); active = false; setError('NEURAL_COLLAPSE: RE-SYNTHESIS_REQUIRED')
+          loadSpectralInventory()
+        } else if (progress > 0) { setSuccess(`SPECTRAL_TUNING: ${progress}%_ALIGNMENT…`) }
+      } catch (err: any) { if (err?.response?.status === 404) { clearInterval(iv); active = false } }
+    }, 3000)
+    setTimeout(() => { active = false; clearInterval(iv); loadSpectralInventory() }, 300000)
+  }, [loadSpectralInventory])
+
+  const handleForgePayload = useCallback(async (_file: File, uploadResponse?: any) => {
+    setError(''); setSuccess('')
+    if (!uploadResponse) { setError('PAYLOAD_VOID: NULL_INGRESS'); return }
+    const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
+    if (!contentId) { setError('PAYLOAD_FRAGMENTED: MISSING_IDENTITY'); return }
+    setSuccess('PAYLOAD_INGESTED: INITIALIZING_SPECTRAL_SYNTHESIS…')
+    await loadSpectralInventory()
+    pollSpectralStatus(contentId, () => router.push(`/dashboard/video/edit/${contentId}`))
+    if (socket && connected) {
+      const handler = (data: any) => {
+        if (data.contentId !== contentId) return
+        if (data.status === 'completed') { setSuccess('MANIFEST_READY: DIVERTING_TO_CHAMBER_V2…'); setTimeout(() => router.push(`/dashboard/video/edit/${contentId}`), 1500); off('video-processed', handler) }
+        else if (data.status === 'failed') { setError('NEURAL_COLLAPSE: ABORT_SYNTHESIS'); loadSpectralInventory(); off('video-processed', handler) }
       }
-    }, 3000) // Poll every 3 seconds
-
-    // Stop polling after 5 minutes
-    setTimeout(() => {
-      if (isPolling) {
-        clearInterval(interval)
-        isPolling = false
-        // Final check and reload
-        loadVideos()
-      }
-    }, 300000)
-  }, [loadVideos, setSuccess, setError])
-
-  const handleUpload = useCallback(async (file: File, uploadResponse?: any) => {
-    setError('')
-    setSuccess('')
-
-    try {
-      // uploadResponse is provided from XMLHttpRequest in FileUpload component
-      if (uploadResponse) {
-        const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
-
-        if (!contentId) {
-          setError('Upload response missing content ID')
-          return
-        }
-
-        setSuccess('Video uploaded! Processing will begin shortly...')
-
-        // Reload videos immediately to show the new upload
-        await loadVideos()
-
-        // Always start polling, socket.io will supplement it if connected
-        // Poll until video is ready, then redirect to edit page
-        pollVideoStatus(contentId, () => {
-          // Redirect to edit page after processing completes
-          router.push(`/dashboard/video/edit/${contentId}`)
-        })
-
-        // Also set up socket listener for this specific video if connected
-        if (socket && connected) {
-          const handleVideoProcessed = (data: any) => {
-            if (data.contentId === contentId) {
-              if (data.status === 'completed') {
-                setSuccess(`Video processing complete! Redirecting to editor...`)
-                // Redirect to edit page after short delay
-                setTimeout(() => {
-                  router.push(`/dashboard/video/edit/${contentId}`)
-                }, 1500)
-                // Clean up listener when completed
-                off('video-processed', handleVideoProcessed)
-              } else if (data.status === 'failed') {
-                setError('Video processing failed')
-                loadVideos()
-                // Clean up listener on failure
-                off('video-processed', handleVideoProcessed)
-              }
-            }
-          }
-
-          on('video-processed', handleVideoProcessed)
-
-          // Clean up listener after 5 minutes as a safety measure
-          setTimeout(() => {
-            off('video-processed', handleVideoProcessed)
-          }, 300000)
-        }
-      } else {
-        // This should not happen when uploadUrl is provided to FileUpload
-        // But keep as fallback
-        setError('Upload response not received')
-      }
-    } catch (error: any) {
-      setError(error.response?.data?.error || error.message || 'Upload failed')
+      on('video-processed', handler)
+      setTimeout(() => off('video-processed', handler), 300000)
     }
-  }, [socket, connected, on, off, loadVideos, pollVideoStatus, router])
+  }, [socket, connected, on, off, loadSpectralInventory, pollSpectralStatus, router])
+
+  const getStatusCfg = (status: string) => STATUS_CFG[status as keyof typeof STATUS_CFG] || STATUS_CFG.pending
+
+  const completedCount = videos.filter(v => v.status === 'completed').length
+  const processingCount = videos.filter(v => v.status === 'processing' || v.status === 'pending').length
+  const totalClips = videos.reduce((sum, v) => sum + (v.generatedContent?.shortVideos?.length || 0), 0)
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen gap-12 backdrop-blur-3xl">
+       <div className="relative">
+          <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
+          <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
+       </div>
+       <div className="space-y-4 text-center">
+          <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Calibrating Kinetic Synthesis Hub...</p>
+          <p className="text-[10px] font-black text-slate-1000 uppercase tracking-[0.4em] leading-none">HIGH_FIDELITY_UPLINK_ACTIVE</p>
+       </div>
+    </div>
+  )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-surface-page transition-colors duration-300">
-        <div className="container mx-auto px-4 py-8">
-          {loading ? (
-            <div className="mb-8">
-              <LoadingSkeleton type="card" count={3} />
+      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-20">
+        <ToastContainer />
+        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
+           <Video size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
+        </div>
+
+        <SwarmConsensusHUD 
+          isVisible={showSwarmHUD} 
+          taskName={swarmHUDTask} 
+          onComplete={() => setShowSwarmHUD(false)} 
+        />
+
+        {/* Kinetic Header */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
+           <div className="flex items-center gap-12">
+              <button 
+                onClick={() => router.push('/dashboard')} 
+                title="Abort Synthesis Session"
+                className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-900 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
+                <ArrowLeft size={40} />
+              </button>
+              <div className="w-24 h-24 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl relative group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
+                <Film size={48} className="text-indigo-400 relative z-10 group-hover:rotate-180 transition-transform duration-1000" />
+              </div>
+              <div>
+                 <div className="flex items-center gap-6 mb-4">
+                   <div className="flex items-center gap-4">
+                      <Cpu size={16} className="text-indigo-400 animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Kinetic Synthesis Hub v12.4</span>
+                   </div>
+                   <div className="flex items-center gap-4 px-5 py-2 rounded-full bg-black/40 border border-white/5 shadow-inner">
+                       <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] animate-ping" />
+                       <span className="text-[10px] font-black text-slate-1000 tracking-[0.3em] uppercase italic leading-none">SYNTHESIS_ACTIVE</span>
+                   </div>
+                 </div>
+                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">KINETIC_SYNTHESIS</h1>
+                 <p className="text-slate-1000 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">High-fidelity kinematic node for autonomous motion synthesis and visual logic.</p>
+              </div>
+           </div>
+
+           <button 
+             onClick={() => {
+               setSwarmHUDTask('Recalibrating Kinetic Nodes')
+               setShowSwarmHUD(true)
+               loadSpectralInventory()
+             }} 
+             title="Recalibrate Synthesis Matrix"
+             className="px-16 py-8 bg-white/[0.02] border-2 border-white/10 text-slate-400 hover:text-white hover:bg-white/[0.05] rounded-[3rem] text-[14px] font-black uppercase tracking-[0.4em] shadow-3xl transition-all duration-1000 flex items-center gap-8 italic group relative overflow-hidden"
+           >
+             <div className="absolute inset-0 bg-indigo-500/10 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-1000" />
+             <div className="relative z-10 flex items-center gap-6">
+                <RefreshCw size={32} className={(loading) ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000'} />
+                RE-CALIBRATE_SYNTHESIS_MATRIX
+             </div>
+           </button>
+        </div>
+
+        {/* Neural Intel HUD */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
+          {[
+            { label: 'Active Matrices', value: videos.length, icon: Layers, color: 'text-indigo-400', bg: 'bg-indigo-500/5' },
+            { label: 'Kinetic Manifests', value: completedCount, icon: ActivitySquare, color: 'text-emerald-400', bg: 'bg-emerald-500/5' },
+            { label: 'Kinetic Fragments', value: totalClips, icon: Sparkles, color: 'text-rose-400', bg: 'bg-rose-500/5' },
+          ].map(s => (
+            <div key={s.label} className={`${glassStyle} rounded-[5rem] p-16 flex flex-col items-center text-center group hover:bg-white/[0.04] shadow-[0_50px_100px_rgba(0,0,0,0.5)] relative overflow-hidden`}>
+               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+               <div className={`w-24 h-24 ${s.bg} rounded-[2.5rem] flex items-center justify-center mb-10 border border-white/10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000 shadow-3xl relative z-10`}>
+                  <s.icon size={48} className={s.color} />
+               </div>
+               <div className={`text-8xl font-black italic tabular-nums leading-none tracking-tighter mb-6 relative z-10 ${s.color}`}>{s.value}</div>
+               <div className="text-[14px] text-slate-1000 font-black uppercase tracking-[0.6em] italic leading-none relative z-10">{s.label}</div>
             </div>
-          ) : (
-            <>
-              {/* Hero Section */}
-              <div className="mb-8">
-                <div className="text-center mb-8">
-                  <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                    <span className="gradient-text">Video Processing</span>
-                  </h1>
-                  <p className="text-lg text-theme-secondary max-w-2xl mx-auto">
-                    Upload long-form videos and get optimized short-form clips with AI-powered editing
-                  </p>
-                </div>
-              </div>
+          ))}
+        </div>
 
-              {error && (
-                <div className="mb-4">
-                  <ErrorAlert message={error} onClose={() => setError('')} />
-                  {(error.includes('temporarily unavailable') || error.includes('Server temporarily unavailable')) && (
-                    <div className="mt-4 text-center">
-                      <button
-                        onClick={handleRetry}
-                        disabled={isRetrying || loading}
-                        className="btn-modern btn-modern-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isRetrying ? 'Retrying...' : 'Try Again'}
-                      </button>
-                      {retryCount > 0 && (
-                        <p className="text-sm text-theme-muted mt-2">
-                          Retry attempt {retryCount}/3
-                        </p>
+        {/* Global Alerts Terminal */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-50 flex items-start gap-10 p-12 bg-rose-500/5 border border-rose-500/20 rounded-[4rem] shadow-2xl backdrop-blur-3xl overflow-hidden group">
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-rose-500 group-hover:h-2 transition-all" />
+              <div className="w-20 h-20 rounded-[2rem] bg-rose-500/20 flex items-center justify-center flex-shrink-0 animate-pulse text-rose-500 shadow-2xl">
+                <AlertCircle size={40} />
+              </div>
+              <div className="flex-1 space-y-3">
+                <p className="text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] italic leading-none">MATRIX_EXCEPTION_LOGGED</p>
+                <p className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">{error}</p>
+                <p className="text-[11px] text-slate-800 font-black uppercase tracking-[0.2em] italic">System integrity compromised. Recalibration of the neural seeder required for synthesis stability.</p>
+              </div>
+              <div className="flex items-center gap-6">
+                <button onClick={() => { setError(''); loadSpectralInventory() }} className="px-12 py-5 bg-rose-600 text-white rounded-[1.8rem] text-[12px] font-black uppercase tracking-[0.3em] hover:bg-rose-500 transition-all shadow-2xl italic active:scale-95">REBOOT_CORE_PROTOCOL</button>
+                <button onClick={() => setError('')} className="p-6 bg-white/5 border border-white/10 text-slate-800 hover:text-white rounded-[1.8rem] transition-all"><X size={28} /></button>
+              </div>
+            </motion.div>
+          )}
+          {success && (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative z-50 flex items-start gap-10 p-12 bg-emerald-500/5 border border-emerald-500/20 rounded-[4rem] shadow-2xl backdrop-blur-3xl overflow-hidden group">
+              <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500 group-hover:h-2 transition-all" />
+              <div className="w-20 h-20 rounded-[2rem] bg-emerald-500/20 flex items-center justify-center flex-shrink-0 text-emerald-500 shadow-2xl">
+                <CheckCircle size={40} />
+              </div>
+              <div className="flex-1 space-y-3">
+                <p className="text-[12px] font-black text-emerald-500 uppercase tracking-[0.5em] italic leading-none">SPECTRAL_SYNC_COMPLETE</p>
+                <p className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">{success}</p>
+                <p className="text-[11px] text-slate-800 font-black uppercase tracking-[0.2em] italic">Consensus reached. Payload has been successfully manifested into the spectral chamber.</p>
+              </div>
+              <button onClick={() => setSuccess('')} className="p-6 bg-white/5 border border-white/10 text-slate-800 hover:text-white rounded-[1.8rem] transition-all"><X size={28} /></button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Kinetic Ingress Terminal */}
+        <div className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 border-indigo-500/10 group shadow-[0_100px_300px_rgba(0,0,0,0.8)]`}>
+          <div className="bg-indigo-600 p-20 relative overflow-hidden">
+             <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, white, transparent 60%)' }} />
+             <div className="absolute -top-40 -right-40 opacity-[0.05] pointer-events-none group-hover:rotate-180 transition-transform duration-[3s]"><Upload size={600} /></div>
+             
+             <div className="relative flex flex-col xl:flex-row items-center justify-between gap-16 z-10">
+                <div className="flex items-center gap-12">
+                   <div className="w-32 h-32 bg-white/10 rounded-[3.5rem] flex items-center justify-center shadow-[0_50px_150px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-1000 border-2 border-white/20"><Upload size={64} className="text-white" /></div>
+                   <div>
+                      <p className="text-white/40 text-[14px] font-black uppercase tracking-[0.8em] mb-4 italic leading-none">INGRESS_TERMINAL_V12</p>
+                      <h2 className="text-white font-black italic uppercase tracking-tighter text-8xl leading-none mb-6">Deploy Kinetic Source</h2>
+                      <p className="text-white/60 text-[16px] font-black uppercase tracking-[0.4em] italic leading-none">Upload cinematic source for kinetic synthesis and logic manifestation.</p>
+                   </div>
+                </div>
+                <div className="hidden lg:flex items-center gap-16 text-white/40 text-[12px] font-black uppercase tracking-widest italic border-l-2 border-white/10 pl-16 h-24">
+                  <div className="flex flex-col gap-5">
+                     <div className="flex items-center gap-4"><Fingerprint size={24} className="text-indigo-300" /> HASH_VERIFY: SECURE</div>
+                     <div className="flex items-center gap-4"><Monitor size={24} className="text-indigo-300" /> MAX_INGRESS: 1GB</div>
+                  </div>
+                </div>
+             </div>
+          </div>
+          <div className="p-20 bg-black/40 backdrop-blur-3xl">
+            <FileUpload
+              onUpload={(file, res) => {
+                setSwarmHUDTask('Analyzing Kinetic Nodes & Temporal Logic')
+                setShowSwarmHUD(true)
+                handleForgePayload(file, res)
+              }}
+              uploadUrl="/api/video/upload"
+              accept={{ 'video/*': ['.mp4', '.mov', '.avi', '.mkv', '.webm'] }}
+              maxSize={1073741824}
+            />
+          </div>
+        </div>
+
+        {/* Kinetic Sequence Matrix */}
+        {videos.length > 0 && (
+          <div className="space-y-20 relative z-10 pt-16">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-12 border-b-2 border-white/5 pb-16">
+              <div className="flex items-center gap-12">
+                 <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Layers size={40} className="text-indigo-400" /></div>
+                 <div>
+                    <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Kinetic Sequence Matrix</h2>
+                    <p className="text-slate-1000 text-[14px] font-black uppercase tracking-[0.6em] italic leading-none">({videos.length}_SYNCHRONIZED_PARTICLES_DETECTED)</p>
+                 </div>
+              </div>
+              {processingCount > 0 && (
+                <div className="px-10 py-5 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 text-indigo-400 text-[12px] font-black uppercase tracking-[0.4em] italic animate-pulse flex items-center gap-5 shadow-2xl">
+                  <ActivitySquare size={20} /> {processingCount} ACTIVE_SYNTHESES_IN_PROGRESS
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-16">
+              {videos.map(video => {
+                const cfg = getStatusCfg(video.status)
+                const clips = video.generatedContent?.shortVideos || []
+                const videoSrc = video.originalFile?.url
+
+                return (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ y: -20, scale: 1.02 }}
+                    key={video._id}
+                    className={`${glassStyle} rounded-[5rem] overflow-hidden group hover:bg-white/[0.05] flex flex-col hover:border-indigo-500/30 shadow-[0_100px_300px_rgba(0,0,0,1)] relative`}
+                  >
+                    <div className="aspect-video relative bg-[#020205] overflow-hidden border-b-2 border-white/5">
+                      {videoSrc ? (
+                        <video
+                          src={videoSrc}
+                          className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-[2s] opacity-60 group-hover:opacity-100"
+                          preload="metadata"
+                          playsInline
+                          muted
+                          onMouseEnter={e => (e.currentTarget as HTMLVideoElement).play().catch(() => {})}
+                          onMouseLeave={e => { const v = e.currentTarget as HTMLVideoElement; v.pause(); v.currentTime = 0 }}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center opacity-[0.05]">
+                          <Film size={160} className="text-white" />
+                        </div>
                       )}
-                    </div>
-                  )}
-                </div>
-              )}
 
-              {success && (
-                <div className="mb-4">
-                  <SuccessAlert message={success} onClose={() => setSuccess('')} />
-                </div>
-              )}
-
-              <div className="card-modern p-6 md:p-8 mb-8">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold mb-2 gradient-text">Upload Video</h2>
-                  <p className="text-theme-secondary">
-                    {uploading ? 'Uploading video...' : 'Drag and drop a video file or click to select'}
-                  </p>
-                </div>
-                <FileUpload
-                  onUpload={handleUpload}
-                  uploadUrl="/api/video/upload"
-                  accept={{ 'video/*': ['.mp4', '.mov', '.avi', '.mkv', '.webm'] }}
-                  maxSize={1073741824}
-                  disabled={uploading}
-                />
-                <div className="mt-4 flex justify-center">
-                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                    <span>Supports MP4, MOV, AVI, MKV, WebM</span>
-                    <span>•</span>
-                    <span>Max 1GB</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card-modern p-6 md:p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold gradient-text">Your Videos</h2>
-                  <div className="flex items-center gap-2 text-sm text-theme-muted">
-                    <span>{videos.length} videos</span>
-                  </div>
-                </div>
-
-                {videos.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🎥</div>
-                    <h3 className="text-xl font-semibold mb-2 text-theme-primary">No videos uploaded yet</h3>
-                    <p className="text-theme-secondary mb-6">
-                      Upload your first video to get started with automatic clip generation
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map((video) => (
-                      <div
-                        key={video._id}
-                        className="card-modern group cursor-pointer animate-fade-in"
-                        onClick={() => router.push(`/dashboard/video/edit/${video._id}`)}
-                      >
-                        <div className="p-6">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${video.status === 'completed'
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                : video.status === 'processing'
-                                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                  : video.status === 'failed'
-                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                              }`}>
-                              {video.status}
-                            </span>
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </div>
-                          </div>
-
-                          <h3 className="font-semibold text-lg mb-2 text-theme-primary group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {video.title || 'Untitled Video'}
-                          </h3>
-
-                          {video.generatedContent?.shortVideos && (
-                            <div className="flex items-center gap-2 text-sm text-theme-secondary mb-4">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                              <span>{video.generatedContent.shortVideos.length} clips generated</span>
-                            </div>
-                          )}
-
-                          <div className="flex gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                router.push(`/dashboard/video/edit/${video._id}`)
-                              }}
-                              className="flex-1 btn-modern btn-modern-primary"
-                            >
-                              <span>Edit Video</span>
-                              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                          </div>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-1000 bg-indigo-950/20 backdrop-blur-3xl">
+                        <div className="w-28 h-28 rounded-[3rem] bg-white text-black flex items-center justify-center shadow-[0_50px_150px_rgba(255,255,255,0.2)] scale-90 group-hover:scale-100 transition-transform duration-1000">
+                          <Play size={48} className="fill-current ml-2" />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+
+                      <div className="absolute top-10 left-10">
+                        <div className={`flex items-center gap-5 px-8 py-4 rounded-[2rem] border-2 text-[12px] font-black uppercase tracking-[0.3em] backdrop-blur-3xl shadow-3xl ${cfg.badge}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full ${cfg.dot}`} />
+                          {cfg.label}
+                        </div>
+                      </div>
+
+                      {clips.length > 0 && (
+                        <div className="absolute top-10 right-10 flex items-center gap-5 px-8 py-4 rounded-[2rem] bg-black/80 backdrop-blur-3xl border-2 border-white/10 text-white text-[12px] font-black uppercase tracking-[0.3em] shadow-3xl">
+                          <Scissors size={24} className="text-indigo-400 animate-pulse" /> {clips.length} FRAGMENTS
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-16 space-y-12 flex-1 flex flex-col justify-between relative z-10">
+                      <div className="space-y-6">
+                        <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter truncate leading-none group-hover:text-indigo-400 transition-colors duration-1000">
+                          {video.title.toUpperCase() || 'UNTITLED_PARTICLE'}
+                        </h3>
+                        <div className="flex items-center justify-between border-t border-white/5 pt-8">
+                           <div className="flex items-center gap-4 text-[12px] font-black text-slate-1000 uppercase tracking-widest italic leading-none">
+                             <Clock size={20} className="text-indigo-400" /> {new Date(video.createdAt).toLocaleDateString()}
+                           </div>
+                           <div className="flex items-center gap-4 text-[12px] font-black text-slate-1000 uppercase tracking-widest italic leading-none opacity-40">
+                             ID: {video._id.slice(-8).toUpperCase()}
+                           </div>
+                        </div>
+                      </div>
+
+                      {(video.status === 'processing' || video.status === 'pending') && (
+                        <div className="space-y-8 p-10 rounded-[3rem] bg-indigo-500/[0.05] border-2 border-indigo-500/20 shadow-inner">
+                          <div className="flex justify-between items-center mb-4">
+                             <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.5em] italic leading-none animate-pulse">Kinetic Alignment Mapping...</p>
+                             <Loader2 size={24} className="text-indigo-400 animate-spin" />
+                          </div>
+                          <div className="h-3 bg-black/80 rounded-full overflow-hidden border-2 border-white/10 shadow-inner">
+                              <motion.div 
+                                animate={{ x: ['-100%', '100%'] }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                                className="h-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent w-full shadow-[0_0_30px_rgba(99,102,241,0.8)]" 
+                              />
+                          </div>
+                          <p className="text-[10px] font-black text-slate-1000 uppercase tracking-[0.4em] italic leading-none text-center">Neural weights manifesting temporal logic clusters...</p>
+                        </div>
+                      )}
+
+                      <div className="flex gap-8 pt-12 border-t-2 border-white/5">
+                        <button
+                          onClick={() => {
+                            setSwarmHUDTask('Inference Matrix Startup')
+                            setShowSwarmHUD(true)
+                            setTimeout(() => router.push(`/dashboard/video/edit/${video._id}`), 1000)
+                          }}
+                          title="Initialize Forge Chamber"
+                          className="flex-1 flex items-center justify-center gap-6 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[2.5rem] text-[15px] font-black uppercase tracking-[0.5em] transition-all duration-1000 shadow-[0_50px_100px_rgba(255,255,255,0.1)] italic active:scale-95 group relative overflow-hidden"
+                        >
+                          <Terminal size={32} className="group-hover:scale-125 transition-transform duration-1000 relative z-10" /> 
+                          <span className="relative z-10">OPEN_FORGE_CHAMBER</span>
+                        </button>
+                        {clips.length > 0 && (
+                          <button
+                            onClick={() => router.push(`/dashboard/video/edit/${video._id}?tab=clips`)}
+                            className="w-24 h-24 bg-white/[0.03] border-2 border-white/10 text-slate-900 hover:bg-emerald-500 hover:text-white rounded-[2.5rem] flex items-center justify-center transition-all duration-1000 shadow-3xl group"
+                            title="Extract Kinetic Fragments"
+                          >
+                            <Target size={40} className="group-hover:rotate-180 transition-transform duration-1000" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Empty Horizon Chamber */}
+        {videos.length === 0 && !loading && (
+          <div className="py-80 text-center bg-white/[0.01] border-2 border-white/5 rounded-[8rem] shadow-3xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+            <div className="w-64 h-64 mx-auto bg-white/[0.02] border-2 border-white/10 rounded-[5rem] flex items-center justify-center mb-16 shadow-inner group-hover:scale-110 group-hover:rotate-180 transition-all duration-[2s]">
+              <Film size={120} className="text-slate-1000 opacity-20 group-hover:opacity-100 group-hover:text-indigo-500 transition-all duration-1000" />
+            </div>
+            <h3 className="text-7xl font-black text-white italic uppercase tracking-tighter mb-8 leading-none">Synthesis Void Occupied</h3>
+            <p className="text-[18px] text-slate-1000 font-black uppercase tracking-[0.5em] max-w-3xl mx-auto leading-tight italic opacity-60">Your sovereign cinematic matrix is awaiting source payloads. Ingest a cinematic object to initialize synthesis.</p>
+          </div>
+        )}
+
+        {/* Kinetic Heuristic Matrix */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10 pt-32">
+          {[
+            { icon: Zap,      color: 'text-amber-400',  title: 'Neural Detection',    desc: 'Swarm consensus identifying peak retention clusters via logic heatmaps.' },
+            { icon: Scissors, color: 'text-indigo-400', title: 'Kinetic Synthesis',    desc: 'AI-driven temporal slicing for max-saturation platform dominance.' },
+            { icon: Sparkles, color: 'text-rose-400', title: 'Sovereign Audio',   desc: 'Recursive regional dubbing & lip-sync for infinite resonance.' },
+          ].map(f => (
+            <div key={f.title} className={`${glassStyle} rounded-[5rem] p-16 flex flex-col items-center text-center group hover:border-indigo-500/30 shadow-inner relative overflow-hidden`}>
+               <div className="absolute inset-x-0 bottom-0 h-2 bg-indigo-500/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-1000" />
+              <div className={`w-28 h-28 rounded-[3rem] flex items-center justify-center bg-white/5 border-2 border-white/10 mb-12 group-hover:scale-110 group-hover:rotate-180 transition-all duration-1000 shadow-3xl`}>
+                <f.icon size={56} className={f.color} />
               </div>
-
-
-              {/* Batch Processing Section */}
-              {videos.length > 0 && (
-                <div className="mt-8">
-                  <BatchVideoProcessor
-                    videos={videos.map(v => ({
-                      id: v._id,
-                      name: v.title,
-                      url: `${v.originalFile?.url || ''}`
-                    }))}
-                    onBatchComplete={(results) => {
-                      const successful = results.filter(r => r.status === 'completed').length
-                      const failed = results.filter(r => r.status === 'failed').length
-                      setSuccess(`Batch processing completed: ${successful} successful, ${failed} failed`)
-                      loadVideos() // Refresh the video list
-                    }}
-                  />
-                </div>
-              )}
-            </>
-          )}
+              <p className="text-4xl font-black text-white italic uppercase tracking-tighter mb-6 leading-none group-hover:text-indigo-400 transition-colors duration-1000">{f.title}</p>
+              <p className="text-[14px] text-slate-1000 font-black uppercase tracking-[0.4em] leading-tight italic opacity-40 group-hover:opacity-100 transition-opacity duration-1000 px-8">{f.desc}</p>
+            </div>
+          ))}
         </div>
+
+        <style jsx global>{`
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+          
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: #020205;
+            color: white;
+            overflow-x: hidden;
+          }
+
+          video::-webkit-media-controls {
+            display: none !important;
+          }
+        `}</style>
       </div>
     </ErrorBoundary>
   )
 }
-

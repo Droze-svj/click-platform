@@ -4,85 +4,86 @@ const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = requ
 const logger = require('../utils/logger');
 
 /**
- * Generate YouTube video script
+ * Generate YouTube video script with Strategic Upgrades (Phase 11)
+ * Includes: 3-Hook A/B Testing, Trend Integration, and Pacing Heatmaps
  */
 async function generateYouTubeScript(topic, options = {}) {
+  const liveTrendService = require('./liveTrendService');
+  const trends = await liveTrendService.getLatestTrends(options.platform || 'tiktok');
+  const strategy = await liveTrendService.getTrendStrategy(trends);
+
   if (!geminiConfigured) {
     logger.warn('Google AI API key not configured, using fallback script');
     return generateFallbackScript('youtube', topic, options);
   }
 
   const {
-    duration = 10, // minutes
-    tone = 'professional',
+    duration = 10,
+    tone = strategy.recommendedTone || 'professional',
     targetAudience = 'general audience',
-    includeIntro = true,
-    includeCTA = true,
-    keywords = []
   } = options;
-
-  const keywordsLine = Array.isArray(keywords) && keywords.length > 0
-    ? `\n- Incorporate these keywords naturally where relevant: ${keywords.slice(0, 10).join(', ')}.`
-    : '';
 
   try {
     const prompt = `Create a ${duration}-minute YouTube video script about "${topic}".
 
-Requirements:
-- Target audience: ${targetAudience}
-- Tone: ${tone}
-- ${includeIntro ? 'Include engaging introduction' : 'Start with main content'}
-- ${includeCTA ? 'Include call-to-action at the end' : 'No call-to-action needed'}
-- Include timestamps for each section
-- Make it engaging and conversational
-- Include 3-5 main points
-- Add natural transitions between sections
-- Word count: approximately ${duration * 150} words (150 words per minute)${keywordsLine}
+    Current Trend Strategy: ${strategy.mold} (${strategy.explanation})
 
-Format the script as JSON with this structure:
-{
-  "title": "Script title",
-  "introduction": "Introduction text",
-  "mainPoints": [
+    Requirements:
+    - Target audience: ${targetAudience}
+    - Tone: ${tone}
+    - Include 3 distinct "3-Second Hooks" (Visual/Audio combinations)
+    - Provide an "Engagement Score" (1-100) for each hook based on current trends.
+    - Break the script into segments with word counts for pacing analysis.
+    - Word count: approximately ${duration * 150} words.
+
+    Format the script as JSON:
     {
-      "title": "Point title",
-      "content": "Point content",
-      "duration": 2
-    }
-  ],
-  "conclusion": "Conclusion text",
-  "callToAction": "CTA text",
-  "keywords": ["keyword1", "keyword2"],
-  "hashtags": ["#hashtag1", "#hashtag2"],
-  "timestamps": [
-    {"time": "0:00", "section": "Introduction"},
-    {"time": "2:00", "section": "Main Point 1"}
-  ]
-}`;
+      "title": "Script title",
+      "strategyMold": "${strategy.mold}",
+      "hooks": [
+        { "hook": "Variant 1 text", "visual": "Visual description", "engagementScore": 85 },
+        { "hook": "Variant 2 text", "visual": "Visual description", "engagementScore": 92 },
+        { "hook": "Variant 3 text", "visual": "Visual description", "engagementScore": 78 }
+      ],
+      "segments": [
+        { "title": "Intro", "content": "Text...", "duration": 0.5, "words": 75 },
+        { "title": "Point 1", "content": "Text...", "duration": 2, "words": 300 }
+      ],
+      "conclusion": "Conclusion text",
+      "callToAction": "CTA text",
+      "hashtags": ["#ht1", "#ht2"]
+    }`;
 
-    const fullPrompt = `You are an expert scriptwriter specializing in engaging video content.\n\n${prompt}`;
-    const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
-    if (!content) throw new Error('No response from AI');
+    const content = await geminiGenerate(prompt, { temperature: 0.8, maxTokens: 3000 });
     const script = JSON.parse(content);
 
+    // Calculate Pacing Heatmap
+    const pacingHeatmap = script.segments.map(s => {
+      const density = s.words / (s.duration * 60); // words per second
+      return {
+        section: s.title,
+        density,
+        status: density > 3 ? 'too-dense' : density < 1.5 ? 'too-slow' : 'optimal',
+        recommendation: density > 3 ? 'Add B-roll to break up text' : density < 1.5 ? 'Increase energy or add music' : 'Maintain pacing'
+      };
+    });
+
     // Combine into full script text
-    let fullScript = script.introduction + '\n\n';
-    script.mainPoints.forEach((point, index) => {
-      fullScript += `${point.title}\n${point.content}\n\n`;
+    let fullScript = (script.segments[0]?.content || '') + '\n\n';
+    script.segments.slice(1).forEach(s => {
+      fullScript += `${s.title}\n${s.content}\n\n`;
     });
     fullScript += script.conclusion;
-    if (script.callToAction) {
-      fullScript += `\n\n${script.callToAction}`;
-    }
 
     return {
       ...script,
       script: fullScript,
+      pacingHeatmap,
       wordCount: fullScript.split(/\s+/).length,
       duration
     };
   } catch (error) {
-    logger.error('YouTube script generation error', { error: error.message, topic });
+    logger.error('Strategic YouTube script error', { error: error.message, topic });
     return generateFallbackScript('youtube', topic, options);
   }
 }

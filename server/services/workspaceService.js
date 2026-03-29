@@ -23,6 +23,7 @@ async function createWorkspace(userId, workspaceData) {
       name,
       type,
       ownerId: userId,
+      userId: userId,
       members: [{
         userId,
         role: 'owner',
@@ -58,7 +59,7 @@ async function createWorkspace(userId, workspaceData) {
     await logAudit(userId, 'workspace_created', 'workspace', workspace._id, {
       workspaceName: name,
       workspaceType: type
-    }, workspaceId = workspace._id);
+    }, workspace._id);
 
     logger.info('Workspace created', { userId, workspaceId: workspace._id, type });
     return workspace;
@@ -758,7 +759,7 @@ async function generateComplianceReport(workspaceId, reportType = 'gdpr') {
       // Data inventory
       const Content = require('../models/Content');
       const User = require('../models/User');
-      
+
       const contentCount = await Content.countDocuments({
         userId: { $in: workspace.members.map(m => m.userId) }
       });

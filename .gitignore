@@ -17,3 +17,5 @@ logs/
 # Generated assignment (ephemeral)
 ASSIGNMENT_READY.md
 node_modules/
+.aider*
+.env.production

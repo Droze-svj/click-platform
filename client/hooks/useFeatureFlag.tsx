@@ -24,6 +24,7 @@ export function useFeatureFlag(featureName: string) {
         }
 
         const response = await fetch(`/api/feature-flags/${featureName}`, {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
           credentials: 'include',
@@ -49,11 +50,11 @@ export function useFeatureFlag(featureName: string) {
   return { enabled, loading, error }
 }
 
-export function FeatureFlag({ 
-  feature, 
-  children, 
-  fallback = null 
-}: { 
+export function FeatureFlag({
+  feature,
+  children,
+  fallback = null
+}: {
   feature: string
   children: React.ReactNode
   fallback?: React.ReactNode | null

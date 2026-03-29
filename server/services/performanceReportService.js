@@ -5,8 +5,6 @@ const ScheduledPost = require('../models/ScheduledPost');
 const AudienceGrowth = require('../models/AudienceGrowth');
 const { getAggregatedPerformanceMetrics } = require('./socialPerformanceMetricsService');
 const { getAudienceGrowthTrends } = require('./socialPerformanceMetricsService');
-const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
 const logger = require('../utils/logger');
 
 /**
@@ -20,6 +18,7 @@ async function generatePerformanceReportExcel(workspaceId, filters = {}) {
       platform = null
     } = filters;
 
+    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
 
     // Summary Sheet
@@ -99,6 +98,7 @@ async function generatePerformanceReportPDF(workspaceId, filters = {}) {
 
     const metrics = await getAggregatedPerformanceMetrics(workspaceId, { startDate, endDate, platform });
 
+    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
     const chunks = [];
 

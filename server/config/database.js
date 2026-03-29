@@ -1,5 +1,5 @@
 // Database Configuration - Supports both Supabase and MongoDB during migration
-const { supabase, prisma, isSupabaseConfigured, isPrismaConfigured } = require('./supabase');
+const { supabase, prisma, isPrismaConfigured } = require('./supabase');
 const mongoose = require('mongoose');
 
 // Database connection status
@@ -38,6 +38,7 @@ const initSupabase = async () => {
 
 // Initialize Prisma connection
 const initPrisma = async () => {
+  // Check if prisma module is even available first
   if (isPrismaConfigured()) {
     try {
       await prisma.$connect();
@@ -47,8 +48,9 @@ const initPrisma = async () => {
     } catch (error) {
       console.error('❌ Prisma connection error:', error.message);
     }
-  } else {
-    console.warn('⚠️ Prisma not configured. Set DATABASE_URL');
+  } else if (process.env.DATABASE_URL) {
+    // Only warn if they tried to set a URL but config says it's not ready
+    console.warn('⚠️ Prisma configured with URL but client not initialized.');
   }
   return false;
 };
@@ -60,6 +62,7 @@ const initMongoDB = async () => {
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // 5 second timeout
     });
     databaseStatus.mongodb = true;
     console.log('✅ MongoDB connected successfully');
@@ -82,15 +85,19 @@ const initDatabases = async () => {
 
   // MongoDB – required for Workflow, Team, ScheduledPost, Content (Mongoose models)
   // Always init when MONGODB_URI is set, regardless of Supabase/Prisma
-  const mongoUri = process.env.MONGODB_URI?.trim();
+  const mongoUri = (process.env.MONGODB_URI || process.env.MONGO_URI)?.trim();
+  let mongodbConnected = false;
   if (mongoUri) {
-    await initMongoDB();
+    mongodbConnected = await initMongoDB();
   } else if (!supabaseConnected && !prismaConnected) {
     console.log('⚠️ No modern database configured, falling back to MongoDB...');
-    await initMongoDB();
+    mongodbConnected = await initMongoDB();
   }
 
+  const success = supabaseConnected || prismaConnected || mongodbConnected;
+
   return {
+    success,
     supabase: databaseStatus.supabase,
     prisma: databaseStatus.prisma,
     mongodb: databaseStatus.mongodb

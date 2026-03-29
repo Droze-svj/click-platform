@@ -10,9 +10,7 @@ const {
   calculateEngagementRate,
   updateReachAndImpressions,
   updateEngagementBreakdown,
-  getAggregatedPerformanceMetrics
-} = require('../services/socialPerformanceMetricsService');
-const {
+  getAggregatedPerformanceMetrics,
   recordAudienceGrowth,
   getAudienceGrowthTrends
 } = require('../services/socialPerformanceMetricsService');

@@ -114,6 +114,46 @@ async function applySLA(approvalId, stages) {
 }
 
 /**
+ * Get workflow templates
+ */
+async function getWorkflowTemplates(userId, agencyWorkspaceId = null, category = null) {
+  try {
+    const query = {};
+
+    if (agencyWorkspaceId) {
+      query.$or = [
+        { agencyWorkspaceId: agencyWorkspaceId },
+        { isShared: true }
+      ];
+    } else {
+      query.isShared = true;
+    }
+
+    const templates = await WorkflowTemplate.find(query).sort({ name: 1 });
+    return templates;
+  } catch (error) {
+    logger.error('Error fetching workflow templates', { error: error.message, userId });
+    throw error;
+  }
+}
+
+/**
+ * Execute workflow template
+ */
+async function executeWorkflowTemplate(userId, agencyWorkspaceId, templateId, contentId, options = {}) {
+  try {
+    return await createApprovalFromTemplate(templateId, contentId, {
+      ...options,
+      workspaceId: agencyWorkspaceId,
+      createdBy: userId
+    });
+  } catch (error) {
+    logger.error('Error executing workflow template', { error: error.message, templateId, contentId });
+    throw error;
+  }
+}
+
+/**
  * Get default template for workspace
  */
 async function getDefaultTemplate(agencyWorkspaceId) {
@@ -233,5 +273,7 @@ module.exports = {
   createWorkflowTemplate,
   createApprovalFromTemplate,
   getDefaultTemplate,
-  createDefaultTemplates
+  createDefaultTemplates,
+  getWorkflowTemplates,
+  executeWorkflowTemplate
 };
