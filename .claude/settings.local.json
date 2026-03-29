@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep \"\\\\.js$\")",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(find . -type f -name \"*.js\" -exec grep -l \"neural\\\\|tensor\" {})",
+      "mcp__ide__executeCode"
+    ]
+  },
+  "outputStyle": "default"
+}

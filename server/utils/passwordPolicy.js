@@ -12,7 +12,7 @@ function calculatePasswordStrength(password) {
     uppercase: /[A-Z]/.test(password),
     lowercase: /[a-z]/.test(password),
     numbers: /\d/.test(password),
-    specialChars: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    specialChars: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     noCommonPatterns: !/(123456|password|qwerty|abc123)/i.test(password)
   };
 
@@ -51,7 +51,7 @@ function getPasswordSuggestions(password) {
     uppercase: /[A-Z]/.test(password),
     lowercase: /[a-z]/.test(password),
     numbers: /\d/.test(password),
-    specialChars: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    specialChars: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)
   };
 
   if (!checks.length) {
@@ -108,7 +108,7 @@ function validatePasswordPolicy(password) {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumbers = /\d/.test(password);
-  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasSpecialChars = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
   const charTypeCount = [hasUppercase, hasLowercase, hasNumbers, hasSpecialChars].filter(Boolean).length;
 

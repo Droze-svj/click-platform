@@ -435,12 +435,14 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
                   className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                   value={exportOptions.scheduledDate}
                   onChange={(e) => setExportOptions(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                  title="Scheduled Publish Date"
                 />
                 <input
                   type="time"
                   className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                   value={exportOptions.scheduledTime}
                   onChange={(e) => setExportOptions(prev => ({ ...prev, scheduledTime: e.target.value }))}
+                  title="Scheduled Publish Time"
                 />
               </div>
             )}
@@ -564,7 +566,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
             </p>
             <ul className="text-blue-800 dark:text-blue-200 space-y-1">
               <li>• Videos are processed in the background and may take several minutes</li>
-              <li>• You'll receive a notification when export is complete</li>
+              <li>• You&apos;ll receive a notification when export is complete</li>
               <li>• High-quality exports may require more processing time</li>
               <li>• Check your downloads folder or the processed files section</li>
             </ul>

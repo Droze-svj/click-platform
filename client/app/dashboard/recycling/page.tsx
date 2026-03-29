@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import ContentRecyclingDashboard from '../../../components/ContentRecyclingDashboard'
+import { useState, useEffect } from 'react'
+import EntropyReversalNode from '../../../components/ContentRecyclingDashboard'
 import { useAuth } from '../../../hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
-export default function RecyclingPage() {
+export default function ReversalNodePage() {
   const router = useRouter()
   const { user } = useAuth()
 
@@ -21,9 +20,9 @@ export default function RecyclingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <ContentRecyclingDashboard />
+    <div className="min-h-screen bg-[#020205] selection:bg-indigo-500/30">
+      <div className="max-w-[1600px] mx-auto px-10 pb-32">
+        <EntropyReversalNode />
       </div>
     </div>
   )

@@ -6,35 +6,34 @@ const contentCollectionSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true,
+    required: true
   },
   name: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   description: {
     type: String,
-    trim: true,
+    trim: true
   },
   color: {
     type: String,
-    default: '#8B5CF6',
+    default: '#8B5CF6'
   },
   contentIds: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content',
+    ref: 'Content'
   }],
   createdAt: {
     type: Date,
-    default: Date.now,
+    default: Date.now
   },
   updatedAt: {
     type: Date,
-    default: Date.now,
-  },
-});
+    default: Date.now
+  }
+  });
 
 contentCollectionSchema.index({ userId: 1, name: 1 });
 

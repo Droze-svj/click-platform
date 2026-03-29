@@ -117,6 +117,9 @@ router.get('/', async (req, res) => {
             enabled: twitterOAuth.isConfigured(),
             configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET),
           },
+          youtube: {
+            enabled: !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET),
+          },
           linkedin: {
             enabled: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
           },
@@ -247,6 +250,53 @@ router.get('/debug-redis', (req, res) => {
         length: process.env.REDIS_URL ? process.env.REDIS_URL.length : 0,
       },
     });
+  }
+});
+
+/**
+ * @swagger
+ * /api/health/error-log:
+ *   post:
+ *     summary: Log client-side unhandled errors
+ *     tags: [Health]
+ */
+router.post('/error-log', (req, res) => {
+  try {
+    const errorData = req.body || {};
+    logger.error('Client-side UI Exception Detected', {
+      source: 'client_telemetry',
+      url: errorData.url,
+      agent: errorData.userAgent,
+      errorName: errorData.error,
+      errorMessage: errorData.message,
+      stack: errorData.stack,
+      componentStack: errorData.componentStack
+    });
+
+    // Optionally capture in Sentry if configured
+    if (process.env.SENTRY_DSN) {
+       try {
+         const { captureException } = require('../utils/sentry');
+         const err = new Error(errorData.message || 'Unknown Client Error');
+         err.name = errorData.error || 'ClientError';
+         err.stack = errorData.stack;
+         captureException(err, { 
+           tags: { source: 'client_ui' },
+           extra: { 
+             componentStack: errorData.componentStack, 
+             url: errorData.url, 
+             userAgent: errorData.userAgent 
+           } 
+         });
+       } catch (e) {
+         // Silently fail Sentry if not available
+       }
+    }
+
+    res.status(200).json({ success: true, message: 'Telemetry received safely' });
+  } catch (err) {
+    logger.error('Failed to parse client telemetry', { error: err.message });
+    res.status(500).json({ success: false });
   }
 });
 

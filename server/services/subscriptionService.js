@@ -74,10 +74,11 @@ async function handleSubscriptionExpiration(user) {
       data: { subscriptionStatus: 'expired' }
     });
 
-    // Save notification to database
+    // Save notification to database (priority: high for billing-critical)
     await Notification.create({
       userId: user._id,
       type: 'warning',
+      priority: 'high',
       title: 'Subscription Expired',
       message: 'Your subscription has expired. You have been downgraded to the free plan.'
     });
@@ -123,6 +124,7 @@ async function sendExpirationWarnings(daysBefore = [7, 3, 1]) {
           await Notification.create({
             userId: user._id,
             type: 'warning',
+            priority: 'high',
             title: 'Subscription Expiring Soon',
             message: `Your subscription expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}. Renew now to continue enjoying all features.`,
             data: { daysUntilExpiry, subscriptionEndDate: user.subscription.endDate }

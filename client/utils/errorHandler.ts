@@ -302,7 +302,21 @@ if (typeof window !== 'undefined') {
     )
   })
 
-  window.addEventListener('unhandledrejection', (event) => {
+  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    // Filter out MetaMask extension noise that shouldn't clutter app logic
+    const reason = event.reason?.message || (typeof event.reason === 'string' ? event.reason : '')
+    const isExtensionNoise =
+      reason.includes('MetaMask') ||
+      reason.includes('extension') ||
+      reason.includes('inpage.js')
+
+    if (isExtensionNoise) {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[AppError] Suppressing extension noise rejection:', reason)
+      }
+      return
+    }
+
     errorHandler.logError(
       event.reason || 'Unhandled Promise Rejection',
       'Global',

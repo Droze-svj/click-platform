@@ -1,6 +1,15 @@
 'use client'
 
 import React, { useRef, useEffect, useState } from 'react'
+import { Play, Pause, Eye, EyeOff, Circle, Activity, Crosshair, Fingerprint, Zap } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TimelineSegment, TimelineEffect, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, TemplateLayout, TEMPLATE_LAYOUTS, CaptionTextStyle, TextOverlayAnimationIn, TextOverlayAnimationOut, ShapeOverlay, MotionGraphicPreset, ImageOverlay, GradientOverlay, SvgOverlay, TransformKeyframe } from '../../types/editor'
+import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
+import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
+import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
+import { Rnd } from 'react-rnd'
+
+import { WebGPURenderer } from '../../lib/rendering/WebGPURenderer'
 
 /** Syncs B-roll video to segment time; playhead-driven. */
 function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; currentTime: number; isPlaying: boolean }) {
@@ -28,8 +37,67 @@ function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; cur
     />
   )
 }
-import { Play, Pause, Eye, EyeOff } from 'lucide-react'
-import { VideoFilter, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, TemplateLayout, TEMPLATE_LAYOUTS, CaptionTextStyle, TextOverlayAnimationIn, TextOverlayAnimationOut, ShapeOverlay, MotionGraphicPreset, ImageOverlay, GradientOverlay, TimelineEffect, TimelineSegment } from '../../types/editor'
+
+
+/** Syncs audio segment to playhead */
+function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogueActive }: { seg: TimelineSegment; currentTime: number; isPlaying: boolean; volume: number; isMuted: boolean; isDialogueActive: boolean }) {
+  const ref = useRef<HTMLAudioElement>(null)
+  const isActive = currentTime >= seg.startTime && currentTime <= seg.endTime
+  const segTime = (currentTime - seg.startTime) * (seg.playbackSpeed ?? 1)
+
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    if (isActive) {
+      if (Math.abs(v.currentTime - segTime) > 0.2) {
+        v.currentTime = segTime
+      }
+      if (isPlaying) v.play().catch(() => {})
+      else v.pause()
+    } else {
+      v.pause()
+      v.currentTime = 0
+    }
+  }, [isActive, isPlaying, segTime])
+
+  // Smooth Volume Ramping
+  const currentVolumeRef = useRef(volume)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+
+    let targetVolume = volume
+    if (seg.track === 6 && isDialogueActive) {
+      targetVolume = volume * 0.3
+    }
+    if (isMuted) targetVolume = 0
+
+    let startTime = performance.now()
+    const DURATION = 300 // 300ms ramp
+    const startVolume = currentVolumeRef.current
+
+    let frameId: number
+    const animate = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / DURATION, 1)
+
+      const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2
+      const currentVol = startVolume + (targetVolume - startVolume) * eased
+
+      v.volume = currentVol
+      currentVolumeRef.current = currentVol
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate)
+      }
+    }
+
+    frameId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frameId)
+  }, [volume, isMuted, isDialogueActive, seg.track])
+
+  return <audio ref={ref} src={seg.sourceUrl} />
+}
 
 /** Compute opacity, transform, and optional filter for text overlay animation based on currentTime */
 function getTextOverlayAnimationStyle(
@@ -142,8 +210,6 @@ function getOverlayAnimationStyle(
   return { opacity, transform: `${base}${tx}${ty}${sc}` }
 }
 
-import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
-
 export interface TranscriptWord {
   word: string
   start: number
@@ -157,10 +223,11 @@ interface RealTimeVideoPreviewProps {
   volume: number
   isMuted: boolean
   playbackSpeed: number
-  filters: VideoFilter
+  filters: import('../../types/editor').VideoFilter
   textOverlays: TextOverlay[]
   shapeOverlays?: ShapeOverlay[]
   imageOverlays?: ImageOverlay[]
+  svgOverlays?: SvgOverlay[]
   gradientOverlays?: GradientOverlay[]
   editingWords?: TranscriptWord[]
   captionStyle?: CaptionStyle | null
@@ -168,20 +235,26 @@ interface RealTimeVideoPreviewProps {
   onTimeUpdate: (time: number) => void
   onDurationChange: (duration: number) => void
   onPlayPause: () => void
-  /** When provided, control before/after from parent (e.g. Manual Edit Compare) */
   showBeforeAfter?: boolean
   onBeforeAfterChange?: (showFiltered: boolean) => void
-  /** When provided, use for compare: after = filtered, before = original, split = side-by-side */
   compareMode?: 'after' | 'before' | 'split'
-  /** Optional timeline effects (filter type) applied at playhead time */
   timelineEffects?: TimelineEffect[]
-  /** Timeline segments (B-roll, images): shown when playhead inside segment and track visible */
   timelineSegments?: TimelineSegment[]
-  /** Track visibility: key = track index, value = visible. Missing = visible. */
   trackVisibility?: Record<number, boolean>
+  previewQuality?: 'draft' | 'full'
+  chromaKey?: import('./views/ChromakeyView').ChromaKeySettings
+  onUpdateOverlay?: (type: 'text' | 'shape' | 'image', id: string, updates: any) => void
+  selectedOverlayId?: string | null
+  onSelectOverlay?: (id: string | null) => void
+  isNeuralActive?: boolean
+  videoTransform?: { scale?: number, positionX?: number, positionY?: number, rotation?: number }
+  videoTransformKeyframes?: TransformKeyframe[]
+  videoCrop?: { top?: number, right?: number, bottom?: number, left?: number }
+  isTransformMode?: boolean
+  onUpdateVideoTransform?: (updates: { scale?: number, positionX?: number, positionY?: number, rotation?: number }) => void
 }
 
-function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: number): VideoFilter {
+function blendFiltersAtTime(base: import('../../types/editor').VideoFilter, effects: TimelineEffect[], t: number): import('../../types/editor').VideoFilter {
   let out = { ...base }
   for (const e of effects) {
     if (e.type !== 'filter' || !e.enabled || t < e.startTime || t > e.endTime) continue
@@ -204,19 +277,52 @@ function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: num
 }
 
 const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
-  videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}
+  videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}, previewQuality = 'full', chromaKey, onUpdateOverlay, selectedOverlayId, onSelectOverlay, isNeuralActive, videoTransform, videoTransformKeyframes, videoCrop, isTransformMode, onUpdateVideoTransform
 }) => {
+  const isDraft = previewQuality === 'draft'
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoRefRight = useRef<HTMLVideoElement>(null)
+  const previewRecorder = usePreviewRecorder(videoRef)
   const onTimeUpdateRef = useRef(onTimeUpdate)
   onTimeUpdateRef.current = onTimeUpdate
   const [internalShowFilters, setInternalShowFilters] = useState(true)
+  const [fps, setFps] = useState(0)
+  const [latency, setLatency] = useState(0)
+  const [previewResolution, setPreviewResolution] = useState<'Full' | '1/2' | '1/4'>('Full')
   const [videoDimensions, setVideoDimensions] = useState<{ w: number; h: number } | null>(null)
   const useCompareMode = typeof compareMode === 'string'
   const isSplit = useCompareMode && compareMode === 'split'
   const showAppliedFilters = useCompareMode ? (compareMode === 'after') : (typeof showBeforeAfter === 'boolean' ? showBeforeAfter : internalShowFilters)
 
-  // Keep playhead in sync: when user seeks (timeline click/drag), sync video to currentTime
+  // V6 WebGPU Rendering Scaffold
+  const webGpuCanvasRef = useRef<HTMLCanvasElement>(null)
+  const rendererRef = useRef<WebGPURenderer | null>(null)
+
+  const videoTransformRef = useRef(videoTransform)
+  videoTransformRef.current = videoTransform
+  const videoTransformKeyframesRef = useRef(videoTransformKeyframes)
+  videoTransformKeyframesRef.current = videoTransformKeyframes
+  const videoCropRef = useRef(videoCrop)
+  videoCropRef.current = videoCrop
+
+  useEffect(() => {
+    if (!webGpuCanvasRef.current) return
+    const renderer = new WebGPURenderer()
+    rendererRef.current = renderer
+    renderer.init(webGpuCanvasRef.current).then(() => {
+      console.log('V6 Zero-Latency WebGPU Renderer Initialized')
+    }).catch(e => console.error('WebGPU Init Failed:', e))
+    return () => renderer.dispose()
+  }, [])
+
+  // Smart Guides State
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const [snapLines, setSnapLines] = useState<{ x?: number, y?: number }>({})
+
+  // Performance Monitoring
+  const frameTimes = useRef<number[]>([])
+  const lastTimeRef = useRef<number>(performance.now())
+
   useEffect(() => {
     const v = videoRef.current
     if (!v || !isFinite(currentTime)) return
@@ -228,14 +334,33 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     }
   }, [currentTime, isPlaying, isSplit])
 
-  // Smooth playhead during playback: drive timeline updates from video time at ~60fps
   useEffect(() => {
     if (!isPlaying) return
     const v = videoRef.current
     if (!v) return
     let rafId: number
-    const tick = () => {
+    const tick = (now: number) => {
+      // Performance tracking
+      const delta = now - lastTimeRef.current
+      lastTimeRef.current = now
+
+      frameTimes.current.push(now)
+      while (frameTimes.current.length > 0 && frameTimes.current[0] <= now - 1000) {
+        frameTimes.current.shift()
+      }
+      setFps(frameTimes.current.length)
+      setLatency(Math.round(delta))
+
       const t = v.currentTime
+      if (rendererRef.current) {
+        // Send render command to offscreen worker
+        rendererRef.current.drawFrame({ timestamp: now }, {
+          quality: previewQuality === 'full' ? 'high' : 'low',
+          transform: interpolateTransformAtTime(videoTransformKeyframesRef.current, t, videoTransformRef.current as any),
+          crop: videoCropRef.current
+        })
+      }
+
       if (isFinite(t)) {
         onTimeUpdateRef.current(t)
         if (isSplit && videoRefRight.current) videoRefRight.current.currentTime = t
@@ -253,34 +378,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   }
 
   useEffect(() => {
-    if (!isSplit || !videoRefRight.current || !videoRef.current) return
-    const right = videoRefRight.current
-    const left = videoRef.current
-    if (Math.abs(right.currentTime - currentTime) > 0.2) right.currentTime = currentTime
-  }, [currentTime, isSplit])
-
-  const layoutSpec = (() => {
-    const t = TEMPLATE_LAYOUTS.find((l) => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1]
-    if (templateLayout === 'auto' && videoDimensions && videoDimensions.w > 0 && videoDimensions.h > 0) {
-      return { ...t, aspect: `${videoDimensions.w}/${videoDimensions.h}` }
-    }
-    return t
-  })()
-
-  useEffect(() => {
     const v = videoRef.current
     if (!v) return
     if (isPlaying) v.play().catch(() => { })
     else v.pause()
   }, [isPlaying])
-
-  useEffect(() => {
-    if (!isSplit) return
-    const right = videoRefRight.current
-    if (!right) return
-    if (isPlaying) right.play().catch(() => { })
-    else right.pause()
-  }, [isSplit, isPlaying])
 
   useEffect(() => {
     const v = videoRef.current
@@ -289,47 +391,32 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     v.muted = isMuted
   }, [volume, isMuted])
 
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v) return
-    v.playbackRate = Math.max(0.25, Math.min(4, playbackSpeed || 1))
-  }, [playbackSpeed])
-
-  /* Full filter chain: base + any timeline effects active at currentTime */
   const effectiveFiltersAtTime = timelineEffects.length > 0 ? blendFiltersAtTime(filters, timelineEffects, currentTime) : filters
   const temp = effectiveFiltersAtTime.temperature ?? 100
   const sepiaAdj = Math.max(0, Math.min(100, (effectiveFiltersAtTime.sepia ?? 0) + ((temp - 100) / 100) * 15))
   const hueAdj = (effectiveFiltersAtTime.hue ?? 0) + (temp < 100 ? 8 : temp > 100 ? -4 : 0)
   const sat = effectiveFiltersAtTime.vibrance != null ? Math.round((effectiveFiltersAtTime.saturation ?? 100) * (effectiveFiltersAtTime.vibrance / 100)) : (effectiveFiltersAtTime.saturation ?? 100)
   const bright = effectiveFiltersAtTime.brightness ?? 100
-  const shadowLift = (effectiveFiltersAtTime.shadows ?? 100) - 100  // >0 = lift shadows
-  const highCrush = 100 - (effectiveFiltersAtTime.highlights ?? 100) // >0 = darken highlights
-  const dehazeAdj = ((effectiveFiltersAtTime.dehaze ?? 100) - 100) / 100 * 0.04  // dehaze ≈ contrast/clarity boost
+  const shadowLift = (effectiveFiltersAtTime.shadows ?? 100) - 100
+  const highCrush = 100 - (effectiveFiltersAtTime.highlights ?? 100)
+  const dehazeAdj = ((effectiveFiltersAtTime.dehaze ?? 100) - 100) / 100 * 0.04
   const brightnessAdj = bright + shadowLift * 0.2 + highCrush * 0.15
   const contrastBase = effectiveFiltersAtTime.contrast ?? 100
   const sharpenAdj = (effectiveFiltersAtTime.sharpen ?? 0) / 100
   const clarityAdj = ((effectiveFiltersAtTime.clarity ?? 0) / 100) * 0.06
   const contrastAdj = Math.min(200, Math.max(50, contrastBase + sharpenAdj * 8 + clarityAdj * 100 + dehazeAdj * 100))
-  const lutId = effectiveFiltersAtTime.lutId
-  const lutBoost = showAppliedFilters && lutId && lutId !== 'none'
-    ? (lutId === 'cinematic' ? { contrast: 1.08, saturate: 0.95 } : lutId === 'bleach' ? { contrast: 1.12, saturate: 0.7 } : lutId === 'log709' ? { contrast: 1.05, brightness: 1.02 } : {})
-    : {}
-  const finalContrast = lutBoost.contrast ? contrastAdj * lutBoost.contrast : contrastAdj
-  const finalSat = lutBoost.saturate != null ? sat * lutBoost.saturate : sat
-  const finalBright = lutBoost.brightness ? brightnessAdj * lutBoost.brightness : brightnessAdj
+  const finalContrast = contrastAdj
+  const finalSat = sat
+  const finalBright = brightnessAdj
 
   const blurVal = effectiveFiltersAtTime.blur ?? 0
-  const isIdentityFilter = Math.abs(finalBright - 100) < 1 && Math.abs(finalContrast - 100) < 1 && Math.abs(finalSat - 100) < 1 && Math.abs(hueAdj) < 1 && Math.abs(sepiaAdj) < 1 && blurVal === 0
-  const filterString = showAppliedFilters
-    ? (isIdentityFilter ? 'blur(0px)' : `
-    brightness(${Math.min(150, Math.max(50, finalBright))}%)
-    contrast(${finalContrast}%)
-    saturate(${Math.min(200, Math.max(0, finalSat))}%)
-    hue-rotate(${hueAdj}deg)
-    sepia(${sepiaAdj}%)
-    blur(${blurVal}px)
-  `)
-    : 'none'
+  const baseFilterString = showAppliedFilters
+    ? `brightness(${Math.min(150, Math.max(50, finalBright))}%) contrast(${finalContrast}%) saturate(${Math.min(200, Math.max(0, finalSat))}%) hue-rotate(${hueAdj}deg) sepia(${sepiaAdj}%) blur(${blurVal}px)`
+    : ''
+
+  // Integrate Chromakey inline SVG filter if enabled
+  const hasChroma = chromaKey?.enabled
+  const filterString = hasChroma ? `url(#chroma-key-matrix) ${baseFilterString}` : (baseFilterString || 'none')
 
   const vignetteOpacity = showAppliedFilters && (effectiveFiltersAtTime.vignette ?? 0) > 0
     ? (effectiveFiltersAtTime.vignette / 100) * 0.6
@@ -343,472 +430,428 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     }
   }
 
-  if (isSplit) {
-    return (
-      <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-        <div className="relative w-full h-full bg-black rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.5)] flex border border-white/10 group">
-          <div className="flex-1 relative min-w-0 border-r border-white/10">
-            <span className="absolute top-2 left-2 z-10 text-[10px] font-bold uppercase tracking-wider text-white/80 bg-black/50 px-2 py-1 rounded">Before</span>
+  // Determine aspect ratio from layout
+  const currentLayout = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1] // Default to standard 16/9
+  const aspectStyle = currentLayout.id === 'auto' ? {} : { aspectRatio: currentLayout.aspect.replace('/', ' / ') }
+
+  const animatedTransform = interpolateTransformAtTime(videoTransformKeyframes, currentTime, videoTransform as any)
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-12 overflow-hidden">
+      {/* Neural Chroma Key SVG Filter Engine */}
+      {hasChroma && (
+        <svg className="absolute w-0 h-0 pointer-events-none">
+          <filter id="chroma-key-matrix" colorInterpolationFilters="sRGB">
+            {/* Dynamic extraction matrix targeting specified color range and utilizing tolerance logic (simplified visual dropping of primary RGB channels) */}
+            <feColorMatrix
+              type="matrix"
+              values={`
+                1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                ${chromaKey.color.toLowerCase() === '#00ff00' ? `1.5 -2.5 1.5 0 ${chromaKey.tolerance}` : `1 1 -2.5 0 ${chromaKey.tolerance}`}
+              `}
+            />
+            <feComponentTransfer>
+              <feFuncA type="gamma" amplitude={chromaKey.opacity} exponent={1 / Math.max(0.1, chromaKey.edge)} offset={chromaKey.spill * -0.2} />
+            </feComponentTransfer>
+          </filter>
+        </svg>
+      )}
+
+      {/* Main Preview Container with Aspect Ratio Control */}
+      <div
+        className="relative bg-black rounded-[2rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] border border-white/5 group/preview w-full h-full max-w-full max-h-full flex items-center justify-center transition-all duration-500"
+        style={aspectStyle}
+      >
+        {/* Cinematic Underlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
+
+        {/* Core Video Frame */}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          onClick={() => onSelectOverlay?.(null)}
+        >
+          <Rnd
+            position={{
+              x: ((animatedTransform.positionX || 0) / 100) * (videoDimensions?.w || 800),
+              y: ((animatedTransform.positionY || 0) / 100) * (videoDimensions?.h || 600)
+            }}
+            onDragStop={(e, d) => {
+               const rawX = (d.x / (videoDimensions?.w || 800)) * 100
+               const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+               onUpdateVideoTransform?.({ ...videoTransform, positionX: rawX, positionY: rawY })
+            }}
+            disableDragging={!isTransformMode || isPlaying}
+            enableResizing={false}
+            className={`absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-300 ${isTransformMode ? 'z-40 ring-4 ring-indigo-500 cursor-move shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]' : 'pointer-events-none'}`}
+            style={{
+               width: '100%',
+               height: '100%',
+            }}
+          >
             <video
               ref={videoRef}
               src={videoUrl}
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{ filter: 'none', objectFit: 'contain' }}
-              onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
+              className="w-full h-full object-contain pointer-events-none"
+              style={{
+                filter: filterString,
+                transform: `scale(${animatedTransform.scale ?? 1}) rotate(${animatedTransform.rotation ?? 0}deg)`,
+                clipPath: videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
+              }}
               onLoadedMetadata={handleLoadedMetadata}
-              onClick={onPlayPause}
+              autoPlay={isPlaying}
+              muted={isMuted}
             />
-          </div>
-          <div className="flex-1 relative min-w-0">
-            <span className="absolute top-2 right-2 z-10 text-[10px] font-bold uppercase tracking-wider text-white/80 bg-black/50 px-2 py-1 rounded">After</span>
-            <video
-              ref={videoRefRight}
-              src={videoUrl}
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{ filter: filterString, objectFit: 'contain' }}
-              onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
-              onLoadedMetadata={handleLoadedMetadata}
-              onClick={onPlayPause}
-            />
-            {vignetteOpacity > 0 && (
-              <div
-                className="absolute inset-0 pointer-events-none rounded-r-3xl"
-                style={{
-                  background: `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,${vignetteOpacity}) 100%)`
-                }}
-              />
-            )}
-            {textOverlays
-              .filter((o) => {
-                if (o.startTime == null || o.endTime == null) return true
-                return currentTime >= o.startTime && currentTime <= o.endTime
-              })
-              .map((overlay) => {
-                const s = overlay.style ?? 'none'
-                const baseShadow = '0 2px 10px rgba(0,0,0,0.5)'
-                const overlayShadows: Record<string, string> = {
-                  none: baseShadow,
-                  shadow: '0 4px 16px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5)',
-                  outline: 'none',
-                  neon: `0 0 10px ${overlay.color}, 0 0 20px ${overlay.color}, 0 0 30px rgba(0,0,0,0.8)`,
-                  minimal: '0 1px 3px rgba(0,0,0,0.4)',
-                  'bold-kinetic': '0 3px 12px rgba(0,0,0,0.6)',
-                }
-                const stroke = s === 'outline' ? `1.5px ${overlay.shadowColor ?? overlay.outlineColor ?? '#fff'}` : undefined
-                const animStyle = getTextOverlayAnimationStyle(overlay, currentTime)
-                const inDur = Math.max(0.1, overlay.animationInDuration ?? 0.3)
-                const outDur = Math.max(0.1, overlay.animationOutDuration ?? 0.3)
-                const inEnd = overlay.startTime + inDur
-                const outStart = overlay.endTime - outDur
-                const inVisibleRest = currentTime >= inEnd && currentTime <= outStart
-                const motionPreset = (overlay.motionGraphic ?? 'none') as MotionGraphicPreset
-                const motionClass = motionPreset !== 'none' && inVisibleRest ? `motion-graphic-${motionPreset}` : ''
-                return (
-                  <div
-                    key={overlay.id}
-                    className={`absolute pointer-events-none select-none text-center transition-opacity duration-75 ${motionClass}`.trim()}
-                    style={{
-                      left: `${overlay.x}%`,
-                      top: `${overlay.y}%`,
-                      fontSize: `${overlay.fontSize}px`,
-                      color: s === 'outline' ? 'transparent' : overlay.color,
-                      fontFamily: overlay.fontFamily,
-                      transform: animStyle.transform,
-                      opacity: animStyle.opacity,
-                      filter: animStyle.filter,
-                      textShadow: overlayShadows[s] ?? baseShadow,
-                      WebkitTextStroke: stroke,
-                      fontWeight: s === 'bold-kinetic' ? 800 : undefined,
-                      letterSpacing: overlay.letterSpacing != null ? `${overlay.letterSpacing}px` : undefined,
-                      lineHeight: overlay.lineHeight,
-                      backgroundColor: overlay.backgroundColor,
-                      padding: overlay.backgroundColor ? '4px 8px' : undefined,
-                      borderRadius: overlay.backgroundColor ? 6 : undefined,
-                    }}
-                  >
-                    {overlay.text}
-                  </div>
-                )
-              })}
-          </div>
+          </Rnd>
+          <canvas ref={webGpuCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-0" />
+          {/* AI Mixing Engine: Detect active dialogue for ducking */}
+          {(() => {
+            const isDialogueActive = timelineSegments.some(s => s.track === 7 && s.type === 'audio' && currentTime >= s.startTime && currentTime <= s.endTime && (trackVisibility[s.track] !== false))
+
+            return (
+              <>
+                {/* Audio Segments Engine */}
+                {timelineSegments.filter(s => s.type === 'audio' && (trackVisibility[s.track] !== false)).map(s => (
+                  <AudioSegment
+                    key={s.id}
+                    seg={s}
+                    currentTime={currentTime}
+                    isPlaying={isPlaying}
+                    volume={volume}
+                    isMuted={isMuted}
+                    isDialogueActive={isDialogueActive}
+                  />
+                ))}
+              </>
+            )
+          })()}
         </div>
-      </div>
-    )
-  }
 
-  return (
-    <div className="absolute inset-0" style={{ width: '100%', height: '100%' }}>
-      <div className="absolute inset-0 bg-black rounded-3xl overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.5)] border border-white/10 group" style={{ width: '100%', height: '100%' }}>
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="absolute inset-0 w-full h-full object-contain transition-all duration-700 ease-in-out"
-          style={{ filter: filterString, width: '100%', height: '100%', objectFit: 'contain' }}
-          onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
-          onLoadedMetadata={handleLoadedMetadata}
-          onClick={onPlayPause}
-        />
+        {/* Interactive Overlays Layer */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Smart Guides Rendering */}
+          {activeDragId && snapLines.x !== undefined && (
+            <div
+              className="absolute top-0 bottom-0 w-[1px] bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] z-0"
+              style={{ left: `${snapLines.x}%` }}
+            />
+          )}
+          {activeDragId && snapLines.y !== undefined && (
+            <div
+              className="absolute left-0 right-0 h-[1px] bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] z-0"
+              style={{ top: `${snapLines.y}%` }}
+            />
+          )}
 
-        {/* Vignette overlay – darkens edges for film look */}
-        {vignetteOpacity > 0 && (
-          <div
-            className="absolute inset-0 pointer-events-none rounded-3xl"
-            style={{
-              background: `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,${vignetteOpacity}) 100%)`
-            }}
-          />
-        )}
+          {/* Text Overlays */}
+          {textOverlays.map((text) => {
+            const { opacity, transform, filter } = getTextOverlayAnimationStyle(text, currentTime)
+            if (opacity === 0) return null
+            const isSelected = selectedOverlayId === text.id
 
-        {/* B-roll & image clips: only when playhead inside segment and track is on (eye visible) */}
-        {timelineSegments
-          .filter((seg) => {
-            if (seg.type !== 'video' && seg.type !== 'image') return false
-            if (!seg.sourceUrl) return false
-            if (currentTime < seg.startTime || currentTime >= seg.endTime) return false
-            if (trackVisibility[seg.track ?? 0] === false) return false
-            return true
-          })
-          .sort((a, b) => (a.track ?? 0) - (b.track ?? 0))
-          .map((seg) => {
-            const t = seg.transform ?? {}
-            const scale = Math.max(0.01, Math.min(2, t.scale ?? 1))
-            const posX = t.positionX ?? 0
-            const posY = t.positionY ?? 0
-            const rotation = t.rotation ?? 0
-            const c = seg.crop ?? {}
-            const top = c.top ?? 0
-            const right = c.right ?? 0
-            const bottom = c.bottom ?? 0
-            const left = c.left ?? 0
-            const hasCrop = top > 0 || right > 0 || bottom > 0 || left > 0
-            const clipPath = hasCrop ? `inset(${top}% ${right}% ${bottom}% ${left}%)` : undefined
             return (
               <div
-                key={seg.id}
-                className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                style={{ zIndex: 2 }}
+                key={text.id}
+                className="absolute top-0 left-0 w-full h-full"
+                style={{ opacity, filter, zIndex: 10 + (text.layer || 0) }}
               >
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{
-                    transform: `translate(${posX}%, ${posY}%) scale(${scale}) rotate(${rotation}deg)`,
-                    transformOrigin: 'center center',
-                    clipPath,
+                <Rnd
+                  bounds="parent"
+                  position={{ x: (text.x / 100) * (videoDimensions?.w || 800) || 0, y: (text.y / 100) * (videoDimensions?.h || 600) || 0 }}
+                  onDragStart={() => setActiveDragId(text.id)}
+                  onDrag={(e, d) => {
+                    const snapDist = 2 // 2% snap threshold
+                    const pX = (d.x / (videoDimensions?.w || 800)) * 100
+                    const pY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const newSnap: {x?: number, y?: number} = {}
+                    if (Math.abs(pX - 50) < snapDist) newSnap.x = 50
+                    if (Math.abs(pY - 50) < snapDist) newSnap.y = 50
+                    setSnapLines(newSnap)
                   }}
+                  onDragStop={(e, d) => {
+                    setActiveDragId(null)
+                    setSnapLines({})
+                    const rawX = (d.x / (videoDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+                    onUpdateOverlay?.('text', text.id, {
+                      x: snapLines.x !== undefined ? snapLines.x : rawX,
+                      y: snapLines.y !== undefined ? snapLines.y : rawY
+                    })
+                  }}
+                  className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
+                  disableDragging={isPlaying}
+                  enableResizing={false}
+                  onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(text.id) }}
                 >
-                  {seg.type === 'image' ? (
-                    <img
-                      src={seg.sourceUrl}
-                      alt=""
-                      className="max-w-full max-h-full object-contain"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      crossOrigin="anonymous"
-                    />
-                  ) : (
-                    <BrollVideo seg={seg} currentTime={currentTime} isPlaying={isPlaying} />
-                  )}
-                </div>
+                    <div
+                      className="whitespace-pre-wrap text-center drop-shadow-lg"
+                      style={{
+                        fontSize: `${text.fontSize}px`,
+                        color: text.color,
+                        fontFamily: text.fontFamily,
+                        letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : 'normal',
+                        lineHeight: text.lineHeight || 1.2,
+                        textShadow: text.style === 'shadow' ? `2px 2px 4px ${text.shadowColor || 'rgba(0,0,0,0.5)'}` :
+                                   text.style === 'neon' ? `0 0 10px ${text.color}, 0 0 20px ${text.color}` :
+                                   text.style === 'outline' ? `-1px -1px 0 ${text.outlineColor || '#000'}, 1px -1px 0 ${text.outlineColor || '#000'}, -1px 1px 0 ${text.outlineColor || '#000'}, 1px 1px 0 ${text.outlineColor || '#000'}` : 'none',
+                        backgroundColor: text.backgroundColor || 'transparent',
+                        padding: text.backgroundColor ? '4px 8px' : '0',
+                        borderRadius: text.backgroundColor ? '4px' : '0',
+                        transform: transform.replace('translate(-50%, -50%)', ''), // Rnd handles base positioning
+                        transformOrigin: 'center center'
+                      }}
+                    >
+                      {text.text}
+                    </div>
+                </Rnd>
               </div>
             )
           })}
 
-        {/* Audio Waveform Simulation Overlay */}
-        <div className="absolute inset-x-0 bottom-0 h-24 pointer-events-none overflow-hidden opacity-40">
-          <div className="flex items-end gap-[1px] h-full px-4 w-fit animate-pulse">
-            {Array.from({ length: 120 }).map((_, i) => (
-              <div
-                key={i}
-                className="w-1 bg-blue-500/50 rounded-full"
-                style={{ height: `${Math.random() * 80 + 20}%`, transition: 'height 0.2s ease-in-out' }}
-              />
-            ))}
+          {/* Engine Telemetry Overlay */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
+            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Engine Status</span>
+                <span className="text-xs font-mono font-bold text-white">{isPlaying ? 'PROCESSING' : 'STANDBY'}</span>
+              </div>
+            </div>
+            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
+               <Activity className="w-3.5 h-3.5 text-indigo-400" />
+               <div className="flex flex-col">
+                 <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Performance</span>
+                 <div className="flex gap-2 text-xs font-mono font-bold text-indigo-300">
+                   <span>{fps} FPS</span>
+                   <span className="opacity-50">|</span>
+                   <span>{latency}ms</span>
+                 </div>
+               </div>
+            </div>
+            {/* Resolution Toggle */}
+            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-1 border border-white/10 shadow-2xl items-center gap-1">
+              {(['Full', '1/2', '1/4'] as const).map(res => (
+                <button
+                  key={res}
+                  onClick={() => setPreviewResolution(res)}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${previewResolution === res ? 'bg-indigo-600 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
+                  title={`${res} Resolution`}
+                >
+                  {res}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="absolute top-6 right-6 flex items-center gap-2">
-          <button
-            onClick={handleBeforeAfterToggle}
-            className={`p-2 rounded-xl backdrop-blur-xl border transition-all ${showAppliedFilters ? 'bg-blue-600/20 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/10 text-white/40'}`}
-            title="Toggle Filters (Before/After)"
-          >
-            {showAppliedFilters ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-          </button>
-        </div>
+          {/* Image Overlays */}
+          {imageOverlays.map((img) => {
+            const { opacity, transform } = getOverlayAnimationStyle(img.startTime, img.endTime, currentTime, img.animationIn, img.animationOut)
+            if (opacity === 0) return null
+            const isSelected = selectedOverlayId === img.id
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6 px-8 py-4 bg-black/40 backdrop-blur-2xl rounded-full border border-white/10 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-          <button onClick={onPlayPause} className="text-white hover:text-blue-400 transition-colors">
-            {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white" />}
-          </button>
-          <div className="w-[1px] h-4 bg-white/20" />
-          <div className="text-[10px] font-black font-mono text-white/60 tracking-widest uppercase">Elite V3 Engine</div>
-        </div>
-
-        {textOverlays
-          .filter((o) => {
-            if (o.startTime == null || o.endTime == null) return true
-            return currentTime >= o.startTime && currentTime <= o.endTime
-          })
-          .sort((a, b) => (a.layer ?? 0) - (b.layer ?? 0))
-          .map((overlay) => {
-            const s = overlay.style ?? 'none'
-            const baseShadow = '0 2px 10px rgba(0,0,0,0.5)'
-            const overlayShadows: Record<string, string> = {
-              none: baseShadow,
-              shadow: '0 4px 16px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5)',
-              outline: 'none',
-              neon: `0 0 10px ${overlay.color}, 0 0 20px ${overlay.color}, 0 0 30px rgba(0,0,0,0.8)`,
-              minimal: '0 1px 3px rgba(0,0,0,0.4)',
-              'bold-kinetic': '0 3px 12px rgba(0,0,0,0.6)',
-            }
-            const stroke = s === 'outline' ? `1.5px ${overlay.shadowColor ?? overlay.outlineColor ?? '#fff'}` : undefined
-            const animStyle = getTextOverlayAnimationStyle(overlay, currentTime)
-            const inDur = Math.max(0.1, overlay.animationInDuration ?? 0.3)
-            const outDur = Math.max(0.1, overlay.animationOutDuration ?? 0.3)
-            const inEnd = overlay.startTime + inDur
-            const outStart = overlay.endTime - outDur
-            const inVisibleRest = currentTime >= inEnd && currentTime <= outStart
-            const motionPreset = (overlay.motionGraphic ?? 'none') as MotionGraphicPreset
-            const motionClass = motionPreset !== 'none' && inVisibleRest ? `motion-graphic-${motionPreset}` : ''
-            return (
-              <div
-                key={overlay.id}
-                className={`absolute pointer-events-none select-none text-center transition-opacity duration-75 ${motionClass}`.trim()}
-                style={{
-                  left: `${overlay.x}%`,
-                  top: `${overlay.y}%`,
-                  fontSize: `${overlay.fontSize}px`,
-                  color: s === 'outline' ? 'transparent' : overlay.color,
-                  fontFamily: overlay.fontFamily,
-                  transform: animStyle.transform,
-                  opacity: animStyle.opacity,
-                  filter: animStyle.filter,
-                  textShadow: overlayShadows[s] ?? baseShadow,
-                  WebkitTextStroke: stroke,
-                  fontWeight: s === 'bold-kinetic' ? 800 : undefined,
-                  letterSpacing: overlay.letterSpacing != null ? `${overlay.letterSpacing}px` : undefined,
-                  lineHeight: overlay.lineHeight,
-                  backgroundColor: overlay.backgroundColor,
-                  padding: overlay.backgroundColor ? '4px 8px' : undefined,
-                  borderRadius: overlay.backgroundColor ? 6 : undefined,
-                }}
-              >
-                {overlay.text}
-              </div>
-            )
-          })}
-
-        {/* Gradient overlays */}
-        {gradientOverlays
-          .filter((g) => currentTime >= g.startTime && currentTime <= g.endTime)
-          .sort((a, b) => (a.layer ?? 0) - (b.layer ?? 0))
-          .map((g) => {
-            const [c0, c1] = g.colorStops
-            const dir = g.direction === 'top-to-bottom' ? '180deg' : g.direction === 'bottom-to-top' ? '0deg' : g.direction === 'left-to-right' ? '90deg' : g.direction === 'right-to-left' ? '270deg' : ''
-            const isRadial = g.direction === 'radial'
-            const region = g.region ?? 'full'
-            const regionStyle: React.CSSProperties = region === 'full' ? { inset: 0 } : region === 'lower-third' ? { bottom: 0, left: 0, right: 0, height: '33%' } : region === 'top-bar' ? { top: 0, left: 0, right: 0, height: '20%' } : region === 'top-half' ? { top: 0, left: 0, right: 0, height: '50%' } : { bottom: 0, left: 0, right: 0, height: '50%' }
-            return (
-              <div
-                key={g.id}
-                className="absolute pointer-events-none"
-                style={{
-                  ...regionStyle,
-                  background: isRadial ? `radial-gradient(circle at center, ${c0}, ${c1})` : `linear-gradient(${dir}, ${c0}, ${c1})`,
-                  opacity: g.opacity,
-                  zIndex: 1,
-                }}
-              />
-            )
-          })}
-
-        {/* Shape overlays – rect, circle, line */}
-        {shapeOverlays
-          .filter((sh) => currentTime >= sh.startTime && currentTime <= sh.endTime)
-          .sort((a, b) => (a.layer ?? 0) - (b.layer ?? 0))
-          .map((sh) => {
-            const shapeMotion = (sh.motionGraphic ?? 'none') as MotionGraphicPreset
-            const shapeMotionClass = shapeMotion !== 'none' ? `motion-graphic-${shapeMotion}` : ''
-            return (
-              <div
-                key={sh.id}
-                className={`absolute pointer-events-none ${shapeMotionClass}`.trim()}
-                style={{
-                  left: `${sh.x}%`,
-                  top: `${sh.y}%`,
-                  width: `${sh.width}%`,
-                  height: sh.kind === 'line' ? `${sh.strokeWidth ?? 2}px` : `${sh.height}%`,
-                  backgroundColor: sh.color,
-                  opacity: sh.opacity,
-                  borderRadius: sh.kind === 'circle' ? '50%' : 0,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              />
-            )
-          })}
-
-        {/* Image overlays – logo, watermark, sticker */}
-        {imageOverlays
-          .filter((img) => currentTime >= img.startTime && currentTime <= img.endTime)
-          .sort((a, b) => (a.layer ?? 0) - (b.layer ?? 0))
-          .map((img) => {
-            const anim = getOverlayAnimationStyle(
-              img.startTime,
-              img.endTime,
-              currentTime,
-              img.animationIn,
-              img.animationOut,
-              img.animationInDuration ?? 0.3,
-              img.animationOutDuration ?? 0.3
-            )
             return (
               <div
                 key={img.id}
-                className="absolute pointer-events-none"
-                style={{
-                  left: `${img.x}%`,
-                  top: `${img.y}%`,
-                  width: `${img.width}%`,
-                  height: `${img.height}%`,
-                  transform: anim.transform,
-                  opacity: anim.opacity * img.opacity,
-                  zIndex: 2,
-                }}
+                className="absolute top-0 left-0 w-full h-full"
+                style={{ opacity, zIndex: 10 + (img.layer || 0) }}
               >
-                <img
-                  src={img.url}
-                  alt=""
-                  className="w-full h-full object-contain"
-                  style={{
-                    borderRadius: img.borderRadius ?? 0,
+                <Rnd
+                  bounds="parent"
+                  position={{ x: (img.x / 100) * (videoDimensions?.w || 800) || 0, y: (img.y / 100) * (videoDimensions?.h || 600) || 0 }}
+                  size={{ width: `${img.width}%`, height: `${img.height}%` }}
+                  onDragStart={() => setActiveDragId(img.id)}
+                  onDrag={(e, d) => {
+                    const snapDist = 2 // 2% snap threshold
+                    const pX = (d.x / (videoDimensions?.w || 800)) * 100
+                    const pY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const newSnap: {x?: number, y?: number} = {}
+                    if (Math.abs(pX - 50) < snapDist) newSnap.x = 50
+                    if (Math.abs(pY - 50) < snapDist) newSnap.y = 50
+                    setSnapLines(newSnap)
                   }}
-                  crossOrigin="anonymous"
-                />
+                  onDragStop={(e, d) => {
+                    setActiveDragId(null)
+                    setSnapLines({})
+                    const rawX = (d.x / (videoDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+                    onUpdateOverlay?.('image', img.id, {
+                      x: snapLines.x !== undefined ? snapLines.x : rawX,
+                      y: snapLines.y !== undefined ? snapLines.y : rawY
+                    })
+                  }}
+                  onResizeStop={(e, direction, ref, delta, position) => {
+                     onUpdateOverlay?.('image', img.id, {
+                       width: parseFloat(ref.style.width),
+                       height: parseFloat(ref.style.height),
+                       x: (position.x / (videoDimensions?.w || 800)) * 100,
+                       y: (position.y / (videoDimensions?.h || 600)) * 100
+                     })
+                  }}
+                  className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500' : 'hover:ring-1 hover:ring-white/50'}`}
+                  disableDragging={isPlaying}
+                  onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(img.id) }}
+                >
+                  <img
+                    src={img.url}
+                    alt="Image Layer"
+                    className="w-full h-full object-contain pointer-events-none"
+                    style={{
+                      opacity: img.opacity ?? 1,
+                      transform: transform.replace('translate(-50%, -50%)', ''), // Basic animation transforms on top of Rnd
+                      transformOrigin: 'center center'
+                    }}
+                  />
+                </Rnd>
               </div>
             )
           })}
 
-        {/* Transcript captions – word-level, synced to video dialogue */}
-        {captionStyle?.enabled && editingWords.length > 0 && (() => {
-          const words = editingWords as TranscriptWord[]
-          const firstStart = words[0]?.start ?? 0
-          const activeIdx = words.findIndex((w) => currentTime >= w.start && currentTime <= w.end)
-          const windowSize = 8
-          let start: number
-          if (activeIdx >= 0) {
-            start = Math.max(0, Math.min(activeIdx - 2, words.length - windowSize))
-          } else if (currentTime < firstStart) {
-            start = 0
-          } else {
-            start = Math.max(0, words.length - windowSize)
-          }
-          const chunk = words.slice(start, start + windowSize)
-          const activeWord = activeIdx >= 0 ? words[activeIdx] : null
-          const emoji = (captionStyle.emojisEnabled && getMatchingEmojiForChunk(chunk, activeWord)) || null
-          const fontSize = CAPTION_SIZE_PX[captionStyle.size]
-          const fontFamily = captionStyle.font || 'Inter, sans-serif'
-          const ts: CaptionTextStyle = captionStyle.textStyle ?? 'default'
+          {/* Shape Overlays */}
+          {shapeOverlays.map((shape) => {
+            const { opacity, transform } = getOverlayAnimationStyle(shape.startTime, shape.endTime, currentTime)
+            if (opacity === 0) return null
+            const isSelected = selectedOverlayId === shape.id
 
-          const layoutStyles: Record<string, React.CSSProperties> = {
-            'bottom-center': {
-              bottom: '10%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'auto',
-              maxWidth: '90%',
-              textAlign: 'center',
-              justifyContent: 'center'
-            },
-            'lower-third': {
-              bottom: '20%',
-              left: '6%',
-              right: 'auto',
-              width: '60%',
-              maxWidth: '70%',
-              textAlign: 'left',
-              justifyContent: 'flex-start'
-            },
-            'top-center': {
-              top: '8%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'auto',
-              maxWidth: '90%',
-              textAlign: 'center',
-              justifyContent: 'center'
-            },
-            'full-width-bottom': {
-              bottom: 0,
-              left: 0,
-              right: 0,
-              width: '100%',
-              padding: '12px 16px',
-              background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-              textAlign: 'center',
-              justifyContent: 'center'
-            }
-          }
-          const pos = layoutStyles[captionStyle.layout] || layoutStyles['bottom-center']
-
-          const baseShadow = '0 2px 8px rgba(0,0,0,0.9), 0 0 1px rgba(0,0,0,1)'
-          const shadowStrong = '0 4px 12px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.9)'
-          const neonShadow = '0 0 8px #fff, 0 0 16px #0ef, 0 0 24px #0ef'
-          const minimalShadow = '0 1px 2px rgba(0,0,0,0.6)'
-          const highContrastStroke = '2px #000'
-          const captionColor = ts === 'outline' || ts === 'subtitle' ? 'transparent' : ts === 'cinematic' ? '#f5f0e6' : ts === 'retro' ? '#f0e6d2' : '#fff'
-          const captionStroke = ts === 'outline' || ts === 'subtitle' ? '1.5px #fff' : ts === 'high-contrast' ? highContrastStroke : undefined
-          const captionShadow = ts === 'outline' || ts === 'subtitle' ? 'none' : ts === 'shadow' ? shadowStrong : ts === 'neon' ? neonShadow : ts === 'minimal' ? minimalShadow : ts === 'high-contrast' ? 'none' : baseShadow
-          const captionFont = (ts === 'cinematic' || ts === 'serif') ? 'Georgia, "Times New Roman", serif' : fontFamily
-
-          return (
-            <div
-              className="absolute flex flex-wrap items-center gap-x-1.5 gap-y-0.5 px-4 pointer-events-none select-none"
-              style={{
-                ...pos,
-                fontFamily: captionFont,
-                fontSize: `${fontSize}px`,
-                color: captionColor,
-                textShadow: captionShadow,
-                lineHeight: 1.3,
-                WebkitTextStroke: captionStroke
-              }}
-            >
-              {emoji && (
-                <span className="shrink-0" style={{ fontSize: `${Math.round(fontSize * 1.1)}px`, lineHeight: 1, opacity: 0.95 }} aria-hidden="true">
-                  {emoji}
-                </span>
-              )}
-              {chunk.map((w) => {
-                const isActive = words.indexOf(w) === activeIdx
-                const isPast = currentTime > w.end
-                const isFuture = currentTime < w.start
-                const dimmed = activeIdx < 0 && (currentTime < firstStart ? isFuture : isPast)
-                const opacity = dimmed ? 0.4 : isActive ? 1 : 0.7
-                const fontWeight = ts === 'bold' || ts === 'kinetic' || ts === 'karaoke' ? (isActive && ts === 'kinetic' ? 800 : 700) : isActive ? 700 : 400
-                const scale = ts === 'kinetic' && isActive ? 1.15 : 1
-                const transform = `scale(${scale})`
-                const pill = ts === 'pill'
-                return (
-                  <span
-                    key={`${w.word}-${w.start}-${w.end}`}
+            return (
+              <div
+                key={shape.id}
+                className="absolute top-0 left-0 w-full h-full"
+                style={{ opacity, zIndex: 10 + (shape.layer || 0) }}
+              >
+                <Rnd
+                  bounds="parent"
+                  position={{ x: (shape.x / 100) * (videoDimensions?.w || 800) || 0, y: (shape.y / 100) * (videoDimensions?.h || 600) || 0 }}
+                  size={{ width: `${shape.width}%`, height: `${shape.height}%` }}
+                  onDragStart={() => setActiveDragId(shape.id)}
+                  onDrag={(e, d) => {
+                    const snapDist = 2 // 2% snap threshold
+                    const pX = (d.x / (videoDimensions?.w || 800)) * 100
+                    const pY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const newSnap: {x?: number, y?: number} = {}
+                    if (Math.abs(pX - 50) < snapDist) newSnap.x = 50
+                    if (Math.abs(pY - 50) < snapDist) newSnap.y = 50
+                    setSnapLines(newSnap)
+                  }}
+                  onDragStop={(e, d) => {
+                    setActiveDragId(null)
+                    setSnapLines({})
+                    const rawX = (d.x / (videoDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+                    onUpdateOverlay?.('shape', shape.id, {
+                      x: snapLines.x !== undefined ? snapLines.x : rawX,
+                      y: snapLines.y !== undefined ? snapLines.y : rawY
+                    })
+                  }}
+                  onResizeStop={(e, direction, ref, delta, position) => {
+                     onUpdateOverlay?.('shape', shape.id, {
+                       width: parseFloat(ref.style.width),
+                       height: parseFloat(ref.style.height),
+                       x: (position.x / (videoDimensions?.w || 800)) * 100,
+                       y: (position.y / (videoDimensions?.h || 600)) * 100
+                     })
+                  }}
+                  className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500' : 'hover:ring-1 hover:ring-white/50'}`}
+                  disableDragging={isPlaying}
+                  onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(shape.id) }}
+                >
+                  <div
+                    className="w-full h-full"
                     style={{
-                      fontWeight,
-                      opacity,
-                      transition: 'opacity 0.1s ease, font-weight 0.1s ease, transform 0.12s ease',
-                      transform,
-                      textTransform: ts === 'uppercase' ? 'uppercase' : undefined,
-                      backgroundColor: pill ? 'rgba(0,0,0,0.75)' : undefined,
-                      borderRadius: pill ? 9999 : undefined,
-                      padding: pill ? '2px 8px' : undefined,
-                      margin: pill ? '0 2px' : undefined
+                      backgroundColor: shape.kind === 'rect' ? shape.color : 'transparent',
+                      borderRadius: shape.kind === 'circle' ? '50%' : '0',
+                      border: shape.kind === 'line' ? `${shape.strokeWidth || 2}px solid ${shape.color}` : 'none',
+                      transform: transform.replace('translate(-50%, -50%)', ''),
+                      transformOrigin: 'center center',
+                      opacity: shape.opacity
                     }}
-                  >
-                    {w.word}
-                  </span>
-                )
-              })}
+                  />
+                </Rnd>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* HUD Elements */}
+        <div className="absolute inset-0 pointer-events-none p-10 flex flex-col justify-between opacity-0 group-hover/preview:opacity-100 transition-opacity duration-500">
+          <div className="flex justify-between items-start">
+            <div className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-4">
+              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Projection Active</span>
             </div>
-          )
-        })()}
+            <div className="flex flex-col items-end gap-2">
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-mono">Res: {videoDimensions?.w ?? 0}x{videoDimensions?.h ?? 0}</span>
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-mono">Buffer: Stable</span>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-end">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Latency</span>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-3 h-3 text-amber-500" />
+                  <span className="text-xs font-black text-white italic">0.2ms</span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Engine</span>
+                <span className="text-xs font-black text-white italic">Elite v3.2</span>
+              </div>
+            </div>
+
+            <div className="px-5 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-6 pointer-events-auto">
+              <button onClick={onPlayPause} className="text-white hover:text-indigo-400 transition-colors">
+                {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
+              </button>
+              <div className="w-px h-4 bg-white/10" />
+              <button onClick={handleBeforeAfterToggle} className={`transition-colors ${showAppliedFilters ? 'text-indigo-400' : 'text-white/40'}`}>
+                {showAppliedFilters ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Framing Corners */}
+        <div className="absolute top-8 left-8 w-6 h-6 border-t-2 border-l-2 border-white/20 pointer-events-none" />
+        <div className="absolute top-8 right-8 w-6 h-6 border-t-2 border-r-2 border-white/20 pointer-events-none" />
+        <div className="absolute bottom-8 left-8 w-6 h-6 border-b-2 border-l-2 border-white/20 pointer-events-none" />
+        <div className="absolute bottom-8 right-8 w-6 h-6 border-b-2 border-r-2 border-white/20 pointer-events-none" />
+
+        {/* Neural DNA Active Overlay */}
+        <AnimatePresence>
+          {isNeuralActive && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 pointer-events-none z-40 overflow-hidden"
+            >
+              {/* Scanline Effect */}
+              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(99,102,241,0.05)_50%)] bg-[length:100%_4px] pointer-events-none" />
+
+              {/* Top HUD Label */}
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-indigo-500/20 backdrop-blur-md border border-indigo-500/40 rounded-full flex items-center gap-3">
+                <Fingerprint className="w-4 h-4 text-indigo-400 animate-pulse" />
+                <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic leading-none">Neural DNA Vault Active</span>
+              </div>
+
+              {/* Data Streams (Simplified) */}
+              <div className="absolute top-0 bottom-0 left-12 w-px bg-indigo-500/20" />
+              <div className="absolute top-1/4 left-14 space-y-2 opacity-50">
+                 <div className="text-[8px] font-mono text-indigo-300">SEG_ID: {Math.random().toString(16).slice(2,8)}</div>
+                 <div className="text-[8px] font-mono text-indigo-300">DNA_MATCH: 99.42%</div>
+                 <div className="text-[8px] font-mono text-indigo-300">FR_LATENCY: 0.12ms</div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Global Filter Overlays */}
+        {vignetteOpacity > 0 && (
+          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,${vignetteOpacity}) 100%)` }} />
+        )}
       </div>
     </div>
   )

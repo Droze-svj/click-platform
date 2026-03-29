@@ -1,496 +1,305 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { toast } from 'react-hot-toast'
-
-interface PWAManagerProps {
-  children: React.ReactNode
-}
+import { Download, RefreshCw, X, CheckCircle, Zap, Shield, Wifi, Smartphone, Github as Google } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface PWAState {
   isOnline: boolean
-  isInstalling: boolean
   canInstall: boolean
   isInstalled: boolean
-  serviceWorkerRegistered: boolean
-  pushNotificationsEnabled: boolean
-  offlineQueue: number
-  cacheSize: string
+  updateAvailable: boolean
+  isInstalling: boolean
+  isUpdating: boolean
+  registration: ServiceWorkerRegistration | null
 }
 
-export default function PWAManager({ children }: PWAManagerProps) {
-  const [pwaState, setPWAState] = useState<PWAState>({
-    isOnline: true,
-    isInstalling: false,
+interface PWAContextType {
+  state: PWAState
+  install: () => Promise<void>
+  update: () => Promise<void>
+  dismissPrompt: () => void
+  requestNotificationPermission: () => Promise<boolean>
+}
+
+const PWAContext = createContext<PWAContextType | undefined>(undefined)
+
+export function PWAManager({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<PWAState>({
+    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     canInstall: false,
     isInstalled: false,
-    serviceWorkerRegistered: false,
-    pushNotificationsEnabled: false,
-    offlineQueue: 0,
-    cacheSize: '0 MB'
+    updateAvailable: false,
+    isInstalling: false,
+    isUpdating: false,
+    registration: null
   })
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [showInstallBanner, setShowInstallBanner] = useState(false)
+  const hasPromptedThisSession = useRef(false)
 
-  // Register service worker
+  // ── Initialization ────────────────────────────────────────────────────────
+
   useEffect(() => {
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      registerServiceWorker()
+    if (typeof window === 'undefined') return
+
+    // 1. Online/Offline status
+    const updateOnline = () => setState(prev => ({ ...prev, isOnline: navigator.onLine }))
+    window.addEventListener('online', updateOnline)
+    window.addEventListener('offline', updateOnline)
+
+    // 2. Check installation status
+    const checkInstalled = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      const isIOSStandalone = (window.navigator as any).standalone === true
+      setState(prev => ({ ...prev, isInstalled: isStandalone || isIOSStandalone }))
     }
+    checkInstalled()
 
-    // Check if already installed
-    checkInstallationStatus()
+    // 3. Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const isProd = process.env.NODE_ENV === 'production'
 
-    // Listen for online/offline events
-    setupNetworkListeners()
+      if (!isProd || isLocalhost) {
+        // Clean up SW in dev mode to prevent caching headaches
+        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()))
+      } else {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          setState(prev => ({ ...prev, registration: reg }))
 
-    // Listen for install prompt
-    setupInstallPrompt()
-
-    // Listen for messages from service worker
-    setupServiceWorkerMessages()
-
-  }, [])
-
-  const registerServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
-      })
-
-      console.log('✅ Service Worker registered:', registration.scope)
-
-      // Handle updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available
-              showUpdateNotification()
+          // Check for updates
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  setState(prev => ({ ...prev, updateAvailable: true }))
+                }
+              })
             }
           })
-        }
-      })
-
-      // Check if service worker is controlling the page
-      if (navigator.serviceWorker.controller) {
-        setPWAState(prev => ({ ...prev, serviceWorkerRegistered: true }))
-      } else {
-        // Wait for controller change
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          setPWAState(prev => ({ ...prev, serviceWorkerRegistered: true }))
         })
       }
-
-      // Get cache size
-      await updateCacheSize()
-
-    } catch (error) {
-      console.error('❌ Service Worker registration failed:', error)
-      toast.error('Service Worker registration failed')
-    }
-  }
-
-  const setupNetworkListeners = () => {
-    const updateOnlineStatus = () => {
-      const isOnline = navigator.onLine
-      setPWAState(prev => ({ ...prev, isOnline }))
-
-      if (isOnline) {
-        toast.success('Back online! Syncing data...')
-        // Trigger background sync
-        triggerBackgroundSync()
-      } else {
-        toast.error('You are offline. Some features may be limited.')
-      }
     }
 
-    window.addEventListener('online', updateOnlineStatus)
-    window.addEventListener('offline', updateOnlineStatus)
-
-    // Initial check
-    updateOnlineStatus()
-
-    return () => {
-      window.removeEventListener('online', updateOnlineStatus)
-      window.removeEventListener('offline', updateOnlineStatus)
-    }
-  }
-
-  const setupInstallPrompt = () => {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the default install prompt
+    // 4. Before Install Prompt
+    const handleBeforePrompt = (e: any) => {
+      // Browsers wait for this to be prevented before showing their own banner
       e.preventDefault()
       setDeferredPrompt(e)
-      setPWAState(prev => ({ ...prev, canInstall: true }))
+      setState(prev => ({ ...prev, canInstall: true }))
 
-      // Show install prompt after a delay
-      setTimeout(() => {
-        setPWAState(currentState => {
-          if (!currentState.isInstalled) {
-            showInstallPrompt()
-          }
-          return currentState
-        })
-      }, 30000) // 30 seconds
-    })
+      // Only show the custom banner if we haven't already dismissed it this session
+      // and we are NOT already installed
+      const lastDismissed = localStorage.getItem('pwa_dismissed')
+      const isRecent = lastDismissed && (Date.now() - parseInt(lastDismissed)) < 1000 * 60 * 60 * 24 // 24h
 
-    // Check if already installed
+      if (!isRecent && !hasPromptedThisSession.current) {
+        // Show after 5 seconds of engagement for better responsiveness
+        setTimeout(() => {
+          setShowInstallBanner(true)
+          hasPromptedThisSession.current = true
+        }, 5000)
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforePrompt)
     window.addEventListener('appinstalled', () => {
-      setPWAState(prev => ({
-        ...prev,
-        isInstalled: true,
-        canInstall: false
-      }))
-      setDeferredPrompt(null)
-      toast.success('Click has been installed!')
+      setState(prev => ({ ...prev, isInstalled: true, canInstall: false }))
+      setShowInstallBanner(false)
     })
-  }
 
-  const setupServiceWorkerMessages = () => {
-    navigator.serviceWorker?.addEventListener('message', (event) => {
-      const { type, data } = event.data
-
-      switch (type) {
-        case 'sw-activated':
-          console.log('🚀 Service Worker activated')
-          setPWAState(prev => ({ ...prev, serviceWorkerRegistered: true }))
-          break
-
-        case 'push-received':
-          handlePushNotification(data)
-          break
-
-        case 'content-synced':
-          toast.success(`Synced ${data.count} new content items`)
-          break
-
-        case 'offline-action-queued':
-          setPWAState(prev => ({
-            ...prev,
-            offlineQueue: prev.offlineQueue + 1
-          }))
-          break
-
-        default:
-          console.log('📨 Service Worker message:', type, data)
-      }
-    })
-  }
-
-  const showInstallPrompt = () => {
-    if (deferredPrompt) {
-      toast((t) => (
-        <div className="flex flex-col gap-2">
-          <span className="font-medium">Install Click</span>
-          <span className="text-sm text-gray-600">
-            Add Click to your home screen for the best experience
-          </span>
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id)
-                installPWA()
-              }}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
-            >
-              Install
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300"
-            >
-              Later
-            </button>
-          </div>
-        </div>
-      ), {
-        duration: 10000,
-        position: 'bottom-center'
-      })
+    return () => {
+      window.removeEventListener('online', updateOnline)
+      window.removeEventListener('offline', updateOnline)
+      window.removeEventListener('beforeinstallprompt', handleBeforePrompt)
     }
-  }
+  }, [])
 
-  const installPWA = async () => {
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  const install = useCallback(async () => {
     if (!deferredPrompt) return
-
-    setPWAState(prev => ({ ...prev, isInstalling: true }))
+    setState(prev => ({ ...prev, isInstalling: true }))
 
     try {
-      const result = await deferredPrompt.prompt()
-      console.log('Install prompt result:', result)
-
-      setDeferredPrompt(null)
-      setPWAState(prev => ({
-        ...prev,
-        isInstalling: false,
-        canInstall: false
-      }))
-
-    } catch (error) {
-      console.error('❌ PWA installation failed:', error)
-      setPWAState(prev => ({ ...prev, isInstalling: false }))
-      toast.error('Installation failed')
-    }
-  }
-
-  const showUpdateNotification = () => {
-    toast((t) => (
-      <div className="flex flex-col gap-2">
-        <span className="font-medium">Update Available</span>
-        <span className="text-sm text-gray-600">
-          A new version of Click is available
-        </span>
-        <div className="flex gap-2 mt-2">
-          <button
-            onClick={() => {
-              toast.dismiss(t.id)
-              updateServiceWorker()
-            }}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
-          >
-            Update
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300"
-          >
-            Later
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: 15000,
-      position: 'top-center'
-    })
-  }
-
-  const updateServiceWorker = async () => {
-    try {
-      const registration = await navigator.serviceWorker.ready
-      await registration.update()
-
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+      await deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setShowInstallBanner(false)
       }
-
-      toast.success('Updating Click...')
-      setTimeout(() => window.location.reload(), 1000)
-
-    } catch (error) {
-      console.error('❌ Service Worker update failed:', error)
-      toast.error('Update failed')
+    } catch (err) {
+      console.error('PWA Install failed', err)
+    } finally {
+      setState(prev => ({ ...prev, isInstalling: false }))
     }
-  }
+  }, [deferredPrompt])
 
-  const handlePushNotification = (data: any) => {
-    // This is handled by the service worker, but we can show additional UI feedback
-    toast.success(`New content: ${data.title || 'Update available'}`)
-  }
+  const update = useCallback(async () => {
+    if (!state.registration?.waiting) return
+    setState(prev => ({ ...prev, isUpdating: true }))
 
-  const requestPushPermission = async () => {
-    try {
-      const permission = await Notification.requestPermission()
+    state.registration.waiting.postMessage({ type: 'SKIP_WAITING' })
 
-      if (permission === 'granted') {
-        setPWAState(prev => ({ ...prev, pushNotificationsEnabled: true }))
+    // Listen for the reload
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload()
+    }, { once: true })
+  }, [state.registration])
 
-        // Subscribe to push notifications
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'SUBSCRIBE_PUSH'
-          })
-        }
+  const dismissPrompt = useCallback(() => {
+    setShowInstallBanner(false)
+    localStorage.setItem('pwa_dismissed', Date.now().toString())
+  }, [])
 
-        toast.success('Push notifications enabled!')
-      } else {
-        toast.error('Push notifications denied')
-      }
-    } catch (error) {
-      console.error('❌ Push permission request failed:', error)
-      toast.error('Failed to enable push notifications')
-    }
-  }
-
-  const triggerBackgroundSync = () => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'REGISTER_SYNC',
-        data: { tag: 'content-sync' }
-      })
-    }
-  }
-
-  const updateCacheSize = async () => {
-    try {
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'GET_CACHE_SIZE'
-        })
-      }
-    } catch (error) {
-      console.error('❌ Cache size check failed:', error)
-    }
-  }
-
-  const clearCache = async () => {
-    try {
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'CLEAR_CACHE'
-        })
-        toast.success('Cache cleared successfully')
-        await updateCacheSize()
-      }
-    } catch (error) {
-      console.error('❌ Cache clear failed:', error)
-      toast.error('Failed to clear cache')
-    }
-  }
-
-  const checkInstallationStatus = () => {
-    // Check if running as PWA
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    const isInWebAppiOS = (window.navigator as any).standalone === true
-
-    setPWAState(prev => ({
-      ...prev,
-      isInstalled: isStandalone || isInWebAppiOS
-    }))
-  }
-
-  // Global PWA functions for components to use
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).pwaManager = {
-        installPWA,
-        requestPushPermission,
-        triggerBackgroundSync,
-        clearCache,
-        updateCacheSize,
-        getState: () => pwaState
-      }
-    }
-  }, [pwaState])
+  const requestNotificationPermission = useCallback(async () => {
+    if (!('Notification' in window)) return false
+    const permission = await Notification.requestPermission()
+    return permission === 'granted'
+  }, [])
 
   return (
-    <>
-      {/* PWA Status Indicator */}
-      <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-2">
-        {/* Offline Indicator */}
-        {!pwaState.isOnline && (
-          <div className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium">Offline</span>
-            {pwaState.offlineQueue > 0 && (
-              <span className="text-xs bg-red-600 px-2 py-1 rounded">
-                {pwaState.offlineQueue} queued
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Install Button */}
-        {pwaState.canInstall && !pwaState.isInstalled && (
-          <button
-            onClick={installPWA}
-            disabled={pwaState.isInstalling}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="text-sm font-medium">
-              {pwaState.isInstalling ? 'Installing...' : 'Install App'}
-            </span>
-          </button>
-        )}
-
-        {/* Push Notifications */}
-        {pwaState.serviceWorkerRegistered &&
-         'Notification' in window &&
-         Notification.permission === 'default' && (
-          <button
-            onClick={requestPushPermission}
-            className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5-5V7a3 3 0 00-6 0v5l-5 5h5m0 0v2a2 2 0 004 0v-2m-4-4h4" />
-            </svg>
-            <span className="text-sm font-medium">Enable Notifications</span>
-          </button>
-        )}
-      </div>
-
-      {/* Offline Page Fallback */}
-      {!pwaState.isOnline && (
-        <div className="fixed inset-0 bg-gray-100 dark:bg-gray-900 z-30 flex items-center justify-center">
-          <div className="text-center p-8 max-w-md">
-            <div className="w-16 h-16 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0 0L12 12m-6.364 6.364L12 12m6.364-6.364L12 12" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              You're Offline
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Some features may be limited, but you can still view cached content and queue actions for when you're back online.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Update Banner */}
-      {pwaState.serviceWorkerRegistered && (
-        <div className="bg-blue-500 text-white px-4 py-2 text-center text-sm">
-          Click is ready to work offline and send notifications
-          <button
-            onClick={() => setPWAState(prev => ({ ...prev, serviceWorkerRegistered: false }))}
-            className="ml-2 underline hover:no-underline"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
+    <PWAContext.Provider value={{ state, install, update, dismissPrompt, requestNotificationPermission }}>
       {children}
-    </>
+
+      <AnimatePresence>
+        {/* Update Banner - High Priority Elite Design */}
+        {state.updateAvailable && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.95 }}
+            className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-6"
+          >
+            <div className="bg-indigo-600/90 dark:bg-indigo-600/80 backdrop-blur-2xl border border-white/20 p-5 rounded-[2rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] flex items-center gap-5 group">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center relative overflow-hidden">
+                <RefreshCw className={`w-6 h-6 text-white ${state.isUpdating ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:animate-shimmer" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-black text-white italic uppercase tracking-tighter">Click Evolved</h4>
+                <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">New intelligence active.</p>
+              </div>
+              <button
+                onClick={update}
+                disabled={state.isUpdating}
+                className="px-6 py-3 bg-white text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
+              >
+                {state.isUpdating ? 'Syncing...' : 'Restart'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Install Banner - The Glass Vault Design */}
+        {showInstallBanner && state.canInstall && !state.isInstalled && (
+          <motion.div
+            initial={{ opacity: 0, x: 100, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9, x: 50 }}
+            className="fixed bottom-8 right-8 z-[90] w-full max-w-sm px-6 md:px-0"
+          >
+            <div className="bg-black/60 dark:bg-black/40 backdrop-blur-3xl border border-white/10 p-8 rounded-[3rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden group">
+              {/* Dynamic Neural Glow */}
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700" />
+              <div className="absolute -bottom-32 -left-32 w-48 h-48 bg-fuchsia-500/10 blur-[80px] rounded-full group-hover:bg-fuchsia-500/20 transition-all duration-700" />
+
+              <button
+                onClick={dismissPrompt}
+                className="absolute top-6 right-6 p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all"
+                aria-label="Dismiss install prompt"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex flex-col gap-6 relative z-10">
+                <div className="flex items-center gap-5">
+                   <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 via-purple-600 to-fuchsia-500 rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-indigo-500/20 ring-1 ring-white/20">
+                     <Download className="w-7 h-7 text-white" />
+                   </div>
+                   <div>
+                     <h3 className="text-xl font-black text-white italic uppercase tracking-tighter leading-none mb-1">Click Desktop</h3>
+                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Native Edge v4.2</p>
+                   </div>
+                </div>
+
+                <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
+                  Ascend to a faster, offline-capable workspace. Built for elite content operations.
+                </p>
+
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={install}
+                    disabled={state.isInstalling}
+                    className="flex-1 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 shadow-2xl shadow-white/5"
+                  >
+                    {state.isInstalling ? (
+                      <RefreshCw className="w-4 h-4 animate-spin text-black" />
+                    ) : (
+                      <>Initialize Installation</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Strategic Advantage Tags */}
+              <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-indigo-500/30 transition-colors">
+                  <Zap className="w-3 h-3 text-amber-500" />
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Instant</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-emerald-500/30 transition-colors">
+                  <Wifi className="w-3 h-3 text-emerald-500" />
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Edge</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-blue-500/30 transition-colors">
+                  <Smartphone className="w-3 h-3 text-blue-500" />
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Nexus</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Offline Overlay - Non-intrusive but clear */}
+        {!state.isOnline && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-end justify-center pb-12 pointer-events-none"
+          >
+            <motion.div
+              initial={{ y: 20 }} animate={{ y: 0 }}
+              className="bg-zinc-900 border border-red-500/30 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto"
+            >
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_red]" />
+              <div className="text-sm">
+                <span className="font-bold text-white mr-2">You&apos;re Offline</span>
+                <span className="text-zinc-400">Some features may be limited.</span>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-xs font-bold text-zinc-500 hover:text-white underline underline-offset-4 ml-2"
+              >
+                Retry Connection
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </PWAContext.Provider>
   )
 }
 
-// Hook for components to use PWA features
 export function usePWA() {
-  const [pwaState, setPWAState] = useState<PWAState | null>(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).pwaManager) {
-      setPWAState((window as any).pwaManager.getState())
-    }
-  }, [])
-
-  return {
-    pwaState,
-    installPWA: () => (window as any).pwaManager?.installPWA?.(),
-    requestPushPermission: () => (window as any).pwaManager?.requestPushPermission?.(),
-    triggerBackgroundSync: () => (window as any).pwaManager?.triggerBackgroundSync?.(),
-    clearCache: () => (window as any).pwaManager?.clearCache?.(),
-    updateCacheSize: () => (window as any).pwaManager?.updateCacheSize?.()
+  const context = useContext(PWAContext)
+  if (context === undefined) {
+    throw new Error('usePWA must be used within a PWAManager')
   }
+  return context
 }
 
-
-
-
-
-
-
-
-
+export default PWAManager

@@ -23,7 +23,12 @@ async function processVideoJob(jobData, job) {
     });
 
     // Process video
-    await processVideo(contentId, videoPath, user);
+    if (jobData.useViralPipeline) {
+      const { runViralPipeline } = require('../services/viralPipelineService');
+      await runViralPipeline(contentId, videoPath, user);
+    } else {
+      await processVideo(contentId, videoPath, user);
+    }
 
     await job.updateProgress(100);
     emitProcessingComplete(userId, job.id, { success: true, contentId });

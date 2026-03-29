@@ -4,7 +4,7 @@ const { createWorker } = require('../services/jobQueueService');
 const { postToLinkedIn } = require('../services/linkedinOAuthService');
 const { postToFacebook } = require('../services/facebookOAuthService');
 const { postToInstagram } = require('../services/instagramOAuthService');
-const { postTweet } = require('../services/twitterOAuthService');
+const twitterOAuth = require('../services/twitterOAuthService');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
@@ -44,7 +44,7 @@ async function processSocialPostJob(jobData, job) {
 
         switch (platform.toLowerCase()) {
           case 'twitter':
-            postResult = await postTweet(userId, content.text, options);
+            postResult = await twitterOAuth.postTweetForUser(userId, content.text, options, options.platform_user_id);
             break;
           case 'linkedin':
             postResult = await postToLinkedIn(userId, content.text, options);

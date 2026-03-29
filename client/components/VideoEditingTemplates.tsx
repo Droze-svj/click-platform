@@ -1077,6 +1077,7 @@ export default function VideoEditingTemplates({
                       <button
                         onClick={() => setShowTemplateDetails(null)}
                         className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"
+                        title="Close details"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1125,7 +1126,7 @@ export default function VideoEditingTemplates({
                         <div className="space-y-3">
                           {template.textOverlays.map(overlay => (
                             <div key={overlay.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                              <div className="font-medium text-sm mb-1">"{overlay.text}"</div>
+                              <div className="font-medium text-sm mb-1">&quot;{overlay.text}&quot;</div>
                               <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {overlay.fontSize}px • {overlay.fontFamily} • {overlay.animation}
                               </div>

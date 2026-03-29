@@ -2,439 +2,307 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
-import LoadingSpinner from '../../../components/LoadingSpinner'
-import ErrorAlert from '../../../components/ErrorAlert'
-import { Plus, Edit, Trash2, Calendar, Eye, Clock } from 'lucide-react'
+import {
+  Plus, Edit, Trash2, Calendar, Eye, Clock, ArrowLeft,
+  RefreshCw, BookOpen, Send, BarChart2, Filter, CheckCircle,
+  AlertCircle, ChevronLeft, ChevronRight, Shield, Zap, Archive,
+  Cpu, Activity, Target, Database, Terminal, Fingerprint,
+  Monitor, Compass, Boxes, Layout, Layers, Timer, Box,
+  Wind, Ghost, Signal, ShieldCheck, ActivityIcon, HardDrive,
+  Workflow, Binary, Orbit, Scan, Command, Sparkle, UserCheck, Key
+} from 'lucide-react'
+import { ErrorBoundary } from '../../../components/ErrorBoundary'
+import ToastContainer from '../../../components/ToastContainer'
+
+const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-3xl transition-all duration-1000'
 
 interface Post {
-  id: string
-  title: string
-  content: string
-  excerpt: string
-  slug: string
+  id: string; title: string; content: string; excerpt: string; slug: string
   status: 'draft' | 'published' | 'scheduled'
-  featured_image?: string
-  thumbnail?: string
-  tags: string[]
-  categories: string[]
-  published_at?: string
-  scheduled_at?: string
-  created_at: string
-  updated_at: string
+  featured_image?: string; thumbnail?: string
+  tags: string[]; categories: string[]
+  published_at?: string; scheduled_at?: string
+  created_at: string; updated_at: string
 }
 
-interface PostsResponse {
-  posts: Post[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
+const STATUS_CFG = {
+  published: { 
+    label: 'DEPLOYED_PHANTOM', 
+    color: 'text-emerald-400', 
+    bg: 'bg-emerald-500/10', 
+    border: 'border-emerald-500/20', 
+    dot: 'bg-emerald-500',
+    glow: 'shadow-[0_0_20px_rgba(16,185,129,0.5)]'
+  },
+  scheduled: { 
+    label: 'LOCKED_TRAJECTORY', 
+    color: 'text-indigo-400', 
+    bg: 'bg-indigo-500/10', 
+    border: 'border-indigo-500/20', 
+    dot: 'bg-indigo-500',
+    glow: 'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
+  },
+  draft: { 
+    label: 'INERT_PARTICLE', 
+    color: 'text-slate-900', 
+    bg: 'bg-white/5', 
+    border: 'border-white/5', 
+    dot: 'bg-slate-950',
+    glow: ''
+  },
 }
 
-export default function PostsPage() {
+const MOCK_POSTS: Post[] = [
+  { id: 'p1', title: 'Neural Saturation: 10 Operational Hacks', content: '', excerpt: 'Optimizing payload resonance across stratified social meshes for maximum influence.', slug: 'neural-saturation', status: 'published', tags: ['neural','operational'], categories: ['STRATEGY','LOGIC'], published_at: new Date(Date.now()- 86400000).toISOString(), created_at: new Date(Date.now()-86400000).toISOString(), updated_at: new Date(Date.now()-86400000).toISOString() },
+  { id: 'p2', title: 'Lattice Sync Strategy: Deep Archive Audit', content: '', excerpt: 'An exhaustive tactical review of sovereign content trajectories and signal gain.', slug: 'lattice-sync', status: 'published', tags: ['lattice','audit'], categories: ['ANALYTICS','TRAJECTORY'], published_at: new Date(Date.now()-172800000).toISOString(), created_at: new Date(Date.now()-172800000).toISOString(), updated_at: new Date(Date.now()-172800000).toISOString() },
+  { id: 'p3', title: 'Spectral Signal Extraction Techniques', content: '', excerpt: 'Developing high-fidelity resonance triggers for autonomous audience induction.', slug: 'spectral-signal', status: 'draft', tags: ['spectral','induction'], categories: ['RESONANCE','SOCIAL'], created_at: new Date(Date.now()-259200000).toISOString(), updated_at: new Date(Date.now()-259200000).toISOString() },
+  { id: 'p4', title: 'Kinetic Motion Masterclass: Sovereign Edit', content: '', excerpt: 'Engineering high-velocity visual payloads for rapid synaptic engagement.', slug: 'kinetic-motion', status: 'scheduled', tags: ['kinetic','visual'], categories: ['OPERATIONS','KINETIC'], scheduled_at: new Date(Date.now()+172800000).toISOString(), created_at: new Date(Date.now()-345600000).toISOString(), updated_at: new Date(Date.now()-345600000).toISOString() },
+]
+
+export default function SignalDiffusionArchivePage() {
   const router = useRouter()
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const [selectedStatus, setSelectedStatus] = useState('all')
+  const PAGE_SIZE = 24
 
-  useEffect(() => {
-    loadPosts()
-  }, [currentPage, selectedStatus])
-
-  const loadPosts = async () => {
+  const loadLattice = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true); else setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      setError(null)
-
-      // Skip API calls in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [Posts] Skipping posts API call in development mode')
-
-        // Provide comprehensive mock data for development
-        const mockPosts: Post[] = [
-          {
-            id: 'mock-post-1',
-            title: '10 Tips for Viral Content Creation',
-            content: 'Learn the secrets of creating content that goes viral...',
-            excerpt: 'Discover the strategies behind viral content creation that every creator should know.',
-            slug: '10-tips-viral-content-creation',
-            status: 'published',
-            featured_image: '/api/placeholder/400/250',
-            thumbnail: '/api/placeholder/200/150',
-            tags: ['content-creation', 'viral', 'tips'],
-            categories: ['Strategy', 'Tutorials'],
-            published_at: new Date(Date.now() - 86400000).toISOString(),
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            updated_at: new Date(Date.now() - 86400000).toISOString()
-          },
-          {
-            id: 'mock-post-2',
-            title: 'Behind the Scenes: Content Strategy',
-            content: 'A deep dive into our content strategy process...',
-            excerpt: 'Get an exclusive look at how we plan and execute our content strategy.',
-            slug: 'behind-scenes-content-strategy',
-            status: 'published',
-            featured_image: '/api/placeholder/400/250',
-            thumbnail: '/api/placeholder/200/150',
-            tags: ['strategy', 'behind-scenes', 'planning'],
-            categories: ['Strategy', 'Case Studies'],
-            published_at: new Date(Date.now() - 172800000).toISOString(),
-            created_at: new Date(Date.now() - 172800000).toISOString(),
-            updated_at: new Date(Date.now() - 172800000).toISOString()
-          },
-          {
-            id: 'mock-post-3',
-            title: 'Quick Tips for Better Engagement',
-            content: 'Simple but effective tips to boost engagement...',
-            excerpt: 'Learn quick and easy ways to increase engagement on your social media posts.',
-            slug: 'quick-tips-better-engagement',
-            status: 'draft',
-            featured_image: '/api/placeholder/400/250',
-            thumbnail: '/api/placeholder/200/150',
-            tags: ['engagement', 'tips', 'social-media'],
-            categories: ['Tips', 'Social Media'],
-            scheduled_at: new Date(Date.now() + 86400000).toISOString(),
-            created_at: new Date(Date.now() - 259200000).toISOString(),
-            updated_at: new Date(Date.now() - 259200000).toISOString()
-          },
-          {
-            id: 'mock-post-4',
-            title: 'Video Editing Masterclass',
-            content: 'Complete guide to professional video editing...',
-            excerpt: 'Master the art of video editing with our comprehensive guide and techniques.',
-            slug: 'video-editing-masterclass',
-            status: 'scheduled',
-            featured_image: '/api/placeholder/400/250',
-            thumbnail: '/api/placeholder/200/150',
-            tags: ['video-editing', 'tutorial', 'masterclass'],
-            categories: ['Video', 'Tutorials'],
-            scheduled_at: new Date(Date.now() + 172800000).toISOString(),
-            created_at: new Date(Date.now() - 345600000).toISOString(),
-            updated_at: new Date(Date.now() - 345600000).toISOString()
-          }
-        ]
-
-        // Filter by status and paginate
-        const filteredPosts = selectedStatus === 'all'
-          ? mockPosts
-          : mockPosts.filter(post => post.status === selectedStatus)
-
-        const startIndex = (currentPage - 1) * 20
-        const endIndex = startIndex + 20
-        const paginatedPosts = filteredPosts.slice(startIndex, endIndex)
-
-        setPosts(paginatedPosts)
-        setLoading(false)
-        return
-      }
-
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20'
-      })
-
-      if (selectedStatus !== 'all') {
-        params.append('status', selectedStatus)
-      }
-
-      const response = await apiGet<PostsResponse>(`/posts?${params}`)
-      setPosts(response.posts)
-    } catch (err: any) {
-      console.error('Failed to load posts:', err)
-      setError(err.message || 'Failed to load posts')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleStatusChange = async (postId: string, newStatus: string) => {
-    try {
-      if (newStatus === 'published') {
-        await apiPost(`/posts/${postId}/publish`, {})
+        await new Promise(r => setTimeout(r, 800))
+        const p = selectedStatus === 'all' ? MOCK_POSTS : MOCK_POSTS.filter(p => p.status === selectedStatus)
+        setPosts(p)
       } else {
-        await apiPut(`/posts/${postId}`, { status: newStatus })
+        const params = new URLSearchParams({ page: currentPage.toString(), limit: String(PAGE_SIZE) })
+        if (selectedStatus !== 'all') params.append('status', selectedStatus)
+        const res = await apiGet<{ posts: Post[] }>(`/posts?${params}`)
+        setPosts(res.posts || [])
       }
-      await loadPosts() // Refresh the list
-    } catch (err: any) {
-      console.error('Failed to update post status:', err)
-      setError(err.message || 'Failed to update post status')
-    }
+    } catch (err: any) { setError(`ARCHIVE_DESYNC: ${err.message}`) }
+    finally { setLoading(false); setRefreshing(false) }
   }
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) return
+  useEffect(() => { loadLattice() }, [currentPage, selectedStatus])
 
-    try {
-      await apiDelete(`/posts/${postId}`)
-      await loadPosts() // Refresh the list
-    } catch (err: any) {
-      console.error('Failed to delete post:', err)
-      setError(err.message || 'Failed to delete post')
-    }
+  const handlePurge = async (postId: string) => {
+    if (!confirm('TERMINATE_PAYLOAD_LATTICE_NODE?')) return
+    try { await apiDelete(`/posts/${postId}`); loadLattice() }
+    catch (err: any) { setError(`PURGE_FAIL: ${err.message}`) }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+  if (loading && posts.length === 0) return (
+     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen font-inter">
+        <Archive size={64} className="text-indigo-500 animate-spin mb-8" />
+        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Signal Diffusion Ledger...</span>
+     </div>
+  )
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return 'bg-green-100 text-green-800'
-      case 'scheduled': return 'bg-blue-100 text-blue-800'
-      case 'draft': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  if (loading && posts.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" />
-        <span className="ml-2 text-gray-600">Loading posts...</span>
-      </div>
-    )
-  }
+  const STATS = [
+    { label: 'Payload Particles', val: posts.length, color: 'text-white', icon: Database },
+    { label: 'Deployed Phantoms', val: posts.filter(p => p.status === 'published').length, color: 'text-emerald-400', icon: Activity },
+    { label: 'Locked Trajectories', val: posts.filter(p => p.status === 'scheduled').length, color: 'text-indigo-400', icon: Target },
+    { label: 'Inert Particles', val: posts.filter(p => p.status === 'draft').length, color: 'text-rose-400', icon: Cpu },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full flex items-center justify-center">
-                <Edit className="w-6 h-6 text-white" />
+    <ErrorBoundary>
+      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1800px] mx-auto space-y-24 font-inter">
+        <ToastContainer />
+        
+        {/* Background Signal Layer */}
+        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
+           <Signal size={1200} className="text-white absolute -bottom-40 -left-60 rotate-12 blur-[1px]" />
+           <Archive size={1000} className="text-white absolute -top-80 -right-40 rotate-[32deg] blur-[2px]" />
+        </div>
+
+        {/* Signal Header HUD */}
+        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
+           <div className="flex items-center gap-10">
+              <button onClick={() => router.push('/dashboard')} title="Abort"
+                className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
+                <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
+              </button>
+              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
+                <Archive size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-1000 animate-pulse" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                  Content Management
-                </h1>
-                <p className="text-gray-600 mt-1">Create, manage, and schedule your posts</p>
+                 <div className="flex items-center gap-6 mb-4">
+                   <div className="flex items-center gap-3">
+                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Signal Diffusion v24.8.4</span>
+                   </div>
+                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
+                       <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
+                       <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase italic leading-none">STRATUM_UPLINK_STABLE</span>
+                   </div>
+                 </div>
+                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Diffusion</h1>
+                 <p className="text-slate-800 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">High-fidelity archival node for persistent mission artifacts and content trajectories.</p>
               </div>
-            </div>
-            <button
-              onClick={() => router.push('/dashboard/posts/create')}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-xl flex items-center gap-2 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="w-5 h-5" />
-              Create New Post
-            </button>
-          </div>
-        </div>
+           </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-lg font-semibold text-gray-800">Filter Posts:</span>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white hover:border-indigo-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200"
-              >
-                <option value="all">📝 All Posts ({posts.length})</option>
-                <option value="draft">📄 Drafts</option>
-                <option value="published">✅ Published</option>
-                <option value="scheduled">📅 Scheduled</option>
-              </select>
-            </div>
-            <div className="text-sm text-gray-600">
-              Showing {posts.length} posts
-            </div>
-          </div>
-        </div>
-
-      {/* Error Alert */}
-      {error && (
-        <ErrorAlert message={error} onClose={() => setError(null)} />
-      )}
-
-        {/* Posts List */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          {posts.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Edit className="w-10 h-10 text-indigo-500" />
-              </div>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-3">No posts yet</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">Start creating amazing content by publishing your first post</p>
-              <button
-                onClick={() => router.push('/dashboard/posts/create')}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-xl inline-flex items-center gap-2 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="w-5 h-5" />
-                Create Your First Post
+           <div className="flex items-center gap-12">
+              <button onClick={() => loadLattice(true)} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+                 <RefreshCw size={32} className={`text-slate-900 group-hover:text-indigo-400 transition-colors duration-700 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
-            </div>
-        ) : (
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {posts.map((post) => (
-                <div key={post.id} className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
-                  {/* Post Thumbnail */}
-                  {post.thumbnail && (
-                    <div className="h-32 bg-gradient-to-r from-gray-200 to-gray-300 relative overflow-hidden">
-                      <img
-                        src={post.thumbnail}
-                        alt={post.title || 'Post thumbnail'}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-3 right-3">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full text-white ${
-                          post.status === 'published' ? 'bg-green-500' :
-                          post.status === 'scheduled' ? 'bg-blue-500' :
-                          'bg-gray-500'
-                        }`}>
-                          {post.status}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+              <Link href="/dashboard/posts/create"
+                className="px-16 py-8 bg-white text-black rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:bg-indigo-600 hover:text-white transition-all duration-1000 flex items-center gap-8 italic active:scale-95 group relative overflow-hidden outline-none border-none"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[2s]" />
+                <Plus size={32} className="group-hover:rotate-90 transition-transform duration-1000" /> INITIALIZE_PAYLOAD
+              </Link>
+           </div>
+        </header>
 
-                  {/* Post Content */}
-                  <div className="p-5">
-                    <h3 className="font-semibold text-lg text-gray-800 mb-2 line-clamp-2">
-                      {post.title || 'Untitled Post'}
-                    </h3>
-
-                    {post.excerpt && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-                    )}
-
-                    {/* Status and Date Info */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        {post.status === 'published' && post.published_at && (
-                          <>
-                            <Eye className="w-4 h-4 text-green-500" />
-                            <span className="text-xs text-gray-500">
-                              {new Date(post.published_at).toLocaleDateString()}
-                            </span>
-                          </>
-                        )}
-                        {post.status === 'scheduled' && post.scheduled_at && (
-                          <>
-                            <Clock className="w-4 h-4 text-blue-500" />
-                            <span className="text-xs text-gray-500">
-                              {new Date(post.scheduled_at).toLocaleDateString()}
-                            </span>
-                          </>
-                        )}
-                        {post.status === 'draft' && (
-                          <span className="text-xs text-gray-500">
-                            Draft • {new Date(post.created_at).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Categories/Tags */}
-                    {post.categories && post.categories.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {post.categories.slice(0, 2).map((category, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                        {post.categories.length > 2 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                            +{post.categories.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => router.push(`/dashboard/posts/${post.id}/edit`)}
-                          className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          title="Edit post"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-
-                        {post.status === 'draft' && (
-                          <>
-                            <button
-                              onClick={() => handleStatusChange(post.id, 'published')}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Publish now"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => router.push(`/dashboard/posts/${post.id}/schedule`)}
-                              className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                              title="Schedule post"
-                            >
-                              <Calendar className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete post"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+        {/* Diffusion HUD Metrics */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-10 relative z-10">
+           {STATS.map((s, i) => (
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, delay: i * 0.1 }}
+               key={s.label} className={`${glassStyle} rounded-[4rem] p-12 flex flex-col items-center text-center group bg-black/40 border-white/5 hover:bg-white/[0.04] shadow-inner relative overflow-hidden`}
+             >
+                <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-[3s] pointer-events-none group-hover:rotate-12 group-hover:scale-150"><s.icon size={200} className="text-white" /></div>
+                <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center mb-10 shadow-3xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000">
+                  <s.icon size={40} className={s.color} />
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+                <p className={`text-6xl font-black italic tracking-tighter leading-none mb-4 drop-shadow-2xl ${s.color}`}>{s.val}</p>
+                <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">{s.label}</p>
+             </motion.div>
+           ))}
+        </section>
 
-      {/* Pagination */}
-      {posts.length > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, posts.length)} of {posts.length} posts
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="px-3 py-1">Page {currentPage}</span>
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={posts.length < 20}
-              className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+        {/* Signal Diffusion Registry */}
+        <section className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 shadow-[0_100px_300px_rgba(0,0,0,1)] border-white/5 bg-black/40`}>
+           <div className="px-16 py-14 border-b-2 border-white/5 flex flex-col xl:flex-row items-center justify-between gap-16 bg-white/[0.02] relative overflow-hidden backdrop-blur-3xl">
+              <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-[5s]"><Layout size={800} className="text-white" /></div>
+              
+              <div className="flex items-center gap-8 p-3 bg-black/60 rounded-[3.5rem] border-2 border-white/10 shadow-inner relative z-10">
+                 {['all','published','scheduled','draft'].map(s => (
+                   <button key={s} onClick={() => setSelectedStatus(s)}
+                     className={`px-12 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] transition-all duration-1000 italic active:scale-95 border-2 ${selectedStatus === s ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'text-slate-900 border-transparent hover:text-white hover:bg-white/[0.05]'}`}>
+                     {s === 'all' ? 'FULL_MATRIX' : STATUS_CFG[s as keyof typeof STATUS_CFG].label.split('_')[0]}
+                   </button>
+                 ))}
+              </div>
+              <div className="flex items-center gap-10 relative z-10">
+                <div className="text-[13px] font-black text-slate-900 uppercase tracking-[0.8em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">
+                  {posts.length} TRAJECTORIES_ONLINE
+                </div>
+                <div className="w-4 h-4 rounded-full bg-indigo-500 animate-ping shadow-[0_0_20px_rgba(99,102,241,1)]" />
+              </div>
+           </div>
+
+           <div className="p-16 min-h-[600px] bg-black/20">
+              <AnimatePresence mode="wait">
+                {posts.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.05 }} exit={{ opacity: 0 }} key="empty" className="py-64 text-center flex flex-col items-center gap-16 group">
+                     <Terminal size={200} className="text-white animate-pulse group-hover:scale-110 transition-transform duration-[3s]" />
+                     <div className="space-y-8">
+                        <p className="text-7xl font-black text-white uppercase tracking-[0.8em] italic drop-shadow-2xl underline decoration-indigo-500/20 underline-offset-8">NULL_ARCHIVE_SECTOR</p>
+                        <p className="text-[18px] font-black text-slate-600 uppercase tracking-[0.5em] italic leading-none max-w-2xl mx-auto">No active content trajectories identified in this stratum. Initiate payload synthesis to begin diffusion.</p>
+                     </div>
+                  </motion.div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+                     {posts.map((post, i) => {
+                       const cfg = STATUS_CFG[post.status] || STATUS_CFG.draft
+                       return (
+                         <motion.div 
+                           initial={{ opacity: 0, scale: 0.9, y: 50 }} whileInView={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, delay: i * 0.05 }}
+                           key={post.id} className="group relative flex flex-col bg-[#050505] border-2 border-white/5 rounded-[5.5rem] overflow-hidden hover:border-indigo-500/40 hover:bg-white/[0.04] transition-all duration-1000 shadow-[0_40px_100px_rgba(0,0,0,1)] hover:shadow-indigo-500/[0.05]"
+                         >
+                            <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-1000 pointer-events-none group-hover:scale-150 rotate-12"><Database size={300} /></div>
+                            
+                            <div className="flex items-center justify-between px-12 py-10 border-b-2 border-white/5 bg-white/[0.01] relative z-20">
+                               <div className="flex items-center gap-6">
+                                  <div className={`w-4 h-4 rounded-full ${cfg.dot} ${cfg.glow} ${post.status === 'published' ? 'animate-pulse' : ''}`} />
+                                  <span className={`text-[12px] font-black uppercase tracking-[0.4em] ${cfg.color} italic leading-none`}>{cfg.label}</span>
+                               </div>
+                               {post.categories?.[0] && (
+                                 <div className="px-6 py-2 rounded-2xl bg-indigo-500/5 text-indigo-400 border-2 border-indigo-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-inner">
+                                   {post.categories[0]}
+                                 </div>
+                               )}
+                            </div>
+                            
+                            <div className="p-14 flex-1 space-y-10 relative z-10 bg-gradient-to-br from-white/[0.02] to-transparent">
+                               <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-700 drop-shadow-2xl">{post.title || 'UNNAMED_PHANTOM'}</h3>
+                               {post.excerpt && <p className="text-[15px] text-slate-900 font-extrabold italic uppercase leading-relaxed line-clamp-3 tracking-tighter opacity-80 group-hover:text-white transition-colors">{post.excerpt}</p>}
+                               <div className="flex flex-wrap gap-4 pt-6 border-t-2 border-white/5">
+                                  {post.tags?.slice(0, 3).map((tag, i) => (
+                                    <span key={i} className="px-5 py-2.5 rounded-2xl bg-black/60 border-2 border-white/5 text-[11px] font-black text-slate-950 uppercase italic tracking-[0.2em] group-hover:border-indigo-500/20 group-hover:text-white transition-all shadow-inner">#{tag}</span>
+                                  ))}
+                               </div>
+                            </div>
+
+                            <div className="px-14 py-12 border-t-2 border-white/5 bg-black/40 flex items-center justify-between relative z-20 group-hover:bg-black/60 transition-all">
+                               <div className="flex items-center gap-8">
+                                  <div className="space-y-3">
+                                     <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none opacity-40">CHRONOS_SYNC</p>
+                                     <p className="text-[14px] font-black text-white italic tabular-nums leading-none tracking-widest bg-white/[0.03] px-4 py-2 rounded-xl">
+                                        {post.status === 'published' ? new Date(post.published_at!).toLocaleDateString().toUpperCase() : post.status === 'scheduled' ? new Date(post.scheduled_at!).toLocaleDateString().toUpperCase() : 'VAULT_LOCK'}
+                                     </p>
+                                  </div>
+                                  <div className="h-16 w-1 bg-white/5 rounded-full mx-2" />
+                                  <div className="flex items-center gap-5">
+                                     <button onClick={() => router.push(`/dashboard/posts/${post.id}/edit`)} className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-900 hover:text-white transition-all shadow-3xl active:scale-75 group/edit relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-indigo-500 opacity-0 group-hover/edit:opacity-20 transition-opacity" />
+                                        <Edit size={28} className="group-hover/edit:rotate-12 transition-transform relative z-10" />
+                                     </button>
+                                     <button onClick={() => router.push(`/dashboard/analytics`)} className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all shadow-3xl active:scale-75 hover:scale-110 relative overflow-hidden group/stats">
+                                        <BarChart2 size={28} className="group-hover/stats:scale-110 transition-transform relative z-10" />
+                                     </button>
+                                  </div>
+                               </div>
+                               <button onClick={() => handlePurge(post.id)} className="w-16 h-16 rounded-[1.8rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-3xl active:scale-75 group/purge">
+                                  <Trash2 size={28} className="group-hover/purge:rotate-[30deg] transition-transform" />
+                               </button>
+                            </div>
+                         </motion.div>
+                       )
+                     })}
+                  </div>
+                )}
+              </AnimatePresence>
+           </div>
+
+           {/* Temporal Ledger Paging */}
+           {posts.length >= PAGE_SIZE && (
+             <div className="px-16 py-12 border-t-2 border-white/5 bg-black/80 flex items-center justify-between relative z-50 backdrop-blur-3xl">
+                <div className="flex items-center gap-8">
+                   <span className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,1)]" />
+                   <span className="text-[13px] font-black text-slate-950 uppercase tracking-[1em] italic opacity-40">TEMPORAL_FRAME_{currentPage}</span>
+                </div>
+                <div className="flex items-center gap-10 p-2 bg-black/40 rounded-[3rem] border-2 border-white/5 shadow-inner">
+                   <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-18 h-18 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-800 hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-3xl hover:border-indigo-500/40"><ChevronLeft size={36}/></button>
+                   <div className="w-1 h-8 bg-white/5 rounded-full" />
+                   <button onClick={() => setCurrentPage(p => p + 1)} disabled={posts.length < PAGE_SIZE} className="w-18 h-18 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-800 hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-3xl hover:border-indigo-500/40"><ChevronRight size={36}/></button>
+                </div>
+             </div>
+           )}
+        </section>
+
+        <style jsx global>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          ::-webkit-scrollbar { width: 6px; }
+          ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); border-radius: 10px; }
+          ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; border: 2px solid #020205; }
+          ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
+          .shadow-3xl { filter: drop-shadow(0 40px 100px rgba(0,0,0,0.8)); }
+        `}</style>
       </div>
-    </div>
+    </ErrorBoundary>
   )
 }

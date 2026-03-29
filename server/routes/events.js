@@ -149,6 +149,8 @@ router.get('/connections', auth, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Connections retrieved', 200, { connections: userConnections });
 }));
 
-module.exports = { router, broadcastEvent };
+module.exports = router;
+module.exports.broadcastEvent = broadcastEvent;
+
 
 

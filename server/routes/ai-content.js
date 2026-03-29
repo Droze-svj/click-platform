@@ -85,13 +85,13 @@ router.post('/save-master-script', auth, asyncHandler(async (req, res) => {
  * Extract viral quotes from transcript
  */
 router.post('/extract-quotes', auth, asyncHandler(async (req, res) => {
-  const { transcript } = req.body;
+  const { transcript, engine, persona } = req.body;
 
   if (!transcript) {
     return sendError(res, 'Transcript is required', 400);
   }
 
-  const result = await aiAgentWritingService.extractViralQuotes(transcript);
+  const result = await aiAgentWritingService.extractViralQuotes(transcript, engine, persona);
   sendSuccess(res, 'Viral quotes extracted', 200, result);
 }));
 

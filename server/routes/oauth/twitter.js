@@ -5,7 +5,7 @@ const auth = require('../../middleware/auth');
 const {
   getAuthorizationUrl,
   exchangeCodeForToken,
-  postTweet,
+  postTweetForUser,
   disconnectTwitter,
   isConfigured
 } = require('../../services/twitterOAuthService');
@@ -74,7 +74,7 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
  * Post a tweet
  */
 router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { text, replyTo, mediaIds } = req.body;
+  const { text, replyTo, mediaIds, platform_user_id } = req.body;
 
   if (!text || text.trim().length === 0) {
     return sendError(res, 'Tweet text is required', 400);
@@ -88,7 +88,7 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   if (replyTo) options.reply = { in_reply_to_tweet_id: replyTo };
   if (mediaIds && mediaIds.length > 0) options.media = { media_ids: mediaIds };
 
-  const tweet = await postTweet(req.user._id, text, options);
+  const tweet = await postTweetForUser(req.user._id, text, options, platform_user_id);
   
   sendSuccess(res, 'Tweet posted successfully', 200, { tweet });
 }));
@@ -104,18 +104,16 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
 
 /**
  * GET /api/oauth/twitter/status
- * Get Twitter connection status
+ * Get Twitter connection status (supports multiple X accounts)
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const User = require('../../models/User');
-  const user = await User.findById(req.user._id).select('oauth.twitter');
-  
-  const connected = user?.oauth?.twitter?.connected || false;
-  const connectedAt = user?.oauth?.twitter?.connectedAt;
+  const { getConnectedAccounts } = require('../../services/twitterOAuthService');
+  const accounts = await getConnectedAccounts(req.user._id);
+  const connected = accounts.length > 0;
 
   sendSuccess(res, 'Status retrieved', 200, {
     connected,
-    connectedAt,
+    accounts,
     configured: isConfigured()
   });
 }));

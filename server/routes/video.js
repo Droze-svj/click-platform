@@ -22,6 +22,7 @@ const logger = require('../utils/logger');
 const { requireActiveSubscription } = require('../middleware/subscriptionAccess');
 const { uploadFile, deleteFile } = require('../services/storageService');
 const { trackAction } = require('../services/workflowService');
+const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser');
 const router = express.Router();
 
 // In-memory store for dev videos (maps contentId to video data)
@@ -54,17 +55,10 @@ const upload = multer({
   storage,
   limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 1073741824 }, // 1GB default
   fileFilter: (req, file, cb) => {
-    // Check if this is a dev user on localhost - allow any file for them
-    // Check both host header and x-forwarded-host (for proxy requests)
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
-      (typeof req.headers['x-forwarded-for'] === 'string' && req.headers['x-forwarded-for'].includes('127.0.0.1'));
-    // Always allow dev mode when NODE_ENV is not production OR when on localhost
-    const allowDevMode = process.env.NODE_ENV !== 'production' || isLocalhost;
-    const userId = req.user?._id || req.user?.id;
-    const isDevUser = userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123');
+    const devModeAllowed = checkAllowDevMode(req);
+    const isDev = isDevUser(req.user);
 
-    if (allowDevMode && isDevUser) {
+    if (devModeAllowed && isDev) {
       // Allow any file for dev users (they'll get a mock response anyway)
       cb(null, true);
       return;
@@ -85,23 +79,14 @@ const upload = multer({
 // Multer error handler middleware - catches multer errors before they become 500s
 const handleMulterError = (err, req, res, next) => {
   if (err) {
-    // Check both host header and x-forwarded-host (for proxy requests)
-    const host = req.headers.host || req.headers['x-forwarded-host'] || '';
-    const referer = req.headers.referer || req.headers.origin || '';
-    const forwardedFor = req.headers['x-forwarded-for'] || '';
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') ||
-      referer.includes('localhost') || referer.includes('127.0.0.1') ||
-      (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
-    // Always allow dev mode when NODE_ENV is not production OR when on localhost
-    const nodeEnv = process.env.NODE_ENV;
-    const allowDevMode = !nodeEnv || nodeEnv !== 'production' || isLocalhost;
+    const devModeAllowed = checkAllowDevMode(req);
+    const isDev = isDevUser(req.user);
     const userId = req.user?._id || req.user?.id;
-    const isDevUser = userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123');
 
     // For dev users, convert multer errors to mock responses
-    if (allowDevMode && isDevUser && (err instanceof multer.MulterError || err.message?.includes('Only video files are allowed'))) {
-      console.log('🔧 [Video] Multer error for dev user, returning mock response', { error: err.message, userId, allowDevMode });
-      logger.warn('Multer error for dev user, returning mock response', { error: err.message, userId, allowDevMode });
+    if (devModeAllowed && isDev && (err instanceof multer.MulterError || err.message?.includes('Only video files are allowed'))) {
+      console.log('🔧 [Video] Multer error for dev user, returning mock response', { error: err.message, userId, devModeAllowed });
+      logger.warn('Multer error for dev user, returning mock response', { error: err.message, userId, devModeAllowed });
       return res.json({
         success: true,
         message: 'Video uploaded successfully (dev mode)',
@@ -1783,11 +1768,12 @@ router.post('/analyze-pacing', auth, async (req, res) => {
 router.post('/editor/save', auth, async (req, res) => {
   try {
     const { videoId, editorState } = req.body;
-    const userId = req.user._id || req.user.id;
+    const userId = req.user?._id || req.user?.id;
+    const isDev = isDevUser(req.user);
 
     // For dev users, just return success
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-      console.log('🔧 [Editor Save] Dev user autosave', { videoId, hasState: !!editorState });
+    if (isDev || (videoId && videoId.toString().startsWith('dev-'))) {
+      console.log('🔧 [Editor Save] Dev user autosave', { videoId, userId, hasState: !!editorState });
       return res.json({
         success: true,
         message: 'Editor state saved (dev mode)',
@@ -1954,4 +1940,6 @@ router.post('/transcribe-editor', auth, async (req, res) => {
 });
 
 module.exports = router;
+// Worker import compatibility: allow `const { processVideo } = require('../routes/video')`
+module.exports.processVideo = processVideo;
 

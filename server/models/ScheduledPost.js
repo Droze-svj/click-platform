@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const scheduledPostSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
   },
   workspaceId: {
@@ -159,20 +158,19 @@ scheduledPostSchema.index({ userId: 1, platform: 1, scheduledTime: 1 }); // User
 scheduledPostSchema.index({ status: 1, scheduledTime: 1 }); // All posts by status (for cron jobs)
 scheduledPostSchema.index({ platform: 1, status: 1 }); // Posts by platform and status
 scheduledPostSchema.index({ contentId: 1 }); // Posts by content
-scheduledPostSchema.index({ scheduledTime: 1, status: 1 }); // For scheduled post processing
 scheduledPostSchema.index({ agencyWorkspaceId: 1, scheduledTime: 1 }); // Agency master calendar
 scheduledPostSchema.index({ clientWorkspaceId: 1, scheduledTime: 1 }); // Client workspace calendar
 scheduledPostSchema.index({ workspaceId: 1, scheduledTime: 1 }); // Workspace calendar
 scheduledPostSchema.index({ campaignId: 1 }); // Campaign posts
 
 // Real-time update hooks
-scheduledPostSchema.post('save', async function(doc) {
+scheduledPostSchema.post('save', async function (doc) {
   try {
     const { handlePostCreated, handlePostUpdated } = require('../services/calendarRealtimeService');
-    
+
     if (this.isNew) {
       await handlePostCreated(doc);
-      
+
       // Create portal activity
       if (doc.clientWorkspaceId && doc.agencyWorkspaceId) {
         const { onPostScheduled } = require('../services/portalActivityHooks');
@@ -180,7 +178,7 @@ scheduledPostSchema.post('save', async function(doc) {
       }
     } else {
       await handlePostUpdated(doc, this.getChanges());
-      
+
       // If status changed to posted, create activity
       if (doc.status === 'posted' && this.getChanges()?.status) {
         if (doc.clientWorkspaceId && doc.agencyWorkspaceId) {
@@ -196,7 +194,7 @@ scheduledPostSchema.post('save', async function(doc) {
   }
 });
 
-scheduledPostSchema.post('findOneAndDelete', async function(doc) {
+scheduledPostSchema.post('findOneAndDelete', async function (doc) {
   try {
     if (doc) {
       const { handlePostDeleted } = require('../services/calendarRealtimeService');

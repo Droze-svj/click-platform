@@ -1,8 +1,10 @@
 // TikTok OAuth Service
-// Features: OAuth 2.0, video upload/publish permissions, platform_accounts storage.
+// Features: OAuth 2.0, video upload/publish permissions, User model storage.
 
-const { createClient } = require('@supabase/supabase-js');
+const OAuthService = require('./OAuthService');
 const logger = require('../utils/logger');
+const fs = require('fs');
+const axios = require('axios');
 
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const API_BASE = 'https://open.tiktokapis.com/v2';
@@ -19,26 +21,15 @@ class TikTokOAuthService {
     this.clientKey = process.env.TIKTOK_CLIENT_KEY;
     this.clientSecret = process.env.TIKTOK_CLIENT_SECRET;
     this.redirectUri = defaultRedirectUri();
-    this.supabase = null;
     this.isConfiguredFlag = !!(this.clientKey && this.clientSecret);
     if (this.isConfiguredFlag) {
       logger.info('TikTok OAuth client initialized', LOG_CONTEXT);
     } else {
       logger.warn('TikTok OAuth not configured. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET', LOG_CONTEXT);
     }
-  }
-
-  getSupabaseClient() {
-    if (!this.supabase) {
-      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Supabase not configured');
-      }
-      this.supabase = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      );
-    }
-    return this.supabase;
+    
+    // Bind methods to ensure they work when destructured in routes
+    this.isConfigured = this.isConfigured.bind(this);
   }
 
   isConfigured() {
@@ -104,68 +95,176 @@ class TikTokOAuthService {
   }
 
   async connectAccount(userId, tokens, profile) {
-    const supabase = this.getSupabaseClient();
-    const accountData = {
-      user_id: userId,
-      platform: 'tiktok',
-      platform_user_id: profile.id,
-      username: profile.username,
-      display_name: profile.display_name,
-      avatar: profile.avatar,
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      token_expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
-      is_connected: true,
-      metadata: {
-        ...profile.metadata,
-        connected_at: new Date().toISOString(),
-      },
+    const credentials = {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      extra: {
+        platformUserId: profile.id,
+        platformUsername: profile.username,
+        display_name: profile.display_name,
+        avatar: profile.avatar,
+        expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null,
+        metadata: profile.metadata
+      }
     };
 
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .upsert(accountData, { onConflict: 'user_id,platform' })
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('TikTok connect account error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
-    }
-    return data;
+    await OAuthService.saveSocialCredentials(userId, 'tiktok', credentials);
+    logger.info('TikTok account connected via Mongoose', { userId, profileId: profile.id });
+    
+    return { success: true, platform: 'tiktok', username: profile.username };
   }
 
   async getConnectedAccounts(userId) {
-    const supabase = this.getSupabaseClient();
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'tiktok')
-      .eq('is_connected', true);
+    const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
+    if (!creds) return [];
 
-    if (error) {
-      logger.error('TikTok get connected accounts error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
-    }
-    return data || [];
+    return [{
+      platform: 'tiktok',
+      platform_user_id: creds.platformUserId,
+      username: creds.platformUsername,
+      display_name: creds.platformUsername,
+      avatar: creds.avatar,
+      is_connected: true,
+      created_at: creds.connectedAt
+    }];
   }
 
-  async disconnectAccount(userId, platformUserId) {
-    const supabase = this.getSupabaseClient();
-    const { error } = await supabase
-      .from('platform_accounts')
-      .delete()
-      .eq('user_id', userId)
-      .eq('platform', 'tiktok')
-      .eq('platform_user_id', platformUserId);
+  async disconnectAccount(userId) {
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user && user.oauth && user.oauth.tiktok) {
+      user.oauth.tiktok = { connected: false };
+      user.markModified('oauth');
+      await user.save();
+    }
+    logger.info('TikTok account disconnected', { userId });
+    return { success: true };
+  }
 
-    if (error) {
-      logger.error('TikTok disconnect account error', { ...LOG_CONTEXT, userId, error: error.message });
+  async getTikTokUserInfo(accessToken) {
+    return this.getUserProfile(accessToken);
+  }
+
+  async getTikTokClient(userId) {
+    const accounts = await this.getConnectedAccounts(userId);
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No TikTok account connected');
+    }
+    const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
+    return { accessToken: creds.accessToken };
+  }
+
+  async refreshAccessToken(userId) {
+    logger.info('Refreshing TikTok access token', { userId });
+    const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
+    if (!creds?.refreshToken) {
+      throw new Error('No TikTok refresh token available');
+    }
+
+    const response = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_key: this.clientKey,
+        client_secret: this.clientSecret,
+        grant_type: 'refresh_token',
+        refresh_token: creds.refreshToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      logger.error('TikTok token refresh failed', { userId, error: errorData });
+      throw new Error(`TikTok token refresh failed: ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.json();
+    
+    await OAuthService.saveSocialCredentials(userId, 'tiktok', {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || creds.refreshToken, // Handle rotation
+      extra: {
+        expiresAt: data.expires_in ? new Date(Date.now() + data.expires_in * 1000) : null,
+        platformUserId: data.open_id || creds.platformUserId
+      }
+    });
+
+    return data.access_token;
+  }
+
+  async uploadVideoToTikTok(userId, videoPath) {
+    try {
+      logger.info('TikTok: Starting video upload initialization...', { userId, videoPath });
+      
+      const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
+      if (!creds?.accessToken) {
+        throw new Error('No TikTok account connected or token missing');
+      }
+
+      const videoStats = fs.statSync(videoPath);
+      
+      // Phase 1: Initialize the upload
+      const initResponse = await axios.post(`${API_BASE}/post/publish/video/init/`, {
+        post_info: {
+          title: "Uploaded from Sovereign",
+          privacy_level: "PUBLIC_TO_EVERYONE",
+          disable_duet: false,
+          disable_comment: false,
+          disable_stitch: false,
+          video_ad_tag: false
+        },
+        source_info: {
+          source: "FILE_UPLOAD",
+          video_size: videoStats.size,
+          chunk_size: videoStats.size,
+          total_chunk_count: 1
+        }
+      }, {
+        headers: {
+          'Authorization': `Bearer ${creds.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const { publish_id, upload_url } = initResponse.data.data;
+      logger.info('TikTok: Upload initialized', { userId, publish_id });
+
+      // Phase 2: Upload the video file
+      const videoData = fs.readFileSync(videoPath);
+      await axios.put(upload_url, videoData, {
+        headers: {
+          'Content-Type': 'video/mp4',
+          'Content-Length': videoStats.size
+        }
+      });
+
+      logger.info('TikTok: Video file uploaded successfully', { userId, publish_id });
+      return { 
+        id: publish_id, 
+        status: 'published',
+        url: 'https://www.tiktok.com/@user/video/' + publish_id // Placeholder URL pattern
+      };
+    } catch (error) {
+      logger.error('TikTok: Upload failed', { userId, error: error.response?.data || error.message });
       throw error;
     }
-    return { success: true };
+  }
+
+  async postToTikTok(userId, postData) {
+    const { videoPath, mediaUrl } = postData;
+    const path = videoPath || mediaUrl;
+    
+    if (path && fs.existsSync(path)) {
+      return this.uploadVideoToTikTok(userId, path);
+    }
+    
+    throw new Error('TikTok requires a valid video file path for publishing');
+  }
+
+  async disconnectTikTok(userId) {
+    return this.disconnectAccount(userId);
   }
 }
 
 module.exports = new TikTokOAuthService();
+

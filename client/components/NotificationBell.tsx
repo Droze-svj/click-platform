@@ -11,6 +11,9 @@ interface Notification {
   _id: string
   type: 'info' | 'success' | 'warning' | 'error'
   title: string
+  message?: string | null
+  link?: string | null
+  suggestion?: string | null
   read: boolean
   createdAt: string
 }
@@ -167,7 +170,10 @@ export default function NotificationBell() {
                   className={`p-4 hover:bg-gray-50 cursor-pointer ${
                     !notification.read ? 'bg-blue-50' : ''
                   }`}
-                  onClick={() => !notification.read && markAsRead(notification._id)}
+                  onClick={() => {
+                    if (!notification.read) markAsRead(notification._id)
+                    if (notification.link) router.push(notification.link)
+                  }}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
@@ -176,12 +182,22 @@ export default function NotificationBell() {
                       notification.type === 'warning' ? 'bg-yellow-500' :
                       'bg-blue-500'
                     }`} />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm">{notification.title}</p>
-                      <p className="text-sm text-gray-600 mt-1">{notification.title}</p>
+                      {(notification.message || notification.suggestion) && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          {notification.message}
+                          {notification.suggestion && (
+                            <span className="text-blue-600 font-medium">{notification.message ? ' — ' : ''}{notification.suggestion}</span>
+                          )}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(notification.createdAt).toLocaleString()}
                       </p>
+                      {notification.link && (
+                        <span className="text-xs text-blue-600 mt-1 inline-block">View →</span>
+                      )}
                     </div>
                   </div>
                 </div>

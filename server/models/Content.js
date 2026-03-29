@@ -2,10 +2,8 @@ const mongoose = require('mongoose');
 
 const contentSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
+    type: String,
+    required: true
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -45,26 +43,26 @@ const contentSchema = new mongoose.Schema({
     enum: ['video', 'article', 'podcast', 'transcript'],
     required: true
   },
-      originalFile: {
-        url: String,
-        filename: String,
-        size: Number,
-        duration: Number // for videos/audio
-      },
-      musicId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Music'
-      },
-      processingOptions: {
-        effects: [String],
-        textOverlay: {
-          text: String,
-          position: String,
-          fontSize: Number,
-          fontColor: String
-        },
-        watermark: String
-      },
+  originalFile: {
+    url: String,
+    filename: String,
+    size: Number,
+    duration: Number // for videos/audio
+  },
+  musicId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Music'
+  },
+  processingOptions: {
+    effects: [String],
+    textOverlay: {
+      text: String,
+      position: String,
+      fontSize: Number,
+      fontColor: String
+    },
+    watermark: String
+  },
   title: String,
   description: String,
   transcript: String,
@@ -99,7 +97,11 @@ const contentSchema = new mongoose.Schema({
       title: String,
       description: String,
       platform: String
-    }]
+    }],
+    editorState: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    }
   },
   analytics: {
     views: Number,
@@ -114,12 +116,12 @@ const contentSchema = new mongoose.Schema({
     testId: String,
     variant: {
       type: String,
-      enum: ['A', 'B'],
-    },
+      enum: ['A', 'B']
+  }
   },
   sharedWith: [{
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'User'
     },
     permission: {
@@ -129,11 +131,11 @@ const contentSchema = new mongoose.Schema({
     },
     sharedAt: Date,
     sharedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'User'
     }
   }],
-  tags: [String],
+
   isPublic: {
     type: Boolean,
     default: false
@@ -255,7 +257,13 @@ const contentSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  timelineBranches: [{
+    name: String, // e.g. 'client-review', 'v2-experiment'
+    editorState: mongoose.Schema.Types.Mixed,
+    createdBy: String,
+    createdAt: { type: Date, default: Date.now }
+  }]
 });
 
 // Indexes for better query performance
@@ -271,7 +279,7 @@ contentSchema.index({ 'tags': 1 }); // Content by tags
 contentSchema.index({ folderId: 1 }); // Content in folders
 
 // Index in Elasticsearch after save
-contentSchema.post('save', async function(doc) {
+contentSchema.post('save', async function (doc) {
   if (this.isNew) {
     const { indexContent } = require('../middleware/elasticsearchIndexer');
     await indexContent(doc);
@@ -282,12 +290,12 @@ contentSchema.post('save', async function(doc) {
 });
 
 // Remove from Elasticsearch on delete
-contentSchema.post('remove', async function(doc) {
+contentSchema.post('remove', async function (doc) {
   const { deleteContentIndex } = require('../middleware/elasticsearchIndexer');
   await deleteContentIndex(doc._id);
 });
 
-contentSchema.pre('save', function(next) {
+contentSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

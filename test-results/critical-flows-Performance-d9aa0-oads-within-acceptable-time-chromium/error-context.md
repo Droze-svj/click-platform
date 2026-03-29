@@ -1,0 +1,263 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - complementary [ref=e5]:
+        - link "Sovereign Control Home" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e8]
+        - navigation [ref=e11]:
+          - link "Mission Control" [ref=e12] [cursor=pointer]:
+            - /url: /dashboard
+            - img [ref=e15]
+            - paragraph [ref=e17]: Mission Control
+          - link "Strategic Hub" [ref=e18] [cursor=pointer]:
+            - /url: /dashboard/marketing-ai
+            - img [ref=e21]
+            - paragraph [ref=e24]: Strategic Hub
+          - link "Creative Forge" [ref=e25] [cursor=pointer]:
+            - /url: /dashboard/video
+            - img [ref=e28]
+            - paragraph [ref=e31]: Creative Forge
+          - link "Identity DNA" [ref=e32] [cursor=pointer]:
+            - /url: /dashboard/brand-kit
+            - img [ref=e35]
+            - paragraph [ref=e41]: Identity DNA
+        - generic [ref=e42]:
+          - generic [ref=e43]:
+            - generic "Development User" [ref=e44]:
+              - img "Development User" [ref=e47]
+            - generic [ref=e49]:
+              - paragraph [ref=e50]: DEVELOPMENT USER
+              - paragraph [ref=e51]: pro
+          - generic [ref=e52]:
+            - button "Switch to Solar" [ref=e53] [cursor=pointer]:
+              - img [ref=e54]
+            - link "Calibrate Systems" [ref=e56] [cursor=pointer]:
+              - /url: /dashboard/settings
+              - img [ref=e57]
+          - button [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+      - main [ref=e63]:
+        - generic [ref=e65]:
+          - generic:
+            - img
+            - img
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - img [ref=e70]
+              - generic [ref=e72]:
+                - generic [ref=e73]:
+                  - generic [ref=e74]:
+                    - img [ref=e75]
+                    - generic [ref=e84]: Command Matrix v18.2.1
+                  - generic [ref=e87]: LATTICE_SECURE
+                - heading "Mission Control" [level=1] [ref=e88]
+                - paragraph [ref=e89]: Central objective node for Development's autonomous mission resonance.
+            - generic [ref=e90]:
+              - button "Mission_Nexus" [ref=e91] [cursor=pointer]:
+                - img [ref=e92]
+                - text: Mission_Nexus
+              - button "Heuristic_Logic" [ref=e94] [cursor=pointer]:
+                - img [ref=e95]
+                - text: Heuristic_Logic
+              - button "Operational_Lattice" [ref=e98] [cursor=pointer]:
+                - img [ref=e99]
+                - text: Operational_Lattice
+              - button "Identity_DNA" [ref=e103] [cursor=pointer]:
+                - img [ref=e104]
+                - text: Identity_DNA
+              - button "Revenue_Oracle" [ref=e113] [cursor=pointer]:
+                - img [ref=e114]
+                - text: Revenue_Oracle
+              - button "Phase_8 // Dominate" [ref=e117] [cursor=pointer]:
+                - img [ref=e118]
+                - text: Phase_8 // Dominate
+              - button "Phase_9 // Omnipresence" [ref=e120] [cursor=pointer]:
+                - img [ref=e121]
+                - text: Phase_9 // Omnipresence
+              - button "Phase_10 // Infinite Scale" [ref=e124] [cursor=pointer]:
+                - img [ref=e125]
+                - text: Phase_10 // Infinite Scale
+              - button "Phase_12 // OVERLORD" [ref=e129] [cursor=pointer]:
+                - img [ref=e130]
+                - text: Phase_12 // OVERLORD
+            - generic [ref=e132]:
+              - link "Calibrate" [ref=e133] [cursor=pointer]:
+                - /url: /dashboard/settings
+                - img [ref=e134]
+              - button "Surveillance" [ref=e137] [cursor=pointer]:
+                - img [ref=e138]
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - generic [ref=e143]:
+                - generic:
+                  - img
+                - img [ref=e146]
+                - paragraph [ref=e149]: Operational Payloads
+                - heading "18/48" [level=3] [ref=e150]
+                - generic [ref=e151]:
+                  - img [ref=e152]
+                  - text: SURGE +12%
+              - generic [ref=e154]:
+                - generic:
+                  - img
+                - img [ref=e157]
+                - paragraph [ref=e160]: Lattice Integrity
+                - heading "98.4%" [level=3] [ref=e161]
+                - generic [ref=e162]:
+                  - img [ref=e163]
+                  - text: AUTONOMOUS
+              - generic [ref=e165]:
+                - generic:
+                  - img
+                - img [ref=e168]
+                - paragraph [ref=e170]: Recursive Swarm Flux
+                - heading "46.3" [level=3] [ref=e171]
+                - generic [ref=e172]:
+                  - img [ref=e173]
+                  - text: CONSENSUS_PEAK
+              - generic [ref=e175]:
+                - generic:
+                  - img
+                - img [ref=e178]
+                - paragraph [ref=e179]: Synchronous Node Uplinks
+                - heading "12" [level=3] [ref=e180]
+                - generic [ref=e181]:
+                  - img [ref=e182]
+                  - text: STABLE
+            - generic [ref=e184]:
+              - generic [ref=e186]:
+                - generic [ref=e187]:
+                  - generic [ref=e188]:
+                    - generic [ref=e189]:
+                      - img [ref=e191]
+                      - heading "Nexus Surveillance" [level=2] [ref=e200]
+                    - paragraph [ref=e201]: "Heuristic trajectory mapping // Node Latency: 32μs"
+                  - generic [ref=e202]:
+                    - generic [ref=e203]: "SWARM_CONSENSUS: 98.2%"
+                    - button "Refresh Surveillance Hub" [ref=e204] [cursor=pointer]:
+                      - img [ref=e205]
+                - generic [ref=e210]:
+                  - generic [ref=e216]:
+                    - img [ref=e219]
+                    - heading "Viral Surge Detected" [level=3] [ref=e222]
+                    - paragraph [ref=e223]: "Sector 09-Beta: AI_KINETIC_FLOW. Trajectory indicates massive retention spike (92.4%)."
+                    - button "INJECT_SWARM" [ref=e224] [cursor=pointer]:
+                      - generic [ref=e225]:
+                        - img [ref=e226]
+                        - text: INJECT_SWARM
+                  - generic [ref=e228]:
+                    - generic [ref=e230]:
+                      - img [ref=e232]
+                      - paragraph [ref=e235]: Neural Swarm Load Capacity
+                    - generic [ref=e239]:
+                      - generic [ref=e240]:
+                        - img [ref=e241]
+                        - text: CROSS_LATTICE_LATENCY
+                      - generic [ref=e245]:
+                        - paragraph [ref=e246]: "0.032"
+                        - generic [ref=e247]: ms
+              - generic [ref=e248]:
+                - generic [ref=e249]:
+                  - generic:
+                    - img
+                  - generic [ref=e250]:
+                    - generic [ref=e251]:
+                      - img [ref=e253]
+                      - generic [ref=e257]:
+                        - heading "Consensus Flux" [level=2] [ref=e258]
+                        - paragraph [ref=e259]: Live Refinery Ledger // 2026.4_SOVEREIGN
+                    - generic [ref=e260]:
+                      - img [ref=e261]
+                      - generic [ref=e262]: Lattice_Sync
+                  - generic [ref=e263]:
+                    - paragraph [ref=e264]: Chain_Link Integrity Verified
+                    - button "VIEW_FULL_LEDGER" [ref=e265] [cursor=pointer]
+                - generic [ref=e266]:
+                  - generic:
+                    - img
+                  - img [ref=e268]
+                  - heading "Consensus Protocol" [level=3] [ref=e270]
+                  - paragraph [ref=e271]: "\"Pattern-interrupt triggers drive 3.2× more retention than high-fidelity hooks.\""
+                  - generic [ref=e272]:
+                    - generic [ref=e274]:
+                      - img
+                      - paragraph [ref=e276]: AUTO_MISSION_OVERRIDE_12.4
+                    - paragraph [ref=e277]: Execute 12 synthesis cycles with hyper-kinetic visuals.
+                - generic [ref=e278]:
+                  - link "FORGE One-Click Forge Autonomous video synthesis" [ref=e279] [cursor=pointer]:
+                    - /url: /dashboard/forge
+                    - generic [ref=e281]:
+                      - img [ref=e283]
+                      - generic [ref=e286]: FORGE
+                    - generic [ref=e287]:
+                      - paragraph [ref=e288]: One-Click Forge
+                      - paragraph [ref=e289]: Autonomous video synthesis
+                  - link "KINETIC Spectral Forge Neural motion synthesis" [ref=e290] [cursor=pointer]:
+                    - /url: /dashboard/video
+                    - generic [ref=e292]:
+                      - img [ref=e294]
+                      - generic [ref=e298]: KINETIC
+                    - generic [ref=e299]:
+                      - paragraph [ref=e300]: Spectral Forge
+                      - paragraph [ref=e301]: Neural motion synthesis
+                  - link "AI_LOGIC Neural Forge Autonomous logic crafting" [ref=e302] [cursor=pointer]:
+                    - /url: /dashboard/content
+                    - generic [ref=e304]:
+                      - img [ref=e306]
+                      - generic [ref=e309]: AI_LOGIC
+                    - generic [ref=e310]:
+                      - paragraph [ref=e311]: Neural Forge
+                      - paragraph [ref=e312]: Autonomous logic crafting
+                  - link "SYNC Identity DNA Global brand essence" [ref=e313] [cursor=pointer]:
+                    - /url: /dashboard/brand-kit
+                    - generic [ref=e315]:
+                      - img [ref=e317]
+                      - generic [ref=e327]: SYNC
+                    - generic [ref=e328]:
+                      - paragraph [ref=e329]: Identity DNA
+                      - paragraph [ref=e330]: Global brand essence
+            - generic [ref=e331]:
+              - generic [ref=e332]:
+                - generic [ref=e333]:
+                  - img [ref=e335]
+                  - generic [ref=e338]:
+                    - heading "Integrity Ledger" [level=2] [ref=e339]
+                    - paragraph [ref=e340]: Autonomous Node Saturation // Resonance Feed
+                - button "MONITOR_SYNC" [ref=e341] [cursor=pointer]:
+                  - generic [ref=e342]:
+                    - text: MONITOR_SYNC
+                    - img [ref=e343]
+              - generic [ref=e345]:
+                - generic [ref=e346]:
+                  - generic [ref=e348]:
+                    - img [ref=e350]
+                    - generic [ref=e356]: 2H AGO
+                  - paragraph [ref=e357]: "TRAJECTORY LOCKED: TIKTOK SURGE"
+                  - img [ref=e360] [cursor=pointer]
+                - generic [ref=e363]:
+                  - generic [ref=e365]:
+                    - img [ref=e367]
+                    - generic [ref=e369]: 4H AGO
+                  - paragraph [ref=e370]: "HOOK EFFICIENCY: 94/100"
+                  - img [ref=e373] [cursor=pointer]
+                - generic [ref=e376]:
+                  - generic [ref=e378]:
+                    - img [ref=e380]
+                    - generic [ref=e383]: YESTERDAY
+                  - paragraph [ref=e384]: AUTONOMOUS SYNTHESIS COMPLETE
+                  - img [ref=e387] [cursor=pointer]
+                - generic [ref=e390]:
+                  - generic [ref=e392]:
+                    - img [ref=e394]
+                    - generic [ref=e397]: YESTERDAY
+                  - paragraph [ref=e398]: "SOCIAL SYNC: 5 NODES UPDATED"
+                  - img [ref=e401] [cursor=pointer]
+    - generic:
+      - generic:
+        - generic: SYSTEM_SYNCHRONIZED_v18.2 [AUTO_RESPONSIVE_ENGAGED]
+  - alert [ref=e404]
+```

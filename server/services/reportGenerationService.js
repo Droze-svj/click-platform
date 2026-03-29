@@ -6,8 +6,6 @@ const Content = require('../models/Content');
 const Workspace = require('../models/Workspace');
 const WhiteLabelPortal = require('../models/WhiteLabelPortal');
 const logger = require('../utils/logger');
-const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
 
 /**
  * Generate client report
@@ -105,7 +103,7 @@ async function generateClientReport(agencyWorkspaceId, clientWorkspaceId, format
  */
 function calculateMetrics(posts) {
   const posted = posts.filter(p => p.status === 'posted');
-  
+
   return {
     totalPosts: posts.length,
     posted: posted.length,
@@ -113,7 +111,7 @@ function calculateMetrics(posts) {
     totalEngagement: posted.reduce((sum, p) => sum + (p.analytics?.engagement || 0), 0),
     totalReach: posted.reduce((sum, p) => sum + (p.analytics?.impressions || 0), 0),
     totalClicks: posted.reduce((sum, p) => sum + (p.analytics?.clicks || 0), 0),
-    averageEngagement: posted.length > 0 
+    averageEngagement: posted.length > 0
       ? Math.round(posted.reduce((sum, p) => sum + (p.analytics?.engagement || 0), 0) / posted.length)
       : 0,
     averageReach: posted.length > 0
@@ -135,7 +133,7 @@ function calculateROI(posts, clientWorkspace) {
   const clickValue = 0.10; // $0.10 per click
 
   const estimatedValue = (totalEngagement * engagementValue) + (totalClicks * clickValue);
-  
+
   // Get client subscription cost (placeholder)
   const monthlyCost = 100; // This would come from actual billing data
   const daysInPeriod = 30;
@@ -177,7 +175,7 @@ function calculateGrowth(posts, startDate, endDate) {
  */
 function getHighlights(posts) {
   const posted = posts.filter(p => p.status === 'posted');
-  
+
   const topPost = posted
     .sort((a, b) => (b.analytics?.engagement || 0) - (a.analytics?.engagement || 0))[0];
 
@@ -245,6 +243,7 @@ function getPlatformBreakdown(posts) {
  * Generate PDF report
  */
 async function generatePDFReport(data) {
+  const PDFDocument = require('pdfkit');
   const doc = new PDFDocument({ margin: 50 });
   const chunks = [];
 
@@ -332,6 +331,7 @@ async function generatePDFReport(data) {
  * Generate Excel report
  */
 async function generateExcelReport(data) {
+  const ExcelJS = require('exceljs');
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Performance Report');
 
@@ -385,7 +385,7 @@ async function generateExcelReport(data) {
     worksheet.getCell(`A${row}`).value = 'Platform Breakdown';
     worksheet.getCell(`A${row}`).font = { bold: true, size: 14 };
     row++;
-    
+
     worksheet.getCell(`A${row}`).value = 'Platform';
     worksheet.getCell(`B${row}`).value = 'Posts';
     worksheet.getCell(`C${row}`).value = 'Engagement';

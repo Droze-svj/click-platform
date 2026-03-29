@@ -2,7 +2,6 @@
 // Customizable dashboards with exports
 
 const { getAgencyKPIDashboard } = require('./kpiDashboardService');
-const ExcelJS = require('exceljs');
 const logger = require('../utils/logger');
 
 /**
@@ -62,6 +61,7 @@ async function exportKPIDashboardToExcel(agencyWorkspaceId, config = {}) {
   try {
     const dashboard = await getAgencyKPIDashboard(agencyWorkspaceId, config);
 
+    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
 
     // Summary Sheet

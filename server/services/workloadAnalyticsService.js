@@ -10,7 +10,7 @@ const logger = require('../utils/logger');
 async function compareClients(userId, clientIds, period = 'month') {
   try {
     const { startDate, endDate } = getPeriodDates(period);
-    
+
     const dashboards = await WorkloadDashboard.find({
       userId,
       clientId: { $in: clientIds },
@@ -110,7 +110,7 @@ async function forecastWorkload(userId, clientId, periods = 3) {
 async function getTeamWorkloadDistribution(userId, period = 'month') {
   try {
     const { startDate, endDate } = getPeriodDates(period);
-    
+
     // Get all client dashboards
     const dashboards = await WorkloadDashboard.find({
       userId,
@@ -212,7 +212,7 @@ function generateInsights(dashboards) {
   const insights = [];
 
   // Find most efficient client
-  const mostEfficient = dashboards.reduce((max, d) => 
+  const mostEfficient = dashboards.reduce((max, d) =>
     d.efficiency.efficiencyScore > max.efficiency.efficiencyScore ? d : max, dashboards[0]);
   if (mostEfficient) {
     insights.push({
@@ -223,7 +223,7 @@ function generateInsights(dashboards) {
   }
 
   // Find most profitable client
-  const mostProfitable = dashboards.reduce((max, d) => 
+  const mostProfitable = dashboards.reduce((max, d) =>
     d.profit.profit > max.profit.profit ? d : max, dashboards[0]);
   if (mostProfitable) {
     insights.push({
@@ -257,7 +257,7 @@ function calculateWorkloadTrends(historical) {
   Object.keys(trends).forEach(key => {
     const firstValue = getNestedValue(first, key);
     const lastValue = getNestedValue(last, key);
-    
+
     if (firstValue > 0 && lastValue > 0) {
       const change = ((lastValue - firstValue) / firstValue) * 100;
       trends[key] = change > 10 ? 'increasing' : change < -10 ? 'decreasing' : 'stable';
@@ -368,11 +368,12 @@ function getPeriodDates(period) {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       endDate = now;
       break;
-    case 'quarter':
+    case 'quarter': {
       const quarter = Math.floor(now.getMonth() / 3);
       startDate = new Date(now.getFullYear(), quarter * 3, 1);
       endDate = now;
       break;
+    }
     case 'year':
       startDate = new Date(now.getFullYear(), 0, 1);
       endDate = now;

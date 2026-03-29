@@ -335,6 +335,23 @@ async function generateVoiceover(videoPath, text, options = {}) {
     const buffer = Buffer.from(await mp3.arrayBuffer())
     fs.writeFileSync(audioPath, buffer)
 
+    // Get audio duration
+    const { getVideoMetadata } = require('./advancedVideoProcessingService')
+    const metadata = await getVideoMetadata(audioPath)
+    const duration = parseFloat(metadata.duration)
+
+    if (!videoPath) {
+      logger.info('Video path not provided, returning only audio voiceover', { jobId })
+      return {
+        audioResultUrl: `/uploads/processed/${audioFilename}`,
+        voice: voice,
+        textLength: text.length,
+        duration: duration,
+        originalSize: 0,
+        processedSize: fs.statSync(audioPath).size
+      }
+    }
+
     // Mix the generated audio with the video
     return new Promise((resolve, reject) => {
       ffmpeg(videoPath)
@@ -353,18 +370,16 @@ async function generateVoiceover(videoPath, text, options = {}) {
         .on('end', () => {
           logger.info('Voiceover generation completed', { jobId, outputPath })
 
-          // Clean up temporary audio file
-          try {
-            fs.unlinkSync(audioPath)
-          } catch (e) {
-            logger.warn('Failed to clean up temporary audio file', { audioPath })
-          }
+          // Use the generated audio file later in the timeline
+          // if (audioPath) try { fs.unlinkSync(audioPath) } catch (e) {}
 
           resolve({
             resultUrl: `/uploads/processed/${outputFilename}`,
+            audioResultUrl: `/uploads/processed/${audioFilename}`,
             voice: voice,
             textLength: text.length,
-            originalSize: fs.statSync(videoPath).size,
+            duration: duration,
+            originalSize: fs.statSync(videoPath || outputPath).size,
             processedSize: fs.statSync(outputPath).size
           })
         })

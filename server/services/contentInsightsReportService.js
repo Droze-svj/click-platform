@@ -5,8 +5,6 @@ const ContentPerformance = require('../models/ContentPerformance');
 const VideoMetrics = require('../models/VideoMetrics');
 const { getTopPerformingPosts } = require('./topPerformingPostsService');
 const { getVideoMetricsAnalytics } = require('./videoMetricsService');
-const ExcelJS = require('exceljs');
-const PDFDocument = require('pdfkit');
 const logger = require('../utils/logger');
 
 /**
@@ -20,6 +18,7 @@ async function generateContentInsightsReportExcel(workspaceId, filters = {}) {
       platform = null
     } = filters;
 
+    const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
 
     // Top Performers Sheet
@@ -142,6 +141,7 @@ async function generateContentInsightsReportPDF(workspaceId, filters = {}) {
       endDate
     });
 
+    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
     const chunks = [];
 

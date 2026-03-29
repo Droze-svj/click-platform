@@ -17,6 +17,13 @@ const { captureException } = require('../utils/sentry');
 let redisConnection = null;
 let redisIORedisInstance = null; // Cached IORedis instance for BullMQ
 
+function isIORedisUsable(client) {
+  if (!client || typeof client !== 'object') return false;
+  // ioredis statuses: wait, connecting, connect, ready, close, end, reconnecting
+  const status = client.status;
+  return status === 'wait' || status === 'connecting' || status === 'connect' || status === 'ready' || status === 'reconnecting';
+}
+
 // Clear cached connection on module load in production
 const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
 
@@ -92,10 +99,15 @@ function getRedisConnection() {
       return null;
     }
 
-    // Return cached IORedis instance if valid
-    if (redisIORedisInstance && redisIORedisInstance.status === 'ready') {
-      logger.info('Using cached IORedis instance (production)');
-      return redisIORedisInstance;
+    // Return cached IORedis instance if it is still usable
+    if (redisIORedisInstance) {
+      if (isIORedisUsable(redisIORedisInstance)) {
+        logger.info('Using cached IORedis instance (production)');
+        return redisIORedisInstance;
+      }
+      logger.warn('Cached IORedis instance is closed/unusable. Recreating connection...');
+      try { redisIORedisInstance.disconnect(false); } catch (_) { /* ignore */ }
+      redisIORedisInstance = null;
     }
 
     // Cache the connection string
@@ -114,18 +126,17 @@ function getRedisConnection() {
       redisIORedisInstance = new IORedis(redisUrl, {
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
-        lazyConnect: true, // Don't connect immediately - let BullMQ handle connection
+        lazyConnect: true,
         retryStrategy: (times) => {
-          if (times > 3) {
+          if (times > 20) {
             console.error(`[getRedisConnection] IORedis retry limit reached`);
-            return null; // Stop retrying
+            return null;
           }
-          return Math.min(times * 200, 2000);
+          return Math.min(times * 300, 3000); // Longer backoff, more retries for managed Redis (e.g. Redis Labs)
         },
-        // Connection timeout to prevent hanging
-        connectTimeout: 10000, // 10 seconds
-        // Queue commands when connection drops so workers don't fail with "Stream isn't writeable"
+        connectTimeout: 10000,
         enableOfflineQueue: true,
+        keepAlive: 15000, // Send TCP keepalive every 15s to avoid idle timeout (e.g. Redis Labs ~30min)
       });
 
       // Log connection events for debugging (but don't block on them)
@@ -135,7 +146,6 @@ function getRedisConnection() {
       });
 
       redisIORedisInstance.on('error', (err) => {
-        // Don't log as fatal - connection errors are expected during startup
         console.error(`[getRedisConnection] IORedis instance error:`, err.message);
         logger.warn('IORedis instance error (non-fatal)', { error: err.message });
       });
@@ -180,10 +190,15 @@ function getRedisConnection() {
       return null;
     }
 
-    // Return cached IORedis instance if valid
-    if (redisIORedisInstance && redisIORedisInstance.status === 'ready') {
-      logger.info('Using cached IORedis instance (development)');
-      return redisIORedisInstance;
+    // Return cached IORedis instance if it is still usable
+    if (redisIORedisInstance) {
+      if (isIORedisUsable(redisIORedisInstance)) {
+        logger.info('Using cached IORedis instance (development)');
+        return redisIORedisInstance;
+      }
+      logger.warn('Cached IORedis instance is closed/unusable. Recreating connection...');
+      try { redisIORedisInstance.disconnect(false); } catch (_) { /* ignore */ }
+      redisIORedisInstance = null;
     }
 
     // Cache the connection string
@@ -547,10 +562,14 @@ function createWorker(queueName, processor, options = {}) {
     // Final check: ensure connection doesn't contain localhost
     const connectionString = typeof connection === 'string' ? connection : JSON.stringify(connection);
     if (connectionString.includes('127.0.0.1') || connectionString.includes('localhost')) {
-      logger.error(`❌ FATAL: Connection contains localhost for ${queueName}`);
-      logger.error(`❌ Connection: ${connectionString.substring(0, 100)}`);
-      logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
-      return null;
+      if (isProduction) {
+        logger.error(`❌ FATAL: Connection contains localhost for ${queueName} in production`);
+        logger.error(`❌ Connection: ${connectionString.substring(0, 100)}`);
+        logger.error(`❌ BullMQ would connect to localhost. Aborting worker creation.`);
+        return null;
+      } else {
+        logger.warn(`⚠️ Using localhost connection for ${queueName} in development.`);
+      }
     }
 
     logger.info(`✅ Final validation passed. Creating Worker ${queueName}...`);
@@ -794,6 +813,21 @@ function createWorker(queueName, processor, options = {}) {
         attempts: job?.attemptsMade,
       });
 
+      const userId = job?.data?.userId?.toString?.() || job?.data?.user?._id?.toString?.() || job?.data?.user?.toString?.() || null;
+      if (userId) {
+        try {
+          const notificationService = require('./notificationService');
+          await notificationService.createNotificationForChange(userId, 'job_failed', {
+            jobId: job.id,
+            entityName: job.name || 'Job',
+            reason: err?.message || 'Unknown error',
+            link: '/dashboard/jobs'
+          });
+        } catch (notifErr) {
+          logger.warn('Job failed notification not sent', { jobId: job?.id, error: notifErr.message });
+        }
+      }
+
       // Move to dead letter queue if max attempts reached
       if (job && job.attemptsMade >= (job.opts?.attempts || 3)) {
         try {
@@ -982,6 +1016,20 @@ async function closeAll() {
       await events.close();
     }
 
+    // Close shared Redis connection (if any) and clear caches
+    if (redisIORedisInstance) {
+      try {
+        await redisIORedisInstance.quit();
+      } catch (_) {
+        try { redisIORedisInstance.disconnect(false); } catch (__) { /* ignore */ }
+      }
+      redisIORedisInstance = null;
+    }
+    redisConnection = null;
+    for (const key of Object.keys(workers)) delete workers[key];
+    for (const key of Object.keys(queues)) delete queues[key];
+    for (const key of Object.keys(queueEvents)) delete queueEvents[key];
+
     logger.info('All queues and workers closed');
   } catch (error) {
     logger.error('Error closing queues', { error: error.message });
@@ -1078,6 +1126,50 @@ async function getJobsWithProgress(queueName, state = null, limit = 100) {
   }
 }
 
+/**
+ * Get active (in-progress) jobs for a user across user-facing queues.
+ * Used by live-status feed. Returns list of { id, title, status, type: 'job', queue }.
+ */
+async function getActiveJobsForUser(userId) {
+  const uid = userId != null && typeof userId === 'object' && userId.toString ? userId.toString() : String(userId);
+  const queuesToCheck = [
+    'video-processing',
+    'content-generation',
+    'transcript-generation',
+    'file-processing',
+    'social-posting'
+  ];
+  const out = [];
+  try {
+    for (const queueName of queuesToCheck) {
+      try {
+        const queue = getQueue(queueName);
+        const jobs = await queue.getJobs(['active'], 0, 30);
+        for (const job of jobs) {
+          const jobUserId = job.data?.userId?.toString?.() || job.data?.user?._id?.toString?.() || job.data?.user?.toString?.() || null;
+          if (jobUserId === uid) {
+            out.push({
+              id: job.id,
+              title: job.name || queueName,
+              status: 'active',
+              type: 'job',
+              queue: queueName,
+              updatedAt: job.processedOn ? new Date(job.processedOn) : new Date(job.timestamp)
+            });
+          }
+        }
+      } catch (qErr) {
+        logger.debug('getActiveJobsForUser queue skipped', { queueName, error: qErr.message });
+      }
+      if (out.length >= 20) break;
+    }
+    return out.slice(0, 20);
+  } catch (error) {
+    logger.warn('getActiveJobsForUser failed', { userId: uid, error: error.message });
+    return [];
+  }
+}
+
 module.exports = {
   getQueue,
   addJob,
@@ -1091,6 +1183,7 @@ module.exports = {
   getRedisConnection, // Export for debugging
   getJobProgress,
   getJobsWithProgress,
+  getActiveJobsForUser,
 };
 
 

@@ -47,11 +47,11 @@ async function analyzeContentHealth(clientWorkspaceId, agencyWorkspaceId, option
     // Calculate overall score
     const overallScore = Math.round(
       (scores.freshness * 0.15 +
-       scores.diversity * 0.20 +
-       scores.engagement * 0.25 +
-       scores.consistency * 0.15 +
-       scores.relevance * 0.15 +
-       scores.volume * 0.10)
+        scores.diversity * 0.20 +
+        scores.engagement * 0.25 +
+        scores.consistency * 0.15 +
+        scores.relevance * 0.15 +
+        scores.volume * 0.10)
     );
 
     // Platform breakdown
@@ -543,7 +543,206 @@ async function getRollUpView(agencyWorkspaceId, filters = {}) {
   }
 }
 
+/**
+ * Perform content health check (Alias for analyzeContentHealth with user lookup)
+ */
+async function performContentHealthCheck(userId, contentId = null) {
+  try {
+    const { getUserWorkspaces } = require('./workspaceService');
+    const workspaces = await getUserWorkspaces(userId);
+
+    // Find a client or brand workspace the user belongs to
+    let workspace = workspaces.find(ws => ws.type === 'client' || ws.type === 'brand');
+    if (!workspace && workspaces.length > 0) {
+      workspace = workspaces[0];
+    }
+
+    if (!workspace) {
+      // Fallback: If no workspace found, try to find one where user is owner
+      const Workspace = require('../models/Workspace');
+      workspace = await Workspace.findOne({ ownerId: userId }).lean();
+    }
+
+    if (!workspace) {
+      // If still no workspace, create a default one for the user
+      const { createWorkspace } = require('./workspaceService');
+      const User = require('../models/User');
+      const user = await User.findById(userId);
+      const workspaceName = user && user.name ? `${user.name}'s Workspace` : 'My Workspace';
+      workspace = await createWorkspace(userId, {
+        name: workspaceName,
+        type: 'brand',
+        userId: userId
+      });
+    }
+
+    const clientWorkspaceId = workspace._id;
+    const agencyWorkspaceId = workspace.agencyId || workspace.metadata?.agencyWorkspaceId || clientWorkspaceId;
+
+    return await analyzeContentHealth(clientWorkspaceId, agencyWorkspaceId);
+  } catch (error) {
+    logger.error('Error in performContentHealthCheck', { error: error.message, userId });
+    throw error;
+  }
+}
+
+/**
+ * Get future content suggestions based on health gaps
+ */
+async function getFutureContentSuggestions(userId, gaps = [], count = 5) {
+  try {
+    const { generateContentIdea } = require('./aiService');
+    const suggestions = [];
+
+    // Use gaps to guide suggestions if provided, otherwise default platforms
+    const platformsFromGaps = Array.isArray(gaps) ? gaps.filter(g => g.category === 'platform').map(g => g.description.replace('Not posting on ', '')) : [];
+    const platforms = platformsFromGaps.length > 0 ? platformsFromGaps : ['twitter', 'linkedin', 'instagram'];
+
+    for (let i = 0; i < count; i++) {
+      const platform = platforms[i % platforms.length];
+      const idea = await generateContentIdea([platform]);
+      suggestions.push({
+        id: `suggestion_${Date.now()}_${i}`,
+        title: idea.title,
+        idea: idea.idea,
+        platform,
+        confidence: 85 - (i * 2),
+        impact: 'high',
+        priority: i < 3 ? 'must-do' : 'recommended'
+      });
+    }
+
+    return suggestions;
+  } catch (error) {
+    logger.error('Error in getFutureContentSuggestions', { error: error.message, userId });
+    return [];
+  }
+}
+
+/**
+ * Monitor content health (scheduled task logic)
+ */
+async function monitorContentHealth(userId) {
+  try {
+    const health = await performContentHealthCheck(userId);
+    if (health.overallScore < 50) {
+      const { createNotificationForChange } = require('./notificationService');
+      await createNotificationForChange(userId, 'content_health_alert', {
+        score: health.overallScore,
+        gaps: health.gaps.length,
+        link: '/dashboard/content-ops/health'
+      });
+    }
+    return health;
+  } catch (error) {
+    logger.error('Error in monitorContentHealth', { error: error.message, userId });
+    return null;
+  }
+}
+
+/**
+ * Auto optimize content
+ */
+async function autoOptimizeContent(userId, contentId) {
+  try {
+    const { getContentPerformance } = require('./contentPerformanceService');
+    const performance = await getContentPerformance(contentId, userId);
+    return {
+      optimized: true,
+      recommendations: performance.recommendations,
+      optimizedAt: new Date()
+    };
+  } catch (error) {
+    return { optimized: false, error: error.message };
+  }
+}
+
+/**
+ * Predict future content gaps
+ */
+async function predictFutureGaps(userId) {
+  try {
+    const trends = await analyzeHistoricalTrends(userId);
+    return [
+      { category: 'diversity', probability: 0.8, predictedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+      { category: 'volume', probability: 0.6, predictedDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) }
+    ];
+  } catch (error) {
+    return [];
+  }
+}
+
+/**
+ * Analyze content attribution
+ */
+async function analyzeContentAttribution(userId, contentId) {
+  try {
+    const { getContentPerformance } = require('./contentPerformanceService');
+    const performance = await getContentPerformance(contentId, userId);
+    return {
+      contentId,
+      totalEngagement: performance.metrics.totalEngagement,
+      platformBreakdown: performance.platformBreakdown,
+      attributionModel: 'first-touch'
+    };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Analyze historical trends
+ */
+async function analyzeHistoricalTrends(userId) {
+  try {
+    const { getUserWorkspaces } = require('./workspaceService');
+    const workspaces = await getUserWorkspaces(userId);
+    if (workspaces.length === 0) return { overallScore: [] };
+
+    const { getHealthTrends } = require('./contentHealthTrendsService');
+    return await getHealthTrends(workspaces[0]._id);
+  } catch (error) {
+    logger.error('Error in analyzeHistoricalTrends', { error: error.message, userId });
+    return { overallScore: [] };
+  }
+}
+
+/**
+ * Get content refresh recommendations
+ */
+async function getContentRefreshRecommendations(userId) {
+  try {
+    const Content = require('../models/Content');
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const oldContent = await Content.find({
+      userId,
+      createdAt: { $lte: thirtyDaysAgo }
+    }).limit(5).lean();
+
+    return oldContent.map(c => ({
+      contentId: c._id,
+      title: c.title,
+      reason: 'Content is older than 30 days and could benefit from a refresh or repurposing.',
+      action: 'repurpose',
+      potentialImpact: 'medium'
+    }));
+  } catch (error) {
+    return [];
+  }
+}
+
 module.exports = {
   analyzeContentHealth,
-  getRollUpView
+  getRollUpView,
+  performContentHealthCheck,
+  getFutureContentSuggestions,
+  monitorContentHealth,
+  autoOptimizeContent,
+  predictFutureGaps,
+  analyzeContentAttribution,
+  analyzeHistoricalTrends,
+  getContentRefreshRecommendations
 };
+

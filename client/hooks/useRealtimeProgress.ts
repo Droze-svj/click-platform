@@ -5,7 +5,7 @@ import { io, Socket } from 'socket.io-client'
 
 interface ProgressData {
   progress: number
-  status: 'uploading' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  status: 'uploading' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'done' | 'error'
   bytesUploaded?: number
   totalBytes?: number
   estimatedTimeRemaining?: number
@@ -18,6 +18,8 @@ interface UseRealtimeProgressOptions {
   uploadId?: string
   jobId?: string
   queueName?: string
+  videoId?: string
+  videoOperation?: string
   onComplete?: (data: ProgressData) => void
   onError?: (error: string) => void
   onProgress?: (data: ProgressData) => void
@@ -27,6 +29,8 @@ export function useRealtimeProgress({
   uploadId,
   jobId,
   queueName,
+  videoId,
+  videoOperation,
   onComplete,
   onError,
   onProgress,
@@ -58,6 +62,11 @@ export function useRealtimeProgress({
       // Subscribe to job progress if jobId and queueName provided
       if (jobId && queueName) {
         socket.emit('subscribe:job', { jobId, queueName })
+      }
+
+      // Subscribe to video processing progress
+      if (videoId && videoOperation) {
+        socket.emit('subscribe:video', { videoId, operation: videoOperation })
       }
     })
 
@@ -98,6 +107,22 @@ export function useRealtimeProgress({
       })
     }
 
+    // Listen for video progress updates
+    if (videoId && videoOperation) {
+      socket.on(`video:progress:${videoId}:${videoOperation}`, (data: ProgressData) => {
+        setProgress(data)
+        if (onProgress) {
+          onProgress(data)
+        }
+
+        if ((data.status === 'completed' || data.status === 'done') && onComplete) {
+          onComplete({ ...data, status: 'completed' })
+        } else if ((data.status === 'failed' || data.status === 'error') && onError) {
+          onError(data.error || 'Video processing failed')
+        }
+      })
+    }
+
     return () => {
       if (uploadId) {
         socket.emit('unsubscribe:upload', { uploadId })
@@ -105,13 +130,16 @@ export function useRealtimeProgress({
       if (jobId && queueName) {
         socket.emit('unsubscribe:job', { jobId, queueName })
       }
+      if (videoId && videoOperation) {
+        socket.emit('unsubscribe:video', { videoId, operation: videoOperation })
+      }
       socket.disconnect()
     }
-  }, [uploadId, jobId, queueName, onComplete, onError, onProgress])
+  }, [uploadId, jobId, queueName, videoId, videoOperation, onComplete, onError, onProgress])
 
   // Fallback to polling if WebSocket not available
   useEffect(() => {
-    if (!isConnected && (uploadId || (jobId && queueName))) {
+    if (!isConnected && (uploadId || (jobId && queueName) || (videoId && videoOperation))) {
       const pollInterval = setInterval(async () => {
         try {
           if (uploadId) {
@@ -144,6 +172,25 @@ export function useRealtimeProgress({
                 }
               }
             }
+          } else if (videoId && videoOperation) {
+            const response = await fetch(`/api/video/progress/${videoId}?operation=${videoOperation}`, {
+              credentials: 'include',
+            })
+            if (response.ok) {
+              const data = await response.json()
+              const progressData = data.data || data
+              if (progressData) {
+                setProgress(progressData)
+                if (progressData.status === 'completed' || progressData.status === 'done') {
+                  if (onComplete) onComplete({ ...progressData, status: 'completed' })
+                  // Clear interval once completed successfully to prevent over-polling
+                  clearInterval(pollInterval)
+                } else if (progressData.status === 'failed' || progressData.status === 'error') {
+                  if (onError) onError(progressData.error || 'Video processing failed')
+                  clearInterval(pollInterval)
+                }
+              }
+            }
           }
         } catch (error) {
           console.error('Failed to poll progress:', error)
@@ -152,7 +199,7 @@ export function useRealtimeProgress({
 
       return () => clearInterval(pollInterval)
     }
-  }, [isConnected, uploadId, jobId, queueName, onComplete, onError])
+  }, [isConnected, uploadId, jobId, queueName, videoId, videoOperation, onComplete, onError])
 
   return {
     progress,

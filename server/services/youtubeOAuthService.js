@@ -1,12 +1,16 @@
 // YouTube OAuth Service
-// Features: Google OAuth 2.0, channel info, video upload permissions, platform_accounts storage.
+// Features: Google OAuth 2.0, channel info, video upload permissions, User model storage.
 
-const { createClient } = require('@supabase/supabase-js');
+const OAuthService = require('./OAuthService');
 const logger = require('../utils/logger');
+const { google } = require('googleapis');
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API_BASE = 'https://www.googleapis.com/youtube/v3';
-const DEFAULT_SCOPE = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly userinfo.profile';
+const DEFAULT_SCOPE = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const LOG_CONTEXT = { service: 'youtube-oauth' };
 
 function defaultRedirectUri() {
@@ -19,26 +23,15 @@ class YouTubeOAuthService {
     this.clientId = process.env.YOUTUBE_CLIENT_ID;
     this.clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
     this.redirectUri = defaultRedirectUri();
-    this.supabase = null;
     this.isConfiguredFlag = !!(this.clientId && this.clientSecret);
     if (this.isConfiguredFlag) {
       logger.info('YouTube OAuth client initialized', LOG_CONTEXT);
     } else {
       logger.warn('YouTube OAuth not configured. Set YOUTUBE_CLIENT_ID and YOUTUBE_CLIENT_SECRET', LOG_CONTEXT);
     }
-  }
-
-  getSupabaseClient() {
-    if (!this.supabase) {
-      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Supabase not configured');
-      }
-      this.supabase = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-      );
-    }
-    return this.supabase;
+    
+    // Bind methods to ensure they work when destructured in routes
+    this.isConfigured = this.isConfigured.bind(this);
   }
 
   isConfigured() {
@@ -114,68 +107,170 @@ class YouTubeOAuthService {
   }
 
   async connectAccount(userId, tokens, profile) {
-    const supabase = this.getSupabaseClient();
-    const accountData = {
-      user_id: userId,
-      platform: 'youtube',
-      platform_user_id: profile.id,
-      username: profile.username,
-      display_name: profile.display_name,
-      avatar: profile.avatar,
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      token_expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
-      is_connected: true,
-      metadata: {
-        ...profile.metadata,
-        connected_at: new Date().toISOString(),
-      },
+    const credentials = {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      extra: {
+        platformUserId: profile.id,
+        platformUsername: profile.username,
+        display_name: profile.display_name,
+        avatar: profile.avatar,
+        expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null,
+        metadata: profile.metadata
+      }
     };
 
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .upsert(accountData, { onConflict: 'user_id,platform' })
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('YouTube connect account error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
-    }
-    return data;
+    await OAuthService.saveSocialCredentials(userId, 'youtube', credentials);
+    logger.info('YouTube account connected via Mongoose', { userId, profileId: profile.id });
+    
+    return { success: true, platform: 'youtube', username: profile.username };
   }
 
   async getConnectedAccounts(userId) {
-    const supabase = this.getSupabaseClient();
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'youtube')
-      .eq('is_connected', true);
+    const creds = await OAuthService.getSocialCredentials(userId, 'youtube');
+    if (!creds) return [];
 
-    if (error) {
-      logger.error('YouTube get connected accounts error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
-    }
-    return data || [];
+    return [{
+      platform: 'youtube',
+      platform_user_id: creds.platformUserId,
+      username: creds.platformUsername,
+      display_name: creds.platformUsername,
+      avatar: creds.avatar,
+      is_connected: true,
+      created_at: creds.connectedAt
+    }];
   }
 
-  async disconnectAccount(userId, platformUserId) {
-    const supabase = this.getSupabaseClient();
-    const { error } = await supabase
-      .from('platform_accounts')
-      .delete()
-      .eq('user_id', userId)
-      .eq('platform', 'youtube')
-      .eq('platform_user_id', platformUserId);
+  async disconnectAccount(userId) {
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user && user.oauth && user.oauth.youtube) {
+      user.oauth.youtube = { connected: false };
+      user.markModified('oauth');
+      await user.save();
+    }
+    logger.info('YouTube account disconnected', { userId });
+    return { success: true };
+  }
 
-    if (error) {
-      logger.error('YouTube disconnect account error', { ...LOG_CONTEXT, userId, error: error.message });
+  async getYouTubeUserInfo(accessToken) {
+    return this.getUserProfile(accessToken);
+  }
+
+  async getYouTubeClient(userId) {
+    const creds = await OAuthService.getSocialCredentials(userId, 'youtube');
+    if (!creds?.accessToken) {
+      throw new Error('No YouTube account connected or token missing');
+    }
+
+    const auth = new google.auth.OAuth2(
+      this.clientId,
+      this.clientSecret,
+      this.redirectUri
+    );
+
+    auth.setCredentials({
+      access_token: creds.accessToken,
+      refresh_token: creds.refreshToken,
+    });
+
+    return google.youtube({ version: 'v3', auth });
+  }
+
+  async refreshAccessToken(userId) {
+    logger.info('Refreshing YouTube access token', { userId });
+    const creds = await OAuthService.getSocialCredentials(userId, 'youtube');
+    if (!creds?.refreshToken) {
+      throw new Error('No YouTube refresh token available');
+    }
+
+    const response = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        refresh_token: creds.refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      logger.error('YouTube token refresh failed', { userId, error: errorData });
+      throw new Error(`YouTube token refresh failed: ${response.status} - ${errorData}`);
+    }
+
+    const data = await response.json();
+    
+    await OAuthService.saveSocialCredentials(userId, 'youtube', {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || creds.refreshToken, // Rotation handling
+      extra: {
+        expiresAt: data.expires_in ? new Date(Date.now() + data.expires_in * 1000) : null
+      }
+    });
+
+    return data.access_token;
+  }
+
+  async uploadVideoToYouTube(userId, videoPath, metadata = {}) {
+    try {
+      logger.info('YouTube: Starting video upload...', { userId, videoPath });
+      const youtube = await this.getYouTubeClient(userId);
+
+      if (!fs.existsSync(videoPath)) {
+        throw new Error(`Video file not found at: ${videoPath}`);
+      }
+
+      const res = await youtube.videos.insert({
+        part: 'snippet,status',
+        requestBody: {
+          snippet: {
+            title: metadata.title || 'Untitled Sovereign Video',
+            description: metadata.description || 'Generated by CLICK Sovereign platform',
+            tags: metadata.tags || ['click', 'ai', 'sovereign'],
+            categoryId: metadata.categoryId || '22', // People & Blogs
+          },
+          status: {
+            privacyStatus: metadata.privacyStatus || 'unlisted',
+            selfDeclaredMadeForKids: false,
+          },
+        },
+        media: {
+          body: fs.createReadStream(videoPath),
+        },
+      });
+
+      logger.info('YouTube: Video uploaded successfully', { userId, videoId: res.data.id });
+      return { 
+        id: res.data.id, 
+        status: 'uploaded', 
+        url: `https://www.youtube.com/watch?v=${res.data.id}` 
+      };
+    } catch (error) {
+      logger.error('YouTube: Upload failed', { userId, error: error.message });
       throw error;
     }
-    return { success: true };
+  }
+
+  async postToYouTube(userId, postData) {
+    const { title, description, videoPath, mediaUrl } = postData;
+    
+    // If we have a local video path, use the upload function
+    if (videoPath || (mediaUrl && fs.existsSync(mediaUrl))) {
+      return this.uploadVideoToYouTube(userId, videoPath || mediaUrl, { title, description });
+    }
+
+    // Otherwise, it might be a Community Post (requires different API)
+    // For now, we focus on video uploads as the primary feature
+    throw new Error('YouTube text-only posts are not yet supported in Sovereign core');
+  }
+
+  async disconnectYouTube(userId) {
+    return this.disconnectAccount(userId);
   }
 }
 
 module.exports = new YouTubeOAuthService();
+

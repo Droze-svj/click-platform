@@ -201,7 +201,7 @@ export default function FlowOptimizer({
       // Prevent unnecessary updates if values haven't changed
       const suggestedWorkflowChanged = JSON.stringify(prev.suggestedWorkflow) !== JSON.stringify(suggestedSteps)
       const completedStepsChanged = JSON.stringify(prev.completedSteps) !== JSON.stringify(completedCategories)
-      
+
       if (!suggestedWorkflowChanged && !completedStepsChanged) {
         return prev
       }
@@ -236,7 +236,7 @@ export default function FlowOptimizer({
       })
 
       // Only trigger completion callbacks if workflow just became complete
-      const wasComplete = prev.suggestedWorkflow.length > 0 && 
+      const wasComplete = prev.suggestedWorkflow.length > 0 &&
         prev.suggestedWorkflow.every(stepId => {
           const step = workflowSteps.find(s => s.id === stepId)
           return step && prev.completedSteps.includes(step.category)
@@ -264,32 +264,32 @@ export default function FlowOptimizer({
   // Use ref to track if we're already analyzing to prevent infinite loops
   const analyzingRef = useRef(false)
   const lastAnalysisRef = useRef({ actionsLength: 0, category: '' })
-  
+
   useEffect(() => {
     // Only analyze if something actually changed
     const actionsLength = userActions.length
     const category = activeCategory
-    
+
     if (
       lastAnalysisRef.current.actionsLength === actionsLength &&
       lastAnalysisRef.current.category === category
     ) {
       return // No changes, skip analysis
     }
-    
+
     // Prevent concurrent analysis calls
     if (analyzingRef.current) return
-    
+
     analyzingRef.current = true
     lastAnalysisRef.current = { actionsLength, category }
-    
+
     analyzeFlow()
-    
+
     // Reset flag after a short delay to allow state updates to complete
     const timeoutId = setTimeout(() => {
       analyzingRef.current = false
     }, 100)
-    
+
     return () => clearTimeout(timeoutId)
   }, [userActions.length, activeCategory, analyzeFlow])
 
@@ -391,7 +391,7 @@ export default function FlowOptimizer({
                       Welcome to Click Video Editor!
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Let's get you started with a quick tour
+                      Let&apos;s get you started with a quick tour
                     </p>
                   </div>
                 </div>
@@ -540,7 +540,7 @@ export default function FlowOptimizer({
                 Workflow Complete! 🎉
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                You've successfully completed your video editing workflow in {formatTime(Math.floor(sessionDuration / 1000))}
+                You&apos;ve successfully completed your video editing workflow in {formatTime(Math.floor(sessionDuration / 1000))}
               </p>
             </div>
 

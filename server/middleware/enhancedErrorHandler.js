@@ -1,5 +1,4 @@
-// Enhanced Error Handler Middleware
-
+console.log('🏗️ enhancedErrorHandler: start requires');
 const {
   handleError,
   AppError,
@@ -12,10 +11,15 @@ const {
   ServiceUnavailableError,
   buildErrorContext,
 } = require('../utils/errorHandler');
+console.log('🏗️ enhancedErrorHandler: errorHandler loaded');
 const logger = require('../utils/logger');
+console.log('🏗️ enhancedErrorHandler: logger loaded');
 const { sendError } = require('../utils/response');
+console.log('🏗️ enhancedErrorHandler: response loaded');
 const { ErrorDeduplicator } = require('../utils/errorRecovery');
+console.log('🏗️ enhancedErrorHandler: errorRecovery loaded');
 const errorLogger = require('./errorLogger');
+console.log('🏗️ enhancedErrorHandler: errorLogger loaded');
 
 // Global error deduplicator
 const errorDeduplicator = new ErrorDeduplicator();
@@ -51,7 +55,7 @@ function enhancedErrorHandler(err, req, res, next) {
 
   // Log error first (skip if duplicate and already logged recently)
   if (!isDuplicate || duplicateCount <= 5) {
-    errorLogger(err, req, res, () => {});
+    errorLogger(err, req, res, () => { });
   }
 
   // Build error context
@@ -137,13 +141,13 @@ function notFoundHandler(req, res, next) {
 function setupUnhandledRejectionHandler() {
   process.on('unhandledRejection', (reason, promise) => {
     // Filter out Redis localhost connection errors - these are expected when REDIS_URL is not set
-    if (reason && typeof reason === 'object' && reason.message && 
-        reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
+    if (reason && typeof reason === 'object' && reason.message &&
+      reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
       // These are expected when REDIS_URL is not configured - workers will be closed automatically
       // Don't spam logs with these errors
       return;
     }
-    
+
     logger.error('Unhandled Rejection', {
       reason: reason?.message || reason,
       stack: reason?.stack,

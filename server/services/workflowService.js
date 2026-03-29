@@ -12,9 +12,10 @@ async function trackAction(userId, action, metadata = {}) {
   try {
     if (isDevUser(userId)) return null;
 
+    let userAction;
     // Wrap in try-catch to handle CastErrors gracefully
     try {
-      const userAction = new UserAction({
+      userAction = new UserAction({
         userId,
         action,
         entityType: metadata.entityType,

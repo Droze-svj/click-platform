@@ -18,6 +18,7 @@ let videoCaptionService = null;
 let audioService = null;
 let socketService = null;
 let Music = null;
+const saliencyService = require('./saliencyService');
 
 function getVideoCaptionService() {
   if (!videoCaptionService) {
@@ -649,14 +650,20 @@ async function autoSelectMusic(videoId, sentiment, duration) {
     let matchingMusic = [];
     try {
       matchingMusic = await Music.find({
-        $or: [
-          { mood: targetMood },
-          { 'metadata.mood': targetMood },
-        ],
-        $or: [
-          { isPublic: true },
-          { public: true },
-        ],
+        $and: [
+          {
+            $or: [
+              { mood: targetMood },
+              { 'metadata.mood': targetMood },
+            ]
+          },
+          {
+            $or: [
+              { isPublic: true },
+              { public: true },
+            ]
+          }
+        ]
       }).limit(5).lean();
     } catch (queryError) {
       // Try simpler query
@@ -696,7 +703,7 @@ async function autoSelectMusic(videoId, sentiment, duration) {
  * @param {string} style - modern, bold, minimal, tiktok, youtube, outline, professional
  * @param {Object} overrides - Optional { fontFamily } from user brand/preferences
  */
-async function generateAndApplySmartCaptions(videoId, transcript, duration, style = 'modern', overrides = {}) {
+async function generateAndApplySmartCaptions(videoId, transcript, duration, style = 'modern', overrides = {}, transcriptData = null) {
   try {
     const captionService = getVideoCaptionService();
     if (!captionService || !transcript) return null;
@@ -708,6 +715,15 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
       style,
       position: 'bottom',
     });
+
+    // Task 4.3: Saliency-Aware Positioning
+    if (style === 'saliency-aware') {
+       logger.info('[Saliency] Computing optimal positioning for each caption block...');
+       // In a real loop, we would sample frames for each caption block
+       const mockSaliency = await saliencyService.getFrameSaliency(videoId, 1.0);
+       overrides.position = saliencyService.getOptimalCaptionPosition(mockSaliency);
+       logger.info(`[Saliency] Decision: Placing captions at "${overrides.position}" to avoid subjects.`);
+    }
 
     // Style captions based on style preference (professional font families and platform styles)
     const styleOptions = {
@@ -737,6 +753,15 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
         outlineColor: '#000000',
         position: 'bottom',
         fontFamily: 'system-ui, -apple-system, sans-serif',
+      },
+      'saliency-aware': {
+        fontSize: 40,
+        fontColor: '#FFFFFF',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        outline: true,
+        outlineColor: '#000000',
+        position: 'bottom', // Will be overridden dynamically
+        fontFamily: 'Inter, sans-serif',
       },
       tiktok: {
         fontSize: 44,
@@ -860,11 +885,45 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
       },
     };
 
-    const baseStyle = { ...(styleOptions[style] || styleOptions.modern), ...overrides };
-    const styledCaptions = captionService.styleCaptions(
+    let baseStyle = { ...(styleOptions[style] || styleOptions.modern), ...overrides };
+
+    // Emotion-Synced Semantic Captions (Task 3.3)
+    let styledCaptions = captionService.styleCaptions(
       captions.captions,
       baseStyle
     );
+
+    // Apply transcript word-level semantics if available
+    if (transcriptData && transcriptData.words && transcriptData.words.length > 0) {
+       styledCaptions = styledCaptions.map(cap => {
+          // Find the loudest/most emotional word in this caption window
+          const wordsInWindow = transcriptData.words.filter(w =>
+            w.start >= cap.startTime && w.end <= cap.endTime
+          );
+
+          if (wordsInWindow.length > 0) {
+            const hasPositive = wordsInWindow.some(w => w.sentiment === 'positive');
+            const hasNegative = wordsInWindow.some(w => w.sentiment === 'negative');
+            const maxVolume = Math.max(...wordsInWindow.map(w => w.volume || 50));
+
+            // Emotion -> Color
+            if (hasPositive) {
+               cap.style.fontColor = '#00FF99'; // Positive Emerald
+               cap.style.animation = 'pop';
+            } else if (hasNegative) {
+               cap.style.fontColor = '#FF3333'; // Negative Red
+               cap.style.animation = 'shake'; // Camera Shake Trigger
+            }
+
+            // Volume -> Scale
+            if (maxVolume > 85) {
+               cap.style.fontSize = cap.style.fontSize * 1.3;
+               cap.style.fontWeight = 900;
+            }
+          }
+          return cap;
+       });
+    }
 
     logger.info('Smart captions generated', { videoId, count: styledCaptions.length, style });
     return styledCaptions;

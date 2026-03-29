@@ -17,7 +17,8 @@ let queue: Payload[] = []
 let flushTimer: ReturnType<typeof setTimeout> | null = null
 
 function isVisible(): boolean {
-  if (typeof document === 'undefined') return true
+  if (typeof document === 'undefined') return false
+  if (typeof localStorage !== 'undefined' && localStorage.getItem('debug_logging') !== 'enabled') return false
   return document.visibilityState !== 'hidden'
 }
 

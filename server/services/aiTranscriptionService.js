@@ -32,10 +32,10 @@ async function transcribeVideo(userId, videoId, videoPath) {
         }
 
         const fullPath = videoPath.startsWith('/')
-            ? path.join(__dirname, '../..', videoPath)
-            : videoPath;
+            ? videoPath
+            : path.join(__dirname, '../..', videoPath);
 
-        if (!fs.existsSync(fullPath)) throw new Error('Video file not found for transcription');
+        if (!fs.existsSync(fullPath)) throw new Error('Video file not found for transcription: ' + fullPath);
 
         logger.info('Starting transcription', { videoId, userId });
 
@@ -46,10 +46,37 @@ async function transcribeVideo(userId, videoId, videoPath) {
             timestamp_granularities: ['word']
         });
 
+        // Task 3.3 Semantic analysis mock
+        // In a true environment, we'd pass `transcription.text` to an LLM or use audio loudness metrics
+        // Here we simulate attaching "loudness" and "sentiment" to each word for the UI to interpret
+        const enrichedWords = (transcription.words || []).map(wordObj => {
+            const lowerWord = wordObj.word.toLowerCase();
+            let sentiment = 'neutral';
+            let volume = 50; // out of 100
+
+            // Simple heuristic for Emotion-Synced Semantic Captions (Task 3.3)
+            if (['amazing', 'wow', 'incredible', 'best'].includes(lowerWord)) {
+                sentiment = 'positive';
+                volume = 90;
+            } else if (['terrible', 'worst', 'angry', 'stop'].includes(lowerWord)) {
+                sentiment = 'negative';
+                volume = 85;
+            } else if (wordObj.word === wordObj.word.toUpperCase() && wordObj.word.length > 1) {
+                // ALL CAPS inferred as shouting/emphasis
+                volume = 95;
+            }
+
+            return {
+                ...wordObj,
+                sentiment,
+                volume
+            };
+        });
+
         return {
             success: true,
             text: transcription.text,
-            words: transcription.words // Contains word-level timestamps
+            words: enrichedWords
         };
     } catch (error) {
         logger.error('Transcription error', { error: error.message, userId });

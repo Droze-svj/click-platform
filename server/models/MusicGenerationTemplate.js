@@ -6,8 +6,7 @@ const mongoose = require('mongoose');
 const musicGenerationTemplateSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    index: true
+    ref: 'User'
   },
   name: {
     type: String,

@@ -9,48 +9,66 @@ console.log('📝 NODE_ENV (before .env):', process.env.NODE_ENV || 'NOT SET');
 // Always load from project root (parent of server/) so it works when run via `node index.js` from server/ or `npm start` from root.
 console.log('📦 Loading environment variables...');
 const path = require('path');
-const rootEnv = path.join(__dirname, '..', '.env');
-require('dotenv').config({ path: rootEnv });
-// Optional: override with .env.local at root if present
-require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+const fs = require('fs');
+
+// Load root environment variables
+const rootEnv = path.join(__dirname, '..', '.env.nosync');
+if (fs.existsSync(rootEnv)) {
+  require('dotenv').config({ path: rootEnv });
+} else {
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+}
+
+// Also load local server environment variables if they exist (common for some deployments)
+const serverEnv = path.join(__dirname, '.env');
+const serverEnvNoSync = path.join(__dirname, '.env.nosync');
+if (fs.existsSync(serverEnvNoSync)) {
+  require('dotenv').config({ path: serverEnvNoSync });
+} else if (fs.existsSync(serverEnv)) {
+  require('dotenv').config({ path: serverEnv });
+}
+
+// Optional: override with .env.local.nosync at root if present
+const localEnv = path.join(__dirname, '..', '.env.local.nosync');
+if (fs.existsSync(localEnv)) {
+  require('dotenv').config({ path: localEnv });
+} else {
+  const localEnvStandard = path.join(__dirname, '..', '.env.local');
+  if (fs.existsSync(localEnvStandard)) {
+    require('dotenv').config({ path: localEnvStandard });
+  }
+}
 console.log('✅ Environment variables loaded');
 console.log('📝 NODE_ENV (after .env):', process.env.NODE_ENV || 'NOT SET (defaulting to development behavior)');
 
 // Initialize logger early (needed for error handlers)
+console.log('REQUIRING LOGGER');
 const logger = require('./utils/logger');
+console.log('LOGGER REQUIRED');
 
-// Initialize Sentry BEFORE error handlers (if configured)
+// Lazy require helper to combat slow external drive I/O
+const lazyRequire = (modulePath) => {
+  let moduleInstance = null;
+  return new Proxy(() => {}, {
+    apply: (target, thisArg, args) => {
+      if (!moduleInstance) {
+        console.log(`📦 Lazy loading: ${modulePath}`);
+        moduleInstance = require(modulePath);
+      }
+      return moduleInstance(...args);
+    },
+    get: (target, prop) => {
+      if (!moduleInstance) {
+        console.log(`📦 Lazy accessing: ${modulePath}.${String(prop)}`);
+        moduleInstance = require(modulePath);
+      }
+      return moduleInstance[prop];
+    }
+  });
+};
+
 let Sentry = null;
-try {
-  const sentryDsn = process.env.SENTRY_DSN?.trim();
-
-  // Validate DSN format before initializing
-  // A valid Sentry DSN should start with 'https://' and contain '@'
-  const isValidDsn = sentryDsn &&
-    sentryDsn.length > 20 &&
-    sentryDsn.startsWith('https://') &&
-    sentryDsn.includes('@') &&
-    !sentryDsn.includes('your-sentry-dsn') &&
-    !sentryDsn.includes('placeholder');
-
-  if (isValidDsn) {
-    Sentry = require('@sentry/node');
-    Sentry.init({
-      dsn: sentryDsn,
-      sendDefaultPii: true,
-      environment: process.env.NODE_ENV || 'development',
-      tracesSampleRate: 1.0,
-    });
-    console.log('✅ Sentry initialized');
-  } else if (sentryDsn) {
-    console.log('⚠️ Sentry DSN appears to be a placeholder. Error tracking disabled.');
-    console.log('⚠️ Please set a valid SENTRY_DSN environment variable.');
-  } else {
-    console.log('⚠️ Sentry DSN not configured. Error tracking disabled.');
-  }
-} catch (sentryError) {
-  console.error('⚠️ Failed to initialize Sentry:', sentryError.message);
-}
+console.log('⚠️ Sentry initialization bypassed to prevent hangs.');
 
 // Global error handlers - must be after Sentry initialization
 process.on('uncaughtException', (error) => {
@@ -174,32 +192,35 @@ if (__isHosted) {
   console.log('📝 Dev mode: skipping separate health check server (starting Express directly)');
 }
 
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const fs = require('fs');
-const helmet = require('helmet');
-const compression = require('compression');
-const { securityHeaders, customSecurityHeaders } = require('./middleware/securityHeaders');
-const cron = require('node-cron');
-const swaggerUi = require('swagger-ui-express');
+console.log('REQUIRING EXPRESS'); const express = require('express');
+console.log('REQUIRING CORS'); const cors = require('cors');
+console.log('LAZY LOADING MONGOOSE'); const mongoose = lazyRequire('mongoose');
+console.log('LAZY LOADING COMPRESSION'); const compression = lazyRequire('compression');
+console.log('REQUIRING SECURITY HEADERS'); const { securityHeaders, customSecurityHeaders } = require('./middleware/securityHeaders');
+console.log('LAZY LOADING CRON'); const cron = lazyRequire('node-cron');
+console.log('LAZY LOADING SWAGGER'); const swaggerUi = lazyRequire('swagger-ui-express');
 let swaggerSpec = null;
 try {
+  console.log('REQUIRING SWAGGER CONFIG');
   swaggerSpec = require('./config/swagger');
+  console.log('SWAGGER CONFIG REQUIRED');
 } catch (err) {
   logger.warn('Swagger docs disabled (missing z-schema?). Run: npm install z-schema', { error: err.message });
   swaggerSpec = { openapi: '3.0.0', info: { title: 'Click API', version: '1.0.0' }, paths: {} };
 }
-const validateEnv = require('./middleware/validateEnv');
+console.log('REQUIRING VALIDATE ENV'); const validateEnv = require('./middleware/validateEnv'); console.log('VALIDATE ENV REQUIRED');
+console.log('REQUIRING ERROR HANDLERS');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
-const { enhancedErrorHandler, notFoundHandler, initErrorHandlers } = require('./middleware/enhancedErrorHandler');
+const { initErrorHandlers } = require('./middleware/enhancedErrorHandler');
+// Note: enhancedErrorHandler and notFoundHandler are exported but not used — original handlers are used below
+console.log('ERROR HANDLERS REQUIRED');
 const { apiLimiter } = require('./middleware/enhancedRateLimiter');
-const requestLogger = require('./middleware/requestLogger');
-const { requestTimeoutRouteAware, getTimeoutForRoute } = require('./middleware/requestTimeout');
-const { cleanupOldFiles } = require('./utils/fileCleanup');
+console.log('REQUIRING REQUEST LOGGER'); const requestLogger = require('./middleware/requestLogger'); console.log('REQUEST LOGGER REQUIRED');
+console.log('REQUIRING REQUEST TIMEOUT'); const { requestTimeoutRouteAware, getTimeoutForRoute } = require('./middleware/requestTimeout'); console.log('REQUEST TIMEOUT REQUIRED');
+console.log('REQUIRING FILE CLEANUP'); const { cleanupOldFiles } = require('./utils/fileCleanup'); console.log('FILE CLEANUP REQUIRED');
 // logger is already imported above (needed for error handlers)
-const { initializeSocket } = require('./services/socketService');
-const { trackResponseTime } = require('./utils/performance');
+console.log('REQUIRING SOCKET'); const { initializeSocket } = require('./services/socketService'); console.log('SOCKET REQUIRED');
+console.log('REQUIRING PERFORMANCE'); require('./utils/performance'); console.log('PERFORMANCE REQUIRED');
 
 // Sentry is already initialized at the top of the file (before error handlers)
 // Don't initialize again to avoid duplicate initialization
@@ -208,15 +229,18 @@ const { trackResponseTime } = require('./utils/performance');
 
 // Initialize Email Service
 try {
+  console.log('REQUIRING EMAIL SERVICE');
   const { initEmailService } = require('./services/emailService');
   initEmailService();
+  console.log('EMAIL SERVICE INITIALIZED');
 } catch (error) {
   logger.warn('Email service initialization failed', { error: error.message });
 }
 
 // Initialize Cache Service
+console.log('INITIALIZING CACHE');
 const { initCache } = require('./services/cacheService');
-initCache().catch(err => {
+initCache().then(() => console.log('CACHE INITIALIZED')).catch(err => {
   logger.warn('Cache initialization failed', { error: err.message });
 });
 
@@ -242,6 +266,7 @@ try {
 // Initialize APM (Application Performance Monitoring)
 let apmMiddleware = null;
 try {
+  console.log('REQUIRING APM');
   const { apmMonitor, apmMiddleware: apmMiddlewareExport } = require('./utils/apm');
   global.apmMonitor = apmMonitor; // Make available globally for error handlers
   apmMiddleware = apmMiddlewareExport; // Assign to outer scope
@@ -254,6 +279,7 @@ try {
 
 // Initialize Alerting System
 try {
+  console.log('REQUIRING ALERTING');
   const alertingSystem = require('./utils/alerting');
   global.alertingSystem = alertingSystem;
   logger.info('✅ Alerting system initialized');
@@ -265,6 +291,7 @@ try {
 // Initialize API Optimization Middleware
 let apiOptimizer = null;
 try {
+  console.log('REQUIRING API OPTIMIZER');
   apiOptimizer = require('./middleware/apiOptimizer');
   logger.info('✅ API optimization middleware loaded');
 } catch (error) {
@@ -274,11 +301,36 @@ try {
 
 // Initialize Database Optimizer
 try {
-  const databaseOptimizer = require('./utils/databaseOptimizer');
+  console.log('REQUIRING DB OPTIMIZER');
+  require('./utils/databaseOptimizer');
   logger.info('✅ Database optimizer loaded');
 } catch (error) {
   logger.warn('Database optimizer initialization failed', { error: error.message });
 }
+
+// Connect to database (supports multiple providers)
+const connectDB = async () => {
+  try {
+    console.log('🏗️ Starting database initialization...');
+    const { initDatabases } = require('./config/database');
+    console.log('🏗️ Calling initDatabases...');
+    const dbStatus = await initDatabases();
+    console.log('🏗️ initDatabases completed:', dbStatus.success ? 'SUCCESS' : 'FAILED');
+
+    if (dbStatus.supabase || dbStatus.prisma || dbStatus.mongodb) {
+      logger.info('✅ Database connected successfully');
+    } else {
+      logger.error('❌ No database connection available');
+      logger.warn('⚠️ Server will start in degraded mode. Database features will not work.');
+    }
+  } catch (err) {
+    logger.error('❌ Database connection error:', err);
+    logger.warn('⚠️ Server will start without database. Connection will retry in background.');
+  }
+};
+
+// Initialize database connection
+connectDB();
 
 // Initialize Job Queue Workers (optional - non-blocking)
 // Check Redis configuration first
@@ -369,12 +421,21 @@ if (process.env.NODE_ENV !== 'test') {
       }
     }
 
-    if (shouldInitializeWorkers) {
+    const backgroundJobsEnabled = process.env.ENABLE_BACKGROUND_JOBS !== 'false';
+    const jobSchedulerEnabled = process.env.ENABLE_JOB_SCHEDULER !== 'false';
+
+    if (!backgroundJobsEnabled) {
+      logger.info('⏭️ Background jobs disabled via ENABLE_BACKGROUND_JOBS=false. Skipping worker initialization.');
+    } else if (shouldInitializeWorkers) {
       try {
         const { initializeWorkers } = require('./queues');
         const { initializeScheduler } = require('./services/jobScheduler');
         initializeWorkers();
-        initializeScheduler();
+        if (jobSchedulerEnabled) {
+          initializeScheduler();
+        } else {
+          logger.info('⏭️ Job scheduler disabled via ENABLE_JOB_SCHEDULER=false.');
+        }
         logger.info('✅ Job queue system initialized');
       } catch (error) {
         // Workers are optional - server can run without them
@@ -534,6 +595,7 @@ if (process.env.NODE_ENV !== 'test') {
   }
 }
 
+console.log('REQUIRING SCHEDULED REPORTS');
 // Initialize Scheduled Reports Cron (every hour)
 const { processScheduledReports } = require('./services/scheduledReportService');
 if (process.env.NODE_ENV !== 'test') {
@@ -552,6 +614,7 @@ if (process.env.NODE_ENV !== 'test') {
   }
 }
 
+console.log('REQUIRING QUERY MONITORING');
 // Initialize Query Performance Monitoring
 try {
   const { initQueryMonitoring } = require('./services/queryPerformanceMonitor');
@@ -658,26 +721,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// #region agent log
-// Backend request probe: capture high-signal browser/API traffic even if the frontend bypasses the Next.js /api proxy.
-// Never log secrets (no tokens/cookies).
-app.use('/api', (req, res, next) => {
-  try {
-    const p = req.path || '';
-    const should =
-      p.startsWith('/auth') ||
-      p.startsWith('/debug') ||
-      p.startsWith('/notifications') ||
-      p.startsWith('/approvals') ||
-      p.startsWith('/search') ||
-      p.startsWith('/onboarding');
-    if (should) {
-      // Debug instrumentation disabled
-    }
-  } catch { }
-  next();
-});
-// #endregion
 
 // EARLY request tracing for debugging (must run before CSRF/body parsing/etc).
 // This is intentionally lightweight and only targets the endpoints that were timing out.
@@ -692,11 +735,8 @@ app.use('/api', (req, res, next) => {
   ) {
     const start = Date.now();
     const startPath = req.path;
-    // #region agent log
-    // #endregion
     res.on('finish', () => {
-      // #region agent log
-      // #endregion
+      logger.debug(`${startPath} completed in ${Date.now() - start}ms`);
     });
   }
   next();
@@ -721,8 +761,6 @@ app.use(sanitizeInput);
 
 // CSRF Protection (after body parsing) - temporarily disabled for auth testing
 // const { csrfProtection } = require('./middleware/csrfProtection');
-// #region agent log
-// #endregion
 // app.use('/api', csrfProtection);
 
 // CORS middleware - must be configured before routes
@@ -848,12 +886,9 @@ app.use('/api', (req, res, next) => {
     p.startsWith('/auth/me')
   ) {
     const start = Date.now();
-    // #region agent log
-    // #endregion
     res.on('finish', () => {
       const durationMs = Date.now() - start;
-      // #region agent log
-      // #endregion
+      logger.debug(`Auth route took ${durationMs}ms`);
     });
   }
   next();
@@ -887,820 +922,6 @@ app.use('/api', (req, res, next) => {
 });
 
 // Serve a simple landing page for testing - MUST BE BEFORE OTHER ROUTES
-app.get('/', (req, res) => {
-  res.send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Click Platform - Test Your APIs</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 3em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .subtitle {
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-        }
-        .card h3 {
-            margin-top: 0;
-            color: #fff;
-            font-size: 1.5em;
-        }
-        .card p {
-            margin-bottom: 20px;
-            opacity: 0.9;
-        }
-        .btn {
-            display: inline-block;
-            background: #4f46e5;
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: background 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .btn:hover {
-            background: #3730a3;
-        }
-        .btn.secondary {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .btn.secondary:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        .status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .status.online {
-            background: #10b981;
-            color: white;
-        }
-        .code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            margin: 15px 0;
-            overflow-x: auto;
-        }
-        .api-test {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-        }
-        .endpoint {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-        }
-        .method {
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-        .method.get { background: #10b981; }
-        .method.post { background: #f59e0b; }
-        .method.put { background: #3b82f6; }
-        .method.delete { background: #ef4444; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Click Platform</h1>
-        <p class="subtitle">Your AI-powered content creation platform is ready for testing!</p>
-
-        <div style="text-align: center; margin-bottom: 30px;">
-            <span class="status online">✓ API Status: Online</span>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-            <h3 style="color: white; margin-bottom: 10px;">🧪 Button Test</h3>
-            <button onclick="alert('Buttons are working!')" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Test Alert</button>
-            <button onclick="console.log('Console test - check browser dev tools')" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">Test Console</button>
-        </div>
-
-        <div class="grid">
-            <div class="card">
-                <h3>🔐 Authentication</h3>
-                <p>Test user registration, login, and email verification.</p>
-                <button id="show-register-btn" class="btn">Test Registration</button>
-                <button id="show-login-btn" class="btn secondary">Test Login</button>
-            </div>
-        </div>
-
-        <div id="auth-forms" style="display: none; margin: 30px auto; max-width: 600px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
-            <h3 id="form-title" style="color: white; text-align: center;">Register</h3>
-            <form id="register-form" style="max-width: 400px; margin: 0 auto;">
-                <div style="margin-bottom: 15px;">
-                    <input type="email" id="reg-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="password" id="reg-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="reg-name" placeholder="Full Name" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <button type="submit" class="btn" style="width: 100%;">Register</button>
-            </form>
-
-            <form id="login-form" style="max-width: 400px; margin: 0 auto; display: none;">
-                <div style="margin-bottom: 15px;">
-                    <input type="email" id="login-email" placeholder="Email" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="password" id="login-password" placeholder="Password" required style="width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 16px;">
-                </div>
-                <button type="submit" class="btn" style="width: 100%;">Login</button>
-            </form>
-
-            <div id="auth-result" style="margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
-        </div>
-
-        <div class="grid">
-
-            <div class="card">
-                <h3>📝 Content Creation</h3>
-                <p>Create, edit, and manage your content posts.</p>
-                <button id="view-posts-btn" class="btn">View Posts</button>
-                <button id="create-post-btn" class="btn secondary">Create Post</button>
-            </div>
-
-            <div class="card">
-                <h3>📊 Analytics Dashboard</h3>
-                <p>Track performance and engagement metrics.</p>
-                <button id="view-analytics-btn" class="btn">View Analytics</button>
-                <button id="view-performance-btn" class="btn secondary">Performance</button>
-            </div>
-
-            <div class="card">
-                <h3>🔗 Social Integration</h3>
-                <p>Connect and post to social media platforms.</p>
-                <button id="connect-twitter-btn" class="btn">Connect Twitter</button>
-                <button id="view-connections-btn" class="btn secondary">View Connections</button>
-            </div>
-
-            <div class="card">
-                <h3>👑 Admin Panel</h3>
-                <p>Manage users and system settings.</p>
-                <button id="admin-stats-btn" class="btn">System Stats</button>
-                <button id="admin-users-btn" class="btn secondary">User Management</button>
-            </div>
-
-            <div class="card">
-                <h3>🔧 API Testing</h3>
-                <p>Use these endpoints to test functionality.</p>
-                <button onclick="testHealth()" class="btn">Test Health</button>
-                <button onclick="testMe()" class="btn secondary">Test Auth</button>
-            </div>
-        </div>
-
-        <div class="api-test">
-            <h3>🧪 Quick API Tests</h3>
-            <p>Click the buttons above or use these curl commands:</p>
-
-            <div class="code">
-curl -s https://click-platform.onrender.com/api/health
-            </div>
-
-            <div class="endpoint">
-                <span><span class="method get">GET</span> /api/health</span>
-                <span>Check API status</span>
-            </div>
-
-            <div class="endpoint">
-                <span><span class="method post">POST</span> /api/auth/register</span>
-                <span>Register new user</span>
-            </div>
-
-            <div class="endpoint">
-                <span><span class="method post">POST</span> /api/auth/login</span>
-                <span>User login</span>
-            </div>
-
-            <div class="endpoint">
-                <span><span class="method get">GET</span> /api/posts</span>
-                <span>Get user posts</span>
-            </div>
-
-            <div class="endpoint">
-                <span><span class="method get">GET</span> /api/analytics/dashboard</span>
-                <span>View analytics</span>
-            </div>
-        </div>
-
-
-        <div style="text-align: center; margin-top: 40px; opacity: 0.8;">
-            <p>💡 <strong>Next Steps:</strong> Full React frontend deployment coming soon!</p>
-            <p>For now, test all your APIs and backend functionality here.</p>
-        </div>
-    </div>
-
-    <script>
-        let authToken = null;
-
-        async function testHealth() {
-            try {
-                const response = await fetch('/api/health');
-                const data = await response.json();
-                alert('✅ API is working!\\n\\n' + JSON.stringify(data, null, 2));
-            } catch (error) {
-                alert('❌ API test failed: ' + error.message);
-            }
-        }
-
-        function showRegistrationForm() {
-            console.log('Registration button clicked');
-
-            // Debug DOM element existence
-            const authForms = document.getElementById('auth-forms');
-            const formTitle = document.getElementById('form-title');
-            const registerForm = document.getElementById('register-form');
-            const loginForm = document.getElementById('login-form');
-            const authResult = document.getElementById('auth-result');
-
-            console.log('DOM elements found:', {
-                authForms: !!authForms,
-                formTitle: !!formTitle,
-                registerForm: !!registerForm,
-                loginForm: !!loginForm,
-                authResult: !!authResult
-            });
-
-            // Apply changes with verification
-            if (authForms) {
-                authForms.style.display = 'block';
-                console.log('Set auth-forms display to block, computed style:', window.getComputedStyle(authForms).display);
-                console.log('auth-forms visibility:', window.getComputedStyle(authForms).visibility);
-                console.log('auth-forms opacity:', window.getComputedStyle(authForms).opacity);
-                console.log('auth-forms parent display:', authForms.parentElement ? window.getComputedStyle(authForms.parentElement).display : 'no parent');
-
-                // Scroll the form into view smoothly
-                setTimeout(() => {
-                    authForms.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 100);
-            } else {
-                console.error('auth-forms element not found!');
-            }
-
-            if (formTitle) {
-                formTitle.textContent = 'Register';
-                console.log('Set form-title text to Register, actual text:', formTitle.textContent);
-                console.log('form-title display:', window.getComputedStyle(formTitle).display);
-            } else {
-                console.error('form-title element not found!');
-            }
-
-            if (registerForm) {
-                registerForm.style.display = 'block';
-                console.log('Set register-form display to block, computed style:', window.getComputedStyle(registerForm).display);
-                console.log('register-form visibility:', window.getComputedStyle(registerForm).visibility);
-                console.log('register-form parent display:', registerForm.parentElement ? window.getComputedStyle(registerForm.parentElement).display : 'no parent');
-            } else {
-                console.error('register-form element not found!');
-            }
-
-            if (loginForm) {
-                loginForm.style.display = 'none';
-                console.log('Set login-form display to none, computed style:', window.getComputedStyle(loginForm).display);
-            } else {
-                console.error('login-form element not found!');
-            }
-
-            if (authResult) {
-                authResult.style.display = 'none';
-                console.log('Set auth-result display to none, computed style:', window.getComputedStyle(authResult).display);
-            } else {
-                console.error('auth-result element not found!');
-            }
-
-            // Force a reflow and check final state
-            setTimeout(() => {
-                console.log('After timeout - auth-forms computed display:', authForms ? window.getComputedStyle(authForms).display : 'element gone');
-                console.log('After timeout - register-form computed display:', registerForm ? window.getComputedStyle(registerForm).display : 'element gone');
-
-                // Try to force visibility with !important-like behavior
-                if (authForms) {
-                    authForms.style.setProperty('display', 'block', 'important');
-                    authForms.style.visibility = 'visible';
-                    authForms.style.opacity = '1';
-                    console.log('FORCED visibility changes applied');
-                }
-                if (registerForm) {
-                    registerForm.style.setProperty('display', 'block', 'important');
-                    registerForm.style.visibility = 'visible';
-                    registerForm.style.opacity = '1';
-                    console.log('FORCED register-form visibility changes applied');
-                }
-
-                    // Check for potential CSS conflicts
-                if (authForms) {
-                    const authFormsRect = authForms.getBoundingClientRect();
-                    console.log('auth-forms bounding rect:', {
-                        width: authFormsRect.width,
-                        height: authFormsRect.height,
-                        top: authFormsRect.top,
-                        left: authFormsRect.left
-                    });
-                    console.log('auth-forms is visible in viewport:', authFormsRect.top >= 0 && authFormsRect.left >= 0 && authFormsRect.width > 0 && authFormsRect.height > 0);
-
-                    // Force visibility check
-                    console.log('auth-forms offsetWidth:', authForms.offsetWidth);
-                    console.log('auth-forms offsetHeight:', authForms.offsetHeight);
-                    console.log('auth-forms clientWidth:', authForms.clientWidth);
-                    console.log('auth-forms clientHeight:', authForms.clientHeight);
-                }
-
-                // Also check if the form is actually in the DOM and visible
-                setTimeout(() => {
-                    const currentAuthForms = document.getElementById('auth-forms');
-                    if (currentAuthForms) {
-                        console.log('Final check - auth-forms display:', window.getComputedStyle(currentAuthForms).display);
-                        console.log('Final check - auth-forms visibility:', window.getComputedStyle(currentAuthForms).visibility);
-                        console.log('Final check - auth-forms opacity:', window.getComputedStyle(currentAuthForms).opacity);
-                        console.log('Can you SEE the form now?', currentAuthForms.offsetWidth > 0 && currentAuthForms.offsetHeight > 0);
-                    }
-                }, 500);
-            }, 100);
-        }
-
-        function showLoginForm() {
-            document.getElementById('auth-forms').style.display = 'block';
-            document.getElementById('form-title').textContent = 'Login';
-            document.getElementById('register-form').style.display = 'none';
-            document.getElementById('login-form').style.display = 'block';
-            document.getElementById('auth-result').style.display = 'none';
-        }
-
-        // Handle registration form
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const resultDiv = document.getElementById('auth-result');
-
-            const data = {
-                email: document.getElementById('reg-email').value,
-                password: document.getElementById('reg-password').value,
-                name: document.getElementById('reg-name').value
-            };
-
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                let result;
-                try {
-                    result = await response.json();
-                } catch (e) {
-                    result = { error: 'Invalid response from server' };
-                }
-
-                if (response.ok) {
-                    resultDiv.style.background = '#10b981';
-                    resultDiv.innerHTML = '<strong>✅ Registration Successful!</strong><br>Check your email for verification link.<br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px;">' + (result.token || 'Check response below') + '</code><br><br><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre>';
-                    authToken = result.token;
-                } else {
-                    resultDiv.style.background = '#ef4444';
-                    let errorMessage = result.error || 'Unknown error';
-                    if (result.details && Array.isArray(result.details)) {
-                        errorMessage += '<br><br><strong>Validation Errors:</strong><ul>';
-                        result.details.forEach(detail => {
-                            errorMessage += '<li>' + detail.msg + ' (field: ' + detail.path + ')</li>';
-                        });
-                        errorMessage += '</ul>';
-                    }
-                    resultDiv.innerHTML = '<strong>❌ Registration Failed:</strong><br>' + errorMessage + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
-                }
-            } catch (error) {
-                resultDiv.style.background = '#ef4444';
-                resultDiv.innerHTML = '<strong>❌ Network Error:</strong><br>' + error.message;
-            }
-
-            resultDiv.style.display = 'block';
-            resultDiv.style.color = 'white';
-        });
-
-        // Handle login form
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const resultDiv = document.getElementById('auth-result');
-
-            const data = {
-                email: document.getElementById('login-email').value,
-                password: document.getElementById('login-password').value
-            };
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    resultDiv.style.background = '#10b981';
-                    resultDiv.innerHTML = '<strong>✅ Login Successful!</strong><br><br><strong>JWT Token:</strong><br><code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; word-break: break-all;">' + result.token + '</code><br><br><button id="copy-token-btn" style="margin-top: 10px; padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; border-radius: 5px; color: white; cursor: pointer;">Copy Token</button><br><br><details><summary>User Info</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result.user, null, 2) + '</pre></details>';
-                    authToken = result.token;
-                    // Add event listener for the dynamically created copy button
-                    setTimeout(() => {
-                        const copyBtn = document.getElementById('copy-token-btn');
-                        if (copyBtn) {
-                            copyBtn.addEventListener('click', copyCurrentToken);
-                        }
-                    }, 100);
-                } else {
-                    resultDiv.style.background = '#ef4444';
-                    let errorMessage = result.error || 'Unknown error';
-                    if (result.details && Array.isArray(result.details)) {
-                        errorMessage += '<br><br><strong>Validation Errors:</strong><ul>';
-                        result.details.forEach(detail => {
-                            errorMessage += '<li>' + detail.msg + ' (field: ' + detail.path + ')</li>';
-                        });
-                        errorMessage += '</ul>';
-                    }
-                    resultDiv.innerHTML = '<strong>❌ Login Failed:</strong><br>' + errorMessage + '<br><br><details><summary>Full Response</summary><pre style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; text-align: left; overflow-x: auto;">' + JSON.stringify(result, null, 2) + '</pre></details>';
-                }
-            } catch (error) {
-                resultDiv.style.background = '#ef4444';
-                resultDiv.innerHTML = '<strong>❌ Network Error:</strong><br>' + error.message;
-            }
-
-            resultDiv.style.display = 'block';
-            resultDiv.style.color = 'white';
-        });
-
-        async function testMe() {
-            if (!authToken) {
-                alert('🔒 Please login first to test authentication.');
-                showLoginForm();
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': 'Bearer ' + authToken }
-                });
-                if (response.status === 401) {
-                    alert('🔒 Token expired. Please login again.');
-                    showLoginForm();
-                } else {
-                    const data = await response.json();
-                    alert('✅ Authentication working!\\n\\nUser: ' + data.email + '\\nRole: ' + (data.role || 'member'));
-                }
-            } catch (error) {
-                alert('❌ Auth test failed: ' + error.message);
-            }
-        }
-
-        function copyCurrentToken() {
-            if (!authToken) {
-                alert('❌ No token available to copy!');
-                return;
-            }
-            navigator.clipboard.writeText(authToken).then(() => {
-                alert('✅ Token copied to clipboard!');
-            }).catch(() => {
-                // Fallback for browsers that don't support clipboard API
-                const textArea = document.createElement('textarea');
-                textArea.value = authToken;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('✅ Token copied to clipboard!');
-            });
-        }
-
-        async function testEndpoint(endpoint, method = 'GET') {
-            if (!authToken && endpoint !== '/api/health') {
-                alert('🔒 Please login first to access protected endpoints.');
-                showLoginForm();
-                return;
-            }
-
-            try {
-                const headers = { 'Content-Type': 'application/json' };
-                if (authToken) {
-                    headers['Authorization'] = 'Bearer ' + authToken;
-                }
-
-                const response = await fetch(endpoint, {
-                    method: method,
-                    headers: headers
-                });
-
-                let result;
-                try {
-                    result = await response.json();
-                } catch (e) {
-                    result = { message: 'No JSON response' };
-                }
-
-                if (response.ok) {
-                    alert('✅ ' + method + ' ' + endpoint + ' succeeded!\\n\\nStatus: ' + response.status + '\\n\\nResponse:\\n' + JSON.stringify(result, null, 2));
-                } else if (response.status === 401) {
-                    alert('🔒 ' + method + ' ' + endpoint + ' requires authentication.\\n\\nPlease login first.');
-                    showLoginForm();
-                } else if (response.status === 403) {
-                    alert('🚫 ' + method + ' ' + endpoint + ' requires admin privileges.\\n\\nMake sure you\\'re logged in with an admin account.');
-                } else {
-                    alert('❌ ' + method + ' ' + endpoint + ' failed.\\n\\nStatus: ' + response.status + '\\nError: ' + (result.error || result.message || 'Unknown error') + '\\n\\nFull Response:\\n' + JSON.stringify(result, null, 2));
-                }
-            } catch (error) {
-                alert('❌ Network error accessing ' + endpoint + ': ' + error.message);
-            }
-        }
-
-        async function createSamplePost() {
-            if (!authToken) {
-                alert('🔒 Please login first to create posts.');
-                showLoginForm();
-                return;
-            }
-
-            const postData = {
-                title: "My First Click Post",
-                content: "Welcome to Click Platform! This is my first automated post created from the web interface.",
-                platforms: ["twitter"],
-                status: "draft"
-            };
-
-            try {
-                const response = await fetch('/api/posts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + authToken
-                    },
-                    body: JSON.stringify(postData)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert('✅ Post created successfully!\\n\\nTitle: ' + result.title + '\\nStatus: ' + result.status + '\\nID: ' + result.id + '\\n\\nFull Response:\\n' + JSON.stringify(result, null, 2));
-                } else {
-                    alert('❌ Failed to create post.\\n\\nStatus: ' + response.status + '\\nError: ' + (result.error || 'Unknown error') + '\\n\\nFull Response:\\n' + JSON.stringify(result, null, 2));
-                }
-            } catch (error) {
-                alert('❌ Network error creating post: ' + error.message);
-            }
-        }
-
-        // Add event listeners for buttons - using DOMContentLoaded for reliability
-        function attachEventListeners() {
-            // #region agent log
-            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'attachEventListeners',
-                    message: 'Function called',
-                    data: { readyState: document.readyState },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    hypothesisId: 'B'
-                })
-            }).catch(() => {});
-            // #endregion
-
-            // Auth buttons
-            const registerBtn = document.getElementById('show-register-btn');
-            const loginBtn = document.getElementById('show-login-btn');
-
-            // #region agent log
-            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'attachEventListeners',
-                    message: 'Button elements found',
-                    data: {
-                        registerBtn: !!registerBtn,
-                        loginBtn: !!loginBtn
-                    },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    hypothesisId: 'C'
-                })
-            }).catch(() => {});
-            // #endregion
-
-            if (registerBtn) {
-                registerBtn.addEventListener('click', (e) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            location: 'registerBtn.click',
-                            message: 'Register button clicked',
-                            data: { buttonId: 'show-register-btn' },
-                            timestamp: Date.now(),
-                            sessionId: 'debug-session',
-                            hypothesisId: 'A'
-                        })
-                    }).catch(() => {});
-                    // #endregion
-
-                    showRegistrationForm();
-                });
-            }
-            if (loginBtn) {
-                loginBtn.addEventListener('click', (e) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            location: 'loginBtn.click',
-                            message: 'Login button clicked',
-                            data: { buttonId: 'show-login-btn' },
-                            timestamp: Date.now(),
-                            sessionId: 'debug-session',
-                            hypothesisId: 'A'
-                        })
-                    }).catch(() => {});
-                    // #endregion
-
-                    showLoginForm();
-                });
-            }
-
-            // API testing buttons
-            const buttons = [
-                { id: 'view-posts-btn', action: () => testEndpoint('/api/posts', 'GET') },
-                { id: 'create-post-btn', action: createSamplePost },
-                { id: 'view-analytics-btn', action: () => testEndpoint('/api/analytics/dashboard', 'GET') },
-                { id: 'view-performance-btn', action: () => testEndpoint('/api/analytics/performance', 'GET') },
-                { id: 'connect-twitter-btn', action: () => testEndpoint('/api/oauth/twitter', 'GET') },
-                { id: 'view-connections-btn', action: () => testEndpoint('/api/oauth/connected-accounts', 'GET') },
-                { id: 'admin-stats-btn', action: () => testEndpoint('/api/admin/stats', 'GET') },
-                { id: 'admin-users-btn', action: () => testEndpoint('/api/admin/users', 'GET') }
-            ];
-
-            buttons.forEach(({ id, action }) => {
-                const btn = document.getElementById(id);
-                if (btn) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            location: 'attachEventListeners',
-                            message: 'Attaching listener to button',
-                            data: { buttonId: id },
-                            timestamp: Date.now(),
-                            sessionId: 'debug-session',
-                            hypothesisId: 'C'
-                        })
-                    }).catch(() => {});
-                    // #endregion
-
-                    btn.addEventListener('click', action);
-                    console.log('Attached listener to button:', id);
-                } else {
-                    // #region agent log
-                    fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            location: 'attachEventListeners',
-                            message: 'Button not found',
-                            data: { buttonId: id },
-                            timestamp: Date.now(),
-                            sessionId: 'debug-session',
-                            hypothesisId: 'D'
-                        })
-                    }).catch(() => {});
-                    // #endregion
-
-                    console.warn('Button not found:', id);
-                }
-            });
-
-            console.log('Event listeners attachment completed');
-        }
-
-        // Attach listeners when DOM is ready
-        if (document.readyState === 'loading') {
-            // #region agent log
-            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'DOMContentLoaded',
-                    message: 'DOM still loading, adding event listener',
-                    data: { readyState: document.readyState },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    hypothesisId: 'E'
-                })
-            }).catch(() => {});
-            // #endregion
-
-            document.addEventListener('DOMContentLoaded', attachEventListeners);
-        } else {
-            // #region agent log
-            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'DOMContentLoaded',
-                    message: 'DOM already loaded, calling attachEventListeners directly',
-                    data: { readyState: document.readyState },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    hypothesisId: 'E'
-                })
-            }).catch(() => {});
-            // #endregion
-
-            attachEventListeners();
-        }
-
-        // Auto-test health on page load
-        window.addEventListener('load', () => {
-            // #region agent log
-            fetch('http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'window.load',
-                    message: 'Page fully loaded',
-                    data: {},
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    hypothesisId: 'B'
-                })
-            }).catch(() => {});
-            // #endregion
-
-            setTimeout(testHealth, 1000);
-        });
-    </script>
-</body>
-</html>`);
-});
 
 // Serve Next.js build files in production (if available)
 if (process.env.NODE_ENV === 'production') {
@@ -1713,30 +934,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Database connection with multi-provider support
-// Supports Supabase, Prisma (PostgreSQL), and MongoDB (legacy)
-const { initDatabases, getDatabaseHealth } = require('./config/database');
-
-// Connect to database (supports multiple providers)
-const connectDB = async () => {
-  try {
-    const dbStatus = await initDatabases();
-
-    if (dbStatus.supabase || dbStatus.prisma || dbStatus.mongodb) {
-      logger.info('✅ Database connected successfully');
-      logger.info('Database status:', getDatabaseHealth());
-    } else {
-      logger.error('❌ No database connection available');
-      logger.warn('⚠️ Server will start in degraded mode. Database features will not work.');
-    }
-  } catch (err) {
-    logger.error('❌ Database connection error:', err);
-    logger.warn('⚠️ Server will start without database. Connection will retry in background.');
-    // Don't exit - allow server to start
-  }
-};
-
-// Connect to database (non-blocking)
-connectDB();
+// Connection is initialized earlier in the file to ensure models can connect
+// getDatabaseHealth available via: require('./config/database').getDatabaseHealth()
 
 // API Documentation
 const swaggerUiOptions = {
@@ -1775,401 +974,151 @@ if (redisCache && typeof redisCache.middleware === 'function') {
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
-// #region agent log - Route mounting
-// #endregion
 
 // Debug middleware for all API requests
 app.use('/api', (req, res, next) => {
-  // #region agent log - API request received
-  // #endregion
   next();
 });
 
 // Debug middleware for quote routes
 app.use('/api/quote', (req, res, next) => {
-  // #region agent log
-  // #endregion
   next();
 });
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/dashboard', require('./routes/dashboard'));
-app.use('/api/posts', require('./routes/posts'));
-app.use('/api/subscription', require('./routes/subscription'));
-app.use('/api/video', require('./routes/video'));
-app.use('/api/content', require('./routes/content'));
-app.use('/api/quote', require('./routes/quote'));
-app.use('/api/scheduler', require('./routes/scheduler'));
-// Analytics routes - more specific first
-app.use('/api/analytics/content', require('./routes/analytics/content'));
-app.use('/api/analytics/performance', require('./routes/analytics/performance'));
-app.use('/api/analytics/growth', require('./routes/analytics/growth'));
-app.use('/api/analytics/advanced', require('./routes/analytics/advanced'));
-app.use('/api/analytics/predictions', require('./routes/analytics/predictions'));
-app.use('/api/analytics', require('./routes/analytics'));
-app.use('/api/analytics', require('./routes/analytics/advanced-features'));
+// ─── Safe Route Loader ──────────────────────────────────────────────────────
+// iCloud Drive sometimes cancels file reads (ECANCELED) mid-require(), which
+// would normally crash the server with an uncaught exception. console.log("Loading route..."); safeUse() wraps
+// each route require() in a try/catch so a single failed route load is logged
+// and skipped rather than bringing down the entire process.
+function safeUse(mountPath, routeFile) {
+  try {
+    const mod = require(routeFile);
+    // Validate it's actually a middleware/router before mounting
+    if (typeof mod !== 'function' && !(mod && typeof mod.handle === 'function')) {
+      logger.warn(`⚠️ Route ${routeFile} does not export a valid middleware/router (got ${typeof mod}). Skipping mount at ${mountPath}.`);
+      return;
+    }
+    app.use(mountPath, mod);
+  } catch (err) {
+    logger.warn(`⚠️ Failed to load route ${routeFile} at ${mountPath}: ${err.message}. Skipping.`);
+  }
+}
+// ────────────────────────────────────────────────────────────────────────────
 
-app.use('/api/niche', require('./routes/niche'));
-app.use('/api/upload', require('./routes/upload'));
-app.use('/api/upload/progress', require('./routes/upload/progress'));
-app.use('/api/search', require('./routes/search'));
-app.use('/api/export', require('./routes/export'));
-app.use('/api/batch', require('./routes/batch'));
-app.use('/api/templates', require('./routes/templates'));
-app.use('/api/music', require('./routes/music'));
-app.use('/api/video/effects', require('./routes/video/effects'));
-app.use('/api/video/enhance', require('./routes/video/enhance'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/scripts', require('./routes/scripts'));
-app.use('/api/versions', require('./routes/versions'));
-app.use('/api/collaboration', require('./routes/collaboration'));
-app.use('/api/membership', require('./routes/membership'));
-app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/subscription', require('./routes/subscription/status'));
-app.use('/api/import', require('./routes/import'));
-app.use('/api/workflows', require('./routes/workflows'));
-app.use('/api/engagement', require('./routes/engagement'));
-app.use('/api/library', require('./routes/library'));
-app.use('/api/suggestions', require('./routes/suggestions'));
-app.use('/api/social', require('./routes/social'));
-app.use('/api/oauth', require('./routes/oauth'));
-app.use('/api/teams', require('./routes/teams'));
-app.use('/api/approvals', require('./routes/approvals'));
-app.use('/api/collections', require('./routes/collections'));
-app.use('/api/versions', require('./routes/versions'));
-app.use('/api/comments', require('./routes/comments'));
-app.use('/api/analytics/enhanced', require('./routes/analytics/enhanced'));
-app.use('/api/analytics/content-performance', require('./routes/analytics/contentPerformance'));
-app.use('/api/analytics/platform', require('./routes/analytics/platform'));
-app.use('/api/analytics/bi', require('./routes/analytics/bi'));
-app.use('/api/benchmarking', require('./routes/benchmarking'));
-app.use('/api/curation', require('./routes/curation'));
-app.use('/api/audience', require('./routes/audience'));
-app.use('/api/onboarding', require('./routes/onboarding'));
-app.use('/api/help', require('./routes/help-center'));
-app.use('/api/templates/marketplace', require('./routes/templates/marketplace'));
-app.use('/api/collaboration/realtime', require('./routes/collaboration/realtime'));
-app.use('/api/collaboration/permissions', require('./routes/collaboration/permissions'));
-app.use('/api/push', require('./routes/push'));
-app.use('/api/templates/analytics', require('./routes/templates/analytics'));
-app.use('/api/sso', require('./routes/sso'));
-app.use('/api/admin/dashboard', require('./routes/admin/dashboard'));
-app.use('/api/white-label', require('./routes/white-label'));
-app.use('/api/reports', require('./routes/reports'));
-app.use('/api/webhooks', require('./routes/webhooks'));
-app.use('/api/sso/scim', require('./routes/sso/scim'));
-app.use('/api/admin/audit', require('./routes/admin/audit'));
-app.use('/api/admin/settings', require('./routes/admin/settings'));
-app.use('/api/admin/bulk', require('./routes/admin/bulk'));
-app.use('/api/admin/error-analytics', require('./routes/admin/error-analytics'));
-app.use('/api/reports/schedule', require('./routes/reports/schedule'));
-app.use('/api/white-label/theme', require('./routes/white-label/theme'));
-app.use('/api/cdn', require('./routes/cdn'));
-app.use('/api/cdn/analytics', require('./routes/cdn/analytics'));
-app.use('/api/cdn/warming', require('./routes/cdn/warming'));
-app.use('/api/monitoring', require('./routes/monitoring'));
-app.use('/api/monitoring/tracing', require('./routes/monitoring/tracing'));
-app.use('/api/disaster-recovery', require('./routes/disaster-recovery'));
-app.use('/api/disaster-recovery/encryption', require('./routes/disaster-recovery/encryption'));
-app.use('/api/microservices', require('./routes/microservices'));
-app.use('/api/database', require('./routes/database/sharding'));
-app.use('/api/database/rebalancing', require('./routes/database/rebalancing'));
-app.use('/api/creative/ideation', require('./routes/creative/ideation'));
-app.use('/api/creative/brand-voice', require('./routes/creative/brand-voice'));
-app.use('/api/creative/hashtags', require('./routes/creative/hashtags'));
-app.use('/api/productive/calendar', require('./routes/productive/calendar'));
-app.use('/api/productive/repurposing', require('./routes/productive/repurposing'));
-app.use('/api/productive/ab-testing', require('./routes/productive/ab-testing'));
-app.use('/api/video/ai-editing', require('./routes/video/ai-editing'));
-app.use('/api/video/manual-editing', require('./routes/video/manual-editing'));
-app.use('/api/assets', require('./routes/assets'));
-app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));
-app.use('/api/video/captions', require('./routes/video/captions'));
-app.use('/api/video/advanced-editing', require('./routes/video/advanced-editing'));
-app.use('/api/graphql', require('./routes/graphql'));
-app.use('/api/plugins', require('./routes/plugins'));
-app.use('/api/marketplace', require('./routes/marketplace'));
-app.use('/api/tenants', require('./routes/tenants'));
-app.use('/api/workflows/advanced-automation', require('./routes/workflows/advanced-automation'));
-app.use('/api/video/effects', require('./routes/video/effects'));
-app.use('/api/video/analytics', require('./routes/video/analytics'));
-app.use('/api/video/transcription', require('./routes/video/transcription'));
-app.use('/api/video/thumbnails', require('./routes/video/thumbnails'));
-app.use('/api/video/chapters', require('./routes/video/chapters'));
-app.use('/api/video/optimization', require('./routes/video/optimization'));
-app.use('/api/debug', require('./routes/debug'));
-app.use('/api/ai/multi-model', require('./routes/ai/multi-model'));
-app.use('/api/ai/recommendations', require('./routes/ai/recommendations'));
-app.use('/api/ai/predictive', require('./routes/ai/predictive'));
-app.use('/api/ai/advanced', require('./routes/ai/advanced'));
-app.use('/api/ai/content-generation', require('./routes/ai/content-generation'));
-app.use('/api/ai/adapt', require('./routes/ai/adapt'));
-app.use('/api/ai', require('./routes/ai/generate-idea'));
-app.use('/api/infrastructure/cache', require('./routes/infrastructure/cache'));
-app.use('/api/infrastructure/load-balancer', require('./routes/infrastructure/load-balancer'));
-app.use('/api/infrastructure/database', require('./routes/infrastructure/database'));
-app.use('/api/infrastructure/resources', require('./routes/infrastructure/resources'));
-app.use('/api/workflows/advanced', require('./routes/workflows/advanced'));
-app.use('/api/workflows/templates', require('./routes/workflows/templates'));
+// Sentry AI Agent Monitoring: group multi-step AI calls by conversation/session/user.
+const sentryConversation = require('./middleware/sentryConversation');
+app.use('/api/ai', sentryConversation);
+app.use('/api/creative/ideation', sentryConversation);
+app.use('/api/content-operations', sentryConversation);
+app.use('/api/pipeline', sentryConversation);
 
-// Mobile app routes (if needed for mobile-specific endpoints)
-// app.use('/api/mobile', require('./routes/mobile'));
-app.use('/api/templates', require('./routes/templates'));
-app.use('/api/search', require('./routes/search'));
-app.use('/api/search/advanced', require('./routes/search/advanced'));
-app.use('/api/search/elasticsearch', require('./routes/search/elasticsearch'));
-app.use('/api/suggestions/enhanced', require('./routes/suggestions/enhanced'));
-app.use('/api/workflows/enhanced', require('./routes/workflows/enhanced'));
-app.use('/api/social', require('./routes/social'));
-app.use('/api/ai', require('./routes/ai-recommendations'));
-app.use('/api/scheduling', require('./routes/scheduling/advanced'));
-app.use('/api/scheduling/advanced', require('./routes/scheduling/advanced'));
+// ── API Routes (v1) ──────────────────────────────────────────────────────────
+const routes = [
+  // Auth & User
+  ['/api/auth', './routes/auth'],
+  ['/api/user', './routes/user'],
+  ['/api/teams', './routes/teams'],
+  ['/api/onboarding', './routes/onboarding'],
+  ['/api/membership', './routes/membership'],
+  ['/api/subscription', './routes/subscription'],
+  ['/api/subscription/status', './routes/subscription/status'],
 
-// Unified content pipeline routes
-app.use('/api/pipeline', require('./routes/pipeline'));
+  // Core Features
+  ['/api/dashboard', './routes/dashboard'],
+  ['/api/tasks', './routes/tasks'],
+  ['/api/pm', './routes/pm'],
+  ['/api/content', './routes/content'],
+  ['/api/posts', './routes/posts'],
+  ['/api/library', './routes/library'],
+  ['/api/assets', './routes/assets'],
+  ['/api/templates', './routes/templates'],
+  ['/api/workflows', './routes/workflows'],
 
-// AI Content Operations routes
-app.use('/api/content-operations', require('./routes/content-operations'));
+  // Video Suite
+  ['/api/video/analytics', './routes/video/analytics'],
+  ['/api/video/transcription', './routes/video/transcription'],
+  ['/api/video/hook-analysis', './routes/video/hook-analysis'],
+  ['/api/video/thumbnails', './routes/video/thumbnails'],
+  ['/api/video/chapters', './routes/video/chapters'],
+  ['/api/video/optimization', './routes/video/optimization'],
+  ['/api/video/progress', './routes/video/progress'],
+  ['/api/video/advanced', './routes/video/advanced'],
+  ['/api/video/ai-editing', './routes/video/ai-editing'],
+  ['/api/video/manual-editing', './routes/video/manual-editing'],
+  ['/api/video/voice-hooks', './routes/video/voice-hooks'],
+  ['/api/video/captions', './routes/video/captions'],
+  ['/api/video/advanced-editing', './routes/video/advanced-editing'],
+  ['/api/video/neural', './routes/video/neural'],
+  ['/api/video/effects', './routes/video/effects'],
+  ['/api/video/enhance', './routes/video/enhance'],
+  ['/api/video/creative', './routes/creative'],
+  ['/api/video', './routes/video'],
 
-// Enterprise routes
-app.use('/api/enterprise', require('./routes/enterprise'));
+  // AI & Analytics
+  ['/api/analytics/content', './routes/analytics/content'],
+  ['/api/analytics/performance', './routes/analytics/performance'],
+  ['/api/analytics/growth', './routes/analytics/growth'],
+  ['/api/analytics/advanced', './routes/analytics/advanced'],
+  ['/api/analytics/predictions', './routes/analytics/predictions'],
+  ['/api/analytics/user', './routes/analytics/user'],
+  ['/api/analytics', './routes/analytics'],
+  ['/api/ai/recommendations', './routes/ai-recommendations'],
+  ['/api/ai', './routes/ai/generate-idea'],
+  ['/api/ai', './routes/ai-content'],
+  ['/api/ai', './routes/ai-enhanced'],
+  
+  // Others
+  ['/api/upload', './routes/upload'],
+  ['/api/upload/progress', './routes/upload/progress'],
+  ['/api/search', './routes/search'],
+  ['/api/search/advanced', './routes/search/advanced'],
+  ['/api/export', './routes/export'],
+  ['/api/social', './routes/social'],
+  ['/api/oauth/linkedin', './routes/oauth/linkedin'],
+  ['/api/oauth/facebook', './routes/oauth/facebook'],
+  ['/api/oauth/instagram', './routes/oauth/instagram'],
+  ['/api/oauth/tiktok', './routes/oauth/tiktok'],
+  ['/api/oauth/youtube', './routes/oauth/youtube'],
+  ['/api/oauth', './routes/oauth'],
+  ['/api/webhooks', './routes/webhooks'],
+  ['/api/billing', './routes/billing'],
+  ['/api/notifications', './routes/notifications'],
+  ['/api/approvals', './routes/approvals'],
+  ['/api/comments', './routes/comments'],
+  ['/api/help', './routes/help-center'],
+  ['/api/admin/dashboard', './routes/admin/dashboard'],
+  ['/api/admin', './routes/admin'],
+  ['/api/debug', './routes/debug'],
+  ['/api/health', './routes/health'],
+  ['/api/agentic', './routes/agentic'],
+  ['/api/dubbing', './routes/dubbing'],
+  ['/api/retention-heatmap', './routes/retention-heatmap'],
+  ['/api/competitive', './routes/competitive-benchmark'],
+  ['/api/digital-twin', './routes/digitalTwin'],
+  
+  // Scene Detection Sub-Routes
+  ['/api/video/scenes', './routes/video/scenes'],
+  ['/api/video/scenes', './routes/video/scenes-advanced'],
+  ['/api/video/scenes', './routes/video/scenes-analytics'],
+  
+  // Audio & Music Features
+  ['/api/music', './routes/music'],
+  ['/api/music', './routes/music-user-uploads'],
+  ['/api/audio/transcription', './routes/transcripts'],
+  
+  // Analytics & Intelligence
+  ['/api/usage-analytics', './routes/usage-analytics'],
 
-// Agency routes
-app.use('/api/agency', require('./routes/agency'));
+  // 2026 Global Marketing AI Expert
+  ['/api/marketing-intelligence', './routes/marketing-intelligence'],
+];
 
-// Advanced recycling routes
-app.use('/api/recycling-advanced', require('./routes/recycling-advanced'));
-
-// Content Ops API routes
-app.use('/api/content-ops', require('./routes/content-ops-api'));
-
-// Webhook routes
-app.use('/api/webhooks', require('./routes/webhooks'));
-
-// Integration routes
-app.use('/api/integrations', require('./routes/integrations'));
-
-// Event streaming routes
-app.use('/api/events', require('./routes/events').router);
-
-// Billing routes
-app.use('/api/billing', require('./routes/billing'));
-
-// Usage analytics routes
-app.use('/api/usage-analytics', require('./routes/usage-analytics'));
-
-// Agency calendar routes
-app.use('/api/agency', require('./routes/agency-calendar'));
-
-// Agency campaign routes
-app.use('/api/agency', require('./routes/agency-campaigns'));
-
-// Agency bulk operations routes
-app.use('/api/agency', require('./routes/agency-bulk'));
-
-// Enhanced calendar routes
-app.use('/api/agency', require('./routes/calendar-enhanced'));
-
-// Client portal routes
-app.use('/api/client-portal', require('./routes/client-portal'));
-
-// Branded links routes
-app.use('/api/agency', require('./routes/branded-links'));
-app.use('/l', require('./routes/branded-links')); // Public link resolution
-
-// Reports routes
-app.use('/api/agency', require('./routes/reports'));
-
-// Enhanced reports routes
-app.use('/api/agency', require('./routes/reports-enhanced'));
-
-// Enhanced portal routes
-app.use('/api/client-portal', require('./routes/portal-enhanced'));
-app.use('/api/agency', require('./routes/portal-enhanced'));
-
-// Client guidelines routes
-app.use('/api/workspaces', require('./routes/client-guidelines'));
-
-// Multi-step approval workflow routes
-app.use('/api/approvals', require('./routes/approval-workflow'));
-
-// Email approval routes (public)
-app.use('/api/email-approval', require('./routes/email-approval'));
-
-// Post comments routes
-app.use('/api/posts', require('./routes/post-comments'));
-
-// Post versions routes
-app.use('/api/posts', require('./routes/post-versions'));
-
-// Enhanced workflow routes
-app.use('/api/agency', require('./routes/workflow-enhanced'));
-app.use('/api/approvals', require('./routes/workflow-enhanced'));
-app.use('/api/comments', require('./routes/workflow-enhanced'));
-
-// Cross-client features routes
-app.use('/api/agency', require('./routes/cross-client-features'));
-app.use('/api/clients', require('./routes/cross-client-features'));
-app.use('/api/evergreen-queues', require('./routes/cross-client-features'));
-
-// Enhanced cross-client features routes
-app.use('/api/agency', require('./routes/cross-client-enhanced'));
-app.use('/api/clients', require('./routes/cross-client-enhanced'));
-app.use('/api/health-alerts', require('./routes/cross-client-enhanced'));
-
-// Value tracking routes
-app.use('/api/clients', require('./routes/value-tracking'));
-app.use('/api/agency', require('./routes/value-tracking'));
-
-// Service tiers routes
-app.use('/api/agency', require('./routes/service-tiers'));
-app.use('/api/clients', require('./routes/service-tiers'));
-
-// KPI dashboard routes
-app.use('/api/agency', require('./routes/kpi-dashboard'));
-
-// Enhanced value tracking routes
-app.use('/api/clients', require('./routes/value-tracking-enhanced'));
-app.use('/api/agency', require('./routes/value-tracking-enhanced'));
-
-// Social performance metrics routes
-app.use('/api/posts', require('./routes/social-performance-metrics'));
-app.use('/api/workspaces', require('./routes/social-performance-metrics'));
-app.use('/api/audience-growth', require('./routes/social-performance-metrics'));
-
-// Enhanced social performance metrics routes
-app.use('/api/workspaces', require('./routes/social-performance-enhanced'));
-app.use('/api/posts', require('./routes/social-performance-enhanced'));
-app.use('/api/audience-growth', require('./routes/social-performance-enhanced'));
-
-// Traffic, conversions, and revenue routes
-app.use('/api/clicks', require('./routes/traffic-conversions'));
-app.use('/api/posts', require('./routes/traffic-conversions'));
-app.use('/api/conversions', require('./routes/traffic-conversions'));
-app.use('/api/workspaces', require('./routes/traffic-conversions'));
-app.use('/api/webhooks', require('./routes/traffic-conversions'));
-
-// Enhanced revenue routes
-app.use('/api/conversions', require('./routes/revenue-enhanced'));
-app.use('/api/workspaces', require('./routes/revenue-enhanced'));
-app.use('/api/revenue-goals', require('./routes/revenue-enhanced'));
-
-// Content insights routes
-app.use('/api/posts', require('./routes/content-insights'));
-app.use('/api/workspaces', require('./routes/content-insights'));
-
-// Enhanced content insights routes
-app.use('/api/posts', require('./routes/content-insights-enhanced'));
-app.use('/api/workspaces', require('./routes/content-insights-enhanced'));
-app.use('/api/content', require('./routes/content-insights-enhanced'));
-
-// Client health routes
-app.use('/api/workspaces', require('./routes/client-health'));
-app.use('/api/clients', require('./routes/client-health'));
-app.use('/api/posts', require('./routes/client-health'));
-
-// Enhanced client health routes
-app.use('/api/clients', require('./routes/client-health-enhanced'));
-app.use('/api/workspaces', require('./routes/client-health-enhanced'));
-app.use('/api/competitors', require('./routes/client-health-enhanced'));
-app.use('/api/comments', require('./routes/client-health-enhanced'));
-
-// Agency business metrics routes
-app.use('/api/agencies', require('./routes/agency-business'));
-app.use('/api/satisfaction', require('./routes/agency-business'));
-
-// Enhanced agency business routes
-app.use('/api/agencies', require('./routes/agency-business-enhanced'));
-
-// Approval Kanban routes
-app.use('/api/clients', require('./routes/approval-kanban'));
-app.use('/api/approvals', require('./routes/approval-kanban'));
-
-// Simple client portal routes
-app.use('/api/simple-portal', require('./routes/simple-portal'));
-
-// Inline comments routes
-app.use('/api/posts', require('./routes/inline-comments'));
-
-// Version comparison routes
-app.use('/api/versions', require('./routes/version-comparison'));
-
-// Enhanced approval routes
-app.use('/api/clients', require('./routes/approval-enhanced'));
-app.use('/api/approvals', require('./routes/approval-enhanced'));
-app.use('/api/posts', require('./routes/approval-enhanced'));
-app.use('/api/workspaces', require('./routes/approval-enhanced'));
-app.use('/api/simple-portal', require('./routes/approval-enhanced'));
-
-// Report builder routes
-app.use('/api/reports', require('./routes/report-builder'));
-app.use('/api/agencies', require('./routes/report-builder'));
-
-// Enhanced report routes
-app.use('/api/reports', require('./routes/report-enhanced'));
-
-// Enhanced pricing routes
-app.use('/api/pricing', require('./routes/pricing-enhanced'));
-app.use('/api/support', require('./routes/pricing-enhanced'));
-
-// Export routes
-app.use('/api/export', require('./routes/export'));
-
-// Enhanced support routes
-app.use('/api/support', require('./routes/support-enhanced'));
-
-// Pro mode routes
-app.use('/api/pro-mode', require('./routes/pro-mode'));
-
-// Status page (public)
-app.use('/api/status', require('./routes/support-enhanced'));
-
-// Workload dashboard routes
-app.use('/api/workload', require('./routes/workload-dashboard'));
-
-// Playbook routes
-app.use('/api/playbooks', require('./routes/playbooks'));
-
-// Risk flag routes
-app.use('/api/risk-flags', require('./routes/risk-flags'));
-
-// AI content routes
-app.use('/api/ai', require('./routes/ai-content'));
-app.use('/api/ai', require('./routes/ai-enhanced'));
-app.use('/api/moderation', require('./routes/moderation'));
-app.use('/api/backup', require('./routes/backup'));
-app.use('/api/video/advanced', require('./routes/video/advanced'));
-app.use('/api/video/progress', require('./routes/video/progress'));
-app.use('/api/workflows/webhooks', require('./routes/workflows/webhooks'));
-app.use('/api/jobs', require('./routes/jobs'));
-app.use('/api/jobs/dashboard', require('./routes/jobs/dashboard'));
-app.use('/api/jobs', require('./routes/jobs/progress'));
-app.use('/api/upload/progress', require('./routes/upload/progress'));
-app.use('/api/upload/chunked', require('./routes/upload/chunked'));
-app.use('/api/security', require('./routes/security'));
-app.use('/api/privacy', require('./routes/privacy'));
-app.use('/api/cache', require('./routes/cache'));
-app.use('/api/oauth/twitter', require('./routes/oauth/twitter'));
-app.use('/api/oauth/linkedin', require('./routes/oauth/linkedin'));
-app.use('/api/oauth/google', require('./routes/oauth/google'));
-app.use('/api/oauth/facebook', require('./routes/oauth/facebook'));
-app.use('/api/oauth/instagram', require('./routes/oauth/instagram'));
-app.use('/api/oauth/youtube', require('./routes/oauth/youtube'));
-app.use('/api/oauth/tiktok', require('./routes/oauth/tiktok'));
-app.use('/api/oauth/health', require('./routes/oauth/health'));
-app.use('/api/monitoring/performance', require('./routes/monitoring/performance'));
-app.use('/api/monitoring/cache', require('./routes/monitoring/cache'));
-app.use('/api/monitoring/database', require('./routes/monitoring/database'));
-app.use('/api/analytics/user', require('./routes/analytics/user'));
-app.use('/api/transcripts', require('./routes/transcripts'));
-app.use('/api/performance', require('./routes/performance'));
-app.use('/api/translation', require('./routes/translation'));
-app.use('/api/feature-flags', require('./routes/feature-flags'));
-
-// Health check (no rate limiting)
-app.use('/api/health', require('./routes/health'));
-app.use('/api/free-ai-models', require('./routes/free-ai-models'));
-app.use('/api/model-versions', require('./routes/model-versions'));
+// Load routes
+routes.forEach(([path, file]) => {
+  console.log(`Loading route: ${path} -> ${file}...`);
+  safeUse(path, file);
+});
+// ────────────────────────────────────────────────────────────────────────────
 
 // Monitoring and Health Check Routes
 app.get('/health', (req, res) => {
@@ -2182,7 +1131,8 @@ app.get('/health', (req, res) => {
   })
 })
 
-app.get('/api/health', (req, res) => {
+// Basic health check endpoint handled directly by Express (fallback)
+app.get('/api/health-status', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -2190,8 +1140,8 @@ app.get('/api/health', (req, res) => {
     memory: process.memoryUsage(),
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development'
-  })
-})
+  });
+});
 
 app.get('/api/monitoring/health', (req, res) => {
   const { getDatabaseHealth } = require('./config/database');
@@ -2265,30 +1215,22 @@ function __installShutdownHooks() {
   __shutdownHooksInstalled = true;
 
   const shutdown = (signal, isNodemonRestart = false) => {
-    // #region agent log
-    try {
-    } catch { }
-    // #endregion
 
     const finish = () => {
-      // #region agent log
-      try {
-      } catch { }
-      // #endregion
 
       // Flush Sentry events before shutdown
       if (Sentry && typeof Sentry.close === 'function') {
         try {
-          Sentry.close(2000).catch(() => { });
-        } catch { }
+          Sentry.close(2000).catch(() => { /* no-op */ });
+        } catch { /* no-op – Sentry may not be loaded */ }
       }
 
       // Close mongoose connection if it exists
       try {
         if (mongoose?.connection?.readyState) {
-          mongoose.connection.close(false).catch(() => { });
+          mongoose.connection.close(false).catch(() => { /* no-op */ });
         }
-      } catch { }
+      } catch { /* no-op – Mongoose may not be connected */ }
 
       if (isNodemonRestart) {
         // Hand control back to nodemon
@@ -2300,20 +1242,16 @@ function __installShutdownHooks() {
 
     try {
       if (server && server.listening) {
-        // #region agent log
-        try {
-        } catch { }
-        // #endregion
 
         // Force-close idle/active keep-alive connections so the port is released promptly.
         // (prevents nodemon restart races where the old process is still holding the listen socket)
-        try { server.closeIdleConnections && server.closeIdleConnections(); } catch { }
-        try { server.closeAllConnections && server.closeAllConnections(); } catch { }
+        try { server.closeIdleConnections && server.closeIdleConnections(); } catch { /* no-op */ }
+        try { server.closeAllConnections && server.closeAllConnections(); } catch { /* no-op */ }
 
         server.close(() => finish());
         return;
       }
-    } catch { }
+    } catch { /* no-op – server may not be listening */ }
     finish();
   };
 
@@ -2322,12 +1260,6 @@ function __installShutdownHooks() {
   // Nodemon restart signal
   process.once('SIGUSR2', () => shutdown('SIGUSR2', true));
 
-  // #region agent log
-  process.once('exit', (code) => {
-    try {
-    } catch { }
-  });
-  // #endregion
 }
 
 __installShutdownHooks();
@@ -2344,6 +1276,11 @@ try {
       setTimeout(() => {
         try {
           // Start main server after health check server is closed
+console.log('🏁 Starting route loading...');
+console.log("Loading route..."); safeUse('/api/auth', './routes/auth');
+// ... many routes ...
+console.log('🏁 Route loading completed. Initializing servers...');
+console.log('🚀 Starting app.listen...');
           server = app.listen(PORT, HOST, () => {
             logger.info(`🚀 Server running on port ${PORT}`);
             logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2467,8 +1404,8 @@ try {
     }); // Close healthCheckServer.close callback
   } else {
     // No health check server, start main server directly
-    // Helper function to start the server
-    function startMainServer() {
+    // Helper: start the main server
+    const startMainServer = () => {
       server = app.listen(PORT, HOST, () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2540,7 +1477,7 @@ try {
   console.log('⚠️ Creating minimal fallback server for health checks...');
   logger.warn('⚠️ Creating minimal fallback server for health checks...');
   try {
-    const express = require('express');
+    console.log('REQUIRING EXPRESS'); const express = require('express');
     const fallbackApp = express();
 
     fallbackApp.get('/api/health', (req, res) => {

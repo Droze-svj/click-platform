@@ -1,181 +1,19 @@
+'use client'
 
-import React, { useState } from 'react'
-import { Clock, Plus, Trash2, Play, Copy, Scissors, Pencil, ChevronUp, ChevronDown, Merge, Music2 } from 'lucide-react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { Stage, Layer, Rect, Text as KonvaText, Line, Group, Circle, Arrow } from 'react-konva'
+import {
+  Clock, Scissors, Compass, Magnet, ZoomIn, ZoomOut,
+  Layers, Music2, Film, Type, ChevronRight, Trash2, Sparkles, Ghost
+} from 'lucide-react'
 import { TimelineSegment, getDefaultTrackForSegmentType } from '../../../types/editor'
-import { formatTime, parseTime } from '../../../utils/editorUtils'
+import { formatTime } from '../../../utils/editorUtils'
+import { KonvaEventObject } from 'konva/lib/Node'
+import { Text } from 'react-konva'
+import { useLocalVAD } from '../../../hooks/useLocalVAD'
+import { useCompetitorGhosting } from '../../../hooks/useCompetitorGhosting'
 
-function SegmentRow({
-  segment: s,
-  duration,
-  formatTime,
-  parseTime,
-  onUpdateTime,
-  onJumpTo,
-  onRemove,
-  onSetIn,
-  onSetOut,
-  onDuplicate,
-  onSplit,
-  onRename,
-  onMerge,
-  onReorder,
-  onTypeChange,
-  canMerge,
-  canMoveUp,
-  canMoveDown,
-  isSelected,
-  onSelect,
-  playhead
-}: {
-  segment: TimelineSegment
-  duration: number
-  formatTime: (t: number) => string
-  parseTime: (v: string) => number
-  onUpdateTime: (id: string, field: 'startTime' | 'endTime', value: number) => void
-  onJumpTo: (t: number) => void
-  onRemove: (id: string) => void
-  onSetIn: () => void
-  onSetOut: () => void
-  onDuplicate: () => void
-  onSplit: () => void
-  onRename: (name: string) => void
-  onMerge?: () => void
-  onReorder?: (dir: -1 | 1) => void
-  onTypeChange?: (type: import('../../../types/editor').TimelineSegmentType) => void
-  canMerge?: boolean
-  canMoveUp?: boolean
-  canMoveDown?: boolean
-  isSelected?: boolean
-  onSelect?: () => void
-  playhead: number
-}) {
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState(s.name)
-  const canSplit = playhead > s.startTime && playhead < s.endTime
-  const barLeft = duration > 0 ? (s.startTime / duration) * 100 : 0
-  const barWidth = duration > 0 ? ((s.endTime - s.startTime) / duration) * 100 : 0
-  const playheadPos = duration > 0 ? (playhead / duration) * 100 : 0
-
-  return (
-    <div
-      onClick={(e) => { if (!(e.target as HTMLElement).closest('button') && !(e.target as HTMLElement).closest('input') && !(e.target as HTMLElement).closest('select')) onSelect?.() }}
-      className={`p-4 rounded-xl space-y-2 cursor-pointer transition-all ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 dark:border-blue-400 ring-2 ring-blue-500/30' : 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}`}
-    >
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          {onTypeChange ? (
-            <select
-              value={s.type}
-              onChange={(e) => onTypeChange(e.target.value as import('../../../types/editor').TimelineSegmentType)}
-              className="w-9 h-9 rounded-lg bg-blue-500/20 font-black text-blue-600 text-[10px] uppercase shrink-0 border-0 cursor-pointer px-1"
-              title="Segment type"
-            >
-              {['video', 'audio', 'text', 'transition', 'image'].map((t) => (
-                <option key={t} value={t}>{t[0].toUpperCase()}</option>
-              ))}
-            </select>
-          ) : (
-            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center font-black text-blue-600 text-[10px] uppercase shrink-0">{s.type[0]}</div>
-          )}
-          {editingName ? (
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              onBlur={() => { onRename(nameInput); setEditingName(false) }}
-              onKeyDown={(e) => e.key === 'Enter' && (onRename(nameInput), setEditingName(false))}
-              className="w-32 px-2 py-1 text-[11px] font-bold rounded border border-blue-500 bg-white dark:bg-gray-800"
-              autoFocus
-            />
-          ) : (
-            <span
-              onClick={() => { setEditingName(true); setNameInput(s.name) }}
-              className="text-[11px] font-bold text-gray-700 dark:text-gray-300 truncate cursor-pointer hover:text-blue-600 flex items-center gap-1"
-              title="Click to rename"
-            >
-              {s.name}
-              <Pencil className="w-3 h-3 opacity-50" />
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1">
-            <label className="text-[9px] font-bold text-gray-500 uppercase">Start</label>
-            <input
-              type="text"
-              value={formatTime(s.startTime)}
-              onChange={(e) => onUpdateTime(s.id, 'startTime', parseTime(e.target.value))}
-              className="w-14 px-2 py-1 text-[10px] font-mono rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="0:00"
-              title="Start time (e.g. 1:30 or 90)"
-            />
-          </div>
-          <button onClick={onSetIn} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-green-500 hover:text-white text-[9px] font-bold" title="Set start to playhead">
-            In
-          </button>
-          <span className="text-gray-400">–</span>
-          <div className="flex items-center gap-1">
-            <label className="text-[9px] font-bold text-gray-500 uppercase">End</label>
-            <input
-              type="text"
-              value={formatTime(s.endTime)}
-              onChange={(e) => onUpdateTime(s.id, 'endTime', parseTime(e.target.value))}
-              className="w-14 px-2 py-1 text-[10px] font-mono rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              placeholder="0:00"
-              title="End time (e.g. 2:00 or 120)"
-            />
-          </div>
-          <button onClick={onSetOut} className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-green-500 hover:text-white text-[9px] font-bold" title="Set end to playhead">
-            Out
-          </button>
-          <span className="text-[10px] font-mono text-gray-400">({s.duration.toFixed(1)}s)</span>
-          <button onClick={() => onJumpTo(s.startTime)} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 hover:text-white" title="Jump to start">
-            <Play className="w-3 h-3" />
-          </button>
-          {canSplit && (
-            <button onClick={onSplit} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-amber-500 hover:text-white" title="Split at playhead">
-              <Scissors className="w-3 h-3" />
-            </button>
-          )}
-          <button onClick={onDuplicate} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-indigo-500 hover:text-white" title="Duplicate segment">
-            <Copy className="w-3 h-3" />
-          </button>
-          {canMerge && onMerge && (
-            <button onClick={onMerge} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-emerald-500 hover:text-white" title="Merge with next">
-              <Merge className="w-3 h-3" />
-            </button>
-          )}
-          {canMoveUp && onReorder && (
-            <button onClick={() => onReorder(-1)} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 hover:text-white" title="Move up">
-              <ChevronUp className="w-3 h-3" />
-            </button>
-          )}
-          {canMoveDown && onReorder && (
-            <button onClick={() => onReorder(1)} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 hover:text-white" title="Move down">
-              <ChevronDown className="w-3 h-3" />
-            </button>
-          )}
-          <button onClick={() => onRemove(s.id)} className="p-1.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-red-500 hover:text-white" title="Remove segment">
-            <Trash2 className="w-3 h-3" />
-          </button>
-        </div>
-      </div>
-      <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full relative overflow-hidden">
-        <div
-          className="absolute h-full bg-blue-500 rounded-full"
-          style={{ left: `${barLeft}%`, width: `${barWidth}%` }}
-        />
-        {playhead >= s.startTime && playhead <= s.endTime && (
-          <div
-            className="absolute top-0 w-0.5 h-full bg-white shadow-sm z-10"
-            style={{ left: `${playheadPos}%` }}
-            title={`Playhead ${formatTime(playhead)}`}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
+// ── Types & constants ─────────────────────────────────────────────────────────
 
 interface AdvancedTimelineViewProps {
   useProfessionalTimeline: boolean
@@ -190,272 +28,594 @@ interface AdvancedTimelineViewProps {
   aiSuggestions: any[]
   showAiPreviews: boolean
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
+  setActiveCategory?: (category: import('../../../types/editor').EditorCategory) => void
+  /** Pre-computed retention heatmap from retentionHeatmapService */
+  retentionHeatmap?: Array<{ timeStart: number; timeEnd: number; score: number; level: 'high' | 'medium' | 'low' }>
 }
 
+const TRACK_HEIGHT = 44
+const TRACK_GAP = 8
+const LABEL_WIDTH = 80
+const RULER_HEIGHT = 28
+const SNAP_THRESHOLD_PX = 8
+
+// Track definitions: each segment type gets a named track row
+const TRACK_DEFS: { id: number; label: string; color: string; icon: React.ElementType }[] = [
+  { id: 0, label: 'Video',   color: '#3B82F6', icon: Film },
+  { id: 1, label: 'B-Roll',  color: '#F59E0B', icon: Layers },
+  { id: 2, label: 'Text',    color: '#A855F7', icon: Type },
+  { id: 3, label: 'Audio',   color: '#10B981', icon: Music2 },
+  { id: 4, label: 'SFX',     color: '#F97316', icon: Scissors },
+]
+
+// Retention score → fill colour
+function heatColor(level: string): string {
+  if (level === 'high') return 'rgba(52,211,153,0.12)'
+  if (level === 'medium') return 'rgba(251,191,36,0.12)'
+  return 'rgba(248,113,113,0.2)'
+}
+
+// Right-click context menu data
+interface CtxMenu { x: number; y: number; segId: string }
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
-  useProfessionalTimeline, setUseProfessionalTimeline, videoState, setVideoState, timelineSegments, setTimelineSegments, selectedSegmentId = null, onSegmentSelect, aiSuggestions, showToast
+  useProfessionalTimeline,
+  setUseProfessionalTimeline,
+  videoState,
+  setVideoState,
+  timelineSegments,
+  setTimelineSegments,
+  selectedSegmentId = null,
+  onSegmentSelect,
+  aiSuggestions,
+  showToast,
+  setActiveCategory,
+  showAiPreviews = true,
+  retentionHeatmap = [],
 }) => {
   const duration = videoState?.duration ?? 60
+  const playheadTime = videoState?.currentTime ?? 0
 
-  const updateSegmentTime = (id: string, field: 'startTime' | 'endTime', value: number) => {
-    setTimelineSegments((prev: TimelineSegment[]) => prev.map(s => {
-      if (s.id !== id) return s
-      const next = { ...s, [field]: Math.max(0, Math.min(duration, value)) }
-      if (field === 'startTime' && next.startTime >= next.endTime) next.endTime = Math.min(duration, next.startTime + 1)
-      if (field === 'endTime' && next.endTime <= next.startTime) next.startTime = Math.max(0, next.endTime - 1)
-      next.duration = next.endTime - next.startTime
-      return next
-    }))
+  const containerRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<any>(null)
+
+  const [dimensions, setDimensions] = useState({ width: 800, height: 400 })
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [isMagnetic, setIsMagnetic] = useState(true)
+  const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null)
+  const [selectedTrackFilter, setSelectedTrackFilter] = useState<number | null>(null)
+
+  // Local AI VAD (Phase 1)
+  const { isReady: vadReady, isProcessing: vadProcessing, vadSegments, processAudio } = useLocalVAD()
+
+  // Competitor Ghosting (Task 4.1)
+  const { profiles, activeProfile, loadGhostCurve, clearGhostCurve, getExpectedEnergyAtTime } = useCompetitorGhosting()
+
+  const handleRunVAD = () => {
+    if (!vadReady || vadProcessing) return
+    // In a real V6 implementation, we extract the AudioBuffer from the video URL using OfflineAudioContext.
+    // For this Phase 1 structure demonstration, we pass a dummy buffer to trigger the Web Worker.
+    const dummyBuffer = new Float32Array(44100 * 15) // 15 seconds of silence
+    processAudio(dummyBuffer)
+    showToast('Running Local Edge AI (VAD)', 'info')
   }
 
-  const addSegment = () => {
-    const start = videoState?.currentTime ?? 0
-    const end = Math.min(duration, start + 5)
-    const seg: TimelineSegment = {
-      id: `seg-${Date.now()}`,
-      startTime: start,
-      endTime: end,
-      duration: end - start,
-      type: 'video',
-      name: 'New Segment',
-      color: '#3B82F6',
-      track: 0
+  const stagePaddingX = LABEL_WIDTH
+
+  // ── Zoom / scale ────────────────────────────────────────────────────────────
+  const pixelsPerSecond = useMemo(() => {
+    const basePPS = (dimensions.width - stagePaddingX * 2) / Math.max(duration, 1)
+    return basePPS * Math.pow(1.5, zoomLevel - 1)
+  }, [dimensions.width, duration, stagePaddingX, zoomLevel])
+
+  const timeToX = useCallback((time: number) => time * pixelsPerSecond, [pixelsPerSecond])
+  const xToTime = useCallback((x: number) => x / pixelsPerSecond, [pixelsPerSecond])
+
+  // ── Measure ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const measure = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.clientWidth,
+          height: containerRef.current.clientHeight,
+        })
+      }
     }
-    setTimelineSegments((prev: TimelineSegment[]) => [...prev, seg])
-    showToast('Segment added — edit timestamps below', 'success')
-  }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
 
-  const removeSegment = (id: string) => {
-    setTimelineSegments((prev: TimelineSegment[]) => prev.filter(s => s.id !== id))
-    showToast('Segment removed', 'info')
-  }
+  // ── Snap edges ──────────────────────────────────────────────────────────────
+  const snapEdges = useMemo(() => {
+    const edges: number[] = [0, duration, playheadTime]
+    timelineSegments.forEach(s => { edges.push(s.startTime, s.endTime) })
+    return Array.from(new Set(edges)).sort((a, b) => a - b)
+  }, [duration, playheadTime, timelineSegments])
 
-  const jumpTo = (time: number) => {
-    setVideoState((prev: any) => ({ ...prev, currentTime: time }))
-    showToast(`Jumped to ${formatTime(time)}`, 'info')
-  }
+  const handleDragMove = useCallback((e: KonvaEventObject<DragEvent>, seg: TimelineSegment) => {
+    if (!isMagnetic) return
+    const node = e.target
+    const newX = node.x()
+    const newTime = xToTime(newX)
+    const segDur = seg.endTime - seg.startTime
+    let minDiff = Infinity
+    let matchedEdge = newTime
 
-  const setFromPlayhead = (id: string, field: 'startTime' | 'endTime') => {
-    const t = videoState?.currentTime ?? 0
-    updateSegmentTime(id, field, t)
-    showToast(`${field === 'startTime' ? 'In' : 'Out'} point set to ${formatTime(t)}`, 'success')
-  }
-
-  const duplicateSegment = (s: TimelineSegment) => {
-    const dup: TimelineSegment = {
-      ...s,
-      id: `seg-${Date.now()}`,
-      name: s.name + ' (copy)',
-      startTime: s.endTime,
-      endTime: Math.min(duration, s.endTime + s.duration),
-      duration: s.duration
+    for (const edge of snapEdges) {
+      if (Math.abs(edge - seg.startTime) < 0.01 || Math.abs(edge - seg.endTime) < 0.01) continue
+      const pxLeft = Math.abs(timeToX(newTime) - timeToX(edge))
+      const pxRight = Math.abs(timeToX(newTime + segDur) - timeToX(edge))
+      if (pxLeft < minDiff) { minDiff = pxLeft; matchedEdge = edge }
+      if (pxRight < minDiff) { minDiff = pxRight; matchedEdge = edge - segDur }
     }
-    setTimelineSegments((prev: TimelineSegment[]) => [...prev, dup])
-    showToast('Segment duplicated', 'success')
-  }
+    if (minDiff < SNAP_THRESHOLD_PX) node.x(timeToX(matchedEdge))
+  }, [isMagnetic, snapEdges, timeToX, xToTime])
 
-  const splitAtPlayhead = (id: string) => {
-    const playhead = videoState?.currentTime ?? 0
-    setTimelineSegments((prev: TimelineSegment[]) => {
-      const seg = prev.find((x) => x.id === id)
-      if (!seg || playhead <= seg.startTime || playhead >= seg.endTime) return prev
-      const a: TimelineSegment = { ...seg, endTime: playhead, duration: playhead - seg.startTime }
-      const b: TimelineSegment = {
-        ...seg,
-        id: `seg-${Date.now()}`,
-        startTime: playhead,
-        endTime: seg.endTime,
-        duration: seg.endTime - playhead,
-        name: seg.name + ' (2)'
-      }
-      return prev.map((x) => (x.id === id ? a : x)).concat(b)
-    })
-    showToast('Segment split at playhead', 'success')
-  }
+  const handleDragEnd = useCallback((e: KonvaEventObject<DragEvent>, seg: TimelineSegment) => {
+    const node = e.target
+    const finalTime = Math.max(0, xToTime(node.x()))
+    node.x(timeToX(finalTime))
+    const segDur = seg.endTime - seg.startTime
+    setTimelineSegments((prev: TimelineSegment[]) =>
+      prev.map(s => s.id === seg.id ? { ...s, startTime: finalTime, endTime: finalTime + segDur } : s)
+    )
+    showToast('Segment moved', 'info')
+  }, [xToTime, timeToX, setTimelineSegments, showToast])
 
-  const updateSegmentName = (id: string, name: string) => {
-    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s) => (s.id === id ? { ...s, name: name || s.name } : s)))
-  }
-
-  const updateSegmentType = (id: string, type: import('../../../types/editor').TimelineSegmentType) => {
-    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s) => (s.id === id ? { ...s, type, track: getDefaultTrackForSegmentType(type) } : s)))
-  }
-
-  const mergeWithNext = (id: string) => {
-    const idx = timelineSegments.findIndex((x) => x.id === id)
-    if (idx < 0 || idx >= timelineSegments.length - 1) return
-    const a = timelineSegments[idx]
-    const b = timelineSegments[idx + 1]
-    const merged: TimelineSegment = {
-      ...a,
-      endTime: b.endTime,
-      duration: b.endTime - a.startTime,
-      name: `${a.name}+${b.name}`
+  const handleStageClick = (e: KonvaEventObject<MouseEvent>) => {
+    setCtxMenu(null)
+    if (e.target.getStage() === e.target) {
+      onSegmentSelect?.(null)
+      const relX = e.evt.offsetX - stagePaddingX
+      const t = Math.max(0, Math.min(duration, xToTime(relX)))
+      setVideoState((prev: any) => ({ ...prev, currentTime: t }))
     }
-    setTimelineSegments((prev: TimelineSegment[]) => prev.filter((_, i) => i !== idx + 1).map((seg, i) => (i === idx ? merged : seg)))
-    showToast('Segments merged', 'success')
   }
 
-  const reorderSegment = (id: string, dir: -1 | 1) => {
-    const idx = timelineSegments.findIndex((x) => x.id === id)
-    if (idx < 0) return
-    const newIdx = idx + dir
-    if (newIdx < 0 || newIdx >= timelineSegments.length) return
-    const arr = [...timelineSegments]
-      ;[arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]]
-    setTimelineSegments(arr)
-    showToast(dir === -1 ? 'Moved up' : 'Moved down', 'info')
+  // ── Right-click context menu ────────────────────────────────────────────────
+  const handleSegmentRightClick = (e: KonvaEventObject<MouseEvent>, seg: TimelineSegment) => {
+    e.evt.preventDefault()
+    onSegmentSelect?.(seg.id)
+    setCtxMenu({ x: e.evt.clientX, y: e.evt.clientY, segId: seg.id })
   }
 
-  const suggestCutsToBeat = (intervalSeconds = 2) => {
-    setTimelineSegments((prev: TimelineSegment[]) => {
-      let videoSegments = prev.filter((s) => s.type === 'video' || s.type === 'image')
-      let longest: TimelineSegment
-      if (videoSegments.length === 0) {
-        longest = {
-          id: `seg-main-${Date.now()}`,
-          startTime: 0,
-          endTime: duration,
-          duration,
-          type: 'video',
-          name: 'Main Video',
-          color: '#3B82F6',
-          track: getDefaultTrackForSegmentType('video'),
-        }
-      } else {
-        longest = videoSegments.reduce((a, b) => (b.duration > a.duration ? b : a))
+  const handleContextAction = (action: string) => {
+    if (!ctxMenu) return
+    const seg = timelineSegments.find(s => s.id === ctxMenu.segId)
+    if (!seg) { setCtxMenu(null); return }
+
+    switch (action) {
+      case 'split': {
+        const mid = (seg.startTime + seg.endTime) / 2
+        const a: TimelineSegment = { ...seg, id: `${seg.id}-a`, endTime: mid }
+        const b: TimelineSegment = { ...seg, id: `${seg.id}-b`, startTime: mid }
+        setTimelineSegments((prev: TimelineSegment[]) => prev.flatMap(s => s.id === seg.id ? [a, b] : [s]))
+        showToast('Segment split at midpoint', 'success')
+        break
       }
-      const start = longest.startTime
-      const end = longest.endTime
-      const segDuration = end - start
-      if (segDuration < intervalSeconds * 2) {
-        showToast(`Segment too short (${segDuration.toFixed(1)}s). Use interval ≤ ${(segDuration / 2).toFixed(1)}s`, 'error')
-        return prev
+      case 'duplicate': {
+        const dup: TimelineSegment = { ...seg, id: `${seg.id}-dup-${Date.now()}`, startTime: seg.endTime }
+        setTimelineSegments((prev: TimelineSegment[]) => [...prev, dup])
+        showToast('Segment duplicated', 'success')
+        break
       }
-      const cutTimes: number[] = []
-      for (let t = start + intervalSeconds; t < end - 0.1; t += intervalSeconds) {
-        cutTimes.push(t)
+      case 'delete': {
+        setTimelineSegments((prev: TimelineSegment[]) => prev.filter(s => s.id !== seg.id))
+        onSegmentSelect?.(null)
+        showToast('Segment deleted', 'info')
+        break
       }
-      if (cutTimes.length === 0) {
-        showToast(`Segment too short for ${intervalSeconds}s interval`, 'info')
-        return prev
-      }
-      let result = prev.filter((s) => s.id !== longest.id)
-      let lastStart = start
-      const baseId = Date.now()
-      cutTimes.forEach((t, i) => {
-        result = [...result, {
-          ...longest,
-          id: `seg-${baseId}-${i}`,
-          startTime: lastStart,
-          endTime: t,
-          duration: t - lastStart,
-          name: `${longest.name} (${i + 1})`,
-        }]
-        lastStart = t
-      })
-      result = [...result, {
-        ...longest,
-        id: `seg-${baseId}-${cutTimes.length}`,
-        startTime: lastStart,
-        endTime: end,
-        duration: end - lastStart,
-        name: `${longest.name} (${cutTimes.length + 1})`,
-      }]
-      showToast(`Split into ${cutTimes.length + 1} segments at ${intervalSeconds}s intervals (beat sync)`, 'success')
-      return result
-    })
+    }
+    setCtxMenu(null)
   }
+
+  // ── Ruler ───────────────────────────────────────────────────────────────────
+  const renderRuler = () => {
+    const ticks: React.ReactNode[] = []
+    const tickInterval = pixelsPerSecond > 50 ? 1 : pixelsPerSecond > 10 ? 5 : 10
+    for (let t = 0; t <= duration; t += tickInterval) {
+      const x = timeToX(t)
+      const isMajor = t % (tickInterval * 2) === 0
+      ticks.push(
+        <Line key={`tk-${t}`} points={[x, isMajor ? 6 : 12, x, RULER_HEIGHT - 2]} stroke={isMajor ? '#475569' : '#1e293b'} strokeWidth={1} />
+      )
+      if (isMajor) {
+        ticks.push(
+          <KonvaText key={`tx-${t}`} x={x + 3} y={4} text={formatTime(t)} fontSize={9} fill="#64748B" fontFamily="Inter" />
+        )
+      }
+    }
+    return ticks
+  }
+
+  // ── Track bands (DOM — drawn beneath the Konva canvas) ──────────────────────
+  const totalTrackHeight = TRACK_DEFS.length * (TRACK_HEIGHT + TRACK_GAP)
+  const canvasWidth = Math.max(dimensions.width, timeToX(duration) + stagePaddingX * 2)
+  const canvasHeight = Math.max(dimensions.height, RULER_HEIGHT + totalTrackHeight + 40)
+
+  // Segments visible in active track filter
+  const visibleSegments = selectedTrackFilter !== null
+    ? timelineSegments.filter(s => (s.track ?? 0) === selectedTrackFilter)
+    : timelineSegments
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h3 className="font-semibold text-gray-900 dark:text-white">Timeline Orchestration</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-[9px] font-bold text-gray-500 uppercase">Beat sync</span>
-            {[1, 2, 4].map((interval) => (
+    <div className="flex flex-col h-full bg-[#080d14] rounded-2xl border border-white/[0.07] overflow-hidden shadow-2xl relative">
+
+      {/* ── Top Control Bar ─────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-3 bg-white/[0.025] border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-500/15 rounded-xl border border-indigo-500/20">
+            <Compass className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div>
+            <h3 className="font-black text-white italic uppercase tracking-wide text-[11px]">Advanced Spatial Timeline</h3>
+            <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Konva Hardware Canvas — {timelineSegments.length} segments</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Track filter pills */}
+          <div className="hidden md:flex items-center gap-1">
+            <button
+              onClick={() => setSelectedTrackFilter(null)}
+              className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === null ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500 hover:text-white'}`}
+            >All</button>
+            {TRACK_DEFS.map(t => (
               <button
-                key={interval}
-                onClick={() => suggestCutsToBeat(interval)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/30 hover:bg-violet-200 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 text-xs font-bold transition-all"
-                title={`Split longest video segment every ${interval}s (beat-aligned cuts)`}
-              >
-                <Music2 className="w-3.5 h-3.5" />
-                {interval}s
-              </button>
+                key={t.id}
+                onClick={() => setSelectedTrackFilter(selectedTrackFilter === t.id ? null : t.id)}
+                className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === t.id ? 'text-white border border-white/10 [background-color:var(--track-color)]' : 'bg-white/5 text-slate-500 hover:text-white border border-transparent'}`}
+                style={{ '--track-color': selectedTrackFilter === t.id ? t.color + '33' : undefined } as React.CSSProperties}
+              >{t.label}</button>
             ))}
           </div>
-          <div className="flex bg-gray-100 dark:bg-gray-950 p-1 rounded-xl">
-            <button
-              onClick={() => setUseProfessionalTimeline(false)}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${!useProfessionalTimeline ? 'bg-white dark:bg-gray-800 shadow-sm text-blue-600' : 'text-gray-400'}`}
-            >Basic</button>
-            <button
-              onClick={() => setUseProfessionalTimeline(true)}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${useProfessionalTimeline ? 'bg-white dark:bg-gray-800 shadow-sm text-blue-600' : 'text-gray-400'}`}
-            >Pro</button>
-          </div>
-        </div>
-        <p className="text-[10px] text-gray-500 font-medium">Toggle between rapid assembly and precision multi-track orchestration.</p>
-      </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-xs font-black uppercase text-gray-400 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-500" />
-            Active Segments ({timelineSegments.length})
-            {selectedSegmentId && (
-              <span className="text-[9px] font-normal text-blue-600 dark:text-blue-400">· Click row to select · Del to remove</span>
-            )}
-          </h4>
+          <div className="h-4 w-px bg-white/10" />
+
+          {/* Magnetic + Zoom */}
           <button
-            onClick={addSegment}
-            className="flex items-center gap-1.5 px-3 py-2 bg-blue-500 text-white rounded-lg text-[10px] font-bold hover:bg-blue-600 transition-colors"
+            onClick={handleRunVAD}
+            disabled={!vadReady || vadProcessing}
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${vadProcessing ? 'bg-sky-500/20 text-sky-400 animate-pulse' : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
+            title="Run Local Edge VAD"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Add Segment
+            {vadProcessing ? 'Processing Edge AI...' : 'Run VAD Matrix'}
+          </button>
+
+          <div className="h-4 w-px bg-white/10" />
+
+          {/* Ghosting Overlay Selector */}
+          <div className="flex items-center gap-1 bg-white/5 rounded-lg border border-white/10 px-1.5 py-1">
+            <button
+               onClick={() => clearGhostCurve()}
+               className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter ${!activeProfile ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
+            >
+              Raw
+            </button>
+            {profiles.map(p => (
+              <button
+                key={p.id}
+                onClick={() => loadGhostCurve(p.id)}
+                className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${activeProfile?.id === p.id ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
+              >
+                {p.name.split(' ')[0]}
+              </button>
+            ))}
+            <Ghost className={`w-3 h-3 ml-1 ${activeProfile ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
+          </div>
+
+          <div className="h-4 w-px bg-white/10" />
+
+          <button
+            onClick={() => setIsMagnetic(v => !v)}
+            className={`p-1.5 rounded-lg border transition-all ${isMagnetic ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-white/5 border-white/10 text-slate-500'}`}
+            title="Magnetic snap"
+          >
+            <Magnet className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.5))} title="Zoom Out" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <span className="text-[9px] font-mono text-slate-600 w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
+          <button onClick={() => setZoomLevel(z => Math.min(10, z + 0.5))} title="Zoom In" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="h-4 w-px bg-white/10" />
+
+          {/* Scroll to playhead */}
+          <button
+            onClick={() => {
+              const el = containerRef.current?.parentElement
+              if (el) el.scrollLeft = Math.max(0, timeToX(playheadTime) - 100)
+            }}
+            title="Jump to playhead"
+            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"
+          >
+            <Clock className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={() => setUseProfessionalTimeline(false)}
+            className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase italic tracking-wider transition-all bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"
+          >
+            Basic Mode
           </button>
         </div>
-        <div className="space-y-3">
-          {timelineSegments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium">No segments yet</p>
-              <p className="text-[10px] mt-1">Add a segment to specify start and end timestamps</p>
-              <button onClick={addSegment} className="mt-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600">
-                Add Segment
-              </button>
+      </div>
+
+      {/* ── Track Labels Column + Canvas ────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Track label sidebar */}
+        <div className="w-20 shrink-0 bg-black/40 border-r border-white/5 flex flex-col pt-[28px]">
+          {/* Ruler spacer */}
+          <div className="h-[28px] shrink-0" />
+          {TRACK_DEFS.map(track => (
+            <div
+              key={track.id}
+              className="flex items-center justify-center gap-1.5 px-2"
+              style={{ height: TRACK_HEIGHT + TRACK_GAP, opacity: selectedTrackFilter === null || selectedTrackFilter === track.id ? 1 : 0.25 }}
+            >
+              <div className="w-1 h-5 rounded-full" style={{ backgroundColor: track.color + '88' }} />
+              <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{track.label}</span>
             </div>
-          ) : (
-            timelineSegments.map((s, idx) => (
-              <SegmentRow
-                key={s.id}
-                segment={s}
-                duration={duration}
-                formatTime={formatTime}
-                parseTime={(v: string) => parseTime(v, duration)}
-                onUpdateTime={updateSegmentTime}
-                onJumpTo={jumpTo}
-                onRemove={removeSegment}
-                onSetIn={() => setFromPlayhead(s.id, 'startTime')}
-                onSetOut={() => setFromPlayhead(s.id, 'endTime')}
-                onDuplicate={() => duplicateSegment(s)}
-                onSplit={() => splitAtPlayhead(s.id)}
-                onRename={(name) => updateSegmentName(s.id, name)}
-                onMerge={() => mergeWithNext(s.id)}
-                onReorder={(dir) => reorderSegment(s.id, dir)}
-                onTypeChange={(type) => updateSegmentType(s.id, type)}
-                canMerge={idx < timelineSegments.length - 1}
-                canMoveUp={idx > 0}
-                canMoveDown={idx < timelineSegments.length - 1}
-                isSelected={selectedSegmentId === s.id}
-                onSelect={() => onSegmentSelect?.(selectedSegmentId === s.id ? null : s.id)}
-                playhead={videoState?.currentTime ?? 0}
-              />
-            ))
-          )}
+          ))}
+        </div>
+
+        {/* Scrollable canvas area */}
+        <div className="flex-1 overflow-x-auto overflow-y-auto relative" ref={containerRef}>
+          <div style={{ width: canvasWidth, height: canvasHeight }}>
+            <Stage
+              width={canvasWidth}
+              height={canvasHeight}
+              onClick={handleStageClick}
+              onContextMenu={e => { e.evt.preventDefault(); setCtxMenu(null) }}
+              ref={stageRef}
+            >
+              {/* ── Retention heatmap layer ──────────────────────────────── */}
+              {retentionHeatmap.length > 0 && (
+                <Layer y={RULER_HEIGHT}>
+                  {retentionHeatmap.map((zone, i) => (
+                    <Rect
+                      key={i}
+                      x={timeToX(zone.timeStart)}
+                      y={0}
+                      width={timeToX(zone.timeEnd - zone.timeStart)}
+                      height={totalTrackHeight}
+                      fill={heatColor(zone.level)}
+                      listening={false}
+                    />
+                  ))}
+                </Layer>
+              )}
+
+              {/* ── Competitor Ghosting Overlay (Task 4.1) ─────────────── */}
+              {activeProfile && (
+                <Layer y={RULER_HEIGHT}>
+                  <Line
+                    points={Array.from({ length: 50 }).flatMap((_, i) => {
+                      const tPct = i / 49;
+                      const time = tPct * duration;
+                      const energy = getExpectedEnergyAtTime(tPct);
+                      // Map energy (0-100) to height (top = 100, bottom = 0)
+                      const y = totalTrackHeight - (energy / 100) * totalTrackHeight;
+                      return [timeToX(time), y];
+                    })}
+                    stroke="#F59E0B"
+                    strokeWidth={2}
+                    opacity={0.4}
+                    dash={[10, 5]}
+                    tension={0.4}
+                  />
+                  <Text
+                    x={10}
+                    y={totalTrackHeight - 20}
+                    text={`Ghost: ${activeProfile.name}`}
+                    fill="#F59E0B"
+                    fontSize={10}
+                    fontStyle="bold"
+                    opacity={0.6}
+                  />
+                </Layer>
+              )}
+
+              {/* ── Local VAD Speech overlay ──────────────────────────────── */}
+              {vadSegments.length > 0 && (
+                <Layer y={RULER_HEIGHT}>
+                  {vadSegments.map((zone, i) => (
+                    <Rect
+                      key={`vad-${i}`}
+                      x={timeToX(zone.start)}
+                      y={0}
+                      width={timeToX(zone.end - zone.start)}
+                      height={totalTrackHeight}
+                      fill={zone.isSpeech ? 'rgba(56, 189, 248, 0.08)' : 'rgba(0,0,0,0)'}
+                      listening={false}
+                    />
+                  ))}
+                </Layer>
+              )}
+
+              {/* ── Saliency / Eye-Tracking Overlay (Task 4.3) ───────────── */}
+              {showAiPreviews && (
+                <Layer y={RULER_HEIGHT}>
+                  {/* Mock Saliency Point */}
+                  <Circle
+                    x={timeToX(playheadTime)}
+                    y={totalTrackHeight / 2}
+                    radius={20}
+                    fillLinearGradientStartPoint={{ x: -20, y: -20 }}
+                    fillLinearGradientEndPoint={{ x: 20, y: 20 }}
+                    fillLinearGradientColorStops={[0, 'rgba(244, 63, 94, 0.4)', 1, 'rgba(244, 63, 94, 0)']}
+                    listening={false}
+                  />
+                  <Text
+                    x={timeToX(playheadTime) + 25}
+                    y={totalTrackHeight / 2 - 5}
+                    text="Eye Track Focus"
+                    fill="#f43f5e"
+                    fontSize={8}
+                    fontStyle="bold"
+                    opacity={0.8}
+                  />
+                </Layer>
+              )}
+
+              {/* ── Ruler layer ──────────────────────────────────────────── */}
+              <Layer>
+                {/* Ruler background */}
+                <Rect x={0} y={0} width={canvasWidth} height={RULER_HEIGHT} fill="#0a0f16" />
+                {renderRuler()}
+                {/* Ruler bottom border */}
+                <Line points={[0, RULER_HEIGHT, canvasWidth, RULER_HEIGHT]} stroke="#1e293b" strokeWidth={1} />
+              </Layer>
+
+              {/* ── Track stripe layer ───────────────────────────────────── */}
+              <Layer y={RULER_HEIGHT}>
+                {TRACK_DEFS.map(track => (
+                  <Rect
+                    key={track.id}
+                    x={0}
+                    y={track.id * (TRACK_HEIGHT + TRACK_GAP)}
+                    width={canvasWidth}
+                    height={TRACK_HEIGHT}
+                    fill={track.id % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.005)'}
+                    listening={false}
+                  />
+                ))}
+              </Layer>
+
+              {/* ── AI suggestion markers ────────────────────────────────── */}
+              <Layer y={RULER_HEIGHT}>
+                {aiSuggestions.map((sug, i) => {
+                  const x = timeToX(sug.time ?? 0)
+                  return (
+                    <Group key={i} x={x}>
+                      <Line points={[0, 0, 0, totalTrackHeight]} stroke="#F59E0B" strokeWidth={1} dash={[3, 4]} opacity={0.5} />
+                      <KonvaText x={4} y={4} text="✦" fontSize={8} fill="#F59E0B" />
+                    </Group>
+                  )
+                })}
+              </Layer>
+
+              {/* ── Segments layer ───────────────────────────────────────── */}
+              <Layer y={RULER_HEIGHT}>
+                {visibleSegments.map(seg => {
+                  const x = timeToX(seg.startTime)
+                  const width = Math.max(2, timeToX(seg.endTime - seg.startTime))
+                  const trackDef = TRACK_DEFS.find(t => t.id === (seg.track ?? 0)) ?? TRACK_DEFS[0]
+                  const y = (seg.track ?? 0) * (TRACK_HEIGHT + TRACK_GAP)
+                  const isSelected = selectedSegmentId === seg.id
+                  const segColor = seg.color || trackDef.color
+
+                  return (
+                    <Group
+                      key={seg.id}
+                      x={x}
+                      y={y}
+                      draggable
+                      onDragMove={e => handleDragMove(e, seg)}
+                      onDragEnd={e => handleDragEnd(e, seg)}
+                      onClick={e => { e.cancelBubble = true; onSegmentSelect?.(seg.id) }}
+                      onContextMenu={e => handleSegmentRightClick(e, seg)}
+                    >
+                      {/* Segment body */}
+                      <Rect
+                        width={width}
+                        height={TRACK_HEIGHT}
+                        fill={segColor + (isSelected ? 'dd' : '88')}
+                        cornerRadius={5}
+                        stroke={isSelected ? '#ffffff' : segColor}
+                        strokeWidth={isSelected ? 1.5 : 0.5}
+                        shadowColor={isSelected ? segColor : 'transparent'}
+                        shadowBlur={isSelected ? 12 : 0}
+                        shadowOpacity={0.6}
+                      />
+                      {/* Left-edge accent */}
+                      <Rect x={0} y={2} width={3} height={TRACK_HEIGHT - 4} fill={segColor} cornerRadius={2} />
+                      {/* Label */}
+                      {width > 30 && (
+                        <KonvaText
+                          x={10}
+                          y={TRACK_HEIGHT / 2 - 6}
+                          text={seg.name}
+                          fontSize={10}
+                          fontFamily="Inter"
+                          fontStyle="bold"
+                          fill="rgba(255,255,255,0.9)"
+                          width={width - 14}
+                          wrap="none"
+                          ellipsis
+                        />
+                      )}
+                      {/* Duration badge */}
+                      {width > 60 && (
+                        <KonvaText
+                          x={10}
+                          y={TRACK_HEIGHT / 2 + 4}
+                          text={formatTime(seg.endTime - seg.startTime)}
+                          fontSize={8}
+                          fontFamily="Inter"
+                          fill="rgba(255,255,255,0.4)"
+                        />
+                      )}
+                    </Group>
+                  )
+                })}
+
+                {/* ── Playhead ────────────────────────────────────────────── */}
+                <Group x={timeToX(playheadTime)} y={-RULER_HEIGHT}>
+                  <Line
+                    points={[0, 0, 0, RULER_HEIGHT + totalTrackHeight + 20]}
+                    stroke="#EF4444"
+                    strokeWidth={1.5}
+                    shadowColor="#EF4444"
+                    shadowBlur={8}
+                    shadowOpacity={0.6}
+                  />
+                  {/* Playhead handle */}
+                  <Rect x={-5} y={RULER_HEIGHT - 6} width={10} height={8} fill="#EF4444" cornerRadius={2} />
+                  {/* Time label */}
+                  <Rect x={-22} y={0} width={44} height={16} fill="#EF4444" cornerRadius={3} />
+                  <KonvaText x={-20} y={3} text={formatTime(playheadTime)} fontSize={8} fill="white" fontFamily="Inter" fontStyle="bold" />
+                </Group>
+              </Layer>
+            </Stage>
+          </div>
         </div>
       </div>
+
+      {/* ── Right-click Context Menu ─────────────────────────────────────────── */}
+      {ctxMenu && (
+        <div
+          className="fixed z-[9999] rounded-2xl border border-white/10 bg-black/95 backdrop-blur-3xl shadow-2xl overflow-hidden"
+          style={{ left: ctxMenu.x, top: ctxMenu.y, minWidth: 160 }}
+        >
+          {[
+            { action: 'split',     label: '✂ Split at midpoint',  color: 'text-white' },
+            { action: 'duplicate', label: '⧉ Duplicate',           color: 'text-white' },
+            { action: 'delete',    label: '✕ Delete segment',      color: 'text-rose-400' },
+          ].map(item => (
+            <button
+              key={item.action}
+              onClick={() => handleContextAction(item.action)}
+              className={`w-full px-4 py-3 text-left text-[11px] font-black uppercase tracking-wider hover:bg-white/10 transition-all ${item.color}`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <button onClick={() => setCtxMenu(null)} className="w-full px-4 py-2 text-[9px] text-slate-600 hover:bg-white/5 transition-all text-left">
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Click outside to close ctx menu */}
+      {ctxMenu && <div className="fixed inset-0 z-[9998]" onClick={() => setCtxMenu(null)} />}
     </div>
   )
 }

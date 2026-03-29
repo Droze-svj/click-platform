@@ -29,6 +29,8 @@
     "library": "Library",
     "scripts": "Scripts",
     "workflows": "Workflows",
+    "tasks": "Tasks",
+    "projects": "Projects",
     "jobs": "Jobs",
     "teams": "Teams",
     "approvals": "Approvals",

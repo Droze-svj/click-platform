@@ -1,6 +1,11 @@
 // Advanced Input Sanitization
 
-const DOMPurify = require('isomorphic-dompurify');
+let DOMPurify;
+try {
+  DOMPurify = require('isomorphic-dompurify');
+} catch (error) {
+  console.warn('⚠️ isomorphic-dompurify failed to load (likely missing jsdom). Falling back to basic sanitization.');
+}
 const validator = require('validator');
 
 /**
@@ -30,11 +35,10 @@ function sanitizeString(input, options = {}) {
 
   // Remove special characters if requested
   if (removeSpecialChars) {
-    sanitized = sanitized.replace(/[<>\"'%;()&+]/g, '');
+    sanitized = sanitized.replace(/[<>"'%;()&+]/g, '');
   }
 
-  // Sanitize HTML
-  if (allowHTML) {
+  if (allowHTML && DOMPurify) {
     sanitized = DOMPurify.sanitize(sanitized, {
       ALLOWED_TAGS: options.allowedTags || [],
       ALLOWED_ATTR: options.allowedAttrs || [],
@@ -177,14 +181,14 @@ function sanitizeFileName(fileName) {
 
   // Remove path traversal attempts
   let sanitized = fileName.replace(/\.\./g, '');
-  sanitized = sanitized.replace(/[\/\\]/g, '_');
-  
+  sanitized = sanitized.replace(/[/\\]/g, '_');
+
   // Remove special characters
   sanitized = sanitized.replace(/[<>:"|?*]/g, '');
-  
+
   // Limit length
   sanitized = sanitized.substring(0, 255);
-  
+
   return sanitized || 'file';
 }
 

@@ -1,0 +1,19 @@
+{
+  "watch": ["server"],
+  "ext": "js,json,mjs,cjs",
+  "ignore": [
+    "node_modules",
+    "client",
+    ".git",
+    "*.md",
+    ".env",
+    ".env.*",
+    "*.log",
+    ".cursor",
+    "terminals",
+    "**/logs",
+    "**/.DS_Store",
+    "**/.*"
+  ],
+  "delay": "2500"
+}

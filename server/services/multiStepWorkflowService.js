@@ -212,6 +212,37 @@ async function advanceToNextStage(approvalId, userId, action, comment = '') {
       timestamp: new Date()
     });
 
+    // If action is request_changes, attempt to automate the revision
+    if (action === 'request_changes' && comment) {
+      try {
+        const commentActionService = require('./commentActionService');
+        const content = await Content.findById(approval.contentId);
+
+        // Use current timeline if available
+        const currentTimeline = content.timeline || { layers: [], clips: [] };
+
+        // Parse and execute action
+        const proposedAction = await commentActionService.parseCommentToAction(comment, currentTimeline);
+        if (proposedAction.actionType !== 'MANUAL_REVIEW') {
+          const updatedTimeline = commentActionService.executeTimelineAction(proposedAction, currentTimeline);
+
+          // Store "Proposed V2" in Content for creator to accept
+          await Content.findByIdAndUpdate(approval.contentId, {
+            $set: {
+              'metadata.proposedV2': {
+                timeline: updatedTimeline,
+                explanation: proposedAction.explanation,
+                generatedAt: new Date()
+              }
+            }
+          });
+          logger.info('Auto-V2 proposed from comment', { approvalId, actionType: proposedAction.actionType });
+        }
+      } catch (err) {
+        logger.warn('Auto-revision failed', { error: err.message });
+      }
+    }
+
     await approval.save();
 
     logger.info('Approval stage advanced', { approvalId, action, newStage: approval.currentStage });
@@ -382,7 +413,7 @@ function calculateTextDiff(oldText, newText) {
   // Simplified diff - in production use a proper diff library
   const oldLines = oldText.split('\n');
   const newLines = newText.split('\n');
-  
+
   const diff = [];
   const maxLines = Math.max(oldLines.length, newLines.length);
 

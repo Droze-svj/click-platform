@@ -1,6 +1,6 @@
-// Security Headers Middleware
-
+console.log('🛡️ Entering securityHeaders.js');
 const helmet = require('helmet');
+console.log('🛡️ Helmet loaded in securityHeaders.js');
 
 /**
  * Configure security headers
@@ -47,13 +47,13 @@ function securityHeaders() {
 function customSecurityHeaders(req, res, next) {
   // X-Content-Type-Options
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  
+
   // X-Frame-Options
   res.setHeader('X-Frame-Options', 'DENY');
-  
+
   // X-XSS-Protection
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  
+
   // Permissions-Policy (formerly Feature-Policy)
   res.setHeader('Permissions-Policy', [
     'geolocation=()',
@@ -62,21 +62,21 @@ function customSecurityHeaders(req, res, next) {
     'payment=()',
     'usb=()',
   ].join(', '));
-  
+
   // Strict-Transport-Security (if not already set by helmet)
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
-  
+
   // X-Permitted-Cross-Domain-Policies
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
-  
+
   // Referrer-Policy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   // Remove server information
   res.removeHeader('X-Powered-By');
-  
+
   next();
 }
 

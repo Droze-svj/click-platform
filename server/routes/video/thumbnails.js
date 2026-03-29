@@ -109,6 +109,33 @@ router.post('/generate', auth, asyncHandler(async (req, res) => {
   }
 }));
 
+const { autoGenerateViralThumbnails } = require('../../services/aiThumbnailService');
+
+/**
+ * @swagger
+ * /api/video/thumbnails/ai-viral:
+ *   post:
+ *     summary: Auto-generate viral thumbnails based on emotion and saliency
+ *     tags: [Video]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/ai-viral', auth, asyncHandler(async (req, res) => {
+  const { videoId, timelineData } = req.body;
+
+  if (!videoId) {
+    return sendError(res, 'Video ID is required', 400);
+  }
+
+  try {
+    const result = await autoGenerateViralThumbnails(videoId, timelineData || {});
+    sendSuccess(res, 'Viral thumbnails generated', 200, result);
+  } catch (error) {
+    logger.error('AI viral thumbnail generation error', { error: error.message, videoId });
+    sendError(res, error.message, 500);
+  }
+}));
+
 module.exports = router;
 
 

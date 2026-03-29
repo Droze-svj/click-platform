@@ -2,408 +2,330 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { X, ChevronRight, ChevronLeft, CheckCircle2, Circle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  X,
+  ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
+  Sparkles,
+  Zap,
+  ShieldCheck,
+  Rocket,
+  Users,
+  Layout,
+  Video,
+  MousePointer2
+} from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
-import { apiGet, apiPost } from '../lib/api'
 
-interface OnboardingStep {
-  id: string
-  title: string
-  description: string
-  component: string
-  required: boolean
-}
+const glassStyle = "backdrop-blur-2xl bg-black/40 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]"
 
-interface OnboardingProgress {
-  progress: {
-    currentStep: number
-    completed: boolean
-    skipped: boolean
-  }
-  steps: OnboardingStep[]
-  currentStepData: OnboardingStep | null
-  totalSteps: number
-  completedSteps: number
-  isComplete: boolean
+const stepVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 500 : -500,
+    opacity: 0,
+    scale: 0.95
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+    scale: 1,
+    transition: {
+      x: { type: 'spring' as const, stiffness: 300, damping: 30 },
+      opacity: { duration: 0.2 }
+    }
+  },
+  exit: (direction: number) => ({
+    zIndex: 0,
+    x: direction < 0 ? 500 : -500,
+    opacity: 0,
+    scale: 0.95,
+    transition: {
+      x: { type: 'spring' as const, stiffness: 300, damping: 30 },
+      opacity: { duration: 0.2 }
+    }
+  })
 }
 
 export default function OnboardingFlow() {
   const pathname = usePathname()
-  const [progress, setProgress] = useState<OnboardingProgress | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [[step, direction], setStep] = useState([0, 0])
   const { showToast } = useToast()
 
-  // Don't show onboarding on public pages
   const isPublicPage = pathname === '/login' || pathname === '/register' || pathname === '/' || !pathname
 
   useEffect(() => {
-    // Skip loading if on public page
-    if (isPublicPage) {
-      setIsLoading(false)
-      setIsVisible(false)
-      return
+    if (!isPublicPage) {
+      // Show onboarding if not completed (simulation for now)
+      const isCompleted = localStorage.getItem('onboarding_completed')
+      if (!isCompleted) {
+        setIsVisible(true)
+      }
     }
-    loadProgress()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPublicPage])
 
-  const loadProgress = async () => {
-    try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [OnboardingFlow] Skipping onboarding API call in development mode')
-        setIsVisible(false)
-        setIsLoading(false)
-        return
-      }
+  const steps = [
+    {
+      id: 'welcome',
+      title: 'Welcome to the click Ecosystem',
+      description: 'Your autonomous partner for high-performance content operations.',
+      component: <WelcomeStep />
+    },
+    {
+      id: 'profile',
+      title: 'Define Your Strategy',
+      description: 'Tailor the Click AI to your specific industry benchmarks.',
+      component: <ProfileStep onComplete={() => nextStep()} />
+    },
+    {
+      id: 'features',
+      title: 'Elite Features',
+      description: 'Unlock multi-platform intelligence and predictive growth.',
+      component: <ExploreFeaturesStep />
+    },
+    {
+      id: 'complete',
+      title: 'Ecosystem Primed',
+      description: 'You are now ready to dominate the social landscape.',
+      component: <CompleteStep onComplete={() => finishOnboarding()} />
+    }
+  ]
 
-      const response = await apiGet<any>('/onboarding', { withCredentials: true })
-      if (response?.success) {
-        setProgress(response.data)
-        setIsVisible(!response.data?.isComplete && !response.data?.progress?.skipped)
-      }
-    } catch (error) {
-      console.error('Failed to load onboarding:', error)
-    } finally {
-      setIsLoading(false)
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      paginate(1)
     }
   }
 
-  const completeStep = async (stepId: string, data?: any) => {
-    try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [OnboardingFlow] Skipping complete step API call in development mode')
-        showToast('Step completed! (dev mode)', 'success')
-        return
-      }
-
-      const response = await apiPost<any>('/onboarding/complete-step', { stepId, data }, { withCredentials: true })
-      if (response?.success) {
-        await loadProgress()
-        showToast('Step completed!', 'success')
-      }
-    } catch (error) {
-      console.error('Failed to complete step:', error)
-      showToast('Failed to complete step', 'error')
+  const prevStep = () => {
+    if (currentStep > 0) {
+      paginate(-1)
     }
   }
 
-  const skipOnboarding = async () => {
-    try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [OnboardingFlow] Skipping skip onboarding API call in development mode')
-        setIsVisible(false)
-        showToast('Onboarding skipped (dev mode)', 'info')
-        return
-      }
-
-      const response = await apiPost<any>('/onboarding/skip', undefined, { withCredentials: true })
-      if (response?.success) {
-        setIsVisible(false)
-        showToast('Onboarding skipped', 'info')
-      }
-    } catch (error) {
-      console.error('Failed to skip onboarding:', error)
-    }
+  const paginate = (newDirection: number) => {
+    setStep([currentStep + newDirection, newDirection])
+    setCurrentStep(currentStep + newDirection)
   }
 
-  const goToStep = async (stepIndex: number) => {
-    try {
-      // Skip API calls in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔧 [OnboardingFlow] Skipping go to step API call in development mode')
-        return
-      }
-
-      const response = await apiPost<any>('/onboarding/goto-step', { stepIndex }, { withCredentials: true })
-      if (response?.success) {
-        await loadProgress()
-      }
-    } catch (error) {
-      console.error('Failed to go to step:', error)
-    }
+  const finishOnboarding = () => {
+    localStorage.setItem('onboarding_completed', 'true')
+    setIsVisible(false)
+    showToast('Elite Access Granted', 'success')
   }
 
-  // Don't render on public pages - return early to prevent any rendering
-  if (isPublicPage) {
-    return null
-  }
-
-  if (isLoading || !isVisible || !progress) {
-    return null
-  }
-
-  const currentStep = progress.currentStepData
-  const currentIndex = progress.progress.currentStep
+  if (isPublicPage || !isVisible) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12 overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+      />
+
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        className={`relative w-full max-w-2xl rounded-[3rem] overflow-hidden ${glassStyle}`}
+      >
+        {/* Animated Background Shimmer */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-transparent to-purple-600/10 pointer-events-none" />
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {currentStep?.title}
+        <div className="flex items-center justify-between p-8 md:p-10 border-b border-white/5">
+          <div className="space-y-1">
+            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter">
+              {steps[currentStep].title}
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {currentStep?.description}
+            <p className="text-slate-400 text-sm font-medium">
+              {steps[currentStep].description}
             </p>
           </div>
           <button
-            onClick={skipOnboarding}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            onClick={() => setIsVisible(false)}
+            className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors text-slate-500 hover:text-white"
+            title="Close onboarding"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div className="px-6 pt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Step {currentIndex + 1} of {progress.totalSteps}
-            </span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {Math.round((progress.completedSteps / progress.totalSteps) * 100)}% Complete
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-purple-600 h-2 rounded-full transition-all"
-              style={{ width: `${(progress.completedSteps / progress.totalSteps) * 100}%` }}
-            />
-          </div>
+        {/* Content Area */}
+        <div className="p-8 md:p-12 min-h-[400px] flex flex-col justify-center relative">
+          <AnimatePresence initial={false} custom={direction}>
+            <motion.div
+              key={currentStep}
+              custom={direction}
+              variants={stepVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="w-full"
+            >
+              {steps[currentStep].component}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Step Indicators */}
-        <div className="px-6 py-4 flex items-center justify-between">
-          {progress.steps.map((step, index) => (
-            <div key={step.id} className="flex items-center flex-1">
-              <button
-                onClick={() => goToStep(index)}
-                className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors ${
-                  index < currentIndex
-                    ? 'bg-green-500 border-green-500 text-white'
-                    : index === currentIndex
-                    ? 'bg-purple-600 border-purple-600 text-white'
-                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-400'
-                }`}
-              >
-                {index < currentIndex ? (
-                  <CheckCircle2 className="w-5 h-5" />
-                ) : (
-                  <span>{index + 1}</span>
-                )}
-              </button>
-              {index < progress.steps.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-2 ${
-                    index < currentIndex ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+        {/* Footer / Navigation */}
+        <div className="p-8 md:p-10 bg-white/5 flex items-center justify-between gap-6 border-t border-white/5">
+          <div className="flex gap-2">
+            {steps.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-500 ${i === currentStep ? 'w-8 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'w-2 bg-white/10'
                   }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+              />
+            ))}
+          </div>
 
-        {/* Step Content */}
-        <div className="p-6">
-          {currentStep && (
-            <div className="space-y-4">
-              {/* Render step-specific content based on stepId */}
-              {currentStep.id === 'welcome' && <WelcomeStep onComplete={() => completeStep('welcome')} />}
-              {currentStep.id === 'profile' && <ProfileStep onComplete={(data) => completeStep('profile', data)} />}
-              {currentStep.id === 'first-content' && <FirstContentStep onComplete={() => completeStep('first-content')} />}
-              {currentStep.id === 'connect-social' && <ConnectSocialStep onComplete={() => completeStep('connect-social')} />}
-              {currentStep.id === 'explore-features' && <ExploreFeaturesStep onComplete={() => completeStep('explore-features')} />}
-              {currentStep.id === 'complete' && <CompleteStep onComplete={() => completeStep('complete')} />}
-            </div>
-          )}
+          <div className="flex gap-4">
+            {currentStep > 0 && (
+              <button
+                onClick={prevStep}
+                className="px-6 py-3 rounded-2xl border border-white/10 text-slate-400 font-bold text-sm hover:bg-white/5 hover:text-white transition-all flex items-center gap-2"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+            )}
+            <button
+              onClick={() => currentStep === steps.length - 1 ? finishOnboarding() : nextStep()}
+              className="px-8 py-3 rounded-2xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all flex items-center gap-2"
+            >
+              {currentStep === steps.length - 1 ? 'Start Dominating' : 'Next Intelligence'}
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => goToStep(currentIndex - 1)}
-            disabled={currentIndex === 0}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </button>
-          <button
-            onClick={skipOnboarding}
-            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-          >
-            Skip onboarding
-          </button>
-          <button
-            onClick={() => {
-              if (currentStep) {
-                completeStep(currentStep.id)
-                if (currentIndex < progress.totalSteps - 1) {
-                  goToStep(currentIndex + 1)
-                }
-              }
-            }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-          >
-            {currentIndex === progress.totalSteps - 1 ? 'Complete' : 'Next'}
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
 
-// Step Components
-function WelcomeStep({ onComplete }: { onComplete: () => void }) {
+function WelcomeStep() {
   return (
-    <div className="text-center space-y-4">
-      <div className="text-6xl mb-4">👋</div>
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-        Welcome to Click!
-      </h3>
-      <p className="text-gray-600 dark:text-gray-400">
-        We're excited to help you create amazing content. Let's get started with a quick tour.
-      </p>
-    </div>
-  )
-}
-
-function ProfileStep({ onComplete }: { onComplete: (data: any) => void }) {
-  const [niche, setNiche] = useState('')
-
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Tell us about yourself
-      </h3>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          What's your niche?
-        </label>
-        <select
-          value={niche}
-          onChange={(e) => setNiche(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+    <div className="text-center space-y-8 py-4">
+      <div className="relative inline-block">
+        <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          className="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center"
         >
-          <option value="">Select niche</option>
-          <option value="health">Health</option>
-          <option value="finance">Finance</option>
-          <option value="education">Education</option>
-          <option value="technology">Technology</option>
-          <option value="lifestyle">Lifestyle</option>
-          <option value="business">Business</option>
-          <option value="entertainment">Entertainment</option>
-          <option value="other">Other</option>
-        </select>
+          <Rocket className="w-16 h-16 md:w-20 md:h-20 text-indigo-400" />
+        </motion.div>
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute -top-2 -right-2 p-3 rounded-2xl bg-indigo-600 shadow-xl"
+        >
+          <Sparkles className="w-6 h-6 text-white" />
+        </motion.div>
       </div>
-      <button
-        onClick={() => onComplete({ preferences: { niche } })}
-        disabled={!niche}
-        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-      >
-        Continue
-      </button>
+      <div className="space-y-4">
+        <h3 className="text-4xl font-black text-white tracking-tighter">Click Genesis</h3>
+        <p className="text-slate-400 text-lg font-medium max-w-md mx-auto leading-relaxed">
+          The only platform that doesn&apos;t just write—it <span className="text-white">operates</span>. Let&apos;s sync your brand with our autonomous engine.
+        </p>
+      </div>
     </div>
   )
 }
 
-function FirstContentStep({ onComplete }: { onComplete: () => void }) {
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Create Your First Content
-      </h3>
-      <p className="text-gray-600 dark:text-gray-400">
-        You can create content by:
-      </p>
-      <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400">
-        <li>Uploading a video</li>
-        <li>Generating content from text</li>
-        <li>Using a template</li>
-      </ul>
-      <button
-        onClick={onComplete}
-        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-      >
-        I'll create content later
-      </button>
-    </div>
-  )
-}
+function ProfileStep({ onComplete }: { onComplete: () => void }) {
+  const [selected, setSelected] = useState('')
+  const niches = [
+    { id: 'tech', name: 'Technology', icon: <Zap className="w-5 h-5 text-indigo-400" /> },
+    { id: 'finance', name: 'Finance', icon: <ShieldCheck className="w-5 h-5 text-emerald-400" /> },
+    { id: 'media', name: 'Media/Ent', icon: <Video className="w-5 h-5 text-rose-400" /> },
+    { id: 'creators', name: 'Creators', icon: <Users className="w-5 h-5 text-blue-400" /> }
+  ]
 
-function ConnectSocialStep({ onComplete }: { onComplete: () => void }) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Connect Your Social Media
-      </h3>
-      <p className="text-gray-600 dark:text-gray-400">
-        Link your accounts to start posting directly from Click.
-      </p>
-      <button
-        onClick={onComplete}
-        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-      >
-        Skip for now
-      </button>
-    </div>
-  )
-}
-
-function ExploreFeaturesStep({ onComplete }: { onComplete: () => void }) {
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Explore Features
-      </h3>
+    <div className="space-y-8">
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="text-2xl mb-2">🎬</div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">Video Processing</p>
-        </div>
-        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="text-2xl mb-2">📊</div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">Analytics</p>
-        </div>
-        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="text-2xl mb-2">📅</div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">Scheduling</p>
-        </div>
-        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="text-2xl mb-2">🤖</div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">AI Features</p>
-        </div>
+        {niches.map(n => (
+          <button
+            key={n.id}
+            onClick={() => setSelected(n.id)}
+            className={`p-6 rounded-3xl border-2 text-left transition-all group ${selected === n.id
+                ? 'bg-indigo-600/10 border-indigo-600 scale-[1.02] shadow-lg shadow-indigo-600/10'
+                : 'bg-white/5 border-white/5 hover:bg-white/10'
+              }`}
+          >
+            <div className={`p-3 rounded-2xl w-fit mb-4 transition-colors ${selected === n.id ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-400'}`}>
+              {n.icon}
+            </div>
+            <div className={`font-bold transition-colors ${selected === n.id ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+              {n.name}
+            </div>
+          </button>
+        ))}
       </div>
+      <p className="text-center text-slate-500 text-sm font-medium">Click AI will calibrate its predictive models based on this selection.</p>
+    </div>
+  )
+}
+
+function ExploreFeaturesStep() {
+  const highlights = [
+    { title: 'Predictive ROI', desc: 'Real-time revenue attribution per post.', icon: <TrendingUp className="w-4 h-4" /> },
+    { title: 'Self-Healing Loop', desc: 'Auto-adjusts content if engagement dips.', icon: <RefreshCw className="w-4 h-4" /> },
+    { title: 'Multi-Core Publish', desc: 'One click, 6 platforms optimized.', icon: <Orbit className="w-4 h-4" /> }
+  ]
+
+  return (
+    <div className="space-y-6">
+      {highlights.map((h, i) => (
+        <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/5 flex items-center gap-6 group hover:bg-white/10 transition-all">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+            {h.icon}
+          </div>
+          <div>
+            <div className="font-bold text-white text-lg">{h.title}</div>
+            <div className="text-slate-500 text-sm font-medium">{h.desc}</div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
 
 function CompleteStep({ onComplete }: { onComplete: () => void }) {
   return (
-    <div className="text-center space-y-4">
-      <div className="text-6xl mb-4">🎉</div>
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-        You're All Set!
-      </h3>
-      <p className="text-gray-600 dark:text-gray-400">
-        Start creating amazing content and grow your audience.
-      </p>
-      <button
-        onClick={onComplete}
-        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-      >
-        Get Started
-      </button>
+    <div className="text-center space-y-10 py-4">
+      <div className="relative">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="w-32 h-32 md:w-40 md:h-40 bg-indigo-600 rounded-full mx-auto flex items-center justify-center"
+        >
+          <Rocket className="w-16 h-16 md:w-20 md:h-20 text-white" />
+        </motion.div>
+        <div className="absolute inset-0 bg-indigo-600/30 blur-3xl -z-10" />
+      </div>
+      <div className="space-y-4">
+        <h3 className="text-4xl font-black text-white tracking-tighter">System Initialized</h3>
+        <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-sm mx-auto">
+          Welcome to the new standard of <span className="text-white">Content Operations</span>. The ecosystem is live.
+        </p>
+      </div>
     </div>
   )
 }
+
+// Minimal icons for completeness
+const TrendingUp = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+const RefreshCw = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+const Orbit = ({ className }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"></circle><path d="M3 16c0 2.209 4.03 4 9 4s9-1.791 9-4"></path><path d="M3 8c0-2.209 4.03-4 9-4s9 1.791 9 4"></path></svg>
+
 
 
 

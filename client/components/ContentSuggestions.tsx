@@ -170,7 +170,7 @@ export default function ContentSuggestions() {
               ))}
               {gaps.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  Great! You're posting to all platforms regularly.
+                  Great! You&apos;re posting to all platforms regularly.
                 </div>
               )}
             </div>

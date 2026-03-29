@@ -8,6 +8,33 @@ const {
   recoveryStrategies,
 } = require('../utils/errorHandler');
 const { generateWithFreeModel } = require('./freeAIModelService');
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (_) {
+  // Optional dependency in some local environments
+}
+
+function withAgentSpan(agentName, fn, modelGetter) {
+  return async (...args) => {
+    if (!Sentry || typeof Sentry.startSpan !== 'function') {
+      return fn(...args);
+    }
+    const model = typeof modelGetter === 'function' ? modelGetter(...args) : (modelGetter || 'gemini-1.5-flash');
+    return Sentry.startSpan(
+      {
+        op: 'gen_ai.invoke_agent',
+        name: `invoke_agent ${agentName}`,
+        attributes: {
+          'gen_ai.agent.name': agentName,
+          'gen_ai.request.model': model || 'gemini-1.5-flash',
+          'gen_ai.operation.name': 'invoke_agent',
+        },
+      },
+      () => fn(...args)
+    );
+  };
+}
 
 // AI Provider configurations
 const AI_PROVIDERS = {
@@ -223,8 +250,8 @@ function getAvailableModels() {
 module.exports = {
   initAIProvider,
   selectModelForTask,
-  generateWithModel,
-  compareModelOutputs,
+  generateWithModel: withAgentSpan('Multi-Model Generation Agent', generateWithModel, (_prompt, _taskType, options = {}) => options.model || currentModel || 'gemini-1.5-flash'),
+  compareModelOutputs: withAgentSpan('Model Comparison Agent', compareModelOutputs, () => currentModel || 'gemini-1.5-flash'),
   getAvailableModels,
 };
 

@@ -122,6 +122,8 @@ async function extendExpiration(id, userId, extendByDays = 10) {
   return doc.toObject ? doc.toObject() : doc
 }
 
+const mongoose = require('mongoose')
+
 /**
  * List saved exports for a user, optionally filtered by contentId
  * @param {string} userId
@@ -129,6 +131,14 @@ async function extendExpiration(id, userId, extendByDays = 10) {
  * @param {string} [baseUrl] - e.g. https://api.example.com - to build full downloadUrl for each item
  */
 async function listSavedExports(userId, contentId = null, baseUrl = '') {
+  // Handle dev tokens or invalid ObjectIds
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return []
+  }
+  if (contentId && !mongoose.Types.ObjectId.isValid(contentId)) {
+    return []
+  }
+
   const query = { userId }
   if (contentId) query.contentId = contentId
 

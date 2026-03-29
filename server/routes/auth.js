@@ -6,9 +6,8 @@ const { createClient } = require('@supabase/supabase-js');
 const { authLimiter } = require('../middleware/enhancedRateLimiter');
 const { authRateLimiter } = require('../middleware/security');
 const { validateRegister, validateLogin } = require('../validators/authValidator');
-const { sendWelcomeEmail } = require('../services/emailService');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
 const { validatePasswordPolicy, getPasswordSuggestions } = require('../utils/passwordPolicy');
-// const { logSecurityEvent } = require('../services/securityAuditService');
 const logger = require('../utils/logger');
 const router = express.Router();
 
@@ -32,9 +31,9 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
 // Middleware to check if Supabase is configured
 const requireSupabase = (req, res, next) => {
   if (!supabase) {
-    return res.status(503).json({ 
-      success: false, 
-      error: 'Database not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.' 
+    return res.status(503).json({
+      success: false,
+      error: 'Database not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.'
     });
   }
   next();
@@ -79,92 +78,92 @@ if (process.env.NODE_ENV === 'production') {
  */
 router.post('/register',
   authRateLimiter, validateRegister, requireSupabase, async (req, res) => {
-  try {
-
-    const { email, password, firstName, lastName } = req.body;
-
-    if (!email || !password || !firstName || !lastName) {
-      return res.status(400).json({ success: false, error: 'Email, password, first name, and last name are required' });
-    }
-
-    // Validate password strength
-    const passwordValidation = validatePasswordPolicy(password);
-    if (!passwordValidation.isValid) {
-      return res.status(400).json({
-        success: false,
-        error: 'Password does not meet security requirements',
-        details: passwordValidation.errors,
-        suggestions: getPasswordSuggestions(password)
-      });
-    }
-
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (existingUser) {
-      return res.status(400).json({ success: false, error: 'User already exists' });
-    }
-
-
-    // Hash password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-
-    // Generate email verification token
-    const crypto = require('crypto');
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    // Create user in Supabase
-    const { data: user, error: insertError } = await supabase
-      .from('users')
-      .insert({
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        first_name: firstName,
-        last_name: lastName,
-        email_verified: false, // Require email verification
-        login_attempts: 0,
-        social_links: {
-          email_verification: {
-            token: verificationToken,
-            expires_at: verificationExpires.toISOString(),
-            attempts: 0
-          }
-        }
-      })
-      .select('id, email, first_name, last_name, avatar, bio, website, location, social_links, email_verified, created_at')
-      .single();
-
-
-    if (insertError) {
-      logger.error('Supabase insert error', { error: insertError });
-      return res.status(500).json({ success: false, error: 'Failed to create user' });
-    }
-
-    // Create combined name for response
-    user.name = `${user.first_name} ${user.last_name}`;
-
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
-
-    logger.info('User registered successfully', { email: user.email, userId: user.id });
-
-    // Send verification email (async, don't wait for it)
     try {
-      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-      const verificationContent = {
-        to: user.email,
-        subject: 'Verify Your Email - Click Platform',
-        html: `
+
+      const { email, password, firstName, lastName } = req.body;
+
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ success: false, error: 'Email, password, first name, and last name are required' });
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordPolicy(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Password does not meet security requirements',
+          details: passwordValidation.errors,
+          suggestions: getPasswordSuggestions(password)
+        });
+      }
+
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        return res.status(400).json({ success: false, error: 'User already exists' });
+      }
+
+
+      // Hash password
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+
+      // Generate email verification token
+      const crypto = require('crypto');
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Create user in Supabase
+      const { data: user, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          email: email.toLowerCase(),
+          password: hashedPassword,
+          first_name: firstName,
+          last_name: lastName,
+          email_verified: false, // Require email verification
+          login_attempts: 0,
+          social_links: {
+            email_verification: {
+              token: verificationToken,
+              expires_at: verificationExpires.toISOString(),
+              attempts: 0
+            }
+          }
+        })
+        .select('id, email, first_name, last_name, avatar, bio, website, location, social_links, email_verified, created_at')
+        .single();
+
+
+      if (insertError) {
+        logger.error('Supabase insert error', { error: insertError });
+        return res.status(500).json({ success: false, error: 'Failed to create user' });
+      }
+
+      // Create combined name for response
+      user.name = `${user.first_name} ${user.last_name}`;
+
+      const token = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      logger.info('User registered successfully', { email: user.email, userId: user.id });
+
+      // Send verification email (async, don't wait for it)
+      try {
+        const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+        const verificationContent = {
+          to: user.email,
+          subject: 'Verify Your Email - Click Platform',
+          html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333; text-align: center;">Welcome to Click Platform!</h2>
             <p>Hello ${user.name},</p>
@@ -190,33 +189,33 @@ router.post('/register',
             <p>Best regards,<br><strong>Click Platform Team</strong></p>
           </div>
         `
-      };
+        };
 
-      await sendWelcomeEmail(user.email, user.name, verificationContent);
-    } catch (emailError) {
-      logger.error('Failed to send verification email', { error: emailError });
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully! Please check your email to verify your account.',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          emailVerified: user.email_verified
-        },
-        requiresVerification: true
+        await sendWelcomeEmail(user.email, user.name, verificationContent);
+      } catch (emailError) {
+        logger.error('Failed to send verification email', { error: emailError });
       }
-    });
-  } catch (error) {
-    logger.error('Registration error:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully! Please check your email to verify your account.',
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            emailVerified: user.email_verified
+          },
+          requiresVerification: true
+        }
+      });
+    } catch (error) {
+      logger.error('Registration error:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
 
 /**
  * POST /api/auth/verify-email
@@ -433,224 +432,224 @@ router.post('/resend-verification', authRateLimiter, requireSupabase, async (req
  */
 router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
-  try {
+    try {
 
-    const { email, password } = req.body;
-    console.log('Login attempt for email:', email);
+      const { email, password } = req.body;
+      console.log('Login attempt for email:', email);
 
-    // Check for development users first (before Supabase)
-    if (process.env.NODE_ENV === 'development' || !supabase) {
-      console.log('Development mode detected, checking for dev users');
+      // Check for development users first (before Supabase)
+      if (process.env.NODE_ENV === 'development' || !supabase) {
+        console.log('Development mode detected, checking for dev users');
 
-      // Simple development credentials
-      if (email === 'admin@example.com' && password === 'admin123') {
-        const user = {
-          id: 'dev-user-123',
-          email: 'admin@example.com',
-          first_name: 'Admin',
-          last_name: 'User',
-          password: null, // No password check needed for dev
+        // Simple development credentials
+        if (email === 'admin@example.com' && password === 'admin123') {
+          const user = {
+            id: 'dev-user-123',
+            email: 'admin@example.com',
+            first_name: 'Admin',
+            last_name: 'User',
+            password: null, // No password check needed for dev
+            login_attempts: 0,
+            last_login_at: null,
+            social_links: null
+          };
+
+          const token = jwt.sign(
+            { userId: user.id },
+            process.env.JWT_SECRET || 'fallback-secret',
+            { expiresIn: '30d' }
+          );
+
+          console.log('Dev user login successful');
+          return res.json({
+            success: true,
+            message: 'Login successful (dev mode)',
+            data: {
+              token,
+              user: {
+                id: user.id,
+                email: user.email,
+                name: `${user.first_name} ${user.last_name}`,
+                emailVerified: true
+              }
+            }
+          });
+        }
+      }
+
+      // Only try Supabase if not in dev mode or if Supabase is available
+      if (!supabase) {
+        console.log('Supabase not available, cannot authenticate');
+        return res.status(503).json({ success: false, error: 'Authentication service unavailable' });
+      }
+
+      // Find user in Supabase
+      let user = null;
+      let findError = null;
+
+      try {
+        const result = await supabase
+          .from('users')
+          .select('id, email, first_name, last_name, password, login_attempts, last_login_at, social_links')
+          .eq('email', email.toLowerCase())
+          .single();
+
+        user = result.data;
+        findError = result.error;
+      } catch (supabaseError) {
+        console.log('Supabase query error:', supabaseError.message);
+        findError = supabaseError;
+      }
+
+      // If Supabase query failed or no user found, return error
+      if (findError || !user) {
+        console.log('User lookup failed in Supabase');
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+
+      // Create a combined name field for compatibility
+      user.name = user.first_name && user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : user.first_name || user.last_name || 'User';
+
+      // Check if account is locked (too many failed attempts)
+      const maxAttempts = 5;
+      const lockoutDuration = 15 * 60 * 1000; // 15 minutes
+
+      if ((user.login_attempts || 0) >= maxAttempts) {
+        // Check if lockout period has expired
+        const lastAttemptTime = user.last_login_attempt_at ? new Date(user.last_login_attempt_at) : new Date(0);
+        const lockoutExpires = new Date(lastAttemptTime.getTime() + lockoutDuration);
+
+        if (new Date() < lockoutExpires) {
+          const remainingTime = Math.ceil((lockoutExpires - new Date()) / 1000 / 60);
+          return res.status(423).json({
+            success: false,
+            error: `Account temporarily locked due to too many failed login attempts. Try again in ${remainingTime} minutes.`,
+            retryAfter: remainingTime * 60
+          });
+        } else {
+          // Lockout period has expired, reset attempts
+          await supabase
+            .from('users')
+            .update({ login_attempts: 0, last_login_attempt_at: null })
+            .eq('id', user.id);
+          user.login_attempts = 0;
+        }
+      }
+
+      // Verify password
+      let isValidPassword = false;
+
+      // Skip password verification for development users (they don't have hashed passwords)
+      if (user.password === null && process.env.NODE_ENV === 'development') {
+        // Development user - password already verified during user lookup
+        isValidPassword = true;
+        console.log('Development user login - skipping password verification');
+      } else {
+        const bcrypt = require('bcryptjs');
+        console.log('Login attempt for:', user.email, 'password length:', password.length);
+        isValidPassword = await bcrypt.compare(password, user.password);
+        console.log('Password verification result:', isValidPassword);
+      }
+
+      // TEMPORARY: Allow login with correct email for testing
+      const tempAllow = user.email === 'freshuser@example.com' && password === 'FreshPass123';
+
+      if (!isValidPassword && !tempAllow) {
+        // Increment login attempts and record timestamp
+        const newAttempts = (user.login_attempts || 0) + 1;
+        await supabase
+          .from('users')
+          .update({
+            login_attempts: newAttempts,
+            last_login_attempt_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        // Log failed login attempt
+        logger.warn('Failed login attempt', {
+          email: user.email,
+          userId: user.id,
+          attempts: newAttempts,
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+      }
+
+      // Check if 2FA is enabled
+      const twoFactorEnabled = user.social_links?.two_factor?.enabled;
+
+      // Successful login - reset attempts and update last login
+      await supabase
+        .from('users')
+        .update({
           login_attempts: 0,
-          last_login_at: null,
-          social_links: null
-        };
+          last_login_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
+      if (twoFactorEnabled) {
+        // Generate temporary token for 2FA verification
+        const tempToken = jwt.sign(
+          { userId: user.id, type: '2fa_pending' },
+          process.env.JWT_SECRET || 'fallback-secret',
+          { expiresIn: '10m' } // Short expiry for 2FA verification
+        );
+
+        logger.info('User login requires 2FA', { email: user.email, userId: user.id });
+
+        res.json({
+          success: true,
+          message: 'Login successful, 2FA verification required',
+          data: {
+            requiresTwoFactor: true,
+            tempToken,
+            user: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              emailVerified: true
+            }
+          }
+        });
+      } else {
+        // Generate final JWT token and refresh token
         const token = jwt.sign(
           { userId: user.id },
           process.env.JWT_SECRET || 'fallback-secret',
           { expiresIn: '30d' }
         );
 
-        console.log('Dev user login successful');
-        return res.json({
+        const refreshToken = jwt.sign(
+          { userId: user.id, type: 'refresh' },
+          process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'fallback-secret',
+          { expiresIn: '90d' }
+        );
+
+        // Remove password and sensitive data from response
+        const { password: _, social_links, ...userWithoutPassword } = user;
+
+        logger.info('User logged in successfully', { email: user.email, userId: user.id });
+
+        res.json({
           success: true,
-          message: 'Login successful (dev mode)',
+          message: 'Login successful',
           data: {
             token,
-            user: {
-              id: user.id,
-              email: user.email,
-              name: `${user.first_name} ${user.last_name}`,
-              emailVerified: true
-            }
+            refreshToken,
+            user: userWithoutPassword
           }
         });
       }
+
+    } catch (error) {
+      logger.error('Login error:', error);
+      res.status(500).json({ success: false, error: 'Server error' });
     }
-
-    // Only try Supabase if not in dev mode or if Supabase is available
-    if (!supabase) {
-      console.log('Supabase not available, cannot authenticate');
-      return res.status(503).json({ success: false, error: 'Authentication service unavailable' });
-    }
-
-    // Find user in Supabase
-    let user = null;
-    let findError = null;
-
-    try {
-      const result = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name, password, login_attempts, last_login_at, social_links')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      user = result.data;
-      findError = result.error;
-    } catch (supabaseError) {
-      console.log('Supabase query error:', supabaseError.message);
-      findError = supabaseError;
-    }
-
-    // If Supabase query failed or no user found, return error
-    if (findError || !user) {
-      console.log('User lookup failed in Supabase');
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-
-    // Create a combined name field for compatibility
-    user.name = user.first_name && user.last_name
-      ? `${user.first_name} ${user.last_name}`
-      : user.first_name || user.last_name || 'User';
-
-    // Check if account is locked (too many failed attempts)
-    const maxAttempts = 5;
-    const lockoutDuration = 15 * 60 * 1000; // 15 minutes
-
-    if ((user.login_attempts || 0) >= maxAttempts) {
-      // Check if lockout period has expired
-      const lastAttemptTime = user.last_login_attempt_at ? new Date(user.last_login_attempt_at) : new Date(0);
-      const lockoutExpires = new Date(lastAttemptTime.getTime() + lockoutDuration);
-
-      if (new Date() < lockoutExpires) {
-        const remainingTime = Math.ceil((lockoutExpires - new Date()) / 1000 / 60);
-        return res.status(423).json({
-          success: false,
-          error: `Account temporarily locked due to too many failed login attempts. Try again in ${remainingTime} minutes.`,
-          retryAfter: remainingTime * 60
-        });
-      } else {
-        // Lockout period has expired, reset attempts
-        await supabase
-          .from('users')
-          .update({ login_attempts: 0, last_login_attempt_at: null })
-          .eq('id', user.id);
-        user.login_attempts = 0;
-      }
-    }
-
-    // Verify password
-    let isValidPassword = false;
-
-    // Skip password verification for development users (they don't have hashed passwords)
-    if (user.password === null && process.env.NODE_ENV === 'development') {
-      // Development user - password already verified during user lookup
-      isValidPassword = true;
-      console.log('Development user login - skipping password verification');
-    } else {
-      const bcrypt = require('bcryptjs');
-      console.log('Login attempt for:', user.email, 'password length:', password.length);
-      isValidPassword = await bcrypt.compare(password, user.password);
-      console.log('Password verification result:', isValidPassword);
-    }
-
-    // TEMPORARY: Allow login with correct email for testing
-    const tempAllow = user.email === 'freshuser@example.com' && password === 'FreshPass123';
-
-    if (!isValidPassword && !tempAllow) {
-      // Increment login attempts and record timestamp
-      const newAttempts = (user.login_attempts || 0) + 1;
-      await supabase
-        .from('users')
-        .update({
-          login_attempts: newAttempts,
-          last_login_attempt_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      // Log failed login attempt
-      logger.warn('Failed login attempt', {
-        email: user.email,
-        userId: user.id,
-        attempts: newAttempts,
-        ip: req.ip,
-        userAgent: req.get('User-Agent')
-      });
-
-      return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-
-    // Check if 2FA is enabled
-    const twoFactorEnabled = user.social_links?.two_factor?.enabled;
-
-    // Successful login - reset attempts and update last login
-    await supabase
-      .from('users')
-      .update({
-        login_attempts: 0,
-        last_login_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
-
-    if (twoFactorEnabled) {
-      // Generate temporary token for 2FA verification
-      const tempToken = jwt.sign(
-        { userId: user.id, type: '2fa_pending' },
-        process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '10m' } // Short expiry for 2FA verification
-      );
-
-      logger.info('User login requires 2FA', { email: user.email, userId: user.id });
-
-      res.json({
-        success: true,
-        message: 'Login successful, 2FA verification required',
-        data: {
-          requiresTwoFactor: true,
-          tempToken,
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            emailVerified: true
-          }
-        }
-      });
-    } else {
-      // Generate final JWT token and refresh token
-      const token = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '30d' }
-      );
-
-      const refreshToken = jwt.sign(
-        { userId: user.id, type: 'refresh' },
-        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'fallback-secret',
-        { expiresIn: '90d' }
-      );
-
-      // Remove password and sensitive data from response
-      const { password: _, social_links, ...userWithoutPassword } = user;
-
-      logger.info('User logged in successfully', { email: user.email, userId: user.id });
-
-      res.json({
-        success: true,
-        message: 'Login successful',
-        data: {
-          token,
-          refreshToken,
-          user: userWithoutPassword
-        }
-      });
-    }
-
-  } catch (error) {
-    logger.error('Login error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
+  });
 
 // Debug endpoint to check user lookup
 router.get('/debug-user/:email', async (req, res) => {
@@ -705,52 +704,52 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
 // Request password reset
 router.post('/forgot-password',
   authRateLimiter, async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email is required' });
-    }
-
-    // Check if user exists
-    const { data: user, error: findError } = await supabase
-      .from('users')
-      .select('id, email, first_name, last_name')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (user) {
-      user.name = `${user.first_name} ${user.last_name}`;
-    }
-
-    if (findError || !user) {
-      // Don't reveal if email exists or not for security
-      return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
-    }
-
-    // Generate reset token (JWT that expires in 1 hour)
-    const resetToken = jwt.sign(
-      { userId: user.id, type: 'password_reset' },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    // Send reset email
     try {
-      const { sendPasswordResetEmail } = require('../services/emailService');
-      await sendPasswordResetEmail(user.email, resetToken, user.name);
-    } catch (emailError) {
-      console.error('Failed to send reset email:', emailError);
-      // Don't fail the request if email fails
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ success: false, error: 'Email is required' });
+      }
+
+      // Check if user exists
+      const { data: user, error: findError } = await supabase
+        .from('users')
+        .select('id, email, first_name, last_name')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (user) {
+        user.name = `${user.first_name} ${user.last_name}`;
+      }
+
+      if (findError || !user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+      }
+
+      // Generate reset token (JWT that expires in 1 hour)
+      const resetToken = jwt.sign(
+        { userId: user.id, type: 'password_reset' },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+
+      // Send reset email
+      try {
+        const { sendPasswordResetEmail } = require('../services/emailService');
+        await sendPasswordResetEmail(user.email, resetToken, user.name);
+      } catch (emailError) {
+        console.error('Failed to send reset email:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ success: false, error: 'Server error' });
     }
-
-    res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
-
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
+  });
 
 // Validate reset token
 router.get('/validate-reset-token/:token', async (req, res) => {
@@ -786,51 +785,51 @@ router.get('/validate-reset-token/:token', async (req, res) => {
 // Reset password with token
 router.post('/reset-password',
   authRateLimiter, async (req, res) => {
-  try {
-    const { token, newPassword } = req.body;
-
-    if (!token || !newPassword) {
-      return res.status(400).json({ success: false, error: 'Token and new password are required' });
-    }
-
-    // Validate password strength
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long' });
-    }
-
-    // Verify JWT token
-    let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.type !== 'password_reset') {
-        return res.status(400).json({ success: false, error: 'Invalid token type' });
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ success: false, error: 'Token and new password are required' });
       }
+
+      // Validate password strength
+      if (newPassword.length < 6) {
+        return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long' });
+      }
+
+      // Verify JWT token
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.type !== 'password_reset') {
+          return res.status(400).json({ success: false, error: 'Invalid token type' });
+        }
+      } catch (error) {
+        return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+      }
+
+      // Hash new password
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update user password
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ password: hashedPassword })
+        .eq('id', decoded.userId);
+
+      if (updateError) {
+        console.error('Failed to update password:', updateError);
+        return res.status(500).json({ success: false, error: 'Failed to update password' });
+      }
+
+      res.json({ success: true, message: 'Password has been reset successfully' });
+
     } catch (error) {
-      return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+      console.error('Reset password error:', error);
+      res.status(500).json({ success: false, error: 'Server error' });
     }
-
-    // Hash new password
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    // Update user password
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ password: hashedPassword })
-      .eq('id', decoded.userId);
-
-    if (updateError) {
-      console.error('Failed to update password:', updateError);
-      return res.status(500).json({ success: false, error: 'Failed to update password' });
-    }
-
-    res.json({ success: true, message: 'Password has been reset successfully' });
-
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
+  });
 
 // Verify email with token
 router.get('/verify-email/:token', async (req, res) => {
@@ -886,60 +885,60 @@ router.get('/verify-email/:token', async (req, res) => {
 // Resend email verification
 router.post('/resend-verification',
   authRateLimiter, async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email is required' });
-    }
-
-    // Find user
-    const { data: user, error: findError } = await supabase
-      .from('users')
-      .select('id, email, name, email_verified')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (findError || !user) {
-      return res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
-    }
-
-    if (user.email_verified) {
-      return res.status(400).json({ success: false, error: 'Email is already verified' });
-    }
-
-    // Delete any existing verification tokens for this user
-    await supabase
-      .from('email_verification_tokens')
-      .delete()
-      .eq('user_id', user.id);
-
-    // Generate new verification token
-    const crypto = require('crypto');
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    // Save verification token
-    const { error: tokenError } = await supabase
-      .from('email_verification_tokens')
-      .insert({
-        user_id: user.id,
-        token: verificationToken,
-        expires_at: expiresAt.toISOString()
-      });
-
-    if (tokenError) {
-      console.error('Failed to save verification token:', tokenError);
-      return res.status(500).json({ success: false, error: 'Failed to process request' });
-    }
-
-    // Send verification email
     try {
-      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-      const emailContent = {
-        to: user.email,
-        subject: 'Verify Your Email Address',
-        html: `
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ success: false, error: 'Email is required' });
+      }
+
+      // Find user
+      const { data: user, error: findError } = await supabase
+        .from('users')
+        .select('id, email, name, email_verified')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (findError || !user) {
+        return res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
+      }
+
+      if (user.email_verified) {
+        return res.status(400).json({ success: false, error: 'Email is already verified' });
+      }
+
+      // Delete any existing verification tokens for this user
+      await supabase
+        .from('email_verification_tokens')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Generate new verification token
+      const crypto = require('crypto');
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Save verification token
+      const { error: tokenError } = await supabase
+        .from('email_verification_tokens')
+        .insert({
+          user_id: user.id,
+          token: verificationToken,
+          expires_at: expiresAt.toISOString()
+        });
+
+      if (tokenError) {
+        console.error('Failed to save verification token:', tokenError);
+        return res.status(500).json({ success: false, error: 'Failed to process request' });
+      }
+
+      // Send verification email
+      try {
+        const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+        const emailContent = {
+          to: user.email,
+          subject: 'Verify Your Email Address',
+          html: `
           <h2>Welcome to Click Platform!</h2>
           <p>Hello ${user.name},</p>
           <p>Thank you for registering with Click Platform. Please verify your email address to complete your registration.</p>
@@ -950,21 +949,21 @@ router.post('/resend-verification',
           <br>
           <p>Best regards,<br>Click Platform Team</p>
         `
-      };
+        };
 
-      await sendWelcomeEmail(user.email, user.name, emailContent);
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      // Don't fail the request if email fails
+        await sendWelcomeEmail(user.email, user.name, emailContent);
+      } catch (emailError) {
+        console.error('Failed to send verification email:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
+
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      res.status(500).json({ success: false, error: 'Server error' });
     }
-
-    res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
-
-  } catch (error) {
-    console.error('Resend verification error:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
+  });
 
 // Get user profile
 router.get('/profile', require('../middleware/auth'), async (req, res) => {
@@ -2078,7 +2077,7 @@ router.get('/security-status', require('../middleware/auth'), async (req, res) =
         backupCodesAvailable: hasBackupCodes,
         failedLoginAttempts: user.login_attempts || 0,
         accountStatus: user.deactivated_at ? 'deactivated' :
-                      user.scheduled_deletion_at ? 'scheduled_for_deletion' : 'active',
+          user.scheduled_deletion_at ? 'scheduled_for_deletion' : 'active',
         recommendations: [
           !twoFactorEnabled && 'Enable two-factor authentication',
           !hasBackupCodes && twoFactorEnabled && 'Generate backup codes for 2FA',
@@ -2140,4 +2139,5 @@ function generateBackupCodes() {
 }
 
 module.exports = router;
+console.log('✅ Finished loading server/routes/auth.js');
 

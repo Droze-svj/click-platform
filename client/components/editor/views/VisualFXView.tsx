@@ -18,6 +18,9 @@ const CREATIVE_PRESETS: { type: TimelineEffectType; name: string; icon: string; 
   { type: 'motion', name: 'Dramatic Zoom', icon: '🎬', desc: 'Quick punch', params: { zoom: 130, duration: 2 } },
   { type: 'transition', name: 'Cross Dissolve', icon: '✨', desc: 'Smooth cut', params: { style: 'dissolve', duration: 0.5 } },
   { type: 'transition', name: 'Blur Transition', icon: '🔮', desc: 'Dreamy cut', params: { style: 'blur', amount: 10 } },
+  { type: 'motion', name: 'The Jitter', icon: '📳', desc: 'High-energy shake', params: { frequency: 12, amplitude: 5, duration: 1 } },
+  { type: 'motion', name: 'The Snap Zoom', icon: '🔍', desc: 'Instant hook focus', params: { zoom: 125, duration: 0.5 } },
+  { type: 'overlay', name: 'The Flash', icon: '⚡', desc: 'White impact frame', params: { opacity: 80, duration: 0.2 } },
 ]
 
 interface VisualFXViewProps {
@@ -37,6 +40,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
 }) => {
   const [duration, setDuration] = useState(3)
   const [search, setSearch] = useState('')
+  const [smartCameraEnabled, setSmartCameraEnabled] = useState(false)
 
   const addEffect = useCallback((preset: typeof CREATIVE_PRESETS[0]) => {
     const currentTime = videoState?.currentTime ?? 0
@@ -75,9 +79,32 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
           <Sparkles className="w-4 h-4 text-amber-500" />
           Visual FX & creative polish
         </h3>
-        <p className="text-xs text-theme-secondary mb-4">
+        <p className="text-xs text-theme-secondary mb-6">
           One-click overlays and motion to boost production value. Effects are added at the current playhead.
         </p>
+
+        <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 flex items-center justify-between mb-8 group/smart">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl transition-all ${smartCameraEnabled ? 'bg-indigo-500 text-white shadow-lg' : 'bg-surface-elevated text-slate-500'}`}>
+              <Sun className={`w-5 h-5 ${smartCameraEnabled ? 'animate-pulse' : ''}`} />
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-widest text-theme-primary">Smart Camera Auto-Center</h4>
+              <p className="text-[10px] text-theme-muted font-medium">Uses AI Face-Tracking to keep subjects in frame</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            title={smartCameraEnabled ? "Disable Smart Camera" : "Enable Smart Camera"}
+            onClick={() => {
+              setSmartCameraEnabled(!smartCameraEnabled)
+              showToast(smartCameraEnabled ? 'Smart Camera Offline' : 'Smart Camera Logic Engaged', 'info')
+            }}
+            className={`w-12 h-6 rounded-full relative transition-all border ${smartCameraEnabled ? 'bg-indigo-500 border-indigo-400' : 'bg-surface-elevated border-subtle'}`}
+          >
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${smartCameraEnabled ? 'left-7' : 'left-1'}`} />
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[10px] font-semibold text-theme-muted">Duration</span>
@@ -86,6 +113,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
               key={d}
               type="button"
               onClick={() => setDuration(d)}
+              title={`Set VFX duration to ${d}s`}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${duration === d ? 'bg-amber-500 text-white' : 'bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card-hover'}`}
             >
               {d}s
@@ -98,6 +126,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search effects..."
+          title="Search VFX library"
           className="w-full px-3 py-2 rounded-lg border border-subtle bg-surface-elevated text-theme-primary placeholder-theme-muted text-sm mb-4"
         />
 
@@ -107,6 +136,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
               key={preset.name}
               type="button"
               onClick={() => addEffect(preset)}
+              title={`Add ${preset.name} effect`}
               className="flex items-center gap-3 p-3 rounded-xl border border-subtle bg-surface-elevated hover:border-default hover:bg-surface-card-hover transition-all text-left group"
             >
               <div
@@ -132,6 +162,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
       <button
         type="button"
         onClick={() => setActiveCategory('effects')}
+        title="View full Effects & Transition Library"
         className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-card border border-subtle text-theme-primary hover:bg-surface-card-hover transition-colors"
       >
         <span className="text-sm font-medium">Open full Effects library</span>

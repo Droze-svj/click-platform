@@ -27,6 +27,7 @@ export default function MobileNavbar() {
     { path: '/dashboard/scripts', labelKey: 'nav.scripts', icon: '📝' },
     { path: '/dashboard/workflows', labelKey: 'nav.workflows', icon: '🤖' },
     { path: '/dashboard/jobs', labelKey: 'nav.jobs', icon: '⚡' },
+    { path: '/dashboard/projects', labelKey: 'nav.projects', icon: '📋' },
     { path: '/dashboard/quotes', labelKey: 'nav.quotes', icon: '💬' },
     { path: '/dashboard/scheduler', labelKey: 'nav.scheduler', icon: '📅' },
     { path: '/dashboard/calendar', labelKey: 'nav.calendar', icon: '📆' },

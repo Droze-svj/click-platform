@@ -7,6 +7,8 @@ const {
   getUserTeams,
   getTeamById,
   inviteMember,
+  inviteByEmail,
+  acceptInvitation,
   updateMemberRole,
   removeMember,
   shareContent,
@@ -98,8 +100,23 @@ router.post('/:teamId/invite-by-email', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Email is required', 400);
   }
 
-  const team = await inviteByEmail(teamId, req.user._id, { email: email.trim(), role });
-  sendSuccess(res, 'Member invited', 200, team);
+  const result = await inviteByEmail(teamId, req.user._id, { email: email.trim(), role });
+  sendSuccess(res, result.invitationSent ? 'Invitation sent to email' : 'Member invited', 200, result);
+}));
+
+/**
+ * POST /api/teams/accept-invitation
+ * Accept a team invitation using a token
+ */
+router.post('/accept-invitation', auth, asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return sendError(res, 'Invitation token is required', 400);
+  }
+
+  const team = await acceptInvitation(token, req.user._id);
+  sendSuccess(res, 'Invitation accepted', 200, team);
 }));
 
 /**

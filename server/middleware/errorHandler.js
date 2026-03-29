@@ -1,7 +1,8 @@
-// Centralized error handling middleware
-
+console.log('🏗️ errorHandler: start requires');
 const logger = require('../utils/logger');
+console.log('🏗️ errorHandler: logger loaded');
 const { captureException, addBreadcrumb } = require('../utils/sentry');
+console.log('🏗️ errorHandler: sentry loaded');
 
 const errorHandler = (err, req, res, next) => {
   // Add breadcrumb for debugging (wrap in try-catch to prevent Sentry errors from breaking error handler)
@@ -232,7 +233,7 @@ const errorHandler = (err, req, res, next) => {
       success: false,
       error: isProduction ? 'An unexpected error occurred' : message,
       code: err.code || 'INTERNAL_ERROR',
-      ...(!isProduction && { 
+      ...(!isProduction && {
         stack: err.stack,
         details: err
       })

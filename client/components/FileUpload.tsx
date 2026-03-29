@@ -25,6 +25,7 @@ export default function FileUpload({
   const { user } = useAuth()
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const xhrRef = useRef<XMLHttpRequest | null>(null)
 
   const uploadWithProgress = useCallback((file: File, url: string): Promise<any> => {
@@ -95,8 +96,17 @@ export default function FileUpload({
           }
         } else {
           try {
-            const error = JSON.parse(xhr.responseText)
-            reject(new Error(error.error || error.message || 'Upload failed'))
+            const errBody = JSON.parse(xhr.responseText)
+            // Detect disk-full (507) specifically
+            if (xhr.status === 507 || errBody.code === 'DISK_FULL') {
+              reject(new Error('💾 The server has no storage space left. Please clear old uploads or contact support.'))
+            } else if (xhr.status === 413) {
+              reject(new Error('📦 File is too large. Maximum size is 1GB.'))
+            } else if (xhr.status === 415) {
+              reject(new Error('🎬 Only video files are supported (MP4, MOV, AVI, MKV, WEBM).'))
+            } else {
+              reject(new Error(errBody.error || errBody.message || 'Upload failed'))
+            }
           } catch (e) {
             reject(new Error(`Upload failed with status ${xhr.status}`))
           }
@@ -150,6 +160,7 @@ export default function FileUpload({
     const file = acceptedFiles[0]
     setUploading(true)
     setProgress(0)
+    setUploadError(null)
 
     try {
       // If uploadUrl is provided, use XMLHttpRequest for real progress tracking
@@ -166,16 +177,7 @@ export default function FileUpload({
     } catch (error: any) {
       console.error('Upload error:', error)
       setProgress(0)
-      // Don't throw error - handle it gracefully to prevent unhandled promise rejections
-      // Pass error to callback if it has error handling
-      try {
-        await onUpload(file)
-      } catch (callbackError) {
-        // Ignore callback errors if upload already failed
-        console.warn('FileUpload: Callback error after upload failure:', callbackError)
-      }
-      // Don't rethrow - the error is already logged and handled
-      // Re-throwing causes unhandled promise rejections
+      setUploadError(error?.message || 'Upload failed. Please try again.')
     } finally {
       setUploading(false)
       setTimeout(() => setProgress(0), 2000)
@@ -235,6 +237,23 @@ export default function FileUpload({
           )}
         </div>
       </div>
+
+      {/* Upload error display */}
+      {uploadError && (
+        <div className="mt-3 flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+          <span className="shrink-0 text-base">⚠️</span>
+          <div>
+            <p className="font-semibold">Upload Failed</p>
+            <p className="text-red-300 text-xs mt-0.5">{uploadError}</p>
+            <button
+              onClick={() => setUploadError(null)}
+              className="text-xs text-red-400 underline mt-1 hover:text-red-300"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

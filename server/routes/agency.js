@@ -16,7 +16,9 @@ const {
   executeOnboardingStep,
   generateClientReport,
   trackClientUsage,
-  getClientPerformanceAlerts
+  getClientPerformanceAlerts,
+  getSLAStatusSummary,
+  getLatestAutonomousReports
 } = require('../services/agencyService');
 const { checkPermission } = require('../services/workspaceService');
 
@@ -260,6 +262,42 @@ router.get('/alerts', auth, asyncHandler(async (req, res) => {
 
   const alerts = await getClientPerformanceAlerts(agencyWorkspaceId, clientWorkspaceId);
   sendSuccess(res, 'Performance alerts retrieved', 200, { alerts });
+}));
+
+/**
+ * GET /api/agency/slas/status
+ * Get agency SLA status summary
+ */
+router.get('/slas/status', auth, asyncHandler(async (req, res) => {
+  const { getUserWorkspaces } = require('../services/workspaceService');
+  const workspaces = await getUserWorkspaces(req.user._id, 'agency');
+  
+  if (workspaces.length === 0) {
+    return sendError(res, 'No agency workspace found', 404);
+  }
+
+  const agencyWorkspaceId = workspaces[0]._id;
+  const summary = await getSLAStatusSummary(agencyWorkspaceId);
+  sendSuccess(res, 'SLA status summary retrieved', 200, summary);
+}));
+
+/**
+ * GET /api/agency/reports/latest
+ * Get latest autonomous reports
+ */
+router.get('/reports/latest', auth, asyncHandler(async (req, res) => {
+  const { getUserWorkspaces } = require('../services/workspaceService');
+  const workspaces = await getUserWorkspaces(req.user._id, 'agency');
+  
+  if (workspaces.length === 0) {
+    return sendError(res, 'No agency workspace found', 404);
+  }
+
+  const agencyWorkspaceId = workspaces[0]._id;
+  const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+  
+  const reports = await getLatestAutonomousReports(agencyWorkspaceId, limit);
+  sendSuccess(res, 'Latest reports retrieved', 200, { reports });
 }));
 
 module.exports = router;

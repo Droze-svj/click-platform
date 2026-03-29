@@ -33,70 +33,56 @@ const rl = readline.createInterface({
 const platforms = {
   twitter: {
     name: 'Twitter/X',
-    service: 'twitterOAuthService',
-    requiredVars: ['TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET', 'TWITTER_CALLBACK_URL'],
+    requiredVars: ['TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET'],
     endpoints: {
-      authorize: '/oauth/twitter/authorize',
+      authorize: '/oauth/twitter/connect',
       callback: '/oauth/twitter/callback',
-      status: '/oauth/twitter/status',
-      post: '/oauth/twitter/post'
+      status: '/oauth/twitter/status'
     }
   },
   linkedin: {
     name: 'LinkedIn',
-    service: 'linkedinOAuthService',
-    requiredVars: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_CALLBACK_URL'],
+    requiredVars: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'],
     endpoints: {
-      authorize: '/oauth/linkedin/authorize',
+      authorize: '/oauth/linkedin/connect',
       callback: '/oauth/linkedin/callback',
-      status: '/oauth/linkedin/status',
-      post: '/oauth/linkedin/post'
+      status: '/oauth/linkedin/status'
     }
   },
   facebook: {
     name: 'Facebook',
-    service: 'facebookOAuthService',
-    requiredVars: ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET', 'FACEBOOK_CALLBACK_URL'],
+    requiredVars: ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'],
     endpoints: {
-      authorize: '/oauth/facebook/authorize',
+      authorize: '/oauth/facebook/connect',
       callback: '/oauth/facebook/callback',
-      status: '/oauth/facebook/status',
-      post: '/oauth/facebook/post'
+      status: '/oauth/facebook/status'
     }
   },
   instagram: {
     name: 'Instagram',
-    service: 'instagramOAuthService',
-    requiredVars: ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET', 'FACEBOOK_CALLBACK_URL'],
+    requiredVars: ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'],
     endpoints: {
-      authorize: '/oauth/instagram/authorize',
+      authorize: '/oauth/instagram/connect',
       callback: '/oauth/instagram/callback',
-      status: '/oauth/instagram/status',
-      accounts: '/oauth/instagram/accounts',
-      post: '/oauth/instagram/post'
-    },
-    requires: 'facebook'
+      status: '/oauth/instagram/status'
+    }
   },
   youtube: {
     name: 'YouTube',
-    service: 'youtubeOAuthService',
-    requiredVars: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_CALLBACK_URL'],
+    requiredVars: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'],
     endpoints: {
-      authorize: '/oauth/youtube/authorize',
+      authorize: '/oauth/youtube/connect',
       callback: '/oauth/youtube/callback',
-      status: '/oauth/youtube/status',
-      post: '/oauth/youtube/post'
+      status: '/oauth/youtube/status'
     }
   },
   tiktok: {
     name: 'TikTok',
-    service: 'tiktokOAuthService',
-    requiredVars: ['TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET', 'TIKTOK_CALLBACK_URL'],
+    requiredVars: ['TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET'],
     endpoints: {
-      authorize: '/oauth/tiktok/authorize',
+      authorize: '/oauth/tiktok/connect',
       callback: '/oauth/tiktok/callback',
-      status: '/oauth/tiktok/status',
-      post: '/oauth/tiktok/post'
+      status: '/oauth/tiktok/status'
     }
   }
 };
@@ -252,8 +238,9 @@ async function testPlatform(platform, token) {
   const url = authUrl.data?.data?.url || authUrl.data?.url;
   const state = authUrl.data?.data?.state || authUrl.data?.state;
   
-  console.log(`\n   🔗 URL: ${url.substring(0, 80)}...`);
-  console.log(`   📝 State: ${state}`);
+  const urlSnippet = typeof url === 'string' ? `${url.substring(0, 80)}...` : 'N/A';
+  console.log(`\n   🔗 URL: ${urlSnippet}`);
+  console.log(`   📝 State: ${state || 'N/A'}`);
   console.log(`\n   ⚠️  Manual testing required:`);
   console.log(`   1. Open the URL above in a browser`);
   console.log(`   2. Complete the OAuth flow`);
