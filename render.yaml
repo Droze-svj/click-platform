@@ -3,11 +3,11 @@
 
 services:
   - type: web
-    name: click-platform
+    name: sovereign-platform
     env: node
     region: oregon # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
     plan: free
-    buildCommand: npm install --legacy-peer-deps --production=false
+    buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -16,6 +16,6 @@ services:
       - key: PORT
         value: 5001
       - key: FRONTEND_URL
-        value: https://click-platform.onrender.com
+        value: https://sovereign-platform.onrender.com
       # Add your other environment variables in Render.com dashboard
       # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET, etc.
