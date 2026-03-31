@@ -272,7 +272,7 @@ try {
   apmMiddleware = apmMiddlewareExport; // Assign to outer scope
   logger.info('✅ APM monitoring service initialized');
 } catch (error) {
-  logger.warn('APM monitoring service initialization failed', { error: error.message });
+  logger.warn(' APM monitoring service initialization failed', { error: error.message });
   global.apmMonitor = null;
   apmMiddleware = null;
 }
@@ -1318,267 +1318,67 @@ function __installShutdownHooks() {
 
 }
 
-__installShutdownHooks();
-try {
-  // Close health check server before starting main server
-  // This ensures the port is free for the main server
-  if (healthCheckServer && healthCheckServer.listening) {
-    logger.info('Closing health check server, starting main server...');
-    // Wait a bit for the server to fully close before starting main server
-    healthCheckServer.close(() => {
-      logger.info('Health check server closed, starting main server...');
+// Main server startup sequence
+function startMainServer() {
+  try {
+    console.log('🏁 Starting route loading...');
+    // Routes are already initialized above via routes.forEach if applicable
+    console.log('🏁 Route loading completed. Initializing servers...');
+    console.log('🚀 Starting app.listen...');
+    
+    server = app.listen(PORT, HOST, () => {
+      logger.info(`🚀 Nexus Cluster Initialized on port ${PORT}`);
+      logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
 
-      // Add small delay to ensure port is fully released (500ms should be sufficient)
-      setTimeout(() => {
-        try {
-          // Start main server after health check server is closed
-console.log('🏁 Starting route loading...');
-console.log("Loading route..."); safeUse('/api/auth', './routes/auth');
-// ... many routes ...
-console.log('🏁 Route loading completed. Initializing servers...');
-console.log('🚀 Starting app.listen...');
-          server = app.listen(PORT, HOST, () => {
-            logger.info(`🚀 Server running on port ${PORT}`);
-            logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-            logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      // Initialize Socket.io for real-time updates
+      initializeSocket(server);
+      logger.info(`🔌 Socket.io initialized for real-time updates`);
 
-            // Initialize Socket.io for real-time updates
-            initializeSocket(server);
-            logger.info(`🔌 Socket.io initialized for real-time updates`);
-
-            // Job queue workers are initialized above with the new centralized system
-
-            // Schedule file cleanup (runs daily at 2 AM)
-            if (process.env.NODE_ENV !== 'test') {
-              cron.schedule('0 2 * * *', async () => {
-                logger.info('🧹 Running scheduled file cleanup...');
-                const uploadsDir = path.join(__dirname, '../uploads');
-                await cleanupOldFiles(path.join(uploadsDir, 'videos'), 30); // Keep videos for 30 days
-                await cleanupOldFiles(path.join(uploadsDir, 'clips'), 14); // Keep clips for 14 days
-                await cleanupOldFiles(path.join(uploadsDir, 'thumbnails'), 14);
-                await cleanupOldFiles(path.join(uploadsDir, 'quotes'), 30);
-                logger.info('✅ File cleanup completed');
-              });
-              logger.info('✅ Scheduled file cleanup enabled (daily at 2 AM)');
-
-              // Schedule subscription expiration checks (runs daily at 3 AM)
-              cron.schedule('0 3 * * *', async () => {
-                logger.info('🔔 Checking subscription expirations...');
-                const { processExpiredSubscriptions, sendExpirationWarnings } = require('./services/subscriptionService');
-                await processExpiredSubscriptions();
-                await sendExpirationWarnings([7, 3, 1]); // Warn 7, 3, and 1 days before
-                logger.info('✅ Subscription expiration check completed');
-              });
-              logger.info('✅ Subscription expiration check enabled (daily at 3 AM)');
-
-              // Schedule expiration warnings (runs every 6 hours)
-              cron.schedule('0 */6 * * *', async () => {
-                logger.info('📧 Sending subscription expiration warnings...');
-                const { sendExpirationWarnings } = require('./services/subscriptionService');
-                await sendExpirationWarnings([7, 3, 1]);
-                logger.info('✅ Expiration warnings sent');
-              });
-              logger.info('✅ Expiration warnings enabled (every 6 hours)');
-
-              // Schedule token refresh (runs every hour)
-              cron.schedule('0 * * * *', async () => {
-                logger.info('🔄 Refreshing social media tokens...');
-                const { refreshAllTokens } = require('./services/tokenRefreshService');
-                try {
-                  const result = await refreshAllTokens();
-                  logger.info(`✅ Token refresh completed: ${result.refreshed} refreshed, ${result.failed} failed`);
-                } catch (error) {
-                  logger.error('❌ Token refresh error', { error: error.message });
-                }
-              });
-              logger.info('✅ Token refresh enabled (hourly)');
-
-              // Schedule automatic backups (runs daily at 4 AM)
-              cron.schedule('0 4 * * *', async () => {
-                logger.info('💾 Running automatic backups...');
-                const { createUserBackup } = require('./services/backupService');
-                try {
-                  // Backup all active users (in production, do this in batches)
-                  const User = require('./models/User');
-                  const activeUsers = await User.find({
-                    'subscription.status': { $in: ['active', 'trial'] },
-                  }).limit(100); // Process 100 at a time
-
-                  let backedUp = 0;
-                  for (const user of activeUsers) {
-                    try {
-                      await createUserBackup(user._id, {
-                        includeContent: true,
-                        includePosts: true,
-                        includeScripts: true,
-                        includeSettings: true,
-                      });
-                      backedUp++;
-                    } catch (error) {
-                      logger.error('Backup failed for user', { userId: user._id, error: error.message });
-                    }
-                  }
-                  logger.info(`✅ Automatic backups completed: ${backedUp} users backed up`);
-                } catch (error) {
-                  logger.error('Automatic backup error', { error: error.message });
-                }
-              });
-              logger.info('✅ Automatic backups enabled (daily at 4 AM)');
-
-              // Schedule cache warming (runs every 6 hours)
-              cron.schedule('0 */6 * * *', async () => {
-                logger.info('🔥 Warming caches...');
-                const { warmAllCaches } = require('./services/cacheWarmingService');
-                await warmAllCaches();
-                logger.info('✅ Cache warming completed');
-              });
-              logger.info('✅ Cache warming enabled (every 6 hours)');
-            }
-          }); // Close app.listen callback
-
-          server.on('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-              logger.error(`❌ Port ${PORT} is already in use. This might be the health check server.`);
-              logger.warn('⚠️ Keeping health check server running since main server failed to start');
-              // Don't exit - keep health check server running so Render.com can detect the port
-              return;
-            } else {
-              logger.error('Server error:', err);
-            }
-          });
-
-          logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
-        } catch (listenError) {
-          console.error('❌ Error starting main server:', listenError.message);
-          console.error('Stack:', listenError.stack);
-          logger.error('❌ Error starting main server:', { error: listenError.message, stack: listenError.stack });
-          // Keep health check server running so port stays bound
-          logger.warn('⚠️ Keeping health check server running since main server failed to start');
-          return;
-        }
-      }, 100); // Small delay to ensure port is fully released
-    }); // Close healthCheckServer.close callback
-  } else {
-    // No health check server, start main server directly
-    // Helper: start the main server
-    const startMainServer = () => {
-      server = app.listen(PORT, HOST, () => {
-        logger.info(`🚀 Server running on port ${PORT}`);
-        logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-        logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-
-        // Initialize Socket.io for real-time updates
-        initializeSocket(server);
-        logger.info(`🔌 Socket.io initialized for real-time updates`);
-
-        logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
-        console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
-      });
-
-      server.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          logger.error(`❌ Port ${PORT} is already in use. Attempting to free it...`);
-          // Try to kill any process using this port (excluding our own PID)
-          const { execSync } = require('child_process');
-          try {
-            execSync(`lsof -ti:${PORT} | grep -v ${process.pid} | xargs kill -9 2>/dev/null || true`, { timeout: 2000 });
-            logger.info(`✅ Attempted to free port ${PORT}`);
-            logger.warn('⚠️ Please restart the server manually or wait for nodemon to restart.');
-          } catch (e) {
-            logger.error(`❌ Could not free port ${PORT}. Please manually kill processes using this port.`);
-          }
-        } else {
-          logger.error('Server error:', err);
-        }
-      });
-    }
-
-    // Check if port is available before attempting to bind
-    const net = require('net');
-    const tester = net.createServer();
-    tester.once('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        logger.warn(`⚠️ Port ${PORT} is in use. Attempting to free it...`);
-        const { execSync } = require('child_process');
-        try {
-          execSync(`lsof -ti:${PORT} | grep -v ${process.pid} | xargs kill -9 2>/dev/null || true`, { timeout: 2000 });
-          logger.info(`✅ Attempted to free port ${PORT}, waiting 1 second before starting server...`);
-          setTimeout(startMainServer, 1000);
-        } catch (e) {
-          logger.error(`❌ Could not free port ${PORT}. Server will attempt to start anyway.`);
-          setTimeout(startMainServer, 2000); // Wait and try anyway
-        }
-      } else {
-        logger.error('Port check error:', err);
-        startMainServer(); // Try to start anyway
+      // Schedule file cleanup (runs daily at 2 AM)
+      if (process.env.NODE_ENV !== 'test') {
+        const cron = require('node-cron');
+        cron.schedule('0 2 * * *', async () => {
+          logger.info('🧹 Running scheduled file cleanup...');
+          const uploadsDir = path.join(__dirname, '../uploads');
+          const { cleanupOldFiles } = require('./utils/fileCleanup');
+          await cleanupOldFiles(path.join(uploadsDir, 'videos'), 30);
+          await cleanupOldFiles(path.join(uploadsDir, 'clips'), 14);
+          await cleanupOldFiles(path.join(uploadsDir, 'thumbnails'), 14);
+          await cleanupOldFiles(path.join(uploadsDir, 'quotes'), 30);
+          logger.info('✅ File cleanup completed');
+        });
       }
     });
 
-    tester.once('listening', () => {
-      tester.once('close', () => {
-        // Port is available, start server immediately
-        startMainServer();
-      }).close();
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        logger.error(`❌ Port ${PORT} is already in use. This might be from a previous deployment.`);
+        logger.warn('⚠️ Manual restart or process cleanup required if port collision persists.');
+      } else {
+        logger.error('Server error:', err);
+      }
     });
 
-    tester.listen(PORT);
-  }
-} catch (error) {
-  logger.error('❌ Failed to start server:', error);
-  logger.error('Stack:', error.stack);
-  console.error('❌ Failed to start main server:', error.message);
-  console.error('Stack:', error.stack);
-
-  // Last resort: Create minimal server that just responds to health checks
-  console.log('⚠️ Creating minimal fallback server for health checks...');
-  logger.warn('⚠️ Creating minimal fallback server for health checks...');
-  try {
-    console.log('REQUIRING EXPRESS'); const express = require('express');
-    const fallbackApp = express();
-
-    fallbackApp.get('/api/health', (req, res) => {
-      res.json({
-        status: 'degraded',
-        message: 'Server running in fallback mode. Check logs for errors.',
-        error: error.message,
-        port: PORT
-      });
-    });
-
-    fallbackApp.get('*', (req, res) => {
-      res.status(503).json({
-        status: 'error',
-        message: 'Server is in fallback mode. Check logs for errors.',
-        port: PORT
-      });
-    });
-
-    const fallbackServer = fallbackApp.listen(PORT, HOST, () => {
-      console.log(`✅ Fallback server running on port ${PORT}`);
-      console.log(`✅ Server bound to ${HOST}:${PORT}`);
-      console.log(`⚠️ Server is in degraded mode. Check logs for errors.`);
-      logger.info(`✅ Fallback server bound to port ${PORT} on ${HOST}`);
-    });
-
-    fallbackServer.on('error', (err) => {
-      console.error('❌ Even fallback server failed:', err);
-      console.error('Error code:', err.code);
-      logger.error('❌ Even fallback server failed:', err);
-      process.exit(1);
-    });
-
-    // Keep process alive
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received, shutting down gracefully');
-      fallbackServer.close(() => {
-        console.log('Fallback server closed');
-        process.exit(0);
-      });
-    });
-  } catch (fallbackError) {
-    console.error('❌ Even fallback server failed:', fallbackError);
-    logger.error('❌ Even fallback server failed:', fallbackError);
+  } catch (err) {
+    logger.error('❌ FATAL: Server startup failed:', { error: err.message, stack: err.stack });
     process.exit(1);
   }
 }
 
+__installShutdownHooks();
+
+// Execution logic: Close health check server IF it is running, then start main server.
+// If it is NOT running, start main server immediately.
+if (healthCheckServer && healthCheckServer.listening) {
+  logger.info('Closing health check server, starting main server...');
+  healthCheckServer.close(() => {
+    logger.info('Health check server closed. Transitioning to Nexus Cluster...');
+    setTimeout(() => {
+      startMainServer();
+    }, 1000);
+  });
+} else {
+  console.log('⏭️ No active health check server. Starting Nexus Cluster directly.');
+  startMainServer();
+}
