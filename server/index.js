@@ -785,7 +785,7 @@ allowedOrigins.push(
 );
 // Allow production frontend if different
 if (process.env.NODE_ENV === 'production') {
-  allowedOrigins.push('https://click-platform.onrender.com');
+  allowedOrigins.push('https://sovereign-platform.onrender.com');
   // Allow any subdomain of onrender.com for flexibility
   allowedOrigins.push(/^https:\/\/.*\.onrender\.com$/);
 }
@@ -924,14 +924,7 @@ app.use('/api', (req, res, next) => {
 // Serve a simple landing page for testing - MUST BE BEFORE OTHER ROUTES
 
 // Serve Next.js build files in production (if available)
-if (process.env.NODE_ENV === 'production') {
-  const nextJsPath = path.join(__dirname, '../client/.next');
-
-  if (fs.existsSync(nextJsPath)) {
-    console.log('📦 Next.js build found, serving from:', nextJsPath);
-    // Could add Next.js serving logic here if needed
-  }
-}
+// Next.js serving logic moved to route definitions
 
 // Database connection with multi-provider support
 // Connection is initialized earlier in the file to ensure models can connect
@@ -1111,6 +1104,7 @@ const routes = [
 
   // 2026 Global Marketing AI Expert
   ['/api/marketing-intelligence', './routes/marketing-intelligence'],
+  ['/api/intelligence', './routes/intelligence'],
 ];
 
 // Load routes
@@ -1120,19 +1114,16 @@ routes.forEach(([path, file]) => {
 });
 // ────────────────────────────────────────────────────────────────────────────
 
-// Monitoring and Health Check Routes
-app.get('/health', (req, res) => {
+// Health Check Routes - Handled directly by Express
+app.get('/api/health-status', (req, res) => {
   res.json({
     status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
-  })
-})
+    mode: 'express-native'
+  });
+});
 
-// Basic health check endpoint handled directly by Express (fallback)
-app.get('/api/health-status', (req, res) => {
+// Monitoring and Health Metrics
+app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -1194,6 +1185,39 @@ app.post('/api/monitoring/test-alert', async (req, res) => {
     res.status(503).json({ error: 'Alerting system not initialized' })
   }
 })
+
+// --- Next.js Integration for Production ---
+if (process.env.NODE_ENV === 'production') {
+  const next = require('../client/node_modules/next');
+  const nextApp = next({ dev: false, dir: path.join(__dirname, '../client') });
+  const handle = nextApp.getRequestHandler();
+
+  nextApp.prepare().then(() => {
+    logger.info('📦 Next.js engine prepared for production');
+    // We use a catch-all for everything that wasn't an API route
+    app.all('*', (req, res) => {
+      // If it's an API route that reached here, it means it wasn't handled by Express
+      if (req.path.startsWith('/api/') || req.path === '/api') {
+        return res.status(404).json({ 
+          error: 'API_NOT_FOUND',
+          path: req.path,
+          message: 'Requested API endpoint does not exist on this Sovereign cluster.'
+        });
+      }
+      return handle(req, res);
+    });
+  }).catch(err => {
+    logger.error('❌ Next.js preparation failed:', { 
+      message: err.message, 
+      stack: err.stack,
+      error: err
+    });
+    // Fallback if Next.js fails to prepare
+    app.get('*', (req, res) => {
+       res.status(500).send('Sovereign Unified Interface Initialization Failed. Check Nexus Logs.');
+    });
+  });
+}
 
 // 404 handler
 app.use(notFound);
