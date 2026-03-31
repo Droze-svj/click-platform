@@ -19,6 +19,12 @@ const HOST = '0.0.0.0';
 
 // ─── STAGE 0.5: IMMEDIATE ROUTE REGISTRATION ───────────────────────────────
 // Must be defined BEFORE app.listen() to ensure zero-millisecond availability
+
+// Root health check for Render.com load balancer
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'active', message: 'Nexus Cluster Root Responsive' });
+});
+
 app.get('/api/status/health-pro', (req, res) => {
   console.log('✅ Health probe hit: /api/status/health-pro');
   res.status(200).json({
@@ -47,24 +53,7 @@ const server = app.listen(PORT, HOST, () => {
 const logger = require('./utils/logger');
 logger.info('🚀 Stage 1 completed. Moving to Stage 2 (Asynchronous Engine Load)...');
 
-// Lazy require helper to battle drive I/O overhead
-const lazyRequire = (modulePath) => {
-  let moduleInstance = null;
-  return new Proxy(() => {}, {
-    apply: (target, thisArg, args) => {
-      if (!moduleInstance) {
-        moduleInstance = require(modulePath);
-      }
-      return moduleInstance(...args);
-    },
-    get: (target, prop) => {
-      if (!moduleInstance) {
-        moduleInstance = require(modulePath);
-      }
-      return moduleInstance[prop];
-    }
-  });
-};
+// Lazy require helper removed - using standard requires inside async block.
 
 // ─── STAGE 2: ASYNC ENGINE LOAD ─────────────────────────────────────────────
 async function initializeNexusEngine() {
@@ -73,21 +62,10 @@ async function initializeNexusEngine() {
 
     // Imports
     const cors = require('cors');
-    const mongoose = require('mongoose');
     const compression = require('compression');
     const { securityHeaders, customSecurityHeaders } = require('./middleware/securityHeaders');
-    const cron = require('node-cron');
-    const swaggerUi = require('swagger-ui-express');
-    const validateEnv = require('./middleware/validateEnv');
-    const { errorHandler, notFound } = require('./middleware/errorHandler');
-    const { initErrorHandlers } = require('./middleware/enhancedErrorHandler');
-    const { apiLimiter } = require('./middleware/enhancedRateLimiter');
-    const requestLogger = require('./middleware/requestLogger');
-    const { requestTimeoutRouteAware, getTimeoutForRoute } = require('./middleware/requestTimeout');
-    const { cleanupOldFiles } = require('./utils/fileCleanup');
     const { initializeSocket } = require('./services/socketService');
 
-    let Sentry = null;
     logger.info('⚠️ Sentry initialization bypassed to prevent hangs.');
 
     // Global error handlers
@@ -99,7 +77,7 @@ async function initializeNexusEngine() {
       }
     });
 
-    process.on('unhandledRejection', (reason, promise) => {
+    process.on('unhandledRejection', (reason) => {
       if (reason && typeof reason === 'object' && reason.message &&
         reason.message.includes('ECONNREFUSED') && reason.message.includes('127.0.0.1:6379')) {
         return;
