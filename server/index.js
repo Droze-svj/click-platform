@@ -124,73 +124,10 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.warn('⚠️ Unhandled rejection detected - server will continue');
 });
 
-// Start minimal health check server (production/staging only).
-// In local dev, this extra server can race with nodemon restarts and cause EADDRINUSE / partial startup.
 const PORT = process.env.PORT || 5001;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Detect if we're running locally (not on cloud platforms)
-// Health check server should ONLY run on actual cloud deployments, not localhost
-const isCloudPlatform = !!(process.env.RENDER || process.env.HEROKU || process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-const __isHosted = (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') && isCloudPlatform;
-
-let healthCheckServer = null;
-if (__isHosted) {
-  console.log(`📝 Starting health check server on port ${PORT}...`);
-  try {
-    // Use Node's built-in http module - no dependencies, always available
-    const http = require('http');
-
-    const healthCheckHandler = (req, res) => {
-      const url = req.url || '/';
-      if (url === '/api/health' || url === '/health') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          status: 'starting',
-          message: 'Server is initializing...',
-          port: PORT,
-          timestamp: new Date().toISOString()
-        }));
-      } else {
-        res.writeHead(503, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          status: 'starting',
-          message: 'Server is initializing...',
-          port: PORT
-        }));
-      }
-    };
-
-    healthCheckServer = http.createServer(healthCheckHandler);
-
-    healthCheckServer.listen(PORT, HOST, () => {
-      console.log(`✅ Health check server bound to port ${PORT} on ${HOST}`);
-      console.log(`✅ Port ${PORT} is now open - Render.com can detect it`);
-      console.log(`✅ Health check available at http://${HOST}:${PORT}/api/health`);
-    });
-
-    healthCheckServer.on('error', (err) => {
-      console.error('❌ Health check server error:', err);
-      console.error('Error code:', err.code);
-      console.error('Error message:', err.message);
-      if (err.code === 'EADDRINUSE') {
-        console.error('⚠️ Port is already in use. This might be from a previous deployment.');
-      }
-      // Don't exit - let the process continue
-    });
-
-    // Keep server alive
-    healthCheckServer.keepAliveTimeout = 65000;
-    healthCheckServer.headersTimeout = 66000;
-
-  } catch (healthError) {
-    console.error('❌ CRITICAL: Failed to start health check server:', healthError);
-    console.error('Stack:', healthError.stack);
-    // This is critical in hosted environments, but don't exit - let the main server try to start
-  }
-} else {
-  console.log('📝 Dev mode: skipping separate health check server (starting Express directly)');
-}
+console.log(`📦 Nexus Cluster initializing on port ${PORT}...`);
 
 console.log('REQUIRING EXPRESS'); const express = require('express');
 console.log('REQUIRING CORS'); const cors = require('cors');
@@ -1321,10 +1258,7 @@ function __installShutdownHooks() {
 // Main server startup sequence
 function startMainServer() {
   try {
-    console.log('🏁 Starting route loading...');
-    // Routes are already initialized above via routes.forEach if applicable
-    console.log('🏁 Route loading completed. Initializing servers...');
-    console.log('🚀 Starting app.listen...');
+    console.log('🚀 Initializing Nexus Cluster...');
     
     server = app.listen(PORT, HOST, () => {
       logger.info(`🚀 Nexus Cluster Initialized on port ${PORT}`);
@@ -1341,7 +1275,6 @@ function startMainServer() {
         cron.schedule('0 2 * * *', async () => {
           logger.info('🧹 Running scheduled file cleanup...');
           const uploadsDir = path.join(__dirname, '../uploads');
-          const { cleanupOldFiles } = require('./utils/fileCleanup');
           await cleanupOldFiles(path.join(uploadsDir, 'videos'), 30);
           await cleanupOldFiles(path.join(uploadsDir, 'clips'), 14);
           await cleanupOldFiles(path.join(uploadsDir, 'thumbnails'), 14);
@@ -1353,8 +1286,8 @@ function startMainServer() {
 
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        logger.error(`❌ Port ${PORT} is already in use. This might be from a previous deployment.`);
-        logger.warn('⚠️ Manual restart or process cleanup required if port collision persists.');
+        logger.error(`❌ Port ${PORT} is already in use.`);
+        logger.warn('⚠️ Manual restart or process cleanup required.');
       } else {
         logger.error('Server error:', err);
       }
@@ -1368,17 +1301,5 @@ function startMainServer() {
 
 __installShutdownHooks();
 
-// Execution logic: Close health check server IF it is running, then start main server.
-// If it is NOT running, start main server immediately.
-if (healthCheckServer && healthCheckServer.listening) {
-  logger.info('Closing health check server, starting main server...');
-  healthCheckServer.close(() => {
-    logger.info('Health check server closed. Transitioning to Nexus Cluster...');
-    setTimeout(() => {
-      startMainServer();
-    }, 1000);
-  });
-} else {
-  console.log('⏭️ No active health check server. Starting Nexus Cluster directly.');
-  startMainServer();
-}
+// Execution logic: Start the main server immediately.
+startMainServer();
