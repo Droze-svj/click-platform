@@ -998,6 +998,18 @@ function safeUse(mountPath, routeFile) {
 }
 // ────────────────────────────────────────────────────────────────────────────
 
+// ─── High-Priority Diagnostics ────────────────────────────────────────────────
+app.get('/api/status/health-pro', (req, res) => {
+  res.status(200).json({
+    status: 'active',
+    id: 'sovereign-calibration-node',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    env: process.env.NODE_ENV || 'not_set'
+  });
+});
+// ────────────────────────────────────────────────────────────────────────────
+
 // Sentry AI Agent Monitoring: group multi-step AI calls by conversation/session/user.
 const sentryConversation = require('./middleware/sentryConversation');
 app.use('/api/ai', sentryConversation);
@@ -1192,8 +1204,19 @@ if (process.env.NODE_ENV === 'production') {
   const nextApp = next({ dev: false, dir: path.join(__dirname, '../client') });
   const handle = nextApp.getRequestHandler();
 
+  // Verification endpoint for Production Mode
+  app.get('/api/status/production-mode', (req, res) => {
+    res.status(200).json({
+      status: 'active',
+      mode: 'production',
+      engine: 'Next.js 14_Unified',
+      prepared: true
+    });
+  });
+
   nextApp.prepare().then(() => {
     logger.info('📦 Next.js engine prepared for production');
+    console.log('✅ Sovereign Unified Interface Ready');
     // We use a catch-all for everything that wasn't an API route
     app.all('*', (req, res) => {
       // If it's an API route that reached here, it means it wasn't handled by Express
@@ -1216,6 +1239,15 @@ if (process.env.NODE_ENV === 'production') {
     app.get('*', (req, res) => {
        res.status(500).send('Sovereign Unified Interface Initialization Failed. Check Nexus Logs.');
     });
+  });
+} else {
+  // Debug endpoint for development mode
+  app.get('/api/status/dev-mode', (req, res) => {
+     res.status(200).json({
+        status: 'active',
+        mode: 'development',
+        message: 'Next.js should be running separately on port 3010'
+     });
   });
 }
 
