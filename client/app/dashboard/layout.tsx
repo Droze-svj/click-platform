@@ -1,14 +1,14 @@
+'use client'
+
 import React, { useEffect } from 'react';
-import LogEmitter from '../utils/logEmitter';
+import LogEmitter from '../../utils/logEmitter';
 
 const Layout = () => {
     useEffect(() => {
-        const emitter = LogEmitter.getInstance();
-
-        emitter.log('System Initialized');
+        LogEmitter.log('System Initialized');
 
         return () => {
-            emitter.log('System Terminated');
+            LogEmitter.log('System Terminated');
         };
     }, []);
 

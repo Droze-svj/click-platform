@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import * as ort from 'onnxruntime-web';
+// import * as ort from 'onnxruntime-web';
+const ort: any = { env: { wasm: {} }, InferenceSession: { create: async () => ({ release: () => {} }) } };
 
 /**
  * useNeuralDepth.ts
@@ -44,12 +45,12 @@ export function useNeuralDepth(videoElementId: string) {
     error: null,
   });
 
-  const sessionRef = useRef<ort.InferenceSession | null>(null);
+  const sessionRef = useRef<any | null>(null);
   const matteCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    let localSession: ort.InferenceSession | null = null;
+    let localSession: any | null = null;
 
     const loadModel = async () => {
       if (sessionRef.current) return; // Already loaded

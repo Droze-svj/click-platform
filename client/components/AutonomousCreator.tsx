@@ -85,6 +85,28 @@ export default function AutonomousCreator() {
     }
   }, [loading])
 
+  const saveManifest = async () => {
+    if (!result) return
+
+    try {
+      showToast('Archiving to Neural Vault...', 'info')
+      const res = await apiPost('/intelligence/factory/save', {
+        manifest: result.data || result,
+        topic: prompt,
+        platform: platform,
+        contentType: 'social-media'
+      })
+
+      if (res.success) {
+        showToast('✦ Manifest Archived Successfully', 'success')
+      } else {
+        showToast('Failed to archive manifest.', 'error')
+      }
+    } catch (err: any) {
+      showToast('Neural link failed during archival.', 'error')
+    }
+  }
+
   const runFactory = async (pivot?: string) => {
     if (!prompt.trim()) {
       showToast('Please enter a creative prompt to initialize the forge.', 'warning')
@@ -465,6 +487,13 @@ export default function AutonomousCreator() {
                     {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <RefreshCw className="w-5 h-5" />} REGENERATE_v4
                  </button>
                  <button 
+                  onClick={saveManifest}
+                  disabled={loading || !result}
+                  className="px-10 py-6 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/40 text-indigo-400 font-black text-[12px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all italic active:scale-95 flex items-center gap-5 shadow-inner"
+                 >
+                    <Shield className="w-5 h-5" /> Archive
+                 </button>
+                 <button 
                   onClick={() => router.push(`/dashboard/video`)}
                   className="px-16 py-8 rounded-[3rem] bg-emerald-600 text-white font-black text-sm uppercase tracking-[0.5em] shadow-[0_40px_100px_rgba(16,185,129,0.5)] hover:bg-emerald-500 transition-all flex items-center gap-8 italic active:scale-95 border-none"
                  >
@@ -529,7 +558,7 @@ export default function AutonomousCreator() {
                            </div>
                            <div className="flex flex-col gap-2 border-l border-white/5 pl-8">
                               <span className="text-[9px] font-black text-slate-800 uppercase italic">SWARM_AGREEMENT</span>
-                              <span className="text-4xl font-black text-white italic leading-none drop-shadow-2xl italic tracking-tighter">SURGE</span>
+                              <span className="text-4xl font-black text-white italic leading-none drop-shadow-2xl tracking-tighter">SURGE</span>
                            </div>
                            <div className="flex flex-col gap-2 border-l border-white/5 pl-8">
                               <span className="text-[9px] font-black text-slate-800 uppercase italic">STYLE_PIVOT_SYNC</span>

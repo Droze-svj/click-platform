@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { apiGet } from '../../../../lib/api'
 import { useAuth } from '../../../../hooks/useAuth'
-import LoadingSkeleton from '../../../../components/LoadingSkeleton'
+import SpectralLoader from '../../../../components/SpectralLoader'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 
@@ -37,17 +37,21 @@ export default function FluxForecastingMatrixPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [pulseMode, setPulseMode] = useState(false)
+  const [lastSynced, setLastSynced] = useState<Date | null>(new Date())
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<PerformanceData[]>([])
   const [period, setPeriod] = useState('30')
 
-  const loadFluxPerformance = useCallback(async (isRefresh = false) => {
+  const loadFluxPerformance = useCallback(async (isRefresh = false, triggerSync = false) => {
     try {
       if (isRefresh) setRefreshing(true); else setLoading(true)
       setError(null)
 
-      const response = await apiGet<PerformanceResponse>(`/analytics/performance?period=${period}`)
+      const syncFlag = triggerSync ? '&sync=true' : ''
+      const response = await apiGet<PerformanceResponse>(`/analytics/performance?period=${period}${syncFlag}`)
       setData(response.performance_data || [])
+      if (triggerSync) setLastSynced(new Date())
     } catch (err: any) {
       setError(err.message || 'FLUX_SYNC_INTERFACE_FAILURE')
     } finally {
@@ -56,6 +60,7 @@ export default function FluxForecastingMatrixPage() {
     }
   }, [period])
 
+  // Removed Spectral Pulse: Sticking to manual/on-load sync as per Sovereign Protocol
   useEffect(() => {
     loadFluxPerformance()
   }, [loadFluxPerformance])
@@ -74,19 +79,14 @@ export default function FluxForecastingMatrixPage() {
     }), { views: 0, engage: 0, posts: 0 })
   }
 
-  if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
-        <Monitor size={64} className="text-emerald-500 animate-spin mb-8" />
-        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Flux Trajectories...</span>
-     </div>
-  );
+  if (loading) return <SpectralLoader message="DECIPHERING_FLUX_TRAJECTORIES..." />;
 
   const stats = getTotalResonance()
   const engageRate = stats.views > 0 ? (stats.engage / stats.views * 100).toFixed(1) : '0'
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24">
+      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[#020205]">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Activity size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -96,7 +96,7 @@ export default function FluxForecastingMatrixPage() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
               <button onClick={() => router.push('/dashboard/analytics')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
                 <ArrowLeft size={32} />
               </button>
               <div className="w-20 h-20 bg-emerald-500/5 border border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
@@ -107,11 +107,11 @@ export default function FluxForecastingMatrixPage() {
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
                       <Gauge size={14} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">Flux Matrix v4.2.0</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">Flux Matrix v9.4.0</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Activity size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">TRAJECTORY_LOCKED</span>
+                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
@@ -120,6 +120,27 @@ export default function FluxForecastingMatrixPage() {
            </div>
 
            <div className="flex items-center gap-8">
+              {/* Pulse Toggle */}
+              <div className="flex flex-col items-end gap-2 mr-4">
+                 <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${pulseMode ? 'bg-emerald-500 animate-ping' : 'bg-slate-800'}`} />
+                    <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic">Pulse_Mode</span>
+                    <button 
+                      onClick={() => setPulseMode(!pulseMode)}
+                      title={pulseMode ? "Disable Pulse Sync" : "Enable Pulse Sync"}
+                      aria-label="Toggle Spectral Pulse Mode"
+                      className={`w-10 h-5 rounded-full p-1 transition-colors duration-500 ${pulseMode ? 'bg-emerald-500/20 border border-emerald-500/50' : 'bg-black/40 border border-white/5'}`}
+                    >
+                       <div className={`w-3 h-3 rounded-full transition-transform duration-500 ${pulseMode ? 'translate-x-5 bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'translate-x-0 bg-slate-700'}`} />
+                    </button>
+                 </div>
+                 {lastSynced && (
+                    <span className="text-[8px] font-black text-slate-900 uppercase tracking-widest italic opacity-50">
+                       Last_Sync: {lastSynced.toLocaleTimeString()}
+                    </span>
+                 )}
+              </div>
+
               <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border border-white/10 shadow-inner">
                 {['7', '30', '90'].map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
@@ -131,11 +152,13 @@ export default function FluxForecastingMatrixPage() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => loadFluxPerformance(true)} disabled={refreshing}
-                className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.4em] italic rounded-[3rem] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6"
+              <button 
+                onClick={() => loadFluxPerformance(true, true)} 
+                disabled={refreshing}
+                className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.4em] italic rounded-[3rem] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6 group"
               >
-                <RefreshCw size={24} className={refreshing ? 'animate-spin' : ''} />
-                {refreshing ? 'INTERPRETING...' : 'SYNC_FLUX'}
+                <RefreshCw size={24} className={`${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-700'}`} />
+                {refreshing ? 'INTERPRETING...' : 'FORCE_SYNC'}
               </button>
            </div>
         </div>
@@ -154,7 +177,7 @@ export default function FluxForecastingMatrixPage() {
            <div className="flex items-center gap-8 mb-20 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
               <div>
-                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity Graph</h2>
+                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
                  <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
               </div>
            </div>
@@ -162,7 +185,7 @@ export default function FluxForecastingMatrixPage() {
            <div className="space-y-12 relative z-10">
               {data.length > 0 ? (
                 <div className="space-y-10">
-                   {data.slice(-14).map((day, idx) => {
+                   {data.slice(-parseInt(period)).map((day, idx) => {
                      const engagement = day.likes + day.shares + day.comments
                      const maxEngage = Math.max(...data.map(d => d.likes + d.shares + d.comments))
                      const maxViews = Math.max(...data.map(d => d.views))

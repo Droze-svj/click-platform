@@ -1,4 +1,3 @@
-import sys
 
 class LogEmitter extends EventTarget {
     constructor() {
@@ -10,4 +9,5 @@ class LogEmitter extends EventTarget {
     }
 }
 
-export default new LogEmitter();
+const logEmitter = new LogEmitter();
+export default logEmitter;

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { TimelineSegment, getDefaultTrackForSegmentType } from '../../../types/editor'
 import { formatTime } from '../../../utils/editorUtils'
-import { KonvaEventObject } from 'konva/lib/Node'
+import type { KonvaEventObject } from 'konva/lib/Node'
 import { Text } from 'react-konva'
 import { useLocalVAD } from '../../../hooks/useLocalVAD'
 import { useCompetitorGhosting } from '../../../hooks/useCompetitorGhosting'

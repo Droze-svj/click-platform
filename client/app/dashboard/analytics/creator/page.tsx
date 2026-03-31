@@ -22,15 +22,6 @@ interface VideoStat {
   engagementRate: number;
 }
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
-const MOCK_VIDEOS: VideoStat[] = [
-  { id:'v1', title:'POV: You stopped wasting hours editing', platform:'tiktok',    views:284000, likes:38000, shares:4200, comments:2800, completionRate:71, hookDropOff:12, editStyle:'Bold Kinetic',  filterUsed:'Sky Neon',    hookType:'question',          publishedAt:'2026-03-01', viralScore:94, trend:'up',   engagementRate:15.8 },
-  { id:'v2', title:'The editing mistake that cost me 1M views', platform:'instagram', views:112000, likes:9800,  shares:1100, comments:640,  completionRate:58, hookDropOff:29, editStyle:'Minimal White', filterUsed:'Matte',       hookType:'stat',              publishedAt:'2026-02-28', viralScore:72, trend:'flat', engagementRate:10.3 },
-  { id:'v3', title:'✦ I automated my entire content pipeline', platform:'youtube',   views:61000,  likes:5400,  shares:780,  comments:390,  completionRate:64, hookDropOff:22, editStyle:'Neon Glow',     hookType:'curiosity-gap', publishedAt:'2026-02-26', viralScore:81, trend:'up',   engagementRate:10.8 },
-  { id:'v4', title:'Why 90% of creators fail by week 3', platform:'tiktok',    views:19000,  likes:1400,  shares:180,  comments:210,  completionRate:41, hookDropOff:48, editStyle:'Bold Kinetic',  filterUsed:'Gothic Dark', hookType:'stat',              publishedAt:'2026-02-24', viralScore:51, trend:'down', engagementRate:9.4  },
-  { id:'v5', title:'My morning routine → 500K views analysis', platform:'instagram', views:398000, likes:56200, shares:8800, comments:4100, completionRate:78, hookDropOff:8,  editStyle:'Sky Neon',     filterUsed:'Vivid Pop',  hookType:'pattern-interrupt', publishedAt:'2026-02-22', viralScore:97, trend:'up',   engagementRate:17.4 },
-]
-
 const PLATFORM_COLORS: Record<string, string> = {
   tiktok: 'from-slate-800 to-black', instagram: 'from-pink-500 to-purple-600', youtube: 'from-red-600 to-red-900', other: 'from-slate-600 to-slate-500'
 }
@@ -62,13 +53,32 @@ const scoreColor = (s: number) => s >= 85 ? 'text-emerald-400' : s >= 65 ? 'text
 const scoreBorder = (s: number) => s >= 85 ? 'border-emerald-500/30' : s >= 65 ? 'border-amber-500/30' : 'border-rose-500/30'
 const scoreBg = (s: number) => s >= 85 ? 'bg-emerald-500/10' : s >= 65 ? 'bg-amber-500/10' : 'bg-rose-500/10'
 
+import { apiGet } from '../../../../lib/api'
+import SpectralLoader from '../../../../components/SpectralLoader'
+
 export default function HeuristicMatrixPage() {
-  const [videos] = useState<VideoStat[]>(MOCK_VIDEOS)
+  const [videos, setVideos] = useState<VideoStat[]>([])
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'views' | 'viralScore' | 'completionRate' | 'engagementRate'>('views')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<VideoStat | null>(null)
   const [insightTab, setInsightTab] = useState<'ai' | 'hooks' | 'forecast'>('ai')
+
+  const fetchStats = async () => {
+    setRefreshing(true)
+    try {
+      const res = await apiGet('/analytics/creator/stats')
+      setVideos(res.stats || [])
+    } catch (err) {
+      console.error('Failed to fetch creator stats', err)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => { fetchStats() }, [])
 
   const filtered = useMemo(() =>
     videos
@@ -110,6 +120,8 @@ export default function HeuristicMatrixPage() {
       opportunity: `Deploy 2 additional "${bestEditStyle.toUpperCase()}" nodes to pulse +${Math.round(totals.views * 0.18 / 1000)}K spectral views.`,
     }
   }, [videos, bestEditStyle, totals.views])
+
+  if (loading) return <SpectralLoader message="Unplinking Operational Nodes..." />
 
   return (
     <ErrorBoundary>
@@ -155,10 +167,13 @@ export default function HeuristicMatrixPage() {
                 ))}
               </div>
               <button 
-                onClick={() => { setLoading(true); setTimeout(() => setLoading(false), 800) }}
+                onClick={fetchStats}
+                disabled={refreshing}
+                title="Refresh Operational Nodes"
+                aria-label="Refresh Matrix Stats"
                 className="p-6 rounded-[2.5rem] bg-white text-black hover:bg-indigo-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center"
               >
-                <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
+                <RefreshCw size={24} className={refreshing ? 'animate-spin' : ''} />
               </button>
            </div>
         </header>

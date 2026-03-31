@@ -164,10 +164,6 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
     }
   }
 
-      setViralQuotes(data.quotes)
-      showToast(`Extraction Complete: ${data.quotes.length} High-Resonance Quotes`, 'success')
-    }
-  }
 
   const handleExtractQuotes = async () => {
     if (!transcript) {
