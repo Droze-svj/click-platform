@@ -17,15 +17,10 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const HOST = '0.0.0.0';
 
-// ─── STAGE 1: EMERGENCY PORT BINDING ────────────────────────────────────────
-// Satisfying Render.com's port detection instantly
-const server = app.listen(PORT, HOST, () => {
-  console.log(`🚀 Nexus Cluster Stage 1: Port ${PORT} Bound [READY]`);
-  console.log(`✅ Health probes active at /api/status/health-pro`);
-});
-
-// Immediate health check response (minimal, no dependencies)
+// ─── STAGE 0.5: IMMEDIATE ROUTE REGISTRATION ───────────────────────────────
+// Must be defined BEFORE app.listen() to ensure zero-millisecond availability
 app.get('/api/status/health-pro', (req, res) => {
+  console.log('✅ Health probe hit: /api/status/health-pro');
   res.status(200).json({
     status: 'active',
     stage: 1,
@@ -37,7 +32,15 @@ app.get('/api/status/health-pro', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
+  console.log('✅ Health probe hit: /api/health');
   res.status(200).json({ status: 'active', stage: 1, message: 'Nexus Cluster Port Bound' });
+});
+
+// ─── STAGE 1: EMERGENCY PORT BINDING ────────────────────────────────────────
+// Satisfying Render.com's port detection instantly
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 Nexus Cluster Stage 1: Port ${PORT} Bound [READY]`);
+  console.log(`✅ Health probes active at /api/status/health-pro`);
 });
 
 // Primary logger initialization (after port is bound)
