@@ -7,14 +7,12 @@ services:
     env: node
     region: oregon # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
     plan: free
-    buildCommand: "npm install --legacy-peer-deps && (cd client && npm install --legacy-peer-deps) && NODE_OPTIONS='--max-old-space-size=2048' NEXT_TELEMETRY_DISABLED=1 npm run build"
+    buildCommand: "npm install --legacy-peer-deps && (cd client && npm install --legacy-peer-deps) && NODE_OPTIONS='--max-old-space-size=448' NEXT_TELEMETRY_DISABLED=1 npm run build"
     startCommand: "npm start"
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5001
       - key: FRONTEND_URL
         value: https://sovereign-platform.onrender.com
       # Add your other environment variables in Render.com dashboard
