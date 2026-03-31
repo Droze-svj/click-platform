@@ -7,8 +7,8 @@ services:
     env: node
     region: oregon # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
     plan: free
-    buildCommand: "npm install --legacy-peer-deps && (cd client && npm install --legacy-peer-deps) && NODE_OPTIONS='--max-old-space-size=448' NEXT_TELEMETRY_DISABLED=1 npm run build"
-    startCommand: "npm start"
+    buildCommand: "npm ci --omit=dev --no-audit --no-fund && (cd client && npm ci --omit=dev --no-audit --no-fund) && NODE_OPTIONS='--max-old-space-size=384' npm run build"
+    startCommand: "NODE_ENV=production node server/index.js"
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
