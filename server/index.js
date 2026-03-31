@@ -1137,46 +1137,59 @@ app.post('/api/monitoring/test-alert', async (req, res) => {
 
 // --- Next.js Integration for Production ---
 if (process.env.NODE_ENV === 'production') {
-  const next = require('../client/node_modules/next');
-  const nextApp = next({ dev: false, dir: path.join(__dirname, '../client') });
-  const handle = nextApp.getRequestHandler();
+  try {
+    const next = require('../client/node_modules/next');
+    const nextApp = next({ dev: false, dir: path.join(__dirname, '../client') });
+    const handle = nextApp.getRequestHandler();
 
-  // Verification endpoint for Production Mode
-  app.get('/api/status/production-mode', (req, res) => {
-    res.status(200).json({
-      status: 'active',
-      mode: 'production',
-      engine: 'Next.js 14_Unified',
-      prepared: true
+    // Verification endpoint for Production Mode
+    app.get('/api/status/production-mode', (req, res) => {
+      res.status(200).json({
+        status: 'active',
+        mode: 'production',
+        engine: 'Next.js 14_Unified',
+        prepared: true
+      });
     });
-  });
 
-  nextApp.prepare().then(() => {
-    logger.info('📦 Next.js engine prepared for production');
-    console.log('✅ Sovereign Unified Interface Ready');
-    // We use a catch-all for everything that wasn't an API route
-    app.all('*', (req, res) => {
-      // If it's an API route that reached here, it means it wasn't handled by Express
-      if (req.path.startsWith('/api/') || req.path === '/api') {
-        return res.status(404).json({ 
-          error: 'API_NOT_FOUND',
-          path: req.path,
-          message: 'Requested API endpoint does not exist on this Sovereign cluster.'
-        });
-      }
-      return handle(req, res);
+    nextApp.prepare().then(() => {
+      logger.info('📦 Next.js engine prepared for production');
+      console.log('✅ Sovereign Unified Interface Ready');
+      // We use a catch-all for everything that wasn't an API route
+      app.all('*', (req, res) => {
+        // If it's an API route that reached here, it means it wasn't handled by Express
+        if (req.path.startsWith('/api/') || req.path === '/api') {
+          return res.status(404).json({ 
+            error: 'API_NOT_FOUND',
+            path: req.path,
+            message: 'Requested API endpoint does not exist on this Sovereign cluster.'
+          });
+        }
+        return handle(req, res);
+      });
+    }).catch(err => {
+      logger.error('❌ Next.js preparation failed:', { 
+        message: err.message, 
+        stack: err.stack,
+        error: err
+      });
+      // Fallback if Next.js fails to prepare
+      app.get('*', (req, res) => {
+         res.status(500).send('Sovereign Unified Interface Initialization Failed. Check Nexus Logs.');
+      });
     });
-  }).catch(err => {
-    logger.error('❌ Next.js preparation failed:', { 
-      message: err.message, 
-      stack: err.stack,
-      error: err
+  } catch (loadError) {
+    logger.error('❌ CRITICAL: Failed to load Next.js module:', { 
+      error: loadError.message, 
+      path: '../client/node_modules/next' 
     });
-    // Fallback if Next.js fails to prepare
+    // Ensure the app doesn't just hang - provide a fallback for all non-API routes
     app.get('*', (req, res) => {
-       res.status(500).send('Sovereign Unified Interface Initialization Failed. Check Nexus Logs.');
+      if (!req.path.startsWith('/api')) {
+        res.status(503).send('Sovereign Platform is starting up or Next.js build is missing. Please check Nexus Cluster logs.');
+      }
     });
-  });
+  }
 } else {
   // Debug endpoint for development mode
   app.get('/api/status/dev-mode', (req, res) => {
