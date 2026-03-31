@@ -43,6 +43,7 @@ const scriptSchema = new mongoose.Schema({
   metadata: {
     keywords: [String],
     hashtags: [String],
+    hooks: [mongoose.Schema.Types.Mixed], // Added for Forge persistence
     timestamps: [{
       time: String,
       section: String

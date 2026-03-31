@@ -406,6 +406,71 @@ Niche: ${niche}`;
   }
 }
 
+/**
+ * Generate high-fidelity Diagnostic Matrix for a post (Phase 13)
+ * Provides heuristic logic, signal analysis, and protocol advice.
+ */
+async function generateDiagnosticMatrix(postData, niche = 'general') {
+  const startTime = process.hrtime();
+  
+  if (!geminiConfigured) {
+    return {
+      success: true,
+      headline: "Spectral signal detected. Neural affinity mapping suggested.",
+      action: "Manifest kinetic visual spikes in frames 0-4 to counteract diffraction.",
+      opportunity: "Deploy additional edit nodes to pulse higher spectral views.",
+      potencyScore: 85,
+      integrityVerified: false
+    };
+  }
+
+  try {
+    const prompt = `Analyze this social media post data and generate a "Sovereign Heuristic Matrix" diagnostic:
+    
+    Data: ${JSON.stringify(postData)}
+    Niche: ${niche}
+    
+    Return a JSON object with:
+    - headline (A high-fidelity, slightly philosophical AI insight about the performance)
+    - action (A specific "Protocol Termination" or "Audit" advice to improve the post)
+    - opportunity (A growth "Heuristic Expansion" tip)
+    - potencyScore (0-100 score based on engagement/reach ratio)
+    - signalGaps (array of 3 items like "Frame 0-2 Diffraction", "Sonic Saturation Drop", etc.)
+
+    Use high-fidelity, "Spectral" terminology (Resonance, Diffraction, Neural Potency, Kinetic Rhythm).
+    Return only valid JSON.`;
+
+    const response = await geminiGenerate(prompt, { maxTokens: 1000, temperature: 0.7 });
+    const result = JSON.parse(response || '{}');
+    
+    // Performance Tracking (Phase 13 Monitoring)
+    const [seconds, nanoseconds] = process.hrtime(startTime);
+    const latencyMs = Math.round((seconds * 1000) + (nanoseconds / 1000000));
+    
+    logger.info('Spectral Audit: Diagnostic Matrix synthesized', {
+      postId: postData.id,
+      latencyMs,
+      potencyScore: result.potencyScore,
+      niche
+    });
+
+    return {
+      ...result,
+      headline: applyClicheShield(result.headline || "Heuristic synthesis complete."),
+      action: applyClicheShield(result.action || "Audit node performance."),
+      opportunity: applyClicheShield(result.opportunity || "Expand operational reach."),
+      integrityVerified: true,
+      performance: { latencyMs }
+    };
+  } catch (error) {
+    logger.error('Diagnostic Matrix synthesis failure', { 
+      error: error.message,
+      postId: postData.id 
+    });
+    return { success: false, error: error.message };
+  }
+}
+
 function extractHashtags(text) {
   const hashtagRegex = /#\w+/g;
   return text.match(hashtagRegex) || [];
@@ -593,6 +658,7 @@ module.exports = {
   generateContentIdea: withAgentSpan('Content Idea Agent', generateContentIdea),
   analyzeContentWithAI: withAgentSpan('Content Health Agent', analyzeContentWithAI),
   getUniversalStrategicFramework: withAgentSpan('Strategic Framework Agent', getUniversalStrategicFramework),
-  validateAndRefineOutput: withAgentSpan('Validation Agent', validateAndRefineOutput)
+  validateAndRefineOutput: withAgentSpan('Validation Agent', validateAndRefineOutput),
+  generateDiagnosticMatrix: withAgentSpan('Diagnostic Matrix Agent', generateDiagnosticMatrix)
 };
 

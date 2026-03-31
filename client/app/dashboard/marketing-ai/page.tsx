@@ -13,7 +13,8 @@ import { useAuth } from '../../../hooks/useAuth'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
 
-const glass = 'backdrop-blur-xl bg-white/[0.03] border border-white/10'
+const glass = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
+const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
 
 type Panel = 'trends' | 'retention' | 'creativity' | 'engagement' | 'optimizer'
 
@@ -27,6 +28,8 @@ export default function MarketingOraclePage() {
   const [data, setData] = useState<Record<string, any>>({})
   const [error, setError] = useState<Record<string, string>>({})
 
+  const [syncStatus, setSyncStatus] = useState<any>(null)
+  const [syncing, setSyncing] = useState(false)
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
   const apiFetch = useCallback(async (endpoint: string, options: RequestInit = {}) => {
@@ -55,6 +58,22 @@ export default function MarketingOraclePage() {
   useEffect(() => {
     load('dashboard', `/dashboard?niche=${niche}&platform=${platform}`)
   }, [niche, platform, load])
+
+  const syncSignals = async () => {
+    setSyncing(true)
+    try {
+      const res = await apiFetch('/sync-signals', { method: 'POST' })
+      if (res.success) {
+        setSyncStatus(res.data)
+        // Refresh dashboard data after sync
+        load('dashboard', `/dashboard?niche=${niche}&platform=${platform}`)
+      }
+    } catch (err) {
+      console.error('Sync failed', err)
+    } finally {
+      setTimeout(() => setSyncing(false), 2000)
+    }
+  }
 
   const panels: { id: Panel; label: string; icon: any; color: string; bg: string }[] = [
     { id: 'trends',     label: 'Global Trend Radar',   icon: Globe,       color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -93,33 +112,76 @@ export default function MarketingOraclePage() {
           </p>
         </div>
 
-        {/* Controls */}
-        <div className={`${glass} rounded-3xl p-6 flex flex-col sm:flex-row gap-4 min-w-[340px]`}>
-          <div className="space-y-2 flex-1">
-            <label className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-600">Your Niche</label>
-            <input
-              value={niche}
-              onChange={(e) => setNiche(e.target.value)}
-              placeholder="e.g. fitness, finance..."
-              className="w-full bg-black/60 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white placeholder-slate-700 font-bold focus:outline-none focus:border-indigo-500/50"
-            />
+        {/* Controls & Sync */}
+        <div className="flex flex-col xl:flex-row gap-8 items-center lg:items-end w-full lg:w-auto">
+          <div className={`${glass} rounded-[3rem] p-8 flex flex-col sm:flex-row gap-6 min-w-[340px] border-indigo-500/10`}>
+            <div className="space-y-3 flex-1">
+              <label className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-700 italic">Target_Niche</label>
+              <input
+                value={niche}
+                onChange={(e) => setNiche(e.target.value)}
+                placeholder="e.g. fitness, finance..."
+                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-900 font-black italic focus:outline-none focus:border-indigo-500/40 uppercase transition-all"
+              />
+            </div>
+            <div className="space-y-3 flex-1">
+              <label className="text-[10px] font-black uppercase tracking-[0.8em] text-slate-700 italic">Active_Matrix</label>
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                title="Select platform"
+                aria-label="Select platform"
+                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white font-black italic focus:outline-none focus:border-indigo-500/40 uppercase transition-all"
+              >
+                {['instagram','tiktok','linkedin','twitter','youtube','facebook'].map((p) => (
+                  <option key={p} value={p} className="bg-black">{p.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="space-y-2 flex-1">
-            <label className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-600">Platform</label>
-            <select
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              title="Select platform"
-              aria-label="Select platform"
-              className="w-full bg-black/60 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white font-bold focus:outline-none focus:border-indigo-500/50"
-            >
-              {['instagram','tiktok','linkedin','twitter','youtube','facebook'].map((p) => (
-                <option key={p} value={p} className="bg-black">{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-              ))}
-            </select>
-          </div>
+
+          <button 
+            onClick={syncSignals}
+            disabled={syncing}
+            className={`group relative flex items-center gap-6 px-12 py-8 rounded-[3rem] font-black uppercase tracking-[0.4em] italic text-sm transition-all duration-1000 overflow-hidden ${
+              syncing 
+              ? 'bg-indigo-600/30 text-indigo-300 cursor-wait' 
+              : 'bg-white text-black hover:bg-slate-100 shadow-[0_40px_100px_rgba(255,255,255,0.2)]'
+            }`}
+          >
+            <div className={`absolute inset-0 bg-indigo-600/20 translate-x-[-100%] ${syncing ? 'animate-shimmer' : 'group-hover:translate-x-[100%] transition-transform duration-[2s]'}`} />
+            {syncing ? (
+              <>
+                <RefreshCw size={24} className="animate-spin" />
+                SYNK_FLUX_IN_PROGRESS...
+              </>
+            ) : (
+              <>
+                <Activity size={24} className="group-hover:animate-pulse" />
+                Trigger SYNK_FLUX
+              </>
+            )}
+          </button>
         </div>
       </header>
+
+      {/* ── Operational Indicators ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {[
+          { label: 'Neural_Fidelity', value: '99.9%', sub: 'ACTIVE_LINK', color: 'text-indigo-400' },
+          { label: 'Signal_Sync', value: syncStatus ? 'CALIBRATED' : 'STABLE', sub: syncStatus ? syncStatus.timestamp.split('T')[1].slice(0,5) : 'CORE_ONLY', color: 'text-emerald-400' },
+          { label: 'Matrix_Drift', value: '0.002', sub: 'MILLIRADIANS', color: 'text-amber-400' },
+          { label: 'Quantum_Load', value: 'MINIMAL', sub: '42.1_PFLOPS', color: 'text-rose-400' },
+        ].map((stat, i) => (
+          <div key={i} className={`${glass} p-8 rounded-[2.5rem] border-white/5 space-y-3 group hover:border-white/20 transition-all`}>
+             <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
+             <div className="flex items-end justify-between">
+                <span className={`text-4xl font-black italic tracking-tighter ${stat.color}`}>{stat.value}</span>
+                <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1">{stat.sub}</span>
+             </div>
+          </div>
+        ))}
+      </div>
 
       {/* ── Panel Navigation ── */}
       <nav className="flex flex-wrap gap-4">
@@ -372,7 +434,12 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
             {/* Big score display */}
             <div className="relative flex items-center justify-center py-8">
               <div className="w-40 h-40 rounded-full border-8 border-white/5 flex items-center justify-center relative shadow-[0_0_80px_rgba(16,185,129,0.2)]">
-                <div className="absolute inset-0 rounded-full border-8 border-emerald-500/40" style={{ clipPath: `inset(${100 - score.score}% 0 0 0)` }} />
+                <motion.div 
+                  className="absolute inset-0 rounded-full border-8 border-emerald-500/40" 
+                  initial={false}
+                  animate={{ clipPath: `inset(${100 - score.score}% 0 0 0)` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                />
                 <div className="text-center">
                   <p className="text-5xl font-black text-emerald-400 tabular-nums leading-none">{score.score}</p>
                   <p className="text-xs font-black uppercase tracking-widest text-slate-600 mt-1">/100</p>

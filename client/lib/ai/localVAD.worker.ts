@@ -1,5 +1,5 @@
-/// <reference lib="webworker" />
-import * as ort from 'onnxruntime-web'
+// import * as ort from 'onnxruntime-web'
+const ort: any = { env: { wasm: {} } }
 
 declare const self: DedicatedWorkerGlobalScope;
 

@@ -1,8 +1,6 @@
 console.log('🏗️ cacheService: start requires');
 const logger = require('../utils/logger');
 console.log('🏗️ cacheService: logger loaded');
-const { captureException } = require('../utils/sentry');
-console.log('🏗️ cacheService: sentry loaded');
 console.log('🏗️ cacheService: requires loaded');
 
 // Lazy load cache monitoring to avoid circular dependencies
@@ -43,18 +41,23 @@ async function initCache() {
     const redis = require('redis');
     console.log('🏗️ cacheService: redis loaded');
 
+    const isTls = redisUrl.startsWith('rediss://');
+    
     redisClient = redis.createClient({
       url: redisUrl,
       password: process.env.REDIS_PASSWORD || undefined,
       socket: {
-        connectTimeout: 5000, // 5 second timeout
+        connectTimeout: 10000, // 10 second timeout for production HA
+        tls: isTls ? {
+          rejectUnauthorized: process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false'
+        } : undefined,
         reconnectStrategy: (retries) => {
-          if (retries > 3) {
-            logger.warn('Redis reconnection failed after 3 retries, disabling cache');
+          if (retries > 10) { // More retries for production resilience
+            logger.warn('Redis reconnection failed after 10 retries, disabling cache');
             cacheEnabled = false;
             return new Error('Redis connection failed');
           }
-          return Math.min(retries * 100, 2000);
+          return Math.min(retries * 500, 5000); // Back off slower
         },
       },
     });

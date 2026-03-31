@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { apiGet } from '../../../lib/api'
-import { useAuth } from '../../../hooks/useAuth'
-import LoadingSkeleton from '../../../components/LoadingSkeleton'
-import { ErrorBoundary } from '../../../components/ErrorBoundary'
-import ToastContainer from '../../../components/ToastContainer'
+import { apiGet } from '@/lib/api'
+import { useAuth } from '@/hooks/useAuth'
+import LoadingSkeleton from '@/components/LoadingSkeleton'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import ToastContainer from '@/components/ToastContainer'
 import {
   Users,
   FileText,
@@ -28,6 +28,7 @@ import {
   Search,
   Filter,
   ArrowUpRight,
+  ShieldAlert,
   ShieldCheck,
   HardDrive,
   ActivityIcon,
@@ -184,7 +185,7 @@ export default function SovereignOversightTerminalPage() {
                 className="px-10 py-5 bg-white/[0.03] border border-white/10 text-slate-800 hover:text-white hover:bg-white/[0.05] font-black uppercase text-[11px] tracking-[0.4em] italic rounded-2xl transition-all flex items-center gap-4 group shadow-xl">
                  <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700" /> REFRESH_LATTICE
               </button>
-              <button className="p-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all rounded-2xl shadow-2xl group active:scale-90">
+              <button title="Scan Matrix" className="p-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all rounded-2xl shadow-2xl group active:scale-90">
                  <Scan size={24} className="group-hover:scale-110 transition-transform" />
               </button>
            </div>
@@ -363,10 +364,3 @@ function CommandButton({ icon: Icon, label, desc, color, onClick }: { icon: any;
     </button>
   )
 }
-
-const ArrowUpRight = (props: any) => (
-  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="7" y1="17" x2="17" y2="7" />
-    <polyline points="7 7 17 7 17 17" />
-  </svg>
-)
