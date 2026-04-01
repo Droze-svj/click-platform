@@ -4,18 +4,20 @@ const OpenAI = require('openai');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
-const path = require('path');
 
 // Initialize OpenAI client
 let openai = null;
-try {
-  if (process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      logger.warn('OpenAI not configured for video captions', { error: error.message });
+    }
   }
-} catch (error) {
-  logger.warn('OpenAI not configured for video captions', { error: error.message });
+  return openai;
 }
 
 /**
@@ -25,7 +27,8 @@ try {
  * @returns {Promise<Object>} Transcript with text and segments
  */
 async function generateTranscript(videoFilePath, language = null) {
-  if (!openai) {
+  const client = getOpenAIClient();
+  if (!client) {
     throw new Error('OpenAI API not configured');
   }
 
@@ -38,7 +41,7 @@ async function generateTranscript(videoFilePath, language = null) {
     const fileStream = createReadStream(videoFilePath);
 
     // Call Whisper API
-    const response = await openai.audio.transcriptions.create({
+    const response = await client.audio.transcriptions.create({
       file: fileStream,
       model: 'whisper-1',
       language: language || undefined, // Auto-detect if not provided
