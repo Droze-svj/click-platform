@@ -58,6 +58,13 @@ class StyleVaultExtractor {
       const hasLumetri = xmlString.includes('Lumetri') || xmlString.includes('Color Correction');
       const hasMotionBlur = xmlString.includes('Motion Blur') || xmlString.includes('RSMB');
 
+      // Extract details for Visual & Audio DNA
+      const transitionMatches = [...xmlString.matchAll(/<transition[^>]*>/gi)];
+      const crossDissolveMatches = [...xmlString.matchAll(/type="cross-dissolve"/gi)];
+      const targetLUFS = xmlString.match(/targetLUFS="(-?\d+)"/i)?.[1] || '-14';
+      const eqMatches = [...xmlString.matchAll(/<effect[^>]*id="eq"[^>]*>/gi)];
+      const audioLevelMatches = [...xmlString.matchAll(/<audio-level[^>]*>/gi)];
+
       return {
         visualDNA: {
           totalClips,
