@@ -7,8 +7,8 @@ services:
     env: node
     region: oregon # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
     plan: free
-    buildCommand: "(npm install --no-audit --no-fund && cd client && npm install --no-audit --no-fund) && (export NODE_OPTIONS='--max-old-space-size=640' && npm run build)"
-    startCommand: "NODE_ENV=production node server/index.js"
+    buildCommand: "(npm install --no-audit --no-fund && npx prisma generate) && (rm -rf node_modules && cd client && npm install --no-audit --no-fund --production=false && export NODE_OPTIONS='--max-old-space-size=450' && npm run build)"
+    startCommand: "npm install --production --no-audit --no-fund && NODE_ENV=production node server/index.js"
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
