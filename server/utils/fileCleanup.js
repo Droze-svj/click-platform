@@ -1,10 +1,10 @@
 // File cleanup utility for failed uploads
 
-console.log('🏗️ fileCleanup: start requires');
+
 const fs = require('fs').promises;
 const path = require('path');
 const logger = require('./logger');
-console.log('🏗️ fileCleanup: requires loaded');
+
 
 // Clean up files older than specified days
 async function cleanupOldFiles(directory, daysOld = 7) {

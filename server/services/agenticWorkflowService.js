@@ -44,7 +44,7 @@ async function startAgentPipeline(videoId, goals, userId) {
 
   // Run pipeline asynchronously (do not await in the request handler)
   runPipeline(job).catch(err => {
-    console.error(`[AgenticAgent] Pipeline error for job ${jobId}:`, err)
+    
     job.status = 'error'
     job.error = err.message
   })
@@ -104,8 +104,8 @@ async function runPipeline(job) {
           const audit = await auditStepQuality(step.id, lastResult);
 
           if (audit.score < 80 && attempts < 2) {
-             job.logs.push(`[Reasoning] ${step.label} quality score ${audit.score}/100 too low. Reason: ${audit.reason}. Retrying with refinement...`);
-             continue; // Retry loop
+            job.logs.push(`[Reasoning] ${step.label} quality score ${audit.score}/100 too low. Reason: ${audit.reason}. Retrying with refinement...`);
+            continue; // Retry loop
           }
           job.logs.push(`[Reasoning] ${step.label} passed quality gate (${audit.score}/100).`);
         }
@@ -129,22 +129,22 @@ async function runPipeline(job) {
   job.logs.push('[AgenticGraph] Initiating Editor->Critic->Revision Cyclic Loop...')
   let finalGraphOutput;
   try {
-     finalGraphOutput = await runSelfReflectiveLoop(job.transcript || 'Create a high-retention video timeline.');
-     job.logs.push(`[AgenticGraph] Graph approved timeline with score ${finalGraphOutput.finalScore} over ${finalGraphOutput.totalIterations} iterations.`);
+    finalGraphOutput = await runSelfReflectiveLoop(job.transcript || 'Create a high-retention video timeline.');
+    job.logs.push(`[AgenticGraph] Graph approved timeline with score ${finalGraphOutput.finalScore} over ${finalGraphOutput.totalIterations} iterations.`);
   } catch (err) {
-     job.logs.push(`[AgenticGraph] Graph execution failed: ${err.message}`);
+    job.logs.push(`[AgenticGraph] Graph execution failed: ${err.message}`);
   }
 
   // Execute Generative Foley (Task 3.2)
   job.logs.push('[AgenticGraph] Generating Foley for Timeline cuts...');
   let foleyNodes = [];
   try {
-     const approvedClips = finalGraphOutput?.finalTimeline?.clips || [];
-     // Await the generation of SFX aligned to the cuts
-     foleyNodes = await alignFoleyToTimeline(approvedClips, job.videoId);
-     job.logs.push(`[AgenticGraph] Sourced ${foleyNodes.length} SFX nodes.`);
+    const approvedClips = finalGraphOutput?.finalTimeline?.clips || [];
+    // Await the generation of SFX aligned to the cuts
+    foleyNodes = await alignFoleyToTimeline(approvedClips, job.videoId);
+    job.logs.push(`[AgenticGraph] Sourced ${foleyNodes.length} SFX nodes.`);
   } catch (err) {
-      job.logs.push(`[AgenticGraph] Foley synthesis bypassed: ${err.message}`);
+    job.logs.push(`[AgenticGraph] Foley synthesis bypassed: ${err.message}`);
   }
 
   job.result = {
@@ -166,76 +166,76 @@ async function executeStep(stepId, job, isRetry = false) {
 
   try {
     switch (stepId) {
-      case 'transcribe': {
-        logger.info('AgenticStep: Transcribing', { videoId, userId });
-        if (videoPath && require('fs').existsSync(require('path').join(__dirname, '../..', videoPath))) {
-          const transResult = await transcribeVideoService(userId, videoId, videoPath);
-          job.transcript = transResult.text;
-          job.words = transResult.words;
-          return { words: transResult.words?.length || 0, text: transResult.text?.substring(0, 50) + '...' };
-        }
-        return { words: 1432, duration: 252, language: 'en', note: 'Mocked (file not found)' };
+    case 'transcribe': {
+      logger.info('AgenticStep: Transcribing', { videoId, userId });
+      if (videoPath && require('fs').existsSync(require('path').join(__dirname, '../..', videoPath))) {
+        const transResult = await transcribeVideoService(userId, videoId, videoPath);
+        job.transcript = transResult.text;
+        job.words = transResult.words;
+        return { words: transResult.words?.length || 0, text: transResult.text?.substring(0, 50) + '...' };
       }
+      return { words: 1432, duration: 252, language: 'en', note: 'Mocked (file not found)' };
+    }
 
-      case 'score': {
-        logger.info('AgenticStep: Scoring', { videoId });
-        const { analyzeSentimentAndEmotions } = require('./aiVideoEditingService');
-        const context = isRetry ? 'Perform a highly critical second-pass analysis focusing on nuance.' : 'Standard first-pass analysis.';
-        const score = await analyzeSentimentAndEmotions(job.transcript || 'Sample video content transcript.', context);
-        return {
-          sentiment: score?.sentiment || 'positive',
-          viralPotential: score?.energyLevel > 7 ? 'High' : 'Moderate',
-          score: score?.energyLevel || 8,
-          analysisPass: isRetry ? 2 : 1
-        };
-      }
+    case 'score': {
+      logger.info('AgenticStep: Scoring', { videoId });
+      const { analyzeSentimentAndEmotions } = require('./aiVideoEditingService');
+      const context = isRetry ? 'Perform a highly critical second-pass analysis focusing on nuance.' : 'Standard first-pass analysis.';
+      const score = await analyzeSentimentAndEmotions(job.transcript || 'Sample video content transcript.', context);
+      return {
+        sentiment: score?.sentiment || 'positive',
+        viralPotential: score?.energyLevel > 7 ? 'High' : 'Moderate',
+        score: score?.energyLevel || 8,
+        analysisPass: isRetry ? 2 : 1
+      };
+    }
 
-      case 'cut': {
-        logger.info('AgenticStep: Cutting', { videoId });
-        const { detectSilencePeriods } = require('./aiVideoEditingService');
-        const silences = videoPath ? await detectSilencePeriods(require('path').join(__dirname, '../..', videoPath)) : [];
-        return { clips: 1, silenceRemoved: silences.length, segmentsKept: silences.length + 1 };
-      }
+    case 'cut': {
+      logger.info('AgenticStep: Cutting', { videoId });
+      const { detectSilencePeriods } = require('./aiVideoEditingService');
+      const silences = videoPath ? await detectSilencePeriods(require('path').join(__dirname, '../..', videoPath)) : [];
+      return { clips: 1, silenceRemoved: silences.length, segmentsKept: silences.length + 1 };
+    }
 
-      case 'captioning': // Adding real captioning step
-      case 'brand':
-        return { templatesApplied: 1, brandKit: 'Primary' };
+    case 'captioning': // Adding real captioning step
+    case 'brand':
+      return { templatesApplied: 1, brandKit: 'Primary' };
 
-      case 'broll': {
-        logger.info('AgenticStep: Sourcing B-roll', { videoId });
-        const { getSmartBRollSuggestions } = require('./aiAssetMatchingService');
-        const suggestions = await getSmartBRollSuggestions(job.transcript || '');
-        return {
-          suggestedClips: suggestions.suggestions?.length || 0,
-          source: suggestions.suggestions?.[0]?.title || 'Stock'
-        };
-      }
+    case 'broll': {
+      logger.info('AgenticStep: Sourcing B-roll', { videoId });
+      const { getSmartBRollSuggestions } = require('./aiAssetMatchingService');
+      const suggestions = await getSmartBRollSuggestions(job.transcript || '');
+      return {
+        suggestedClips: suggestions.suggestions?.length || 0,
+        source: suggestions.suggestions?.[0]?.title || 'Stock'
+      };
+    }
 
-      case 'thumbnails': {
-        logger.info('AgenticStep: Thumbnails', { videoId });
-        const { generateThumbnail } = require('./advancedVideoProcessingService');
-        const outputPath = `server/uploads/processed/thumb-${videoId}-${Date.now()}.jpg`;
-        const thumbUrl = await generateThumbnail(require('path').join(__dirname, '../..', videoPath || ''), outputPath)
-          .catch(() => 'thumb-error.jpg');
-        return { count: 1, urls: [thumbUrl] };
-      }
+    case 'thumbnails': {
+      logger.info('AgenticStep: Thumbnails', { videoId });
+      const { generateThumbnail } = require('./advancedVideoProcessingService');
+      const outputPath = `server/uploads/processed/thumb-${videoId}-${Date.now()}.jpg`;
+      const thumbUrl = await generateThumbnail(require('path').join(__dirname, '../..', videoPath || ''), outputPath)
+        .catch(() => 'thumb-error.jpg');
+      return { count: 1, urls: [thumbUrl] };
+    }
 
-      case 'metadata': {
-        logger.info('AgenticStep: Metadata', { videoId });
-        const { generateCaptions: genMeta } = require('./aiService');
-        const caption = await genMeta(job.transcript || 'Viral video content', 'general');
-        return {
-          title: caption.substring(0, 40) + '...',
-          description: caption,
-          hashtags: caption.match(/#\w+/g) || ['#viral', '#trending']
-        };
-      }
+    case 'metadata': {
+      logger.info('AgenticStep: Metadata', { videoId });
+      const { generateCaptions: genMeta } = require('./aiService');
+      const caption = await genMeta(job.transcript || 'Viral video content', 'general');
+      return {
+        title: caption.substring(0, 40) + '...',
+        description: caption,
+        hashtags: caption.match(/#\w+/g) || ['#viral', '#trending']
+      };
+    }
 
-      case 'draft':
-        return { calendarSlotsFilled: 1 };
+    case 'draft':
+      return { calendarSlotsFilled: 1 };
 
-      default:
-        return {};
+    default:
+      return {};
     }
   } catch (error) {
     logger.error(`AgenticStep ${stepId} failed`, { error: error.message, videoId });

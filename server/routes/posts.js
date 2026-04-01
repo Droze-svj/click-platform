@@ -69,7 +69,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     const { data: posts, error, count } = await query;
 
     if (error) {
-      console.error('Posts fetch error:', error);
+      
       return res.status(500).json({ success: false, error: 'Failed to fetch posts' });
     }
 
@@ -85,7 +85,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get posts error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -135,7 +135,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Post creation error:', error);
+      
       return res.status(500).json({ success: false, error: 'Failed to create post' });
     }
 
@@ -152,7 +152,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Create post error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -195,7 +195,7 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
     res.json({ success: true, post });
 
   } catch (error) {
-    console.error('Get post error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -251,7 +251,7 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Post update error:', error);
+      
       return res.status(500).json({ success: false, error: 'Failed to update post' });
     }
 
@@ -266,7 +266,7 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update post error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -288,7 +288,7 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Post deletion error:', error);
+      
       return res.status(500).json({ success: false, error: 'Failed to delete post' });
     }
 
@@ -302,7 +302,7 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Delete post error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -327,7 +327,7 @@ router.post('/:id/publish', auth, asyncHandler(async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Post publish error:', error);
+      
       return res.status(500).json({ success: false, error: 'Failed to publish post' });
     }
 
@@ -342,7 +342,7 @@ router.post('/:id/publish', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Publish post error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -377,7 +377,7 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Post schedule error:', error);
+      
       return res.status(500).json({ success: false, error: 'Failed to schedule post' });
     }
 
@@ -394,7 +394,7 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Schedule post error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));

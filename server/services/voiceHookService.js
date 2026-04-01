@@ -4,6 +4,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const logger = require('../utils/logger');
+const ffmpeg = require('fluent-ffmpeg');
 
 /**
  * Get available voice hooks library
@@ -391,75 +392,70 @@ async function getVoiceHookSuggestions(videoMetadata, userPreferences = {}) {
  * Get voice hook templates for different content types
  */
 async function getVoiceHookTemplates() {
-  try {
-    return {
-      templates: [
-        {
-          id: 'youtube_tutorial',
-          name: 'YouTube Tutorial',
-          description: 'Perfect for how-to videos and tutorials',
-          hooks: [
-            { hookId: 'intro_attention', startTime: 0, volume: 1.0 },
-            { hookId: 'transition_next', startTime: 45, volume: 0.9 },
-            { hookId: 'transition_important', startTime: 90, volume: 0.9 },
-            { hookId: 'cta_comment', startTime: 150, volume: 1.0 },
-            { hookId: 'thank_you', startTime: 165, volume: 0.9 }
-          ],
-          estimatedEngagement: 85,
-          targetDuration: '3-5 minutes'
-        },
-        {
-          id: 'tiktok_viral',
-          name: 'TikTok Viral',
-          description: 'High-energy hooks for short-form viral content',
-          hooks: [
-            { hookId: 'hook_shocking', startTime: 0, volume: 1.0 },
-            { hookId: 'cta_share', startTime: 12, volume: 1.0 }
-          ],
-          estimatedEngagement: 92,
-          targetDuration: '15-30 seconds'
-        },
-        {
-          id: 'instagram_story',
-          name: 'Instagram Story',
-          description: 'Engaging hooks for story content',
-          hooks: [
-            { hookId: 'intro_story', startTime: 0, volume: 1.0 },
-            { hookId: 'cta_follow', startTime: 8, volume: 0.9 }
-          ],
-          estimatedEngagement: 78,
-          targetDuration: '15 seconds'
-        },
-        {
-          id: 'linkedin_professional',
-          name: 'LinkedIn Professional',
-          description: 'Professional, business-appropriate hooks',
-          hooks: [
-            { hookId: 'intro_story', startTime: 0, volume: 0.9 },
-            { hookId: 'transition_important', startTime: 30, volume: 0.8 },
-            { hookId: 'cta_follow', startTime: 50, volume: 0.9 }
-          ],
-          estimatedEngagement: 65,
-          targetDuration: '1-2 minutes'
-        },
-        {
-          id: 'product_review',
-          name: 'Product Review',
-          description: 'Engaging hooks for product reviews and demos',
-          hooks: [
-            { hookId: 'hook_promise', startTime: 0, volume: 1.0 },
-            { hookId: 'hook_shocking', startTime: 15, volume: 1.0 },
-            { hookId: 'cta_like', startTime: 45, volume: 1.0 }
-          ],
-          estimatedEngagement: 88,
-          targetDuration: '1-2 minutes'
-        }
-      ]
-    };
-  } catch (error) {
-    logger.error('Failed to get voice hook templates', { error: error.message });
-    throw error;
-  }
+  return {
+    templates: [
+      {
+        id: 'youtube_tutorial',
+        name: 'YouTube Tutorial',
+        description: 'Perfect for how-to videos and tutorials',
+        hooks: [
+          { hookId: 'intro_attention', startTime: 0, volume: 1.0 },
+          { hookId: 'transition_next', startTime: 45, volume: 0.9 },
+          { hookId: 'transition_important', startTime: 90, volume: 0.9 },
+          { hookId: 'cta_comment', startTime: 150, volume: 1.0 },
+          { hookId: 'thank_you', startTime: 165, volume: 0.9 }
+        ],
+        estimatedEngagement: 85,
+        targetDuration: '3-5 minutes'
+      },
+      {
+        id: 'tiktok_viral',
+        name: 'TikTok Viral',
+        description: 'High-energy hooks for short-form viral content',
+        hooks: [
+          { hookId: 'hook_shocking', startTime: 0, volume: 1.0 },
+          { hookId: 'cta_share', startTime: 12, volume: 1.0 }
+        ],
+        estimatedEngagement: 92,
+        targetDuration: '15-30 seconds'
+      },
+      {
+        id: 'instagram_story',
+        name: 'Instagram Story',
+        description: 'Engaging hooks for story content',
+        hooks: [
+          { hookId: 'intro_story', startTime: 0, volume: 1.0 },
+          { hookId: 'cta_follow', startTime: 8, volume: 0.9 }
+        ],
+        estimatedEngagement: 78,
+        targetDuration: '15 seconds'
+      },
+      {
+        id: 'linkedin_professional',
+        name: 'LinkedIn Professional',
+        description: 'Professional, business-appropriate hooks',
+        hooks: [
+          { hookId: 'intro_story', startTime: 0, volume: 0.9 },
+          { hookId: 'transition_important', startTime: 30, volume: 0.8 },
+          { hookId: 'cta_follow', startTime: 50, volume: 0.9 }
+        ],
+        estimatedEngagement: 65,
+        targetDuration: '1-2 minutes'
+      },
+      {
+        id: 'product_review',
+        name: 'Product Review',
+        description: 'Engaging hooks for product reviews and demos',
+        hooks: [
+          { hookId: 'hook_promise', startTime: 0, volume: 1.0 },
+          { hookId: 'hook_shocking', startTime: 15, volume: 1.0 },
+          { hookId: 'cta_like', startTime: 45, volume: 1.0 }
+        ],
+        estimatedEngagement: 88,
+        targetDuration: '1-2 minutes'
+      }
+    ]
+  };
 }
 
 /**

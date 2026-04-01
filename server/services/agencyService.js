@@ -117,10 +117,10 @@ async function monitorAndFulfillSLAs(agencyWorkspaceId) {
         // Trigger autonomous content generation from the most recent "Viral Ideas"
         const ideas = await require('./aiService').generateViralIdeas(client.userId, 'general');
         if (ideas && ideas.length > 0) {
-            await unifiedPipeline.processContentPipeline(client.userId, ideas[0].id, {
-                autoSchedule: true,
-                context: 'SLA_AUTO_FULFILLMENT'
-            });
+          await unifiedPipeline.processContentPipeline(client.userId, ideas[0].id, {
+            autoSchedule: true,
+            context: 'SLA_AUTO_FULFILLMENT'
+          });
         }
       }
     }
@@ -183,9 +183,9 @@ async function getLatestAutonomousReports(agencyWorkspaceId, limit = 10) {
       agencyWorkspaceId,
       type: 'autonomous'
     })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
   } catch (error) {
     logger.error('Error getting latest autonomous reports', { error: error.message });
     throw error;
@@ -872,33 +872,33 @@ async function executeOnboardingStep(onboardingId, stepNumber) {
     // Execute step action
     let result;
     switch (step.action) {
-      case 'invite_members':
-        // Invite client members
-        result = { success: true };
-        break;
-      case 'setup_portal':
-        // Create white-label portal
-        const portal = await createWhiteLabelPortal(
-          onboarding.agencyWorkspaceId,
-          onboarding.clientWorkspaceId,
-          { subdomain: onboarding.metadata.clientName.toLowerCase().replace(/\s+/g, '-') }
-        );
-        result = { success: true, portalId: portal._id };
-        break;
-      case 'configure_branding':
-        // Configure branding
-        result = { success: true };
-        break;
-      case 'setup_workflows':
-        // Setup default workflows
-        result = { success: true };
-        break;
-      case 'send_welcome':
-        // Send welcome email
-        result = { success: true };
-        break;
-      default:
-        result = { success: true };
+    case 'invite_members':
+      // Invite client members
+      result = { success: true };
+      break;
+    case 'setup_portal':
+      // Create white-label portal
+      const portal = await createWhiteLabelPortal(
+        onboarding.agencyWorkspaceId,
+        onboarding.clientWorkspaceId,
+        { subdomain: onboarding.metadata.clientName.toLowerCase().replace(/\s+/g, '-') }
+      );
+      result = { success: true, portalId: portal._id };
+      break;
+    case 'configure_branding':
+      // Configure branding
+      result = { success: true };
+      break;
+    case 'setup_workflows':
+      // Setup default workflows
+      result = { success: true };
+      break;
+    case 'send_welcome':
+      // Send welcome email
+      result = { success: true };
+      break;
+    default:
+      result = { success: true };
     }
 
     step.status = 'completed';
@@ -1056,17 +1056,17 @@ function getDefaultPeriod(reportType) {
   const startDate = new Date();
 
   switch (reportType) {
-    case 'weekly':
-      startDate.setDate(startDate.getDate() - 7);
-      break;
-    case 'monthly':
-      startDate.setMonth(startDate.getMonth() - 1);
-      break;
-    case 'quarterly':
-      startDate.setMonth(startDate.getMonth() - 3);
-      break;
-    default:
-      startDate.setMonth(startDate.getMonth() - 1);
+  case 'weekly':
+    startDate.setDate(startDate.getDate() - 7);
+    break;
+  case 'monthly':
+    startDate.setMonth(startDate.getMonth() - 1);
+    break;
+  case 'quarterly':
+    startDate.setMonth(startDate.getMonth() - 3);
+    break;
+  default:
+    startDate.setMonth(startDate.getMonth() - 1);
   }
 
   return { startDate, endDate };
@@ -1265,9 +1265,9 @@ async function getClientPerformanceAlerts(agencyWorkspaceId, clientWorkspaceId =
     const clients = clientWorkspaceId
       ? [await Workspace.findById(clientWorkspaceId)]
       : await Workspace.find({
-          type: 'client',
-          'members.userId': agency.ownerId
-        });
+        type: 'client',
+        'members.userId': agency.ownerId
+      });
 
     const alerts = [];
 

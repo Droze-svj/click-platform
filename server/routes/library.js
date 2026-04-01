@@ -306,7 +306,7 @@ router.get('/tags', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/categories', auth, asyncHandler(async (req, res) => {
-    const contents = await Content.find({ userId: req.user._id }).select('category').maxTimeMS(8000);
+  const contents = await Content.find({ userId: req.user._id }).select('category').maxTimeMS(8000);
   const categories = [...new Set(contents.map(c => c.category).filter(Boolean))].sort();
   sendSuccess(res, 'Categories fetched', 200, categories);
 }));

@@ -51,19 +51,19 @@ async function applyAnimatedText(videoPath, outputPath, textOverlay) {
     // Add animation
     if (animation && animation.type) {
       switch (animation.type) {
-        case 'fade':
-          textFilter += `:enable='between(t,${startTime},${endTime})':alpha='if(lt(t,${startTime + animation.duration}), (t-${startTime})/${animation.duration}, if(gt(t,${endTime - animation.duration}), (${endTime}-t)/${animation.duration}, 1))'`;
-          break;
-        case 'slide':
-          textFilter += `:enable='between(t,${startTime},${endTime})':x='if(lt(t,${startTime + animation.duration}), w+(t-${startTime})*w/${animation.duration}, (w-text_w)/2)'`;
-          break;
-        case 'typewriter':
-          // Simplified typewriter effect
-          textFilter += `:enable='between(t,${startTime},${endTime})'`;
-          break;
-        case 'zoom':
-          textFilter += `:enable='between(t,${startTime},${endTime})'`;
-          break;
+      case 'fade':
+        textFilter += `:enable='between(t,${startTime},${endTime})':alpha='if(lt(t,${startTime + animation.duration}), (t-${startTime})/${animation.duration}, if(gt(t,${endTime - animation.duration}), (${endTime}-t)/${animation.duration}, 1))'`;
+        break;
+      case 'slide':
+        textFilter += `:enable='between(t,${startTime},${endTime})':x='if(lt(t,${startTime + animation.duration}), w+(t-${startTime})*w/${animation.duration}, (w-text_w)/2)'`;
+        break;
+      case 'typewriter':
+        // Simplified typewriter effect
+        textFilter += `:enable='between(t,${startTime},${endTime})'`;
+        break;
+      case 'zoom':
+        textFilter += `:enable='between(t,${startTime},${endTime})'`;
+        break;
       }
     } else {
       textFilter += `:enable='between(t,${startTime},${endTime})'`;

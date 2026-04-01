@@ -150,9 +150,9 @@ function autoTuneFusionThresholds(visualBoundaries, audioFeatures) {
     : 0.3;
   const stdDistance = distances.length > 0
     ? Math.sqrt(distances.reduce((sum, d) => {
-        const diff = d - meanDistance;
-        return sum + diff * diff;
-      }, 0) / distances.length)
+      const diff = d - meanDistance;
+      return sum + diff * diff;
+    }, 0) / distances.length)
     : 0.1;
 
   // Adaptive thresholds: mean + 0.5 * std (captures ~70% of significant changes)
@@ -332,11 +332,11 @@ function calculateTemporalConsistencyScore(decision, prevDecision, nextDecision,
 
     // If decisions are similar and close together, might be over-segmentation
     if (timeDiff < expectedInterval * 0.5) {
-          if (prevDecision.isSceneBoundary === decision.isSceneBoundary) {
-            score += 0.2; // Consistent
-          } else {
-            score -= 0.1; // Inconsistent
-          }
+      if (prevDecision.isSceneBoundary === decision.isSceneBoundary) {
+        score += 0.2; // Consistent
+      } else {
+        score -= 0.1; // Inconsistent
+      }
     }
   }
 

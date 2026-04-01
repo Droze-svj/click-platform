@@ -157,20 +157,20 @@ function getScenesAggregateValue(scenes, field) {
  */
 function evaluateCondition(value, operator, expected) {
   switch (operator) {
-    case 'equals':
-      return value === expected;
-    case 'not_equals':
-      return value !== expected;
-    case 'greater_than':
-      return Number(value) > Number(expected);
-    case 'less_than':
-      return Number(value) < Number(expected);
-    case 'contains':
-      return String(value).includes(String(expected));
-    case 'in':
-      return Array.isArray(expected) && expected.includes(value);
-    default:
-      return false;
+  case 'equals':
+    return value === expected;
+  case 'not_equals':
+    return value !== expected;
+  case 'greater_than':
+    return Number(value) > Number(expected);
+  case 'less_than':
+    return Number(value) < Number(expected);
+  case 'contains':
+    return String(value).includes(String(expected));
+  case 'in':
+    return Array.isArray(expected) && expected.includes(value);
+  default:
+    return false;
   }
 }
 
@@ -185,27 +185,27 @@ async function executeSceneWorkflowActions(actions, context) {
       let result;
 
       switch (action.type) {
-        case 'create_clips_from_scenes':
-          result = await createClipsFromScenesInternal(context, action.config);
-          break;
-        case 'generate_captions_for_scenes':
-          result = await generateCaptionsForScenesInternal(context, action.config);
-          break;
-        case 'create_carousel_from_scenes':
-          result = await createCarouselFromScenesInternal(context, action.config);
-          break;
-        case 'tag_key_moments':
-          result = await tagKeyMomentsInternal(context, action.config);
-          break;
-        case 'export_scene_analytics':
-          result = await exportSceneAnalyticsInternal(context, action.config);
-          break;
-        case 'notify':
-          result = await notifySceneDetection(context, action.config);
-          break;
-        default:
-          logger.warn('Unknown scene workflow action', { actionType: action.type });
-          result = { success: false, error: 'Unknown action type' };
+      case 'create_clips_from_scenes':
+        result = await createClipsFromScenesInternal(context, action.config);
+        break;
+      case 'generate_captions_for_scenes':
+        result = await generateCaptionsForScenesInternal(context, action.config);
+        break;
+      case 'create_carousel_from_scenes':
+        result = await createCarouselFromScenesInternal(context, action.config);
+        break;
+      case 'tag_key_moments':
+        result = await tagKeyMomentsInternal(context, action.config);
+        break;
+      case 'export_scene_analytics':
+        result = await exportSceneAnalyticsInternal(context, action.config);
+        break;
+      case 'notify':
+        result = await notifySceneDetection(context, action.config);
+        break;
+      default:
+        logger.warn('Unknown scene workflow action', { actionType: action.type });
+        result = { success: false, error: 'Unknown action type' };
       }
 
       results.push({ action: action.type, success: true, result });
@@ -395,7 +395,7 @@ async function createClipsFromScenes(context, config = {}) {
  * Generate captions for scenes
  */
 async function generateCaptionsForScenes(context, config = {}) {
-  const { scenes, content } = context;
+  const { contentId, scenes, content } = context;
   const captions = [];
 
   for (const scene of scenes) {

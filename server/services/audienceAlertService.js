@@ -60,58 +60,58 @@ async function checkAudienceAlerts(userId) {
 
         // Get current value based on metric
         switch (alert.metric) {
-          case 'engagement':
-            currentValue = insights.insights.overview.avgEngagement;
-            break;
-          case 'growth':
-            currentValue = insights.insights.growth.growthRate;
-            break;
-          case 'retention':
-            // Would need retention analysis
-            continue;
-          case 'sentiment':
-            // Would need sentiment analysis
-            continue;
-          case 'engagementRate':
-            currentValue = insights.insights.overview.engagementRate;
-            break;
+        case 'engagement':
+          currentValue = insights.insights.overview.avgEngagement;
+          break;
+        case 'growth':
+          currentValue = insights.insights.growth.growthRate;
+          break;
+        case 'retention':
+          // Would need retention analysis
+          continue;
+        case 'sentiment':
+          // Would need sentiment analysis
+          continue;
+        case 'engagementRate':
+          currentValue = insights.insights.overview.engagementRate;
+          break;
         }
 
         // Check threshold
         switch (alert.threshold) {
-          case 'increase':
-            // Compare with previous period
-            const previousInsights = await getAudienceInsights(userId, { period: 14 });
-            if (previousInsights.hasData) {
-              const previousValue = alert.metric === 'engagement'
-                ? previousInsights.insights.overview.avgEngagement
-                : alert.metric === 'engagementRate'
+        case 'increase':
+          // Compare with previous period
+          const previousInsights = await getAudienceInsights(userId, { period: 14 });
+          if (previousInsights.hasData) {
+            const previousValue = alert.metric === 'engagement'
+              ? previousInsights.insights.overview.avgEngagement
+              : alert.metric === 'engagementRate'
                 ? previousInsights.insights.overview.engagementRate
                 : previousInsights.insights.growth.growthRate;
               
-              const increase = ((currentValue / previousValue) - 1) * 100;
-              shouldTrigger = increase >= alert.value;
-            }
-            break;
-          case 'decrease':
-            const prevInsights = await getAudienceInsights(userId, { period: 14 });
-            if (prevInsights.hasData) {
-              const prevValue = alert.metric === 'engagement'
-                ? prevInsights.insights.overview.avgEngagement
-                : alert.metric === 'engagementRate'
+            const increase = ((currentValue / previousValue) - 1) * 100;
+            shouldTrigger = increase >= alert.value;
+          }
+          break;
+        case 'decrease':
+          const prevInsights = await getAudienceInsights(userId, { period: 14 });
+          if (prevInsights.hasData) {
+            const prevValue = alert.metric === 'engagement'
+              ? prevInsights.insights.overview.avgEngagement
+              : alert.metric === 'engagementRate'
                 ? prevInsights.insights.overview.engagementRate
                 : prevInsights.insights.growth.growthRate;
               
-              const decrease = ((1 - (currentValue / prevValue)) * 100);
-              shouldTrigger = decrease >= alert.value;
-            }
-            break;
-          case 'above':
-            shouldTrigger = currentValue >= alert.value;
-            break;
-          case 'below':
-            shouldTrigger = currentValue <= alert.value;
-            break;
+            const decrease = ((1 - (currentValue / prevValue)) * 100);
+            shouldTrigger = decrease >= alert.value;
+          }
+          break;
+        case 'above':
+          shouldTrigger = currentValue >= alert.value;
+          break;
+        case 'below':
+          shouldTrigger = currentValue <= alert.value;
+          break;
         }
 
         if (shouldTrigger) {

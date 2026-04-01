@@ -303,7 +303,7 @@ async function getContentTypeInsights(userId, period) {
     const bestType = Object.keys(typeStats).reduce((a, b) => 
       (typeStats[a].engagement / typeStats[a].posts) > (typeStats[b].engagement / typeStats[b].posts) 
         ? a : b, 
-      Object.keys(typeStats)[0]
+    Object.keys(typeStats)[0]
     );
 
     const insights = [];
@@ -531,7 +531,7 @@ async function getEngagementRecommendations(userId) {
     const bestHour = Object.keys(hourStats).reduce((a, b) => 
       (hourStats[a].engagement / hourStats[a].posts) > (hourStats[b].engagement / hourStats[b].posts) 
         ? a : b,
-      Object.keys(hourStats)[0]
+    Object.keys(hourStats)[0]
     );
 
     if (bestHour) {

@@ -45,36 +45,36 @@ async function fillContentGaps(clientWorkspaceId, gapData, options = {}) {
 
         // Generate content based on gap type
         switch (gap.category) {
-          case 'platform':
-            contentData = await generateContentForPlatform(
-              clientWorkspaceId,
-              gap.description,
-              gap.recommendation
-            );
-            break;
+        case 'platform':
+          contentData = await generateContentForPlatform(
+            clientWorkspaceId,
+            gap.description,
+            gap.recommendation
+          );
+          break;
 
-          case 'format':
-            contentData = await generateContentForFormat(
-              clientWorkspaceId,
-              gap.description,
-              gap.recommendation
-            );
-            break;
+        case 'format':
+          contentData = await generateContentForFormat(
+            clientWorkspaceId,
+            gap.description,
+            gap.recommendation
+          );
+          break;
 
-          case 'topic':
-            contentData = await generateContentForTopic(
-              clientWorkspaceId,
-              gap.description,
-              gap.recommendation
-            );
-            break;
+        case 'topic':
+          contentData = await generateContentForTopic(
+            clientWorkspaceId,
+            gap.description,
+            gap.recommendation
+          );
+          break;
 
-          default:
-            contentData = await generateGenericContent(
-              clientWorkspaceId,
-              gap.description,
-              gap.recommendation
-            );
+        default:
+          contentData = await generateGenericContent(
+            clientWorkspaceId,
+            gap.description,
+            gap.recommendation
+          );
         }
 
         if (contentData) {

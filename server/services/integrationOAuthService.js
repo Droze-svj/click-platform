@@ -128,23 +128,23 @@ async function testIntegration(integrationId, testData = {}) {
   const headers = { 'Content-Type': 'application/json' };
 
   switch (marketplace.authType) {
-    case 'oauth':
-      if (integration.config.credentials?.accessToken) {
-        headers.Authorization = `Bearer ${integration.config.credentials.accessToken}`;
-      }
-      break;
-    case 'api_key':
-      if (integration.config.apiKey) headers['X-API-Key'] = integration.config.apiKey;
-      break;
-    case 'bearer':
-      if (integration.config.apiKey) headers.Authorization = `Bearer ${integration.config.apiKey}`;
-      break;
-    case 'basic':
-      if (integration.config.apiKey && integration.config.apiSecret) {
-        const credentials = Buffer.from(`${integration.config.apiKey}:${integration.config.apiSecret}`).toString('base64');
-        headers.Authorization = `Basic ${credentials}`;
-      }
-      break;
+  case 'oauth':
+    if (integration.config.credentials?.accessToken) {
+      headers.Authorization = `Bearer ${integration.config.credentials.accessToken}`;
+    }
+    break;
+  case 'api_key':
+    if (integration.config.apiKey) headers['X-API-Key'] = integration.config.apiKey;
+    break;
+  case 'bearer':
+    if (integration.config.apiKey) headers.Authorization = `Bearer ${integration.config.apiKey}`;
+    break;
+  case 'basic':
+    if (integration.config.apiKey && integration.config.apiSecret) {
+      const credentials = Buffer.from(`${integration.config.apiKey}:${integration.config.apiSecret}`).toString('base64');
+      headers.Authorization = `Basic ${credentials}`;
+    }
+    break;
   }
 
   const startTime = Date.now();

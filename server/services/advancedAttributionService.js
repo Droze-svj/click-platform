@@ -108,104 +108,104 @@ async function calculateAttributionByModel(path, model, conversion) {
   }
 
   switch (model) {
-    case 'first_touch':
-      // First touchpoint gets 100% credit
+  case 'first_touch':
+    // First touchpoint gets 100% credit
+    credits.push({
+      postId: touchpoints[0].postId,
+      platform: touchpoints[0].platform,
+      credit: 100,
+      value: conversionValue
+    });
+    analysis.mostInfluentialTouchpoint = {
+      postId: touchpoints[0].postId,
+      platform: touchpoints[0].platform,
+      reason: 'First touch attribution'
+    };
+    break;
+
+  case 'last_touch':
+    // Last touchpoint gets 100% credit
+    const lastTouchpoint = touchpoints[touchpoints.length - 1];
+    credits.push({
+      postId: lastTouchpoint.postId,
+      platform: lastTouchpoint.platform,
+      credit: 100,
+      value: conversionValue
+    });
+    analysis.mostInfluentialTouchpoint = {
+      postId: lastTouchpoint.postId,
+      platform: lastTouchpoint.platform,
+      reason: 'Last touch attribution'
+    };
+    break;
+
+  case 'linear':
+    // Equal credit to all touchpoints
+    const creditPerTouchpoint = 100 / touchpoints.length;
+    touchpoints.forEach(touchpoint => {
       credits.push({
-        postId: touchpoints[0].postId,
-        platform: touchpoints[0].platform,
-        credit: 100,
-        value: conversionValue
+        postId: touchpoint.postId,
+        platform: touchpoint.platform,
+        credit: creditPerTouchpoint,
+        value: (conversionValue * creditPerTouchpoint) / 100
       });
-      analysis.mostInfluentialTouchpoint = {
-        postId: touchpoints[0].postId,
-        platform: touchpoints[0].platform,
-        reason: 'First touch attribution'
-      };
-      break;
+    });
+    break;
 
-    case 'last_touch':
-      // Last touchpoint gets 100% credit
-      const lastTouchpoint = touchpoints[touchpoints.length - 1];
+  case 'time_decay':
+    // More recent touchpoints get more credit
+    const totalWeight = touchpoints.reduce((sum, tp, index) => {
+      return sum + (index + 1); // Weight increases with recency
+    }, 0);
+
+    touchpoints.forEach((touchpoint, index) => {
+      const weight = index + 1;
+      const credit = (weight / totalWeight) * 100;
       credits.push({
-        postId: lastTouchpoint.postId,
-        platform: lastTouchpoint.platform,
-        credit: 100,
-        value: conversionValue
+        postId: touchpoint.postId,
+        platform: touchpoint.platform,
+        credit,
+        value: (conversionValue * credit) / 100
       });
-      analysis.mostInfluentialTouchpoint = {
-        postId: lastTouchpoint.postId,
-        platform: lastTouchpoint.platform,
-        reason: 'Last touch attribution'
-      };
-      break;
+    });
+    break;
 
-    case 'linear':
-      // Equal credit to all touchpoints
-      const creditPerTouchpoint = 100 / touchpoints.length;
-      touchpoints.forEach(touchpoint => {
-        credits.push({
-          postId: touchpoint.postId,
-          platform: touchpoint.platform,
-          credit: creditPerTouchpoint,
-          value: (conversionValue * creditPerTouchpoint) / 100
-        });
+  case 'position_based':
+    // First and last get 40% each, middle get 20% split
+    const firstLastCredit = 40;
+    const middleCredit = touchpoints.length > 2 ? 20 / (touchpoints.length - 2) : 0;
+
+    touchpoints.forEach((touchpoint, index) => {
+      let credit;
+      if (index === 0 || index === touchpoints.length - 1) {
+        credit = firstLastCredit;
+      } else {
+        credit = middleCredit;
+      }
+      credits.push({
+        postId: touchpoint.postId,
+        platform: touchpoint.platform,
+        credit,
+        value: (conversionValue * credit) / 100
       });
-      break;
+    });
+    break;
 
-    case 'time_decay':
-      // More recent touchpoints get more credit
-      const totalWeight = touchpoints.reduce((sum, tp, index) => {
-        return sum + (index + 1); // Weight increases with recency
-      }, 0);
-
-      touchpoints.forEach((touchpoint, index) => {
-        const weight = index + 1;
-        const credit = (weight / totalWeight) * 100;
-        credits.push({
-          postId: touchpoint.postId,
-          platform: touchpoint.platform,
-          credit,
-          value: (conversionValue * credit) / 100
-        });
+  case 'data_driven':
+    // Simplified data-driven model (would use ML in production)
+    // For now, use time decay with engagement weighting
+    touchpoints.forEach((touchpoint, index) => {
+      const recencyWeight = (touchpoints.length - index) / touchpoints.length;
+      const engagementWeight = 1; // Would calculate from actual engagement
+      const credit = (recencyWeight * engagementWeight * 100) / touchpoints.length;
+      credits.push({
+        postId: touchpoint.postId,
+        platform: touchpoint.platform,
+        credit,
+        value: (conversionValue * credit) / 100
       });
-      break;
-
-    case 'position_based':
-      // First and last get 40% each, middle get 20% split
-      const firstLastCredit = 40;
-      const middleCredit = touchpoints.length > 2 ? 20 / (touchpoints.length - 2) : 0;
-
-      touchpoints.forEach((touchpoint, index) => {
-        let credit;
-        if (index === 0 || index === touchpoints.length - 1) {
-          credit = firstLastCredit;
-        } else {
-          credit = middleCredit;
-        }
-        credits.push({
-          postId: touchpoint.postId,
-          platform: touchpoint.platform,
-          credit,
-          value: (conversionValue * credit) / 100
-        });
-      });
-      break;
-
-    case 'data_driven':
-      // Simplified data-driven model (would use ML in production)
-      // For now, use time decay with engagement weighting
-      touchpoints.forEach((touchpoint, index) => {
-        const recencyWeight = (touchpoints.length - index) / touchpoints.length;
-        const engagementWeight = 1; // Would calculate from actual engagement
-        const credit = (recencyWeight * engagementWeight * 100) / touchpoints.length;
-        credits.push({
-          postId: touchpoint.postId,
-          platform: touchpoint.platform,
-          credit,
-          value: (conversionValue * credit) / 100
-        });
-      });
-      break;
+    });
+    break;
   }
 
   // Calculate path efficiency

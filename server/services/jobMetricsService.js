@@ -47,20 +47,20 @@ async function getQueueMetrics(queueName, timeRange = '24h') {
     let startDate;
 
     switch (timeRange) {
-      case '1h':
-        startDate = new Date(now.getTime() - 60 * 60 * 1000);
-        break;
-      case '24h':
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    case '1h':
+      startDate = new Date(now.getTime() - 60 * 60 * 1000);
+      break;
+    case '24h':
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
+    case '7d':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
 
     const metrics = await JobMetrics.find({
@@ -101,20 +101,20 @@ async function getUserJobMetrics(userId, timeRange = '24h') {
     let startDate;
 
     switch (timeRange) {
-      case '1h':
-        startDate = new Date(now.getTime() - 60 * 60 * 1000);
-        break;
-      case '24h':
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        break;
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    case '1h':
+      startDate = new Date(now.getTime() - 60 * 60 * 1000);
+      break;
+    case '24h':
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
+    case '7d':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
 
     // Get jobs from all queues and aggregate metrics

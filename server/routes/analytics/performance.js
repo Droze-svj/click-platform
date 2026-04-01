@@ -66,7 +66,7 @@ router.get('/global', auth, asyncHandler(async (req, res) => {
       status: 'SYNCHRONIZED_ACTIVE_STREAM'
     });
   } catch (error) {
-    console.error('Global performance error:', error);
+    
     res.status(500).json({ success: false, error: 'GLOBAL_SYNC_FAILURE' });
   }
 }));

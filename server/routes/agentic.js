@@ -17,7 +17,7 @@ router.post('/run', authenticateToken, requireFeature('ai_agent'), async (req, r
     const result = await startAgentPipeline(videoId, goals || [], req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Agentic] /run error:', err)
+    
     res.status(500).json({ error: 'Failed to start agent pipeline' })
   }
 })

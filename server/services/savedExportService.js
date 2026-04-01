@@ -20,7 +20,9 @@ function resolveExportPath(exportPathOrUrl) {
       const u = new URL(normalized)
       normalized = u.pathname || ''
     }
-  } catch (_) { }
+  } catch (_) {
+    // Ignore URL parsing errors and fallback to treating as a relative path
+  }
   normalized = normalized.replace(/^\/+/, '')
   if (normalized.startsWith('uploads/')) {
     return path.join(__dirname, '../..', normalized)

@@ -250,16 +250,16 @@ async function fetchStockAssets(type, page = 1, limit = 24, search = '') {
   const s = String(search || '').trim()
 
   switch (type) {
-    case 'images':
-      return fetchStockImages(p, l, s)
-    case 'music':
-      return fetchStockMusic(p, l, s)
-    case 'broll':
-      return fetchStockBroll(p, l, s)
-    case 'sfx':
-      return fetchStockSfx(p, l, s)
-    default:
-      return { items: [], hasMore: false, total: 0 }
+  case 'images':
+    return fetchStockImages(p, l, s)
+  case 'music':
+    return fetchStockMusic(p, l, s)
+  case 'broll':
+    return fetchStockBroll(p, l, s)
+  case 'sfx':
+    return fetchStockSfx(p, l, s)
+  default:
+    return { items: [], hasMore: false, total: 0 }
   }
 }
 

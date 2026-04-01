@@ -1,5 +1,5 @@
 // ─── STAGE 0: SYSTEM INITIALIZATION ─────────────────────────────────────────
-console.log('🚀 Nexus Cluster Stage 0: Initializing core...');
+
 const path = require('path');
 const fs = require('fs');
 
@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/status/health-pro', (req, res) => {
-  console.log('✅ Health probe hit: /api/status/health-pro');
+  
   res.status(200).json({
     status: 'active',
     stage: 1,
@@ -38,15 +38,15 @@ app.get('/api/status/health-pro', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  console.log('✅ Health probe hit: /api/health');
+  
   res.status(200).json({ status: 'active', stage: 1, message: 'Nexus Cluster Port Bound' });
 });
 
 // ─── STAGE 1: EMERGENCY PORT BINDING ────────────────────────────────────────
 // Satisfying Render.com's port detection instantly
 const server = app.listen(PORT, HOST, () => {
-  console.log(`🚀 Nexus Cluster Stage 1: Port ${PORT} Bound [READY]`);
-  console.log(`✅ Health probes active at /api/status/health-pro`);
+  
+  
 });
 
 // Primary logger initialization (after port is bound)

@@ -48,42 +48,42 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
 
     // Generate script based on type
     switch (type) {
-      case 'youtube':
-      case 'video':
-        scriptData = await generateYouTubeScript(topic, {
-          ...options,
-          targetAudience: options.targetAudience || req.user.niche || 'general audience'
-        });
-        break;
-      case 'podcast':
-        scriptData = await generatePodcastScript(topic, {
-          ...options,
-          targetAudience: options.targetAudience || req.user.niche || 'general audience'
-        });
-        break;
-      case 'social-media':
-        scriptData = await generateSocialMediaScript(topic, {
-          ...options,
-          platform: options.platform || 'instagram'
-        });
-        break;
-      case 'blog':
-        scriptData = await generateBlogScript(topic, {
-          ...options,
-          targetAudience: options.targetAudience || req.user.niche || 'general audience'
-        });
-        break;
-      case 'email':
-        scriptData = await generateEmailScript(topic, {
-          ...options,
-          type: options.emailType || 'marketing'
-        });
-        break;
-      default:
-        return res.status(400).json({
-          success: false,
-          error: 'Unsupported script type'
-        });
+    case 'youtube':
+    case 'video':
+      scriptData = await generateYouTubeScript(topic, {
+        ...options,
+        targetAudience: options.targetAudience || req.user.niche || 'general audience'
+      });
+      break;
+    case 'podcast':
+      scriptData = await generatePodcastScript(topic, {
+        ...options,
+        targetAudience: options.targetAudience || req.user.niche || 'general audience'
+      });
+      break;
+    case 'social-media':
+      scriptData = await generateSocialMediaScript(topic, {
+        ...options,
+        platform: options.platform || 'instagram'
+      });
+      break;
+    case 'blog':
+      scriptData = await generateBlogScript(topic, {
+        ...options,
+        targetAudience: options.targetAudience || req.user.niche || 'general audience'
+      });
+      break;
+    case 'email':
+      scriptData = await generateEmailScript(topic, {
+        ...options,
+        type: options.emailType || 'marketing'
+      });
+      break;
+    default:
+      return res.status(400).json({
+        success: false,
+        error: 'Unsupported script type'
+      });
     }
 
     // Save script to database
@@ -135,7 +135,7 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
     // Update engagement
     const { updateStreak, checkAchievements, createActivity } = require('../services/engagementService');
     await updateStreak(req.user._id);
-    const achievements = await checkAchievements(req.user._id, 'generate_script', {
+    await checkAchievements(req.user._id, 'generate_script', {
       scriptId: script._id,
       scriptType: type
     });
@@ -191,7 +191,7 @@ router.get('/', auth, async (req, res) => {
     
     // Enhanced logging for debugging (always log for localhost requests)
     if (isLocalhost || !nodeEnv || nodeEnv !== 'production') {
-      console.log('🔧 [Scripts] GET request received', {
+      logger.info('🔧 [Scripts] GET request received', {
         userId,
         host,
         referer,
@@ -204,24 +204,12 @@ router.get('/', auth, async (req, res) => {
         xForwardedHost: req.headers['x-forwarded-host'],
         xForwardedFor: forwardedFor
       });
-      logger.info('Scripts GET request', {
-        userId,
-        host,
-        referer,
-        isLocalhost,
-        allowDevMode,
-        nodeEnv: nodeEnv || 'undefined',
-        hasUser: !!req.user,
-        userAgent: req.headers['user-agent']?.substring(0, 50),
-        xForwardedHost: req.headers['x-forwarded-host'],
-        xForwardedFor: forwardedFor
-      });
     }
-    
+
     // Check if MongoDB is connected first
     const mongoose = require('mongoose');
     const isMongoConnected = mongoose.connection.readyState === 1;
-    
+
     // For dev mode OR when MongoDB isn't connected, return empty array immediately
     // This prevents any database operations that could fail
     if (allowDevMode || !isMongoConnected) {
@@ -260,11 +248,11 @@ router.get('/', auth, async (req, res) => {
         error: 'User ID not found'
       });
     }
-    
+
     // Final safety check: if userId is a dev user ID, return empty array
     // This prevents CastError when Mongoose tries to cast 'dev-user-123' to ObjectId
     if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123' || userId.toString().startsWith('test-'))) {
-      console.log('🔧 [Scripts] Dev user detected, returning empty array', { userId, allowDevMode });
+
       logger.info('Dev user detected in scripts route, returning empty array', { userId, allowDevMode });
       return res.json({
         success: true,
@@ -291,14 +279,14 @@ router.get('/', auth, async (req, res) => {
     // Try to execute queries, but handle all errors gracefully
     let scripts = [];
     let total = 0;
-    
+
     try {
       // Validate userId is a valid ObjectId before creating query
       const mongoose = require('mongoose');
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new Error(`Invalid userId format: ${userId}. Expected MongoDB ObjectId.`);
       }
-      
+
       const query = { userId };
       if (type) query.type = type;
       if (status) query.status = status;
@@ -322,10 +310,10 @@ router.get('/', auth, async (req, res) => {
     } catch (dbError) {
       // If it's a CastError (invalid ObjectId) or connection error, return empty array for dev mode
       if (allowDevMode && (dbError.name === 'CastError' || dbError.message?.includes('buffering') || dbError.message?.includes('connection'))) {
-        logger.warn('Database error in scripts query, returning empty array for dev mode', { 
+        logger.warn('Database error in scripts query, returning empty array for dev mode', {
           error: dbError.message,
           errorName: dbError.name,
-          userId 
+          userId
         });
         scripts = [];
         total = 0;
@@ -347,11 +335,11 @@ router.get('/', auth, async (req, res) => {
     });
   } catch (error) {
     // Enhanced error logging
-    console.error('❌ [Scripts] Error in GET /api/scripts', {
+    logger.error('❌ [Scripts] Error in GET /api/scripts', {
       error: error.message,
       errorName: error.name,
       errorCode: error.code,
-      stack: error.stack?.substring(0, 500),
+      stack: error.stack,
       userId: req.user?._id || req.user?.id,
       hasUser: !!req.user,
       nodeEnv: process.env.NODE_ENV || 'undefined'
@@ -376,8 +364,6 @@ router.get('/', auth, async (req, res) => {
           stack: error.stack?.substring(0, 200)
         })
       });
-    } else {
-      console.error('⚠️ [Scripts] Response already sent, cannot send error response');
     }
   }
 });

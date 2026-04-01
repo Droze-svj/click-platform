@@ -77,18 +77,18 @@ async function createVariant(baseContent, index, variationTypes, platforms) {
   // Generate variations for each type
   for (const type of variationTypes) {
     switch (type) {
-      case 'headline':
-        variant.variations.headline = await generateHeadlineVariant(baseContent, index);
-        break;
-      case 'caption':
-        variant.variations.caption = await generateCaptionVariant(baseContent, index);
-        break;
-      case 'hashtags':
-        variant.variations.hashtags = await generateHashtagVariant(baseContent, index);
-        break;
-      case 'timing':
-        variant.variations.timing = await generateTimingVariant(baseContent, index);
-        break;
+    case 'headline':
+      variant.variations.headline = await generateHeadlineVariant(baseContent, index);
+      break;
+    case 'caption':
+      variant.variations.caption = await generateCaptionVariant(baseContent, index);
+      break;
+    case 'hashtags':
+      variant.variations.hashtags = await generateHashtagVariant(baseContent, index);
+      break;
+    case 'timing':
+      variant.variations.timing = await generateTimingVariant(baseContent, index);
+      break;
     }
   }
 

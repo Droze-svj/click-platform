@@ -194,18 +194,18 @@ function buildPromptWithGuardrails(template, input, options) {
     prompt += '\n\nGuardrails:';
     template.guardrails.forEach(guardrail => {
       switch (guardrail.type) {
-        case 'avoid_phrase':
-          prompt += `\n- DO NOT use: "${guardrail.value}"`;
-          break;
-        case 'require_phrase':
-          prompt += `\n- MUST include: "${guardrail.value}"`;
-          break;
-        case 'tone_requirement':
-          prompt += `\n- Tone must be: ${guardrail.value}`;
-          break;
-        case 'cta_requirement':
-          prompt += `\n- CTA requirement: ${guardrail.value}`;
-          break;
+      case 'avoid_phrase':
+        prompt += `\n- DO NOT use: "${guardrail.value}"`;
+        break;
+      case 'require_phrase':
+        prompt += `\n- MUST include: "${guardrail.value}"`;
+        break;
+      case 'tone_requirement':
+        prompt += `\n- Tone must be: ${guardrail.value}`;
+        break;
+      case 'cta_requirement':
+        prompt += `\n- CTA requirement: ${guardrail.value}`;
+        break;
       }
     });
   }
@@ -221,26 +221,26 @@ function validateAgainstGuardrails(content, guardrails) {
 
   guardrails.forEach(guardrail => {
     switch (guardrail.type) {
-      case 'avoid_phrase':
-        if (content.toLowerCase().includes(guardrail.value.toLowerCase())) {
-          violations.push({
-            type: guardrail.type,
-            severity: guardrail.severity,
-            message: `Found avoided phrase: "${guardrail.value}"`,
-            suggestion: guardrail.description || 'Remove or replace this phrase'
-          });
-        }
-        break;
-      case 'require_phrase':
-        if (!content.toLowerCase().includes(guardrail.value.toLowerCase())) {
-          violations.push({
-            type: guardrail.type,
-            severity: guardrail.severity,
-            message: `Missing required phrase: "${guardrail.value}"`,
-            suggestion: guardrail.description || 'Add this required phrase'
-          });
-        }
-        break;
+    case 'avoid_phrase':
+      if (content.toLowerCase().includes(guardrail.value.toLowerCase())) {
+        violations.push({
+          type: guardrail.type,
+          severity: guardrail.severity,
+          message: `Found avoided phrase: "${guardrail.value}"`,
+          suggestion: guardrail.description || 'Remove or replace this phrase'
+        });
+      }
+      break;
+    case 'require_phrase':
+      if (!content.toLowerCase().includes(guardrail.value.toLowerCase())) {
+        violations.push({
+          type: guardrail.type,
+          severity: guardrail.severity,
+          message: `Missing required phrase: "${guardrail.value}"`,
+          suggestion: guardrail.description || 'Add this required phrase'
+        });
+      }
+      break;
     }
   });
 

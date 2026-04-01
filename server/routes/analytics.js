@@ -290,7 +290,7 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Analytics update error:', error);
+      logger.error('Failed to update analytics in Supabase', { error, postId });
       return res.status(500).json({ success: false, error: 'Failed to update analytics' });
     }
 
@@ -312,7 +312,7 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update post analytics error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -443,7 +443,7 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get analytics dashboard error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -621,7 +621,7 @@ router.get('/performance', auth, asyncHandler(async (req, res) => {
       const { syncAllPlatformsAudienceGrowth } = require('../services/audienceGrowthSyncService');
       // Fire and forget, don't block the request
       syncAllPlatformsAudienceGrowth(userId).catch(err => {
-        console.error('Background Flux Sync Failure:', { userId, error: err.message });
+        
       });
     }
 
@@ -705,7 +705,7 @@ router.get('/performance', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get performance data error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -761,7 +761,7 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
       spectral_gravity
     });
   } catch (error) {
-    console.error('Global metric failure:', error);
+    logger.error('Global metric failure', { error: error.message });
     res.status(500).json({ success: false, error: 'GLOBAL_METRIC_FAILURE' });
   }
 }));
@@ -815,7 +815,7 @@ router.get('/performance/top-nodes', auth, asyncHandler(async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    console.error('Node rank failure:', error);
+    
     res.status(500).json({ success: false, error: 'NODE_RANK_FAILURE' });
   }
 }));
@@ -839,10 +839,8 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
     const { data: realPosts } = await supabase
       .from('posts')
       .select(`
-        id, platform, title, 
-        post_analytics (
-          views, likes, comments, shares, engagement_rate
-        )
+        id, title, platform,
+        post_analytics ( views, likes, shares, comments, platform )
       `)
       .eq('author_id', req.user.id)
       .eq('status', 'published')
@@ -850,7 +848,7 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
       .limit(10);
 
     const formattedPosts = (realPosts || []).map(p => {
-      const stats = p.post_analytics[0] || {};
+      const stats = p.post_analytics?.[0] || {};
       return {
         postId: p.id,
         platform: p.platform || stats.platform || 'other',
@@ -859,20 +857,36 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
         likes: stats.likes || 0,
         comments: stats.comments || 0,
         shares: stats.shares || 0,
-        velocity: Math.round((stats.views || 0) / 24), // Rough estimate for now
+        velocity: Math.round((stats.views || 0) / 24),
         hoursSincePost: 24
       };
     });
 
-    // If no real posts, fallback to simulated for "WOW" factor in empty states (but tag them)
     const finalPosts = formattedPosts.length > 0 ? formattedPosts : [
       { postId: 'sim-1', platform: 'tiktok', views: 47200, likes: 3100, comments: 380, shares: 210, velocity: 312, hoursSincePost: 4, isSimulated: true },
     ];
 
     const analyzedPosts = await Promise.all(
       finalPosts.map(async (p) => {
-        peakVelocityPost,
-        alerts,
+        try {
+          const analysis = await analyzePost(p);
+          return {
+            ...p,
+            potencyScore: analysis.score || 75,
+            anomalies: analysis.anomalies || [],
+            isSimulated: p.isSimulated || false
+          };
+        } catch (err) {
+          logger.warn('Post analysis failed', { postId: p.postId, error: err.message });
+          return { ...p, potencyScore: 70, anomalies: [] };
+        }
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        peakVelocityPost: analyzedPosts.sort((a, b) => b.velocity - a.velocity)[0],
         posts: analyzedPosts,
       }
     });
@@ -950,6 +964,7 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const supabase = getSupabaseClient();
+    const { generateContent: geminiGenerate } = require('../utils/googleAI');
 
     // 1. Fetch Post and Analytics Context
     const { data: post, error: postErr } = await supabase
@@ -967,7 +982,7 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
     const platform = post.platform || 'tiktok';
     const analytics = post.post_analytics[0] || {};
     
-    console.log(`🧠 INITIATING NEURAL SCAN: Post ${id} (${platform})`);
+    
 
     const prompt = `
       Perform a deep-scan on this ${platform} content manifest. 
@@ -978,6 +993,20 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
       - potencyScore: (1-100) based on current traction.
       - predictiveROI: (percentage) expected growth if action is taken.
       - specificAdvice: Single sentence of PLATFORM-SPECIFIC tactical advice for ${platform}.
+    `;
+
+    const matrixResponse = await geminiGenerate(prompt, { json: true });
+    
+    res.json({
+      success: true,
+      matrix: matrixResponse
+    });
+  } catch (error) {
+    logger.error('Neural scan failure:', error);
+    res.status(500).json({ success: false, error: 'NEURAL_SCAN_FAILURE' });
+  }
+}));
+
 module.exports = router;
 
 

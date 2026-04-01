@@ -8,8 +8,7 @@ const { sendSuccess, sendError } = require('../utils/response');
 const {
   processSubscriptionChange,
   completeSubscriptionChange,
-  applyPromoCode,
-  calculateProratedAmount
+  applyPromoCode
 } = require('../services/billingService');
 const {
   getCurrentUsage,
@@ -21,8 +20,6 @@ const AddOn = require('../models/AddOn');
 const PromoCode = require('../models/PromoCode');
 const SubscriptionChange = require('../models/SubscriptionChange');
 const User = require('../models/User');
-const MembershipPackage = require('../models/MembershipPackage');
-const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -183,13 +180,19 @@ router.get('/promo-codes', asyncHandler(async (req, res) => {
   const promoCodes = await PromoCode.find({
     isActive: true,
     validFrom: { $lte: now },
-    $or: [
-      { validUntil: { $gte: now } },
-      { validUntil: null }
-    ],
-    $or: [
-      { maxUses: -1 },
-      { $expr: { $lt: ['$usedCount', '$maxUses'] } }
+    $and: [
+      {
+        $or: [
+          { validUntil: { $gte: now } },
+          { validUntil: null }
+        ]
+      },
+      {
+        $or: [
+          { maxUses: -1 },
+          { $expr: { $lt: ['$usedCount', '$maxUses'] } }
+        ]
+      }
     ]
   }).select('code description discountType discountValue validUntil').lean();
 

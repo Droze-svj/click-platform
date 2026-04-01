@@ -94,29 +94,29 @@ router.post('/:agencyWorkspaceId/reports/generate-from-template', auth, requireW
   if (!finalStartDate || !finalEndDate) {
     const now = new Date();
     switch (template.filters.defaultDateRange) {
-      case 'last_7_days':
-        finalEndDate = now;
-        finalStartDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'last_30_days':
-        finalEndDate = now;
-        finalStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case 'last_90_days':
-        finalEndDate = now;
-        finalStartDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case 'this_month':
-        finalStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        finalEndDate = now;
-        break;
-      case 'last_month':
-        finalStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        finalEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
-        break;
-      default:
-        finalEndDate = now;
-        finalStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    case 'last_7_days':
+      finalEndDate = now;
+      finalStartDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'last_30_days':
+      finalEndDate = now;
+      finalStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case 'last_90_days':
+      finalEndDate = now;
+      finalStartDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case 'this_month':
+      finalStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      finalEndDate = now;
+      break;
+    case 'last_month':
+      finalStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      finalEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
+      break;
+    default:
+      finalEndDate = now;
+      finalStartDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
   }
 

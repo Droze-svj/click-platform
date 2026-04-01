@@ -249,17 +249,17 @@ function estimateTimeInvestment(content) {
 
   // Base time for content creation
   switch (content.type) {
-    case 'video':
-      time = 120; // 2 hours
-      break;
-    case 'article':
-      time = 60; // 1 hour
-      break;
-    case 'podcast':
-      time = 90; // 1.5 hours
-      break;
-    default:
-      time = 30; // 30 minutes
+  case 'video':
+    time = 120; // 2 hours
+    break;
+  case 'article':
+    time = 60; // 1 hour
+    break;
+  case 'podcast':
+    time = 90; // 1.5 hours
+    break;
+  default:
+    time = 30; // 30 minutes
   }
 
   // Add time for processing

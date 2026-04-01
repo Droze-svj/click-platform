@@ -261,46 +261,46 @@ function generateComponentRecommendations(component, score) {
   const recommendations = [];
 
   switch (component) {
-    case 'awareness':
-      recommendations.push({
-        action: 'increase_posting',
-        description: 'Post more frequently to increase reach and profile visits',
-        priority: 'high',
-        expectedImpact: 'Boost awareness score'
-      });
-      break;
-    case 'engagement':
-      recommendations.push({
-        action: 'optimize_content',
-        description: 'Improve content quality and posting times for better engagement',
-        priority: 'high',
-        expectedImpact: 'Boost engagement score'
-      });
-      break;
-    case 'growth':
-      recommendations.push({
-        action: 'growth_strategy',
-        description: 'Implement follower growth strategies and collaborations',
-        priority: 'medium',
-        expectedImpact: 'Boost growth score'
-      });
-      break;
-    case 'quality':
-      recommendations.push({
-        action: 'content_quality',
-        description: 'Focus on creating higher quality content',
-        priority: 'medium',
-        expectedImpact: 'Boost quality score'
-      });
-      break;
-    case 'sentiment':
-      recommendations.push({
-        action: 'sentiment_management',
-        description: 'Address negative sentiment and improve brand perception',
-        priority: 'high',
-        expectedImpact: 'Boost sentiment score'
-      });
-      break;
+  case 'awareness':
+    recommendations.push({
+      action: 'increase_posting',
+      description: 'Post more frequently to increase reach and profile visits',
+      priority: 'high',
+      expectedImpact: 'Boost awareness score'
+    });
+    break;
+  case 'engagement':
+    recommendations.push({
+      action: 'optimize_content',
+      description: 'Improve content quality and posting times for better engagement',
+      priority: 'high',
+      expectedImpact: 'Boost engagement score'
+    });
+    break;
+  case 'growth':
+    recommendations.push({
+      action: 'growth_strategy',
+      description: 'Implement follower growth strategies and collaborations',
+      priority: 'medium',
+      expectedImpact: 'Boost growth score'
+    });
+    break;
+  case 'quality':
+    recommendations.push({
+      action: 'content_quality',
+      description: 'Focus on creating higher quality content',
+      priority: 'medium',
+      expectedImpact: 'Boost quality score'
+    });
+    break;
+  case 'sentiment':
+    recommendations.push({
+      action: 'sentiment_management',
+      description: 'Address negative sentiment and improve brand perception',
+      priority: 'high',
+      expectedImpact: 'Boost sentiment score'
+    });
+    break;
   }
 
   return recommendations;

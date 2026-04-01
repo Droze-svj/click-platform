@@ -10,8 +10,8 @@ const {
   getFutureContentSuggestions
 } = require('../services/contentHealthService');
 
-console.log('performContentHealthCheck defined:', !!performContentHealthCheck);
-console.log('getFutureContentSuggestions defined:', !!getFutureContentSuggestions);
+
+
 
 const {
   getAdaptivePerformancePrediction,

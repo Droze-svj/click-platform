@@ -138,7 +138,7 @@ async function updateEngagementBreakdown(postId, breakdown) {
 
     // Update breakdown
     Object.keys(breakdown).forEach(key => {
-      if (post.analytics.engagementBreakdown.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(post.analytics.engagementBreakdown, key)) {
         post.analytics.engagementBreakdown[key] = breakdown[key];
       }
     });
@@ -322,16 +322,17 @@ async function getAudienceGrowthTrends(userId, platform, filters = {}) {
 function getPeriodStart(period) {
   const now = new Date();
   switch (period) {
-    case 'weekly':
-      const dayOfWeek = now.getDay();
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - dayOfWeek);
-      startOfWeek.setHours(0, 0, 0, 0);
-      return startOfWeek;
-    case 'monthly':
-      return new Date(now.getFullYear(), now.getMonth(), 1);
-    default:
-      return new Date(now.setHours(0, 0, 0, 0));
+  case 'weekly': {
+    const dayOfWeek = now.getDay();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - dayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+    return startOfWeek;
+  }
+  case 'monthly':
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  default:
+    return new Date(now.setHours(0, 0, 0, 0));
   }
 }
 
@@ -401,7 +402,7 @@ async function getAggregatedPerformanceMetrics(workspaceId, filters = {}) {
       // Engagement breakdown
       if (analytics.engagementBreakdown) {
         Object.keys(analytics.engagementBreakdown).forEach(key => {
-          if (metrics.engagementBreakdown.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(metrics.engagementBreakdown, key)) {
             metrics.engagementBreakdown[key] += analytics.engagementBreakdown[key] || 0;
           }
         });

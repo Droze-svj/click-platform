@@ -492,85 +492,85 @@ async function getAssetRecommendations(userId, options = {}) {
     let recommendations = [];
 
     switch (basedOn) {
-      case 'usage':
-        // Most used assets
-        const posts = await ScheduledPost.find({
-          userId,
-          status: 'posted'
-        }).lean();
+    case 'usage':
+      // Most used assets
+      const posts = await ScheduledPost.find({
+        userId,
+        status: 'posted'
+      }).lean();
 
-        const usageCount = {};
-        posts.forEach(post => {
-          const cid = post.contentId?.toString();
-          if (cid) {
-            usageCount[cid] = (usageCount[cid] || 0) + 1;
-          }
-        });
-
-        const topUsed = Object.entries(usageCount)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, limit)
-          .map(([id]) => id);
-
-        recommendations = await Content.find({
-          _id: { $in: topUsed },
-          userId
-        }).limit(limit).lean();
-        break;
-
-      case 'performance':
-        // Best performing assets
-        const performancePosts = await ScheduledPost.find({
-          userId,
-          status: 'posted',
-          'analytics.engagement': { $exists: true }
-        })
-          .sort({ 'analytics.engagement': -1 })
-          .limit(limit)
-          .lean();
-
-        const topPerformingIds = performancePosts.map(p => p.contentId).filter(Boolean);
-        recommendations = await Content.find({
-          _id: { $in: topPerformingIds },
-          userId
-        }).limit(limit).lean();
-        break;
-
-      case 'recency':
-        // Recently created
-        const query = { userId };
-        if (type) query.type = type;
-        if (category) query.category = category;
-
-        recommendations = await Content.find(query)
-          .sort({ createdAt: -1 })
-          .limit(limit)
-          .lean();
-        break;
-
-      case 'similarity':
-        // Similar assets (by tags/category)
-        if (options.referenceContentId) {
-          const reference = await Content.findById(options.referenceContentId);
-          if (reference) {
-            const similarQuery = {
-              userId,
-              _id: { $ne: options.referenceContentId }
-            };
-
-            if (reference.tags && reference.tags.length > 0) {
-              similarQuery.tags = { $in: reference.tags };
-            }
-            if (reference.category) {
-              similarQuery.category = reference.category;
-            }
-
-            recommendations = await Content.find(similarQuery)
-              .limit(limit)
-              .lean();
-          }
+      const usageCount = {};
+      posts.forEach(post => {
+        const cid = post.contentId?.toString();
+        if (cid) {
+          usageCount[cid] = (usageCount[cid] || 0) + 1;
         }
-        break;
+      });
+
+      const topUsed = Object.entries(usageCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([id]) => id);
+
+      recommendations = await Content.find({
+        _id: { $in: topUsed },
+        userId
+      }).limit(limit).lean();
+      break;
+
+    case 'performance':
+      // Best performing assets
+      const performancePosts = await ScheduledPost.find({
+        userId,
+        status: 'posted',
+        'analytics.engagement': { $exists: true }
+      })
+        .sort({ 'analytics.engagement': -1 })
+        .limit(limit)
+        .lean();
+
+      const topPerformingIds = performancePosts.map(p => p.contentId).filter(Boolean);
+      recommendations = await Content.find({
+        _id: { $in: topPerformingIds },
+        userId
+      }).limit(limit).lean();
+      break;
+
+    case 'recency':
+      // Recently created
+      const query = { userId };
+      if (type) query.type = type;
+      if (category) query.category = category;
+
+      recommendations = await Content.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+      break;
+
+    case 'similarity':
+      // Similar assets (by tags/category)
+      if (options.referenceContentId) {
+        const reference = await Content.findById(options.referenceContentId);
+        if (reference) {
+          const similarQuery = {
+            userId,
+            _id: { $ne: options.referenceContentId }
+          };
+
+          if (reference.tags && reference.tags.length > 0) {
+            similarQuery.tags = { $in: reference.tags };
+          }
+          if (reference.category) {
+            similarQuery.category = reference.category;
+          }
+
+          recommendations = await Content.find(similarQuery)
+            .limit(limit)
+            .lean();
+        }
+      }
+      break;
     }
 
     return {

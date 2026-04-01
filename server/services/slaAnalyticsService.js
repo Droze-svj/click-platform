@@ -58,9 +58,9 @@ async function getSLAAnalytics(clientWorkspaceId, filters = {}) {
     const completedSLAs = slas.filter(s => s.completedAt);
     const averageCompletionTime = completedSLAs.length > 0
       ? completedSLAs.reduce((sum, s) => {
-          const hours = (new Date(s.completedAt) - new Date(s.startedAt)) / (1000 * 60 * 60);
-          return sum + hours;
-        }, 0) / completedSLAs.length
+        const hours = (new Date(s.completedAt) - new Date(s.startedAt)) / (1000 * 60 * 60);
+        return sum + hours;
+      }, 0) / completedSLAs.length
       : 0;
 
     // Calculate on-time rate

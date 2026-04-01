@@ -156,25 +156,25 @@ async function applyWinBackOffer(userId, offerType, offerData) {
     }
 
     switch (offerType) {
-      case 'discount':
-        // Apply discount to subscription
-        user.subscription.discount = {
-          percent: offerData.discount,
-          duration: offerData.duration,
-          appliedAt: new Date()
-        };
-        await user.save();
-        return { applied: true, message: `Discount applied: ${offerData.discount}% off` };
+    case 'discount':
+      // Apply discount to subscription
+      user.subscription.discount = {
+        percent: offerData.discount,
+        duration: offerData.duration,
+        appliedAt: new Date()
+      };
+      await user.save();
+      return { applied: true, message: `Discount applied: ${offerData.discount}% off` };
 
-      case 'pause':
-        return await pauseSubscription(userId, { reason: 'Win-back offer' });
+    case 'pause':
+      return await pauseSubscription(userId, { reason: 'Win-back offer' });
 
-      case 'upgrade':
-        // Offer upgrade with discount
-        return { applied: true, message: 'Upgrade offer sent' };
+    case 'upgrade':
+      // Offer upgrade with discount
+      return { applied: true, message: 'Upgrade offer sent' };
 
-      default:
-        return { applied: false, message: 'Unknown offer type' };
+    default:
+      return { applied: false, message: 'Unknown offer type' };
     }
   } catch (error) {
     logger.error('Error applying win-back offer', { error: error.message, userId });

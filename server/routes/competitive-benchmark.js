@@ -23,7 +23,7 @@ router.get('/benchmarks', authenticateToken, addTierContext, async (req, res) =>
     const data = await getCompetitiveBenchmarks(userId, platform, timeframe)
     res.json({ success: true, data })
   } catch (err) {
-    console.error('[Benchmark] /benchmarks error:', err.message)
+    
     // Return a graceful mock so the frontend always has data to show
     res.json({
       success: true,
@@ -50,7 +50,7 @@ router.get('/next-week', authenticateToken, requireFeature('creator_analytics'),
     const data = await getNextWeekRecommendations(userId, platform)
     res.json({ success: true, data })
   } catch (err) {
-    console.error('[Benchmark] /next-week error:', err.message)
+    
     res.status(500).json({ error: 'Failed to generate weekly plan' })
   }
 })
@@ -65,7 +65,7 @@ router.post('/track', authenticateToken, requireFeature('creator_analytics'), as
     const data = await trackCompetitors(userId, competitorUsernames, platform)
     res.json({ success: true, data })
   } catch (err) {
-    console.error('[Benchmark] /track error:', err.message)
+    
     res.status(500).json({ error: 'Failed to track competitors' })
   }
 })
@@ -79,7 +79,7 @@ router.get('/compare', authenticateToken, requireFeature('creator_analytics'), a
     const data = await compareWithCompetitors(userId, platform)
     res.json({ success: true, data })
   } catch (err) {
-    console.error('[Benchmark] /compare error:', err.message)
+    
     res.status(500).json({ error: 'Failed to compare with competitors' })
   }
 })

@@ -5,6 +5,7 @@
 
 const nodemailer = require('nodemailer')
 const { WebClient } = require('@slack/web-api')
+const logger = require('./logger');
 
 class AlertingSystem {
   constructor() {
@@ -72,7 +73,7 @@ class AlertingSystem {
           auth: this.config.email.auth
         }))
 
-        console.log('✅ Email alerting initialized')
+        logger.info('Email transporter initialized');
       }
 
       // Initialize Slack client
@@ -80,14 +81,13 @@ class AlertingSystem {
         if (this.config.slack.token) {
           this.transporters.set('slack', new WebClient(this.config.slack.token))
         }
-        console.log('✅ Slack alerting initialized')
+        
       }
 
-      this.isInitialized = true
-      console.log('✅ Alerting system initialized')
-
+      this.isInitialized = true;
+      logger.info('Alerting system initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize alerting system:', error.message)
+      logger.error('Failed to initialize alerting system', { error: error.message });
     }
   }
 
@@ -98,13 +98,13 @@ class AlertingSystem {
     try {
       // Check rate limiting
       if (!this.checkRateLimit()) {
-        console.warn('⚠️ Alert rate limit exceeded, skipping alert')
+        
         return
       }
 
       // Check cooldown for this alert type
       if (this.checkCooldown(alert)) {
-        console.log(`⚠️ Alert cooldown active for ${alert.type}, skipping`)
+        
         return
       }
 
@@ -132,10 +132,9 @@ class AlertingSystem {
       // Send alerts
       await this.sendAlerts(enhancedAlert)
 
-      console.log(`🚨 Alert sent: ${alert.type} (${alert.severity})`)
-
+      logger.info('Alert handled', { type: alert.type, severity: alert.severity });
     } catch (error) {
-      console.error('❌ Alert handling failed:', error.message)
+      logger.error('Error handling alert', { error: error.message, alertType: alert?.type });
     }
   }
 
@@ -190,7 +189,7 @@ class AlertingSystem {
       })
 
     } catch (error) {
-      console.error('❌ Email alert failed:', error.message)
+      logger.error('Error sending email alert', { error: error.message });
     }
   }
 
@@ -248,7 +247,7 @@ class AlertingSystem {
       }
 
     } catch (error) {
-      console.error('❌ Slack alert failed:', error.message)
+      logger.error('Error sending Slack alert', { error: error.message });
     }
   }
 
@@ -269,7 +268,7 @@ class AlertingSystem {
         })
       })
     } catch (error) {
-      console.error('❌ Webhook alert failed:', error.message)
+      logger.error('Error sending webhook alert', { error: error.message });
     }
   }
 
@@ -280,39 +279,28 @@ class AlertingSystem {
     const timestamp = new Date(alert.timestamp).toISOString()
     const severityEmoji = this.getSeverityEmoji(alert.severity)
 
-    console.log(`🚨 ${severityEmoji} ALERT [${alert.severity.toUpperCase()}]: ${alert.type}`)
-    console.log(`   📅 Time: ${timestamp}`)
-    console.log(`   🏢 Environment: ${alert.environment}`)
-    console.log(`   🖥️  Host: ${alert.hostname}`)
-    console.log(`   📝 Description: ${this.formatAlertDescription(alert)}`)
-
-    if (this.config.console.detailed && alert.data) {
-      console.log('   📊 Details:', JSON.stringify(alert.data, null, 2))
-    }
+    logger.info(`${severityEmoji} [${alert.severity.toUpperCase()}] ${alert.type}`, {
+      message: this.formatAlertDescription(alert),
+      timestamp
+    });
 
     if (alert.data?.recommendations) {
-      console.log('   💡 Recommendations:')
-      alert.data.recommendations.forEach((rec, i) => {
-        console.log(`      ${i + 1}. ${rec}`)
-      })
+      alert.data.recommendations.forEach((rec) => {
+        logger.info(`Recommendation: ${rec.message}`);
+      });
     }
-
-    console.log('   ──────────────────────────────────────────────────')
   }
 
   /**
    * Log alert to console (basic)
    */
   logAlert(alert) {
-    const color = this.getSeverityColor(alert.severity)
     const timestamp = new Date(alert.timestamp).toISOString()
 
-    console.log(`🚨 [${timestamp}] ${color} ${alert.type} (${alert.severity})`)
-    console.log(`   ${this.formatAlertDescription(alert)}`)
-
-    if (alert.data) {
-      console.log('   Data:', JSON.stringify(alert.data, null, 2))
-    }
+    logger.info(`[${alert.severity.toUpperCase()}] ${alert.type}`, {
+      timestamp,
+      data: alert.data
+    });
   }
 
   /**
@@ -320,23 +308,23 @@ class AlertingSystem {
    */
   formatAlertDescription(alert) {
     switch (alert.type) {
-      case 'high_response_time':
-        return `API response time exceeded threshold: ${alert.data.responseTime}ms > ${alert.data.threshold}ms`
+    case 'high_response_time':
+      return `API response time exceeded threshold: ${alert.data.responseTime}ms > ${alert.data.threshold}ms`
 
-      case 'high_error_rate':
-        return `Error rate exceeded threshold: ${alert.data.errorRate} > ${alert.data.threshold}`
+    case 'high_error_rate':
+      return `Error rate exceeded threshold: ${alert.data.errorRate} > ${alert.data.threshold}`
 
-      case 'high_memory_usage':
-        return `Memory usage exceeded threshold: ${(alert.data.utilization * 100).toFixed(1)}% > ${(alert.data.threshold * 100).toFixed(1)}%`
+    case 'high_memory_usage':
+      return `Memory usage exceeded threshold: ${(alert.data.utilization * 100).toFixed(1)}% > ${(alert.data.threshold * 100).toFixed(1)}%`
 
-      case 'high_cpu_usage':
-        return `CPU usage exceeded threshold: ${(alert.data.utilization * 100).toFixed(1)}% > ${(alert.data.threshold * 100).toFixed(1)}%`
+    case 'high_cpu_usage':
+      return `CPU usage exceeded threshold: ${(alert.data.utilization * 100).toFixed(1)}% > ${(alert.data.threshold * 100).toFixed(1)}%`
 
-      case 'slow_database_query':
-        return `Database query exceeded threshold: ${alert.data.duration}ms > ${alert.data.threshold}ms`
+    case 'slow_database_query':
+      return `Database query exceeded threshold: ${alert.data.duration}ms > ${alert.data.threshold}ms`
 
-      default:
-        return alert.data?.message || 'Alert triggered'
+    default:
+      return alert.data?.message || 'Alert triggered'
     }
   }
 
@@ -387,11 +375,11 @@ ${JSON.stringify(alert.data, null, 2)}
    */
   getSeverityColor(severity) {
     switch (severity) {
-      case 'critical': return '#dc2626'
-      case 'high': return '#ea580c'
-      case 'medium': return '#ca8a04'
-      case 'low': return '#16a34a'
-      default: return '#6b7280'
+    case 'critical': return '#dc2626'
+    case 'high': return '#ea580c'
+    case 'medium': return '#ca8a04'
+    case 'low': return '#16a34a'
+    default: return '#6b7280'
     }
   }
 
@@ -400,11 +388,11 @@ ${JSON.stringify(alert.data, null, 2)}
    */
   getSeverityEmoji(severity) {
     switch (severity) {
-      case 'critical': return '🚨🚨🚨'
-      case 'high': return '🔴'
-      case 'medium': return '🟡'
-      case 'low': return '🟢'
-      default: return '⚪'
+    case 'critical': return '🚨🚨🚨'
+    case 'high': return '🔴'
+    case 'medium': return '🟡'
+    case 'low': return '🟢'
+    default: return '⚪'
     }
   }
 
@@ -487,7 +475,7 @@ ${JSON.stringify(alert.data, null, 2)}
       }
     }
 
-    console.log('🧪 Testing alerting system...')
+    
     await this.handleAlert(testAlert)
   }
 

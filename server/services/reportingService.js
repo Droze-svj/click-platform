@@ -17,17 +17,17 @@ async function generatePDFReport(userId, reportType, options = {}) {
     let data = {};
 
     switch (reportType) {
-      case 'content':
-        data = await getContentReportData(userId, startDate);
-        break;
-      case 'analytics':
-        data = await getAnalyticsReportData(userId, startDate);
-        break;
-      case 'scheduled':
-        data = await getScheduledReportData(userId, startDate);
-        break;
-      default:
-        throw new Error('Invalid report type');
+    case 'content':
+      data = await getContentReportData(userId, startDate);
+      break;
+    case 'analytics':
+      data = await getAnalyticsReportData(userId, startDate);
+      break;
+    case 'scheduled':
+      data = await getScheduledReportData(userId, startDate);
+      break;
+    default:
+      throw new Error('Invalid report type');
     }
 
     // In production, use a PDF library like pdfkit or puppeteer
@@ -58,17 +58,17 @@ async function generateExcelReport(userId, reportType, options = {}) {
     let data = {};
 
     switch (reportType) {
-      case 'content':
-        data = await getContentReportData(userId, startDate);
-        break;
-      case 'analytics':
-        data = await getAnalyticsReportData(userId, startDate);
-        break;
-      case 'scheduled':
-        data = await getScheduledReportData(userId, startDate);
-        break;
-      default:
-        throw new Error('Invalid report type');
+    case 'content':
+      data = await getContentReportData(userId, startDate);
+      break;
+    case 'analytics':
+      data = await getAnalyticsReportData(userId, startDate);
+      break;
+    case 'scheduled':
+      data = await getScheduledReportData(userId, startDate);
+      break;
+    default:
+      throw new Error('Invalid report type');
     }
 
     // In production, use a library like exceljs
@@ -106,14 +106,14 @@ async function generateCustomReport(userId, reportConfig) {
     let data = {};
 
     switch (type) {
-      case 'content':
-        data = await getContentReportData(userId, startDate, filters);
-        break;
-      case 'analytics':
-        data = await getAnalyticsReportData(userId, startDate, filters);
-        break;
-      default:
-        throw new Error('Invalid report type');
+    case 'content':
+      data = await getContentReportData(userId, startDate, filters);
+      break;
+    case 'analytics':
+      data = await getAnalyticsReportData(userId, startDate, filters);
+      break;
+    default:
+      throw new Error('Invalid report type');
     }
 
     // Filter fields if specified
@@ -124,20 +124,20 @@ async function generateCustomReport(userId, reportConfig) {
     // Format based on requested format
     let formatted;
     switch (format) {
-      case 'json':
-        formatted = data;
-        break;
-      case 'csv':
-        formatted = convertToCSV(data);
-        break;
-      case 'pdf':
-        formatted = formatPDFData(data, type, period);
-        break;
-      case 'excel':
-        formatted = formatExcelData(data, type);
-        break;
-      default:
-        formatted = data;
+    case 'json':
+      formatted = data;
+      break;
+    case 'csv':
+      formatted = convertToCSV(data);
+      break;
+    case 'pdf':
+      formatted = formatPDFData(data, type, period);
+      break;
+    case 'excel':
+      formatted = formatExcelData(data, type);
+      break;
+    default:
+      formatted = data;
     }
 
     logger.info('Custom report generated', { userId, type, format });

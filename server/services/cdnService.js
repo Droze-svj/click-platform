@@ -22,15 +22,15 @@ async function initCDN() {
     const provider = process.env.CDN_PROVIDER || 'cloudflare';
 
     switch (provider) {
-      case 'cloudfront':
-        await initCloudFront();
-        break;
-      case 'cloudflare':
-        await initCloudflare();
-        break;
-      default:
-        logger.warn('CDN provider not configured, using cache fallback');
-        cdnProvider = null;
+    case 'cloudfront':
+      await initCloudFront();
+      break;
+    case 'cloudflare':
+      await initCloudflare();
+      break;
+    default:
+      logger.warn('CDN provider not configured, using cache fallback');
+      cdnProvider = null;
     }
   } catch (error) {
     logger.warn('CDN initialization failed, using cache fallback', {
@@ -93,12 +93,12 @@ async function purgeCache(paths) {
     }
 
     switch (cdnProvider) {
-      case CDN_PROVIDERS.CLOUDFRONT:
-        return await purgeCloudFront(paths);
-      case CDN_PROVIDERS.CLOUDFLARE:
-        return await purgeCloudflare(paths);
-      default:
-        return { success: false, error: 'Unknown CDN provider' };
+    case CDN_PROVIDERS.CLOUDFRONT:
+      return await purgeCloudFront(paths);
+    case CDN_PROVIDERS.CLOUDFLARE:
+      return await purgeCloudflare(paths);
+    default:
+      return { success: false, error: 'Unknown CDN provider' };
     }
   } catch (error) {
     logger.error('Purge CDN cache error', { error: error.message, paths });

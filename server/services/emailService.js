@@ -15,71 +15,71 @@ function initEmailService() {
 
   try {
     switch (emailProvider) {
-      case 'sendgrid':
-        if (process.env.SENDGRID_API_KEY) {
-          transporter = nodemailer.createTransport({
-            service: 'SendGrid',
-            auth: {
-              user: 'apikey',
-              pass: process.env.SENDGRID_API_KEY,
-            },
-          });
-          logger.info('✅ Email service initialized (SendGrid)');
-        } else {
-          logger.warn('⚠️ SendGrid API key not found. Email service disabled.');
-        }
-        break;
+    case 'sendgrid':
+      if (process.env.SENDGRID_API_KEY) {
+        transporter = nodemailer.createTransport({
+          service: 'SendGrid',
+          auth: {
+            user: 'apikey',
+            pass: process.env.SENDGRID_API_KEY,
+          },
+        });
+        logger.info('✅ Email service initialized (SendGrid)');
+      } else {
+        logger.warn('⚠️ SendGrid API key not found. Email service disabled.');
+      }
+      break;
 
-      case 'mailgun':
-        if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
-          transporter = nodemailer.createTransport({
-            host: `smtp.mailgun.org`,
-            port: 587,
-            secure: false,
-            auth: {
-              user: process.env.MAILGUN_SMTP_USER || `postmaster@${process.env.MAILGUN_DOMAIN}`,
-              pass: process.env.MAILGUN_API_KEY,
-            },
-          });
-          logger.info('✅ Email service initialized (Mailgun)');
-        } else {
-          logger.warn('⚠️ Mailgun credentials not found. Email service disabled.');
-        }
-        break;
+    case 'mailgun':
+      if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+        transporter = nodemailer.createTransport({
+          host: `smtp.mailgun.org`,
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.MAILGUN_SMTP_USER || `postmaster@${process.env.MAILGUN_DOMAIN}`,
+            pass: process.env.MAILGUN_API_KEY,
+          },
+        });
+        logger.info('✅ Email service initialized (Mailgun)');
+      } else {
+        logger.warn('⚠️ Mailgun credentials not found. Email service disabled.');
+      }
+      break;
 
-      case 'ses':
-        if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-          transporter = nodemailer.createTransport({
-            SES: {
-              aws: require('@aws-sdk/client-ses'),
-              region: process.env.AWS_SES_REGION || 'us-east-1',
-            },
-          });
-          logger.info('✅ Email service initialized (AWS SES)');
-        } else {
-          logger.warn('⚠️ AWS credentials not found. Email service disabled.');
-        }
-        break;
+    case 'ses':
+      if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+        transporter = nodemailer.createTransport({
+          SES: {
+            aws: require('@aws-sdk/client-ses'),
+            region: process.env.AWS_SES_REGION || 'us-east-1',
+          },
+        });
+        logger.info('✅ Email service initialized (AWS SES)');
+      } else {
+        logger.warn('⚠️ AWS credentials not found. Email service disabled.');
+      }
+      break;
 
-      case 'smtp':
-        if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-          transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587'),
-            secure: process.env.SMTP_SECURE === 'true',
-            auth: {
-              user: process.env.SMTP_USER,
-              pass: process.env.SMTP_PASS,
-            },
-          });
-          logger.info('✅ Email service initialized (SMTP)');
-        } else {
-          logger.warn('⚠️ SMTP credentials not found. Email service disabled.');
-        }
-        break;
+    case 'smtp':
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+        transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+        logger.info('✅ Email service initialized (SMTP)');
+      } else {
+        logger.warn('⚠️ SMTP credentials not found. Email service disabled.');
+      }
+      break;
 
-      default:
-        logger.warn(`⚠️ Unknown email provider: ${emailProvider}. Email service disabled.`);
+    default:
+      logger.warn(`⚠️ Unknown email provider: ${emailProvider}. Email service disabled.`);
     }
   } catch (error) {
     logger.error('Email service initialization error', { error: error.message });

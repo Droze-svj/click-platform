@@ -115,8 +115,8 @@ class DigitalTwinService {
         const response = await axios.post(process.env.SORA_GATEWAY_URL, {
           model: "sora-1",
           input: {
-             audio_url: job.voiceNoteUrl,
-             avatar_id: job.options?.avatarId
+            audio_url: job.voiceNoteUrl,
+            avatar_id: job.options?.avatarId
           },
           quality: "high",
           aspect_ratio: "16:9"
@@ -147,33 +147,33 @@ class DigitalTwinService {
     if (!job) return null;
 
     if (job.provider === 'simulated') {
-        if (job.progress < 100) {
+      if (job.progress < 100) {
         job.progress += 20;
         if (job.progress >= 100) {
-            job.progress = 100;
-            job.status = 'completed';
-            job.videoUrl = `https://cdn.click.ai/generated/${jobId}.mp4`;
-            job.thumbnailUrl = `https://cdn.click.ai/generated/${jobId}_thumb.jpg`;
-            job.completedAt = Date.now();
+          job.progress = 100;
+          job.status = 'completed';
+          job.videoUrl = `https://cdn.click.ai/generated/${jobId}.mp4`;
+          job.thumbnailUrl = `https://cdn.click.ai/generated/${jobId}_thumb.jpg`;
+          job.completedAt = Date.now();
         }
-        }
+      }
     } else if (job.provider === 'heygen' && job.externalId) {
-        // Poll HeyGen API
-        try {
-            const response = await axios.get(`https://api.heygen.com/v2/video/${job.externalId}`, {
-                headers: { 'X-Api-Key': this.heygenApiKey }
-            });
-            const externalStatus = response.data.data.status;
-            if (externalStatus === 'completed') {
-                job.status = 'completed';
-                job.videoUrl = response.data.data.video_url;
-                job.progress = 100;
-            } else if (externalStatus === 'failed') {
-                job.status = 'failed';
-            }
-        } catch (e) {
-            logger.error('Error polling HeyGen', { error: e.message });
+      // Poll HeyGen API
+      try {
+        const response = await axios.get(`https://api.heygen.com/v2/video/${job.externalId}`, {
+          headers: { 'X-Api-Key': this.heygenApiKey }
+        });
+        const externalStatus = response.data.data.status;
+        if (externalStatus === 'completed') {
+          job.status = 'completed';
+          job.videoUrl = response.data.data.video_url;
+          job.progress = 100;
+        } else if (externalStatus === 'failed') {
+          job.status = 'failed';
         }
+      } catch (e) {
+        logger.error('Error polling HeyGen', { error: e.message });
+      }
     }
 
     return job;

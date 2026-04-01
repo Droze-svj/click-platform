@@ -58,53 +58,53 @@ async function exportWithCodec(videoPath, outputPath, codecOptions) {
 
     // Video codec settings
     switch (videoCodec) {
-      case 'h264':
-        command.videoCodec('libx264');
-        command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '18' : quality === 'medium' ? '23' : '28']);
-        break;
-      case 'h265':
-      case 'hevc':
-        command.videoCodec('libx265');
-        command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '20' : quality === 'medium' ? '25' : '30']);
-        break;
-      case 'vp9':
-        command.videoCodec('libvpx-vp9');
-        command.outputOptions(['-crf', quality === 'high' ? '30' : '35', '-b:v', '0']);
-        break;
-      case 'prores':
-        command.videoCodec('prores');
-        command.outputOptions(['-profile:v', '3']); // ProRes 422 HQ
-        break;
-      case 'dnxhd':
-        command.videoCodec('dnxhd');
-        command.outputOptions(['-b:v', '145M']); // DNxHD 145
-        break;
-      default:
-        command.videoCodec('libx264');
+    case 'h264':
+      command.videoCodec('libx264');
+      command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '18' : quality === 'medium' ? '23' : '28']);
+      break;
+    case 'h265':
+    case 'hevc':
+      command.videoCodec('libx265');
+      command.outputOptions(['-preset', preset, '-crf', quality === 'high' ? '20' : quality === 'medium' ? '25' : '30']);
+      break;
+    case 'vp9':
+      command.videoCodec('libvpx-vp9');
+      command.outputOptions(['-crf', quality === 'high' ? '30' : '35', '-b:v', '0']);
+      break;
+    case 'prores':
+      command.videoCodec('prores');
+      command.outputOptions(['-profile:v', '3']); // ProRes 422 HQ
+      break;
+    case 'dnxhd':
+      command.videoCodec('dnxhd');
+      command.outputOptions(['-b:v', '145M']); // DNxHD 145
+      break;
+    default:
+      command.videoCodec('libx264');
     }
 
     // Audio codec settings
     switch (audioCodec) {
-      case 'aac':
-        command.audioCodec('aac');
-        command.outputOptions(['-b:a', '192k']);
-        break;
-      case 'mp3':
-        command.audioCodec('libmp3lame');
-        command.outputOptions(['-b:a', '192k']);
-        break;
-      case 'pcm':
-        command.audioCodec('pcm_s16le');
-        break;
-      case 'flac':
-        command.audioCodec('flac');
-        break;
-      case 'opus':
-        command.audioCodec('libopus');
-        command.outputOptions(['-b:a', '128k']);
-        break;
-      default:
-        command.audioCodec('aac');
+    case 'aac':
+      command.audioCodec('aac');
+      command.outputOptions(['-b:a', '192k']);
+      break;
+    case 'mp3':
+      command.audioCodec('libmp3lame');
+      command.outputOptions(['-b:a', '192k']);
+      break;
+    case 'pcm':
+      command.audioCodec('pcm_s16le');
+      break;
+    case 'flac':
+      command.audioCodec('flac');
+      break;
+    case 'opus':
+      command.audioCodec('libopus');
+      command.outputOptions(['-b:a', '128k']);
+      break;
+    default:
+      command.audioCodec('aac');
     }
 
     command

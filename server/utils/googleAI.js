@@ -99,7 +99,7 @@ async function generateEmbeddings(text) {
     const result = await embeddingModel.embedContent(text);
     return result.embedding.values;
   } catch (err) {
-    console.error('Error generating embedding:', err);
+    
     return null;
   }
 }

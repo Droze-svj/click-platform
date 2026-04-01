@@ -102,15 +102,15 @@ async function getHealthTrends(clientWorkspaceId, filters = {}) {
 function getPeriodKey(date, period) {
   const d = new Date(date);
   switch (period) {
-    case 'daily':
-      return d.toISOString().split('T')[0];
-    case 'weekly':
-      const week = Math.floor(d.getDate() / 7);
-      return `${d.getFullYear()}-W${week}`;
-    case 'monthly':
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    default:
-      return d.toISOString().split('T')[0];
+  case 'daily':
+    return d.toISOString().split('T')[0];
+  case 'weekly':
+    const week = Math.floor(d.getDate() / 7);
+    return `${d.getFullYear()}-W${week}`;
+  case 'monthly':
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  default:
+    return d.toISOString().split('T')[0];
   }
 }
 

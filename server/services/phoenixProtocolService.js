@@ -30,9 +30,9 @@ class PhoenixProtocolService {
 
       if (performanceRatio < this.performanceThreshold) {
         logger.info('Phoenix Protocol Triggered: Underperformance Detected', { 
-            assetId, 
-            performanceRatio, 
-            threshold: this.performanceThreshold 
+          assetId, 
+          performanceRatio, 
+          threshold: this.performanceThreshold 
         });
 
         return await this.initiateRecovery(userId, contentId, assetId);
@@ -54,25 +54,25 @@ class PhoenixProtocolService {
     // Step 1: Sovereignty Engine generates a "Phoenix Hook" (Hyper-Optimized Revision)
     const originalContent = "Original underperforming hook"; // Mock retrieval
     const debate = await sovereigntyEngine.conductDebate(userId, originalContent, {
-        platform: 'social',
-        context: 'PHOENIX_RECOVERY_MODE'
+      platform: 'social',
+      context: 'PHOENIX_RECOVERY_MODE'
     });
 
     const newHook = debate.finalHook;
 
     // Step 2: Queue Re-Render
     const renderJob = await videoRender.initiateRender(userId, contentId, {
-        injectedHook: newHook,
-        priority: 'critical_recovery',
-        meta: { phoenixProtocolId: `PHX-${Date.now()}` }
+      injectedHook: newHook,
+      priority: 'critical_recovery',
+      meta: { phoenixProtocolId: `PHX-${Date.now()}` }
     });
 
     const recovery = {
-        recoveryId: `PHX-${Date.now()}`,
-        assetId,
-        newHook,
-        renderJobId: renderJob.id,
-        status: 're-rendering'
+      recoveryId: `PHX-${Date.now()}`,
+      assetId,
+      newHook,
+      renderJobId: renderJob.id,
+      status: 're-rendering'
     };
 
     this.activeRecoveries.push(recovery);

@@ -33,12 +33,12 @@ async function getLicensingTransparencyInfo(userId) {
       platforms: platformCoverage,
       protection: protection,
       providers: {
-      licensed: licensedProviders.map(p => ({
-        name: p.provider,
-        licenseType: p.licenseType || p.settings?.licenseType || 'platform',
-        allowsMonetization: true,
-        requiresAttribution: p.requiresAttribution || p.settings?.requiresAttribution || false
-      })),
+        licensed: licensedProviders.map(p => ({
+          name: p.provider,
+          licenseType: p.licenseType || p.settings?.licenseType || 'platform',
+          allowsMonetization: true,
+          requiresAttribution: p.requiresAttribution || p.settings?.requiresAttribution || false
+        })),
         aiGenerated: aiProviders.map(p => ({
           name: p.provider,
           licenseType: 'ai_generated',

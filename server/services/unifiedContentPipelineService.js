@@ -5,7 +5,7 @@
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
-const { generateSocialContent, detectHighlights } = require('./aiService');
+const { generateSocialContent, detectHighlights, predictPerformance } = require('./aiService');
 const { generateHashtags } = require('./hashtagService');
 // Content recycling - use recycling service if available
 async function identifyRecyclableContentForPipeline(userId, contentId) {
@@ -208,49 +208,49 @@ async function extractContent(content) {
     const { type, transcript, title, description, body, originalFile } = content;
 
     switch (type) {
-      case 'video':
-        // Extract transcript if available, otherwise use description
-        return {
-          text: transcript || description || body || '',
-          title: title || 'Untitled Video',
-          type: 'video',
-          duration: originalFile?.duration || 0,
-          hasVideo: true
-        };
+    case 'video':
+      // Extract transcript if available, otherwise use description
+      return {
+        text: transcript || description || body || '',
+        title: title || 'Untitled Video',
+        type: 'video',
+        duration: originalFile?.duration || 0,
+        hasVideo: true
+      };
 
-      case 'article':
-        return {
-          text: body || transcript || description || '',
-          title: title || 'Untitled Article',
-          type: 'article',
-          hasVideo: false
-        };
+    case 'article':
+      return {
+        text: body || transcript || description || '',
+        title: title || 'Untitled Article',
+        type: 'article',
+        hasVideo: false
+      };
 
-      case 'podcast':
-        return {
-          text: transcript || description || body || '',
-          title: title || 'Untitled Podcast',
-          type: 'podcast',
-          duration: originalFile?.duration || 0,
-          hasVideo: false,
-          hasAudio: true
-        };
+    case 'podcast':
+      return {
+        text: transcript || description || body || '',
+        title: title || 'Untitled Podcast',
+        type: 'podcast',
+        duration: originalFile?.duration || 0,
+        hasVideo: false,
+        hasAudio: true
+      };
 
-      case 'transcript':
-        return {
-          text: transcript || body || description || '',
-          title: title || 'Untitled Transcript',
-          type: 'transcript',
-          hasVideo: false
-        };
+    case 'transcript':
+      return {
+        text: transcript || body || description || '',
+        title: title || 'Untitled Transcript',
+        type: 'transcript',
+        hasVideo: false
+      };
 
-      default:
-        return {
-          text: transcript || body || description || '',
-          title: title || 'Untitled',
-          type: type || 'general',
-          hasVideo: false
-        };
+    default:
+      return {
+        text: transcript || body || description || '',
+        title: title || 'Untitled',
+        type: type || 'general',
+        hasVideo: false
+      };
     }
   } catch (error) {
     logger.error('Error extracting content', { error: error.message });
@@ -271,37 +271,37 @@ async function generateMultiFormatAssets(content, extractedContent, platforms) {
 
       // Generate platform-specific formats
       switch (platform) {
-        case 'twitter':
-          assets.twitter = await generateTwitterAssets(text, title, type);
-          break;
+      case 'twitter':
+        assets.twitter = await generateTwitterAssets(text, title, type);
+        break;
 
-        case 'linkedin':
-          assets.linkedin = await generateLinkedInAssets(text, title, type);
-          break;
+      case 'linkedin':
+        assets.linkedin = await generateLinkedInAssets(text, title, type);
+        break;
 
-        case 'facebook':
-          assets.facebook = await generateFacebookAssets(text, title, type);
-          break;
+      case 'facebook':
+        assets.facebook = await generateFacebookAssets(text, title, type);
+        break;
 
-        case 'instagram':
-          assets.instagram = await generateInstagramAssets(text, title, type, hasVideo);
-          break;
+      case 'instagram':
+        assets.instagram = await generateInstagramAssets(text, title, type, hasVideo);
+        break;
 
-        case 'youtube':
-          if (hasVideo && type === 'video') {
-            assets.youtube = await generateYouTubeAssets(content, extractedContent);
-          } else {
-            assets.youtube = await generateYouTubeShortAssets(text, title);
-          }
-          break;
+      case 'youtube':
+        if (hasVideo && type === 'video') {
+          assets.youtube = await generateYouTubeAssets(content, extractedContent);
+        } else {
+          assets.youtube = await generateYouTubeShortAssets(text, title);
+        }
+        break;
 
-        case 'tiktok':
-          if (hasVideo && type === 'video') {
-            assets.tiktok = await generateTikTokAssets(content, extractedContent);
-          } else {
-            assets.tiktok = await generateTikTokTextAssets(text, title);
-          }
-          break;
+      case 'tiktok':
+        if (hasVideo && type === 'video') {
+          assets.tiktok = await generateTikTokAssets(content, extractedContent);
+        } else {
+          assets.tiktok = await generateTikTokTextAssets(text, title);
+        }
+        break;
       }
     }
 
@@ -1221,35 +1221,37 @@ async function triggerWorkflowAutomation(userId, contentId, triggerType = 'pipel
         // Execute workflow actions
         for (const action of workflow.actions || []) {
           switch (action.type) {
-            case 'notify':
-              // Send notification
-              const { sendNotification } = require('./notificationService');
-              await sendNotification(userId, {
-                title: 'Pipeline Completed',
-                message: `Content pipeline completed for ${contentId}`,
-                type: 'success'
-              });
-              break;
+          case 'notify': {
+            // Send notification
+            const { sendNotification } = require('./notificationService');
+            await sendNotification(userId, {
+              title: 'Pipeline Completed',
+              message: `Content pipeline completed for ${contentId}`,
+              type: 'success'
+            });
+            break;
+          }
 
-            case 'schedule':
-              // Auto-schedule
-              await scheduleWithOptimalTimes(userId, contentId);
-              break;
+          case 'schedule':
+            // Auto-schedule
+            await scheduleWithOptimalTimes(userId, contentId);
+            break;
 
-            case 'publish':
-              // Auto-publish
-              await publishAllNetworks(userId, contentId, { schedule: false });
-              break;
+          case 'publish':
+            // Auto-publish
+            await publishAllNetworks(userId, contentId, { schedule: false });
+            break;
 
-            case 'webhook':
-              // Trigger webhook
-              const axios = require('axios');
-              await axios.post(action.config.url, {
-                event: triggerType,
-                contentId,
-                userId
-              });
-              break;
+          case 'webhook': {
+            // Trigger webhook
+            const axios = require('axios');
+            await axios.post(action.config.url, {
+              event: triggerType,
+              contentId,
+              userId
+            });
+            break;
+          }
           }
         }
 

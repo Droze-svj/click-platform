@@ -144,9 +144,9 @@ function calculateFeatureStatistics(featuresArray) {
 
     const bandwidthVariance = bandwidths.length > 0
       ? bandwidths.reduce((sum, b) => {
-          const diff = b - mean.spectral.bandwidth;
-          return sum + diff * diff;
-        }, 0) / bandwidths.length
+        const diff = b - mean.spectral.bandwidth;
+        return sum + diff * diff;
+      }, 0) / bandwidths.length
       : 0;
 
     std.spectral = {

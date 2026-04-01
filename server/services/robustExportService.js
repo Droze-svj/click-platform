@@ -58,23 +58,23 @@ async function processExportJob(jobId) {
       // Process based on type
       let result;
       switch (job.export.type) {
-        case 'content':
-          result = await exportContent(job);
-          break;
-        case 'analytics':
-          result = await exportAnalytics(job);
-          break;
-        case 'reports':
-          result = await exportReports(job);
-          break;
-        case 'assets':
-          result = await exportAssets(job);
-          break;
-        case 'bulk':
-          result = await exportBulk(job);
-          break;
-        default:
-          throw new Error(`Unknown export type: ${job.export.type}`);
+      case 'content':
+        result = await exportContent(job);
+        break;
+      case 'analytics':
+        result = await exportAnalytics(job);
+        break;
+      case 'reports':
+        result = await exportReports(job);
+        break;
+      case 'assets':
+        result = await exportAssets(job);
+        break;
+      case 'bulk':
+        result = await exportBulk(job);
+        break;
+      default:
+        throw new Error(`Unknown export type: ${job.export.type}`);
       }
 
       // Update job with result

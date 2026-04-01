@@ -45,7 +45,7 @@ function csrfProtection(req, res, next) {
       req.path.startsWith('/auth/profile') ||
       req.path.startsWith('/auth/change-password') ||
       req.path.startsWith('/posts')) {
-    console.log('Skipping CSRF for auth/post endpoint:', req.path);
+    
     return next();
   }
 

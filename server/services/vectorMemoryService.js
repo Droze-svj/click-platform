@@ -29,7 +29,7 @@ function cosineSimilarity(vecA, vecB) {
 async function storeUserMemory(userId, text, metadata = {}) {
   const vector = await generateEmbeddings(text);
   if (!vector) {
-    console.warn("Embeddings generation failed, memory not stored.");
+    
     return false;
   }
 
@@ -63,11 +63,11 @@ async function queryUserMemory(userId, queryText, topK = 3) {
     try {
       const cachedResult = await redisClient.get(cacheKey);
       if (cachedResult) {
-        console.log("Semantic Cache Hit!");
+        
         return JSON.parse(cachedResult);
       }
     } catch (err) {
-      console.warn("Redis Cache check failed", err);
+      
     }
   }
 
@@ -100,7 +100,7 @@ async function queryUserMemory(userId, queryText, topK = 3) {
     try {
       await redisClient.set(cacheKey, JSON.stringify(results), 'EX', 3600);
     } catch (err) {
-      console.warn("Redis Cache set failed", err);
+      
     }
   }
 

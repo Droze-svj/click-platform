@@ -51,14 +51,14 @@ function buildVideoFilterChain(filters) {
 function buildLUTApproximation(lutId) {
   if (!lutId || lutId === 'none') return []
   switch (lutId) {
-    case 'cinematic':
-      return ['colorchannelmixer=rr=0.95:gg=0.9:bb=0.85', 'eq=contrast=1.08:saturation=0.95']
-    case 'bleach':
-      return ['colorchannelmixer=rr=0.9:gg=0.88:bb=0.95', 'eq=contrast=1.12:saturation=0.7']
-    case 'log709':
-      return ['colorchannelmixer=rr=1.05:gg=1.02:bb=1.0', 'eq=contrast=1.05:brightness=0.02']
-    default:
-      return []
+  case 'cinematic':
+    return ['colorchannelmixer=rr=0.95:gg=0.9:bb=0.85', 'eq=contrast=1.08:saturation=0.95']
+  case 'bleach':
+    return ['colorchannelmixer=rr=0.9:gg=0.88:bb=0.95', 'eq=contrast=1.12:saturation=0.7']
+  case 'log709':
+    return ['colorchannelmixer=rr=1.05:gg=1.02:bb=1.0', 'eq=contrast=1.05:brightness=0.02']
+  default:
+    return []
   }
 }
 
@@ -181,19 +181,19 @@ async function renderFromEditorState(options) {
 
   const overlayFilters = []
     ; (textOverlays || []).forEach((o) => {
-      try {
-        overlayFilters.push(buildDrawTextFilter(o))
-      } catch (e) {
-        logger.warn('Skip text overlay', { error: e.message, overlay: o })
-      }
-    })
-    ; (shapeOverlays || []).forEach((s) => {
-      try {
-        overlayFilters.push(buildDrawBoxFilter(s))
-      } catch (e) {
-        logger.warn('Skip shape overlay', { error: e.message, shape: s })
-      }
-    })
+    try {
+      overlayFilters.push(buildDrawTextFilter(o))
+    } catch (e) {
+      logger.warn('Skip text overlay', { error: e.message, overlay: o })
+    }
+  })
+  ; (shapeOverlays || []).forEach((s) => {
+    try {
+      overlayFilters.push(buildDrawBoxFilter(s))
+    } catch (e) {
+      logger.warn('Skip shape overlay', { error: e.message, shape: s })
+    }
+  })
 
   const allVideoFilters = [...videoFilters_ff, ...lutFilters, ...overlayFilters]
   const filterStr = allVideoFilters.length > 0 ? allVideoFilters.join(',') : null

@@ -50,22 +50,22 @@ async function applyKeyframeAnimation(videoPath, outputPath, keyframes, property
     let filter = '';
     
     switch (property) {
-      case 'position':
-        // Animate position using xfade or overlay
-        filter = buildPositionAnimation(keyframes);
-        break;
-      case 'scale':
-        filter = buildScaleAnimation(keyframes);
-        break;
-      case 'rotation':
-        filter = buildRotationAnimation(keyframes);
-        break;
-      case 'opacity':
-        filter = buildOpacityAnimation(keyframes);
-        break;
-      default:
-        reject(new Error(`Unknown property: ${property}`));
-        return;
+    case 'position':
+      // Animate position using xfade or overlay
+      filter = buildPositionAnimation(keyframes);
+      break;
+    case 'scale':
+      filter = buildScaleAnimation(keyframes);
+      break;
+    case 'rotation':
+      filter = buildRotationAnimation(keyframes);
+      break;
+    case 'opacity':
+      filter = buildOpacityAnimation(keyframes);
+      break;
+    default:
+      reject(new Error(`Unknown property: ${property}`));
+      return;
     }
 
     if (!filter) {

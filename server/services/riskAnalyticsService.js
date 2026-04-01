@@ -138,21 +138,22 @@ async function getRiskTrends(userId, clientId, period = 'month') {
     let startDate;
 
     switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'quarter':
-        const quarter = Math.floor(now.getMonth() / 3);
-        startDate = new Date(now.getFullYear(), quarter * 3, 1);
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'quarter': {
+      const quarter = Math.floor(now.getMonth() / 3);
+      startDate = new Date(now.getFullYear(), quarter * 3, 1);
+      break;
+    }
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    default:
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
     const flags = await RiskFlag.find({
@@ -366,34 +367,35 @@ async function automatedRemediation(flagId) {
 
     // Auto-fix based on risk type
     switch (flag.riskType) {
-      case 'low_posting_frequency':
-        // Suggest playbook application
-        const PlaybookService = require('./playbookService');
-        const suggestions = await PlaybookService.getPlaybookSuggestions(flag.userId, flag.clientId);
-        if (suggestions.length > 0) {
-          remediationActions.push({
-            type: 'suggest_playbook',
-            playbook: suggestions[0],
-            message: 'Suggested playbook to increase posting frequency'
-          });
-        }
-        break;
-
-      case 'content_gap':
-        // Suggest content planning
+    case 'low_posting_frequency': {
+      // Suggest playbook application
+      const PlaybookService = require('./playbookService');
+      const suggestions = await PlaybookService.getPlaybookSuggestions(flag.userId, flag.clientId);
+      if (suggestions.length > 0) {
         remediationActions.push({
-          type: 'content_planning',
-          message: 'Create content plan to fill gaps'
+          type: 'suggest_playbook',
+          playbook: suggestions[0],
+          message: 'Suggested playbook to increase posting frequency'
         });
-        break;
+      }
+      break;
+    }
 
-      case 'falling_engagement':
-        // Suggest content optimization
-        remediationActions.push({
-          type: 'content_optimization',
-          message: 'Review and optimize content strategy'
-        });
-        break;
+    case 'content_gap':
+      // Suggest content planning
+      remediationActions.push({
+        type: 'content_planning',
+        message: 'Create content plan to fill gaps'
+      });
+      break;
+
+    case 'falling_engagement':
+      // Suggest content optimization
+      remediationActions.push({
+        type: 'content_optimization',
+        message: 'Review and optimize content strategy'
+      });
+      break;
     }
 
     // Update flag with remediation actions

@@ -16,7 +16,7 @@ router.post('/analyze', authenticateToken, async (req, res) => {
     const summary = summarizeRetention(heatmap)
     res.json({ heatmap, summary })
   } catch (err) {
-    console.error('[RetentionHeatmap] error:', err)
+    
     res.status(500).json({ error: 'Failed to analyze retention' })
   }
 })

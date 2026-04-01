@@ -261,37 +261,37 @@ router.post('/tracks/:trackId/align', auth, asyncHandler(async (req, res) => {
     let result;
 
     switch (alignmentType) {
-      case 'scene_boundary':
-        if (!sceneId) {
-          return sendError(res, 'sceneId is required for scene_boundary alignment', 400);
-        }
-        const { alignTo } = req.body;
-        result = await alignToSceneBoundary(trackId, sceneId, alignTo || 'start', req.user._id);
-        break;
+    case 'scene_boundary':
+      if (!sceneId) {
+        return sendError(res, 'sceneId is required for scene_boundary alignment', 400);
+      }
+      const { alignTo } = req.body;
+      result = await alignToSceneBoundary(trackId, sceneId, alignTo || 'start', req.user._id);
+      break;
 
-      case 'key_moment':
-        if (!contentId) {
-          return sendError(res, 'contentId is required for key_moment alignment', 400);
-        }
-        result = await alignBeatToKeyMoment(trackId, contentId, req.user._id);
-        break;
+    case 'key_moment':
+      if (!contentId) {
+        return sendError(res, 'contentId is required for key_moment alignment', 400);
+      }
+      result = await alignBeatToKeyMoment(trackId, contentId, req.user._id);
+      break;
 
-      case 'snap':
-        if (!contentId) {
-          return sendError(res, 'contentId is required for snap alignment', 400);
-        }
-        result = await snapToNearestSceneBoundary(trackId, contentId, req.user._id);
-        break;
+    case 'snap':
+      if (!contentId) {
+        return sendError(res, 'contentId is required for snap alignment', 400);
+      }
+      result = await snapToNearestSceneBoundary(trackId, contentId, req.user._id);
+      break;
 
-      case 'chorus':
-        if (!sceneId) {
-          return sendError(res, 'sceneId is required for chorus alignment', 400);
-        }
-        result = await alignChorusToScene(trackId, sceneId, req.user._id);
-        break;
+    case 'chorus':
+      if (!sceneId) {
+        return sendError(res, 'sceneId is required for chorus alignment', 400);
+      }
+      result = await alignChorusToScene(trackId, sceneId, req.user._id);
+      break;
 
-      default:
-        return sendError(res, 'Invalid alignmentType', 400);
+    default:
+      return sendError(res, 'Invalid alignmentType', 400);
     }
 
     sendSuccess(res, 'Track aligned', 200, result);

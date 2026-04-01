@@ -497,18 +497,18 @@ async function notifyClientApprover(approvalId, stage, contentId) {
       const emailService = require('./emailService');
       if (emailService && emailService.sendEmail) {
         await emailService.sendEmail({
-      to: token.approverEmail,
-      subject: 'Content Approval Required',
-      template: 'approval-request',
-      data: {
-        approverName: token.approverName,
-        contentTitle: content?.title || 'Content',
-        contentPreview: content?.content?.text?.substring(0, 200) || '',
-        approveUrl,
-        rejectUrl,
-        requestChangesUrl,
-        expiresAt: token.expiresAt
-      }
+          to: token.approverEmail,
+          subject: 'Content Approval Required',
+          template: 'approval-request',
+          data: {
+            approverName: token.approverName,
+            contentTitle: content?.title || 'Content',
+            contentPreview: content?.content?.text?.substring(0, 200) || '',
+            approveUrl,
+            rejectUrl,
+            requestChangesUrl,
+            expiresAt: token.expiresAt
+          }
         });
       }
     } catch (error) {

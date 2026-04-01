@@ -121,14 +121,14 @@ router.post('/webhooks/conversions', asyncHandler(async (req, res) => {
 
   let conversion;
   switch (source) {
-    case 'google_analytics':
-      conversion = await processGoogleAnalyticsConversion(data);
-      break;
-    case 'shopify':
-      conversion = await processShopifyConversion(data);
-      break;
-    default:
-      conversion = await processConversionWebhook({ source: source || 'external', ...data });
+  case 'google_analytics':
+    conversion = await processGoogleAnalyticsConversion(data);
+    break;
+  case 'shopify':
+    conversion = await processShopifyConversion(data);
+    break;
+  default:
+    conversion = await processConversionWebhook({ source: source || 'external', ...data });
   }
 
   if (conversion) {

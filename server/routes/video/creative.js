@@ -60,7 +60,7 @@ router.post('/transcribe', upload.single('video'), async (req, res) => {
 
     res.json({ success: true, transcript: mockTranscript });
   } catch (error) {
-    console.error('Transcription error:', error);
+    
     res.status(500).json({ error: error.message });
   }
 });
@@ -86,7 +86,7 @@ router.post('/auto-reframe', express.json(), async (req, res) => {
 
     res.json({ success: true, message: 'Reframe complete', trackingMode: 'center_fallback' });
   } catch (err) {
-    console.error('Auto-Reframe error:', err);
+    
     res.status(500).json({ error: err.message });
   }
 });
@@ -124,7 +124,7 @@ router.post('/magic-broll', express.json(), async (req, res) => {
 
     res.json({ success: true, overlays });
   } catch (err) {
-    console.error('Magic B-Roll error:', err);
+    
     res.status(500).json({ error: err.message });
   }
 });
@@ -200,7 +200,7 @@ router.post('/thumbnail', express.json(), async (req, res) => {
       message: 'AI Thumbnail generated successfully'
     });
   } catch (err) {
-    console.error('Thumbnail generation error:', err);
+    
     res.status(500).json({ error: err.message });
   }
 });

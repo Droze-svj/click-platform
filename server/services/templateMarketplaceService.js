@@ -73,18 +73,18 @@ async function browseTemplates(filters = {}) {
 
     let sort = {};
     switch (sortBy) {
-      case 'popular':
-        sort = { downloads: -1 };
-        break;
-      case 'recent':
-        sort = { createdAt: -1 };
-        break;
-      case 'rating':
-        sort = { rating: -1 };
-        break;
-      case 'price':
-        sort = { price: 1 };
-        break;
+    case 'popular':
+      sort = { downloads: -1 };
+      break;
+    case 'recent':
+      sort = { createdAt: -1 };
+      break;
+    case 'rating':
+      sort = { rating: -1 };
+      break;
+    case 'price':
+      sort = { price: 1 };
+      break;
     }
 
     const templates = await TemplateModel.find(query)

@@ -117,22 +117,22 @@ function getValueFromContext(context, field) {
  */
 function evaluateCondition(value, operator, expected) {
   switch (operator) {
-    case 'equals':
-      return value === expected;
-    case 'not_equals':
-      return value !== expected;
-    case 'contains':
-      return String(value).includes(String(expected));
-    case 'greater_than':
-      return Number(value) > Number(expected);
-    case 'less_than':
-      return Number(value) < Number(expected);
-    case 'in':
-      return Array.isArray(expected) && expected.includes(value);
-    case 'not_in':
-      return Array.isArray(expected) && !expected.includes(value);
-    default:
-      return false;
+  case 'equals':
+    return value === expected;
+  case 'not_equals':
+    return value !== expected;
+  case 'contains':
+    return String(value).includes(String(expected));
+  case 'greater_than':
+    return Number(value) > Number(expected);
+  case 'less_than':
+    return Number(value) < Number(expected);
+  case 'in':
+    return Array.isArray(expected) && expected.includes(value);
+  case 'not_in':
+    return Array.isArray(expected) && !expected.includes(value);
+  default:
+    return false;
   }
 }
 
@@ -160,49 +160,49 @@ async function executeAction(action, context) {
  */
 async function executeActionInternal(action, context) {
   switch (action.type) {
-    case 'create_content':
-      return await createContent(action.config, context);
-    case 'update_content':
-      return await updateContent(action.config, context);
-    case 'publish_content':
-      return await publishContent(action.config, context);
-    case 'schedule_content':
-      return await scheduleContent(action.config, context);
-    case 'send_notification':
-      return await sendNotification(action.config, context);
-    case 'assign_task':
-      return await assignTask(action.config, context);
-    case 'update_status':
-      return await updateStatus(action.config, context);
-    case 'webhook':
-      return await callWebhook(action.config, context);
-    case 'email':
-      return await sendEmail(action.config, context);
-    case 'detect_scenes':
-      return await detectScenes(action.config, context);
-    case 'create_clips_from_scenes':
-      if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
-      return await sceneWorkflowActions.createClipsFromScenes(action.config, context);
-    case 'generate_captions_for_scenes':
-      if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
-      return await sceneWorkflowActions.generateCaptionsForScenes(action.config, context);
-    case 'create_carousel_from_scenes':
-      if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
-      return await sceneWorkflowActions.createCarouselFromScenes(action.config, context);
-    case 'tag_key_moments':
-      if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
-      return await sceneWorkflowActions.tagKeyMoments(action.config, context);
-    case 'export_scene_analytics':
-      if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
-      return await sceneWorkflowActions.exportSceneAnalytics(action.config, context);
-    case 'create_clips_with_audio_criteria':
-      return await createClipsWithAudioCriteria(action.config, context);
-    case 'skip_segments_by_audio':
-      return await skipSegmentsByAudio(action.config, context);
-    case 'generate_music_for_scenes':
-      return await generateMusicForScenes(action.config, context);
-    default:
-      throw new Error(`Unknown action type: ${action.type}`);
+  case 'create_content':
+    return await createContent(action.config, context);
+  case 'update_content':
+    return await updateContent(action.config, context);
+  case 'publish_content':
+    return await publishContent(action.config, context);
+  case 'schedule_content':
+    return await scheduleContent(action.config, context);
+  case 'send_notification':
+    return await sendNotification(action.config, context);
+  case 'assign_task':
+    return await assignTask(action.config, context);
+  case 'update_status':
+    return await updateStatus(action.config, context);
+  case 'webhook':
+    return await callWebhook(action.config, context);
+  case 'email':
+    return await sendEmail(action.config, context);
+  case 'detect_scenes':
+    return await detectScenes(action.config, context);
+  case 'create_clips_from_scenes':
+    if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
+    return await sceneWorkflowActions.createClipsFromScenes(action.config, context);
+  case 'generate_captions_for_scenes':
+    if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
+    return await sceneWorkflowActions.generateCaptionsForScenes(action.config, context);
+  case 'create_carousel_from_scenes':
+    if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
+    return await sceneWorkflowActions.createCarouselFromScenes(action.config, context);
+  case 'tag_key_moments':
+    if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
+    return await sceneWorkflowActions.tagKeyMoments(action.config, context);
+  case 'export_scene_analytics':
+    if (!sceneWorkflowActions) throw new Error('Scene workflow service not available');
+    return await sceneWorkflowActions.exportSceneAnalytics(action.config, context);
+  case 'create_clips_with_audio_criteria':
+    return await createClipsWithAudioCriteria(action.config, context);
+  case 'skip_segments_by_audio':
+    return await skipSegmentsByAudio(action.config, context);
+  case 'generate_music_for_scenes':
+    return await generateMusicForScenes(action.config, context);
+  default:
+    throw new Error(`Unknown action type: ${action.type}`);
   }
 }
 
@@ -435,24 +435,24 @@ async function checkAudioConditions(scenes, conditions) {
 
       // Check if condition is met
       switch (condition.operator) {
-        case 'has_audio_tag':
-          const requiredTags = condition.audioCriteria.audioTags || [];
-          const hasRequiredTags = filteredScenes.length > 0;
-          if (!hasRequiredTags && requiredTags.length > 0) {
-            return false;
-          }
-          break;
-        case 'audio_energy_range':
-          const minEnergy = condition.value?.min || 0;
-          const maxEnergy = condition.value?.max || 1;
-          const allInRange = filteredScenes.every(scene => {
-            const energy = scene.audioFeatures?.energy || scene.audioFeatures?.averageEnergy || 0;
-            return energy >= minEnergy && energy <= maxEnergy;
-          });
-          if (!allInRange) {
-            return false;
-          }
-          break;
+      case 'has_audio_tag':
+        const requiredTags = condition.audioCriteria.audioTags || [];
+        const hasRequiredTags = filteredScenes.length > 0;
+        if (!hasRequiredTags && requiredTags.length > 0) {
+          return false;
+        }
+        break;
+      case 'audio_energy_range':
+        const minEnergy = condition.value?.min || 0;
+        const maxEnergy = condition.value?.max || 1;
+        const allInRange = filteredScenes.every(scene => {
+          const energy = scene.audioFeatures?.energy || scene.audioFeatures?.averageEnergy || 0;
+          return energy >= minEnergy && energy <= maxEnergy;
+        });
+        if (!allInRange) {
+          return false;
+        }
+        break;
       }
     }
   }

@@ -1,8 +1,8 @@
-console.log('🏗️ requestTimeout: start requires');
+
 const logger = require('../utils/logger');
-console.log('🏗️ requestTimeout: logger loaded');
+
 const { sendError } = require('../utils/response');
-console.log('🏗️ requestTimeout: response loaded');
+
 
 /**
  * Request timeout middleware

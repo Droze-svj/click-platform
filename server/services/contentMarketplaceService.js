@@ -114,18 +114,18 @@ function getMarketplaceItems(filters = {}) {
 
   // Sort
   switch (sortBy) {
-    case 'popular':
-      items.sort((a, b) => b.downloadCount - a.downloadCount);
-      break;
-    case 'newest':
-      items.sort((a, b) => b.createdAt - a.createdAt);
-      break;
-    case 'price':
-      items.sort((a, b) => a.price - b.price);
-      break;
-    case 'rating':
-      items.sort((a, b) => b.rating - a.rating);
-      break;
+  case 'popular':
+    items.sort((a, b) => b.downloadCount - a.downloadCount);
+    break;
+  case 'newest':
+    items.sort((a, b) => b.createdAt - a.createdAt);
+    break;
+  case 'price':
+    items.sort((a, b) => a.price - b.price);
+    break;
+  case 'rating':
+    items.sort((a, b) => b.rating - a.rating);
+    break;
   }
 
   return items;

@@ -168,33 +168,33 @@ async function executeNode(node, allNodes, edges, inputData, executedNodes, node
   let result = null;
 
   switch (node.type) {
-    case 'start':
-      result = inputData;
-      break;
+  case 'start':
+    result = inputData;
+    break;
 
-    case 'action':
-      // Execute action (would call appropriate service)
-      result = await executeAction(node.action, inputData);
-      break;
+  case 'action':
+    // Execute action (would call appropriate service)
+    result = await executeAction(node.action, inputData);
+    break;
 
-    case 'condition':
-      // Evaluate condition
-      result = evaluateCondition(node.condition, inputData);
-      break;
+  case 'condition':
+    // Evaluate condition
+    result = evaluateCondition(node.condition, inputData);
+    break;
 
-    case 'delay':
-      // Wait for specified time
-      await new Promise((resolve) => setTimeout(resolve, node.duration || 1000));
-      result = inputData;
-      break;
+  case 'delay':
+    // Wait for specified time
+    await new Promise((resolve) => setTimeout(resolve, node.duration || 1000));
+    result = inputData;
+    break;
 
-    case 'webhook':
-      // Call webhook
-      result = await callWebhook(node.url, inputData);
-      break;
+  case 'webhook':
+    // Call webhook
+    result = await callWebhook(node.url, inputData);
+    break;
 
-    default:
-      result = inputData;
+  default:
+    result = inputData;
   }
 
   nodeResults.set(node.id, result);

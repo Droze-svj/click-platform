@@ -9,6 +9,8 @@ module.exports = {
   },
   rules: {
     'no-unused-vars': 'warn',
-    'no-console': 'off',
+    'no-console': 'error',
+    'indent': ['error', 2],
+    'no-mixed-spaces-and-tabs': 'error',
   },
 };

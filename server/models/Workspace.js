@@ -1,5 +1,5 @@
 // Workspace Model
-console.log('--- ENTERING Workspace.js ---');
+
 // Multi-brand/multi-client workspaces
 
 const mongoose = require('mongoose');
@@ -144,5 +144,5 @@ workspaceSchema.pre('save', function (next) {
 });
 
 module.exports = mongoose.model('Workspace', workspaceSchema);
-console.log('--- LEAVING Workspace.js ---');
+
 

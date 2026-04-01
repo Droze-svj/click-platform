@@ -82,19 +82,19 @@ async function getKanbanBoardWithFilters(clientWorkspaceId, agencyWorkspaceId, f
         let comparison = 0;
 
         switch (sortBy) {
-          case 'priority':
-            const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-            comparison = priorityOrder[b.priority] - priorityOrder[a.priority];
-            break;
-          case 'dueDate':
-            if (a.dueDate && b.dueDate) {
-              comparison = new Date(a.dueDate) - new Date(b.dueDate);
-            } else if (a.dueDate) return -1;
-            else if (b.dueDate) return 1;
-            break;
-          case 'createdAt':
-            comparison = new Date(b.createdAt) - new Date(a.createdAt);
-            break;
+        case 'priority':
+          const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
+          comparison = priorityOrder[b.priority] - priorityOrder[a.priority];
+          break;
+        case 'dueDate':
+          if (a.dueDate && b.dueDate) {
+            comparison = new Date(a.dueDate) - new Date(b.dueDate);
+          } else if (a.dueDate) return -1;
+          else if (b.dueDate) return 1;
+          break;
+        case 'createdAt':
+          comparison = new Date(b.createdAt) - new Date(a.createdAt);
+          break;
         }
 
         return sortOrder === 'asc' ? -comparison : comparison;
@@ -234,14 +234,14 @@ async function getKanbanBoardWithSwimlanes(clientWorkspaceId, agencyWorkspaceId,
  */
 function getSwimlaneKey(card, type) {
   switch (type) {
-    case 'priority':
-      return card.priority || 'medium';
-    case 'assignee':
-      return card.assignee?.toString() || 'unassigned';
-    case 'sla':
-      return card.sla?.status || 'no_sla';
-    default:
-      return 'default';
+  case 'priority':
+    return card.priority || 'medium';
+  case 'assignee':
+    return card.assignee?.toString() || 'unassigned';
+  case 'sla':
+    return card.sla?.status || 'no_sla';
+  default:
+    return 'default';
   }
 }
 
@@ -250,14 +250,14 @@ function getSwimlaneKey(card, type) {
  */
 function getSwimlaneName(key, type) {
   switch (type) {
-    case 'priority':
-      return key.charAt(0).toUpperCase() + key.slice(1) + ' Priority';
-    case 'assignee':
-      return key === 'unassigned' ? 'Unassigned' : `Assigned to ${key}`;
-    case 'sla':
-      return key === 'no_sla' ? 'No SLA' : key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
-    default:
-      return key;
+  case 'priority':
+    return key.charAt(0).toUpperCase() + key.slice(1) + ' Priority';
+  case 'assignee':
+    return key === 'unassigned' ? 'Unassigned' : `Assigned to ${key}`;
+  case 'sla':
+    return key === 'no_sla' ? 'No SLA' : key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
+  default:
+    return key;
   }
 }
 

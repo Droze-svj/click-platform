@@ -117,7 +117,7 @@ const contentSchema = new mongoose.Schema({
     variant: {
       type: String,
       enum: ['A', 'B']
-  }
+    }
   },
   sharedWith: [{
     userId: {

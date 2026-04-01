@@ -155,14 +155,14 @@ function shouldRunRule(rule) {
   const hoursSinceLastRun = (now - lastRun) / (1000 * 60 * 60);
 
   switch (rule.actions.scheduleInterval) {
-    case 'daily':
-      return hoursSinceLastRun >= 24;
-    case 'weekly':
-      return hoursSinceLastRun >= 168; // 7 days
-    case 'monthly':
-      return hoursSinceLastRun >= 720; // 30 days
-    default:
-      return true;
+  case 'daily':
+    return hoursSinceLastRun >= 24;
+  case 'weekly':
+    return hoursSinceLastRun >= 168; // 7 days
+  case 'monthly':
+    return hoursSinceLastRun >= 720; // 30 days
+  default:
+    return true;
   }
 }
 

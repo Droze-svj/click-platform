@@ -7,7 +7,7 @@ const mongoose = require('mongoose')
 
 class DatabaseOptimizer {
   constructor() {
-    console.log('🏗️ DatabaseOptimizer: constructor start');
+    
     this.connectionPool = null
     this.performanceMetrics = {
       queryCount: 0,
@@ -16,14 +16,14 @@ class DatabaseOptimizer {
       activeConnections: 0,
       indexesCreated: 0
     }
-    console.log('🏗️ DatabaseOptimizer: constructor end');
+    
   }
 
   /**
    * Optimize MongoDB connection with advanced settings
    */
   async optimizeConnection(connectionString) {
-    console.log('🔧 Optimizing database connection...')
+    
 
     const options = {
       // Connection pool settings
@@ -52,7 +52,7 @@ class DatabaseOptimizer {
       // Connect with optimized settings
       await mongoose.connect(connectionString, options)
 
-      console.log('✅ Database connection optimized')
+      
 
       // Set up connection event handlers
       this.setupConnectionMonitoring()
@@ -63,7 +63,7 @@ class DatabaseOptimizer {
       return mongoose.connection
 
     } catch (error) {
-      console.error('❌ Database optimization failed:', error)
+      
       throw error
     }
   }
@@ -75,22 +75,22 @@ class DatabaseOptimizer {
     const conn = mongoose.connection
 
     conn.on('connected', () => {
-      console.log('📊 Database connected')
+      
       this.updateConnectionMetrics()
     })
 
     conn.on('disconnected', () => {
-      console.warn('⚠️ Database disconnected')
+      
       this.updateConnectionMetrics()
     })
 
     conn.on('reconnected', () => {
-      console.log('🔄 Database reconnected')
+      
       this.updateConnectionMetrics()
     })
 
     conn.on('error', (err) => {
-      console.error('❌ Database error:', err)
+      
     })
 
     // Periodic health checks
@@ -122,7 +122,7 @@ class DatabaseOptimizer {
 
         // Log slow queries
         if (duration > 1000) { // Queries taking more than 1 second
-          console.warn(`🐌 Slow query: ${operation} on ${collection} took ${duration}ms`)
+          
 
           global.databaseOptimizer?.performanceMetrics.slowQueries.push({
             operation,
@@ -166,7 +166,7 @@ class DatabaseOptimizer {
       this.performanceMetrics.connectionPoolSize = conn.db?.serverConfig?.poolSize || 0
       this.performanceMetrics.activeConnections = conn.db?.serverConfig?.connections?.length || 0
     } catch (error) {
-      console.warn('⚠️ Failed to update connection metrics:', error.message)
+      
     }
   }
 
@@ -180,12 +180,12 @@ class DatabaseOptimizer {
       const pingTime = Date.now() - startTime
 
       if (pingTime > 500) { // Ping taking more than 500ms
-        console.warn(`⚠️ Slow database ping: ${pingTime}ms`)
+        
       }
 
       return { status: 'healthy', pingTime }
     } catch (error) {
-      console.error('❌ Database health check failed:', error.message)
+      
       return { status: 'unhealthy', error: error.message }
     }
   }
@@ -194,7 +194,7 @@ class DatabaseOptimizer {
    * Optimize database indexes
    */
   async optimizeIndexes() {
-    console.log('📊 Optimizing database indexes...')
+    
 
     try {
       const db = mongoose.connection.db
@@ -214,14 +214,14 @@ class DatabaseOptimizer {
           await this.analyzeCollectionIndexes(collectionObj, collectionName, indexes)
 
         } catch (error) {
-          console.warn(`⚠️ Failed to analyze indexes for ${collectionName}:`, error.message)
+          
         }
       }
 
-      console.log('✅ Database index optimization completed')
+      
 
     } catch (error) {
-      console.error('❌ Index optimization failed:', error)
+      
     }
   }
 
@@ -281,10 +281,10 @@ class DatabaseOptimizer {
         }
 
         this.performanceMetrics.indexesCreated++
-        console.log(`📊 Created index: ${collectionName}_${suggestion.field}`)
+        
 
       } catch (error) {
-        console.warn(`⚠️ Failed to create index for ${collectionName}.${suggestion.field}:`, error.message)
+        
       }
     }
   }
@@ -293,7 +293,7 @@ class DatabaseOptimizer {
    * Create compound indexes for common query patterns
    */
   async createCompoundIndexes() {
-    console.log('🔗 Creating compound indexes...')
+    
 
     const indexes = [
       // Content queries: user + createdAt
@@ -322,11 +322,11 @@ class DatabaseOptimizer {
           name: `${indexDef.collection}_compound_${Object.keys(indexDef.fields).join('_')}`
         })
 
-        console.log(`🔗 Created compound index for ${indexDef.collection}`)
+        
         this.performanceMetrics.indexesCreated++
 
       } catch (error) {
-        console.warn(`⚠️ Failed to create compound index for ${indexDef.collection}:`, error.message)
+        
       }
     }
   }
@@ -335,7 +335,7 @@ class DatabaseOptimizer {
    * Optimize read/write concerns for performance
    */
   async optimizeReadWriteConcerns() {
-    console.log('⚡ Optimizing read/write concerns...')
+    
 
     try {
       // Set default read preference
@@ -348,9 +348,9 @@ class DatabaseOptimizer {
         j: true // Wait for journal write
       })
 
-      console.log('✅ Read/write concerns optimized')
+      
     } catch (error) {
-      console.warn('⚠️ Failed to optimize read/write concerns:', error.message)
+      
     }
   }
 
@@ -390,7 +390,7 @@ class DatabaseOptimizer {
    * Run database maintenance tasks
    */
   async runMaintenance() {
-    console.log('🧹 Running database maintenance...')
+    
 
     try {
       const db = mongoose.connection.db
@@ -403,7 +403,7 @@ class DatabaseOptimizer {
           if (!collection.name.startsWith('system.')) {
             try {
               await db.command({ compact: collection.name })
-              console.log(`🧹 Compacted collection: ${collection.name}`)
+              
             } catch (error) {
               // Compact may not be supported on all MongoDB deployments
             }
@@ -414,13 +414,13 @@ class DatabaseOptimizer {
       // Rebuild indexes (selective)
       const stats = await db.stats()
       if (stats.indexSize > 1024 * 1024 * 100) { // If indexes > 100MB
-        console.log('📊 Large index size detected, consider rebuilding indexes')
+        
       }
 
-      console.log('✅ Database maintenance completed')
+      
 
     } catch (error) {
-      console.warn('⚠️ Database maintenance failed:', error.message)
+      
     }
   }
 
@@ -428,13 +428,13 @@ class DatabaseOptimizer {
    * Close database connection gracefully
    */
   async close() {
-    console.log('🔌 Closing database connection...')
+    
 
     try {
       await mongoose.connection.close()
-      console.log('✅ Database connection closed')
+      
     } catch (error) {
-      console.error('❌ Error closing database connection:', error)
+      
     }
   }
 }

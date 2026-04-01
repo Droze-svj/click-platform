@@ -56,14 +56,14 @@ async function getCurrentUsage(userId, workspaceId, quotaType) {
     let startDate;
 
     switch (quotaType) {
-      case 'monthly':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'daily':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      default:
-        startDate = new Date(0); // All time
+    case 'monthly':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'daily':
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
+    default:
+      startDate = new Date(0); // All time
     }
 
     const query = {

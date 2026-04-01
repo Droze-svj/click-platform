@@ -92,8 +92,8 @@ class SyntheticAudienceService {
     // Simulate a 10-point retention curve (e.g., every 10% of duration)
     const curve = [];
     for (let i = 0; i < 10; i++) {
-        const activeAtPoint = results.filter(r => r.retentionDropoff >= (i * 10)).length;
-        curve.push(Math.round((activeAtPoint / results.length) * 100));
+      const activeAtPoint = results.filter(r => r.retentionDropoff >= (i * 10)).length;
+      curve.push(Math.round((activeAtPoint / results.length) * 100));
     }
     return curve;
   }

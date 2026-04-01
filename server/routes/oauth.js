@@ -21,13 +21,13 @@ const { validateConnect, validateCallback, validateDisconnect } = require('../va
 function getServiceByPlatform(platform) {
   if (!platform) return null;
   switch (platform.toLowerCase()) {
-    case 'twitter': return twitterOAuth;
-    case 'tiktok': return tiktokOAuth;
-    case 'youtube': return youtubeOAuth;
-    case 'instagram': return instagramOAuth;
-    case 'linkedin': return linkedinOAuth;
-    case 'facebook': return facebookOAuth;
-    default: return null;
+  case 'twitter': return twitterOAuth;
+  case 'tiktok': return tiktokOAuth;
+  case 'youtube': return youtubeOAuth;
+  case 'instagram': return instagramOAuth;
+  case 'linkedin': return linkedinOAuth;
+  case 'facebook': return facebookOAuth;
+  default: return null;
   }
 }
 

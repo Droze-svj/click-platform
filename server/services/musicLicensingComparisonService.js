@@ -215,14 +215,14 @@ async function getLicenseCostBreakdown(userId, options = {}) {
 function getTimeRangeStart(timeRange) {
   const now = new Date();
   switch (timeRange) {
-    case 'week':
-      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    case 'month':
-      return new Date(now.getFullYear(), now.getMonth(), 1);
-    case 'year':
-      return new Date(now.getFullYear(), 0, 1);
-    default:
-      return new Date(0);
+  case 'week':
+    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  case 'month':
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  case 'year':
+    return new Date(now.getFullYear(), 0, 1);
+  default:
+    return new Date(0);
   }
 }
 

@@ -185,10 +185,10 @@ async function sendDiscordAlert(alert) {
  */
 function getColorForSeverity(severity) {
   switch (severity) {
-    case 'critical': return 'danger';
-    case 'warning': return 'warning';
-    case 'info': return 'good';
-    default: return '#808080';
+  case 'critical': return 'danger';
+  case 'warning': return 'warning';
+  case 'info': return 'good';
+  default: return '#808080';
   }
 }
 
@@ -197,10 +197,10 @@ function getColorForSeverity(severity) {
  */
 function getDiscordColorForSeverity(severity) {
   switch (severity) {
-    case 'critical': return 15158332; // Red
-    case 'warning': return 16776960; // Yellow
-    case 'info': return 3066993; // Green
-    default: return 9807270; // Gray
+  case 'critical': return 15158332; // Red
+  case 'warning': return 16776960; // Yellow
+  case 'info': return 3066993; // Green
+  default: return 9807270; // Gray
   }
 }
 

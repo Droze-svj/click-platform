@@ -265,18 +265,18 @@ function estimateEditEffort(analysis, uncertaintyFlags) {
   // Add effort from flags
   uncertaintyFlags.forEach(flag => {
     switch (flag.severity) {
-      case 'critical':
-        effort += 20;
-        break;
-      case 'high':
-        effort += 15;
-        break;
-      case 'medium':
-        effort += 10;
-        break;
-      case 'low':
-        effort += 5;
-        break;
+    case 'critical':
+      effort += 20;
+      break;
+    case 'high':
+      effort += 15;
+      break;
+    case 'medium':
+      effort += 10;
+      break;
+    case 'low':
+      effort += 5;
+      break;
     }
   });
 

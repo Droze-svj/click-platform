@@ -89,16 +89,16 @@ async function autoFixProject(projectData, auditReport) {
  */
 async function auditStepQuality(stepId, result) {
   switch (stepId) {
-    case 'score':
-      return { score: result.viralPotential === 'High' ? 90 : 75, reason: result.viralPotential === 'High' ? 'Good potential' : 'Moderate excitement level' };
-    case 'metadata': {
-      const hookAudit = await analyzeHookStrength(result.title);
-      return { score: hookAudit.score, reason: hookAudit.reason };
-    }
-    case 'thumbnails':
-      return { score: 85, reason: 'Visual consistency checks passed' };
-    default:
-      return { score: 100, reason: 'Step verified' };
+  case 'score':
+    return { score: result.viralPotential === 'High' ? 90 : 75, reason: result.viralPotential === 'High' ? 'Good potential' : 'Moderate excitement level' };
+  case 'metadata': {
+    const hookAudit = await analyzeHookStrength(result.title);
+    return { score: hookAudit.score, reason: hookAudit.reason };
+  }
+  case 'thumbnails':
+    return { score: 85, reason: 'Visual consistency checks passed' };
+  default:
+    return { score: 100, reason: 'Step verified' };
   }
 }
 

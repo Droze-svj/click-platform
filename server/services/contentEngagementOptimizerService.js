@@ -420,7 +420,7 @@ async function generateABVariants(userId, contentText, platform, niche) {
   try {
     if (!geminiConfigured) {
       const lines = contentText.split('\n');
-        return {
+      return {
         original: { text: contentText, predictedLift: '0%', hypothesis: 'Control' },
         variants: [
           { label: 'A — Curiosity Gap', text: `What if everything about ${niche} is slightly wrong?\n\n${lines.slice(1).join('\n')}`, predictedLift: '+15–30%', hypothesis: 'Curiosity gap opening outperforms statement openings' },

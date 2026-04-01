@@ -309,7 +309,7 @@ async function getDemographicInsights(posts) {
     comments: Math.round((totalComments / total) * 100),
     shares: Math.round((totalShares / total) * 100),
     primary: totalLikes > totalComments && totalLikes > totalShares ? 'likes' :
-             totalComments > totalShares ? 'comments' : 'shares'
+      totalComments > totalShares ? 'comments' : 'shares'
   } : null;
 
   return {

@@ -645,6 +645,37 @@ Format as JSON: { summary, topInsights (array), recommendations (array) }`;
   }
 }
 
+/**
+ * Predict performance of a content asset
+ * @param {string} userId User ID
+ * @param {Object} asset Asset data
+ * @returns {Promise<Object>} Prediction results
+ */
+async function predictPerformance(userId, asset) {
+  try {
+    const predictionService = require('./predictionService');
+    // Adapt asset object to what predictionService expects
+    const prediction = await predictionService.predictContentPerformance(null, {
+      userId,
+      title: asset.title || 'Untitled',
+      description: asset.content || '',
+      type: asset.type || 'video',
+      platform: asset.platform,
+      tags: asset.hashtags || []
+    });
+
+    return {
+      engagement: prediction.estimatedEngagement?.expected || 0,
+      reach: prediction.estimatedReach?.expected || 0,
+      score: prediction.performanceScore || 0,
+      recommendations: prediction.recommendations?.map(r => r.message) || []
+    };
+  } catch (error) {
+    logger.warn('Performance prediction failed, using fallback', { error: error.message });
+    return { engagement: 50, reach: 500, score: 70, recommendations: [] };
+  }
+}
+
 module.exports = {
   generateCaptions: withAgentSpan('Caption Agent', generateCaptions),
   detectHighlights: withAgentSpan('Highlight Agent', detectHighlights),
@@ -659,6 +690,7 @@ module.exports = {
   analyzeContentWithAI: withAgentSpan('Content Health Agent', analyzeContentWithAI),
   getUniversalStrategicFramework: withAgentSpan('Strategic Framework Agent', getUniversalStrategicFramework),
   validateAndRefineOutput: withAgentSpan('Validation Agent', validateAndRefineOutput),
-  generateDiagnosticMatrix: withAgentSpan('Diagnostic Matrix Agent', generateDiagnosticMatrix)
+  generateDiagnosticMatrix: withAgentSpan('Diagnostic Matrix Agent', generateDiagnosticMatrix),
+  predictPerformance: withAgentSpan('Performance Prediction Agent', predictPerformance)
 };
 

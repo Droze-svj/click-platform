@@ -139,14 +139,14 @@ function formatCaptions(transcript, format = 'srt') {
   const { segments, text } = transcript;
 
   switch (format.toLowerCase()) {
-    case 'srt':
-      return formatSRT(segments);
-    case 'vtt':
-      return formatVTT(segments);
-    case 'ssa':
-      return formatSSA(segments);
-    default:
-      return text;
+  case 'srt':
+    return formatSRT(segments);
+  case 'vtt':
+    return formatVTT(segments);
+  case 'ssa':
+    return formatSSA(segments);
+  default:
+    return text;
   }
 }
 

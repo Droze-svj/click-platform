@@ -25,21 +25,21 @@ router.get('/:platform/connect', auth, asyncHandler(async (req, res) => {
     let authUrl;
 
     switch (platform.toLowerCase()) {
-      case 'twitter':
-        if (!twitterOAuth.isConfigured()) {
-          return res.status(400).json({
-            success: false,
-            error: 'Twitter OAuth not configured. Please contact administrator.'
-          });
-        }
-        authUrl = twitterOAuth.getAuthorizationUrl(state);
-        break;
-
-      default:
+    case 'twitter':
+      if (!twitterOAuth.isConfigured()) {
         return res.status(400).json({
           success: false,
-          error: `Unsupported platform: ${platform}`
+          error: 'Twitter OAuth not configured. Please contact administrator.'
         });
+      }
+      authUrl = twitterOAuth.getAuthorizationUrl(state);
+      break;
+
+    default:
+      return res.status(400).json({
+        success: false,
+        error: `Unsupported platform: ${platform}`
+      });
     }
 
     res.json({
@@ -49,7 +49,7 @@ router.get('/:platform/connect', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('OAuth connect error:', error);
+    
     res.status(500).json({
       success: false,
       error: 'Failed to initiate OAuth connection'
@@ -91,20 +91,20 @@ router.get('/:platform/callback', async (req, res) => {
     let tokens, profile, accountData;
 
     switch (platform.toLowerCase()) {
-      case 'twitter':
-        // Exchange code for tokens
-        tokens = await twitterOAuth.exchangeCodeForToken(code);
+    case 'twitter':
+      // Exchange code for tokens
+      tokens = await twitterOAuth.exchangeCodeForToken(code);
 
-        // Get user profile
-        profile = await twitterOAuth.getUserProfile(tokens.access_token);
+      // Get user profile
+      profile = await twitterOAuth.getUserProfile(tokens.access_token);
 
-        // Connect account to user
-        accountData = await twitterOAuth.connectAccount(userId, tokens, profile);
-        break;
+      // Connect account to user
+      accountData = await twitterOAuth.connectAccount(userId, tokens, profile);
+      break;
 
-      default:
-        const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=unsupported_platform`;
-        return res.redirect(redirectUri);
+    default:
+      const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=unsupported_platform`;
+      return res.redirect(redirectUri);
     }
 
     logger.info(`OAuth connection successful for ${platform}`, { userId, platformUserId: profile.id });
@@ -114,7 +114,7 @@ router.get('/:platform/callback', async (req, res) => {
     res.redirect(successRedirectUri);
 
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    
 
     const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=oauth_failed&description=${encodeURIComponent(error.message)}`;
     res.redirect(redirectUri);
@@ -141,7 +141,7 @@ router.get('/accounts', auth, asyncHandler(async (req, res) => {
         accounts.twitter = twitterAccounts[0]; // Take the first one for now
       }
     } catch (error) {
-      console.error('Error fetching Twitter accounts:', error);
+      
     }
 
     // TODO: Add other platforms when implemented
@@ -155,7 +155,7 @@ router.get('/accounts', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Get accounts error:', error);
+    
     res.status(500).json({
       success: false,
       error: 'Failed to fetch connected accounts'
@@ -180,15 +180,15 @@ router.delete('/:platform/disconnect', auth, asyncHandler(async (req, res) => {
     }
 
     switch (platform.toLowerCase()) {
-      case 'twitter':
-        await twitterOAuth.disconnectAccount(req.user.id, platform_user_id);
-        break;
+    case 'twitter':
+      await twitterOAuth.disconnectAccount(req.user.id, platform_user_id);
+      break;
 
-      default:
-        return res.status(400).json({
-          success: false,
-          error: `Unsupported platform: ${platform}`
-        });
+    default:
+      return res.status(400).json({
+        success: false,
+        error: `Unsupported platform: ${platform}`
+      });
     }
 
     logger.info(`Account disconnected for ${platform}`, { userId: req.user.id, platformUserId: platform_user_id });
@@ -199,7 +199,7 @@ router.delete('/:platform/disconnect', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Disconnect account error:', error);
+    
     res.status(500).json({
       success: false,
       error: 'Failed to disconnect account'

@@ -183,7 +183,7 @@ function getRedis() {
     const { createClient } = require('redis')
     _redisClient = createClient({ url })
     _redisClient.on('error', (e) => {
-      console.error('[RateLimit] Redis error:', e.message)
+      
       _redisClient = null // reset so we retry next time
     })
     _redisClient.connect().catch(() => { _redisClient = null })
@@ -223,7 +223,7 @@ async function checkFeatureRateLimit(userId, feature) {
     }
     return { allowed: true, limit: limits.rph, used: count }
   } catch (err) {
-    console.error('[RateLimit] Redis check failed:', err.message)
+    
     return { allowed: true } // fail open — don't block users on Redis errors
   }
 }

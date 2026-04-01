@@ -39,9 +39,9 @@ async function getSearchSuggestions(query, userId, options = {}) {
         ],
         licenseStatus: 'active'
       })
-      .select('title artist genre mood')
-      .limit(limit)
-      .lean();
+        .select('title artist genre mood')
+        .limit(limit)
+        .lean();
 
       suggestions.tracks.push(...licensedTracks.map(t => ({
         id: t._id.toString(),
@@ -67,9 +67,9 @@ async function getSearchSuggestions(query, userId, options = {}) {
         status: 'completed',
         musicId: { $ne: null }
       })
-      .populate('musicId', 'title artist genre mood')
-      .limit(limit)
-      .lean();
+        .populate('musicId', 'title artist genre mood')
+        .limit(limit)
+        .lean();
 
       const aiTracks = aiGenerations
         .filter(g => g.musicId)
@@ -95,9 +95,9 @@ async function getSearchSuggestions(query, userId, options = {}) {
           { artist: { $regex: queryLower, $options: 'i' } }
         ]
       })
-      .select('title artist genre mood')
-      .limit(limit)
-      .lean();
+        .select('title artist genre mood')
+        .limit(limit)
+        .lean();
 
       suggestions.tracks.push(...userTracks.map(t => ({
         id: t._id.toString(),

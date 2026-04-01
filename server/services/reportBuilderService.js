@@ -174,30 +174,30 @@ async function generateMetricsData(metrics, clientWorkspaceId, period) {
  */
 async function getMetricValue(metricType, clientWorkspaceId, period, config = {}) {
   switch (metricType) {
-    case 'reach':
-      return await getReach(clientWorkspaceId, period);
-    case 'impressions':
-      return await getImpressions(clientWorkspaceId, period);
-    case 'engagement_rate':
-      return await getEngagementRate(clientWorkspaceId, period);
-    case 'ctr':
-      return await getCTR(clientWorkspaceId, period);
-    case 'conversions':
-      return await getConversions(clientWorkspaceId, period);
-    case 'roi':
-      return await getROI(clientWorkspaceId, period);
-    case 'roas':
-      return await getROAS(clientWorkspaceId, period);
-    case 'brand_awareness':
-      return await getBrandAwareness(clientWorkspaceId, period);
-    case 'sentiment':
-      return await getSentiment(clientWorkspaceId, period);
-    case 'health_score':
-      return await getHealthScore(clientWorkspaceId);
-    case 'audience_growth':
-      return await getAudienceGrowth(clientWorkspaceId, period);
-    default:
-      return 0;
+  case 'reach':
+    return await getReach(clientWorkspaceId, period);
+  case 'impressions':
+    return await getImpressions(clientWorkspaceId, period);
+  case 'engagement_rate':
+    return await getEngagementRate(clientWorkspaceId, period);
+  case 'ctr':
+    return await getCTR(clientWorkspaceId, period);
+  case 'conversions':
+    return await getConversions(clientWorkspaceId, period);
+  case 'roi':
+    return await getROI(clientWorkspaceId, period);
+  case 'roas':
+    return await getROAS(clientWorkspaceId, period);
+  case 'brand_awareness':
+    return await getBrandAwareness(clientWorkspaceId, period);
+  case 'sentiment':
+    return await getSentiment(clientWorkspaceId, period);
+  case 'health_score':
+    return await getHealthScore(clientWorkspaceId);
+  case 'audience_growth':
+    return await getAudienceGrowth(clientWorkspaceId, period);
+  default:
+    return 0;
   }
 }
 
@@ -320,14 +320,14 @@ async function getBenchmark(metricType, value) {
  */
 function formatMetricValue(value, format) {
   switch (format) {
-    case 'percentage':
-      return `${value.toFixed(2)}%`;
-    case 'currency':
-      return `$${value.toLocaleString()}`;
-    case 'number':
-      return value.toLocaleString();
-    default:
-      return value.toString();
+  case 'percentage':
+    return `${value.toFixed(2)}%`;
+  case 'currency':
+    return `$${value.toLocaleString()}`;
+  case 'number':
+    return value.toLocaleString();
+  default:
+    return value.toString();
   }
 }
 

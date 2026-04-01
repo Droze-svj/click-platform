@@ -48,27 +48,27 @@ function evaluateRule(approval, rule) {
 
   for (const condition of conditions) {
     switch (condition.type) {
-      case 'priority':
-        if (approval.metadata?.priority !== condition.value) {
-          return false;
-        }
-        break;
-      case 'content_type':
-        // Would check content type
-        break;
-      case 'word_count':
-        // Would check content word count
-        break;
-      case 'has_tag':
-        if (!approval.metadata?.tags?.includes(condition.value)) {
-          return false;
-        }
-        break;
-      case 'stage':
-        if (approval.currentStage !== condition.value) {
-          return false;
-        }
-        break;
+    case 'priority':
+      if (approval.metadata?.priority !== condition.value) {
+        return false;
+      }
+      break;
+    case 'content_type':
+      // Would check content type
+      break;
+    case 'word_count':
+      // Would check content word count
+      break;
+    case 'has_tag':
+      if (!approval.metadata?.tags?.includes(condition.value)) {
+        return false;
+      }
+      break;
+    case 'stage':
+      if (approval.currentStage !== condition.value) {
+        return false;
+      }
+      break;
     }
   }
 

@@ -49,9 +49,9 @@ const savedExportSchema = new mongoose.Schema({
     type: Number,
     default: 10
   }
-  }, {
+}, {
   timestamps: true
-  })
+})
 
 savedExportSchema.index({ userId: 1, contentId: 1, createdAt: -1 })
 savedExportSchema.index({ expiresAt: 1 })

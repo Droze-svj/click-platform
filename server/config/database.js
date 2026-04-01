@@ -23,15 +23,15 @@ const initSupabase = async () => {
       const { error: authError } = await adminSupabase.auth.getSession();
       if (!authError) {
         databaseStatus.supabase = true;
-        console.log('✅ Supabase connected successfully');
+        
         return true;
       }
-      console.warn('⚠️ Supabase connection test failed:', authError?.message || 'Unknown error');
+      
     } catch (error) {
-      console.warn('⚠️ Supabase connection error:', error.message);
+      
     }
   } else {
-    console.warn('⚠️ Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+    
   }
   return false;
 };
@@ -43,14 +43,14 @@ const initPrisma = async () => {
     try {
       await prisma.$connect();
       databaseStatus.prisma = true;
-      console.log('✅ Prisma (PostgreSQL) connected successfully');
+      
       return true;
     } catch (error) {
-      console.error('❌ Prisma connection error:', error.message);
+      
     }
   } else if (process.env.DATABASE_URL) {
     // Only warn if they tried to set a URL but config says it's not ready
-    console.warn('⚠️ Prisma configured with URL but client not initialized.');
+    
   }
   return false;
 };
@@ -65,17 +65,17 @@ const initMongoDB = async () => {
       serverSelectionTimeoutMS: 5000, // 5 second timeout
     });
     databaseStatus.mongodb = true;
-    console.log('✅ MongoDB connected successfully');
+    
     return true;
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
+    
     return false;
   }
 };
 
 // Initialize all database connections
 const initDatabases = async () => {
-  console.log('🔄 Initializing database connections...');
+  
 
   // Supabase (auth, users)
   const supabaseConnected = await initSupabase();
@@ -90,7 +90,7 @@ const initDatabases = async () => {
   if (mongoUri) {
     mongodbConnected = await initMongoDB();
   } else if (!supabaseConnected && !prismaConnected) {
-    console.log('⚠️ No modern database configured, falling back to MongoDB...');
+    
     mongodbConnected = await initMongoDB();
   }
 

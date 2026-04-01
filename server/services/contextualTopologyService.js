@@ -44,15 +44,15 @@ class ContextualTopologyService {
 
     // Mock transformation logic
     return {
-        assetId,
-        platform: targetPlatform,
-        appliedTopology: topology,
-        status: 'topology_applied',
-        transformedMetadata: {
-            filters: topology.lut,
-            audioMix: topology.soundProfile,
-            overlayType: topology.captionStyle
-        }
+      assetId,
+      platform: targetPlatform,
+      appliedTopology: topology,
+      status: 'topology_applied',
+      transformedMetadata: {
+        filters: topology.lut,
+        audioMix: topology.soundProfile,
+        overlayType: topology.captionStyle
+      }
     };
   }
 }

@@ -27,24 +27,24 @@ async function syncAudienceGrowth(userId, platform) {
 
     // Platform-specific API calls
     switch (platform.toLowerCase()) {
-      case 'twitter':
-        followerData = await syncTwitterFollowers(userId, accessToken, connection);
-        break;
-      case 'linkedin':
-        followerData = await syncLinkedInFollowers(userId, accessToken, connection);
-        break;
-      case 'instagram':
-      case 'facebook':
-        followerData = await syncFacebookFollowers(userId, accessToken, connection, platform);
-        break;
-      case 'youtube':
-        followerData = await syncYouTubeFollowers(userId, accessToken, connection);
-        break;
-      case 'tiktok':
-        followerData = await syncTikTokFollowers(userId, accessToken, connection);
-        break;
-      default:
-        throw new Error(`Follower sync not supported for ${platform}`);
+    case 'twitter':
+      followerData = await syncTwitterFollowers(userId, accessToken, connection);
+      break;
+    case 'linkedin':
+      followerData = await syncLinkedInFollowers(userId, accessToken, connection);
+      break;
+    case 'instagram':
+    case 'facebook':
+      followerData = await syncFacebookFollowers(userId, accessToken, connection, platform);
+      break;
+    case 'youtube':
+      followerData = await syncYouTubeFollowers(userId, accessToken, connection);
+      break;
+    case 'tiktok':
+      followerData = await syncTikTokFollowers(userId, accessToken, connection);
+      break;
+    default:
+      throw new Error(`Follower sync not supported for ${platform}`);
     }
 
     if (followerData) {

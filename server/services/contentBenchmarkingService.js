@@ -396,9 +396,9 @@ async function benchmarkUserPerformance(userId, period = 30) {
 
     const grade = overallScore >= 90 ? 'A+' :
       overallScore >= 80 ? 'A' :
-      overallScore >= 70 ? 'B' :
-      overallScore >= 60 ? 'C' :
-      overallScore >= 50 ? 'D' : 'F';
+        overallScore >= 70 ? 'B' :
+          overallScore >= 60 ? 'C' :
+            overallScore >= 50 ? 'D' : 'F';
 
     return {
       hasData: true,
