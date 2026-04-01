@@ -7,7 +7,6 @@ const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
 const { generateSocialContent, detectHighlights } = require('./aiService');
 const { generateHashtags } = require('./hashtagService');
-const { predictPerformance } = require('./performanceBenchmarkService');
 // Content recycling - use recycling service if available
 async function identifyRecyclableContentForPipeline(userId, contentId) {
   try {
@@ -1222,7 +1221,7 @@ async function triggerWorkflowAutomation(userId, contentId, triggerType = 'pipel
         // Execute workflow actions
         for (const action of workflow.actions || []) {
           switch (action.type) {
-            case 'notify': {
+            case 'notify':
               // Send notification
               const { sendNotification } = require('./notificationService');
               await sendNotification(userId, {
@@ -1231,7 +1230,6 @@ async function triggerWorkflowAutomation(userId, contentId, triggerType = 'pipel
                 type: 'success'
               });
               break;
-            }
 
             case 'schedule':
               // Auto-schedule
@@ -1243,7 +1241,7 @@ async function triggerWorkflowAutomation(userId, contentId, triggerType = 'pipel
               await publishAllNetworks(userId, contentId, { schedule: false });
               break;
 
-            case 'webhook': {
+            case 'webhook':
               // Trigger webhook
               const axios = require('axios');
               await axios.post(action.config.url, {
@@ -1252,7 +1250,6 @@ async function triggerWorkflowAutomation(userId, contentId, triggerType = 'pipel
                 userId
               });
               break;
-            }
           }
         }
 
