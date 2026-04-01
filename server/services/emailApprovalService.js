@@ -83,8 +83,8 @@ async function processEmailApproval(token, action, comment = '', ipAddress = nul
       success: true,
       approvalId: approval._id,
       message: action === 'approve' ? 'Content approved successfully' :
-               action === 'reject' ? 'Content rejected' :
-               'Changes requested'
+        action === 'reject' ? 'Content rejected' :
+          'Changes requested'
     };
   } catch (error) {
     logger.error('Error processing email approval', { error: error.message, token });

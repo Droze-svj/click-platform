@@ -23,7 +23,7 @@ class AgentState {
  * The Editor Agent constructs the initial Timeline JSON.
  */
 async function editorAgent(state) {
-  console.log(`[EditorAgent] Constructing timeline... Iteration: ${state.iterations}`);
+  
   state.history.push({ agent: 'Editor', action: 'Drafting initial timeline' });
 
   // Simulated or AI-Generated initial JSON
@@ -36,7 +36,7 @@ async function editorAgent(state) {
     const cleanJSON = aiResponse ? aiResponse.replace(/```json|```/g, '').trim() : null;
     result = JSON.parse(cleanJSON);
   } catch (err) {
-    console.warn('[EditorAgent] AI mapping failed, falling back to mock timeline:', err.message);
+    
     result = {
       duration: 60,
       clips: [{ id: "c1", startTime: 0, duration: 15, type: "hook" }]
@@ -51,30 +51,30 @@ async function editorAgent(state) {
  * The Critic Agent acts like `PredictionEngineView.tsx`, identifying retention drops.
  */
 async function criticAgent(state) {
-  console.log(`[CriticAgent] Evaluating timeline...`);
+  
 
   // Logic to calculate retention drops / pacing errors
   let defects = [];
   let score = 100;
 
   if (!state.timelineJSON || !state.timelineJSON.clips || state.timelineJSON.clips.length < 3) {
-      defects.push("Timeline has too few cuts. Pacing is too slow (retention drop likely). Include at least 3 clips.");
-      score -= 30;
+    defects.push("Timeline has too few cuts. Pacing is too slow (retention drop likely). Include at least 3 clips.");
+    score -= 30;
   }
 
   if (state.timelineJSON && state.timelineJSON.clips) {
-     const hasHook = state.timelineJSON.clips.some(c => c.type === 'hook' || c.duration <= 5);
-     if (!hasHook) {
-         defects.push("Missing a rapid $<5s hook at the beginning.");
-         score -= 20;
-     }
+    const hasHook = state.timelineJSON.clips.some(c => c.type === 'hook' || c.duration <= 5);
+    if (!hasHook) {
+      defects.push("Missing a rapid $<5s hook at the beginning.");
+      score -= 20;
+    }
   }
 
   // Simulate AI Critic (e.g. LLM looking for poor narrative structure)
   if (state.iterations === 0 && score === 100) {
-      // Force an artificial AI critique on first pass for demonstration of the cyclic loop
-      defects.push("Audio pacing feels flat in the mid-section. Add b-roll overlays to bridge clips 1 and 2.");
-      score -= 15;
+    // Force an artificial AI critique on first pass for demonstration of the cyclic loop
+    defects.push("Audio pacing feels flat in the mid-section. Add b-roll overlays to bridge clips 1 and 2.");
+    score -= 15;
   }
 
   state.criticFeedback = defects;
@@ -87,7 +87,7 @@ async function criticAgent(state) {
  * The Revision Agent applies Critic feedback to the Timeline JSON.
  */
 async function revisionAgent(state) {
-  console.log(`[RevisionAgent] Applying fixes based on Feedback...`);
+  
   state.history.push({ agent: 'Revision', action: `Revising based on ${state.criticFeedback.length} defects` });
 
   const prompt = `Act as an expert video editor. Revise this timeline: ${JSON.stringify(state.timelineJSON)}.
@@ -95,19 +95,19 @@ async function revisionAgent(state) {
   Return ONLY the updated valid JSON.`;
 
   try {
-      const aiResponse = await generateContent(prompt, { temperature: 0.4, maxTokens: 800 });
-      const cleanJSON = aiResponse ? aiResponse.replace(/```json|```/g, '').trim() : null;
-      state.timelineJSON = JSON.parse(cleanJSON);
+    const aiResponse = await generateContent(prompt, { temperature: 0.4, maxTokens: 800 });
+    const cleanJSON = aiResponse ? aiResponse.replace(/```json|```/g, '').trim() : null;
+    state.timelineJSON = JSON.parse(cleanJSON);
   } catch (err) {
-      console.warn('[RevisionAgent] AI revision failed, applying programmatic fixes');
-      // Programmatic fallback
-      if (state.criticFeedback.some(d => d.includes('too few cuts'))) {
-         state.timelineJSON.clips.push({ id: `c-added-${Date.now()}`, startTime: 15, duration: 5, type: 'b-roll' });
-         state.timelineJSON.clips.push({ id: `c-added-2-${Date.now()}`, startTime: 20, duration: 10, type: 'content' });
-      }
-      if (state.criticFeedback.some(d => d.includes('Missing a rapid'))) {
-         state.timelineJSON.clips.unshift({ id: `hook-${Date.now()}`, startTime: 0, duration: 3, type: 'hook' });
-      }
+    
+    // Programmatic fallback
+    if (state.criticFeedback.some(d => d.includes('too few cuts'))) {
+      state.timelineJSON.clips.push({ id: `c-added-${Date.now()}`, startTime: 15, duration: 5, type: 'b-roll' });
+      state.timelineJSON.clips.push({ id: `c-added-2-${Date.now()}`, startTime: 20, duration: 10, type: 'content' });
+    }
+    if (state.criticFeedback.some(d => d.includes('Missing a rapid'))) {
+      state.timelineJSON.clips.unshift({ id: `hook-${Date.now()}`, startTime: 0, duration: 3, type: 'hook' });
+    }
   }
 
   return state;
@@ -117,7 +117,7 @@ async function revisionAgent(state) {
  * Executor routing logic connecting the Agents into a cyclic graph.
  */
 async function runSelfReflectiveLoop(initialContext) {
-  console.log(`\n\n[AgenticGraph] Starting Self-Reflective Loop...`);
+  
   const state = new AgentState({ context: initialContext });
 
   // 1. Initial Draft
@@ -125,27 +125,27 @@ async function runSelfReflectiveLoop(initialContext) {
 
   // 2. Cyclic Loop
   while (state.iterations < state.maxIterations) {
-      await criticAgent(state);
+    await criticAgent(state);
 
-      if (state.score >= 90) {
-          console.log(`[AgenticGraph] Timeline approved by Critic with score ${state.score}!`);
-          break;
-      }
+    if (state.score >= 90) {
+      
+      break;
+    }
 
-      console.log(`[AgenticGraph] Timeline rejected (Score: ${state.score}). Routing to RevisionAgent.`);
-      await revisionAgent(state);
-      state.iterations++;
+    
+    await revisionAgent(state);
+    state.iterations++;
   }
 
   if (state.score < 90) {
-      console.warn(`[AgenticGraph] Max iterations reached. Proceeding with sub-optimal score: ${state.score}`);
+    
   }
 
   return {
-      finalTimeline: state.timelineJSON,
-      finalScore: state.score,
-      totalIterations: state.iterations,
-      history: state.history,
+    finalTimeline: state.timelineJSON,
+    finalScore: state.score,
+    totalIterations: state.iterations,
+    history: state.history,
   };
 }
 

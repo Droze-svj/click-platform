@@ -357,160 +357,160 @@ router.post('/supabase',
   supabaseWebhookRateLimiter,
   express.raw({ type: 'application/json' }),
   asyncHandler(async (req, res) => {
-  const crypto = require('crypto');
-  const logger = require('../utils/logger');
+    const crypto = require('crypto');
+    const logger = require('../utils/logger');
   
-  try {
+    try {
     // Get Supabase webhook signature (case-insensitive header lookup)
-    const signature = req.headers['x-supabase-signature'] || 
+      const signature = req.headers['x-supabase-signature'] || 
                      req.headers['X-Supabase-Signature'] ||
                      req.headers['x-supabase-webhook-signature'] ||
                      req.headers['X-Supabase-Webhook-Signature'];
-    const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
+      const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
     
-    // Parse the webhook payload
-    const rawBody = req.body.toString();
-    if (!rawBody || rawBody.trim().length === 0) {
-      logger.warn('Supabase webhook: Empty payload received');
-      return sendError(res, 'Empty webhook payload', 400);
-    }
-
-    let payload;
-    try {
-      payload = JSON.parse(rawBody);
-    } catch (error) {
-      logger.error('Supabase webhook: Invalid JSON payload', { 
-        error: error.message,
-        bodyPreview: rawBody.substring(0, 200)
-      });
-      return sendError(res, 'Invalid JSON payload', 400);
-    }
-
-    // Validate payload structure
-    if (!payload || typeof payload !== 'object') {
-      logger.error('Supabase webhook: Invalid payload structure', { payload });
-      return sendError(res, 'Invalid payload structure', 400);
-    }
-
-    // Verify webhook signature if secret is configured
-    if (webhookSecret && signature) {
-      try {
-        // Supabase uses HMAC SHA256 for webhook signatures
-        const expectedSignature = crypto
-          .createHmac('sha256', webhookSecret)
-          .update(rawBody)
-          .digest('hex');
-        
-        // Use constant-time comparison for security
-        // Check lengths first to avoid timingSafeEqual throwing
-        if (signature.length !== expectedSignature.length) {
-          logger.warn('Supabase webhook: Signature length mismatch', { 
-            receivedLength: signature.length,
-            expectedLength: expectedSignature.length
-          });
-          return sendError(res, 'Invalid webhook signature', 401);
-        }
-        
-        const signatureMatch = crypto.timingSafeEqual(
-          Buffer.from(signature),
-          Buffer.from(expectedSignature)
-        );
-        
-        if (!signatureMatch) {
-          logger.warn('Supabase webhook: Invalid signature', { 
-            received: signature?.substring(0, 20) + '...',
-            expected: expectedSignature.substring(0, 20) + '...'
-          });
-          return sendError(res, 'Invalid webhook signature', 401);
-        }
-      } catch (sigError) {
-        // Fallback to simple string comparison if timingSafeEqual fails
-        logger.error('Supabase webhook: Signature verification error', { 
-          error: sigError.message,
-          stack: sigError.stack
-        });
-        return sendError(res, 'Signature verification failed', 401);
+      // Parse the webhook payload
+      const rawBody = req.body.toString();
+      if (!rawBody || rawBody.trim().length === 0) {
+        logger.warn('Supabase webhook: Empty payload received');
+        return sendError(res, 'Empty webhook payload', 400);
       }
-    } else if (process.env.NODE_ENV === 'production') {
-      // In production, require signature verification
-      logger.warn('Supabase webhook: Missing signature or secret in production', {
-        hasSecret: !!webhookSecret,
-        hasSignature: !!signature
-      });
-      return sendError(res, 'Webhook authentication required', 401);
-    }
 
-    // Extract webhook event details with defaults
-    const {
-      type,        // 'INSERT', 'UPDATE', 'DELETE'
-      table,       // Table name (e.g., 'users', 'content')
-      schema = 'public',  // Schema name (usually 'public')
-      record,      // New/updated record (for INSERT/UPDATE)
-      old_record,  // Old record (for UPDATE/DELETE)
-      timestamp = new Date().toISOString()  // Event timestamp
-    } = payload;
-
-    // Validate required fields
-    if (!type || !table) {
-      logger.error('Supabase webhook: Missing required fields', { 
-        hasType: !!type, 
-        hasTable: !!table,
-        payload 
-      });
-      return sendError(res, 'Missing required fields: type and table are required', 400);
-    }
-
-    // Validate event type
-    const validTypes = ['INSERT', 'UPDATE', 'DELETE'];
-    if (!validTypes.includes(type)) {
-      logger.warn('Supabase webhook: Invalid event type', { type, validTypes });
-      return sendError(res, `Invalid event type. Must be one of: ${validTypes.join(', ')}`, 400);
-    }
-
-    // Create webhook log entry
-    const webhookLogId = new require('mongoose').Types.ObjectId();
-    const eventName = `supabase.${table.toLowerCase()}.${type.toLowerCase()}`;
-    const recordId = record?.id || old_record?.id;
-    
-    // Log the webhook event
-    logger.info('Supabase webhook received', {
-      type,
-      table,
-      schema,
-      recordId,
-      timestamp,
-      hasRecord: !!record,
-      hasOldRecord: !!old_record,
-      eventName
-    });
-
-    // Start processing timer
-    const startTime = Date.now();
-    let processingStatus = 'pending';
-    let processingError = null;
-
-    // Handle different event types with async processing
-    // Respond immediately and process asynchronously for better reliability
-    const processWebhookAsync = async () => {
+      let payload;
       try {
-        // Check conditional filters if configured
-        const shouldProcess = await checkWebhookFilters(table, type, record, old_record);
-        if (!shouldProcess) {
-          logger.info('Supabase webhook: Filtered out by conditions', { 
-            table, type, recordId 
-          });
-          processingStatus = 'filtered';
-          await logWebhookEvent({
-            _id: webhookLogId,
-            event: eventName,
-            status: 'filtered',
-            payload: { type, table, schema, record, old_record, timestamp },
-            createdAt: new Date()
-          });
-          return;
-        }
+        payload = JSON.parse(rawBody);
+      } catch (error) {
+        logger.error('Supabase webhook: Invalid JSON payload', { 
+          error: error.message,
+          bodyPreview: rawBody.substring(0, 200)
+        });
+        return sendError(res, 'Invalid JSON payload', 400);
+      }
 
-        switch (type) {
+      // Validate payload structure
+      if (!payload || typeof payload !== 'object') {
+        logger.error('Supabase webhook: Invalid payload structure', { payload });
+        return sendError(res, 'Invalid payload structure', 400);
+      }
+
+      // Verify webhook signature if secret is configured
+      if (webhookSecret && signature) {
+        try {
+        // Supabase uses HMAC SHA256 for webhook signatures
+          const expectedSignature = crypto
+            .createHmac('sha256', webhookSecret)
+            .update(rawBody)
+            .digest('hex');
+        
+          // Use constant-time comparison for security
+          // Check lengths first to avoid timingSafeEqual throwing
+          if (signature.length !== expectedSignature.length) {
+            logger.warn('Supabase webhook: Signature length mismatch', { 
+              receivedLength: signature.length,
+              expectedLength: expectedSignature.length
+            });
+            return sendError(res, 'Invalid webhook signature', 401);
+          }
+        
+          const signatureMatch = crypto.timingSafeEqual(
+            Buffer.from(signature),
+            Buffer.from(expectedSignature)
+          );
+        
+          if (!signatureMatch) {
+            logger.warn('Supabase webhook: Invalid signature', { 
+              received: signature?.substring(0, 20) + '...',
+              expected: expectedSignature.substring(0, 20) + '...'
+            });
+            return sendError(res, 'Invalid webhook signature', 401);
+          }
+        } catch (sigError) {
+        // Fallback to simple string comparison if timingSafeEqual fails
+          logger.error('Supabase webhook: Signature verification error', { 
+            error: sigError.message,
+            stack: sigError.stack
+          });
+          return sendError(res, 'Signature verification failed', 401);
+        }
+      } else if (process.env.NODE_ENV === 'production') {
+      // In production, require signature verification
+        logger.warn('Supabase webhook: Missing signature or secret in production', {
+          hasSecret: !!webhookSecret,
+          hasSignature: !!signature
+        });
+        return sendError(res, 'Webhook authentication required', 401);
+      }
+
+      // Extract webhook event details with defaults
+      const {
+        type,        // 'INSERT', 'UPDATE', 'DELETE'
+        table,       // Table name (e.g., 'users', 'content')
+        schema = 'public',  // Schema name (usually 'public')
+        record,      // New/updated record (for INSERT/UPDATE)
+        old_record,  // Old record (for UPDATE/DELETE)
+        timestamp = new Date().toISOString()  // Event timestamp
+      } = payload;
+
+      // Validate required fields
+      if (!type || !table) {
+        logger.error('Supabase webhook: Missing required fields', { 
+          hasType: !!type, 
+          hasTable: !!table,
+          payload 
+        });
+        return sendError(res, 'Missing required fields: type and table are required', 400);
+      }
+
+      // Validate event type
+      const validTypes = ['INSERT', 'UPDATE', 'DELETE'];
+      if (!validTypes.includes(type)) {
+        logger.warn('Supabase webhook: Invalid event type', { type, validTypes });
+        return sendError(res, `Invalid event type. Must be one of: ${validTypes.join(', ')}`, 400);
+      }
+
+      // Create webhook log entry
+      const webhookLogId = new require('mongoose').Types.ObjectId();
+      const eventName = `supabase.${table.toLowerCase()}.${type.toLowerCase()}`;
+      const recordId = record?.id || old_record?.id;
+    
+      // Log the webhook event
+      logger.info('Supabase webhook received', {
+        type,
+        table,
+        schema,
+        recordId,
+        timestamp,
+        hasRecord: !!record,
+        hasOldRecord: !!old_record,
+        eventName
+      });
+
+      // Start processing timer
+      const startTime = Date.now();
+      let processingStatus = 'pending';
+      let processingError = null;
+
+      // Handle different event types with async processing
+      // Respond immediately and process asynchronously for better reliability
+      const processWebhookAsync = async () => {
+        try {
+        // Check conditional filters if configured
+          const shouldProcess = await checkWebhookFilters(table, type, record, old_record);
+          if (!shouldProcess) {
+            logger.info('Supabase webhook: Filtered out by conditions', { 
+              table, type, recordId 
+            });
+            processingStatus = 'filtered';
+            await logWebhookEvent({
+              _id: webhookLogId,
+              event: eventName,
+              status: 'filtered',
+              payload: { type, table, schema, record, old_record, timestamp },
+              createdAt: new Date()
+            });
+            return;
+          }
+
+          switch (type) {
           case 'INSERT':
             if (!record) {
               throw new Error('INSERT event requires a record');
@@ -534,117 +534,117 @@ router.post('/supabase',
           
           default:
             logger.warn('Supabase webhook: Unknown event type', { type });
-        }
+          }
 
-        processingStatus = 'delivered';
-        const processingTime = Date.now() - startTime;
+          processingStatus = 'delivered';
+          const processingTime = Date.now() - startTime;
 
-        // Log successful webhook delivery
-        await logWebhookEvent({
-          _id: webhookLogId,
-          event: eventName,
-          status: 'delivered',
-          httpStatus: 200,
-          responseTime: processingTime,
-          payload: { type, table, schema, record, old_record, timestamp },
-          deliveredAt: new Date(),
-          createdAt: new Date()
-        });
-
-        logger.info('Supabase webhook processed successfully', {
-          type,
-          table,
-          recordId,
-          processingTime: `${processingTime}ms`
-        });
-
-      } catch (handlerError) {
-        processingStatus = 'failed';
-        processingError = handlerError;
-        const processingTime = Date.now() - startTime;
-
-        logger.error('Supabase webhook handler error', {
-          type,
-          table,
-          recordId,
-          error: handlerError.message,
-          stack: handlerError.stack,
-          processingTime: `${processingTime}ms`
-        });
-
-        // Log failed webhook delivery
-        await logWebhookEvent({
-          _id: webhookLogId,
-          event: eventName,
-          status: 'failed',
-          httpStatus: 500,
-          responseTime: processingTime,
-          payload: { type, table, schema, record, old_record, timestamp },
-          error: {
-            message: handlerError.message,
-            code: handlerError.code || 'PROCESSING_ERROR',
-            stack: process.env.NODE_ENV === 'development' ? handlerError.stack : undefined
-          },
-          createdAt: new Date()
-        });
-
-        // Retry logic for transient errors (async, don't block response)
-        if (shouldRetry(handlerError)) {
-          logger.info('Supabase webhook: Scheduling retry', { 
-            type, table, recordId 
+          // Log successful webhook delivery
+          await logWebhookEvent({
+            _id: webhookLogId,
+            event: eventName,
+            status: 'delivered',
+            httpStatus: 200,
+            responseTime: processingTime,
+            payload: { type, table, schema, record, old_record, timestamp },
+            deliveredAt: new Date(),
+            createdAt: new Date()
           });
-          // Schedule retry (you can implement a job queue here if needed)
-          setTimeout(() => {
-            processWebhookAsync().catch(err => {
-              logger.error('Supabase webhook retry failed', { 
-                error: err.message, type, table, recordId 
-              });
+
+          logger.info('Supabase webhook processed successfully', {
+            type,
+            table,
+            recordId,
+            processingTime: `${processingTime}ms`
+          });
+
+        } catch (handlerError) {
+          processingStatus = 'failed';
+          processingError = handlerError;
+          const processingTime = Date.now() - startTime;
+
+          logger.error('Supabase webhook handler error', {
+            type,
+            table,
+            recordId,
+            error: handlerError.message,
+            stack: handlerError.stack,
+            processingTime: `${processingTime}ms`
+          });
+
+          // Log failed webhook delivery
+          await logWebhookEvent({
+            _id: webhookLogId,
+            event: eventName,
+            status: 'failed',
+            httpStatus: 500,
+            responseTime: processingTime,
+            payload: { type, table, schema, record, old_record, timestamp },
+            error: {
+              message: handlerError.message,
+              code: handlerError.code || 'PROCESSING_ERROR',
+              stack: process.env.NODE_ENV === 'development' ? handlerError.stack : undefined
+            },
+            createdAt: new Date()
+          });
+
+          // Retry logic for transient errors (async, don't block response)
+          if (shouldRetry(handlerError)) {
+            logger.info('Supabase webhook: Scheduling retry', { 
+              type, table, recordId 
             });
-          }, 5000); // Retry after 5 seconds
+            // Schedule retry (you can implement a job queue here if needed)
+            setTimeout(() => {
+              processWebhookAsync().catch(err => {
+                logger.error('Supabase webhook retry failed', { 
+                  error: err.message, type, table, recordId 
+                });
+              });
+            }, 5000); // Retry after 5 seconds
+          }
         }
-      }
-    };
+      };
 
-    // Process asynchronously (fire and forget)
-    processWebhookAsync().catch(err => {
-      logger.error('Supabase webhook async processing error', { 
-        error: err.message, type, table, recordId 
+      // Process asynchronously (fire and forget)
+      processWebhookAsync().catch(err => {
+        logger.error('Supabase webhook async processing error', { 
+          error: err.message, type, table, recordId 
+        });
       });
-    });
 
-    // Always respond immediately with 200 to acknowledge receipt
-    // This prevents Supabase from retrying and allows async processing
-    res.status(200).json({
-      success: true,
-      message: 'Webhook received and queued for processing',
-      event: {
-        type,
-        table,
-        schema,
-        timestamp,
-        recordId,
-        eventName
-      },
-      processing: 'async'
-    });
+      // Always respond immediately with 200 to acknowledge receipt
+      // This prevents Supabase from retrying and allows async processing
+      res.status(200).json({
+        success: true,
+        message: 'Webhook received and queued for processing',
+        event: {
+          type,
+          table,
+          schema,
+          timestamp,
+          recordId,
+          eventName
+        },
+        processing: 'async'
+      });
 
-  } catch (error) {
-    logger.error('Supabase webhook processing error', {
-      error: error.message,
-      stack: error.stack,
-      headers: Object.keys(req.headers),
-      bodyPreview: req.body?.toString()?.substring(0, 200)
-    });
+    } catch (error) {
+      logger.error('Supabase webhook processing error', {
+        error: error.message,
+        stack: error.stack,
+        headers: Object.keys(req.headers),
+        bodyPreview: req.body?.toString()?.substring(0, 200)
+      });
     
-    // Still return 200 to prevent Supabase from retrying
-    // Log the error for investigation
-    res.status(200).json({
-      success: false,
-      message: 'Webhook received but processing failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal error'
-    });
-  }
-}));
+      // Still return 200 to prevent Supabase from retrying
+      // Log the error for investigation
+      res.status(200).json({
+        success: false,
+        message: 'Webhook received but processing failed',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal error'
+      });
+    }
+  }));
 
 /**
  * Handle Supabase INSERT events
@@ -657,17 +657,17 @@ async function handleSupabaseInsert(table, schema, record, timestamp) {
     
     // Handle specific tables
     switch (table) {
-      case 'users':
-        await handleUserInserted(record);
-        break;
+    case 'users':
+      await handleUserInserted(record);
+      break;
       
-      case 'content':
-      case 'contents':
-        await handleContentInserted(record);
-        break;
+    case 'content':
+    case 'contents':
+      await handleContentInserted(record);
+      break;
       
-      default:
-        logger.info(`Supabase INSERT: No handler for table ${table}`);
+    default:
+      logger.info(`Supabase INSERT: No handler for table ${table}`);
     }
   } catch (error) {
     logger.error('Supabase INSERT handler error', {
@@ -691,17 +691,17 @@ async function handleSupabaseUpdate(table, schema, record, old_record, timestamp
     
     // Handle specific tables
     switch (table) {
-      case 'users':
-        await handleUserUpdated(record, old_record);
-        break;
+    case 'users':
+      await handleUserUpdated(record, old_record);
+      break;
       
-      case 'content':
-      case 'contents':
-        await handleContentUpdated(record, old_record);
-        break;
+    case 'content':
+    case 'contents':
+      await handleContentUpdated(record, old_record);
+      break;
       
-      default:
-        logger.info(`Supabase UPDATE: No handler for table ${table}`);
+    default:
+      logger.info(`Supabase UPDATE: No handler for table ${table}`);
     }
   } catch (error) {
     logger.error('Supabase UPDATE handler error', {
@@ -723,17 +723,17 @@ async function handleSupabaseDelete(table, schema, old_record, timestamp) {
     
     // Handle specific tables
     switch (table) {
-      case 'users':
-        await handleUserDeleted(old_record);
-        break;
+    case 'users':
+      await handleUserDeleted(old_record);
+      break;
       
-      case 'content':
-      case 'contents':
-        await handleContentDeleted(old_record);
-        break;
+    case 'content':
+    case 'contents':
+      await handleContentDeleted(old_record);
+      break;
       
-      default:
-        logger.info(`Supabase DELETE: No handler for table ${table}`);
+    default:
+      logger.info(`Supabase DELETE: No handler for table ${table}`);
     }
   } catch (error) {
     logger.error('Supabase DELETE handler error', {

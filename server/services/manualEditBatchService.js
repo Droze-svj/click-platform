@@ -39,84 +39,84 @@ async function applyBatchOperationsSequential(videoPath, operations, outputPath)
       });
 
       switch (operation.type) {
-        case 'color-grading':
-          if (operation.preset) {
-            await colorGradingService.applyColorPreset(currentPath, tempPath, operation.preset);
-          } else if (operation.curves) {
-            await colorGradingService.applyColorCurves(currentPath, tempPath, operation.curves);
-          } else if (operation.colorWheels) {
-            await colorGradingService.applyColorWheels(currentPath, tempPath, operation.colorWheels);
-          }
-          break;
+      case 'color-grading':
+        if (operation.preset) {
+          await colorGradingService.applyColorPreset(currentPath, tempPath, operation.preset);
+        } else if (operation.curves) {
+          await colorGradingService.applyColorCurves(currentPath, tempPath, operation.curves);
+        } else if (operation.colorWheels) {
+          await colorGradingService.applyColorWheels(currentPath, tempPath, operation.colorWheels);
+        }
+        break;
 
-        case 'audio-mixing':
-          if (operation.eqPreset) {
-            await audioMixingService.applyEQPreset(currentPath, tempPath, operation.eqPreset);
-          } else if (operation.noiseReduction) {
-            await audioMixingService.applyNoiseReduction(
-              currentPath, 
-              tempPath, 
-              operation.strength || 10
-            );
-          } else if (operation.normalize) {
-            await audioMixingService.normalizeAudio(
-              currentPath, 
-              tempPath, 
-              operation.normalizeType || 'lufs',
-              operation.target || -16
-            );
-          }
-          break;
+      case 'audio-mixing':
+        if (operation.eqPreset) {
+          await audioMixingService.applyEQPreset(currentPath, tempPath, operation.eqPreset);
+        } else if (operation.noiseReduction) {
+          await audioMixingService.applyNoiseReduction(
+            currentPath, 
+            tempPath, 
+            operation.strength || 10
+          );
+        } else if (operation.normalize) {
+          await audioMixingService.normalizeAudio(
+            currentPath, 
+            tempPath, 
+            operation.normalizeType || 'lufs',
+            operation.target || -16
+          );
+        }
+        break;
 
-        case 'typography':
-          if (operation.template) {
-            await typographyService.applyTextTemplate(currentPath, tempPath, operation.template);
-          } else if (operation.textOverlay) {
-            await typographyService.applyAnimatedText(
-              currentPath, 
-              tempPath, 
-              operation.textOverlay
-            );
-          }
-          break;
+      case 'typography':
+        if (operation.template) {
+          await typographyService.applyTextTemplate(currentPath, tempPath, operation.template);
+        } else if (operation.textOverlay) {
+          await typographyService.applyAnimatedText(
+            currentPath, 
+            tempPath, 
+            operation.textOverlay
+          );
+        }
+        break;
 
-        case 'motion-graphics':
-          if (operation.stabilize) {
-            await motionGraphicsService.applyStabilization(
-              currentPath, 
-              tempPath, 
-              operation.strength || 0.5
-            );
-          } else if (operation.shape) {
-            await motionGraphicsService.addShapeOverlay(
-              currentPath, 
-              tempPath, 
-              operation.shape
-            );
-          }
-          break;
+      case 'motion-graphics':
+        if (operation.stabilize) {
+          await motionGraphicsService.applyStabilization(
+            currentPath, 
+            tempPath, 
+            operation.strength || 0.5
+          );
+        } else if (operation.shape) {
+          await motionGraphicsService.addShapeOverlay(
+            currentPath, 
+            tempPath, 
+            operation.shape
+          );
+        }
+        break;
 
-        case 'speed-control':
-          if (operation.speed) {
-            await speedControlService.applyVariableSpeed(
-              currentPath, 
-              tempPath, 
-              operation.speed
-            );
-          } else if (operation.reverse) {
-            await speedControlService.reverseVideo(currentPath, tempPath);
-          } else if (operation.freeze) {
-            await speedControlService.freezeFrame(currentPath, tempPath, operation.freeze);
-          }
-          break;
+      case 'speed-control':
+        if (operation.speed) {
+          await speedControlService.applyVariableSpeed(
+            currentPath, 
+            tempPath, 
+            operation.speed
+          );
+        } else if (operation.reverse) {
+          await speedControlService.reverseVideo(currentPath, tempPath);
+        } else if (operation.freeze) {
+          await speedControlService.freezeFrame(currentPath, tempPath, operation.freeze);
+        }
+        break;
 
-        default:
-          logger.warn('Unknown operation type', { type: operation.type });
-          // Skip unknown operations
-          if (!isLast) {
-            tempFiles.push(currentPath);
-          }
-          continue;
+      default:
+        logger.warn('Unknown operation type', { type: operation.type });
+        // Skip unknown operations
+        if (!isLast) {
+          tempFiles.push(currentPath);
+        }
+        continue;
       }
 
       currentPath = tempPath;
@@ -193,21 +193,21 @@ function validateBatchOperations(operations) {
 
     // Type-specific validation
     switch (op.type) {
-      case 'color-grading':
-        if (!op.preset && !op.curves && !op.colorWheels) {
-          errors.push(`Operation ${index + 1}: Color grading requires preset, curves, or colorWheels`);
-        }
-        break;
-      case 'audio-mixing':
-        if (!op.eqPreset && !op.noiseReduction && !op.normalize) {
-          errors.push(`Operation ${index + 1}: Audio mixing requires eqPreset, noiseReduction, or normalize`);
-        }
-        break;
-      case 'typography':
-        if (!op.template && !op.textOverlay) {
-          errors.push(`Operation ${index + 1}: Typography requires template or textOverlay`);
-        }
-        break;
+    case 'color-grading':
+      if (!op.preset && !op.curves && !op.colorWheels) {
+        errors.push(`Operation ${index + 1}: Color grading requires preset, curves, or colorWheels`);
+      }
+      break;
+    case 'audio-mixing':
+      if (!op.eqPreset && !op.noiseReduction && !op.normalize) {
+        errors.push(`Operation ${index + 1}: Audio mixing requires eqPreset, noiseReduction, or normalize`);
+      }
+      break;
+    case 'typography':
+      if (!op.template && !op.textOverlay) {
+        errors.push(`Operation ${index + 1}: Typography requires template or textOverlay`);
+      }
+      break;
     }
   });
 

@@ -173,20 +173,20 @@ function calculatePerformance(posts) {
 function calculateNextScheduleDate(frequency) {
   const now = new Date();
   switch (frequency) {
-    case 'daily':
-      now.setDate(now.getDate() + 1);
-      break;
-    case 'weekly':
-      now.setDate(now.getDate() + 7);
-      break;
-    case 'biweekly':
-      now.setDate(now.getDate() + 14);
-      break;
-    case 'monthly':
-      now.setMonth(now.getMonth() + 1);
-      break;
-    default:
-      now.setDate(now.getDate() + 7);
+  case 'daily':
+    now.setDate(now.getDate() + 1);
+    break;
+  case 'weekly':
+    now.setDate(now.getDate() + 7);
+    break;
+  case 'biweekly':
+    now.setDate(now.getDate() + 14);
+    break;
+  case 'monthly':
+    now.setMonth(now.getMonth() + 1);
+    break;
+  default:
+    now.setDate(now.getDate() + 7);
   }
   return now;
 }

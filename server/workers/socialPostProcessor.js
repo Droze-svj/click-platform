@@ -43,28 +43,28 @@ async function processSocialPostJob(jobData, job) {
         let postResult;
 
         switch (platform.toLowerCase()) {
-          case 'twitter':
-            postResult = await twitterOAuth.postTweetForUser(userId, content.text, options, options.platform_user_id);
-            break;
-          case 'linkedin':
-            postResult = await postToLinkedIn(userId, content.text, options);
-            break;
-          case 'facebook':
-            postResult = await postToFacebook(userId, content.text, options);
-            break;
-          case 'instagram':
-            if (!content.imageUrl) {
-              throw new Error('Image URL required for Instagram');
-            }
-            postResult = await postToInstagram(
-              userId,
-              content.imageUrl,
-              content.text,
-              options
-            );
-            break;
-          default:
-            throw new Error(`Unsupported platform: ${platform}`);
+        case 'twitter':
+          postResult = await twitterOAuth.postTweetForUser(userId, content.text, options, options.platform_user_id);
+          break;
+        case 'linkedin':
+          postResult = await postToLinkedIn(userId, content.text, options);
+          break;
+        case 'facebook':
+          postResult = await postToFacebook(userId, content.text, options);
+          break;
+        case 'instagram':
+          if (!content.imageUrl) {
+            throw new Error('Image URL required for Instagram');
+          }
+          postResult = await postToInstagram(
+            userId,
+            content.imageUrl,
+            content.text,
+            options
+          );
+          break;
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
         }
 
         results.push({

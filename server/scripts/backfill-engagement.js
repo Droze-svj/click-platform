@@ -12,10 +12,10 @@ if (!process.env.SUPABASE_URL) {
 }
 
 async function backfillEngagement() {
-  console.log('🚀 Starting Engagement History Backfill...');
+  
   
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('❌ Missing Supabase credentials in .env.production');
+    
     process.exit(1);
   }
 
@@ -30,11 +30,11 @@ async function backfillEngagement() {
     .select('id, views, likes, shares, comments, posted_at, created_at');
 
   if (error) {
-    console.error('❌ Error fetching analytics:', error);
+    
     process.exit(1);
   }
 
-  console.log(`📊 Found ${analytics.length} analytics records to process.`);
+  
 
   const historyRecords = [];
   const now = new Date();
@@ -65,7 +65,7 @@ async function backfillEngagement() {
     }
   }
 
-  console.log(`📝 Inserting ${historyRecords.length} history points...`);
+  
 
   // Insert in batches of 100
   const batchSize = 100;
@@ -76,16 +76,16 @@ async function backfillEngagement() {
       .insert(batch);
 
     if (insertError) {
-      console.error(`❌ Error inserting batch ${i / batchSize}:`, insertError);
+      
     } else {
-      console.log(`✅ Compressed batch ${i / batchSize + 1}/${Math.ceil(historyRecords.length / batchSize)}`);
+      
     }
   }
 
-  console.log('✨ Backfill complete!');
+  
 }
 
 backfillEngagement().catch(err => {
-  console.error('💥 Fatal error:', err);
+  
   process.exit(1);
 });

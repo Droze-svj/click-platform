@@ -33,7 +33,7 @@ const contentCollectionSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-  });
+});
 
 contentCollectionSchema.index({ userId: 1, name: 1 });
 

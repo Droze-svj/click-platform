@@ -39,16 +39,16 @@ async function sendExportNotification(jobId, type) {
  */
 function getNotificationMessage(job, type) {
   switch (type) {
-    case 'started':
-      return `Your ${job.export.type} export has started processing.`;
-    case 'completed':
-      return `Your ${job.export.type} export is ready! Download it here.`;
-    case 'failed':
-      return `Your ${job.export.type} export failed. ${job.error?.message || 'Please try again.'}`;
-    case 'retry':
-      return `Your ${job.export.type} export is being retried automatically.`;
-    default:
-      return `Your export status has been updated.`;
+  case 'started':
+    return `Your ${job.export.type} export has started processing.`;
+  case 'completed':
+    return `Your ${job.export.type} export is ready! Download it here.`;
+  case 'failed':
+    return `Your ${job.export.type} export failed. ${job.error?.message || 'Please try again.'}`;
+  case 'retry':
+    return `Your ${job.export.type} export is being retried automatically.`;
+  default:
+    return `Your export status has been updated.`;
   }
 }
 
@@ -72,18 +72,18 @@ async function notifyExportEvent(jobId, event) {
     }
 
     switch (event) {
-      case 'started':
-        await sendExportNotification(jobId, 'started');
-        break;
-      case 'completed':
-        await sendExportNotification(jobId, 'completed');
-        break;
-      case 'failed':
-        await sendExportNotification(jobId, 'failed');
-        break;
-      case 'retry':
-        await sendExportNotification(jobId, 'retry');
-        break;
+    case 'started':
+      await sendExportNotification(jobId, 'started');
+      break;
+    case 'completed':
+      await sendExportNotification(jobId, 'completed');
+      break;
+    case 'failed':
+      await sendExportNotification(jobId, 'failed');
+      break;
+    case 'retry':
+      await sendExportNotification(jobId, 'retry');
+      break;
     }
   } catch (error) {
     logger.error('Error notifying export event', { error: error.message, jobId });

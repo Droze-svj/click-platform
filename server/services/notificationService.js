@@ -272,51 +272,51 @@ function summarizeChange(changeType, payload) {
   const entityName = payload.taskTitle || payload.entityName || payload.name || 'Item';
   const link = payload.link || (payload.taskId ? `/dashboard/tasks?open=${payload.taskId}` : null) || '/dashboard';
   switch (changeType) {
-    case 'task_delayed':
-      return {
-        title: 'Task delayed',
-        summary: `${entityName} was delayed by ${payload.daysDelayed ?? 'a few'} days.`,
-        suggestion: payload.suggestAssignBackup !== false ? 'Assign a backup?' : null,
-        link,
-        category: 'task',
-        priority: 'medium'
-      };
-    case 'task_status':
-      return {
-        title: 'Task status changed',
-        summary: `${entityName} is now ${payload.newStatus || payload.status}.`,
-        suggestion: payload.newStatus === 'in_progress' ? 'Consider adding a due date.' : null,
-        link,
-        category: 'task',
-        priority: 'low'
-      };
-    case 'milestone_completed':
-      return {
-        title: 'Milestone completed',
-        summary: `"${entityName}" is done.`,
-        suggestion: payload.nextMilestone ? `Next: ${payload.nextMilestone}` : null,
-        link: payload.projectId ? `/dashboard/projects` : link,
-        category: 'project',
-        priority: 'medium'
-      };
-    case 'job_failed':
-      return {
-        title: 'Job failed',
-        summary: `${entityName || 'A job'} failed. ${payload.reason || 'Check the job for details.'}`,
-        suggestion: 'Retry or check logs.',
-        link: payload.jobId ? `/dashboard/jobs` : link,
-        category: 'system',
-        priority: 'high'
-      };
-    default:
-      return {
-        title: payload.title || 'Update',
-        summary: payload.message || payload.summary || 'Something changed.',
-        suggestion: payload.suggestion || null,
-        link,
-        category: payload.category || 'system',
-        priority: payload.priority || 'medium'
-      };
+  case 'task_delayed':
+    return {
+      title: 'Task delayed',
+      summary: `${entityName} was delayed by ${payload.daysDelayed ?? 'a few'} days.`,
+      suggestion: payload.suggestAssignBackup !== false ? 'Assign a backup?' : null,
+      link,
+      category: 'task',
+      priority: 'medium'
+    };
+  case 'task_status':
+    return {
+      title: 'Task status changed',
+      summary: `${entityName} is now ${payload.newStatus || payload.status}.`,
+      suggestion: payload.newStatus === 'in_progress' ? 'Consider adding a due date.' : null,
+      link,
+      category: 'task',
+      priority: 'low'
+    };
+  case 'milestone_completed':
+    return {
+      title: 'Milestone completed',
+      summary: `"${entityName}" is done.`,
+      suggestion: payload.nextMilestone ? `Next: ${payload.nextMilestone}` : null,
+      link: payload.projectId ? `/dashboard/projects` : link,
+      category: 'project',
+      priority: 'medium'
+    };
+  case 'job_failed':
+    return {
+      title: 'Job failed',
+      summary: `${entityName || 'A job'} failed. ${payload.reason || 'Check the job for details.'}`,
+      suggestion: 'Retry or check logs.',
+      link: payload.jobId ? `/dashboard/jobs` : link,
+      category: 'system',
+      priority: 'high'
+    };
+  default:
+    return {
+      title: payload.title || 'Update',
+      summary: payload.message || payload.summary || 'Something changed.',
+      suggestion: payload.suggestion || null,
+      link,
+      category: payload.category || 'system',
+      priority: payload.priority || 'medium'
+    };
   }
 }
 

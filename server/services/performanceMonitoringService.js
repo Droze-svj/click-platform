@@ -103,18 +103,18 @@ function trackDatabaseQuery(queryType, queryTime, isSlow = false) {
 function trackCacheOperation(operation, hit = false) {
   try {
     switch (operation) {
-      case 'hit':
-        metrics.cache.hits++;
-        break;
-      case 'miss':
-        metrics.cache.misses++;
-        break;
-      case 'set':
-        metrics.cache.sets++;
-        break;
-      case 'error':
-        metrics.cache.errors++;
-        break;
+    case 'hit':
+      metrics.cache.hits++;
+      break;
+    case 'miss':
+      metrics.cache.misses++;
+      break;
+    case 'set':
+      metrics.cache.sets++;
+      break;
+    case 'error':
+      metrics.cache.errors++;
+      break;
     }
   } catch (error) {
     logger.error('Error tracking cache operation', { error: error.message });

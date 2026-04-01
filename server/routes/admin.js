@@ -102,7 +102,7 @@ router.get('/dashboard', auth, requireAdmin, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admin dashboard error:', error);
+    logger.error('Failed to load admin dashboard', { error: error.message });
     res.status(500).json({
       success: false,
       error: 'Failed to load admin dashboard'
@@ -166,7 +166,7 @@ router.get('/users', auth, requireAdmin, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admin users list error:', error);
+    logger.error('Failed to load users for admin', { error: error.message });
     res.status(500).json({
       success: false,
       error: 'Failed to load users'
@@ -240,7 +240,7 @@ router.get('/users/:id', auth, requireAdmin, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admin user details error:', error);
+    logger.error('Failed to load user details for admin', { error: error.message, userId: req.params.id });
     res.status(500).json({
       success: false,
       error: 'Failed to load user details'
@@ -302,7 +302,7 @@ router.put('/users/:id', auth, requireAdmin, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admin update user error:', error);
+    logger.error('Failed to update user', { error: error.message, userId: req.params.id });
     res.status(500).json({
       success: false,
       error: 'Failed to update user'
@@ -354,7 +354,7 @@ router.delete('/users/:id', auth, requireSuperAdmin, asyncHandler(async (req, re
     });
 
   } catch (error) {
-    console.error('Admin delete user error:', error);
+    logger.error('Failed to delete user', { error: error.message, userId: req.params.id });
     res.status(500).json({
       success: false,
       error: 'Failed to delete user'
@@ -428,7 +428,7 @@ router.get('/posts', auth, requireAdmin, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admin posts list error:', error);
+    logger.error('Failed to load posts for admin', { error: error.message });
     res.status(500).json({
       success: false,
       error: 'Failed to load posts'
@@ -471,18 +471,18 @@ router.put('/posts/:id/moderate', auth, requireAdmin, asyncHandler(async (req, r
     const updateData = {};
 
     switch (action) {
-      case 'approve':
-        if (post.status === 'draft') {
-          updateData.status = 'published';
-          updateData.published_at = new Date().toISOString();
-        }
-        break;
-      case 'reject':
-        updateData.status = 'rejected';
-        break;
-      case 'flag':
-        updateData.status = 'flagged';
-        break;
+    case 'approve':
+      if (post.status === 'draft') {
+        updateData.status = 'published';
+        updateData.published_at = new Date().toISOString();
+      }
+      break;
+    case 'reject':
+      updateData.status = 'rejected';
+      break;
+    case 'flag':
+      updateData.status = 'flagged';
+      break;
     }
 
     const { data: updatedPost, error } = await supabase
@@ -511,7 +511,7 @@ router.put('/posts/:id/moderate', auth, requireAdmin, asyncHandler(async (req, r
     });
 
   } catch (error) {
-    console.error('Admin moderate post error:', error);
+    logger.error('Failed to moderate post', { error: error.message, postId: req.params.id });
     res.status(500).json({
       success: false,
       error: 'Failed to moderate post'
@@ -591,7 +591,7 @@ router.get('/analytics', auth, requireAdmin, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Admin analytics error:', error);
+    logger.error('Failed to load admin analytics', { error: error.message });
     res.status(500).json({
       success: false,
       error: 'Failed to load admin analytics'

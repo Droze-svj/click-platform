@@ -153,25 +153,25 @@ async function checkConditions(conditions, userId, context) {
 async function checkCondition(condition, userId, context) {
   try {
     switch (condition.type) {
-      case 'content_count':
-        const count = await Content.countDocuments({ userId });
-        return compareValues(count, condition.operator || '>=', condition.value || 0);
+    case 'content_count':
+      const count = await Content.countDocuments({ userId });
+      return compareValues(count, condition.operator || '>=', condition.value || 0);
 
-      case 'post_count':
-        const postCount = await ScheduledPost.countDocuments({ userId });
-        return compareValues(postCount, condition.operator || '>=', condition.value || 0);
+    case 'post_count':
+      const postCount = await ScheduledPost.countDocuments({ userId });
+      return compareValues(postCount, condition.operator || '>=', condition.value || 0);
 
-      case 'date':
-        const now = new Date();
-        const targetDate = new Date(condition.value);
-        return compareDates(now, condition.operator || '>=', targetDate);
+    case 'date':
+      const now = new Date();
+      const targetDate = new Date(condition.value);
+      return compareDates(now, condition.operator || '>=', targetDate);
 
-      case 'custom':
-        // Custom condition evaluation
-        return evaluateCustomCondition(condition, context);
+    case 'custom':
+      // Custom condition evaluation
+      return evaluateCustomCondition(condition, context);
 
-      default:
-        return true;
+    default:
+      return true;
     }
   } catch (error) {
     logger.error('Error checking condition', { error: error.message, condition });
@@ -185,20 +185,20 @@ async function checkCondition(condition, userId, context) {
 async function executeAction(action, userId, context) {
   try {
     switch (action.type) {
-      case 'create_content':
-        return await createContentFromAction(action, userId, context);
+    case 'create_content':
+      return await createContentFromAction(action, userId, context);
 
-      case 'schedule_post':
-        return await schedulePostFromAction(action, userId, context);
+    case 'schedule_post':
+      return await schedulePostFromAction(action, userId, context);
 
-      case 'send_notification':
-        return await sendNotificationFromAction(action, userId, context);
+    case 'send_notification':
+      return await sendNotificationFromAction(action, userId, context);
 
-      case 'update_content':
-        return await updateContentFromAction(action, userId, context);
+    case 'update_content':
+      return await updateContentFromAction(action, userId, context);
 
-      default:
-        throw new Error(`Unknown action type: ${action.type}`);
+    default:
+      throw new Error(`Unknown action type: ${action.type}`);
     }
   } catch (error) {
     logger.error('Error executing action', { error: error.message, action });
@@ -306,13 +306,13 @@ async function updateContentFromAction(action, userId, context) {
  */
 function compareValues(value, operator, target) {
   switch (operator) {
-    case '>': return value > target;
-    case '>=': return value >= target;
-    case '<': return value < target;
-    case '<=': return value <= target;
-    case '==': return value === target;
-    case '!=': return value !== target;
-    default: return value >= target;
+  case '>': return value > target;
+  case '>=': return value >= target;
+  case '<': return value < target;
+  case '<=': return value <= target;
+  case '==': return value === target;
+  case '!=': return value !== target;
+  default: return value >= target;
   }
 }
 

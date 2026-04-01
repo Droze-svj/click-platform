@@ -18,20 +18,20 @@ async function checkForModelUpgrades(provider, model) {
     let upgrades = null;
 
     switch (provider) {
-      case 'openrouter':
-        upgrades = await checkOpenRouterUpgrades(model);
-        break;
-      case 'huggingface':
-        upgrades = await checkHuggingFaceUpgrades(model);
-        break;
-      case 'cerebras':
-        upgrades = await checkCerebrasUpgrades(model);
-        break;
-      case 'replicate':
-        upgrades = await checkReplicateUpgrades(model);
-        break;
-      default:
-        logger.warn('Upgrade check not implemented for provider', { provider });
+    case 'openrouter':
+      upgrades = await checkOpenRouterUpgrades(model);
+      break;
+    case 'huggingface':
+      upgrades = await checkHuggingFaceUpgrades(model);
+      break;
+    case 'cerebras':
+      upgrades = await checkCerebrasUpgrades(model);
+      break;
+    case 'replicate':
+      upgrades = await checkReplicateUpgrades(model);
+      break;
+    default:
+      logger.warn('Upgrade check not implemented for provider', { provider });
     }
 
     return upgrades;
@@ -408,9 +408,9 @@ async function compareVersions(provider, model, version1, version2) {
       comparison: {
         performanceDelta: v2.baselinePerformance && v1.baselinePerformance
           ? {
-              qualityScore: (v2.baselinePerformance.avgQualityScore || 0) - (v1.baselinePerformance.avgQualityScore || 0),
-              responseTime: (v2.baselinePerformance.avgResponseTime || 0) - (v1.baselinePerformance.avgResponseTime || 0),
-            }
+            qualityScore: (v2.baselinePerformance.avgQualityScore || 0) - (v1.baselinePerformance.avgQualityScore || 0),
+            responseTime: (v2.baselinePerformance.avgResponseTime || 0) - (v1.baselinePerformance.avgResponseTime || 0),
+          }
           : null,
         newFeatures: v2.improvements?.filter(imp => !v1.improvements?.includes(imp)) || [],
         breakingChanges: v2.breakingChanges || [],

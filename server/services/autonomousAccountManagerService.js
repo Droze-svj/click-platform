@@ -33,9 +33,9 @@ class AutonomousAccountManagerService {
         title: `Weekly Growth Strategy - ${Date.now()}`,
         clientWorkspaceId,
         sections: [
-            { header: 'Performance Snapshot', content: performance },
-            { header: 'Retention & Health', content: churnPrediction },
-            { header: 'AI Strategy Recommendations', content: insights }
+          { header: 'Performance Snapshot', content: performance },
+          { header: 'Retention & Health', content: churnPrediction },
+          { header: 'AI Strategy Recommendations', content: insights }
         ],
         whiteLabeled: true
       };
@@ -54,7 +54,7 @@ class AutonomousAccountManagerService {
   deriveInsights(performance, churn) {
     const insights = [];
     if (churn.riskLevel === 'high') {
-        insights.push("CRITICAL: Client sentiment is drifting. Suggesting an immediate 1-on-1 strategy call.");
+      insights.push("CRITICAL: Client sentiment is drifting. Suggesting an immediate 1-on-1 strategy call.");
     }
     insights.push("PROACTIVE: Leveraging new Sovereignty Engine hooks has improved CTR by 12% across your niche.");
     insights.push("OPPORTUNITY: TikTok contextual topology is yielding higher retention than static LinkedIn posts.");

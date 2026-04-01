@@ -23,7 +23,7 @@ router.post('/auto-reframe', authenticateToken, requireFeature('b_roll_ai'), asy
     const result = await getService().autoReframe(videoId, aspectRatio, req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Creative] /auto-reframe error:', err.message)
+    
     res.status(500).json({ error: 'Auto-reframe failed', detail: err.message })
   }
 })
@@ -36,7 +36,7 @@ router.post('/magic-broll', authenticateToken, requireFeature('b_roll_ai'), asyn
     const result = await getService().magicBRoll(videoId, transcript, req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Creative] /magic-broll error:', err.message)
+    
     res.status(500).json({ error: 'Magic B-roll failed', detail: err.message })
   }
 })
@@ -49,7 +49,7 @@ router.post('/eye-contact', authenticateToken, requireFeature('creator_analytics
     const result = await getService().fixEyeContact(videoId, req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Creative] /eye-contact error:', err.message)
+    
     res.status(500).json({ error: 'Eye contact correction failed', detail: err.message })
   }
 })
@@ -62,7 +62,7 @@ router.post('/background-swap', authenticateToken, requireFeature('b_roll_ai'), 
     const result = await getService().swapBackground(videoId, backgroundUrl, blurAmount, req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Creative] /background-swap error:', err.message)
+    
     res.status(500).json({ error: 'Background swap failed', detail: err.message })
   }
 })
@@ -76,7 +76,7 @@ router.post('/speed-ramp', authenticateToken, requireFeature('b_roll_ai'), async
     const result = await getService().applySpeedRamp(videoId, { intensity, preserveAudio }, req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Creative] /speed-ramp error:', err.message)
+    
     res.status(500).json({ error: 'Speed ramp failed', detail: err.message })
   }
 })
@@ -90,7 +90,7 @@ router.post('/ai-avatar', authenticateToken, requireFeature('generative_dubbing'
     const result = await getService().generateAiAvatar(videoId, { referenceClipUrl, script, voiceId }, req.user.id)
     res.json(result)
   } catch (err) {
-    console.error('[Creative] /ai-avatar error:', err.message)
+    
     res.status(500).json({ error: 'AI Avatar synthesis failed', detail: err.message })
   }
 })
@@ -116,7 +116,7 @@ router.post('/thumbnail', authenticateToken, requireFeature('creative_tools'), a
       message: `Thumbnail enhancement job queued (style: ${style})`,
     })
   } catch (err) {
-    console.error('[Creative] /thumbnail error:', err.message)
+    
     res.status(500).json({ error: 'Thumbnail generation failed', detail: err.message })
   }
 })

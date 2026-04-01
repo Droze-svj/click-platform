@@ -256,26 +256,26 @@ async function createCustomLayout(inputs, layout, outputPath) {
     const layoutFilters = [];
 
     switch (layout.type) {
-      case 'picture-in-picture':
-        const pipX = layout.pipX || '(W-w)/2';
-        const pipY = layout.pipY || '(H-h)/2';
-        const pipW = layout.pipW || 'W/3';
-        const pipH = layout.pipH || 'H/3';
-        layoutFilters.push(`[1:v]scale=${pipW}:${pipH}[pip];[0:v][pip]overlay=${pipX}:${pipY}`);
-        break;
+    case 'picture-in-picture':
+      const pipX = layout.pipX || '(W-w)/2';
+      const pipY = layout.pipY || '(H-h)/2';
+      const pipW = layout.pipW || 'W/3';
+      const pipH = layout.pipH || 'H/3';
+      layoutFilters.push(`[1:v]scale=${pipW}:${pipH}[pip];[0:v][pip]overlay=${pipX}:${pipY}`);
+      break;
 
-      case 'side-by-side':
-        layoutFilters.push('[0:v]pad=2*W:H[bg];[bg][1:v]overlay=W/2:0');
-        break;
+    case 'side-by-side':
+      layoutFilters.push('[0:v]pad=2*W:H[bg];[bg][1:v]overlay=W/2:0');
+      break;
 
-      case 'grid':
-        const gridSize = Math.ceil(Math.sqrt(inputs.length));
-        // Complex grid layout logic would go here
-        break;
+    case 'grid':
+      const gridSize = Math.ceil(Math.sqrt(inputs.length));
+      // Complex grid layout logic would go here
+      break;
 
-      default:
-        // Default to overlay first input on second
-        layoutFilters.push('[0:v][1:v]overlay=10:10');
+    default:
+      // Default to overlay first input on second
+      layoutFilters.push('[0:v][1:v]overlay=10:10');
     }
 
     if (layoutFilters.length > 0) {
@@ -316,9 +316,9 @@ async function applyAdvancedCaptions(videoPath, captions, styleConfig) {
 
     let yPosition;
     switch (position) {
-      case 'top': yPosition = margin; break;
-      case 'center': yPosition = '(h-text_h)/2'; break;
-      case 'bottom': default: yPosition = `h-text_h-${margin}`; break;
+    case 'top': yPosition = margin; break;
+    case 'center': yPosition = '(h-text_h)/2'; break;
+    case 'bottom': default: yPosition = `h-text_h-${margin}`; break;
     }
 
     const captionFilters = captions.map(caption => {

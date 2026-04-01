@@ -106,8 +106,8 @@ async function getEditAnalytics(userId, period = '30d') {
     const analytics = preferences.editAnalytics;
     const now = new Date();
     const periodMs = period === '7d' ? 7 * 24 * 60 * 60 * 1000 :
-                     period === '30d' ? 30 * 24 * 60 * 60 * 1000 :
-                     90 * 24 * 60 * 60 * 1000;
+      period === '30d' ? 30 * 24 * 60 * 60 * 1000 :
+        90 * 24 * 60 * 60 * 1000;
 
     // Filter sessions by period
     const recentSessions = (analytics.sessions || []).filter(session => {

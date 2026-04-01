@@ -6,7 +6,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { authLimiter } = require('../middleware/enhancedRateLimiter');
 const { authRateLimiter } = require('../middleware/security');
 const { validateRegister, validateLogin } = require('../validators/authValidator');
-const { sendWelcomeEmail, sendPasswordResetEmail } = require('../services/emailService');
+const { sendWelcomeEmail } = require('../services/emailService');
 const { validatePasswordPolicy, getPasswordSuggestions } = require('../utils/passwordPolicy');
 const logger = require('../utils/logger');
 const router = express.Router();
@@ -142,14 +142,14 @@ router.post('/register',
 
 
       if (insertError) {
-        logger.error('Supabase insert error', { error: insertError });
+        logger.error('Supabase insert error in register', { error: insertError });
         return res.status(500).json({ success: false, error: 'Failed to create user' });
       }
 
       // Create combined name for response
       user.name = `${user.first_name} ${user.last_name}`;
 
-      const token = jwt.sign(
+      jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
@@ -236,7 +236,7 @@ router.post('/verify-email', authRateLimiter, requireSupabase, async (req, res) 
       .eq('social_links->email_verification->>token', token);
 
     if (findError) {
-      console.error('Database error finding user:', findError);
+      logger.error('Database error in verify-email', { error: findError });
       return res.status(500).json({ success: false, error: 'Database error' });
     }
 
@@ -276,7 +276,7 @@ router.post('/verify-email', authRateLimiter, requireSupabase, async (req, res) 
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Error updating user verification:', updateError);
+      
       return res.status(500).json({ success: false, error: 'Failed to verify email' });
     }
 
@@ -304,7 +304,7 @@ router.post('/verify-email', authRateLimiter, requireSupabase, async (req, res) 
     });
 
   } catch (error) {
-    console.error('Email verification error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -357,7 +357,7 @@ router.post('/resend-verification', authRateLimiter, requireSupabase, async (req
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Error updating verification token:', updateError);
+      logger.error('Resend verification update error', { error: updateError });
       return res.status(500).json({ success: false, error: 'Failed to resend verification' });
     }
 
@@ -398,7 +398,7 @@ router.post('/resend-verification', authRateLimiter, requireSupabase, async (req
     res.json({ success: true, message: 'Verification email sent successfully.' });
 
   } catch (error) {
-    console.error('Resend verification error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -435,11 +435,11 @@ router.post('/login',
     try {
 
       const { email, password } = req.body;
-      console.log('Login attempt for email:', email);
+      
 
       // Check for development users first (before Supabase)
       if (process.env.NODE_ENV === 'development' || !supabase) {
-        console.log('Development mode detected, checking for dev users');
+        
 
         // Simple development credentials
         if (email === 'admin@example.com' && password === 'admin123') {
@@ -460,7 +460,7 @@ router.post('/login',
             { expiresIn: '30d' }
           );
 
-          console.log('Dev user login successful');
+          
           return res.json({
             success: true,
             message: 'Login successful (dev mode)',
@@ -479,7 +479,7 @@ router.post('/login',
 
       // Only try Supabase if not in dev mode or if Supabase is available
       if (!supabase) {
-        console.log('Supabase not available, cannot authenticate');
+        
         return res.status(503).json({ success: false, error: 'Authentication service unavailable' });
       }
 
@@ -497,13 +497,13 @@ router.post('/login',
         user = result.data;
         findError = result.error;
       } catch (supabaseError) {
-        console.log('Supabase query error:', supabaseError.message);
+        
         findError = supabaseError;
       }
 
       // If Supabase query failed or no user found, return error
       if (findError || !user) {
-        console.log('User lookup failed in Supabase');
+        
         return res.status(401).json({ success: false, error: 'Invalid credentials' });
       }
 
@@ -545,12 +545,12 @@ router.post('/login',
       if (user.password === null && process.env.NODE_ENV === 'development') {
         // Development user - password already verified during user lookup
         isValidPassword = true;
-        console.log('Development user login - skipping password verification');
+        
       } else {
         const bcrypt = require('bcryptjs');
-        console.log('Login attempt for:', user.email, 'password length:', password.length);
+        
         isValidPassword = await bcrypt.compare(password, user.password);
-        console.log('Password verification result:', isValidPassword);
+        
       }
 
       // TEMPORARY: Allow login with correct email for testing
@@ -630,7 +630,9 @@ router.post('/login',
         );
 
         // Remove password and sensitive data from response
-        const { password: _, social_links, ...userWithoutPassword } = user;
+        const userWithoutPassword = { ...user };
+        delete userWithoutPassword.password;
+        delete userWithoutPassword.social_links;
 
         logger.info('User logged in successfully', { email: user.email, userId: user.id });
 
@@ -655,7 +657,7 @@ router.post('/login',
 router.get('/debug-user/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    console.log('Debug lookup for:', email);
+    
 
     const { data: user, error } = await supabase
       .from('users')
@@ -663,7 +665,7 @@ router.get('/debug-user/:email', async (req, res) => {
       .eq('email', email.toLowerCase())
       .single();
 
-    console.log('Debug result:', { user: user ? 'found' : 'not found', error: error?.message });
+    
 
     res.json({
       success: !!user,
@@ -739,14 +741,14 @@ router.post('/forgot-password',
         const { sendPasswordResetEmail } = require('../services/emailService');
         await sendPasswordResetEmail(user.email, resetToken, user.name);
       } catch (emailError) {
-        console.error('Failed to send reset email:', emailError);
+        
         // Don't fail the request if email fails
       }
 
       res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
 
     } catch (error) {
-      console.error('Forgot password error:', error);
+      
       res.status(500).json({ success: false, error: 'Server error' });
     }
   });
@@ -777,7 +779,7 @@ router.get('/validate-reset-token/:token', async (req, res) => {
     res.json({ valid: true, message: 'Token is valid' });
 
   } catch (error) {
-    console.error('Validate reset token error:', error);
+    
     res.status(500).json({ valid: false, message: 'Server error' });
   }
 });
@@ -819,14 +821,14 @@ router.post('/reset-password',
         .eq('id', decoded.userId);
 
       if (updateError) {
-        console.error('Failed to update password:', updateError);
+        
         return res.status(500).json({ success: false, error: 'Failed to update password' });
       }
 
       res.json({ success: true, message: 'Password has been reset successfully' });
 
     } catch (error) {
-      console.error('Reset password error:', error);
+      
       res.status(500).json({ success: false, error: 'Server error' });
     }
   });
@@ -861,7 +863,7 @@ router.get('/verify-email/:token', async (req, res) => {
       .eq('id', verificationToken.user_id);
 
     if (updateError) {
-      console.error('Failed to update user verification status:', updateError);
+      
       return res.status(500).json({ success: false, error: 'Failed to verify email' });
     }
 
@@ -877,7 +879,7 @@ router.get('/verify-email/:token', async (req, res) => {
     res.json({ success: true, message: 'Email verified successfully' });
 
   } catch (error) {
-    console.error('Verify email error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -928,7 +930,7 @@ router.post('/resend-verification',
         });
 
       if (tokenError) {
-        console.error('Failed to save verification token:', tokenError);
+        
         return res.status(500).json({ success: false, error: 'Failed to process request' });
       }
 
@@ -953,14 +955,14 @@ router.post('/resend-verification',
 
         await sendWelcomeEmail(user.email, user.name, emailContent);
       } catch (emailError) {
-        console.error('Failed to send verification email:', emailError);
+        
         // Don't fail the request if email fails
       }
 
       res.json({ success: true, message: 'If the email exists, a verification link has been sent.' });
 
     } catch (error) {
-      console.error('Resend verification error:', error);
+      
       res.status(500).json({ success: false, error: 'Server error' });
     }
   });
@@ -986,7 +988,7 @@ router.get('/profile', require('../middleware/auth'), async (req, res) => {
 
     res.json({ success: true, profile });
   } catch (error) {
-    console.error('Get profile error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1027,7 +1029,7 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
       .single();
 
     if (updateError) {
-      console.error('Profile update error:', updateError);
+      
       return res.status(500).json({ success: false, error: 'Failed to update profile' });
     }
 
@@ -1038,7 +1040,7 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update profile error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1091,14 +1093,14 @@ router.post('/change-password', require('../middleware/auth'), async (req, res) 
       .eq('id', req.user.id);
 
     if (updateError) {
-      console.error('Password change error:', updateError);
+      
       return res.status(500).json({ success: false, error: 'Failed to change password' });
     }
 
     res.json({ success: true, message: 'Password changed successfully' });
 
   } catch (error) {
-    console.error('Change password error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1164,7 +1166,7 @@ router.post('/2fa/setup', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('2FA setup error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1239,7 +1241,7 @@ router.post('/2fa/enable', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('2FA enable error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1289,7 +1291,7 @@ router.post('/2fa/disable', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('2FA disable error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1325,7 +1327,7 @@ router.get('/2fa/status', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('2FA status error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1421,7 +1423,7 @@ router.post('/2fa/verify', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('2FA verify error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1480,7 +1482,7 @@ router.post('/deactivate', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Account deactivation error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1574,7 +1576,7 @@ router.delete('/delete', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Account deletion error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1657,7 +1659,7 @@ router.post('/reactivate', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Account reactivation error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1690,7 +1692,7 @@ router.post('/cancel-deletion', require('../middleware/auth'), async (req, res) 
     });
 
   } catch (error) {
-    console.error('Cancel deletion error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1761,7 +1763,7 @@ router.post('/refresh', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Token refresh error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1790,7 +1792,7 @@ router.post('/logout', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Logout error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1829,7 +1831,7 @@ router.get('/sessions', require('../middleware/auth'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Sessions error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1860,7 +1862,7 @@ router.post('/revoke-sessions', require('../middleware/auth'), async (req, res) 
     });
 
   } catch (error) {
-    console.error('Revoke sessions error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -1882,7 +1884,7 @@ router.get('/security-events', require('../middleware/auth'), async (req, res) =
       .single();
 
     if (error) {
-      console.warn('Database error in security-events, returning mock data:', error.message);
+      
       // Return mock data for development/demo purposes
       return res.json({
         success: true,
@@ -1983,7 +1985,7 @@ router.get('/security-events', require('../middleware/auth'), async (req, res) =
     });
 
   } catch (error) {
-    console.error('Security events error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -2016,7 +2018,7 @@ router.post('/report-suspicious', require('../middleware/auth'), async (req, res
     });
 
   } catch (error) {
-    console.error('Report suspicious error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -2036,7 +2038,7 @@ router.get('/security-status', require('../middleware/auth'), async (req, res) =
       .single();
 
     if (error) {
-      console.warn('Database error in security-status, returning mock data:', error.message);
+      
       // Return mock data for development/demo purposes
       return res.json({
         success: true,
@@ -2087,7 +2089,7 @@ router.get('/security-status', require('../middleware/auth'), async (req, res) =
     });
 
   } catch (error) {
-    console.error('Security status error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -2124,7 +2126,7 @@ router.post('/check-password-strength', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Password strength check error:', error);
+    
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
@@ -2139,5 +2141,5 @@ function generateBackupCodes() {
 }
 
 module.exports = router;
-console.log('✅ Finished loading server/routes/auth.js');
+
 

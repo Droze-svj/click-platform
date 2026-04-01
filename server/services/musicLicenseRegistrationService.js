@@ -112,38 +112,38 @@ async function registerWithProvider(usageLog, providerConfig, options = {}) {
     let registrationResult;
 
     switch (usageLog.provider) {
-      case 'soundstripe':
-        registrationResult = await registerSoundstripeUsage(
-          usageLog,
-          providerConfig,
-          authHeaders,
-          user,
-          options
-        );
-        break;
+    case 'soundstripe':
+      registrationResult = await registerSoundstripeUsage(
+        usageLog,
+        providerConfig,
+        authHeaders,
+        user,
+        options
+      );
+      break;
 
-      case 'artlist':
-        registrationResult = await registerArtlistUsage(
-          usageLog,
-          providerConfig,
-          authHeaders,
-          user,
-          options
-        );
-        break;
+    case 'artlist':
+      registrationResult = await registerArtlistUsage(
+        usageLog,
+        providerConfig,
+        authHeaders,
+        user,
+        options
+      );
+      break;
 
-      case 'hooksounds':
-        registrationResult = await registerHookSoundsUsage(
-          usageLog,
-          providerConfig,
-          authHeaders,
-          user,
-          options
-        );
-        break;
+    case 'hooksounds':
+      registrationResult = await registerHookSoundsUsage(
+        usageLog,
+        providerConfig,
+        authHeaders,
+        user,
+        options
+      );
+      break;
 
-      default:
-        throw new Error(`Unsupported provider: ${usageLog.provider}`);
+    default:
+      throw new Error(`Unsupported provider: ${usageLog.provider}`);
     }
 
     return registrationResult;

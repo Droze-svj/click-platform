@@ -1,10 +1,10 @@
-console.log('🏗️ errorHandler: start requires');
-const logger = require('../utils/logger');
-console.log('🏗️ errorHandler: logger loaded');
-const { captureException, addBreadcrumb } = require('../utils/sentry');
-console.log('🏗️ errorHandler: sentry loaded');
 
-const errorHandler = (err, req, res, next) => {
+const logger = require('../utils/logger');
+
+const { captureException, addBreadcrumb } = require('../utils/sentry');
+
+
+const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused-vars
   // Add breadcrumb for debugging (wrap in try-catch to prevent Sentry errors from breaking error handler)
   try {
     addBreadcrumb('Error occurred', 'error', 'error', {
@@ -49,13 +49,14 @@ const errorHandler = (err, req, res, next) => {
       query: req.query
     });
   } catch (loggerErr) {
-    // Fallback to console if logger fails
-    console.error('Request error (logger failed):', {
+    /* eslint-disable no-console */
+    console.error('Fallback error:', { // eslint-disable-line no-console
       error: err.message,
       url: req.originalUrl,
       method: req.method,
       loggerError: loggerErr.message
     });
+    /* eslint-enable no-console */
   }
 
   // Mongoose validation error
@@ -260,7 +261,7 @@ const errorHandler = (err, req, res, next) => {
 };
 
 // 404 handler
-const notFound = (req, res, next) => {
+const notFound = (req, res, next) => { // eslint-disable-line no-unused-vars
   res.status(404).json({
     success: false,
     error: `Route ${req.originalUrl} not found`

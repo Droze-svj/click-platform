@@ -306,18 +306,18 @@ function calculateRiskSummary(clientSummaries) {
 
     client.riskFlags.forEach(flag => {
       switch (flag.severity) {
-        case 'critical':
-          criticalRisks++;
-          break;
-        case 'high':
-          highRisks++;
-          break;
-        case 'medium':
-          mediumRisks++;
-          break;
-        case 'low':
-          lowRisks++;
-          break;
+      case 'critical':
+        criticalRisks++;
+        break;
+      case 'high':
+        highRisks++;
+        break;
+      case 'medium':
+        mediumRisks++;
+        break;
+      case 'low':
+        lowRisks++;
+        break;
       }
     });
   });

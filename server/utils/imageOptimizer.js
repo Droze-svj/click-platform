@@ -30,18 +30,18 @@ async function optimizeImage(inputPath, outputPath, options = {}) {
 
     // Convert format and optimize
     switch (format.toLowerCase()) {
-      case 'jpeg':
-      case 'jpg':
-        pipeline = pipeline.jpeg({ quality, mozjpeg: true });
-        break;
-      case 'png':
-        pipeline = pipeline.png({ quality, compressionLevel: 9 });
-        break;
-      case 'webp':
-        pipeline = pipeline.webp({ quality });
-        break;
-      default:
-        pipeline = pipeline.jpeg({ quality });
+    case 'jpeg':
+    case 'jpg':
+      pipeline = pipeline.jpeg({ quality, mozjpeg: true });
+      break;
+    case 'png':
+      pipeline = pipeline.png({ quality, compressionLevel: 9 });
+      break;
+    case 'webp':
+      pipeline = pipeline.webp({ quality });
+      break;
+    default:
+      pipeline = pipeline.jpeg({ quality });
     }
 
     // Ensure output directory exists

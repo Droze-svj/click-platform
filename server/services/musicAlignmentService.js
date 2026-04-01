@@ -31,17 +31,17 @@ async function alignToSceneBoundary(trackId, sceneId, alignmentType, userId) {
     let targetTime = 0;
 
     switch (alignmentType) {
-      case 'start':
-        targetTime = scene.start;
-        break;
-      case 'end':
-        targetTime = scene.end;
-        break;
-      case 'center':
-        targetTime = (scene.start + scene.end) / 2;
-        break;
-      default:
-        targetTime = scene.start;
+    case 'start':
+      targetTime = scene.start;
+      break;
+    case 'end':
+      targetTime = scene.end;
+      break;
+    case 'center':
+      targetTime = (scene.start + scene.end) / 2;
+      break;
+    default:
+      targetTime = scene.start;
     }
 
     track.alignment = {

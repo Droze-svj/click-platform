@@ -35,7 +35,7 @@ const responseTimeMiddleware = (req, res, next) => {
 
     // Log slow requests (> 1 second)
     if (duration > 1000) {
-      console.warn(`🐌 Slow API request: ${method} ${url} took ${duration}ms`)
+      
     }
 
     // Track in APM if available
@@ -113,7 +113,7 @@ const requestOptimizationMiddleware = (req, res, next) => {
   // Optimize JSON parsing for large payloads
   if (req.headers['content-type']?.includes('application/json') &&
       parseInt(req.headers['content-length'] || '0') > 1024 * 1024) { // > 1MB
-    console.warn(`📊 Large JSON payload detected: ${req.headers['content-length']} bytes`)
+    
   }
 
   // Add ETag support for conditional requests
@@ -177,7 +177,7 @@ const rateLimitEnhancementMiddleware = (req, res, next) => {
 
     // Warn when approaching limit
     if (remaining < 10) {
-      console.warn(`⚠️ Rate limit warning: ${remaining} requests remaining for ${req.ip}`)
+      
     }
   }
 

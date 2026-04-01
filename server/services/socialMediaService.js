@@ -28,21 +28,21 @@ async function postToSocial(userId, platform, contentData, contentId = null) {
 
     let result;
     switch (platform.toLowerCase()) {
-      case 'tiktok':
-        result = await require('./TikTokSocialService').postToTikTok(finalAuth, contentData);
-        break;
-      case 'youtube':
-        result = await require('./YouTubeSocialService').uploadToYouTube(finalAuth, contentData);
-        break;
-      case 'twitter':
-      case 'x':
-        result = await require('./TwitterSocialService').postTweet(finalAuth, contentData);
-        break;
-      case 'instagram':
-        result = await postToInstagram(finalAuth, contentData);
-        break;
-      default:
-        throw new Error(`Unsupported platform: ${platform}`);
+    case 'tiktok':
+      result = await require('./TikTokSocialService').postToTikTok(finalAuth, contentData);
+      break;
+    case 'youtube':
+      result = await require('./YouTubeSocialService').uploadToYouTube(finalAuth, contentData);
+      break;
+    case 'twitter':
+    case 'x':
+      result = await require('./TwitterSocialService').postTweet(finalAuth, contentData);
+      break;
+    case 'instagram':
+      result = await postToInstagram(finalAuth, contentData);
+      break;
+    default:
+      throw new Error(`Unsupported platform: ${platform}`);
     }
 
     // If contentId is provided, persist the post result to the Content model
@@ -103,19 +103,19 @@ async function syncSocialInsights(userId) {
         let insights;
 
         switch (platform.toLowerCase()) {
-          case 'youtube':
-            insights = await require('./YouTubeSocialService').getChannelInsights(authData);
-            break;
-          case 'tiktok':
-            insights = await require('./TikTokSocialService').getProfileInsights(authData);
-            break;
-          case 'twitter':
-          case 'x':
-            insights = await require('./TwitterSocialService').getUserInsights(authData);
-            break;
-          default:
-            logger.warn(`Insights sync not supported for platform: ${platform}`);
-            continue;
+        case 'youtube':
+          insights = await require('./YouTubeSocialService').getChannelInsights(authData);
+          break;
+        case 'tiktok':
+          insights = await require('./TikTokSocialService').getProfileInsights(authData);
+          break;
+        case 'twitter':
+        case 'x':
+          insights = await require('./TwitterSocialService').getUserInsights(authData);
+          break;
+        default:
+          logger.warn(`Insights sync not supported for platform: ${platform}`);
+          continue;
         }
 
         results[platform] = insights;

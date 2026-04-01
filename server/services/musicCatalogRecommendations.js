@@ -21,20 +21,20 @@ async function getRecommendedTracks(userId, options = {}) {
     let recommendations = [];
 
     switch (basedOn) {
-      case 'usage':
-        recommendations = await getRecommendationsBasedOnUsage(userId, limit, excludeTrackIds);
-        break;
-      case 'favorites':
-        recommendations = await getRecommendationsBasedOnFavorites(userId, limit, excludeTrackIds);
-        break;
-      case 'similar':
-        recommendations = await getSimilarTracks(options.trackId, limit, excludeTrackIds);
-        break;
-      case 'trending':
-        recommendations = await getTrendingTracks(limit, excludeTrackIds);
-        break;
-      default:
-        recommendations = await getRecommendationsBasedOnUsage(userId, limit, excludeTrackIds);
+    case 'usage':
+      recommendations = await getRecommendationsBasedOnUsage(userId, limit, excludeTrackIds);
+      break;
+    case 'favorites':
+      recommendations = await getRecommendationsBasedOnFavorites(userId, limit, excludeTrackIds);
+      break;
+    case 'similar':
+      recommendations = await getSimilarTracks(options.trackId, limit, excludeTrackIds);
+      break;
+    case 'trending':
+      recommendations = await getTrendingTracks(limit, excludeTrackIds);
+      break;
+    default:
+      recommendations = await getRecommendationsBasedOnUsage(userId, limit, excludeTrackIds);
     }
 
     return recommendations;
@@ -61,9 +61,9 @@ async function getRecommendationsBasedOnUsage(userId, limit, excludeTrackIds) {
         { mood: { $in: userPreferences.moods } }
       ]
     })
-    .sort({ usageCount: -1, createdAt: -1 })
-    .limit(limit)
-    .lean();
+      .sort({ usageCount: -1, createdAt: -1 })
+      .limit(limit)
+      .lean();
 
     return recommendations.map(track => ({
       id: track._id.toString(),
@@ -123,9 +123,9 @@ async function getRecommendationsBasedOnFavorites(userId, limit, excludeTrackIds
         { mood: { $in: uniqueMoods } }
       ]
     })
-    .sort({ usageCount: -1 })
-    .limit(limit)
-    .lean();
+      .sort({ usageCount: -1 })
+      .limit(limit)
+      .lean();
 
     return recommendations.map(track => ({
       id: track._id.toString(),
@@ -160,8 +160,8 @@ async function getSimilarTracks(trackId, limit, excludeTrackIds) {
         { bpm: track.bpm ? { $gte: track.bpm - 5, $lte: track.bpm + 5 } : undefined }
       ].filter(Boolean)
     })
-    .limit(limit)
-    .lean();
+      .limit(limit)
+      .lean();
 
     return recommendations.map(t => ({
       id: t._id.toString(),
@@ -189,9 +189,9 @@ async function getTrendingTracks(limit, excludeTrackIds) {
       licenseStatus: 'active',
       usageCount: { $gt: 0 }
     })
-    .sort({ usageCount: -1, lastUsedAt: -1 })
-    .limit(limit)
-    .lean();
+      .sort({ usageCount: -1, lastUsedAt: -1 })
+      .limit(limit)
+      .lean();
 
     return recommendations.map(track => ({
       id: track._id.toString(),
@@ -274,9 +274,9 @@ async function recommendTracksForContent(contentMetadata, options = {}) {
       mood: recommendations.mood,
       bpm: recommendations.bpm ? { $gte: recommendations.bpm - 5, $lte: recommendations.bpm + 5 } : undefined
     })
-    .sort({ usageCount: -1 })
-    .limit(limit)
-    .lean();
+      .sort({ usageCount: -1 })
+      .limit(limit)
+      .lean();
 
     return {
       recommendedParams: recommendations,

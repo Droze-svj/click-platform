@@ -55,42 +55,44 @@ async function checkRepostAlerts(userId) {
         let currentValue = 0;
 
         switch (alert.metric) {
-          case 'engagement':
-            currentValue = recycle.repostPerformance?.engagement || 0;
+        case 'engagement':
+          currentValue = recycle.repostPerformance?.engagement || 0;
+          if (alert.threshold === 'below') {
+            shouldTrigger = currentValue < alert.value;
+          } else if (alert.threshold === 'above') {
+            shouldTrigger = currentValue > alert.value;
+          }
+          break;
+
+        case 'engagementRate':
+          currentValue = recycle.repostPerformance?.engagementRate || 0;
+          if (alert.threshold === 'below') {
+            shouldTrigger = currentValue < alert.value;
+          } else if (alert.threshold === 'above') {
+            shouldTrigger = currentValue > alert.value;
+          }
+          break;
+
+        case 'performance': {
+          const original = recycle.originalPerformance?.engagement || 0;
+          const repost = recycle.repostPerformance?.engagement || 0;
+          if (original > 0) {
+            currentValue = (repost / original) * 100;
             if (alert.threshold === 'below') {
               shouldTrigger = currentValue < alert.value;
-            } else if (alert.threshold === 'above') {
-              shouldTrigger = currentValue > alert.value;
             }
-            break;
+          }
+          break;
+        }
 
-          case 'engagementRate':
-            currentValue = recycle.repostPerformance?.engagementRate || 0;
-            if (alert.threshold === 'below') {
-              shouldTrigger = currentValue < alert.value;
-            } else if (alert.threshold === 'above') {
-              shouldTrigger = currentValue > alert.value;
-            }
-            break;
-
-          case 'performance':
-            const original = recycle.originalPerformance?.engagement || 0;
-            const repost = recycle.repostPerformance?.engagement || 0;
-            if (original > 0) {
-              currentValue = (repost / original) * 100;
-              if (alert.threshold === 'below') {
-                shouldTrigger = currentValue < alert.value;
-              }
-            }
-            break;
-
-          case 'decay':
-            const decayResult = await detectContentDecay(alert.recycleId);
-            if (decayResult.decayDetected) {
-              shouldTrigger = true;
-              currentValue = decayResult.decayScore;
-            }
-            break;
+        case 'decay': {
+          const decayResult = await detectContentDecay(alert.recycleId);
+          if (decayResult.decayDetected) {
+            shouldTrigger = true;
+            currentValue = decayResult.decayScore;
+          }
+          break;
+        }
         }
 
         if (shouldTrigger) {

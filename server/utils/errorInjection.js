@@ -18,67 +18,67 @@ function injectError(errorType, options = {}) {
   } = options;
 
   switch (errorType) {
-    case 'validation':
-      throw new ValidationError(
-        message || 'Validation error injected for testing',
-        fields || []
-      );
+  case 'validation':
+    throw new ValidationError(
+      message || 'Validation error injected for testing',
+      fields || []
+    );
 
-    case 'authentication':
-      throw new AppError(
-        message || 'Authentication error injected for testing',
-        401
-      );
+  case 'authentication':
+    throw new AppError(
+      message || 'Authentication error injected for testing',
+      401
+    );
 
-    case 'authorization':
-      throw new AppError(
-        message || 'Authorization error injected for testing',
-        403
-      );
+  case 'authorization':
+    throw new AppError(
+      message || 'Authorization error injected for testing',
+      403
+    );
 
-    case 'notFound':
-      throw new AppError(
-        message || 'Not found error injected for testing',
-        404
-      );
+  case 'notFound':
+    throw new AppError(
+      message || 'Not found error injected for testing',
+      404
+    );
 
-    case 'rateLimit': {
-      const rateLimitError = new AppError(
-        message || 'Rate limit error injected for testing',
-        429
-      );
-      rateLimitError.retryAfter = options.retryAfter || 60;
-      throw rateLimitError;
-    }
+  case 'rateLimit': {
+    const rateLimitError = new AppError(
+      message || 'Rate limit error injected for testing',
+      429
+    );
+    rateLimitError.retryAfter = options.retryAfter || 60;
+    throw rateLimitError;
+  }
 
-    case 'serviceUnavailable':
-      throw new ServiceUnavailableError(
-        message || 'Service unavailable error injected for testing'
-      );
+  case 'serviceUnavailable':
+    throw new ServiceUnavailableError(
+      message || 'Service unavailable error injected for testing'
+    );
 
-    case 'internal':
-      throw new AppError(
-        message || 'Internal error injected for testing',
-        500
-      );
+  case 'internal':
+    throw new AppError(
+      message || 'Internal error injected for testing',
+      500
+    );
 
-    case 'timeout': {
-      const timeoutError = new Error('Request timeout');
-      timeoutError.code = 'ETIMEDOUT';
-      throw timeoutError;
-    }
+  case 'timeout': {
+    const timeoutError = new Error('Request timeout');
+    timeoutError.code = 'ETIMEDOUT';
+    throw timeoutError;
+  }
 
-    case 'network': {
-      const networkError = new Error('Network error');
-      networkError.code = 'ECONNREFUSED';
-      throw networkError;
-    }
+  case 'network': {
+    const networkError = new Error('Network error');
+    networkError.code = 'ECONNREFUSED';
+    throw networkError;
+  }
 
-    default:
-      throw new AppError(
-        message || 'Unknown error injected for testing',
-        500
-      );
+  default:
+    throw new AppError(
+      message || 'Unknown error injected for testing',
+      500
+    );
   }
 }
 

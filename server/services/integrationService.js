@@ -100,17 +100,17 @@ async function testIntegrationConnection(integration) {
     let testUrl = integration.config.baseUrl;
     
     switch (integration.type) {
-      case 'cms':
-        testUrl += '/api/health';
-        break;
-      case 'dam':
-        testUrl += '/api/v1/health';
-        break;
-      case 'crm':
-        testUrl += '/api/status';
-        break;
-      default:
-        testUrl += '/health';
+    case 'cms':
+      testUrl += '/api/health';
+      break;
+    case 'dam':
+      testUrl += '/api/v1/health';
+      break;
+    case 'crm':
+      testUrl += '/api/status';
+      break;
+    default:
+      testUrl += '/health';
     }
 
     const headers = getAuthHeaders(integration);
@@ -123,7 +123,7 @@ async function testIntegrationConnection(integration) {
 
     const responseTime = Date.now() - startTime;
     const status = response.status >= 200 && response.status < 300 ? 'healthy' : 
-                   response.status >= 400 && response.status < 500 ? 'degraded' : 'down';
+      response.status >= 400 && response.status < 500 ? 'degraded' : 'down';
 
     return {
       lastCheck: new Date(),
@@ -148,27 +148,27 @@ function getAuthHeaders(integration) {
   const headers = { 'Content-Type': 'application/json' };
 
   switch (integration.config.authType) {
-    case 'api_key':
-      if (integration.config.apiKey) {
-        headers['X-API-Key'] = integration.config.apiKey;
-      }
-      break;
-    case 'bearer':
-      if (integration.config.apiKey) {
-        headers['Authorization'] = `Bearer ${integration.config.apiKey}`;
-      }
-      break;
-    case 'basic':
-      if (integration.config.apiKey && integration.config.apiSecret) {
-        const credentials = Buffer.from(`${integration.config.apiKey}:${integration.config.apiSecret}`).toString('base64');
-        headers['Authorization'] = `Basic ${credentials}`;
-      }
-      break;
-    case 'oauth':
-      if (integration.config.credentials?.accessToken) {
-        headers['Authorization'] = `Bearer ${integration.config.credentials.accessToken}`;
-      }
-      break;
+  case 'api_key':
+    if (integration.config.apiKey) {
+      headers['X-API-Key'] = integration.config.apiKey;
+    }
+    break;
+  case 'bearer':
+    if (integration.config.apiKey) {
+      headers['Authorization'] = `Bearer ${integration.config.apiKey}`;
+    }
+    break;
+  case 'basic':
+    if (integration.config.apiKey && integration.config.apiSecret) {
+      const credentials = Buffer.from(`${integration.config.apiKey}:${integration.config.apiSecret}`).toString('base64');
+      headers['Authorization'] = `Basic ${credentials}`;
+    }
+    break;
+  case 'oauth':
+    if (integration.config.credentials?.accessToken) {
+      headers['Authorization'] = `Bearer ${integration.config.credentials.accessToken}`;
+    }
+    break;
   }
 
   return headers;
@@ -205,15 +205,15 @@ async function pushContentToIntegration(integration, content) {
 
     let endpoint = '/api/content';
     switch (integration.type) {
-      case 'cms':
-        endpoint = '/api/posts';
-        break;
-      case 'dam':
-        endpoint = '/api/assets';
-        break;
-      case 'crm':
-        endpoint = '/api/activities';
-        break;
+    case 'cms':
+      endpoint = '/api/posts';
+      break;
+    case 'dam':
+      endpoint = '/api/assets';
+      break;
+    case 'crm':
+      endpoint = '/api/activities';
+      break;
     }
 
     const url = `${integration.config.baseUrl}${endpoint}`;
@@ -265,12 +265,12 @@ async function pullContentFromIntegration(integration) {
     
     let endpoint = '/api/content';
     switch (integration.type) {
-      case 'cms':
-        endpoint = '/api/posts';
-        break;
-      case 'dam':
-        endpoint = '/api/assets';
-        break;
+    case 'cms':
+      endpoint = '/api/posts';
+      break;
+    case 'dam':
+      endpoint = '/api/assets';
+      break;
     }
 
     const url = `${integration.config.baseUrl}${endpoint}`;

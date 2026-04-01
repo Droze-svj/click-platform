@@ -119,35 +119,35 @@ async function calculateRefund(userId, policy) {
     let autoApprove = false;
 
     switch (policy.policyType) {
-      case 'pro_rated':
-        if (policy.rules.proRated.enabled) {
-          const dailyRate = originalAmount / totalDays;
-          refundAmount = dailyRate * daysRemaining;
+    case 'pro_rated':
+      if (policy.rules.proRated.enabled) {
+        const dailyRate = originalAmount / totalDays;
+        refundAmount = dailyRate * daysRemaining;
           
-          // Apply processing fee
-          if (policy.rules.proRated.processingFee > 0) {
-            const fee = refundAmount * (policy.rules.proRated.processingFee / 100);
-            refundAmount -= fee;
-          }
+        // Apply processing fee
+        if (policy.rules.proRated.processingFee > 0) {
+          const fee = refundAmount * (policy.rules.proRated.processingFee / 100);
+          refundAmount -= fee;
+        }
           
-          autoApprove = daysRemaining >= (policy.rules.proRated.minimumDays || 0);
-        }
-        break;
-      case 'full_refund':
-        if (policy.rules.fullRefund.enabled) {
-          const daysSinceStart = Math.ceil((now - startDate) / (1000 * 60 * 60 * 24));
-          if (daysSinceStart <= policy.rules.fullRefund.timeLimit) {
-            refundAmount = originalAmount;
-            autoApprove = true;
-          }
-        }
-        break;
-      case 'partial_refund':
-        if (policy.rules.partialRefund.enabled) {
-          refundAmount = originalAmount * (policy.rules.partialRefund.percentage / 100);
+        autoApprove = daysRemaining >= (policy.rules.proRated.minimumDays || 0);
+      }
+      break;
+    case 'full_refund':
+      if (policy.rules.fullRefund.enabled) {
+        const daysSinceStart = Math.ceil((now - startDate) / (1000 * 60 * 60 * 24));
+        if (daysSinceStart <= policy.rules.fullRefund.timeLimit) {
+          refundAmount = originalAmount;
           autoApprove = true;
         }
-        break;
+      }
+      break;
+    case 'partial_refund':
+      if (policy.rules.partialRefund.enabled) {
+        refundAmount = originalAmount * (policy.rules.partialRefund.percentage / 100);
+        autoApprove = true;
+      }
+      break;
     }
 
     return {

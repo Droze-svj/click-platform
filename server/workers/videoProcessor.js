@@ -55,7 +55,7 @@ async function processVideoJob(jobData, job) {
  * Initialize video processing worker
  */
 function initializeVideoWorker() {
-  console.log('[initializeVideoWorker] Starting worker initialization');
+  
   logger.info('[initializeVideoWorker] Starting worker initialization', {
     nodeEnv: process.env.NODE_ENV,
     redisUrlExists: !!process.env.REDIS_URL,
@@ -70,7 +70,7 @@ function initializeVideoWorker() {
     },
   });
 
-  console.log(`[initializeVideoWorker] Worker result: ${worker ? 'created' : 'null'}`);
+  
   logger.info('Video processing worker initialized', { workerCreated: !!worker });
   return worker;
 }

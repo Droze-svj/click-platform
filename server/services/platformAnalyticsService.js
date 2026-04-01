@@ -368,24 +368,24 @@ async function syncPostAnalytics(userId, postId) {
 
     let analytics;
     switch (post.platform.toLowerCase()) {
-      case 'twitter':
-        analytics = await syncTwitterAnalytics(userId, postId, post.platformPostId);
-        break;
-      case 'linkedin':
-        analytics = await syncLinkedInAnalytics(userId, postId, post.platformPostId);
-        break;
-      case 'facebook':
-      case 'instagram':
-        analytics = await syncFacebookAnalytics(userId, postId, post.platformPostId);
-        break;
-      case 'youtube':
-        analytics = await syncYouTubeAnalytics(userId, postId, post.platformPostId);
-        break;
-      case 'tiktok':
-        analytics = await syncTikTokAnalytics(userId, postId, post.platformPostId);
-        break;
-      default:
-        throw new Error(`Analytics sync not supported for platform: ${post.platform}`);
+    case 'twitter':
+      analytics = await syncTwitterAnalytics(userId, postId, post.platformPostId);
+      break;
+    case 'linkedin':
+      analytics = await syncLinkedInAnalytics(userId, postId, post.platformPostId);
+      break;
+    case 'facebook':
+    case 'instagram':
+      analytics = await syncFacebookAnalytics(userId, postId, post.platformPostId);
+      break;
+    case 'youtube':
+      analytics = await syncYouTubeAnalytics(userId, postId, post.platformPostId);
+      break;
+    case 'tiktok':
+      analytics = await syncTikTokAnalytics(userId, postId, post.platformPostId);
+      break;
+    default:
+      throw new Error(`Analytics sync not supported for platform: ${post.platform}`);
     }
 
     // Update post with synced analytics

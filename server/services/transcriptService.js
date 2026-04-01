@@ -53,39 +53,39 @@ async function exportTranscript(contentId, userId, format = 'txt') {
     let exported;
 
     switch (format.toLowerCase()) {
-      case 'txt':
-        exported = content.transcript;
-        break;
+    case 'txt':
+      exported = content.transcript;
+      break;
       
-      case 'json':
-        exported = JSON.stringify({
-          title: content.title,
-          transcript: content.transcript,
-          exportedAt: new Date().toISOString(),
-        }, null, 2);
-        break;
+    case 'json':
+      exported = JSON.stringify({
+        title: content.title,
+        transcript: content.transcript,
+        exportedAt: new Date().toISOString(),
+      }, null, 2);
+      break;
       
-      case 'srt':
-        // Convert to SRT subtitle format
-        exported = convertToSRT(content.transcript);
-        break;
+    case 'srt':
+      // Convert to SRT subtitle format
+      exported = convertToSRT(content.transcript);
+      break;
       
-      case 'vtt':
-        // Convert to WebVTT format
-        exported = convertToVTT(content.transcript);
-        break;
+    case 'vtt':
+      // Convert to WebVTT format
+      exported = convertToVTT(content.transcript);
+      break;
       
-      case 'docx':
-        // For DOCX, return metadata for file generation
-        exported = {
-          format: 'docx',
-          content: content.transcript,
-          title: content.title,
-        };
-        break;
+    case 'docx':
+      // For DOCX, return metadata for file generation
+      exported = {
+        format: 'docx',
+        content: content.transcript,
+        title: content.title,
+      };
+      break;
       
-      default:
-        throw new Error(`Unsupported format: ${format}`);
+    default:
+      throw new Error(`Unsupported format: ${format}`);
     }
 
     // Track export

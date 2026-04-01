@@ -90,9 +90,9 @@ async function detectEvergreenContent(userId, contentId) {
       'content.contentId': contentId,
       status: 'posted'
     })
-    .sort({ postedAt: -1 })
-    .limit(10)
-    .lean();
+      .sort({ postedAt: -1 })
+      .limit(10)
+      .lean();
 
     if (posts.length < 2) {
       return { isEvergreen: false, score: 0 };
@@ -413,23 +413,23 @@ function calculateNextRepostDate(frequency, interval, fromDate = new Date()) {
   const nextDate = new Date(fromDate);
 
   switch (frequency) {
-    case 'daily':
-      nextDate.setDate(nextDate.getDate() + interval);
-      break;
-    case 'weekly':
-      nextDate.setDate(nextDate.getDate() + (interval * 7));
-      break;
-    case 'monthly':
-      nextDate.setMonth(nextDate.getMonth() + interval);
-      break;
-    case 'quarterly':
-      nextDate.setMonth(nextDate.getMonth() + (interval * 3));
-      break;
-    case 'custom':
-      nextDate.setDate(nextDate.getDate() + interval);
-      break;
-    default:
-      nextDate.setDate(nextDate.getDate() + 30);
+  case 'daily':
+    nextDate.setDate(nextDate.getDate() + interval);
+    break;
+  case 'weekly':
+    nextDate.setDate(nextDate.getDate() + (interval * 7));
+    break;
+  case 'monthly':
+    nextDate.setMonth(nextDate.getMonth() + interval);
+    break;
+  case 'quarterly':
+    nextDate.setMonth(nextDate.getMonth() + (interval * 3));
+    break;
+  case 'custom':
+    nextDate.setDate(nextDate.getDate() + interval);
+    break;
+  default:
+    nextDate.setDate(nextDate.getDate() + 30);
   }
 
   return nextDate;
@@ -570,8 +570,8 @@ async function suggestRecyclableContent(userId, limit = 10) {
           recommendation: evergreen.isEvergreen 
             ? 'High evergreen potential - great for recycling'
             : evergreen.score > 40
-            ? 'Moderate evergreen potential'
-            : 'Good performance - consider recycling'
+              ? 'Moderate evergreen potential'
+              : 'Good performance - consider recycling'
         };
       })
     );
@@ -997,47 +997,47 @@ async function applyAdvancedRefreshStrategy(recycleId, strategy = 'smart') {
     };
 
     switch (strategy) {
-      case 'minimal':
-        // Just update hashtags
-        refresh.hashtags = await generateFreshHashtags(originalContent);
-        break;
+    case 'minimal':
+      // Just update hashtags
+      refresh.hashtags = await generateFreshHashtags(originalContent);
+      break;
 
-      case 'moderate':
-        // Update hashtags and caption
-        refresh.hashtags = await generateFreshHashtags(originalContent);
-        refresh.caption = await generateRefreshedCaption(originalContent);
-        break;
+    case 'moderate':
+      // Update hashtags and caption
+      refresh.hashtags = await generateFreshHashtags(originalContent);
+      refresh.caption = await generateRefreshedCaption(originalContent);
+      break;
 
-      case 'aggressive':
-        // Full refresh: title, description, hashtags, caption
+    case 'aggressive':
+      // Full refresh: title, description, hashtags, caption
+      refresh.title = await generateRefreshedTitle(originalContent);
+      refresh.description = await generateRefreshedDescription(originalContent);
+      refresh.hashtags = await generateFreshHashtags(originalContent);
+      refresh.caption = await generateRefreshedCaption(originalContent);
+      break;
+
+    case 'smart':
+    default:
+      // Smart refresh based on performance
+      const performanceRatio = recycle.repostPerformance?.engagement 
+        ? (recycle.repostPerformance.engagement / (recycle.originalPerformance?.engagement || 1))
+        : 1;
+
+      if (performanceRatio < 0.7) {
+        // Poor performance: aggressive refresh
         refresh.title = await generateRefreshedTitle(originalContent);
         refresh.description = await generateRefreshedDescription(originalContent);
         refresh.hashtags = await generateFreshHashtags(originalContent);
         refresh.caption = await generateRefreshedCaption(originalContent);
-        break;
-
-      case 'smart':
-      default:
-        // Smart refresh based on performance
-        const performanceRatio = recycle.repostPerformance?.engagement 
-          ? (recycle.repostPerformance.engagement / (recycle.originalPerformance?.engagement || 1))
-          : 1;
-
-        if (performanceRatio < 0.7) {
-          // Poor performance: aggressive refresh
-          refresh.title = await generateRefreshedTitle(originalContent);
-          refresh.description = await generateRefreshedDescription(originalContent);
-          refresh.hashtags = await generateFreshHashtags(originalContent);
-          refresh.caption = await generateRefreshedCaption(originalContent);
-        } else if (performanceRatio < 0.9) {
-          // Moderate performance: moderate refresh
-          refresh.hashtags = await generateFreshHashtags(originalContent);
-          refresh.caption = await generateRefreshedCaption(originalContent);
-        } else {
-          // Good performance: minimal refresh
-          refresh.hashtags = await generateFreshHashtags(originalContent);
-        }
-        break;
+      } else if (performanceRatio < 0.9) {
+        // Moderate performance: moderate refresh
+        refresh.hashtags = await generateFreshHashtags(originalContent);
+        refresh.caption = await generateRefreshedCaption(originalContent);
+      } else {
+        // Good performance: minimal refresh
+        refresh.hashtags = await generateFreshHashtags(originalContent);
+      }
+      break;
     }
 
     return refresh;
@@ -1448,8 +1448,8 @@ async function predictRepostPerformance(userId, recycleId) {
       recommendation: finalPrediction > originalEngagement * 0.8
         ? 'Good repost potential - predicted performance is strong'
         : finalPrediction > originalEngagement * 0.6
-        ? 'Moderate repost potential - consider content refresh'
-        : 'Low repost potential - significant refresh recommended'
+          ? 'Moderate repost potential - consider content refresh'
+          : 'Low repost potential - significant refresh recommended'
     };
   } catch (error) {
     logger.error('Error predicting repost performance', { error: error.message, recycleId });

@@ -360,27 +360,27 @@ function getPeriodDates(period) {
   let startDate, endDate;
 
   switch (period) {
-    case 'week':
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      endDate = now;
-      break;
-    case 'month':
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      endDate = now;
-      break;
-    case 'quarter': {
-      const quarter = Math.floor(now.getMonth() / 3);
-      startDate = new Date(now.getFullYear(), quarter * 3, 1);
-      endDate = now;
-      break;
-    }
-    case 'year':
-      startDate = new Date(now.getFullYear(), 0, 1);
-      endDate = now;
-      break;
-    default:
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      endDate = now;
+  case 'week':
+    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    endDate = now;
+    break;
+  case 'month':
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    endDate = now;
+    break;
+  case 'quarter': {
+    const quarter = Math.floor(now.getMonth() / 3);
+    startDate = new Date(now.getFullYear(), quarter * 3, 1);
+    endDate = now;
+    break;
+  }
+  case 'year':
+    startDate = new Date(now.getFullYear(), 0, 1);
+    endDate = now;
+    break;
+  default:
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    endDate = now;
   }
 
   return { startDate, endDate };

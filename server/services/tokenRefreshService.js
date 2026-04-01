@@ -26,35 +26,35 @@ async function refreshTokenIfNeeded(connection) {
 
       let newTokenData;
       switch (connection.platform.toLowerCase()) {
-        case 'twitter':
-          if (connection.refreshToken) {
-            newTokenData = await refreshTwitterToken(connection.refreshToken);
-            break;
-          }
-          // No refresh token, can't refresh
-          logger.warn('No refresh token available for Twitter', { connectionId: connection._id });
-          return connection;
-
-        case 'linkedin':
-          try {
-            newTokenData = await refreshLinkedInWithToken(connection.refreshToken);
-            newTokenData.expiresIn = newTokenData.expiresIn ?? 5184000; // LinkedIn default ~60 days in seconds
-          } catch (err) {
-            logger.warn('LinkedIn token refresh failed', { connectionId: connection._id, error: err.message });
-            return connection;
-          }
+      case 'twitter':
+        if (connection.refreshToken) {
+          newTokenData = await refreshTwitterToken(connection.refreshToken);
           break;
+        }
+        // No refresh token, can't refresh
+        logger.warn('No refresh token available for Twitter', { connectionId: connection._id });
+        return connection;
 
-        case 'facebook':
-        case 'instagram':
-          // Facebook tokens are long-lived, may not need refresh
-          // But if they do expire, would need to re-authenticate
-          logger.info('Facebook token is long-lived, no refresh needed');
+      case 'linkedin':
+        try {
+          newTokenData = await refreshLinkedInWithToken(connection.refreshToken);
+          newTokenData.expiresIn = newTokenData.expiresIn ?? 5184000; // LinkedIn default ~60 days in seconds
+        } catch (err) {
+          logger.warn('LinkedIn token refresh failed', { connectionId: connection._id, error: err.message });
           return connection;
+        }
+        break;
 
-        default:
-          logger.warn('Unknown platform for token refresh', { platform: connection.platform });
-          return connection;
+      case 'facebook':
+      case 'instagram':
+        // Facebook tokens are long-lived, may not need refresh
+        // But if they do expire, would need to re-authenticate
+        logger.info('Facebook token is long-lived, no refresh needed');
+        return connection;
+
+      default:
+        logger.warn('Unknown platform for token refresh', { platform: connection.platform });
+        return connection;
       }
 
       // Update connection with new tokens

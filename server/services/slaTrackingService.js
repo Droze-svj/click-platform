@@ -100,8 +100,8 @@ async function sendSLANotification(sla, status) {
     
     for (const approver of approvers) {
       const notificationType = status === 'overdue' ? 'sla_overdue' :
-                               status === 'at_risk' ? 'sla_at_risk' :
-                               'sla_warning';
+        status === 'at_risk' ? 'sla_at_risk' :
+          'sla_warning';
 
       await sendNotification(approver.approverId, {
         type: notificationType,

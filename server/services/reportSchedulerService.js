@@ -39,44 +39,44 @@ async function scheduleReport(userId, reportConfig, schedule) {
     
     // In production, this would schedule the actual job
     // await jobSchedulerService.scheduleRecurringJob(jobId, async () => {
-        try {
-          // Generate report
-          let report;
-          if (format === 'pdf') {
-            report = await generatePDFReport(userId, type, { period });
-          } else if (format === 'excel') {
-            report = await generateExcelReport(userId, type, { period });
-          } else {
-            report = await generateCustomReport(userId, { ...reportConfig, format, period });
-          }
+    try {
+      // Generate report
+      let report;
+      if (format === 'pdf') {
+        report = await generatePDFReport(userId, type, { period });
+      } else if (format === 'excel') {
+        report = await generateExcelReport(userId, type, { period });
+      } else {
+        report = await generateCustomReport(userId, { ...reportConfig, format, period });
+      }
 
-          // Send to recipients
-          const emailRecipients = recipients.length > 0 ? recipients : [userId];
+      // Send to recipients
+      const emailRecipients = recipients.length > 0 ? recipients : [userId];
           
-          // Send emails (in production, attach report file)
-          for (const recipientId of emailRecipients) {
-            // Get recipient email (could be user ID or email)
-            const recipientEmail = typeof recipientId === 'string' && recipientId.includes('@')
-              ? recipientId
-              : await getRecipientEmail(recipientId);
+      // Send emails (in production, attach report file)
+      for (const recipientId of emailRecipients) {
+        // Get recipient email (could be user ID or email)
+        const recipientEmail = typeof recipientId === 'string' && recipientId.includes('@')
+          ? recipientId
+          : await getRecipientEmail(recipientId);
 
-            // In production, send email with report attachment
-            // await sendEmail(recipientEmail, `Scheduled Report: ${type}`, 'report', {...});
-          }
+        // In production, send email with report attachment
+        // await sendEmail(recipientEmail, `Scheduled Report: ${type}`, 'report', {...});
+      }
 
-          logger.info('Scheduled report generated and sent', {
-            userId,
-            type,
-            format,
-            recipients: emailRecipients.length,
-          });
-        } catch (error) {
-          logger.error('Scheduled report error', {
-            error: error.message,
-            userId,
-            type,
-          });
-        }
+      logger.info('Scheduled report generated and sent', {
+        userId,
+        type,
+        format,
+        recipients: emailRecipients.length,
+      });
+    } catch (error) {
+      logger.error('Scheduled report error', {
+        error: error.message,
+        userId,
+        type,
+      });
+    }
 
     return { success: true, jobId };
   } catch (error) {
@@ -92,14 +92,14 @@ function getCronSchedule(scheduleType, scheduleTime) {
   const [hour, minute] = scheduleTime.split(':').map(Number);
 
   switch (scheduleType) {
-    case 'daily':
-      return `${minute} ${hour} * * *`; // Daily at specified time
-    case 'weekly':
-      return `${minute} ${hour} * * 1`; // Every Monday
-    case 'monthly':
-      return `${minute} ${hour} 1 * *`; // First day of month
-    default:
-      return `${minute} ${hour} * * *`;
+  case 'daily':
+    return `${minute} ${hour} * * *`; // Daily at specified time
+  case 'weekly':
+    return `${minute} ${hour} * * 1`; // Every Monday
+  case 'monthly':
+    return `${minute} ${hour} 1 * *`; // First day of month
+  default:
+    return `${minute} ${hour} * * *`;
   }
 }
 

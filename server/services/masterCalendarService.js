@@ -143,20 +143,20 @@ function groupPosts(posts, groupBy) {
     let key;
 
     switch (groupBy) {
-      case 'date':
-        key = new Date(post.scheduledTime).toISOString().split('T')[0];
-        break;
-      case 'client':
-        key = post.clientWorkspaceId?._id?.toString() || 'unknown';
-        break;
-      case 'platform':
-        key = post.platform;
-        break;
-      case 'team':
-        key = post.userId?._id?.toString() || 'unknown';
-        break;
-      default:
-        key = 'all';
+    case 'date':
+      key = new Date(post.scheduledTime).toISOString().split('T')[0];
+      break;
+    case 'client':
+      key = post.clientWorkspaceId?._id?.toString() || 'unknown';
+      break;
+    case 'platform':
+      key = post.platform;
+      break;
+    case 'team':
+      key = post.userId?._id?.toString() || 'unknown';
+      break;
+    default:
+      key = 'all';
     }
 
     if (!grouped[key]) {
@@ -330,27 +330,27 @@ async function getCalendarView(agencyWorkspaceId, viewType = 'month', date = new
     let startDate, endDate;
 
     switch (viewType) {
-      case 'day':
-        startDate = new Date(date);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(date);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'week':
-        const dayOfWeek = date.getDay();
-        startDate = new Date(date);
-        startDate.setDate(date.getDate() - dayOfWeek);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case 'month':
-      default:
-        startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-        endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        endDate.setHours(23, 59, 59, 999);
-        break;
+    case 'day':
+      startDate = new Date(date);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'week':
+      const dayOfWeek = date.getDay();
+      startDate = new Date(date);
+      startDate.setDate(date.getDate() - dayOfWeek);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
+      break;
+    case 'month':
+    default:
+      startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+      endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+      break;
     }
 
     const calendar = await getMasterCalendar(agencyWorkspaceId, {

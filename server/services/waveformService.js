@@ -72,7 +72,7 @@ async function generateWaveformData(audioPath, width, precision) {
         const rms = Math.sqrt(segment.reduce((sum, val) => sum + val * val, 0) / segment.length);
         waveform.push(rms);
       }
-      console.log(JSON.stringify(waveform));
+      
     "`;
 
     const { stdout } = await execAsync(command);

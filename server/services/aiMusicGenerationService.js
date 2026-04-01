@@ -334,12 +334,12 @@ class SoundrawProvider extends AIMusicProvider {
  */
 function createAIProvider(provider, config) {
   switch (provider) {
-    case 'mubert':
-      return new MubertProvider(config);
-    case 'soundraw':
-      return new SoundrawProvider(config);
-    default:
-      throw new Error(`Unsupported AI music provider: ${provider}`);
+  case 'mubert':
+    return new MubertProvider(config);
+  case 'soundraw':
+    return new SoundrawProvider(config);
+  default:
+    throw new Error(`Unsupported AI music provider: ${provider}`);
   }
 }
 

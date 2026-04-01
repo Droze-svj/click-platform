@@ -6,10 +6,10 @@ const path = require('path');
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 async function seedSupabase() {
-  console.log('🌱 Seeding Supabase with Spectral Data...');
+  
   
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('❌ Missing Supabase credentials in server/.env');
+    
     process.exit(1);
   }
 
@@ -22,7 +22,7 @@ async function seedSupabase() {
   const { data: users } = await supabase.from('profiles').select('id').limit(1);
   const userId = users?.[0]?.id || '00000000-0000-0000-0000-000000000000';
 
-  console.log(`👤 Using User ID: ${userId}`);
+  
 
   // 2. Create sample posts
   const posts = [
@@ -61,11 +61,11 @@ async function seedSupabase() {
     .select();
 
   if (postError) {
-    console.error('❌ Error creating posts:', postError);
+    
     process.exit(1);
   }
 
-  console.log(`✅ Created ${createdPosts.length} posts.`);
+  
 
   // 3. Create sample analytics
   const analytics = createdPosts.map((post, i) => ({
@@ -89,15 +89,15 @@ async function seedSupabase() {
     .insert(analytics);
 
   if (analyticsError) {
-    console.error('❌ Error creating analytics:', analyticsError);
+    
   } else {
-    console.log('✅ Created analytics snapshots.');
+    
   }
 
-  console.log('✨ Seeding complete! Now run the backfill script to generate history charts.');
+  
 }
 
 seedSupabase().catch(err => {
-  console.error('💥 Fatal error:', err);
+  
   process.exit(1);
 });

@@ -22,7 +22,7 @@ router.post('/start', authenticateToken, requireFeature('generative_dubbing'), a
     const result = await generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEnabled, audioSampleUrl })
     res.json(result)
   } catch (err) {
-    console.error('[Dubbing] /start error:', err)
+    
     res.status(500).json({ error: 'Failed to start dubbing job' })
   }
 })

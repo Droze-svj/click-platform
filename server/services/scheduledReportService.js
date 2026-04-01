@@ -113,19 +113,19 @@ function calculatePeriod(periodConfig) {
   let startDate, endDate;
 
   switch (periodConfig.type) {
-    case 'last_period':
-      // Last 30 days
-      endDate = now;
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      break;
-    case 'rolling':
-      endDate = now;
-      startDate = new Date(now.getTime() - periodConfig.days * 24 * 60 * 60 * 1000);
-      break;
-    case 'custom':
-      startDate = periodConfig.customStart;
-      endDate = periodConfig.customEnd;
-      break;
+  case 'last_period':
+    // Last 30 days
+    endDate = now;
+    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    break;
+  case 'rolling':
+    endDate = now;
+    startDate = new Date(now.getTime() - periodConfig.days * 24 * 60 * 60 * 1000);
+    break;
+  case 'custom':
+    startDate = periodConfig.customStart;
+    endDate = periodConfig.customEnd;
+    break;
   }
 
   return {
@@ -146,25 +146,26 @@ function calculateNextGeneration(schedule) {
   next.setHours(hours, minutes, 0, 0);
   
   switch (schedule.frequency) {
-    case 'daily':
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-      break;
-    case 'weekly':
-      const dayDiff = schedule.dayOfWeek - next.getDay();
-      if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
-        next.setDate(next.getDate() + (7 + dayDiff));
-      } else {
-        next.setDate(next.getDate() + dayDiff);
-      }
-      break;
-    case 'monthly':
-      next.setDate(schedule.dayOfMonth || 1);
-      if (next <= now) {
-        next.setMonth(next.getMonth() + 1);
-      }
-      break;
+  case 'daily':
+    if (next <= now) {
+      next.setDate(next.getDate() + 1);
+    }
+    break;
+  case 'weekly': {
+    const dayDiff = schedule.dayOfWeek - next.getDay();
+    if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
+      next.setDate(next.getDate() + (7 + dayDiff));
+    } else {
+      next.setDate(next.getDate() + dayDiff);
+    }
+    break;
+  }
+  case 'monthly':
+    next.setDate(schedule.dayOfMonth || 1);
+    if (next <= now) {
+      next.setMonth(next.getMonth() + 1);
+    }
+    break;
   }
   
   return next;

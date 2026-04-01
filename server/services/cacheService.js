@@ -1,7 +1,7 @@
-console.log('🏗️ cacheService: start requires');
+
 const logger = require('../utils/logger');
-console.log('🏗️ cacheService: logger loaded');
-console.log('🏗️ cacheService: requires loaded');
+
+
 
 // Lazy load cache monitoring to avoid circular dependencies
 let cacheMonitoring = null;
@@ -37,9 +37,9 @@ async function initCache() {
   }
 
   try {
-    console.log('🏗️ cacheService: requiring redis inside initCache...');
+    
     const redis = require('redis');
-    console.log('🏗️ cacheService: redis loaded');
+    
 
     const isTls = redisUrl.startsWith('rediss://');
     

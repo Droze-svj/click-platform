@@ -87,10 +87,10 @@ async function updateMemory(memoryId, userId, updates) {
           domain: updates.domain || undefined,
           'metadata.verified': updates.verified !== undefined ? updates.verified : undefined,
           'metadata.verifiedBy': updates.verified ? userId : undefined,
-          'metadata.verifiedAt': updates.verified ? new Date() : undefined
+          'metadata.verifiedAt': updates.verified ? new Date() : undefined,
+          lastUsed: new Date()
         },
-        $inc: { usageCount: 1 },
-        $set: { lastUsed: new Date() }
+        $inc: { usageCount: 1 }
       },
       { new: true }
     );

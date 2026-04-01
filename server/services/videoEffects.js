@@ -17,30 +17,30 @@ async function applyVideoEffect(videoPath, outputPath, effect) {
 
     // Apply effect based on type
     switch (effect) {
-      case 'brightness':
-        command.videoFilters('eq=brightness=0.1');
-        break;
-      case 'contrast':
-        command.videoFilters('eq=contrast=1.2');
-        break;
-      case 'saturation':
-        command.videoFilters('eq=saturation=1.3');
-        break;
-      case 'vintage':
-        command.videoFilters('curves=vintage');
-        break;
-      case 'blackwhite':
-        command.videoFilters('hue=s=0');
-        break;
-      case 'blur':
-        command.videoFilters('boxblur=2:1');
-        break;
-      case 'sharpen':
-        command.videoFilters('unsharp=5:5:1.0:5:5:0.0');
-        break;
-      default:
-        // No effect, just copy
-        command.videoCodec('copy');
+    case 'brightness':
+      command.videoFilters('eq=brightness=0.1');
+      break;
+    case 'contrast':
+      command.videoFilters('eq=contrast=1.2');
+      break;
+    case 'saturation':
+      command.videoFilters('eq=saturation=1.3');
+      break;
+    case 'vintage':
+      command.videoFilters('curves=vintage');
+      break;
+    case 'blackwhite':
+      command.videoFilters('hue=s=0');
+      break;
+    case 'blur':
+      command.videoFilters('boxblur=2:1');
+      break;
+    case 'sharpen':
+      command.videoFilters('unsharp=5:5:1.0:5:5:0.0');
+      break;
+    default:
+      // No effect, just copy
+      command.videoCodec('copy');
     }
 
     command
@@ -127,22 +127,22 @@ async function addWatermark(videoPath, watermarkPath, outputPath, options = {}) 
   // Calculate position
   let xPos, yPos;
   switch (position) {
-    case 'top-left':
-      xPos = margin;
-      yPos = margin;
-      break;
-    case 'top-right':
-      xPos = `main_w-overlay_w-${margin}`;
-      yPos = margin;
-      break;
-    case 'bottom-left':
-      xPos = margin;
-      yPos = `main_h-overlay_h-${margin}`;
-      break;
-    case 'bottom-right':
-    default:
-      xPos = `main_w-overlay_w-${margin}`;
-      yPos = `main_h-overlay_h-${margin}`;
+  case 'top-left':
+    xPos = margin;
+    yPos = margin;
+    break;
+  case 'top-right':
+    xPos = `main_w-overlay_w-${margin}`;
+    yPos = margin;
+    break;
+  case 'bottom-left':
+    xPos = margin;
+    yPos = `main_h-overlay_h-${margin}`;
+    break;
+  case 'bottom-right':
+  default:
+    xPos = `main_w-overlay_w-${margin}`;
+    yPos = `main_h-overlay_h-${margin}`;
   }
 
   return new Promise((resolve, reject) => {

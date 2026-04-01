@@ -7,24 +7,24 @@ const logger = require('../utils/logger');
 let RedisStore;
 let redisClient;
 
-console.log('🏗️ enhancedRateLimiter: initializing...');
+
 try {
   const redisUrl = process.env.REDIS_URL;
   const hasValidRedis = (redisUrl || process.env.REDIS_HOST) && !redisUrl?.includes('placeholder');
-  console.log('🏗️ enhancedRateLimiter: hasValidRedis =', hasValidRedis);
+  
   if (hasValidRedis) {
     // Try to load rate-limit-redis (optional dependency)
     try {
-      console.log('🏗️ enhancedRateLimiter: loading rate-limit-redis');
+      
       RedisStore = require('rate-limit-redis').default;
-      console.log('🏗️ enhancedRateLimiter: rate-limit-redis loaded');
+      
     } catch (storeError) {
       logger.warn('rate-limit-redis not installed, using memory store for rate limiting');
       RedisStore = null;
     }
 
     if (RedisStore) {
-      console.log('🏗️ enhancedRateLimiter: loading redis client');
+      
       const redis = require('redis');
 
       redisClient = redis.createClient({
@@ -47,11 +47,11 @@ try {
         logger.info('✅ Redis connected for rate limiting');
       });
 
-      console.log('🏗️ enhancedRateLimiter: connecting to redis');
+      
       redisClient.connect().then(() => {
-        console.log('🏗️ enhancedRateLimiter: redis connected');
+        
       }).catch((err) => {
-        console.warn('🏗️ enhancedRateLimiter: redis connection failed', err.message);
+        
         redisClient = null;
       });
     }
@@ -60,7 +60,7 @@ try {
   logger.warn('Redis not available, using memory store for rate limiting', { error: error.message });
   redisClient = null;
 }
-console.log('🏗️ enhancedRateLimiter: init complete');
+
 
 /**
  * Create rate limiter with optional Redis store

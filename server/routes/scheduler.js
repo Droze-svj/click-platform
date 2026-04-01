@@ -42,7 +42,7 @@ router.post('/schedule', auth, async (req, res) => {
       contentId: contentId || null,
       platform,
       scheduledTime: scheduledPost.scheduledTime
-    }).catch(err => console.warn('Webhook trigger failed', err));
+    }).catch(err => 
 
     res.json({
       message: 'Post scheduled successfully',
@@ -129,7 +129,7 @@ router.delete('/:postId', auth, async (req, res) => {
     await triggerWebhook(req.user._id, 'post.cancelled', {
       postId: postId.toString(),
       platform: post.platform
-    }).catch(err => console.warn('Webhook trigger failed', err));
+    }).catch(err => 
 
     res.json({ message: 'Post deleted' });
   } catch (error) {

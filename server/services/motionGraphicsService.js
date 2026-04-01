@@ -16,19 +16,19 @@ async function addShapeOverlay(videoPath, outputPath, shape) {
     let filter;
     
     switch (type) {
-      case 'rectangle':
-        filter = `drawbox=x=${properties.x || 10}:y=${properties.y || 10}:w=${properties.width || 100}:h=${properties.height || 50}:color=${properties.color || 'white'}@${properties.opacity || 0.5}`;
-        break;
-      case 'circle':
-        filter = `drawbox=x=${properties.x || 10}:y=${properties.y || 10}:w=${properties.width || 50}:h=${properties.height || 50}:color=${properties.color || 'white'}@${properties.opacity || 0.5}:t=fill`;
-        break;
-      case 'arrow':
-        // Simplified arrow using drawbox
-        filter = `drawbox=x=${properties.x || 10}:y=${properties.y || 10}:w=${properties.width || 50}:h=${properties.height || 5}:color=${properties.color || 'white'}@${properties.opacity || 0.8}`;
-        break;
-      default:
-        reject(new Error(`Unknown shape type: ${type}`));
-        return;
+    case 'rectangle':
+      filter = `drawbox=x=${properties.x || 10}:y=${properties.y || 10}:w=${properties.width || 100}:h=${properties.height || 50}:color=${properties.color || 'white'}@${properties.opacity || 0.5}`;
+      break;
+    case 'circle':
+      filter = `drawbox=x=${properties.x || 10}:y=${properties.y || 10}:w=${properties.width || 50}:h=${properties.height || 50}:color=${properties.color || 'white'}@${properties.opacity || 0.5}:t=fill`;
+      break;
+    case 'arrow':
+      // Simplified arrow using drawbox
+      filter = `drawbox=x=${properties.x || 10}:y=${properties.y || 10}:w=${properties.width || 50}:h=${properties.height || 5}:color=${properties.color || 'white'}@${properties.opacity || 0.8}`;
+      break;
+    default:
+      reject(new Error(`Unknown shape type: ${type}`));
+      return;
     }
     
     if (startTime !== undefined && endTime !== undefined) {

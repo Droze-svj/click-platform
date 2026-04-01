@@ -91,19 +91,19 @@ router.post('/:agencyWorkspaceId/reports/schedule', auth, requireWorkspaceAccess
 function calculateNextRun(frequency) {
   const now = new Date();
   switch (frequency) {
-    case 'daily':
-      now.setDate(now.getDate() + 1);
-      now.setHours(9, 0, 0, 0);
-      break;
-    case 'weekly':
-      now.setDate(now.getDate() + 7);
-      now.setHours(9, 0, 0, 0);
-      break;
-    case 'monthly':
-      now.setMonth(now.getMonth() + 1);
-      now.setDate(1);
-      now.setHours(9, 0, 0, 0);
-      break;
+  case 'daily':
+    now.setDate(now.getDate() + 1);
+    now.setHours(9, 0, 0, 0);
+    break;
+  case 'weekly':
+    now.setDate(now.getDate() + 7);
+    now.setHours(9, 0, 0, 0);
+    break;
+  case 'monthly':
+    now.setMonth(now.getMonth() + 1);
+    now.setDate(1);
+    now.setHours(9, 0, 0, 0);
+    break;
   }
   return now;
 }

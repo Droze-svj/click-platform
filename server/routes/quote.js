@@ -7,7 +7,7 @@ try {
   loadImage = canvasMod.loadImage;
   registerFont = canvasMod.registerFont;
 } catch (e) {
-  console.warn("⚠️ canvas module disabled/missing. Quote generation disabled.");
+  
   createCanvas = () => { throw new Error("Canvas disabled"); };
 }
 const path = require('path');

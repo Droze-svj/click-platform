@@ -32,41 +32,41 @@ async function applyTransition(clip1Path, clip2Path, outputPath, transition) {
         let filter;
         
         switch (type) {
-          case 'dissolve':
-          case 'crossfade':
-            filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration}`;
-            break;
-          case 'wipe':
-            const wipeDirection = direction === 'left' ? 'wipeleft' : direction === 'right' ? 'wiperight' : 
-                                direction === 'up' ? 'wipeup' : 'wipedown';
-            filter = `xfade=transition=${wipeDirection}:duration=${duration}:offset=${duration1 - duration}`;
-            break;
-          case 'slide':
-            const slideDirection = direction === 'left' ? 'slideleft' : direction === 'right' ? 'slideright' :
-                                  direction === 'up' ? 'slideup' : 'slidedown';
-            filter = `xfade=transition=${slideDirection}:duration=${duration}:offset=${duration1 - duration}`;
-            break;
-          case 'zoom':
-            filter = `xfade=transition=zoom:duration=${duration}:offset=${duration1 - duration}`;
-            break;
-          case 'glitch':
-            // Glitch effect using multiple filters
-            filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration},hue=s=1.2`;
-            break;
-          case '3d-cube':
-            filter = `xfade=transition=cube:duration=${duration}:offset=${duration1 - duration}`;
-            break;
-          case '3d-flip':
-            filter = `xfade=transition=flip:duration=${duration}:offset=${duration1 - duration}`;
-            break;
-          case 'blur':
-            filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration},boxblur=5:1`;
-            break;
-          case 'color-wash':
-            filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration},eq=saturation=1.5`;
-            break;
-          default:
-            filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration}`;
+        case 'dissolve':
+        case 'crossfade':
+          filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration}`;
+          break;
+        case 'wipe':
+          const wipeDirection = direction === 'left' ? 'wipeleft' : direction === 'right' ? 'wiperight' : 
+            direction === 'up' ? 'wipeup' : 'wipedown';
+          filter = `xfade=transition=${wipeDirection}:duration=${duration}:offset=${duration1 - duration}`;
+          break;
+        case 'slide':
+          const slideDirection = direction === 'left' ? 'slideleft' : direction === 'right' ? 'slideright' :
+            direction === 'up' ? 'slideup' : 'slidedown';
+          filter = `xfade=transition=${slideDirection}:duration=${duration}:offset=${duration1 - duration}`;
+          break;
+        case 'zoom':
+          filter = `xfade=transition=zoom:duration=${duration}:offset=${duration1 - duration}`;
+          break;
+        case 'glitch':
+          // Glitch effect using multiple filters
+          filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration},hue=s=1.2`;
+          break;
+        case '3d-cube':
+          filter = `xfade=transition=cube:duration=${duration}:offset=${duration1 - duration}`;
+          break;
+        case '3d-flip':
+          filter = `xfade=transition=flip:duration=${duration}:offset=${duration1 - duration}`;
+          break;
+        case 'blur':
+          filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration},boxblur=5:1`;
+          break;
+        case 'color-wash':
+          filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration},eq=saturation=1.5`;
+          break;
+        default:
+          filter = `xfade=transition=fade:duration=${duration}:offset=${duration1 - duration}`;
         }
         
         // Concatenate clips with transition
@@ -168,21 +168,21 @@ async function applyTimeEffect(videoPath, outputPath, timeEffect) {
     let filter;
     
     switch (type) {
-      case 'freeze':
-        // Freeze frame at specific time
-        filter = `select='eq(n,${Math.floor(time * 30)})',setpts=PTS-STARTPTS`;
-        break;
-      case 'rewind':
-        // Reverse playback
-        filter = 'reverse';
-        break;
-      case 'echo':
-        // Echo effect (simplified)
-        filter = 'split[main][copy];[copy]setpts=PTS+0.1/TB[delayed];[main][delayed]overlay';
-        break;
-      default:
-        reject(new Error(`Unknown time effect: ${type}`));
-        return;
+    case 'freeze':
+      // Freeze frame at specific time
+      filter = `select='eq(n,${Math.floor(time * 30)})',setpts=PTS-STARTPTS`;
+      break;
+    case 'rewind':
+      // Reverse playback
+      filter = 'reverse';
+      break;
+    case 'echo':
+      // Echo effect (simplified)
+      filter = 'split[main][copy];[copy]setpts=PTS+0.1/TB[delayed];[main][delayed]overlay';
+      break;
+    default:
+      reject(new Error(`Unknown time effect: ${type}`));
+      return;
     }
     
     ffmpeg(videoPath)

@@ -21,12 +21,12 @@ if (vapidKeys.publicKey && vapidKeys.privateKey) {
       vapidKeys.publicKey,
       vapidKeys.privateKey
     )
-    console.log('✅ Web push notifications configured')
+    
   } catch (error) {
-    console.warn('⚠️ Web push notifications disabled:', error.message)
+    
   }
 } else {
-  console.warn('⚠️ VAPID keys not configured. Web push notifications disabled.')
+  
 }
 
 // In-memory storage for subscriptions (use database in production)
@@ -58,7 +58,7 @@ router.post('/subscribe', async (req, res) => {
       lastUsed: new Date()
     })
 
-    console.log(`✅ Push subscription saved for user: ${userId || 'anonymous'}`)
+    
 
     // Send welcome notification
     try {
@@ -71,7 +71,7 @@ router.post('/subscribe', async (req, res) => {
         requireInteraction: false
       }))
     } catch (error) {
-      console.warn('⚠️ Welcome notification failed:', error.message)
+      
     }
 
     res.json({
@@ -81,7 +81,7 @@ router.post('/subscribe', async (req, res) => {
     })
 
   } catch (error) {
-    console.error('❌ Push subscription failed:', error)
+    
     res.status(500).json({ error: 'Failed to subscribe to push notifications' })
   }
 })
@@ -98,7 +98,7 @@ router.post('/unsubscribe', async (req, res) => {
           (subscription && subData.subscription.endpoint === subscription.endpoint)) {
         pushSubscriptions.delete(id)
         removed = true
-        console.log(`✅ Push subscription removed for user: ${userId || 'anonymous'}`)
+        
         break
       }
     }
@@ -110,7 +110,7 @@ router.post('/unsubscribe', async (req, res) => {
     })
 
   } catch (error) {
-    console.error('❌ Push unsubscribe failed:', error)
+    
     res.status(500).json({ error: 'Failed to unsubscribe from push notifications' })
   }
 })
@@ -180,7 +180,7 @@ router.post('/send/:userId', async (req, res) => {
     })
 
   } catch (error) {
-    console.error('❌ Send push notification failed:', error)
+    
     res.status(500).json({ error: 'Failed to send push notification' })
   }
 })
@@ -224,7 +224,7 @@ router.post('/broadcast', async (req, res) => {
     // Send to specified users or all users
     const targetSubscriptions = userIds
       ? Array.from(pushSubscriptions.entries()).filter(([id, sub]) =>
-          userIds.includes(sub.userId))
+        userIds.includes(sub.userId))
       : Array.from(pushSubscriptions.values())
 
     for (const subData of targetSubscriptions) {
@@ -233,7 +233,7 @@ router.post('/broadcast', async (req, res) => {
         sent++
         subData.lastUsed = new Date()
       } catch (error) {
-        console.warn('⚠️ Failed to send to subscription:', error.message)
+        
         failed++
 
         // Remove invalid subscriptions
@@ -257,7 +257,7 @@ router.post('/broadcast', async (req, res) => {
     })
 
   } catch (error) {
-    console.error('❌ Broadcast failed:', error)
+    
     res.status(500).json({ error: 'Failed to send broadcast notification' })
   }
 })
@@ -303,7 +303,7 @@ router.post('/test', async (req, res) => {
     })
 
   } catch (error) {
-    console.error('❌ Test notification failed:', error)
+    
     res.status(500).json({ error: 'Failed to send test notification' })
   }
 })
@@ -352,7 +352,7 @@ setInterval(() => {
   }
 
   if (cleaned > 0) {
-    console.log(`🧹 Cleaned up ${cleaned} old push subscriptions`)
+    
   }
 }, 24 * 60 * 60 * 1000) // Daily cleanup
 

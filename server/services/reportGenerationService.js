@@ -50,47 +50,47 @@ async function generateClientReport(agencyWorkspaceId, clientWorkspaceId, format
 
     // Generate report based on format
     switch (format.toLowerCase()) {
-      case 'pdf':
-        return await generatePDFReport({
-          agencyWorkspace,
-          clientWorkspace,
-          portal,
-          metrics,
-          roi,
-          growth,
-          highlights,
-          platformBreakdown,
-          dateRange: { startDate, endDate }
-        });
-      case 'excel':
-      case 'xlsx':
-        return await generateExcelReport({
-          agencyWorkspace,
-          clientWorkspace,
-          portal,
-          metrics,
-          roi,
-          growth,
-          highlights,
-          platformBreakdown,
-          posts,
-          dateRange: { startDate, endDate }
-        });
-      case 'csv':
-        return await generateCSVReport({
-          agencyWorkspace,
-          clientWorkspace,
-          portal,
-          metrics,
-          roi,
-          growth,
-          highlights,
-          platformBreakdown,
-          posts,
-          dateRange: { startDate, endDate }
-        });
-      default:
-        throw new Error(`Unsupported format: ${format}`);
+    case 'pdf':
+      return await generatePDFReport({
+        agencyWorkspace,
+        clientWorkspace,
+        portal,
+        metrics,
+        roi,
+        growth,
+        highlights,
+        platformBreakdown,
+        dateRange: { startDate, endDate }
+      });
+    case 'excel':
+    case 'xlsx':
+      return await generateExcelReport({
+        agencyWorkspace,
+        clientWorkspace,
+        portal,
+        metrics,
+        roi,
+        growth,
+        highlights,
+        platformBreakdown,
+        posts,
+        dateRange: { startDate, endDate }
+      });
+    case 'csv':
+      return await generateCSVReport({
+        agencyWorkspace,
+        clientWorkspace,
+        portal,
+        metrics,
+        roi,
+        growth,
+        highlights,
+        platformBreakdown,
+        posts,
+        dateRange: { startDate, endDate }
+      });
+    default:
+      throw new Error(`Unsupported format: ${format}`);
     }
   } catch (error) {
     logger.error('Error generating report', { error: error.message, agencyWorkspaceId, clientWorkspaceId });

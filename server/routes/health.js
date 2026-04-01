@@ -275,22 +275,22 @@ router.post('/error-log', (req, res) => {
 
     // Optionally capture in Sentry if configured
     if (process.env.SENTRY_DSN) {
-       try {
-         const { captureException } = require('../utils/sentry');
-         const err = new Error(errorData.message || 'Unknown Client Error');
-         err.name = errorData.error || 'ClientError';
-         err.stack = errorData.stack;
-         captureException(err, { 
-           tags: { source: 'client_ui' },
-           extra: { 
-             componentStack: errorData.componentStack, 
-             url: errorData.url, 
-             userAgent: errorData.userAgent 
-           } 
-         });
-       } catch (e) {
-         // Silently fail Sentry if not available
-       }
+      try {
+        const { captureException } = require('../utils/sentry');
+        const err = new Error(errorData.message || 'Unknown Client Error');
+        err.name = errorData.error || 'ClientError';
+        err.stack = errorData.stack;
+        captureException(err, { 
+          tags: { source: 'client_ui' },
+          extra: { 
+            componentStack: errorData.componentStack, 
+            url: errorData.url, 
+            userAgent: errorData.userAgent 
+          } 
+        });
+      } catch (e) {
+        // Silently fail Sentry if not available
+      }
     }
 
     res.status(200).json({ success: true, message: 'Telemetry received safely' });

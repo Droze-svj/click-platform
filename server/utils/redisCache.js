@@ -26,9 +26,9 @@ class RedisCache {
       const isPlaceholder = redisUrl && (redisUrl.includes('placeholder') || redisUrl.includes('localhost:6379'));
       if (process.env.NODE_ENV === 'test' || !redisUrl || isPlaceholder) {
         if (redisUrl?.includes('placeholder')) {
-          console.log('⚠️ Redis URL appears to be a placeholder. Set REDIS_URL in Render env vars. Caching disabled.');
+          
         } else {
-          console.log('⚠️ Redis caching disabled (not configured or test environment)');
+          
         }
         return;
       }
@@ -46,12 +46,12 @@ class RedisCache {
       });
 
       this.client.on('error', (err) => {
-        console.warn('⚠️ Redis connection error:', err.message);
+        
         this.isConnected = false;
       });
 
       this.client.on('connect', () => {
-        console.log('✅ Redis connected successfully');
+        
         this.isConnected = true;
       });
 
@@ -67,8 +67,8 @@ class RedisCache {
       await this.client.connect();
 
     } catch (error) {
-      console.warn('⚠️ Redis connection failed:', error.message);
-      console.log('📝 Continuing without Redis caching');
+      
+      
       this.client = null;
       this.isConnected = false;
     }
@@ -114,7 +114,7 @@ class RedisCache {
       const data = await this.client.get(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      console.warn('⚠️ Redis get error:', error.message);
+      
       return null;
     }
   }
@@ -129,7 +129,7 @@ class RedisCache {
       await this.client.setEx(key, ttl, JSON.stringify(data));
       return true;
     } catch (error) {
-      console.warn('⚠️ Redis set error:', error.message);
+      
       return false;
     }
   }
@@ -144,7 +144,7 @@ class RedisCache {
       await this.client.del(key);
       return true;
     } catch (error) {
-      console.warn('⚠️ Redis delete error:', error.message);
+      
       return false;
     }
   }
@@ -162,7 +162,7 @@ class RedisCache {
       }
       return true;
     } catch (error) {
-      console.warn('⚠️ Redis clear pattern error:', error.message);
+      
       return false;
     }
   }
@@ -191,7 +191,7 @@ class RedisCache {
         hitRate: await this.calculateHitRate()
       };
     } catch (error) {
-      console.warn('⚠️ Redis stats error:', error.message);
+      
       return {
         connected: false,
         keys: 0,
@@ -246,7 +246,7 @@ class RedisCache {
         // Try to get from cache
         const cachedData = await this.get(cacheKey);
         if (cachedData) {
-          console.log(`📋 Cache hit for ${req.originalUrl || req.url}`);
+          
           return res.json({
             ...cachedData,
             _cached: true,
@@ -260,7 +260,7 @@ class RedisCache {
           // Only cache successful responses
           if (res.statusCode >= 200 && res.statusCode < 300) {
             this.set(cacheKey, data, ttl).catch(err =>
-              console.warn('⚠️ Cache set failed:', err.message)
+              
             );
           }
 
@@ -269,7 +269,7 @@ class RedisCache {
 
         next();
       } catch (error) {
-        console.warn('⚠️ Cache middleware error:', error.message);
+        
         next();
       }
     };
@@ -321,9 +321,9 @@ class RedisCache {
     if (this.client && this.isConnected) {
       try {
         await this.client.disconnect();
-        console.log('✅ Redis disconnected gracefully');
+        
       } catch (error) {
-        console.warn('⚠️ Redis disconnect error:', error.message);
+        
       }
     }
     this.isConnected = false;

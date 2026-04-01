@@ -119,25 +119,25 @@ function calculateNextGeneration(schedule) {
   next.setHours(hours, minutes, 0, 0);
   
   switch (schedule.frequency) {
-    case 'daily':
-      if (next <= now) {
-        next.setDate(next.getDate() + 1);
-      }
-      break;
-    case 'weekly':
-      const dayDiff = schedule.dayOfWeek - next.getDay();
-      if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
-        next.setDate(next.getDate() + (7 + dayDiff));
-      } else {
-        next.setDate(next.getDate() + dayDiff);
-      }
-      break;
-    case 'monthly':
-      next.setDate(schedule.dayOfMonth || 1);
-      if (next <= now) {
-        next.setMonth(next.getMonth() + 1);
-      }
-      break;
+  case 'daily':
+    if (next <= now) {
+      next.setDate(next.getDate() + 1);
+    }
+    break;
+  case 'weekly':
+    const dayDiff = schedule.dayOfWeek - next.getDay();
+    if (dayDiff < 0 || (dayDiff === 0 && next <= now)) {
+      next.setDate(next.getDate() + (7 + dayDiff));
+    } else {
+      next.setDate(next.getDate() + dayDiff);
+    }
+    break;
+  case 'monthly':
+    next.setDate(schedule.dayOfMonth || 1);
+    if (next <= now) {
+      next.setMonth(next.getMonth() + 1);
+    }
+    break;
   }
   
   return next;

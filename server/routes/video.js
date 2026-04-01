@@ -10,17 +10,15 @@ const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
 const { generateCaptions, detectHighlights } = require('../services/aiService');
 const { generateTranscriptFromVideo } = require('../services/whisperService');
 const { transcribeVideo: transcribeVideoService, isTranscriptionConfigured } = require('../services/aiTranscriptionService');
-const { mixMusicWithVideo } = require('../services/audioService');
 const { applyVideoEffect, addTextOverlay, addWatermark } = require('../services/videoEffects');
 const { generateThumbnail } = require('../services/thumbnailService');
 const { cleanupFailedContent } = require('../utils/fileCleanup');
 const { emitToUser } = require('../services/socketService');
 const { retry } = require('../utils/retry');
 const { validateVideoFile, validateFileExists } = require('../middleware/fileValidator');
-const Music = require('../models/Music');
 const logger = require('../utils/logger');
 const { requireActiveSubscription } = require('../middleware/subscriptionAccess');
-const { uploadFile, deleteFile } = require('../services/storageService');
+const { uploadFile } = require('../services/storageService');
 const { trackAction } = require('../services/workflowService');
 const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser');
 const router = express.Router();
@@ -85,7 +83,7 @@ const handleMulterError = (err, req, res, next) => {
 
     // For dev users, convert multer errors to mock responses
     if (devModeAllowed && isDev && (err instanceof multer.MulterError || err.message?.includes('Only video files are allowed'))) {
-      console.log('🔧 [Video] Multer error for dev user, returning mock response', { error: err.message, userId, devModeAllowed });
+      
       logger.warn('Multer error for dev user, returning mock response', { error: err.message, userId, devModeAllowed });
       return res.json({
         success: true,
@@ -119,7 +117,7 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
 
     // Enhanced logging for debugging
     if (isLocalhost || !nodeEnv || nodeEnv !== 'production') {
-      console.log('🔧 [Video] Upload request received', {
+      logger.info('🔧 [Video] Upload request received', {
         userId,
         host,
         referer,
@@ -134,7 +132,7 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
     // ALWAYS handle dev users early to prevent MongoDB operations with invalid ObjectIds
     // Check for dev users FIRST, before any MongoDB operations
     if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123')) {
-      console.log('🔧 [Video] Dev user detected, returning mock response', { userId, allowDevMode, hasFile: !!req.file });
+      
 
       // If file was uploaded, save it locally but don't create MongoDB document
       if (req.file) {
@@ -157,7 +155,7 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
           updatedAt: new Date().toISOString()
         });
 
-        console.log('🔧 [Video] Dev video stored', { contentId, fileUrl, storeSize: devVideoStore.size });
+        
 
         return res.json({
           success: true,
@@ -311,7 +309,7 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
     // Update engagement (streak, achievements, activity)
     const { updateStreak, checkAchievements, createActivity } = require('../services/engagementService');
     await updateStreak(userId);
-    const achievements = await checkAchievements(userId, 'upload_video', {
+    await checkAchievements(userId, 'upload_video', {
       contentId: content._id
     });
     await createActivity(userId, 'video_uploaded', {
@@ -357,11 +355,11 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
     }
 
     // Enhanced error logging
-    console.error('❌ [Video] Upload error caught in catch block', {
+    logger.error('❌ [Video] Upload error caught in catch block', {
       error: error.message,
       errorName: error.name,
       errorCode: error.code,
-      stack: error.stack?.substring(0, 500),
+      stack: error.stack,
       userId,
       hasUser: !!req.user,
       hasFile: !!req.file,
@@ -397,8 +395,6 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
           stack: error.stack?.substring(0, 200)
         })
       });
-    } else {
-      console.error('⚠️ [Video] Response already sent, cannot send error response');
     }
   }
 });
@@ -1058,7 +1054,7 @@ router.get('/:contentId', auth, async (req, res) => {
       const devVideo = devVideoStore.get(contentId);
 
       if (devVideo) {
-        console.log('🔧 [Video] Returning dev video from store', { contentId, fileUrl: devVideo.originalFile?.url });
+        
         return res.json({
           success: true,
           data: devVideo
@@ -1069,7 +1065,7 @@ router.get('/:contentId', auth, async (req, res) => {
       const timestampMatch = contentId.toString().match(/\d+/);
       const uploadTime = timestampMatch ? parseInt(timestampMatch[0]) : Date.now();
 
-      console.log('🔧 [Video] Dev video not found in store, returning mock data', { contentId, storeSize: devVideoStore.size });
+      
 
       return res.json({
         success: true,
@@ -1175,7 +1171,7 @@ router.post('/analyze', auth, async (req, res) => {
       const { analyzeVideoContent } = require('../services/aiService');
       analysisResult = await analyzeVideoContent({ videoId, url, duration });
     } catch (aiError) {
-      console.log('AI analysis not available, using fallback:', aiError.message);
+      
       analysisResult = null;
     }
 
@@ -1487,7 +1483,7 @@ router.post('/generate-captions', auth, async (req, res) => {
       const { generateCaptions } = require('../services/aiService');
       captionsResult = await generateCaptions({ videoId, url, duration, language });
     } catch (aiError) {
-      console.log('AI caption generation not available, using fallback:', aiError.message);
+      
       captionsResult = null;
     }
 
@@ -1584,7 +1580,7 @@ router.post('/detect-scenes', auth, async (req, res) => {
       const { detectHighlights } = require('../services/aiService');
       scenesResult = await detectHighlights({ videoId, url, duration, detectScenes: true });
     } catch (aiError) {
-      console.log('AI scene detection not available, using fallback:', aiError.message);
+      
       scenesResult = null;
     }
 
@@ -1714,20 +1710,20 @@ router.post('/analyze-pacing', auth, async (req, res) => {
 
     // Recommend genres based on content
     switch (contentType) {
-      case 'music-video':
-        pacingAnalysis.recommendedGenres = ['electronic', 'pop', 'rock'];
-        break;
-      case 'vlog':
-        pacingAnalysis.recommendedGenres = ['acoustic', 'indie', 'ambient'];
-        break;
-      case 'tutorial':
-        pacingAnalysis.recommendedGenres = ['corporate', 'uplifting', 'minimal'];
-        break;
-      case 'social-media':
-        pacingAnalysis.recommendedGenres = ['trending', 'hip-hop', 'electronic'];
-        break;
-      default:
-        pacingAnalysis.recommendedGenres = ['ambient', 'corporate', 'electronic'];
+    case 'music-video':
+      pacingAnalysis.recommendedGenres = ['electronic', 'pop', 'rock'];
+      break;
+    case 'vlog':
+      pacingAnalysis.recommendedGenres = ['acoustic', 'indie', 'ambient'];
+      break;
+    case 'tutorial':
+      pacingAnalysis.recommendedGenres = ['corporate', 'uplifting', 'minimal'];
+      break;
+    case 'social-media':
+      pacingAnalysis.recommendedGenres = ['trending', 'hip-hop', 'electronic'];
+      break;
+    default:
+      pacingAnalysis.recommendedGenres = ['ambient', 'corporate', 'electronic'];
     }
 
     // Track action (only if content exists)
@@ -1773,7 +1769,7 @@ router.post('/editor/save', auth, async (req, res) => {
 
     // For dev users, just return success
     if (isDev || (videoId && videoId.toString().startsWith('dev-'))) {
-      console.log('🔧 [Editor Save] Dev user autosave', { videoId, userId, hasState: !!editorState });
+      
       return res.json({
         success: true,
         message: 'Editor state saved (dev mode)',
@@ -1844,7 +1840,7 @@ router.post('/transcribe-editor', auth, async (req, res) => {
       });
     }
 
-    const { videoId, language = 'en' } = req.body;
+    const { videoId } = req.body;
     const userId = req.user?._id || req.user?.id;
 
     if (!videoId || typeof videoId !== 'string') {

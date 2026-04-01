@@ -21,7 +21,7 @@ const requireActiveSubscription = (req, res, next) => {
 
     // Enhanced logging for debugging
     if (isLocalhost || !nodeEnv || nodeEnv !== 'production') {
-      console.log('🔧 [Subscription] Middleware check', {
+      logger.info('🔧 [Subscription] Middleware check', {
         nodeEnv: nodeEnv || 'undefined',
         isLocalhost,
         hasUser: !!req.user,
@@ -76,24 +76,17 @@ const requireActiveSubscription = (req, res, next) => {
 
       next();
     } catch (error) {
-      console.error('❌ [Subscription] Error checking subscription access', {
+      logger.error('❌ [Subscription] Error checking subscription access', {
         error: error.message,
         errorName: error.name,
-        stack: error.stack?.substring(0, 500),
+        stack: error.stack,
         userId: req.user?._id || req.user?.id,
         nodeEnv: nodeEnv || 'undefined',
         isLocalhost
       });
 
-      logger.error('Error checking subscription access', {
-        error: error.message,
-        userId: req.user?._id || req.user?.id,
-        stack: error.stack
-      });
-
       // In development or localhost, allow access on error to prevent blocking development
       if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
-        console.log('🔧 [Subscription] Allowing access in dev/localhost mode due to subscription check error');
         logger.warn('Allowing access in development mode due to subscription check error');
         return next();
       }
@@ -106,10 +99,10 @@ const requireActiveSubscription = (req, res, next) => {
     }
   } catch (outerError) {
     // Catch any errors in the outer try block (like accessing req.user properties)
-    console.error('❌ [Subscription] Outer error in middleware', {
+    logger.error('❌ [Subscription] Outer error in middleware', {
       error: outerError.message,
       errorName: outerError.name,
-      stack: outerError.stack?.substring(0, 500)
+      stack: outerError.stack
     });
 
     // In development, allow access to prevent blocking
@@ -118,7 +111,7 @@ const requireActiveSubscription = (req, res, next) => {
     const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
 
     if (!nodeEnv || nodeEnv !== 'production' || isLocalhost) {
-      console.log('🔧 [Subscription] Allowing access due to outer error in dev/localhost mode');
+      
       return next();
     }
 

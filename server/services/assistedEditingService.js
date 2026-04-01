@@ -122,18 +122,18 @@ function buildImprovementPrompt(content, section, sectionType, improvementType, 
   let prompt = `Improve the ${sectionType} section of this content:\n\nFull content: "${content}"\n\nSection to improve: "${section}"\n\n`;
 
   switch (improvementType) {
-    case 'enhance':
-      prompt += 'Enhance this section to make it more engaging and effective.';
-      break;
-    case 'shorten':
-      prompt += 'Make this section more concise while keeping the key message.';
-      break;
-    case 'expand':
-      prompt += 'Expand this section with more detail and context.';
-      break;
-    case 'rephrase':
-      prompt += 'Rephrase this section with different wording while keeping the meaning.';
-      break;
+  case 'enhance':
+    prompt += 'Enhance this section to make it more engaging and effective.';
+    break;
+  case 'shorten':
+    prompt += 'Make this section more concise while keeping the key message.';
+    break;
+  case 'expand':
+    prompt += 'Expand this section with more detail and context.';
+    break;
+  case 'rephrase':
+    prompt += 'Rephrase this section with different wording while keeping the meaning.';
+    break;
   }
 
   if (tone) {

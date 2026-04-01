@@ -140,10 +140,10 @@ async function getBestPerformingContent(userId, platform, limit = 3) {
       status: 'posted',
       'analytics.engagement': { $exists: true }
     })
-    .sort({ 'analytics.engagement': -1 })
-    .limit(limit)
-    .populate('content.contentId')
-    .lean();
+      .sort({ 'analytics.engagement': -1 })
+      .limit(limit)
+      .populate('content.contentId')
+      .lean();
 
     return posts.map(post => ({
       content: post.content?.text || '',
@@ -229,10 +229,10 @@ async function getSmartSuggestions(userId, limit = 5) {
       postedAt: { $gte: startDate },
       'analytics.engagement': { $exists: true }
     })
-    .sort({ 'analytics.engagement': -1 })
-    .limit(10)
-    .populate('content.contentId')
-    .lean();
+      .sort({ 'analytics.engagement': -1 })
+      .limit(10)
+      .populate('content.contentId')
+      .lean();
 
     // Analyze patterns
     const suggestions = [];
@@ -246,7 +246,7 @@ async function getSmartSuggestions(userId, limit = 5) {
 
     const bestType = Object.keys(typeCounts).reduce((a, b) => 
       typeCounts[a] > typeCounts[b] ? a : b,
-      Object.keys(typeCounts)[0]
+    Object.keys(typeCounts)[0]
     );
 
     if (bestType && bestType !== 'unknown') {
@@ -268,7 +268,7 @@ async function getSmartSuggestions(userId, limit = 5) {
 
     const bestPlatform = Object.keys(platformCounts).reduce((a, b) => 
       platformCounts[a] > platformCounts[b] ? a : b,
-      Object.keys(platformCounts)[0]
+    Object.keys(platformCounts)[0]
     );
 
     if (bestPlatform) {
@@ -315,7 +315,7 @@ async function getSmartSuggestions(userId, limit = 5) {
 
     const bestHour = Object.keys(hourCounts).reduce((a, b) => 
       hourCounts[a] > hourCounts[b] ? a : b,
-      Object.keys(hourCounts)[0]
+    Object.keys(hourCounts)[0]
     );
 
     if (bestHour) {

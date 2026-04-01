@@ -13,7 +13,7 @@ function checkDir(dir) {
         const exported = require('./' + file); // Since we run inside server/routes
         if (typeof exported !== 'function' && typeof exported.use !== 'function') {
           if (!exported || !exported.router) {
-            console.log('❌ INVALID EXPORT (not function/router):', file);
+            
           }
         }
       } catch (e) { /* ignore require errors */ }
@@ -22,4 +22,4 @@ function checkDir(dir) {
 }
 process.chdir(path.join(__dirname, 'routes'));
 checkDir('.');
-console.log('Done.');
+

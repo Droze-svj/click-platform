@@ -777,28 +777,28 @@ router.post('/content/export', requireScope('content.read'), asyncHandler(async 
   let filename;
 
   switch (format) {
-    case 'json':
-      exportData = JSON.stringify(content, null, 2);
-      contentType = 'application/json';
-      filename = `content-export-${Date.now()}.json`;
-      break;
-    case 'csv':
-      // Convert to CSV
-      const headers = ['id', 'title', 'type', 'status', 'createdAt', 'tags'];
-      const rows = content.map(c => [
-        c._id,
-        c.title || '',
-        c.type || '',
-        c.status || '',
-        c.createdAt || '',
-        (c.tags || []).join(';')
-      ]);
-      exportData = [headers, ...rows].map(row => row.join(',')).join('\n');
-      contentType = 'text/csv';
-      filename = `content-export-${Date.now()}.csv`;
-      break;
-    default:
-      return sendError(res, 'Unsupported export format', 400);
+  case 'json':
+    exportData = JSON.stringify(content, null, 2);
+    contentType = 'application/json';
+    filename = `content-export-${Date.now()}.json`;
+    break;
+  case 'csv':
+    // Convert to CSV
+    const headers = ['id', 'title', 'type', 'status', 'createdAt', 'tags'];
+    const rows = content.map(c => [
+      c._id,
+      c.title || '',
+      c.type || '',
+      c.status || '',
+      c.createdAt || '',
+      (c.tags || []).join(';')
+    ]);
+    exportData = [headers, ...rows].map(row => row.join(',')).join('\n');
+    contentType = 'text/csv';
+    filename = `content-export-${Date.now()}.csv`;
+    break;
+  default:
+    return sendError(res, 'Unsupported export format', 400);
   }
 
   res.setHeader('Content-Type', contentType);

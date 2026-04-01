@@ -72,7 +72,7 @@ class APMMonitor {
     }
 
     this.isCollecting = true;
-    console.log('✅ APM monitoring initialized');
+    
   }
 
   /**
@@ -238,14 +238,14 @@ class APMMonitor {
         if (global.gc && typeof global.gc === 'function') {
           try {
             global.gc();
-            console.log('⚠️ Triggered manual GC due to critical memory usage');
+            
           } catch (gcError) {
-            console.warn('⚠️ Failed to trigger GC:', gcError.message);
+            
           }
         }
       } else if (limitUtilization > 0.99) {
         // Warn if we're extremely close to limit (99%+) even if not at critical threshold
-        console.warn('⚠️ Critical: Memory usage at 99%+ of heap limit. Consider enabling --expose-gc for manual GC if needed.');
+        
       }
     } catch (error) {
       // Heap statistics not available, continue with basic check
@@ -342,7 +342,7 @@ class APMMonitor {
       this.setCustomMetric('gc_stats', metric);
 
     } catch (error) {
-      console.warn('GC monitoring not available:', error.message);
+      
     }
   }
 
@@ -404,12 +404,12 @@ class APMMonitor {
     }
 
     // Log alert
-    console.warn(`🚨 APM Alert [${alert.severity.toUpperCase()}]: ${type}`, data);
+    
 
     // Trigger alerting system
     if (global.alertingSystem) {
       global.alertingSystem.handleAlert(alert).catch(err =>
-        console.error('APM alert failed:', err.message)
+        
       )
     }
   }
@@ -419,24 +419,24 @@ class APMMonitor {
    */
   determineAlertSeverity(type, data) {
     switch (type) {
-      case 'high_error_rate':
-        return data.errorRate > 0.1 ? 'critical' : 'high';
-      case 'high_response_time':
-        return data.responseTime > 5000 ? 'critical' : 'high';
-      case 'critical_memory_usage':
+    case 'high_error_rate':
+      return data.errorRate > 0.1 ? 'critical' : 'high';
+    case 'high_response_time':
+      return data.responseTime > 5000 ? 'critical' : 'high';
+    case 'critical_memory_usage':
+      return 'critical';
+    case 'high_memory_usage':
+      // Check if we're very close to the limit
+      if (data.limitUtilization && data.limitUtilization > 0.95) {
         return 'critical';
-      case 'high_memory_usage':
-        // Check if we're very close to the limit
-        if (data.limitUtilization && data.limitUtilization > 0.95) {
-          return 'critical';
-        }
-        return 'high';
-      case 'high_cpu_usage':
-        return 'high';
-      case 'slow_database_query':
-        return 'medium';
-      default:
-        return 'low';
+      }
+      return 'high';
+    case 'high_cpu_usage':
+      return 'high';
+    case 'slow_database_query':
+      return 'medium';
+    default:
+      return 'low';
     }
   }
 
@@ -589,7 +589,7 @@ class APMMonitor {
    */
   updateThresholds(newThresholds) {
     this.thresholds = { ...this.thresholds, ...newThresholds };
-    console.log('✅ APM thresholds updated:', this.thresholds);
+    
   }
 
   /**
@@ -602,7 +602,7 @@ class APMMonitor {
     if (this.performanceObserver) this.performanceObserver.disconnect();
 
     this.isCollecting = false;
-    console.log('🛑 APM monitoring stopped');
+    
   }
 
   /**

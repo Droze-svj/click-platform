@@ -8,8 +8,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Authenticate Mock
 const authenticate = (req, res, next) => {
-    req.user = { id: 'test_user_v6' };
-    next();
+  req.user = { id: 'test_user_v6' };
+  next();
 };
 
 /**
@@ -26,12 +26,12 @@ router.post('/extract', authenticate, upload.single('timeline'), async (req, res
     const styleProfile = parseTimelineXML(xmlString);
 
     if (!styleProfile) {
-        return res.status(500).json({ error: "Failed to extract StyleProfile from XML" });
+      return res.status(500).json({ error: "Failed to extract StyleProfile from XML" });
     }
 
     res.json({ message: "Style DNA Extractions complete", styleProfile, status: 200 });
   } catch (error) {
-    console.error('Style Vault Extraction Error:', error);
+    
     res.status(500).json({ error: "Server Error examining XML" });
   }
 });

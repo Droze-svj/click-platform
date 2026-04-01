@@ -48,18 +48,18 @@ async function mixAudioTracks(videoPath, audioTracks, outputPath) {
       if (track.effects) {
         track.effects.forEach(effect => {
           switch (effect.type) {
-            case 'eq':
-              filterChain += `,equalizer=f=${effect.settings.frequency || 1000}:width_type=h:width=${effect.settings.width || 200}:g=${effect.settings.gain || 0}`;
-              break;
-            case 'reverb':
-              filterChain += `,aecho=${effect.settings.in_gain || 0.8}:${effect.settings.out_gain || 0.9}:${effect.settings.delays || '1000'}:${effect.settings.decays || '0.5'}`;
-              break;
-            case 'compressor':
-              filterChain += `,acompressor=threshold=${effect.settings.threshold || -20}:ratio=${effect.settings.ratio || 4}:attack=${effect.settings.attack || 20}:release=${effect.settings.release || 250}`;
-              break;
-            case 'noise-reduction':
-              filterChain += `,afftdn=nr=${effect.settings.strength || 10}`;
-              break;
+          case 'eq':
+            filterChain += `,equalizer=f=${effect.settings.frequency || 1000}:width_type=h:width=${effect.settings.width || 200}:g=${effect.settings.gain || 0}`;
+            break;
+          case 'reverb':
+            filterChain += `,aecho=${effect.settings.in_gain || 0.8}:${effect.settings.out_gain || 0.9}:${effect.settings.delays || '1000'}:${effect.settings.decays || '0.5'}`;
+            break;
+          case 'compressor':
+            filterChain += `,acompressor=threshold=${effect.settings.threshold || -20}:ratio=${effect.settings.ratio || 4}:attack=${effect.settings.attack || 20}:release=${effect.settings.release || 250}`;
+            break;
+          case 'noise-reduction':
+            filterChain += `,afftdn=nr=${effect.settings.strength || 10}`;
+            break;
           }
         });
       }
@@ -294,24 +294,24 @@ async function applyAudioEffect(videoPath, outputPath, effect) {
     let filter;
     
     switch (effect.type) {
-      case 'reverb':
-        filter = `aecho=${effect.settings.in_gain || 0.8}:${effect.settings.out_gain || 0.9}:${effect.settings.delays || '1000'}:${effect.settings.decays || '0.5'}`;
-        break;
-      case 'echo':
-        filter = `aecho=${effect.settings.in_gain || 0.8}:${effect.settings.out_gain || 0.9}:${effect.settings.delays || '1000'}:${effect.settings.decays || '0.5'}`;
-        break;
-      case 'chorus':
-        filter = `chorus=0.5:0.9:50:0.4:0.25:2`;
-        break;
-      case 'distortion':
-        filter = `acrusher=level_in=1:level_out=0.8:bits=8:mode=log:aa=1`;
-        break;
-      case 'pitch-shift':
-        filter = `asetrate=44100*${effect.settings.semitones || 0},aresample=44100`;
-        break;
-      default:
-        reject(new Error(`Unknown audio effect: ${effect.type}`));
-        return;
+    case 'reverb':
+      filter = `aecho=${effect.settings.in_gain || 0.8}:${effect.settings.out_gain || 0.9}:${effect.settings.delays || '1000'}:${effect.settings.decays || '0.5'}`;
+      break;
+    case 'echo':
+      filter = `aecho=${effect.settings.in_gain || 0.8}:${effect.settings.out_gain || 0.9}:${effect.settings.delays || '1000'}:${effect.settings.decays || '0.5'}`;
+      break;
+    case 'chorus':
+      filter = `chorus=0.5:0.9:50:0.4:0.25:2`;
+      break;
+    case 'distortion':
+      filter = `acrusher=level_in=1:level_out=0.8:bits=8:mode=log:aa=1`;
+      break;
+    case 'pitch-shift':
+      filter = `asetrate=44100*${effect.settings.semitones || 0},aresample=44100`;
+      break;
+    default:
+      reject(new Error(`Unknown audio effect: ${effect.type}`));
+      return;
     }
     
     ffmpeg(videoPath)

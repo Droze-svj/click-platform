@@ -31,33 +31,33 @@ async function validateAPIKey(provider, apiKey) {
     let details = {};
 
     switch (provider) {
-      case 'openrouter':
-        isValid = await validateOpenRouterKey(apiKey);
-        if (isValid) {
-          details = await getOpenRouterKeyDetails(apiKey);
-        }
-        break;
+    case 'openrouter':
+      isValid = await validateOpenRouterKey(apiKey);
+      if (isValid) {
+        details = await getOpenRouterKeyDetails(apiKey);
+      }
+      break;
 
-      case 'huggingface':
-        isValid = await validateHuggingFaceKey(apiKey);
-        if (isValid) {
-          details = await getHuggingFaceKeyDetails(apiKey);
-        }
-        break;
+    case 'huggingface':
+      isValid = await validateHuggingFaceKey(apiKey);
+      if (isValid) {
+        details = await getHuggingFaceKeyDetails(apiKey);
+      }
+      break;
 
-      case 'cerebras':
-        isValid = await validateCerebrasKey(apiKey);
-        break;
+    case 'cerebras':
+      isValid = await validateCerebrasKey(apiKey);
+      break;
 
-      case 'replicate':
-        isValid = await validateReplicateKey(apiKey);
-        if (isValid) {
-          details = await getReplicateKeyDetails(apiKey);
-        }
-        break;
+    case 'replicate':
+      isValid = await validateReplicateKey(apiKey);
+      if (isValid) {
+        details = await getReplicateKeyDetails(apiKey);
+      }
+      break;
 
-      default:
-        throw new AppError(`Key validation not implemented for ${provider}`, 400);
+    default:
+      throw new AppError(`Key validation not implemented for ${provider}`, 400);
     }
 
     const result = {

@@ -83,32 +83,6 @@ const templateSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  rating: {
-    type: Number,
-    default: 0,
-    min: 0,
-    max: 5,
-  },
-  ratings: [{
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-    },
-    review: String,
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
-  isFeatured: {
-    type: Boolean,
-    default: false,
-  },
   tags: [String],
   createdAt: {
     type: Date,

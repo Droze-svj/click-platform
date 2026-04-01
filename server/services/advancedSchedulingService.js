@@ -108,26 +108,26 @@ function calculateNextRecurrence(recurrence, startDate) {
   const now = new Date();
 
   switch (recurrence.frequency) {
-    case 'daily':
-      date.setDate(date.getDate() + recurrence.interval);
-      break;
-    case 'weekly':
-      if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
-        // Find next matching day of week
-        const currentDay = date.getDay();
-        const nextDay = recurrence.daysOfWeek.find(day => day > currentDay) || recurrence.daysOfWeek[0];
-        const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
-        date.setDate(date.getDate() + daysToAdd);
-      } else {
-        date.setDate(date.getDate() + (7 * recurrence.interval));
-      }
-      break;
-    case 'monthly':
-      date.setMonth(date.getMonth() + recurrence.interval);
-      if (recurrence.dayOfMonth) {
-        date.setDate(recurrence.dayOfMonth);
-      }
-      break;
+  case 'daily':
+    date.setDate(date.getDate() + recurrence.interval);
+    break;
+  case 'weekly':
+    if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+      // Find next matching day of week
+      const currentDay = date.getDay();
+      const nextDay = recurrence.daysOfWeek.find(day => day > currentDay) || recurrence.daysOfWeek[0];
+      const daysToAdd = nextDay > currentDay ? nextDay - currentDay : 7 - currentDay + nextDay;
+      date.setDate(date.getDate() + daysToAdd);
+    } else {
+      date.setDate(date.getDate() + (7 * recurrence.interval));
+    }
+    break;
+  case 'monthly':
+    date.setMonth(date.getMonth() + recurrence.interval);
+    if (recurrence.dayOfMonth) {
+      date.setDate(recurrence.dayOfMonth);
+    }
+    break;
   }
 
   // Apply time if specified
@@ -309,36 +309,36 @@ async function resolveConflicts(userId, postId, strategy = 'auto') {
     let newTime = post.scheduledTime;
 
     switch (strategy) {
-      case 'auto':
-        // Find next available slot
-        const { getOptimalPostingTimes } = require('./contentCalendarService');
-        const optimalTimes = await getOptimalPostingTimes(userId, [post.platform]);
+    case 'auto':
+      // Find next available slot
+      const { getOptimalPostingTimes } = require('./contentCalendarService');
+      const optimalTimes = await getOptimalPostingTimes(userId, [post.platform]);
         
-        // Try next optimal time
-        newTime = new Date(post.scheduledTime);
-        newTime.setHours(newTime.getHours() + 2); // Move 2 hours forward
+      // Try next optimal time
+      newTime = new Date(post.scheduledTime);
+      newTime.setHours(newTime.getHours() + 2); // Move 2 hours forward
         
-        // Check if still conflicts
-        let attempts = 0;
-        while (attempts < 10) {
-          const newConflicts = await detectConflicts(userId, newTime, post.platform, postId);
-          if (!newConflicts.hasConflicts) {
-            break;
-          }
-          newTime.setHours(newTime.getHours() + 1);
-          attempts++;
+      // Check if still conflicts
+      let attempts = 0;
+      while (attempts < 10) {
+        const newConflicts = await detectConflicts(userId, newTime, post.platform, postId);
+        if (!newConflicts.hasConflicts) {
+          break;
         }
-        break;
+        newTime.setHours(newTime.getHours() + 1);
+        attempts++;
+      }
+      break;
 
-      case 'delay':
-        newTime = new Date(post.scheduledTime);
-        newTime.setHours(newTime.getHours() + 2);
-        break;
+    case 'delay':
+      newTime = new Date(post.scheduledTime);
+      newTime.setHours(newTime.getHours() + 2);
+      break;
 
-      case 'advance':
-        newTime = new Date(post.scheduledTime);
-        newTime.setHours(newTime.getHours() - 2);
-        break;
+    case 'advance':
+      newTime = new Date(post.scheduledTime);
+      newTime.setHours(newTime.getHours() - 2);
+      break;
     }
 
     post.scheduledTime = newTime;

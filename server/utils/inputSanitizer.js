@@ -4,7 +4,7 @@ let DOMPurify;
 try {
   DOMPurify = require('isomorphic-dompurify');
 } catch (error) {
-  console.warn('⚠️ isomorphic-dompurify failed to load (likely missing jsdom). Falling back to basic sanitization.');
+  
 }
 const validator = require('validator');
 

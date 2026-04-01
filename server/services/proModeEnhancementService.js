@@ -172,30 +172,30 @@ function buildAdvancedFilters(filters, operators) {
     const operator = operators[key] || 'equals';
 
     switch (operator) {
-      case 'equals':
-        searchFilters[key] = value;
-        break;
-      case 'not_equals':
-        searchFilters[key] = { $ne: value };
-        break;
-      case 'contains':
-        searchFilters[key] = { $regex: value, $options: 'i' };
-        break;
-      case 'greater_than':
-        searchFilters[key] = { $gt: value };
-        break;
-      case 'less_than':
-        searchFilters[key] = { $lt: value };
-        break;
-      case 'between':
-        searchFilters[key] = { $gte: value[0], $lte: value[1] };
-        break;
-      case 'in':
-        searchFilters[key] = { $in: value };
-        break;
-      case 'not_in':
-        searchFilters[key] = { $nin: value };
-        break;
+    case 'equals':
+      searchFilters[key] = value;
+      break;
+    case 'not_equals':
+      searchFilters[key] = { $ne: value };
+      break;
+    case 'contains':
+      searchFilters[key] = { $regex: value, $options: 'i' };
+      break;
+    case 'greater_than':
+      searchFilters[key] = { $gt: value };
+      break;
+    case 'less_than':
+      searchFilters[key] = { $lt: value };
+      break;
+    case 'between':
+      searchFilters[key] = { $gte: value[0], $lte: value[1] };
+      break;
+    case 'in':
+      searchFilters[key] = { $in: value };
+      break;
+    case 'not_in':
+      searchFilters[key] = { $nin: value };
+      break;
     }
   });
 

@@ -138,21 +138,21 @@ async function getExportAnalytics(userId, period = 'month') {
     let startDate;
 
     switch (period) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'quarter':
-        const quarter = Math.floor(now.getMonth() / 3);
-        startDate = new Date(now.getFullYear(), quarter * 3, 1);
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    case 'week':
+      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'quarter':
+      const quarter = Math.floor(now.getMonth() / 3);
+      startDate = new Date(now.getFullYear(), quarter * 3, 1);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
+    default:
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
     const exports = await ExportJob.find({
@@ -251,21 +251,21 @@ function calculateNextRun(schedule) {
   nextRun.setHours(hours, minutes, 0, 0);
 
   switch (schedule.frequency) {
-    case 'daily':
-      if (nextRun <= now) {
-        nextRun.setDate(nextRun.getDate() + 1);
-      }
-      break;
-    case 'weekly':
-      const daysUntil = (schedule.dayOfWeek - nextRun.getDay() + 7) % 7;
-      nextRun.setDate(nextRun.getDate() + (daysUntil || 7));
-      break;
-    case 'monthly':
-      nextRun.setDate(schedule.dayOfMonth);
-      if (nextRun <= now) {
-        nextRun.setMonth(nextRun.getMonth() + 1);
-      }
-      break;
+  case 'daily':
+    if (nextRun <= now) {
+      nextRun.setDate(nextRun.getDate() + 1);
+    }
+    break;
+  case 'weekly':
+    const daysUntil = (schedule.dayOfWeek - nextRun.getDay() + 7) % 7;
+    nextRun.setDate(nextRun.getDate() + (daysUntil || 7));
+    break;
+  case 'monthly':
+    nextRun.setDate(schedule.dayOfMonth);
+    if (nextRun <= now) {
+      nextRun.setMonth(nextRun.getMonth() + 1);
+    }
+    break;
   }
 
   return nextRun;

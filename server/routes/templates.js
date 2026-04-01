@@ -363,17 +363,17 @@ router.get('/marketplace', auth, asyncHandler(async (req, res) => {
 
     let sort = {};
     switch (sortBy) {
-      case 'popular':
-        sort = { usageCount: -1, rating: -1 };
-        break;
-      case 'rating':
-        sort = { rating: -1, usageCount: -1 };
-        break;
-      case 'newest':
-        sort = { createdAt: -1 };
-        break;
-      default:
-        sort = { usageCount: -1 };
+    case 'popular':
+      sort = { usageCount: -1, rating: -1 };
+      break;
+    case 'rating':
+      sort = { rating: -1, usageCount: -1 };
+      break;
+    case 'newest':
+      sort = { createdAt: -1 };
+      break;
+    default:
+      sort = { usageCount: -1 };
     }
 
     let templates = [];

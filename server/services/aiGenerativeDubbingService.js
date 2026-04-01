@@ -26,7 +26,7 @@ const ELEVENLABS_BASE = 'https://api.elevenlabs.io/v1'
  */
 async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEnabled = false, audioSampleUrl }) {
   if (!ELEVENLABS_API_KEY) {
-    console.warn('[DubbingService] ELEVENLABS_API_KEY not set — returning mock response')
+    
     return buildMockResponse(videoId, targetLanguage, lipSyncEnabled)
   }
 
@@ -64,7 +64,7 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
       lipSyncDataUrl: lipSyncEnabled ? `https://api.clickapp.io/lipsync/${dub.dubbing_id}` : null,
     }
   } catch (err) {
-    console.error('[DubbingService] Error:', err.message)
+    
     return buildMockResponse(videoId, targetLanguage, lipSyncEnabled)
   }
 }

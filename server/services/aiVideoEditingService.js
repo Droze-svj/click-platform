@@ -718,11 +718,11 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
 
     // Task 4.3: Saliency-Aware Positioning
     if (style === 'saliency-aware') {
-       logger.info('[Saliency] Computing optimal positioning for each caption block...');
-       // In a real loop, we would sample frames for each caption block
-       const mockSaliency = await saliencyService.getFrameSaliency(videoId, 1.0);
-       overrides.position = saliencyService.getOptimalCaptionPosition(mockSaliency);
-       logger.info(`[Saliency] Decision: Placing captions at "${overrides.position}" to avoid subjects.`);
+      logger.info('[Saliency] Computing optimal positioning for each caption block...');
+      // In a real loop, we would sample frames for each caption block
+      const mockSaliency = await saliencyService.getFrameSaliency(videoId, 1.0);
+      overrides.position = saliencyService.getOptimalCaptionPosition(mockSaliency);
+      logger.info(`[Saliency] Decision: Placing captions at "${overrides.position}" to avoid subjects.`);
     }
 
     // Style captions based on style preference (professional font families and platform styles)
@@ -895,34 +895,34 @@ async function generateAndApplySmartCaptions(videoId, transcript, duration, styl
 
     // Apply transcript word-level semantics if available
     if (transcriptData && transcriptData.words && transcriptData.words.length > 0) {
-       styledCaptions = styledCaptions.map(cap => {
-          // Find the loudest/most emotional word in this caption window
-          const wordsInWindow = transcriptData.words.filter(w =>
-            w.start >= cap.startTime && w.end <= cap.endTime
-          );
+      styledCaptions = styledCaptions.map(cap => {
+        // Find the loudest/most emotional word in this caption window
+        const wordsInWindow = transcriptData.words.filter(w =>
+          w.start >= cap.startTime && w.end <= cap.endTime
+        );
 
-          if (wordsInWindow.length > 0) {
-            const hasPositive = wordsInWindow.some(w => w.sentiment === 'positive');
-            const hasNegative = wordsInWindow.some(w => w.sentiment === 'negative');
-            const maxVolume = Math.max(...wordsInWindow.map(w => w.volume || 50));
+        if (wordsInWindow.length > 0) {
+          const hasPositive = wordsInWindow.some(w => w.sentiment === 'positive');
+          const hasNegative = wordsInWindow.some(w => w.sentiment === 'negative');
+          const maxVolume = Math.max(...wordsInWindow.map(w => w.volume || 50));
 
-            // Emotion -> Color
-            if (hasPositive) {
-               cap.style.fontColor = '#00FF99'; // Positive Emerald
-               cap.style.animation = 'pop';
-            } else if (hasNegative) {
-               cap.style.fontColor = '#FF3333'; // Negative Red
-               cap.style.animation = 'shake'; // Camera Shake Trigger
-            }
-
-            // Volume -> Scale
-            if (maxVolume > 85) {
-               cap.style.fontSize = cap.style.fontSize * 1.3;
-               cap.style.fontWeight = 900;
-            }
+          // Emotion -> Color
+          if (hasPositive) {
+            cap.style.fontColor = '#00FF99'; // Positive Emerald
+            cap.style.animation = 'pop';
+          } else if (hasNegative) {
+            cap.style.fontColor = '#FF3333'; // Negative Red
+            cap.style.animation = 'shake'; // Camera Shake Trigger
           }
-          return cap;
-       });
+
+          // Volume -> Scale
+          if (maxVolume > 85) {
+            cap.style.fontSize = cap.style.fontSize * 1.3;
+            cap.style.fontWeight = 900;
+          }
+        }
+        return cap;
+      });
     }
 
     logger.info('Smart captions generated', { videoId, count: styledCaptions.length, style });
