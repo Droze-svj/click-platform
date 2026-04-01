@@ -1,10 +1,7 @@
 {
   "name": "click",
   "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "client"
-  ],
+    "workspaces": ["client"],
   "engines": {
     "node": ">=20.0.0"
   },
@@ -15,10 +12,10 @@
     "dev:server": "nodemon server/index.js",
     "dev:client": "cd client && npm run dev -- --port 3010",
     "dev:client:turbo": "cd client && npm run dev:turbo",
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 npm run prisma:generate && cd client && NODE_OPTIONS=--max-old-space-size=4096 npm run build",
+    "build": "npm run prisma:generate && cd client && npm run build",
     "start": "node server/index.js",
-    "start:prod": "node --max-old-space-size=4096 server/index.js",
-    "start:server": "node --max-old-space-size=4096 server/index.js",
+    "start:prod": "node --max-old-space-size=2048 server/index.js",
+    "start:server": "node --max-old-space-size=2048 server/index.js",
     "start:client": "cd client && npm start",
     "postinstall": "npm run prisma:generate",
     "prisma:generate": "npx prisma generate --schema=prisma/schema.prisma",
