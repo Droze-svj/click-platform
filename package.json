@@ -1,6 +1,7 @@
 {
   "name": "click",
   "version": "1.0.0",
+    "workspaces": ["client"],
   "engines": {
     "node": ">=20.0.0"
   },
