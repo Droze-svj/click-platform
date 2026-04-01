@@ -6,6 +6,7 @@
 const os = require('os');
 const v8 = require('v8');
 const { performance, PerformanceObserver } = require('perf_hooks');
+const logger = require('./logger');
 
 class APMMonitor {
   constructor() {
@@ -238,14 +239,14 @@ class APMMonitor {
         if (global.gc && typeof global.gc === 'function') {
           try {
             global.gc();
-            
+            global.gc();
           } catch (gcError) {
-            
+            logger.warn('Failed to manually trigger GC in APM', { error: gcError.message });
           }
         }
       } else if (limitUtilization > 0.99) {
         // Warn if we're extremely close to limit (99%+) even if not at critical threshold
-        
+        logger.warn('Memory usage is extremely high', { limitUtilization });
       }
     } catch (error) {
       // Heap statistics not available, continue with basic check
@@ -342,7 +343,7 @@ class APMMonitor {
       this.setCustomMetric('gc_stats', metric);
 
     } catch (error) {
-      
+      logger.error('Failed to collect GC metrics in APM', { error: error.message });
     }
   }
 
@@ -408,9 +409,9 @@ class APMMonitor {
 
     // Trigger alerting system
     if (global.alertingSystem) {
-      global.alertingSystem.handleAlert(alert).catch(err =>
-        
-      )
+      global.alertingSystem.handleAlert(alert).catch(err => {
+        logger.error('Failed to handle alert in APM', { error: err.message });
+      });
     }
   }
 
@@ -654,7 +655,7 @@ const apmDatabaseMiddleware = (schema) => {
     next();
   });
 
-  schema.post('save', function (doc) {
+  schema.post('save', function () {
     const duration = Date.now() - this._startTime;
     apmMonitor.recordDatabaseQuery('save', this.constructor.modelName, duration);
   });
@@ -664,7 +665,7 @@ const apmDatabaseMiddleware = (schema) => {
     next();
   });
 
-  schema.post('find', function (result) {
+  schema.post('find', function () {
     const duration = Date.now() - this._startTime;
     apmMonitor.recordDatabaseQuery('find', this.constructor.modelName, duration);
   });

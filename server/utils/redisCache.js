@@ -5,6 +5,7 @@
 
 const redis = require('redis');
 const crypto = require('crypto');
+const logger = require('./logger');
 
 class RedisCache {
   constructor() {
@@ -26,9 +27,9 @@ class RedisCache {
       const isPlaceholder = redisUrl && (redisUrl.includes('placeholder') || redisUrl.includes('localhost:6379'));
       if (process.env.NODE_ENV === 'test' || !redisUrl || isPlaceholder) {
         if (redisUrl?.includes('placeholder')) {
-          
+          logger.info('Redis URL is placeholder, skipping connection');
         } else {
-          
+          logger.info('Redis URL not configured, skipping connection');
         }
         return;
       }
@@ -46,7 +47,7 @@ class RedisCache {
       });
 
       this.client.on('error', (err) => {
-        
+        logger.error('Redis connection error', { error: err.message });
         this.isConnected = false;
       });
 
@@ -259,9 +260,9 @@ class RedisCache {
         res.json = (data) => {
           // Only cache successful responses
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            this.set(cacheKey, data, ttl).catch(err =>
-              
-            );
+            this.set(cacheKey, data, ttl).catch(err => {
+              logger.warn('Failed to set cache in middleware', { error: err.message, key: cacheKey });
+            });
           }
 
           return originalJson.call(res, data);
@@ -269,7 +270,7 @@ class RedisCache {
 
         next();
       } catch (error) {
-        
+        logger.error('Redis cache middleware failure', { error: error.message });
         next();
       }
     };
@@ -323,7 +324,7 @@ class RedisCache {
         await this.client.disconnect();
         
       } catch (error) {
-        
+        logger.error('Failed to disconnect Redis cache', { error: error.message });
       }
     }
     this.isConnected = false;

@@ -4,6 +4,7 @@
  */
 
 const mongoose = require('mongoose')
+const logger = require('./logger')
 
 class DatabaseOptimizer {
   constructor() {
@@ -63,7 +64,7 @@ class DatabaseOptimizer {
       return mongoose.connection
 
     } catch (error) {
-      
+      logger.error('Failed to optimize database connection', { error: error.message })
       throw error
     }
   }
@@ -90,7 +91,7 @@ class DatabaseOptimizer {
     })
 
     conn.on('error', (err) => {
-      
+      logger.error('Mongoose connection error', { error: err.message })
     })
 
     // Periodic health checks
@@ -185,7 +186,7 @@ class DatabaseOptimizer {
 
       return { status: 'healthy', pingTime }
     } catch (error) {
-      
+      logger.error('Database health check failure', { error: error.message })
       return { status: 'unhealthy', error: error.message }
     }
   }
@@ -214,7 +215,7 @@ class DatabaseOptimizer {
           await this.analyzeCollectionIndexes(collectionObj, collectionName, indexes)
 
         } catch (error) {
-          
+          logger.warn(`Failed to analyze indexes for collection ${collectionName}`, { error: error.message })
         }
       }
 
@@ -406,6 +407,7 @@ class DatabaseOptimizer {
               
             } catch (error) {
               // Compact may not be supported on all MongoDB deployments
+              logger.debug(`Compact not supported for ${collection.name}`, { error: error.message })
             }
           }
         }
