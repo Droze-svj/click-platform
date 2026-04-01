@@ -174,9 +174,9 @@ export function extractApiError(error: any, context?: {
       category = 'api'
     }
 
-    // Handle error instances
-    else if (error?.message) {
-      message = error.message
+    // Handle error instances or strings
+    else if (error?.message || typeof error === 'string') {
+      message = typeof error === 'string' ? error : error.message
       category = 'application'
 
       // Check for specific error patterns

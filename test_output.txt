@@ -1,0 +1,490 @@
+
+> click@1.0.0 test:unit
+> jest --selectProjects unit tests/server/routes/auth.test.js
+
+Running one project: unit
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Volumes/CLICK/WHOP AI V3' ; watchman watch-project '/Volumes/CLICK/WHOP AI V3'`
+
+FAIL unit tests/server/services/errorHandler.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/services/jobQueueService.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/services/emailService.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/services/cacheService.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/services/storageService.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/services/twitterOAuthService.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/services/neuralStrategist.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/routes/content.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/middleware/requestTimeout.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/routes/analytics.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/databaseConfig.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/routes/video.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+FAIL unit tests/server/routes/auth.test.js
+  ● Test suite failed to run
+
+    Cannot find module 'browserslist'
+    Require stack:
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/helper-compilation-targets/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/resolve-targets.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/config-descriptors.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/item.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/full.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/transform-file.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/module-types.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/configuration.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/config/files/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/@babel/core/lib/index.js
+    - /Volumes/CLICK/WHOP AI V3/node_modules/jest-snapshot/build/InlineSnapshots.js
+
+      at Object.require (node_modules/@babel/helper-compilation-targets/src/index.ts:1:1)
+      at require (node_modules/@babel/core/src/config/resolve-targets.ts:10:1)
+      at getTargets (node_modules/@babel/core/src/config/resolve-targets.ts:47:10)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:122:28)
+          at loadPrivatePartialConfig.next (<anonymous>)
+      at loadPrivatePartialConfig (node_modules/@babel/core/src/config/partial.ts:169:12)
+          at loadPartialConfig.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:53:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:72:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/ScriptTransformer.js:228:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/ScriptTransformer.js:289:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:525:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/ScriptTransformer.js:674:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/ScriptTransformer.js:726:19)
+
+Snapshot Summary
+ › 3 snapshot files obsolete from 3 test suites. To remove them all, run `npm run test:unit -- -u`.
+   ↳   • .node_modules_old/png-js/test/__snapshots__/pixels.spec.js.snap
+       • .node_modules_old/png-js/test/__snapshots__/metadata.spec.js.snap
+       • .node_modules_old/png-js/test/__snapshots__/imgdata.spec.js.snap
+
+Test Suites: 13 failed, 13 total
+Tests:       0 total
+Snapshots:   3 files obsolete, 0 total
+Time:        39.053 s
+Ran all test suites.

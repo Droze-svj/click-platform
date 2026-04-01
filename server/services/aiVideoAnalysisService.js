@@ -13,9 +13,20 @@ try {
   // Optional dependency in some local environments
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+let openai = null;
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    } catch (e) {
+      logger.warn('OpenAI not configured for video analysis', { error: e.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 function withAgentSpan(agentName, fn, model = 'gpt-4o') {
   return async (...args) => {

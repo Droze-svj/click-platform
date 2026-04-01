@@ -7,9 +7,20 @@ const { v4: uuidv4 } = require('uuid')
 const logger = require('../utils/logger')
 const OpenAI = require('openai')
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+let openai = null;
+function getOpenAIClient() {
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+    } catch (e) {
+      logger.warn('OpenAI not configured for enhanced video processing', { error: e.message });
+      return null;
+    }
+  }
+  return openai;
+}
 
 // Helper function to get output path
 function getOutputPath(filename) {
@@ -325,8 +336,11 @@ async function generateVoiceover(videoPath, text, options = {}) {
   logger.info('Starting voiceover generation', { jobId, userId, voice, textLength: text.length })
 
   try {
+    const client = getOpenAIClient();
+    if (!client) throw new Error('OpenAI client not initialized');
+
     // Generate speech using OpenAI TTS
-    const mp3 = await openai.audio.speech.create({
+    const mp3 = await client.audio.speech.create({
       model: "tts-1",
       voice: voice,
       input: text,

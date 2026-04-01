@@ -1,11 +1,20 @@
 // Test setup file
 
+let MongoMemoryServer;
+try {
+  ({ MongoMemoryServer } = require('mongodb-memory-server'));
+} catch (e) {
+  // Silent catch, will handle fallback in beforeAll
+}
+const mongoose = require('mongoose');
+
 require('dotenv').config({ path: '.env.test' });
+
+let mongoServer;
 
 // Set test environment variables
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key';
-process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/click-test';
 
 // Mock isomorphic-dompurify before any modules require it
 jest.mock('isomorphic-dompurify', () => {
@@ -34,7 +43,26 @@ jest.mock('isomorphic-dompurify', () => {
 }, { virtual: false });
 
 // Increase timeout for integration tests
-jest.setTimeout(30000);
+jest.setTimeout(60000);
+
+// Global setup for MongoDB (preferred in-memory, fallback to local)
+beforeAll(async () => {
+  let uri;
+  try {
+    if (!MongoMemoryServer) throw new Error('mongodb-memory-server module not loaded');
+    mongoServer = await MongoMemoryServer.create();
+    uri = mongoServer.getUri();
+    process.env.MONGODB_URI = uri;
+  } catch (error) {
+    console.warn('Failed to start MongoMemoryServer, falling back to local MongoDB:', error.message);
+    uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/click-test';
+  }
+  
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
+  await mongoose.connect(uri);
+});
 
 // Mock external services in tests
 jest.mock('../server/services/emailService', () => ({
@@ -55,8 +83,10 @@ global.console = {
 
 // Clean up after all tests
 afterAll(async () => {
-  const mongoose = require('mongoose');
   if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.close();
+  }
+  if (mongoServer) {
+    await mongoServer.stop();
   }
 });

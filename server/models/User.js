@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
     },
     plan: {
       type: String,
-      enum: ['monthly', 'annual'],
+      enum: ['monthly', 'annual', 'free', 'pro', 'agency', 'trial'],
       default: 'monthly'
     },
     startDate: Date,
