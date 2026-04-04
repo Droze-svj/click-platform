@@ -4,10 +4,13 @@ const path = require('path');
 const fs = require('fs');
 
 // Load environment variables IMMEDIATELY
-const rootEnv = path.join(__dirname, '..', '.env.nosync');
-if (fs.existsSync(rootEnv)) {
-  require('dotenv').config({ path: rootEnv });
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.nosync';
+const envPath = path.join(__dirname, '..', envFile);
+
+if (fs.existsSync(envPath)) {
+  require('dotenv').config({ path: envPath });
 } else {
+  // Fallback to .env if specific environment file doesn't exist
   require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 }
 
@@ -174,16 +177,22 @@ async function initializeNexusEngine() {
     // --- Next.js Integration ---
     if (process.env.NODE_ENV === 'production') {
       try {
-        const next = require('../client/node_modules/next');
+        const next = require('next');
         const nextApp = next({ dev: false, dir: path.join(__dirname, '../client') });
         const handle = nextApp.getRequestHandler();
         
-        nextApp.prepare().then(() => {
-          logger.info('📦 Next.js engine prepared for production');
-          app.all('*', (req, res) => handle(req, res));
-        });
+        nextApp.prepare()
+          .then(() => {
+            logger.info('📦 Next.js engine prepared for production');
+            app.all('*', (req, res) => handle(req, res));
+          })
+          .catch((err) => {
+            logger.error('❌ Next.js preparation failed:', { error: err.message, stack: err.stack });
+            if (global.Sentry) Sentry.captureException(err);
+          });
       } catch (e) {
         logger.error('❌ Failed to load Next.js module', { error: e.message });
+        if (global.Sentry) Sentry.captureException(e);
       }
     }
 
