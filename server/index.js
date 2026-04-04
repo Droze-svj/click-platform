@@ -66,7 +66,24 @@ async function initializeNexusEngine() {
     const { securityHeaders, customSecurityHeaders } = require('./middleware/securityHeaders');
     const { initializeSocket } = require('./services/socketService');
 
-    logger.info('⚠️ Sentry initialization bypassed to prevent hangs.');
+    // Sentry Initialization
+    const Sentry = require('@sentry/node');
+    if (process.env.SENTRY_DSN) {
+      Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV || 'development',
+        integrations: [
+          new Sentry.Integrations.Http({ tracing: true }),
+          new Sentry.Integrations.Express({ app }),
+        ],
+        tracesSampleRate: 1.0,
+      });
+      app.use(Sentry.Handlers.requestHandler());
+      app.use(Sentry.Handlers.tracingHandler());
+      logger.info('✅ Sentry initialization completed');
+    } else {
+      logger.warn('⚠️ Sentry DSN not found - skipping initialization');
+    }
 
     // Global error handlers
     process.on('uncaughtException', (error) => {
