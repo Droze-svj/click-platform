@@ -1,173 +1,103 @@
-// Automatic token refresh service for social media connections
+/**
+ * Unified Token Refresh Service
+ * Handles automated background refresh for all social platforms stored on the User model.
+ */
 
-const SocialConnection = require('../models/SocialConnection');
-const { refreshTwitterToken } = require('./oauthService');
-const { refreshWithRefreshToken: refreshLinkedInWithToken } = require('./linkedinOAuthService');
+const cron = require('node-cron');
+const User = require('../models/User');
 const logger = require('../utils/logger');
-const { captureException } = require('../utils/sentry');
+const youtubeOAuth = require('./youtubeOAuthService');
+const twitterOAuth = require('./twitterOAuthService');
+// Add other services as they are finalized (linkedin, facebook, etc.)
+
+const LOG_CONTEXT = { service: 'token-refresh' };
 
 /**
- * Refresh token for a social connection if needed
+ * Refresh tokens for a specific platform across all users
  */
-async function refreshTokenIfNeeded(connection) {
-  try {
-    // Check if token expires soon (within 1 hour)
-    const expiresAt = connection.metadata?.expiresAt;
-    if (!expiresAt) {
-      return connection; // No expiration info, assume valid
-    }
+async function refreshPlatformTokens(platform) {
+  const platformKey = platform.toLowerCase();
+  const service = platformKey === 'youtube' ? youtubeOAuth : (platformKey === 'twitter' ? twitterOAuth : null);
 
-    const expiresIn = new Date(expiresAt) - new Date();
-    const oneHour = 60 * 60 * 1000;
-
-    // If expires in less than 1 hour, refresh it
-    if (expiresIn < oneHour) {
-      logger.info('Refreshing token', { platform: connection.platform, userId: connection.userId });
-
-      let newTokenData;
-      switch (connection.platform.toLowerCase()) {
-      case 'twitter':
-        if (connection.refreshToken) {
-          newTokenData = await refreshTwitterToken(connection.refreshToken);
-          break;
-        }
-        // No refresh token, can't refresh
-        logger.warn('No refresh token available for Twitter', { connectionId: connection._id });
-        return connection;
-
-      case 'linkedin':
-        try {
-          newTokenData = await refreshLinkedInWithToken(connection.refreshToken);
-          newTokenData.expiresIn = newTokenData.expiresIn ?? 5184000; // LinkedIn default ~60 days in seconds
-        } catch (err) {
-          logger.warn('LinkedIn token refresh failed', { connectionId: connection._id, error: err.message });
-          return connection;
-        }
-        break;
-
-      case 'facebook':
-      case 'instagram':
-        // Facebook tokens are long-lived, may not need refresh
-        // But if they do expire, would need to re-authenticate
-        logger.info('Facebook token is long-lived, no refresh needed');
-        return connection;
-
-      default:
-        logger.warn('Unknown platform for token refresh', { platform: connection.platform });
-        return connection;
-      }
-
-      // Update connection with new tokens
-      connection.accessToken = newTokenData.accessToken;
-      if (newTokenData.refreshToken) {
-        connection.refreshToken = newTokenData.refreshToken;
-      }
-      if (newTokenData.expiresIn) {
-        connection.metadata = {
-          ...connection.metadata,
-          expiresAt: new Date(Date.now() + newTokenData.expiresIn * 1000),
-        };
-      }
-      connection.lastRefreshed = new Date();
-      await connection.save();
-
-      logger.info('Token refreshed successfully', { platform: connection.platform, userId: connection.userId });
-      return connection;
-    }
-
-    return connection; // Token still valid
-  } catch (error) {
-    logger.error('Token refresh error', {
-      error: error.message,
-      platform: connection.platform,
-      userId: connection.userId,
-    });
-    captureException(error, {
-      tags: { service: 'token_refresh', platform: connection.platform },
-      extra: { connectionId: connection._id },
-    });
-    return connection; // Return original connection on error
+  if (!service || !service.refreshAccessToken) {
+    logger.debug(`Skipping refresh for ${platform}: service not capable`, LOG_CONTEXT);
+    return;
   }
-}
 
-/**
- * Refresh all tokens that need refreshing
- */
-async function refreshAllTokens() {
   try {
-    const connections = await SocialConnection.find({
-      isActive: true,
-      refreshToken: { $exists: true, $ne: null },
-    });
+    // Find users who have this platform connected and a refresh token
+    const query = {
+      [`oauth.${platformKey}.connected`]: true,
+      [`oauth.${platformKey}.refreshToken`]: { $exists: true, $ne: null }
+    };
 
-    logger.info('Checking tokens for refresh', { count: connections.length });
+    const users = await User.find(query);
+    logger.info(`Checking ${users.length} ${platform} connections for refresh`, LOG_CONTEXT);
 
     let refreshed = 0;
     let failed = 0;
 
-    for (const connection of connections) {
+    for (const user of users) {
       try {
-        const beforeToken = connection.accessToken;
-        await refreshTokenIfNeeded(connection);
-        if (connection.accessToken !== beforeToken) {
+        const oauthData = user.oauth[platformKey];
+        const expiresAt = oauthData.expiresAt ? new Date(oauthData.expiresAt).getTime() : null;
+
+        // If expires in less than 30 minutes, or no expiry info (safeguard)
+        const shouldRefresh = !expiresAt || (expiresAt - Date.now() < 30 * 60 * 1000);
+
+        if (shouldRefresh) {
+          logger.debug(`Refreshing ${platform} token for user ${user._id}`, LOG_CONTEXT);
+          await service.refreshAccessToken(user._id);
           refreshed++;
         }
-      } catch (error) {
+      } catch (err) {
         failed++;
-        logger.error('Failed to refresh token for connection', {
-          connectionId: connection._id,
-          platform: connection.platform,
-          error: error.message,
-        });
+        logger.error(`Failed to refresh ${platform} token for user ${user._id}`, { error: err.message, ...LOG_CONTEXT });
       }
     }
 
-    logger.info('Token refresh complete', { refreshed, failed, total: connections.length });
-    return { refreshed, failed, total: connections.length };
+    if (refreshed > 0 || failed > 0) {
+      logger.info(`${platform} refresh cycle complete`, { refreshed, failed, total: users.length, ...LOG_CONTEXT });
+    }
   } catch (error) {
-    logger.error('Token refresh batch error', { error: error.message });
-    captureException(error, { tags: { service: 'token_refresh', operation: 'batch' } });
-    throw error;
+    logger.error(`Error in ${platform} refresh cycle`, { error: error.message, ...LOG_CONTEXT });
   }
 }
 
 /**
- * Get valid access token (refresh if needed)
+ * Main entry point for the background refresh job
  */
-async function getValidAccessToken(userId, platform) {
-  try {
-    const connection = await SocialConnection.findOne({
-      userId,
-      platform: platform.toLowerCase(),
-      isActive: true,
-    });
-
-    if (!connection) {
-      throw new Error(`No active connection found for ${platform}`);
-    }
-
-    // Refresh if needed
-    const refreshed = await refreshTokenIfNeeded(connection);
-
-    return refreshed.accessToken;
-  } catch (error) {
-    logger.error('Get valid access token error', {
-      error: error.message,
-      userId,
-      platform,
-    });
-    throw error;
+async function runRefreshCycle() {
+  logger.info('🎯 Starting global token refresh cycle', LOG_CONTEXT);
+  
+  const platforms = ['youtube', 'twitter']; // Expand as needed
+  
+  for (const platform of platforms) {
+    await refreshPlatformTokens(platform);
   }
 }
 
+/**
+ * Initialize the scheduled tasks
+ */
+function initScheduler() {
+  // Run every 15 minutes
+  cron.schedule('*/15 * * * *', () => {
+    runRefreshCycle().catch(err => {
+      logger.error('Token refresh job failed', { error: err.message, ...LOG_CONTEXT });
+    });
+  });
+
+  // Run once on startup after a short delay
+  setTimeout(() => {
+    runRefreshCycle().catch(() => {});
+  }, 30000); // 30 second delay after startup
+
+  logger.info('📅 Token refresh scheduler initialized (hourly)', LOG_CONTEXT);
+}
+
 module.exports = {
-  refreshTokenIfNeeded,
-  refreshAllTokens,
-  getValidAccessToken,
+  refreshPlatformTokens,
+  runRefreshCycle,
+  initScheduler
 };
-
-
-
-
-
-
