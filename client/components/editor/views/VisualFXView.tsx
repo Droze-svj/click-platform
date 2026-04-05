@@ -7,19 +7,15 @@ import { TimelineEffect, TimelineEffectType, EFFECT_TYPE_COLORS } from '../../..
 import { formatTime } from '../../../utils/editorUtils'
 
 /** Creative overlay & motion presets that boost visual quality */
-const CREATIVE_PRESETS: { type: TimelineEffectType; name: string; icon: string; desc: string; params: Record<string, number | string | boolean> }[] = [
+const CREATIVE_PRESETS: { type: TimelineEffectType; name: string; icon: string; desc: string; params: Record<string, number | string | boolean>; ai?: boolean }[] = [
   { type: 'overlay', name: 'Cinematic Vignette', icon: '🎬', desc: 'Film-style focus', params: { strength: 35, softness: 60 } },
   { type: 'overlay', name: 'Light Leak Gold', icon: '☀️', desc: 'Warm sun flare', params: { intensity: 45, position: 'top-right' } },
+  { type: 'overlay', name: 'Neural Glow', icon: '✨', desc: 'Soft bloom effect', params: { radius: 15, intensity: 1.2 }, ai: true },
   { type: 'overlay', name: 'Film Grain', icon: '🎞️', desc: 'Subtle texture', params: { amount: 18, size: 1.2 } },
-  { type: 'overlay', name: 'Dust & Scratches', icon: '🧹', desc: 'Vintage look', params: { density: 12, opacity: 25 } },
+  { type: 'overlay', name: 'Chromatic Aberration', icon: '🌈', desc: 'RGB color fringe', params: { offset: 4 } },
   { type: 'motion', name: 'Push In', icon: '📐', desc: 'Subtle zoom in', params: { zoom: 108, duration: 3 } },
-  { type: 'motion', name: 'Pull Back', icon: '📐', desc: 'Subtle zoom out', params: { zoom: 92, duration: 3 } },
-  { type: 'motion', name: 'Ken Burns In', icon: '📷', desc: 'Slow zoom + pan', params: { zoom: 115, panX: 5, panY: 5, duration: 4 } },
-  { type: 'motion', name: 'Dramatic Zoom', icon: '🎬', desc: 'Quick punch', params: { zoom: 130, duration: 2 } },
-  { type: 'transition', name: 'Cross Dissolve', icon: '✨', desc: 'Smooth cut', params: { style: 'dissolve', duration: 0.5 } },
-  { type: 'transition', name: 'Blur Transition', icon: '🔮', desc: 'Dreamy cut', params: { style: 'blur', amount: 10 } },
-  { type: 'motion', name: 'The Jitter', icon: '📳', desc: 'High-energy shake', params: { frequency: 12, amplitude: 5, duration: 1 } },
-  { type: 'motion', name: 'The Snap Zoom', icon: '🔍', desc: 'Instant hook focus', params: { zoom: 125, duration: 0.5 } },
+  { type: 'motion', name: 'The Jitter', icon: '📳', desc: 'High-energy shake', params: { frequency: 12, amplitude: 5, duration: 1 }, ai: true },
+  { type: 'motion', name: 'The Snap Zoom', icon: '🔍', desc: 'Instant hook focus', params: { zoom: 125, duration: 0.5 }, ai: true },
   { type: 'overlay', name: 'The Flash', icon: '⚡', desc: 'White impact frame', params: { opacity: 80, duration: 0.2 } },
 ]
 
@@ -146,7 +142,15 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
                 {preset.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-theme-primary truncate">{preset.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-theme-primary truncate">{preset.name}</p>
+                  {(preset as any).ai && (
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[7px] font-black text-amber-500 uppercase tracking-tighter animate-pulse">
+                      <Zap className="w-2 h-2" />
+                      AI Rec
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-theme-muted truncate">{preset.desc}</p>
               </div>
               <Plus className="w-4 h-4 text-theme-muted group-hover:text-amber-500 shrink-0" />

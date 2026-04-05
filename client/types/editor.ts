@@ -15,6 +15,7 @@ export interface VideoFilter {
   clarity: number
   dehaze: number
   vibrance: number
+  exposure: number
   lift: { r: number, g: number, b: number }
   gamma: { r: number, g: number, b: number }
   gain: { r: number, g: number, b: number }
