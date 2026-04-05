@@ -4,6 +4,12 @@ const nextConfig = {
   poweredByHeader: false,
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
+  productionBrowserSourceMaps: false,
+  swcMinify: true,
+  experimental: {
+    workerThreads: false,
+    cpus: 1
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'commondatastorage.googleapis.com' },
