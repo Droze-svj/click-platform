@@ -126,6 +126,14 @@ router.get('/', async (req, res) => {
           facebook: {
             enabled: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
           },
+          encryption: {
+            enabled: !!process.env.OAUTH_ENCRYPTION_KEY,
+            status: process.env.OAUTH_ENCRYPTION_KEY ? 'configured' : 'using default (INSECURE)',
+          },
+          tokenHealth: {
+            status: 'monitored',
+            frequency: '15m'
+          }
         },
         database: dbStatus,
         redis: redisStatus,
@@ -143,6 +151,38 @@ router.get('/', async (req, res) => {
       service: 'running',
       error: error.message
     });
+  }
+});
+
+/**
+ * @swagger
+ * /api/health/trigger-sentry-error:
+ *   get:
+ *     summary: Trigger a real Sentry exception for DSN verification
+ *     tags: [Health]
+ */
+router.get('/trigger-sentry-error', (req, res) => {
+  const logger = require('../utils/logger');
+  logger.info('🚨 Manually triggering Sentry error for DSN verification...');
+  
+  // Create a real exception to be caught by Sentry middleware or explicit capture
+  try {
+    throw new Error('Sovereign Verification Exception: Testing SENTRY_DSN Configuration');
+  } catch (error) {
+    if (process.env.SENTRY_DSN) {
+      const Sentry = require('@sentry/node');
+      Sentry.captureException(error);
+      res.status(500).json({
+        success: true,
+        message: 'Exception triggered and sent to Sentry.',
+        error: error.message
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'SENTRY_DSN not configured, nothing to send.'
+      });
+    }
   }
 });
 

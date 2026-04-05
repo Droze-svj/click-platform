@@ -24,8 +24,11 @@ const HOST = '0.0.0.0';
 // Must be defined BEFORE app.listen() to ensure zero-millisecond availability
 
 // Root health check for Render.com load balancer
-app.get('/', (req, res) => {
-  res.status(200).json({ status: 'active', message: 'Nexus Cluster Root Responsive' });
+app.get('/', (req, res, next) => {
+  if (app.get('nextReady')) {
+    return next();
+  }
+  res.status(200).json({ status: 'active', message: 'Nexus Cluster Root Responsive', booting: true });
 });
 
 app.get('/api/status/health-pro', (req, res) => {
@@ -110,6 +113,15 @@ async function initializeNexusEngine() {
     const dbStatus = await initDatabases();
     logger.info('🏗️ Database initialization completed', { success: dbStatus.success });
 
+    // Initialize Token Refresh Scheduler
+    try {
+      const { initScheduler } = require('./services/tokenRefreshService');
+      initScheduler();
+      logger.info('✅ Token refresh scheduler initialized');
+    } catch (err) {
+      logger.warn('Token refresh scheduler failed (non-fatal)', { error: err.message });
+    }
+
     // Job Queue Workers (Optional)
     const redisUrl = process.env.REDIS_URL?.trim();
     if (redisUrl && redisUrl.startsWith('redis')) {
@@ -174,16 +186,29 @@ async function initializeNexusEngine() {
     ];
     routes.forEach(([path, file]) => typeof file === 'string' ? safeUse(path, file) : app.get(path, file));
 
-    // --- Next.js Integration ---
+// --- Next.js Integration ---
     if (process.env.NODE_ENV === 'production') {
       try {
-        const next = require('next');
+        logger.info('📦 Initializing Next.js engine...');
+        
+        // Robust module resolution for Next.js in workspace setup
+        let next;
+        try {
+          next = require('next');
+        } catch (err) {
+          logger.warn('⚠️ Standard require("next") failed, attempting workspace resolution...');
+          const nextPath = require.resolve('next', { paths: [path.join(__dirname, '../client')] });
+          next = require(nextPath);
+        }
+
         const nextApp = next({ dev: false, dir: path.join(__dirname, '../client') });
         const handle = nextApp.getRequestHandler();
         
         nextApp.prepare()
           .then(() => {
-            logger.info('📦 Next.js engine prepared for production');
+            app.set('nextReady', true);
+            logger.info('🚀 Next.js engine prepared for production');
+            // Catch-all must be the LAST route
             app.all('*', (req, res) => handle(req, res));
           })
           .catch((err) => {
