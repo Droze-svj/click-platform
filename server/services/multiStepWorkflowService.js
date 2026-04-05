@@ -8,6 +8,7 @@ const PostVersion = require('../models/PostVersion');
 const EmailApprovalToken = require('../models/EmailApprovalToken');
 // Email service will be required when needed
 const logger = require('../utils/logger');
+const notificationService = require('./notificationService');
 
 /**
  * Create multi-step approval workflow
@@ -119,7 +120,7 @@ async function createMultiStepApproval(contentId, workflowConfig) {
 /**
  * Advance to next stage
  */
-async function advanceToNextStage(approvalId, userId, action, comment = '') {
+async function advanceToNextStage(approvalId, userId, action, comment = '', acceptV2 = false) {
   try {
     const approval = await ContentApproval.findById(approvalId);
     if (!approval) {
@@ -129,6 +130,17 @@ async function advanceToNextStage(approvalId, userId, action, comment = '') {
     const currentStage = approval.stages.find(s => s.stageOrder === approval.currentStage);
     if (!currentStage) {
       throw new Error('Current stage not found');
+    }
+
+    const Content = require('../models/Content');
+    const content = await Content.findById(approval.contentId);
+
+    // If accepting AI revision, merge metadata.proposedV2.timeline into content.timeline
+    if (acceptV2 && content?.metadata?.proposedV2?.timeline) {
+      content.timeline = content.metadata.proposedV2.timeline;
+      content.markModified('timeline');
+      await content.save();
+      logger.info('AI Revision (V2) accepted and merged into content timeline', { contentId: content._id, approvalId });
     }
 
     // Update current stage
@@ -178,6 +190,21 @@ async function advanceToNextStage(approvalId, userId, action, comment = '') {
             }
           }
         }
+      }
+
+      // Trigger Notification for Stage Advance
+      const nextStage = approval.stages.find(s => s.stageOrder === approval.currentStage);
+      const notifyUsers = approval.assignedTo.filter(a => a.stageOrder === approval.currentStage);
+      
+      for (const assigned of notifyUsers) {
+        await notificationService.createNotification(
+          assigned.userId,
+          'Approval Stage Advanced',
+          `Content "${content.title}" has advanced to ${nextStage?.stageName || 'the next stage'}. Your review is required.`,
+          'info',
+          `/approvals/${approval._id}`,
+          { category: 'approval', priority: 'medium', context: { entityId: approval._id, entityType: 'approval' } }
+        );
       }
     } else if (action === 'reject') {
       currentStage.status = 'rejected';
@@ -270,6 +297,10 @@ async function getApprovalStatus(approvalId) {
       throw new Error('Approval not found');
     }
 
+    // Check for AI-proposed V2 in Content metadata
+    const content = await Content.findById(approval.contentId).select('metadata').lean();
+    const proposedV2 = content?.metadata?.proposedV2 || null;
+
     // Get current status
     const currentStage = approval.stages.find(s => s.stageOrder === approval.currentStage);
     const nextStage = approval.stages.find(s => s.stageOrder === approval.currentStage + 1);
@@ -287,6 +318,7 @@ async function getApprovalStatus(approvalId) {
         order: nextStage.stageOrder
       } : null,
       status: approval.status,
+      proposedV2, // Surface the AI-suggested revision for the frontend
       progress: {
         current: approval.currentStage + 1,
         total: approval.stages.length,
