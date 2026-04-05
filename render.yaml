@@ -6,8 +6,8 @@ services:
     name: sovereign-platform
     env: node
     region: oregon # Change to your preferred region: oregon, frankfurt, singapore, mumbai, sydney
-    buildCommand: 'export NODE_OPTIONS="--max-old-space-size=1024" && pnpm install --no-audit --no-fund && pnpm prisma:generate && pnpm build'
-    startCommand: 'NODE_OPTIONS="--max-old-space-size=1024" NODE_ENV=production node server/index.js'
+    buildCommand: 'export NODE_OPTIONS="--max-old-space-size=450" && NEXT_TELEMETRY_DISABLED=1 pnpm install --no-audit --no-fund && pnpm prisma:generate && pnpm build'
+    startCommand: 'NODE_OPTIONS="--max-old-space-size=450" NODE_ENV=production node server/index.js'
     
     
     healthCheckPath: /
@@ -16,6 +16,8 @@ services:
         value: https://a400da46f531219b7ce6f78a9d5cb6ff@o4510623214731264.ingest.de.sentry.io/4510629716033616
       - key: NODE_ENV
         value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
       - key: FRONTEND_URL
         value: https://sovereign-platform.onrender.com
       # Add your other environment variables in Render.com dashboard
