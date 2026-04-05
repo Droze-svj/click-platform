@@ -263,7 +263,11 @@ const contentSchema = new mongoose.Schema({
     editorState: mongoose.Schema.Types.Mixed,
     createdBy: String,
     createdAt: { type: Date, default: Date.now }
-  }]
+  }],
+  metadata: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
 });
 
 // Indexes for better query performance
