@@ -1,9 +1,8 @@
 {
   "name": "click",
   "version": "1.0.0",
-    "workspaces": ["client"],
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x"
   },
   "description": "Click - Transform long-form content into social-ready formats with AI-powered tools",
   "main": "server/index.js",
