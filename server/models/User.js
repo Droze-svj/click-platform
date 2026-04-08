@@ -190,6 +190,17 @@ const userSchema = new mongoose.Schema({
   anonymizedAt: Date,
   dataExportRequestedAt: Date,
   dataDeletionRequestedAt: Date,
+  monetizationSettings: {
+    preferredProvider: {
+      type: String,
+      enum: ['whop', 'shopify'],
+      default: 'whop'
+    },
+    autoMonetize: {
+      type: Boolean,
+      default: false
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

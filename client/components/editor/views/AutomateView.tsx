@@ -203,7 +203,10 @@ const AutomateView: React.FC<AutomateViewProps> = ({
       setPipelineStep('monetization')
       setStepProgress(0)
       showToast('Step 8/8 — Whop Monetization Bridge…', 'info')
-      const monetRes = await apiPost('/video/advanced/monetization-plan', { transcript: transcriptText }) as any
+      const monetRes = await apiPost('/video/advanced/monetization-plan', { 
+        transcript: transcriptText,
+        videoId: videoId 
+      }) as any
       const monetizationPlan = monetRes?.data ?? monetRes
       setStepProgress(100)
 
@@ -408,8 +411,8 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                     <span className="text-[8px] font-black text-emerald-400/60 uppercase tracking-widest">Whop Sync Active</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pipelineResult.monetizationPlan.monetizationSteps.map((step: any) => (
-                      <div key={step.id} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                    {(pipelineResult.monetizationPlan.triggers || []).map((step: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[8px] font-black text-indigo-400 uppercase px-2 py-0.5 bg-indigo-500/10 rounded-md">@{step.startTime}s</span>
                           <div className="flex items-center gap-1">
@@ -417,7 +420,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                              <span className="text-[8px] font-black text-emerald-400 uppercase">{(step.intentScore * 100).toFixed(0)}% Intent</span>
                           </div>
                         </div>
-                        <p className="text-[10px] font-black text-white uppercase truncate">{step.product.name}</p>
+                        <p className="text-[10px] font-black text-white uppercase truncate">{step.productName}</p>
                               <p className="text-[7px] text-slate-400 line-clamp-2 italic">&quot;{step.reason}&quot;</p>
                         <button className="w-full mt-2 py-2 bg-emerald-600 text-white text-[8px] font-black uppercase rounded-lg">Apply Checkout QR</button>
                       </div>

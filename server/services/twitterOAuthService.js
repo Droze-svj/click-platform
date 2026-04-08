@@ -216,7 +216,7 @@ module.exports = {
   exchangeCodeForToken,
   getUserProfile,
   postTweet,
-  refreshToken,
+  refreshAccessToken,
   getAccessTokenForAccount,
   getConnectedAccounts,
   disconnectTwitter,

@@ -1006,17 +1006,25 @@ router.post('/roi-prediction', auth, asyncHandler(async (req, res) => {
 
 /**
  * @route   POST /api/video/advanced/monetization-plan
- * @desc    Generate a monetization plan with Whop product CTAs
+ * @desc    Generate and persist a monetization plan with Whop/Shopify products
  * @access  Private
  */
-const { generateMonetizationPlan } = require('../../services/whopMonetizationService');
+const monetizationService = require('../../services/monetizationService');
 router.post('/monetization-plan', auth, asyncHandler(async (req, res) => {
-  const { transcript, products } = req.body;
+  const { transcript, videoId, provider = 'whop' } = req.body;
   if (!transcript) {
     return res.status(400).json({ success: false, message: 'Transcript is required for monetization planning' });
   }
-  const result = await generateMonetizationPlan(transcript, products);
-  sendSuccess(res, 'Monetization plan generated', 200, result);
+
+  // Use the refined unified bridge with persistence
+  const result = await monetizationService.generateAndPersistPlan(
+    req.user._id,
+    videoId || null, // videoId maps to contentId
+    transcript,
+    { provider }
+  );
+
+  sendSuccess(res, 'Monetization plan generated and persisted', 200, result);
 }));
 
 /**
