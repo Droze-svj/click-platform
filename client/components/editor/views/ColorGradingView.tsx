@@ -12,10 +12,29 @@ const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; desc:
   { id: 'retro', label: 'Retro', f: { sepia: 35, saturation: 80, contrast: 110, vignette: 25 }, desc: 'Vintage film', swatch: 'from-amber-800 to-yellow-700', group: 'Cinematic' },
   { id: 'cinematic', label: 'Cinematic', f: { contrast: 108, saturation: 95, vignette: 35, sepia: 8 }, desc: 'Film look', swatch: 'from-amber-900/60 to-slate-800', group: 'Cinematic' },
   { id: 'teal-orange', label: 'Teal & Orange', f: { saturation: 120, temperature: 105, tint: -5, vibrance: 115 }, desc: 'Hollywood', swatch: 'from-teal-500 to-orange-500', group: 'Cinematic' },
+  { id: 'cyberpunk', label: 'Cyberpunk', f: { saturation: 140, temperature: 80, tint: 25, contrast: 115, vibrance: 130 }, desc: 'Neon night', swatch: 'from-fuchsia-600 to-cyan-500', group: 'Cinematic' },
+  { id: 'earthly', label: 'Earthly', f: { saturation: 90, temperature: 110, tint: -10, contrast: 105, shadows: 15 }, desc: 'Natural tones', swatch: 'from-emerald-800 to-amber-900', group: 'Atmosphere' },
   { id: 'vivid', label: 'Vivid', f: { saturation: 135, contrast: 108, vibrance: 125 }, desc: 'High pop', swatch: 'from-pink-400 via-purple-500 to-cyan-400', group: 'Vibrance' },
-  { id: 'sunset', label: 'Sunset', f: { saturation: 120, temperature: 128, vibrance: 118, shadows: 18 }, desc: 'Golden hour', swatch: 'from-orange-400 to-rose-500', group: 'Atmosphere' },
+  { id: 'high-key', label: 'High Key', f: { brightness: 125, contrast: 90, shadows: -10, saturation: 105 }, desc: 'Bright & Airy', swatch: 'from-white to-slate-200', group: 'Stylistic' },
   { id: 'noir', label: 'Noir', f: { saturation: 0, contrast: 135, vignette: 55, brightness: 85 }, desc: 'B&W dramatic', swatch: 'from-gray-400 to-black', group: 'Stylistic' },
 ]
+
+const INITIAL_FILTERS: VideoFilter = {
+  brightness: 100,
+  contrast: 100,
+  saturation: 100,
+  temperature: 100,
+  vibrance: 100,
+  sepia: 0,
+  vignette: 0,
+  tint: 0,
+  shadows: 0,
+  highlights: 100,
+  exposure: 100,
+  lift: { r: 127, g: 127, b: 127 },
+  gamma: { r: 127, g: 127, b: 127 },
+  gain: { r: 127, g: 127, b: 127 }
+}
 
 interface ColorGradingViewProps {
   videoFilters: VideoFilter
@@ -127,6 +146,23 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ label, desc, colorClass, value,
 const ColorGradingView: React.FC<ColorGradingViewProps> = ({
   videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast
 }) => {
+  const [isComparing, setIsComparing] = React.useState(false)
+  const [preCompareFilters, setPreCompareFilters] = React.useState<VideoFilter | null>(null)
+
+  const toggleComparison = () => {
+    if (!isComparing) {
+      setPreCompareFilters({ ...videoFilters })
+      setVideoFilters(INITIAL_FILTERS)
+      setIsComparing(true)
+      showToast('Viewing Original (No Grade)', 'info')
+    } else {
+      if (preCompareFilters) setVideoFilters(preCompareFilters)
+      setIsComparing(false)
+      setPreCompareFilters(null)
+      showToast('Grade Re-applied', 'success')
+    }
+  }
+
   const applyPreset = (preset: typeof COLOR_PRESETS[0]) => {
     setVideoFilters((prev: any) => ({ ...prev, ...preset.f }))
     showToast(`${preset.label} applied`, 'success')
@@ -165,7 +201,15 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Premium Graded Presets</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <button
+               onClick={toggleComparison}
+               title={isComparing ? "Apply Grade" : "Compare with Original"}
+               className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest ${isComparing ? 'bg-amber-500 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}
+            >
+               <RefreshCw className={`w-3 h-3 ${isComparing ? 'animate-spin' : ''}`} />
+               {isComparing ? 'Original Active' : 'Before / After'}
+            </button>
             <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 italic">Validated</span>
           </div>
         </div>

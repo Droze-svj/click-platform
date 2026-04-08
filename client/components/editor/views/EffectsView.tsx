@@ -32,6 +32,13 @@ const EFFECT_CATEGORIES: { type: TimelineEffectType; label: string; icon: React.
   { type: 'speed', label: 'Speed', icon: Clock },
   { type: 'audio', label: 'Audio FX', icon: Music },
   { type: 'retention', label: 'Viral Hooks', icon: Zap },
+  { type: 'style', label: 'Pro Styles', icon: Sparkles },
+]
+
+const PROFESSIONAL_STYLES = [
+  { id: 'style-cinematic', name: 'Cinematic Master', desc: 'Arri-style log, grain, and 2.35:1 crop', effects: ['cinematic', 'grain', 'vignette'] },
+  { id: 'style-vlog', name: 'Vlog Punch', desc: 'High saturation, snap zooms, and bright tones', effects: ['vivid', 'snap-zoom', 'warm'] },
+  { id: 'style-tiktok', name: 'TikTok Viral', desc: 'Vertical focus, high-energy jitter, and glow', effects: ['vibrance', 'jitter', 'neural-glow'] },
 ]
 
 const QUICK_DURATIONS = [

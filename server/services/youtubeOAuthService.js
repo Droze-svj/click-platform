@@ -121,7 +121,7 @@ class YouTubeOAuthService {
     };
 
     await OAuthService.saveSocialCredentials(userId, 'youtube', credentials);
-    logger.info('YouTube account connected via Mongoose', { userId, profileId: profile.id });
+    logger.info('YouTube account connected', { userId, profileId: profile.id });
     
     return { success: true, platform: 'youtube', username: profile.username };
   }
@@ -137,7 +137,7 @@ class YouTubeOAuthService {
       display_name: creds.platformUsername,
       avatar: creds.avatar,
       is_connected: true,
-      created_at: creds.connectedAt
+      connected_at: creds.connectedAt
     }];
   }
 

@@ -43,28 +43,39 @@ async function saveSocialCredentials(userId, platform, credentials) {
     const user = await User.findById(userId);
     if (!user) throw new Error('User not found');
 
-    const encryptedCreds = {
-      accessToken: encrypt(credentials.accessToken),
+    const platformKey = platform.toLowerCase();
+    
+    // Ensure the oauth structure exists on the user model
+    if (!user.oauth) user.oauth = {};
+    if (!user.oauth[platformKey]) user.oauth[platformKey] = {};
+
+    // Encrypt sensitive tokens
+    const encryptedData = {
+      accessToken: credentials.accessToken ? encrypt(credentials.accessToken) : null,
       refreshToken: credentials.refreshToken ? encrypt(credentials.refreshToken) : null,
-      expiresAt: credentials.expiresAt,
-      profile: credentials.profile,
-      platform
+      connected: true,
+      connectedAt: new Date(),
+      lastRefreshed: new Date()
     };
 
-    // Placeholder: In a real system, we'd have a 'socialAccounts' array on the User model
-    // user.socialAccounts = user.socialAccounts || [];
-    // // Update or add
-    // const index = user.socialAccounts.findIndex(a => a.platform === platform);
-    // if (index > -1) user.socialAccounts[index] = encryptedCreds;
-    // else user.socialAccounts.push(encryptedCreds);
+    // Merge in extra metadata if provided (expiresAt, platformUserId, etc.)
+    if (credentials.extra) {
+      Object.assign(encryptedData, credentials.extra);
+    }
+
+    // Update the specific platform object
+    user.oauth[platformKey] = {
+      ...user.oauth[platformKey],
+      ...encryptedData
+    };
+
+    user.markModified('oauth');
+    await user.save();
     
-    logger.debug('Credentials payload prepared', { platform, encryptedCreds });
-    // await user.save();
-    
-    logger.info(`Saved ${platform} credentials for user ${userId}`);
+    logger.info(`Successfully saved ${platform} credentials for user ${userId}`);
     return true;
   } catch (error) {
-    logger.error('Failed to save social credentials', { error: error.message });
+    logger.error('Failed to save social credentials', { error: error.message, platform });
     throw error;
   }
 }
@@ -75,28 +86,28 @@ async function saveSocialCredentials(userId, platform, credentials) {
 async function getSocialCredentials(userId, platform) {
   try {
     const user = await User.findById(userId);
-    if (!user) return null;
+    if (!user || !user.oauth) return null;
 
-    logger.debug('Fetching credentials from platform', { platform });
-    // Placeholder lookup
-    // const creds = user.socialAccounts?.find(a => a.platform === platform);
-    const creds = null; // Mocking lack of account for now
+    const platformKey = platform.toLowerCase();
+    const creds = user.oauth[platformKey];
     
-    if (!creds) return null;
+    if (!creds || !creds.connected) return null;
 
+    // Return decrypted tokens along with all metadata
     return {
-      accessToken: decrypt(creds.accessToken),
-      refreshToken: creds.refreshToken ? decrypt(creds.refreshToken) : null,
-      expiresAt: creds.expiresAt,
-      profile: creds.profile
+      ...creds,
+      accessToken: creds.accessToken ? decrypt(creds.accessToken) : null,
+      refreshToken: creds.refreshToken ? decrypt(creds.refreshToken) : null
     };
   } catch (error) {
-    logger.error('Failed to get social credentials', { error: error.message });
+    logger.error('Failed to get social credentials', { error: error.message, platform });
     throw error;
   }
 }
 
 module.exports = {
+  encrypt,
+  decrypt,
   saveSocialCredentials,
   getSocialCredentials
 };

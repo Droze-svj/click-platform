@@ -17,6 +17,7 @@ const {
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
+const multiStepWorkflowService = require('../services/multiStepWorkflowService');
 const router = express.Router();
 
 /**
@@ -110,8 +111,22 @@ router.post('/:approvalId/approve', auth, asyncHandler(async (req, res) => {
   const { approvalId } = req.params;
   const { comment } = req.body;
 
-  const approval = await approveContent(approvalId, req.user._id, comment || '');
-  sendSuccess(res, 'Content approved', 200, approval);
+  // Use the advanced multi-step service for stage advancement
+  const approval = await multiStepWorkflowService.advanceToNextStage(approvalId, req.user._id, 'approve', comment || '');
+  sendSuccess(res, 'Content approved and advanced to next stage', 200, approval);
+}));
+
+/**
+ * POST /api/approvals/:approvalId/accept-v2
+ * Accept AI-proposed revision and approve current stage
+ */
+router.post('/:approvalId/accept-v2', auth, asyncHandler(async (req, res) => {
+  const { approvalId } = req.params;
+  const { comment } = req.body;
+
+  // Advance stage and MERGE V2 revisions
+  const approval = await multiStepWorkflowService.advanceToNextStage(approvalId, req.user._id, 'approve', comment || '', true);
+  sendSuccess(res, 'AI Revision accepted and stage approved', 200, approval);
 }));
 
 /**
