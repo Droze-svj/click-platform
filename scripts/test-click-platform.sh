@@ -100,19 +100,29 @@ echo ""
 
 TEST_EMAIL="test-$(date +%s)@example.com"
 TEST_PASSWORD="Test123!@#"
-TEST_NAME="Test User"
+TEST_FIRST_NAME="Test"
+TEST_LAST_NAME="User"
 
 echo -e "${YELLOW}Registering test user...${NC}"
 REGISTER_RESPONSE=$(curl -s -X POST "$SERVICE_URL/api/auth/register" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$TEST_EMAIL\",\"password\":\"$TEST_PASSWORD\",\"name\":\"$TEST_NAME\"}")
+  -d "{\"email\":\"$TEST_EMAIL\",\"password\":\"$TEST_PASSWORD\",\"firstName\":\"$TEST_FIRST_NAME\",\"lastName\":\"$TEST_LAST_NAME\"}")
 
-if echo "$REGISTER_RESPONSE" | grep -q "success\|token"; then
+if echo "$REGISTER_RESPONSE" | grep -q "\"success\":true"; then
     echo -e "${GREEN}✅ Registration successful${NC}"
     TESTS_PASSED=$((TESTS_PASSED + 1))
 else
-    echo -e "${YELLOW}⚠️  User may already exist, trying login...${NC}"
-    WARNINGS=$((WARNINGS + 1))
+    echo -e "${RED}❌ Registration failed${NC}"
+    echo "   Response: $REGISTER_RESPONSE"
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    # Try to continue if it's just "User already exists"
+    if echo "$REGISTER_RESPONSE" | grep -q "User already exists"; then
+        echo -e "${YELLOW}⚠️  User already exists, continuing...${NC}"
+        WARNINGS=$((WARNINGS + 1))
+        TESTS_FAILED=$((TESTS_FAILED - 1))
+    else
+        echo -e "${YELLOW}⚠️  Attempting login anyway...${NC}"
+    fi
 fi
 echo ""
 
