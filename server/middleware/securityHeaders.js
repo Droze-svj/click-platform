@@ -1,6 +1,6 @@
-
+console.log('🛡️ Entering securityHeaders.js');
 const helmet = require('helmet');
-
+console.log('🛡️ Helmet loaded in securityHeaders.js');
 
 /**
  * Configure security headers
@@ -84,8 +84,3 @@ module.exports = {
   securityHeaders,
   customSecurityHeaders,
 };
-
-
-
-
-

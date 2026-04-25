@@ -1,4 +1,4 @@
-
+console.log('🏗️ enhancedErrorHandler: start requires');
 const {
   handleError,
   AppError,
@@ -11,15 +11,15 @@ const {
   ServiceUnavailableError,
   buildErrorContext,
 } = require('../utils/errorHandler');
-
+console.log('🏗️ enhancedErrorHandler: errorHandler loaded');
 const logger = require('../utils/logger');
-
+console.log('🏗️ enhancedErrorHandler: logger loaded');
 const { sendError } = require('../utils/response');
-
+console.log('🏗️ enhancedErrorHandler: response loaded');
 const { ErrorDeduplicator } = require('../utils/errorRecovery');
-
+console.log('🏗️ enhancedErrorHandler: errorRecovery loaded');
 const errorLogger = require('./errorLogger');
-
+console.log('🏗️ enhancedErrorHandler: errorLogger loaded');
 
 // Global error deduplicator
 const errorDeduplicator = new ErrorDeduplicator();
@@ -186,4 +186,3 @@ module.exports = {
   notFoundHandler,
   initErrorHandlers,
 };
-

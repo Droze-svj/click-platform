@@ -1,10 +1,10 @@
-
+console.log('🏗️ errorHandler: start requires');
 const logger = require('../utils/logger');
-
+console.log('🏗️ errorHandler: logger loaded');
 const { captureException, addBreadcrumb } = require('../utils/sentry');
+console.log('🏗️ errorHandler: sentry loaded');
 
-
-const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused-vars
+const errorHandler = (err, req, res, next) => {
   // Add breadcrumb for debugging (wrap in try-catch to prevent Sentry errors from breaking error handler)
   try {
     addBreadcrumb('Error occurred', 'error', 'error', {
@@ -49,14 +49,13 @@ const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused
       query: req.query
     });
   } catch (loggerErr) {
-    /* eslint-disable no-console */
-    console.error('Fallback error:', { // eslint-disable-line no-console
+    // Fallback to console if logger fails
+    console.error('Request error (logger failed):', {
       error: err.message,
       url: req.originalUrl,
       method: req.method,
       loggerError: loggerErr.message
     });
-    /* eslint-enable no-console */
   }
 
   // Mongoose validation error
@@ -249,9 +248,7 @@ const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused
           code: 'ERROR_HANDLER_FAILED'
         });
       } catch (e) {
-        // If we can't even send a response, log and give up.
-        // Using console here because the logger itself may be the failure source.
-        // eslint-disable-next-line no-console
+        // If we can't even send a response, log and give up
         console.error('CRITICAL: Error handler completely failed', {
           originalError: err.message,
           handlerError: finalError.message,
@@ -263,7 +260,7 @@ const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused
 };
 
 // 404 handler
-const notFound = (req, res, next) => { // eslint-disable-line no-unused-vars
+const notFound = (req, res, next) => {
   res.status(404).json({
     success: false,
     error: `Route ${req.originalUrl} not found`
@@ -271,4 +268,3 @@ const notFound = (req, res, next) => { // eslint-disable-line no-unused-vars
 };
 
 module.exports = { errorHandler, notFound };
-

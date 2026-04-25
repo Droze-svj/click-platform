@@ -96,13 +96,13 @@ const options = {
       }
     ]
   },
-  apis: [
+  apis: process.env.NODE_ENV === 'production' ? [
     './server/routes/*.js',
     './server/index.js'
-  ]
+  ] : [] // Disable scanning in development to prevent iCloud hangs
 };
 
-// const swaggerSpec = swaggerJsdoc(options);
-// module.exports = swaggerSpec;
-module.exports = options;
+const swaggerSpec = swaggerJsdoc(options);
+
+module.exports = swaggerSpec;
 

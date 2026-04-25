@@ -25,26 +25,33 @@ function defaultRedirectUri() {
     `${process.env.FRONTEND_URL || process.env.API_URL || 'http://localhost:5001'}/api/oauth/facebook/callback`;
 }
 
-async function getAuthorizationUrl(userId, callbackUrl) {
+
+async function getAuthorizationUrl(userId, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Facebook OAuth not configured');
-  if (!userId || !callbackUrl) throw new Error('userId and callbackUrl are required');
 
-  const state = crypto.randomBytes(32).toString('hex');
-  const scope = getScope();
-  const clientId = process.env.FACEBOOK_APP_ID;
-  const authUrl = `${GRAPH_API_BASE.replace('/v18.0', '')}/v18.0/dialog/oauth?` +
-    `client_id=${clientId}&` +
-    `redirect_uri=${encodeURIComponent(callbackUrl.trim())}&` +
-    `state=${encodeURIComponent(state)}&` +
-    `scope=${encodeURIComponent(scope)}&` +
-    `response_type=code`;
+  const user = await User.findById(userId);
+  if (!user) throw new Error('User not found');
 
-  await User.findByIdAndUpdate(userId, {
-    $set: { 'oauth.facebook.state': state },
+  const oauthState = state || crypto.randomBytes(32).toString('hex');
+
+  // Persist state to User model
+  if (!user.oauth) user.oauth = {};
+  if (!user.oauth.facebook) user.oauth.facebook = {};
+  user.oauth.facebook.state = oauthState;
+  user.oauth.facebook.stateCreatedAt = new Date();
+  user.markModified('oauth');
+  await user.save();
+
+  const params = new URLSearchParams({
+    client_id: process.env.FACEBOOK_APP_ID,
+    redirect_uri: callbackUrl || defaultRedirectUri(),
+    state: oauthState,
+    scope: getScope(),
+    response_type: 'code'
   });
 
   logger.info('Facebook OAuth authorization URL generated', { ...LOG_CONTEXT, userId });
-  return { url: authUrl, state };
+  return `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
 }
 
 async function exchangeCodeForToken(userId, code, state) {
@@ -193,6 +200,41 @@ async function postToFacebook(userId, text, options = {}, retries = 1) {
   }
 }
 
+/**
+ * Refresh a long-lived access token
+ */
+async function refreshAccessToken(userId) {
+  const user = await User.findById(userId).select('oauth.facebook');
+  if (!user?.oauth?.facebook?.accessToken) throw new Error('Facebook not connected');
+
+  try {
+    const response = await axios.get(`${GRAPH_API_BASE}/oauth/access_token`, {
+      params: {
+        grant_type: 'fb_exchange_token',
+        client_id: process.env.FACEBOOK_APP_ID,
+        client_secret: process.env.FACEBOOK_APP_SECRET,
+        fb_exchange_token: user.oauth.facebook.accessToken
+      }
+    });
+
+    const { access_token, expires_in } = response.data;
+    
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'oauth.facebook.accessToken': access_token,
+        'oauth.facebook.expiresAt': expires_in ? new Date(Date.now() + expires_in * 1000) : null,
+        'oauth.facebook.lastRefreshAt': new Date()
+      }
+    });
+
+    logger.info('Facebook token refreshed successfully', { ...LOG_CONTEXT, userId });
+    return access_token;
+  } catch (error) {
+    logger.error('Facebook token refresh failed', { ...LOG_CONTEXT, userId, error: error.message });
+    throw error;
+  }
+}
+
 async function disconnectFacebook(userId) {
   if (!userId) throw new Error('userId is required');
   await User.findByIdAndUpdate(userId, { $unset: { 'oauth.facebook': '' } });
@@ -208,6 +250,7 @@ module.exports = {
   getFacebookPages,
   getFacebookClient,
   postToFacebook,
+  refreshAccessToken,
   disconnectFacebook,
   defaultRedirectUri,
 };
