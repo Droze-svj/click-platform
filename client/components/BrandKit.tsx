@@ -40,10 +40,10 @@ const DEFAULT_BRAND: BrandKitData = {
 interface BrandKitProps {
   onApply?: (kit: BrandKitData) => void
   onSave?: (kit: BrandKitData) => void
-  showToast: (m: string, t: 'success' | 'info' | 'error') => void
+  showToast?: (m: string, t: 'success' | 'info' | 'error') => void
 }
 
-const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast }) => {
+const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => {} }) => {
   const [kit, setKit] = useState<BrandKitData>(DEFAULT_BRAND)
   const [saved, setSaved] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)

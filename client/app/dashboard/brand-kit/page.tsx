@@ -48,10 +48,10 @@ export default function BrandKitPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <BrandKit 
+          <BrandKit
             onApply={(kit) => {
-              console.log('Brand applied globally:', kit.name);
-            }} 
+              console.log('Brand applied globally:', kit.primaryColor);
+            }}
           />
         </motion.div>
       </div>

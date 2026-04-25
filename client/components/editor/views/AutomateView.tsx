@@ -411,7 +411,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                     <span className="text-[8px] font-black text-emerald-400/60 uppercase tracking-widest">Whop Sync Active</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {(pipelineResult.monetizationPlan.triggers || []).map((step: any, idx: number) => (
+                    {(((pipelineResult.monetizationPlan as any).triggers) || []).map((step: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[8px] font-black text-indigo-400 uppercase px-2 py-0.5 bg-indigo-500/10 rounded-md">@{step.startTime}s</span>

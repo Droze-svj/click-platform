@@ -165,3 +165,111 @@ describe('segmentTimelineRenderer.planSegments', () => {
     expect(r.usable[0].seg.reversed).toBe(true);
   });
 });
+
+describe('segmentTimelineRenderer edge-case interactions', () => {
+  it('multi-source + freeze: freeze keeps its source input registered', () => {
+    const r = planSegments(
+      [
+        { id: 'a', track: 0, type: 'video', startTime: 0, endTime: 2, duration: 2, sourceUrl: '/a.mp4' },
+        { id: 'b', track: 0, type: 'video', startTime: 2, endTime: 3, duration: 1, sourceUrl: '/b.mp4', freezeFrame: true, sourceStartTime: 0.5, sourceEndTime: 0.55 },
+        { id: 'c', track: 0, type: 'video', startTime: 3, endTime: 5, duration: 2, sourceUrl: '/a.mp4' },
+      ],
+      '/a.mp4'
+    );
+    expect(r.inputUrls).toEqual(['/a.mp4', '/b.mp4']);
+    expect(r.usable[1].inputIndex).toBe(1);
+    expect(r.usable[1].seg.freezeFrame).toBe(true);
+    expect(r.totalDuration).toBe(5);
+  });
+
+  it('J-cut + reversed segment: audio offset still applies; reversed flag preserved', () => {
+    const r = planSegments(
+      [
+        { id: 'a', track: 0, type: 'video', startTime: 0, endTime: 5, duration: 5 },
+        { id: 'b', track: 0, type: 'video', startTime: 5, endTime: 10, duration: 5, reversed: true, audioLeadInSec: 0.5 },
+      ],
+      '/p.mp4'
+    );
+    expect(r.usable[1].audioOffset).toBe(4.5);
+    expect(r.usable[1].seg.reversed).toBe(true);
+  });
+
+  it('L-cut + freeze does not blow up: audioTailOutSec stored as-is', () => {
+    const r = planSegments(
+      [
+        { id: 'freeze', track: 0, type: 'video', startTime: 0, endTime: 1, duration: 1, freezeFrame: true, audioTailOutSec: 0.5 },
+        { id: 'next', track: 0, type: 'video', startTime: 1, endTime: 3, duration: 2 },
+      ],
+      '/p.mp4'
+    );
+    expect(r.usable[0].seg.audioTailOutSec).toBe(0.5);
+    expect(r.usable[0].seg.freezeFrame).toBe(true);
+  });
+
+  it('J-cut on first segment: clamps audio offset to non-negative (no negative adelay)', () => {
+    const r = planSegments(
+      [
+        { id: 'first', track: 0, type: 'video', startTime: 0, endTime: 2, duration: 2, audioLeadInSec: 1.0 },
+      ],
+      '/p.mp4'
+    );
+    expect(r.usable[0].audioOffset).toBe(0);
+  });
+
+  it('reorder + multi-source: input indices follow first-seen order, not segment order', () => {
+    const r = planSegments(
+      [
+        // Visual order: secondary first, primary second, then secondary again
+        { id: 's1', track: 0, type: 'video', startTime: 0, endTime: 1, duration: 1, sourceUrl: '/secondary.mp4' },
+        { id: 'p1', track: 0, type: 'video', startTime: 1, endTime: 3, duration: 2, sourceUrl: '/primary.mp4' },
+        { id: 's2', track: 0, type: 'video', startTime: 3, endTime: 4, duration: 1, sourceUrl: '/secondary.mp4' },
+      ],
+      '/primary.mp4'
+    );
+    // primary is registered first (because it's the explicit primarySourceUrl)
+    expect(r.inputUrls[0]).toBe('/primary.mp4');
+    expect(r.inputUrls[1]).toBe('/secondary.mp4');
+    expect(r.usable[0].inputIndex).toBe(1); // s1 -> secondary
+    expect(r.usable[1].inputIndex).toBe(0); // p1 -> primary
+    expect(r.usable[2].inputIndex).toBe(1); // s2 -> reuses secondary
+  });
+
+  it('reverse + freeze on the same segment: both flags survive planning (renderer prefers freeze path)', () => {
+    const r = planSegments(
+      [{ id: 'a', track: 0, type: 'video', startTime: 0, endTime: 2, duration: 2, freezeFrame: true, reversed: true }],
+      '/p.mp4'
+    );
+    expect(r.usable[0].seg.freezeFrame).toBe(true);
+    expect(r.usable[0].seg.reversed).toBe(true);
+    // Note: in the filter graph, freezeFrame branch wins because reverse on a
+    // single still frame is a no-op. This test just ensures planning preserves
+    // the data so the render function can decide.
+  });
+
+  it('non-primary tracks (V3+) are skipped even with sourceUrl', () => {
+    const r = planSegments(
+      [
+        { id: 'v1', track: 0, type: 'video', startTime: 0, endTime: 5, duration: 5, sourceUrl: '/p.mp4' },
+        { id: 'broll-overlay', track: 2, type: 'video', startTime: 1, endTime: 4, duration: 3, sourceUrl: '/q.mp4' },
+        { id: 'graphics', track: 4, type: 'video', startTime: 0, endTime: 5, duration: 5, sourceUrl: '/r.mp4' },
+      ],
+      '/p.mp4'
+    );
+    // Only the V1 segment is planned. Track 2+ are skipped silently because
+    // multi-track compositing is not yet implemented.
+    expect(r.usable).toHaveLength(1);
+    expect(r.usable[0].seg.id).toBe('v1');
+  });
+
+  it('zero-duration segment is floored to 0.05s minimum', () => {
+    const r = planSegments(
+      [
+        { id: 'normal', track: 0, type: 'video', startTime: 0, endTime: 2, duration: 2, sourceUrl: '/p.mp4' },
+        { id: 'tiny', track: 0, type: 'video', startTime: 2, endTime: 2, duration: 0, sourceUrl: '/p.mp4' },
+      ],
+      '/p.mp4'
+    );
+    expect(r.usable[1].duration).toBeCloseTo(0.05);
+    expect(r.totalDuration).toBeCloseTo(2.05);
+  });
+});

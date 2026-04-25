@@ -91,12 +91,15 @@ export interface EngagementScore {
   retentionHeatmap: number[] // array of scores per second or frame region
   platformInsights?: PlatformInsights // AI-analyzed algorithm data specific to a platform
   // Psychological breakdown surfaced in InsightsSidebar — fomo, curiosity, value, etc.
-  // Optional because some legacy callers don't populate it.
+  // Optional because some legacy callers don't populate it. Index signature
+  // is loosened to number|string because readability is a grade label
+  // (e.g. "8th Grade").
   psychology?: {
     fomo: number
     curiosity: number
     value: number
-    [key: string]: number
+    readability?: string
+    [key: string]: number | string | undefined
   }
 }
 
@@ -914,6 +917,7 @@ export type TimelineEffectType =
   | 'speed'        // Slow motion, fast forward, reverse
   | 'audio'        // Audio effects (reverb, echo, etc.)
   | 'retention'    // Viral hooks, zoom jumps, etc.
+  | 'style'        // Style preset (font + color combo) applied as an effect
 
 /** Easing function for effect fade in/out */
 export type EffectEasing = 'none' | 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out'
@@ -1013,6 +1017,7 @@ export const EFFECT_TYPE_COLORS: Record<TimelineEffectType, string> = {
   speed: '#3B82F6',       // Blue
   audio: '#EF4444',       // Red
   retention: '#FCD34D',   // Yellow
+  style: '#A78BFA',       // Lavender
 }
 
 export const EFFECT_PRESETS: { type: TimelineEffectType; name: string; icon: string; params: Record<string, number | string | boolean> }[] = [

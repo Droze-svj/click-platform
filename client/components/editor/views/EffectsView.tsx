@@ -115,7 +115,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
   // Group effects by category for filtered view
   const filteredByCategory = useMemo(() => {
     const result: Record<TimelineEffectType, typeof EFFECT_PRESETS> = {
-      filter: [], transition: [], motion: [], overlay: [], speed: [], audio: [], retention: []
+      filter: [], transition: [], motion: [], overlay: [], speed: [], audio: [], retention: [], style: []
     }
     filteredPresets.forEach((p) => result[p.type].push(p))
     return result

@@ -35,6 +35,9 @@ interface User {
     quotesCreated: number
     postsScheduled: number
   }
+  // Per-user calendar webhook secret used by AdvancedSchedulingHub to derive
+  // an iCal export URL. Optional because not all users have it provisioned.
+  calendarSecret?: string
 }
 
 async function waitForAuthCheckToFinish(timeoutMs = 5000) {

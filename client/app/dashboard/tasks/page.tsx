@@ -354,7 +354,7 @@ function DirectiveCard({ task, onSelect, onDragStart }: any) {
   
   return (
     <motion.div 
-      layout draggable onDragStart={e => { e.dataTransfer.setData('text/plain', task._id); onDragStart() }} onClick={onSelect}
+      layout draggable onDragStart={(e: any) => { e.dataTransfer?.setData('text/plain', task._id); onDragStart() }} onClick={onSelect}
       whileHover={{ scale: 1.05, y: -20, rotate: 1 }} 
       className="p-12 rounded-[5rem] border-2 border-white/5 bg-black/60 hover:border-emerald-500/50 hover:bg-white/[0.04] transition-all duration-1000 cursor-grab active:cursor-grabbing group shadow-[0_60px_150px_rgba(0,0,0,0.8)] relative overflow-hidden"
     >
