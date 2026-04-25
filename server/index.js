@@ -78,14 +78,8 @@ async function initializeNexusEngine() {
       Sentry.init({
         dsn: process.env.SENTRY_DSN,
         environment: process.env.NODE_ENV || 'development',
-        integrations: [
-          new Sentry.Integrations.Http({ tracing: true }),
-          new Sentry.Integrations.Express({ app }),
-        ],
         tracesSampleRate: 1.0,
       });
-      app.use(Sentry.Handlers.requestHandler());
-      app.use(Sentry.Handlers.tracingHandler());
       logger.info('✅ Sentry initialization completed');
     } else {
       logger.warn('⚠️ Sentry DSN not found - skipping initialization');
@@ -177,16 +171,19 @@ async function initializeNexusEngine() {
     // Load API routes
     const routes = [
       ['/api/auth', './routes/auth'],
+      ['/api/oauth', './routes/oauth'],
       ['/api/user', './routes/user'],
       ['/api/dashboard', './routes/dashboard'],
       ['/api/video', './routes/video'],
       ['/api/ai', './routes/ai-content'],
+      ['/api/scheduler', './routes/scheduler'],
+      ['/api/social', './routes/social'],
       ['/api/health', './routes/health'],
       ['/api/status/production-mode', (req, res) => res.json({ status: 'ready', engine: 'Next.js 14' })]
     ];
     routes.forEach(([path, file]) => typeof file === 'string' ? safeUse(path, file) : app.get(path, file));
 
-// --- Next.js Integration ---
+    // --- Next.js Integration ---
     if (process.env.NODE_ENV === 'production') {
       try {
         logger.info('📦 Initializing Next.js engine...');

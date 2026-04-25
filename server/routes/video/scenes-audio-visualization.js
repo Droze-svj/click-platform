@@ -177,8 +177,8 @@ function extractAudioCuesForTimeline(scenes) {
     const classification = audioFeatures.classification || {};
     const dominantClass = audioFeatures.dominantClass || 
                          (classification.voice > 0.5 ? 'voice' :
-                          classification.music > 0.5 ? 'music' :
-                          classification.silence > 0.5 ? 'silence' : 'unknown');
+                           classification.music > 0.5 ? 'music' :
+                             classification.silence > 0.5 ? 'silence' : 'unknown');
 
     cues.push({
       time: scene.start,

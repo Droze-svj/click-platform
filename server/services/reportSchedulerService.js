@@ -140,15 +140,10 @@ async function cancelScheduledReport(userId, reportType) {
  * Get scheduled reports
  */
 async function getScheduledReports(userId) {
-  try {
-    // In production, store in database
-    // For now, return placeholder
-    // The job scheduler would need getUserJobs method
-    return [];
-  } catch (error) {
-    logger.error('Get scheduled reports error', { error: error.message, userId });
-    return [];
-  }
+  // In production, store in database
+  // For now, return placeholder
+  // The job scheduler would need getUserJobs method
+  return [];
 }
 
 module.exports = {

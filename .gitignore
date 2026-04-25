@@ -19,3 +19,32 @@ ASSIGNMENT_READY.md
 node_modules/
 .aider*
 .env.production
+
+# Stray node_modules backups / scratch dirs
+.node_modules_backup/
+.node_modules-*
+node_modules_slow/
+_stray_*/
+
+# Process / build / ffmpeg artifacts at root
+*.pid
+*_pid.txt
+build_output.txt
+client/build_log.txt
+client/build_pid.txt
+all-lint-errors.json
+ffmpeg-*.log
+
+# TS incremental-build cache (auto-regenerated)
+*.tsbuildinfo
+
+# Local scratch
+scratch/
+output.mp4
+debug-startup.js
+error-catch-startup.js
+debug_server.log
+
+# Playwright test artifacts
+playwright-report/
+test-results/

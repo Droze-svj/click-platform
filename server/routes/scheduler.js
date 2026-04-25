@@ -4,6 +4,9 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const cron = require('node-cron');
+const logger = require('../utils/logger');
+const mongoose = require('mongoose');
+const { sendSuccess, sendError } = require('../utils/response');
 const router = express.Router();
 
 // Schedule a post
@@ -42,7 +45,7 @@ router.post('/schedule', auth, async (req, res) => {
       contentId: contentId || null,
       platform,
       scheduledTime: scheduledPost.scheduledTime
-    }).catch(err => 
+    }).catch(err => logger.error('Webhook trigger failed for post.scheduled', { error: err.message }));
 
     res.json({
       message: 'Post scheduled successfully',
@@ -129,7 +132,7 @@ router.delete('/:postId', auth, async (req, res) => {
     await triggerWebhook(req.user._id, 'post.cancelled', {
       postId: postId.toString(),
       platform: post.platform
-    }).catch(err => 
+    }).catch(err => logger.error('Webhook trigger failed for post.cancelled', { error: err.message }));
 
     res.json({ message: 'Post deleted' });
   } catch (error) {
@@ -164,9 +167,6 @@ router.get('/calendar', auth, async (req, res) => {
 });
 
 // Process scheduled posts (runs every minute)
-const logger = require('../utils/logger');
-const mongoose = require('mongoose');
-
 cron.schedule('* * * * *', async () => {
   try {
     // Check if MongoDB is connected before attempting queries
@@ -229,15 +229,27 @@ cron.schedule('* * * * *', async () => {
               }
             );
 
-            post.status = 'posted';
-            post.platformPostId = result.platformPostId || result._id?.toString() || `post-${Date.now()}`;
-            await post.save();
-
-            logger.info('Post published', {
-              postId: post._id,
-              platform: post.platform,
-              userId: post.userId
-            });
+            if (!result || result.success === false) {
+              post.status = 'failed';
+              post.failureReason = (result && result.error) || 'Publishing returned no result';
+              await post.save();
+              logger.error('Post publish reported failure', {
+                postId: post._id,
+                platform: post.platform,
+                userId: post.userId,
+                error: post.failureReason,
+              });
+            } else {
+              post.status = 'posted';
+              post.platformPostId = result.platformPostId || result.externalId || `post-${Date.now()}`;
+              await post.save();
+              logger.info('Post published', {
+                postId: post._id,
+                platform: post.platform,
+                userId: post.userId,
+                mocked: !!result.mocked,
+              });
+            }
           } catch (postError) {
             logger.error('Error posting to platform', {
               postId: post._id,
@@ -245,15 +257,15 @@ cron.schedule('* * * * *', async () => {
               error: postError.message
             });
             post.status = 'failed';
+            post.failureReason = postError.message?.slice(0, 500) || 'Unknown publishing error';
             await post.save();
           }
         } else {
-          // No connection - mark as posted (mock for now)
-          post.status = 'posted';
-          post.platformPostId = `mock-${Date.now()}`;
+          post.status = 'needs_reconnect';
+          post.failureReason = `No active ${post.platform} connection. Reconnect the account to publish this post.`;
           await post.save();
 
-          logger.info('Post marked as posted (no connection)', {
+          logger.warn('Scheduled post blocked: missing platform connection', {
             postId: post._id,
             platform: post.platform,
             userId: post.userId

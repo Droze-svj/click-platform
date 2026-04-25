@@ -1,6 +1,7 @@
 // AI-Assisted Editing Tools Service
 // Features: Smart Cut Suggestions, Auto-Framing, Scene Detection, Best Moments, Auto-Color Match, Smart Reframe, Auto-Captions, Music Sync, Pacing Analysis, Quality Check
 
+const ffmpeg = require('fluent-ffmpeg');
 const logger = require('../utils/logger');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 

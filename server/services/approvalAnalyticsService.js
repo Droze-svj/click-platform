@@ -140,7 +140,10 @@ async function getApprovalDashboard(userId, filters = {}) {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState !== 1) {
       logger.warn('MongoDB not connected, cannot get overdue SLA count');
-      return { ...result, summary: { ...result.summary, overdue: 0 } };
+      return {
+        approvals,
+        summary: { pending: pendingCount, overdue: 0, total: approvals.length }
+      };
     }
 
     // Get overdue count

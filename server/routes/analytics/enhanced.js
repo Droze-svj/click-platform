@@ -21,23 +21,9 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/comprehensive', auth, asyncHandler(async (req, res) => {
-  // #region agent log
-  // #endregion
-
-  try {
-    const { period = 30 } = req.query;
-    // #region agent log
-    // #endregion
-
-    const analytics = await getComprehensiveAnalytics(req.user._id, parseInt(period));
-    // #region agent log
-    // #endregion
-    sendSuccess(res, 'Comprehensive analytics fetched', 200, analytics);
-  } catch (error) {
-    // #region agent log
-    // #endregion
-    throw error;
-  }
+  const { period = 30 } = req.query;
+  const analytics = await getComprehensiveAnalytics(req.user._id, parseInt(period));
+  sendSuccess(res, 'Comprehensive analytics fetched', 200, analytics);
 }));
 
 /**
@@ -50,23 +36,9 @@ router.get('/comprehensive', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/trends', auth, asyncHandler(async (req, res) => {
-  // #region agent log
-  // #endregion
-
-  try {
-    const { period = 30 } = req.query;
-    // #region agent log
-    // #endregion
-
-    const trends = await getPerformanceTrends(req.user._id, parseInt(period));
-    // #region agent log
-    // #endregion
-    sendSuccess(res, 'Performance trends fetched', 200, trends);
-  } catch (error) {
-    // #region agent log
-    // #endregion
-    throw error;
-  }
+  const { period = 30 } = req.query;
+  const trends = await getPerformanceTrends(req.user._id, parseInt(period));
+  sendSuccess(res, 'Performance trends fetched', 200, trends);
 }));
 
 /**

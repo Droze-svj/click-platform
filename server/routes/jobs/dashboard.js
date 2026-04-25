@@ -98,31 +98,31 @@ router.get('/dashboard/jobs/:queueName', auth, requireAdmin, asyncHandler(async 
     let jobs = [];
 
     switch (status) {
-      case 'waiting':
-        jobs = await queue.getWaiting(parseInt(offset), parseInt(limit));
-        break;
-      case 'active':
-        jobs = await queue.getActive(parseInt(offset), parseInt(limit));
-        break;
-      case 'completed':
-        jobs = await queue.getCompleted(parseInt(offset), parseInt(limit));
-        break;
-      case 'failed':
-        jobs = await queue.getFailed(parseInt(offset), parseInt(limit));
-        break;
-      case 'delayed':
-        jobs = await queue.getDelayed(parseInt(offset), parseInt(limit));
-        break;
-      default:
-        // Get all
-        const [waiting, active, completed, failed, delayed] = await Promise.all([
-          queue.getWaiting(0, parseInt(limit)),
-          queue.getActive(0, parseInt(limit)),
-          queue.getCompleted(0, parseInt(limit)),
-          queue.getFailed(0, parseInt(limit)),
-          queue.getDelayed(0, parseInt(limit)),
-        ]);
-        jobs = [...waiting, ...active, ...completed, ...failed, ...delayed];
+    case 'waiting':
+      jobs = await queue.getWaiting(parseInt(offset), parseInt(limit));
+      break;
+    case 'active':
+      jobs = await queue.getActive(parseInt(offset), parseInt(limit));
+      break;
+    case 'completed':
+      jobs = await queue.getCompleted(parseInt(offset), parseInt(limit));
+      break;
+    case 'failed':
+      jobs = await queue.getFailed(parseInt(offset), parseInt(limit));
+      break;
+    case 'delayed':
+      jobs = await queue.getDelayed(parseInt(offset), parseInt(limit));
+      break;
+    default:
+      // Get all
+      const [waiting, active, completed, failed, delayed] = await Promise.all([
+        queue.getWaiting(0, parseInt(limit)),
+        queue.getActive(0, parseInt(limit)),
+        queue.getCompleted(0, parseInt(limit)),
+        queue.getFailed(0, parseInt(limit)),
+        queue.getDelayed(0, parseInt(limit)),
+      ]);
+      jobs = [...waiting, ...active, ...completed, ...failed, ...delayed];
     }
 
     const formattedJobs = await Promise.all(jobs.map(async (job) => ({

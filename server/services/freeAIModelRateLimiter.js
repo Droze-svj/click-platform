@@ -163,6 +163,7 @@ function getUsage(provider) {
     requests: [],
   };
 
+  const { FREE_AI_PROVIDERS } = require('./freeAIModelService');
   const providerConfig = FREE_AI_PROVIDERS[provider];
   const limits = providerConfig?.freeTier || {};
 

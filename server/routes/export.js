@@ -5,6 +5,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 
 const asyncHandler = require('../middleware/asyncHandler');
+const logger = require('../utils/logger');
 const { sendSuccess, sendError } = require('../utils/response');
 const { createExportJob, getExportJobStatus, retryExport } = require('../services/robustExportService');
 const { createExportTemplate, getExportTemplates, useExportTemplate, getExportHistory, getExportAnalytics, scheduleExport } = require('../services/exportEnhancementService');
@@ -20,7 +21,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { type, format, filters, options } = req.body;
 
-  logExportServer('export_request_received', {
+  logger.info('export_request_received', {
     userId,
     type,
     format,
@@ -31,7 +32,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
   });
 
   if (!type || !format) {
-    logExportServer('export_error_validation', {
+    logger.warn('export_error_validation', {
       userId,
       type,
       format,
@@ -48,7 +49,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       options: options || {}
     });
 
-    logExportServer('export_job_created', {
+    logger.info('export_job_created', {
       userId,
       jobId: job?.id || job?._id,
       type,
@@ -57,7 +58,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
 
     sendSuccess(res, 'Export job created', 201, job);
   } catch (error) {
-    logExportServer('export_error_job_creation', {
+    logger.error('export_error_job_creation', {
       userId,
       type,
       format,

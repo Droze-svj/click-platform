@@ -9,8 +9,10 @@ module.exports = {
   },
   rules: {
     'no-unused-vars': 'warn',
-    'no-console': 'error',
+    'no-console': 'warn',
     'indent': ['error', 2],
     'no-mixed-spaces-and-tabs': 'error',
+    'no-case-declarations': 'off',
+    'no-empty': ['warn', { allowEmptyCatch: true }],
   },
 };

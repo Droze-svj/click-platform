@@ -15,6 +15,7 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const multer = require('multer');
 const path = require('path');
+const { randomUUID } = require('crypto');
 const router = express.Router();
 
 const upload = multer({ storage: multer.memoryStorage() });

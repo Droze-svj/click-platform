@@ -1,6 +1,7 @@
 // Advanced video enhancement routes
 
 const express = require('express');
+const path = require('path');
 const Content = require('../../models/Content');
 const auth = require('../../middleware/auth');
 const {

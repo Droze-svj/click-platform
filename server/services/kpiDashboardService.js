@@ -185,7 +185,7 @@ async function getClientsByTier(agencyWorkspaceId) {
     };
 
     assignments.forEach(assignment => {
-      if (byTier.hasOwnProperty(assignment.tierName)) {
+      if (Object.prototype.hasOwnProperty.call(byTier, assignment.tierName)) {
         byTier[assignment.tierName]++;
       } else {
         byTier.custom++;

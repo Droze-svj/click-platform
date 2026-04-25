@@ -243,10 +243,11 @@ async function approveContent(approvalId, approverId, comment = '') {
 
     // Trigger webhook for approval completion
     if (approval.status === 'approved') {
+      const approvedContent = approval.contentId;
       const { triggerWebhook } = require('./webhookService');
-      await triggerWebhook(content.userId, 'approval.completed', {
+      await triggerWebhook(approvedContent.userId, 'approval.completed', {
         approvalId: approval._id,
-        contentId: content._id,
+        contentId: approvedContent._id,
         status: 'approved',
         completedAt: new Date()
       }, approval.workspaceId);

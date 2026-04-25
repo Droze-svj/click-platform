@@ -121,27 +121,16 @@ async function getClientPerformance(clientWorkspaceId, period) {
  * Get client health score
  */
 async function getClientHealthScore(clientWorkspaceId) {
-  try {
-    // Would use actual health service
-    // For now, return placeholder
-    return {
-      overall: 75,
-      awareness: 80,
-      engagement: 70,
-      growth: 75,
-      sentiment: 80,
-      trend: 'stable'
-    };
-  } catch (error) {
-    return {
-      overall: 0,
-      awareness: 0,
-      engagement: 0,
-      growth: 0,
-      sentiment: 0,
-      trend: 'stable'
-    };
-  }
+  // Would use actual health service
+  // For now, return placeholder
+  return {
+    overall: 75,
+    awareness: 80,
+    engagement: 70,
+    growth: 75,
+    sentiment: 80,
+    trend: 'stable'
+  };
 }
 
 /**

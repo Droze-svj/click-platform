@@ -8,6 +8,7 @@ const {
   recoveryStrategies,
 } = require('../utils/errorHandler');
 const { generateWithFreeModel } = require('./freeAIModelService');
+const { retryWithBackoff } = require('../utils/retryWithBackoff');
 let Sentry = null;
 try {
   Sentry = require('@sentry/node');
@@ -37,44 +38,34 @@ function withAgentSpan(agentName, fn, modelGetter) {
 }
 
 // AI Provider configurations
+// Click is configured for Gemini-only AI. OpenAI and Anthropic providers are
+// intentionally absent from this map — re-adding them requires updating the
+// generateWithModel pipeline (which currently calls geminiGenerate directly)
+// and removing the AI_GEMINI_ONLY guards in utils/openai.js.
 const AI_PROVIDERS = {
-  openai: {
-    name: 'OpenAI',
-    models: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-    defaultModel: 'gpt-4',
-  },
-  anthropic: {
-    name: 'Anthropic',
-    models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
-    defaultModel: 'claude-3-sonnet',
-  },
   google: {
     name: 'Google',
-    models: ['gemini-pro', 'gemini-ultra'],
-    defaultModel: 'gemini-pro',
+    models: ['gemini-1.5-pro', 'gemini-1.5-flash'],
+    defaultModel: 'gemini-1.5-flash',
   },
 };
 
-let openaiClient = null;
-let currentProvider = 'openai';
-let currentModel = 'gpt-4';
+let currentProvider = 'google';
+let currentModel = 'gemini-1.5-flash';
 
 /**
  * Initialize AI provider
  */
 function initAIProvider(provider = 'google', model = null) {
   try {
-    currentProvider = provider;
-
-    if (provider === 'google' || provider === 'openai') {
-      // Use Gemini as primary
-      currentModel = model || 'gemini-1.5-flash';
-    } else if (provider === 'anthropic') {
-      currentModel = model || AI_PROVIDERS.anthropic.defaultModel;
+    if (provider !== 'google') {
+      logger.warn(`Provider "${provider}" requested but Click is Gemini-only — coercing to google`);
     }
+    currentProvider = 'google';
+    currentModel = model || AI_PROVIDERS.google.defaultModel;
 
-    logger.info('AI provider initialized', { provider, model: currentModel });
-    return { provider, model: currentModel };
+    logger.info('AI provider initialized', { provider: currentProvider, model: currentModel });
+    return { provider: currentProvider, model: currentModel };
   } catch (error) {
     logger.error('Init AI provider error', { error: error.message, provider });
     throw new ServiceUnavailableError(`AI Provider (${provider})`);
@@ -158,7 +149,7 @@ async function generateWithModel(prompt, taskType, options = {}) {
       content,
       model: currentModel,
       provider: currentProvider,
-      tokens: response.usage?.total_tokens || 0,
+      tokens: 0,
     };
   } catch (error) {
     logger.error('Generate with model error', { error: error.message, taskType });
@@ -196,7 +187,7 @@ function getSystemPromptForTask(taskType) {
 /**
  * Compare model outputs
  */
-async function compareModelOutputs(prompt, taskType, models = ['gpt-4', 'gpt-3.5-turbo']) {
+async function compareModelOutputs(prompt, taskType, models = ['gemini-1.5-pro', 'gemini-1.5-flash']) {
   try {
     const outputs = [];
 

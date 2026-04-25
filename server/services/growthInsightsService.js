@@ -108,24 +108,14 @@ async function getGrowthMetrics(userId, period = 30) {
  * Get platform follower data
  */
 async function getPlatformFollowerData(userId, period) {
-  try {
-    // This would integrate with platform analytics APIs
-    // For now, return placeholder data
-    // In production, this would fetch from platformAnalyticsService
-    
-    return {
-      totalFollowers: 0,
-      previousFollowers: 0,
-      followerChange: 0
-    };
-  } catch (error) {
-    logger.error('Error getting platform follower data', { error: error.message });
-    return {
-      totalFollowers: 0,
-      previousFollowers: 0,
-      followerChange: 0
-    };
-  }
+  // This would integrate with platform analytics APIs
+  // For now, return placeholder data
+  // In production, this would fetch from platformAnalyticsService
+  return {
+    totalFollowers: 0,
+    previousFollowers: 0,
+    followerChange: 0
+  };
 }
 
 /**
