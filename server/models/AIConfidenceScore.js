@@ -77,10 +77,10 @@ const confidenceScoreSchema = new mongoose.Schema({
     brandCompliance: { type: Number, min: 0, max: 100 },
     platformFit: { type: Number, min: 0, max: 100 }
   },
-  // AI model used
+  // AI model used (Click is Gemini-only)
   model: {
     type: String,
-    default: 'gpt-4'
+    default: 'gemini-1.5-flash'
   },
   // Analysis metadata
   analysisMetadata: {

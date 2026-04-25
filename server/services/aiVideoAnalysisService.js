@@ -4,7 +4,6 @@ const ffmpeg = require('fluent-ffmpeg')
 const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
-const OpenAI = require('openai')
 const logger = require('../utils/logger')
 let Sentry = null
 try {
@@ -13,22 +12,10 @@ try {
   // Optional dependency in some local environments
 }
 
-let openai = null;
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (e) {
-      logger.warn('OpenAI not configured for video analysis', { error: e.message });
-      return null;
-    }
-  }
-  return openai;
-}
+// Click is Gemini-only. The previous OpenAI import + getOpenAIClient() helper
+// were unused in this file — removed to keep the dependency surface small.
 
-function withAgentSpan(agentName, fn, model = 'gpt-4o') {
+function withAgentSpan(agentName, fn, model = 'gemini-1.5-flash') {
   return async (...args) => {
     if (!Sentry || typeof Sentry.startSpan !== 'function') {
       return fn(...args)
@@ -394,13 +381,13 @@ async function analyzeVideoContent(videoPath, options = {}) {
 }
 
 module.exports = {
-  analyzeVideoContent: withAgentSpan('Video Analysis Agent', analyzeVideoContent, 'gpt-4o'),
-  detectHighlights: withAgentSpan('Video Highlight Agent', detectHighlights, 'gpt-4o'),
-  analyzePacing: withAgentSpan('Video Pacing Agent', analyzePacing, 'gpt-4o'),
-  analyzeEngagement: withAgentSpan('Video Engagement Agent', analyzeEngagement, 'gpt-4o'),
-  analyzeTechnicalQuality: withAgentSpan('Video Technical Agent', analyzeTechnicalQuality, 'gpt-4o'),
-  analyzeContent: withAgentSpan('Video Content Agent', analyzeContent, 'gpt-4o'),
-  generateEditingSuggestions: withAgentSpan('Video Editing Suggestion Agent', generateEditingSuggestions, 'gpt-4o')
+  analyzeVideoContent: withAgentSpan('Video Analysis Agent', analyzeVideoContent, 'gemini-1.5-flash'),
+  detectHighlights: withAgentSpan('Video Highlight Agent', detectHighlights, 'gemini-1.5-flash'),
+  analyzePacing: withAgentSpan('Video Pacing Agent', analyzePacing, 'gemini-1.5-flash'),
+  analyzeEngagement: withAgentSpan('Video Engagement Agent', analyzeEngagement, 'gemini-1.5-flash'),
+  analyzeTechnicalQuality: withAgentSpan('Video Technical Agent', analyzeTechnicalQuality, 'gemini-1.5-flash'),
+  analyzeContent: withAgentSpan('Video Content Agent', analyzeContent, 'gemini-1.5-flash'),
+  generateEditingSuggestions: withAgentSpan('Video Editing Suggestion Agent', generateEditingSuggestions, 'gemini-1.5-flash')
 }
 
 

@@ -41,7 +41,7 @@ async function analyzeContentConfidence(contentId, content, context = {}) {
       needsHumanReview,
       reviewReason: needsHumanReview ? generateReviewReason(uncertaintyFlags, overallConfidence) : null,
       confidenceBreakdown: analysis.breakdown,
-      model: 'gpt-4',
+      model: 'gemini-1.5-flash',
       analysisMetadata: analysis.metadata
     });
 

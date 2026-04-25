@@ -5,16 +5,13 @@ const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
-// OpenAI kept only for DALL-E image generation (no Gemini equivalent in current setup)
-let openai = null;
+// Click is Gemini-only. DALL-E image generation is intentionally disabled —
+// Gemini's @google/generative-ai SDK does not currently expose Imagen for
+// arbitrary image generation. The image branch below now returns the
+// generated image *prompt* without fetching pixels, so the rest of the
+// multi-modal flow still produces useful output.
 function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      const { OpenAI } = require('openai');
-      openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    } catch (e) { return null; }
-  }
-  return openai;
+  return null;
 }
 
 /**

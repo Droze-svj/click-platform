@@ -17,19 +17,18 @@ async function postToTikTok(authData, contentData) {
     logger.info('Posting to TikTok...', { title, mediaUrl });
     logger.debug('TikTok post details', { description, hasToken: !!accessToken });
 
-    // TikTok Content Posting API
     if (axios.defaults.baseURL) { /* dummy check for axios usage */ }
-    
-    // In dev mode, return mock success
-    if (process.env.NODE_ENV !== 'production') {
+
+    if (process.env.MOCK_PUBLISHING === '1') {
+      logger.warn('TikTok publish mocked via MOCK_PUBLISHING=1 — no real upload');
       return {
-        id: `tt_${Date.now()}`,
-        url: `https://www.tiktok.com/@user/video/dummy`
+        id: `tt_mock_${Date.now()}`,
+        url: 'https://www.tiktok.com/@mock/video/dummy',
+        mocked: true
       };
     }
 
-    // Real implementation would follow the TikTok v2 publishing flow
-    throw new Error('Full TikTok video publishing not implemented for production yet');
+    throw new Error('TikTok video publishing is not yet implemented. Set MOCK_PUBLISHING=1 to simulate.');
   } catch (error) {
     logger.error('TikTok API error', { error: error.response?.data || error.message });
     throw new Error(`TikTok post failed: ${error.message}`);

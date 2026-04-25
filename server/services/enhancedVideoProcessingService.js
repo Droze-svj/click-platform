@@ -5,21 +5,12 @@ const path = require('path')
 const fs = require('fs')
 const { v4: uuidv4 } = require('uuid')
 const logger = require('../utils/logger')
-const OpenAI = require('openai')
 
-let openai = null;
+// Click is configured for Gemini-only AI. The Gemini API has no TTS endpoint
+// equivalent to OpenAI's tts-1, so the AI voiceover branch below now throws
+// a clear error rather than silently failing or producing an empty audio file.
 function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (e) {
-      logger.warn('OpenAI not configured for enhanced video processing', { error: e.message });
-      return null;
-    }
-  }
-  return openai;
+  return null;
 }
 
 // Helper function to get output path
@@ -337,7 +328,9 @@ async function generateVoiceover(videoPath, text, options = {}) {
 
   try {
     const client = getOpenAIClient();
-    if (!client) throw new Error('OpenAI client not initialized');
+    if (!client) {
+      throw new Error('AI voiceover is unavailable: Click is configured for Gemini-only AI and Gemini does not expose a text-to-speech API. Wire up Google Cloud Text-to-Speech to enable this feature.');
+    }
 
     // Generate speech using OpenAI TTS
     const mp3 = await client.audio.speech.create({

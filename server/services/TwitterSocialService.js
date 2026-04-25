@@ -51,11 +51,12 @@ async function postTweet(authData, contentData) {
  */
 async function uploadMedia(accessToken, mediaUrl) {
   logger.info('Uploading media to Twitter...', { mediaUrl });
-  // In a real implementation, we'd download the media and POST it to media/upload
-  // For now, return a placeholder ID if in dev
-  if (process.env.NODE_ENV !== 'production') return 'mock_media_id_123';
-  
-  throw new Error('Twitter media upload not fully implemented for production yet');
+  if (process.env.MOCK_PUBLISHING === '1') {
+    logger.warn('Twitter media upload mocked via MOCK_PUBLISHING=1');
+    return 'mock_media_id_123';
+  }
+
+  throw new Error('Twitter media upload is not yet implemented. Set MOCK_PUBLISHING=1 to simulate.');
 }
 
 module.exports = {

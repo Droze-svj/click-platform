@@ -1,16 +1,17 @@
-const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 const path = require('path');
 const fs = require('fs');
 const { uploadFile } = require('./storageService');
 
-let openai = null;
+// Click is configured for Gemini-only AI. The Gemini API does not currently
+// expose a text-to-speech endpoint comparable to OpenAI's tts-1, so AI
+// voiceover generation is intentionally disabled. Callers receive a clear
+// error instead of a silent failure or fake audio file. To re-enable voice
+// generation, wire up Google Cloud Text-to-Speech (a separate service from
+// the Gemini API) and replace the body of generateVoiceover().
 
 function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return openai;
+  return null;
 }
 
 /**
@@ -25,7 +26,9 @@ async function generateVoiceover(userId, text, options = {}) {
     } = options;
 
     const client = getOpenAIClient();
-    if (!client) throw new Error('OpenAI client not initialized');
+    if (!client) {
+      throw new Error('AI voiceover is unavailable: Click is configured for Gemini-only AI and Gemini does not expose a text-to-speech API. Wire up Google Cloud Text-to-Speech to enable this feature.');
+    }
 
     const outputFilename = `tts-${userId}-${Date.now()}.mp3`;
     const outputPath = path.join(__dirname, '../../uploads/audio', outputFilename);

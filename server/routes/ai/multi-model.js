@@ -51,7 +51,7 @@ router.post('/compare', auth, asyncHandler(async (req, res) => {
     ]);
   }
   
-  const result = await compareModelOutputs(prompt, taskType, models || ['gpt-4', 'gpt-3.5-turbo']);
+  const result = await compareModelOutputs(prompt, taskType, models || ['gemini-1.5-pro', 'gemini-1.5-flash']);
   sendSuccess(res, 'Model outputs compared', 200, result);
 }));
 
