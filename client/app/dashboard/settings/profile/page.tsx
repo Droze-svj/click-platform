@@ -6,7 +6,7 @@ import {
   User, Mail, Camera, Save, Key, ArrowLeft, 
   Globe, Instagram, Linkedin, MapPin, Activity, 
   Cpu, Layers, Lock, Shield, Twitter, Target,
-  RefreshCw, Plus, X, ArrowRight, Zap, Terminal, Fingerprint
+  RefreshCw, Plus, X, ArrowRight, Zap, Terminal, Fingerprint, Network
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPut } from '../../../../lib/api'

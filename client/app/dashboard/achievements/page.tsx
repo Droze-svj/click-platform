@@ -10,7 +10,7 @@ import {
   Settings2, Box, Sparkles, Video,
   ArrowLeft, Fingerprint, Gauge, Network, Brain,
   TrendingUp, PieChart, Shield, History, Grid,
-  Award, Command, Boxes, Monitor, ActivitySquare
+  Award, Command, Boxes, Monitor, ActivitySquare, RefreshCw
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'

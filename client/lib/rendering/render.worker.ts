@@ -1,7 +1,8 @@
 /// <reference lib="webworker" />
 /// <reference types="@webgpu/types" />
 
-declare const self: DedicatedWorkerGlobalScope;
+// `self` is a built-in in Worker context — the webworker lib reference above
+// types it as DedicatedWorkerGlobalScope. Re-declaring it triggered TS2451.
 
 let canvas: OffscreenCanvas | null = null;
 let device: GPUDevice | null = null;

@@ -15,7 +15,7 @@ import {
   Fingerprint, Compass, Boxes, Layout, Layers, Timer, Monitor,
   Accessibility, Box, Workflow, Share2, Scan, Link2, ZapOff, Anchor,
   Wind, Ghost, ShieldCheck, ShieldAlert, ActivitySquare, Binary,
-  Orbit, GitBranch, CpuIcon
+  Orbit, GitBranch, CpuIcon, Lock
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
@@ -248,7 +248,7 @@ export default function KineticExecutionMatrixPage() {
                    </header>
                    <div className="space-y-6 relative z-10 max-h-[1200px] overflow-y-auto pr-10 custom-scrollbar">
                       {rootNodes.map(task => (
-                        <DirectiveRow key={task._id} task={task} expanded={expandedTasks.has(task._id)} expandToggle={(id: string) => setExpandedTasks(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelect={setSelectedTask} onAddSub={(p: string) => setAddingForParent(p)} onPurge={purgeNode} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} depth={0} />
+                        <DirectiveRow key={task._id} task={task} expanded={expandedTasks.has(task._id)} expandedTasks={expandedTasks} expandToggle={(id: string) => setExpandedTasks(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n })} onSelect={setSelectedTask} onAddSub={(p: string) => setAddingForParent(p)} onPurge={purgeNode} getSubtasks={(pid: string) => tasks.filter(t => t.parentId === pid)} depth={0} />
                       ))}
                       {rootNodes.length === 0 && <div className="py-64 text-center opacity-10"><Wind size={120} className="mx-auto mb-10 text-white" /><h3 className="text-6xl font-black uppercase tracking-tighter italic">Lattice Empty</h3></div>}
                    </div>
@@ -397,7 +397,7 @@ function DirectiveCard({ task, onSelect, onDragStart }: any) {
   )
 }
 
-function DirectiveRow({ task, expanded, expandToggle, onSelect, onAddSub, onPurge, getSubtasks, depth }: any) {
+function DirectiveRow({ task, expanded, expandedTasks, expandToggle, onSelect, onAddSub, onPurge, getSubtasks, depth }: any) {
   const sub = getSubtasks(task._id), hasSub = sub.length > 0
   return (
     <section>
@@ -424,7 +424,7 @@ function DirectiveRow({ task, expanded, expandToggle, onSelect, onAddSub, onPurg
       <AnimatePresence>
          {expanded && hasSub && (
            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              {sub.map((s: any) => <DirectiveRow key={s._id} task={s} expanded={expandedTasks.has(s._id)} expandToggle={expandToggle} onSelect={onSelect} onAddSub={onAddSub} onPurge={onPurge} getSubtasks={getSubtasks} depth={depth + 1} />)}
+              {sub.map((s: any) => <DirectiveRow key={s._id} task={s} expanded={expandedTasks.has(s._id)} expandedTasks={expandedTasks} expandToggle={expandToggle} onSelect={onSelect} onAddSub={onAddSub} onPurge={onPurge} getSubtasks={getSubtasks} depth={depth + 1} />)}
            </motion.div>
          )}
       </AnimatePresence>

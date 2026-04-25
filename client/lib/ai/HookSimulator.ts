@@ -4,7 +4,7 @@ export class HookSimulator {
   simulateHook(captionSpeed: 'slow' | 'moderate' | 'fast') {
     const baseScore = captionSpeed === 'fast' ? 85 : 45;
     const variance = Math.random() * 15;
-    const totalScore = Math.min(baseScore + variance, this.MAX_SCORE);
+    const totalScore = Math.min(baseScore + variance, HookSimulator.MAX_SCORE);
 
     return {
       variant: captionSpeed.toUpperCase(),

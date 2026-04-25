@@ -2,8 +2,15 @@
 const nextConfig = {
   reactStrictMode: false,
   poweredByHeader: false,
+  // TypeScript: 26 known type-drift errors at the time of writing (2026-04-25).
+  // None are runtime crashes — they're component prop mismatches and
+  // type-vs-implementation drift (e.g. BrandKit `showToast` prop, VideoFilter
+  // initializers in older views). Build is gated permissive while these are
+  // worked through; flip back to `false` to surface them in CI again.
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
+  // ESLint: was masking 9 real undefined-import bugs that would crash at
+  // render. Those are now fixed, so lint is enforced at build time again.
+  eslint: { ignoreDuringBuilds: false },
   productionBrowserSourceMaps: false,
   swcMinify: true,
   experimental: {

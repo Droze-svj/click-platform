@@ -9,7 +9,7 @@ import {
   ChevronRight, Cpu, Activity, Shield, Globe, Radio, 
   Layers, Terminal, X, ArrowUpRight, Hexagon, PieChart,
   ArrowLeft, Network, Gauge, Fingerprint, Brain, Monitor,
-  ActivitySquare, Lock, AlertCircle, Boxes
+  ActivitySquare, Lock, AlertCircle, Boxes, ArrowRight
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'

@@ -1,7 +1,12 @@
+/// <reference lib="webworker" />
 // import * as ort from 'onnxruntime-web'
 const ort: any = { env: { wasm: {} } }
 
-declare const self: DedicatedWorkerGlobalScope;
+// `self` is already a global in Worker context (DedicatedWorkerGlobalScope);
+// re-declaring it triggered TS2451. The webworker lib reference above pulls
+// in the correct type from lib.webworker.d.ts.
+const _self: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
+void _self;
 
 // Set correct WASM paths for Next.js explicitly if needed
 ort.env.wasm.wasmPaths = '/_next/static/wasm/'
