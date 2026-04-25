@@ -535,7 +535,7 @@ async function optimizeRecyclingCalendar(userId, calendar) {
       }
     }
     
-    logger.info('Recycling calendar optimized', { userId, conflictsResolved: conflicts.length });
+    logger.info('Recycling calendar optimized', { userId });
     return optimized;
   } catch (error) {
     logger.error('Error optimizing recycling calendar', { error: error.message, userId });

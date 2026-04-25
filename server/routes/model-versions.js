@@ -24,6 +24,7 @@ const {
   getRolloutStatus,
   pauseRollout,
   cancelRollout,
+  recordModelUpgrade,
 } = require('../services/modelVersionManager');
 
 /**

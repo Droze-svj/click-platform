@@ -310,13 +310,9 @@ async function deleteBackup(backupId) {
  * Calculate backup size
  */
 async function calculateBackupSize(backupDir) {
-  try {
-    // In production, calculate actual size
-    // For now, return placeholder
-    return 0;
-  } catch (error) {
-    return 0;
-  }
+  // In production, calculate actual size
+  // For now, return placeholder
+  return 0;
 }
 
 /**

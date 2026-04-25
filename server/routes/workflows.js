@@ -26,9 +26,9 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.get('/suggestions', auth, asyncHandler(async (req, res) => {
+  const userId = req.user?._id || req.user?.id;
   try {
     const { currentAction } = req.query;
-    const userId = req.user?._id || req.user?.id;
     const allowDevMode = req.allowDevMode ?? true;
 
     if (req.user?.isDevUser || isDevUser(userId)) {

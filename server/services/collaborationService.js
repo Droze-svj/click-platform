@@ -253,23 +253,6 @@ function cleanupStalePresence() {
 setInterval(cleanupStalePresence, 60 * 1000);
 
 /**
- * Get cursor positions for all users in a room
- */
-function getRoomCursors(room) {
-  try {
-    const users = getRoomUsers(room);
-    return users.map((user) => ({
-      userId: user.userId,
-      cursor: user.cursor,
-      lastSeen: user.lastSeen,
-    }));
-  } catch (error) {
-    logger.error('Error getting room cursors', { error: error.message, room });
-    return [];
-  }
-}
-
-/**
  * Track an activity pulse for a team
  */
 function trackActivityPulse(teamId, pulse) {

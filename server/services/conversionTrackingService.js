@@ -263,7 +263,7 @@ async function getConversionFunnel(workspaceId, filters = {}) {
 
     conversions.forEach(conversion => {
       const stage = conversion.funnel.stage;
-      if (funnel.hasOwnProperty(stage)) {
+      if (Object.prototype.hasOwnProperty.call(funnel, stage)) {
         funnel[stage]++;
       }
     });

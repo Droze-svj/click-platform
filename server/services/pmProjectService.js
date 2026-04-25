@@ -67,7 +67,7 @@ function computeCriticalPath(milestones) {
     if (isEnd && finish >= maxFinish - 0.001) {
       criticalPathIds.add(id);
       let current = id;
-      while (true) {
+      for (;;) {
         const currM = idToM.get(current);
         if (!currM?.dependencyMilestoneIds?.length) break;
         let latestPred = -1;

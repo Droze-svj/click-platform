@@ -1895,7 +1895,7 @@ async function createRepostABTest(userId, recycleId, variations) {
     }
 
     return {
-      testId: testId,
+      testId: test._id,
       testName: `Repost A/B Test - ${recycle.originalContentId}`,
       variants: testVariations.map((v, idx) => ({
         variant: idx === 0 ? 'A' : 'B',

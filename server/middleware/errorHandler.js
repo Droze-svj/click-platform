@@ -249,7 +249,9 @@ const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused
           code: 'ERROR_HANDLER_FAILED'
         });
       } catch (e) {
-        // If we can't even send a response, log and give up
+        // If we can't even send a response, log and give up.
+        // Using console here because the logger itself may be the failure source.
+        // eslint-disable-next-line no-console
         console.error('CRITICAL: Error handler completely failed', {
           originalError: err.message,
           handlerError: finalError.message,

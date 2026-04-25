@@ -251,7 +251,7 @@ function getMetrics() {
       },
       database: {
         totalQueries: metrics.database.queries,
-        slowQueries: metrics.database.slowQueries,
+        slowQueryCount: metrics.database.slowQueries,
         avgQueryTime: Math.round(dbAvgQueryTime) + 'ms',
         slowQueries: slowQueries,
       },

@@ -15,13 +15,17 @@ const {
  * Get personalized content recommendations
  */
 async function getPersonalizedRecommendations(userId, options = {}) {
-  try {
-    const {
-      limit = 10,
-      type = null,
-      platform = null,
-    } = options;
+  const {
+    limit = 10,
+    type = null,
+    platform = null,
+  } = options;
 
+  let userContent = [];
+  let user = null;
+  let preferences = { categories: [], platforms: [], topTopics: [] };
+
+  try {
     // Handle dev users - return empty array to avoid MongoDB CastErrors
     if (userId && (userId.toString().startsWith('dev-') || userId.toString().startsWith('test-') || userId.toString() === 'dev-user-123')) {
       logger.info('Returning empty recommendations for dev user');
@@ -31,10 +35,6 @@ async function getPersonalizedRecommendations(userId, options = {}) {
         topPlatforms: []
       };
     }
-
-    // Get user's content history - wrap in try-catch to handle CastErrors
-    let userContent = [];
-    let user = null;
 
     try {
       userContent = await Content.find({
@@ -62,7 +62,7 @@ async function getPersonalizedRecommendations(userId, options = {}) {
     }
 
     // Analyze user preferences
-    const preferences = analyzeUserPreferences(userContent);
+    preferences = analyzeUserPreferences(userContent);
 
     // Generate recommendations
     const prompt = `Generate personalized content recommendations for this user:

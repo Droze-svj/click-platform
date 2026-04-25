@@ -275,7 +275,7 @@ async function detectScenesMultiModal(videoPath, options = {}) {
     });
 
     logger.info('Multi-modal scene detection completed', {
-      visualScenes: visualScenes.length,
+      visualBoundaries: visualBoundaries.length,
       audioCues: audioCues.length,
       textSegments: textSegments.length,
       finalScenes: finalScenes.length
