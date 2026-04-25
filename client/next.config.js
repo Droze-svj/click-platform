@@ -19,13 +19,30 @@ const nextConfig = {
   },
   transpilePackages: ['lucide-react'],
   webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        canvas: false,
-      };
+    // The video editor pulls in konva → canvas (a native binding) via a
+    // dynamic({ ssr: false }) import, but Next.js still bundles those modules
+    // for the server build. The `canvas: false` fallback used to be gated to
+    // the client bundle only, which made the server build fail on Vercel with
+    // "Can't resolve '../build/Release/canvas.node'". Applying the fallback to
+    // both bundles is safe — server code never actually executes konva because
+    // the consuming components are client-only.
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      canvas: false,
+    };
+
+    // Mark konva itself as external on the server so webpack doesn't even try
+    // to walk into it. This pairs with ssr:false on the consuming dynamic
+    // imports.
+    if (isServer) {
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        'canvas',
+        'konva',
+        'react-konva',
+      ];
     }
-    
+
     if (config.module && config.module.rules) {
       config.module.rules.push({
         test: /\.node$/,
