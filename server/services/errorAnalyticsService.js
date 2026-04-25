@@ -110,16 +110,16 @@ async function getErrorStatistics(options = {}) {
 function getTimeKey(timestamp, groupBy) {
   const date = new Date(timestamp);
   switch (groupBy) {
-  case 'hour':
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`;
-  case 'day':
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  case 'week':
-    const weekStart = new Date(date);
-    weekStart.setDate(date.getDate() - date.getDay());
-    return `${weekStart.getFullYear()}-W${String(Math.ceil((weekStart.getDate() + 6) / 7)).padStart(2, '0')}`;
-  default:
-    return date.toISOString();
+    case 'hour':
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`;
+    case 'day':
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    case 'week':
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      return `${weekStart.getFullYear()}-W${String(Math.ceil((weekStart.getDate() + 6) / 7)).padStart(2, '0')}`;
+    default:
+      return date.toISOString();
   }
 }
 

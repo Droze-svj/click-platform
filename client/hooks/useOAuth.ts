@@ -1,9 +1,7 @@
 // OAuth Hook for Social Media Platforms
 
 import { useState } from 'react'
-import axios from 'axios'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+import { apiGet, apiPost, apiDelete } from '../lib/api'
 
 interface OAuthStatus {
   connected: boolean
@@ -12,69 +10,41 @@ interface OAuthStatus {
   [key: string]: any
 }
 
-export function useOAuth(token: string | null) {
+export function useOAuth() {
   const [loading, setLoading] = useState(false)
 
   /**
    * Get OAuth authorization URL for a platform
    */
-  const getAuthUrl = async (platform: string): Promise<{ url: string; state: string }> => {
-    if (!token) throw new Error('Authentication required')
-
-    const response = await axios.get(`${API_URL}/oauth/${platform}/authorize`, {
-    })
-
-    if (response.data.success) {
-      return response.data.data
-    }
-    throw new Error(response.data.error || 'Failed to get authorization URL')
+  const getAuthUrl = async (platform: string): Promise<{ auth_url: string; state: string }> => {
+    return await apiGet<{ auth_url: string; state: string }>(`/oauth/${platform}/connect`)
   }
 
   /**
    * Complete OAuth connection (after callback)
+   * Note: The callback is usually handled by the backend redirecting back to the frontend.
+   * This function can be used if the frontend needs to manually signal completion.
    */
   const completeConnection = async (platform: string, code: string, state: string): Promise<void> => {
-    if (!token) throw new Error('Authentication required')
-
-    const response = await axios.post(
-      `${API_URL}/oauth/${platform}/complete`,
-      { code, state },
-      {
-      }
-    )
-
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to complete connection')
-    }
+    await apiPost(`/oauth/${platform}/callback`, { code, state })
   }
 
   /**
    * Get connection status for a platform
    */
   const getStatus = async (platform: string): Promise<OAuthStatus> => {
-    if (!token) throw new Error('Authentication required')
-
-    const response = await axios.get(`${API_URL}/oauth/${platform}/status`, {
-    })
-
-    if (response.data.success) {
-      return response.data.data
+    const response = await apiGet<{ configured: Record<string, boolean> }>(`/oauth/status`)
+    return {
+      connected: false, // This hook doesn't currently fetch per-user connection status here
+      configured: response.configured[platform]
     }
-    throw new Error(response.data.error || 'Failed to get status')
   }
 
   /**
    * Disconnect a platform
    */
   const disconnect = async (platform: string): Promise<void> => {
-    if (!token) throw new Error('Authentication required')
-
-    const response = await axios.delete(`${API_URL}/oauth/${platform}/disconnect`, {
-    })
-
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to disconnect')
-    }
+    await apiDelete(`/oauth/${platform}/disconnect`)
   }
 
   /**
@@ -83,9 +53,9 @@ export function useOAuth(token: string | null) {
   const connect = async (platform: string): Promise<void> => {
     setLoading(true)
     try {
-      const { url } = await getAuthUrl(platform)
+      const response = await getAuthUrl(platform)
       // Redirect to OAuth provider
-      window.location.href = url
+      window.location.href = response.auth_url
     } catch (error: any) {
       setLoading(false)
       throw error
@@ -106,11 +76,20 @@ export function useOAuth(token: string | null) {
     }
   }
 
+  /**
+   * Get all connected accounts for the user
+   */
+  const getConnections = async (): Promise<Record<string, any>> => {
+    const response = await apiGet<{ accounts: Record<string, any> }>(`/oauth/connections`)
+    return response.accounts
+  }
+
   return {
     loading,
     connect,
     disconnect,
     getStatus,
+    getConnections,
     handleCallback,
     getAuthUrl,
   }

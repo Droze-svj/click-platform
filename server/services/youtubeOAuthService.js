@@ -1,7 +1,7 @@
 // YouTube OAuth Service
 // Features: Google OAuth 2.0, channel info, video upload permissions, User model storage.
 
-const OAuthService = require('./OAuthService');
+const OAuthService = require('./oauthService');
 const logger = require('../utils/logger');
 const { google } = require('googleapis');
 const fs = require('fs');
@@ -15,7 +15,7 @@ const LOG_CONTEXT = { service: 'youtube-oauth' };
 
 function defaultRedirectUri() {
   return process.env.YOUTUBE_REDIRECT_URI ||
-    `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social/connect/youtube/callback`;
+    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/youtube/callback`;
 }
 
 class YouTubeOAuthService {
@@ -43,11 +43,24 @@ class YouTubeOAuthService {
     return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
   }
 
-  getAuthorizationUrl(state) {
+  async getAuthorizationUrl(userId, state, callbackUrl) {
     if (!this.isConfigured()) throw new Error('YouTube OAuth not configured');
+    
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    // Persist state to User model
+    if (!user.oauth) user.oauth = {};
+    if (!user.oauth.youtube) user.oauth.youtube = {};
+    user.oauth.youtube.state = state;
+    user.oauth.youtube.stateCreatedAt = new Date();
+    user.markModified('oauth');
+    await user.save();
+
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: callbackUrl || this.redirectUri,
       response_type: 'code',
       scope: this.getScope(),
       access_type: 'offline',

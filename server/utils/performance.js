@@ -1,11 +1,11 @@
-// Performance monitoring utilities
-
+console.log('🏗️ performance: start requires');
 const logger = require('./logger');
+console.log('🏗️ performance: requires loaded');
 
 // Response time tracking middleware
 function trackResponseTime(req, res, next) {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     const logData = {
@@ -34,7 +34,7 @@ function trackResponseTime(req, res, next) {
 function logMemoryUsage() {
   const used = process.memoryUsage();
   const formatMB = (bytes) => Math.round(bytes / 1024 / 1024 * 100) / 100;
-  
+
   logger.info('Memory usage', {
     rss: `${formatMB(used.rss)}MB`,
     heapTotal: `${formatMB(used.heapTotal)}MB`,

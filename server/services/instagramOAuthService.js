@@ -3,6 +3,7 @@
 
 const { createClient } = require('@supabase/supabase-js');
 const logger = require('../utils/logger');
+const OAuthService = require('./oauthService');
 
 const TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
 const GRAPH_API_BASE = 'https://graph.instagram.com';
@@ -11,7 +12,7 @@ const LOG_CONTEXT = { service: 'instagram-oauth' };
 
 function defaultRedirectUri() {
   return process.env.INSTAGRAM_REDIRECT_URI ||
-    `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social/connect/instagram/callback`;
+    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/instagram/callback`;
 }
 
 class InstagramOAuthService {
@@ -50,11 +51,24 @@ class InstagramOAuthService {
     return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
   }
 
-  getAuthorizationUrl(state) {
+  async getAuthorizationUrl(userId, state, callbackUrl) {
     if (!this.isConfigured()) throw new Error('Instagram OAuth not configured');
+    
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    // Persist state to User model
+    if (!user.oauth) user.oauth = {};
+    if (!user.oauth.instagram) user.oauth.instagram = {};
+    user.oauth.instagram.state = state;
+    user.oauth.instagram.stateCreatedAt = new Date();
+    user.markModified('oauth');
+    await user.save();
+
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: callbackUrl || this.redirectUri,
       scope: this.getScope(),
       response_type: 'code',
       state,
@@ -111,66 +125,50 @@ class InstagramOAuthService {
   }
 
   async connectAccount(userId, tokens, profile) {
-    const supabase = this.getSupabaseClient();
-    const accountData = {
-      user_id: userId,
-      platform: 'instagram',
-      platform_user_id: profile.id,
-      username: profile.username,
-      display_name: profile.display_name,
-      avatar: profile.avatar,
-      access_token: tokens.access_token,
-      refresh_token: null,
-      token_expires_at: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000).toISOString() : null,
-      is_connected: true,
-      metadata: {
-        ...profile.metadata,
-        connected_at: new Date().toISOString(),
-      },
+    const credentials = {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      extra: {
+        platformUserId: profile.id,
+        platformUsername: profile.username,
+        display_name: profile.display_name,
+        avatar: profile.avatar,
+        expiresAt: tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null,
+        metadata: profile.metadata,
+        connectedAt: new Date()
+      }
     };
 
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .upsert(accountData, { onConflict: 'user_id,platform' })
-      .select()
-      .single();
-
-    if (error) {
-      logger.error('Instagram connect account error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
-    }
-    return data;
+    await OAuthService.saveSocialCredentials(userId, 'instagram', credentials);
+    logger.info('Instagram account connected via Mongoose', { userId, profileId: profile.id });
+    
+    return { success: true, platform: 'instagram', username: profile.username };
   }
 
   async getConnectedAccounts(userId) {
-    const supabase = this.getSupabaseClient();
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'instagram')
-      .eq('is_connected', true);
+    const creds = await OAuthService.getSocialCredentials(userId, 'instagram');
+    if (!creds) return [];
 
-    if (error) {
-      logger.error('Instagram get connected accounts error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
-    }
-    return data || [];
+    return [{
+      platform: 'instagram',
+      platform_user_id: creds.platformUserId,
+      username: creds.platformUsername,
+      display_name: creds.platformUsername,
+      avatar: creds.avatar,
+      is_connected: true,
+      connected_at: creds.connectedAt
+    }];
   }
 
-  async disconnectAccount(userId, platformUserId) {
-    const supabase = this.getSupabaseClient();
-    const { error } = await supabase
-      .from('platform_accounts')
-      .delete()
-      .eq('user_id', userId)
-      .eq('platform', 'instagram')
-      .eq('platform_user_id', platformUserId);
-
-    if (error) {
-      logger.error('Instagram disconnect account error', { ...LOG_CONTEXT, userId, error: error.message });
-      throw error;
+  async disconnectAccount(userId) {
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user && user.oauth && user.oauth.instagram) {
+      user.oauth.instagram = { connected: false };
+      user.markModified('oauth');
+      await user.save();
     }
+    logger.info('Instagram account disconnected', { userId });
     return { success: true };
   }
 
@@ -179,11 +177,46 @@ class InstagramOAuthService {
   }
 
   async getInstagramClient(userId) {
-    const accounts = await this.getConnectedAccounts(userId);
-    if (!accounts || accounts.length === 0) {
-      throw new Error('No Instagram account connected');
+    const creds = await OAuthService.getSocialCredentials(userId, 'instagram');
+    if (!creds?.accessToken) {
+      throw new Error('No Instagram account connected or token missing');
     }
-    return { accessToken: accounts[0].access_token };
+    return { accessToken: creds.accessToken };
+  }
+
+  async refreshAccessToken(userId) {
+    logger.info('Refreshing Instagram access token', { userId });
+    const creds = await OAuthService.getSocialCredentials(userId, 'instagram');
+    if (!creds?.accessToken) throw new Error('Instagram not connected');
+
+    try {
+      // Instagram 'Basic Display API' uses a GET request to refresh long-lived tokens
+      const refreshUrl = `${GRAPH_API_BASE}/refresh_access_token?grant_type=ig_refresh_token&access_token=${creds.accessToken}`;
+      const response = await fetch(refreshUrl);
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        logger.error('Instagram token refresh failed', { userId, status: response.status, errorData });
+        throw new Error(`Instagram token refresh failed: ${response.status} - ${errorData}`);
+      }
+
+      const data = await response.json();
+
+      await OAuthService.saveSocialCredentials(userId, 'instagram', {
+        accessToken: data.access_token,
+        refreshToken: null, // Basic Display API doesn't use refresh tokens for rotation
+        extra: {
+          expiresAt: data.expires_in ? new Date(Date.now() + data.expires_in * 1000) : null,
+          lastRefreshAt: new Date()
+        }
+      });
+
+      logger.info('Instagram token refreshed successfully', { userId });
+      return data.access_token;
+    } catch (error) {
+      logger.error('Instagram token refresh failed', { userId, error: error.message });
+      throw error;
+    }
   }
 
   async postToInstagram(userId, imageUrl, caption, options = {}) {

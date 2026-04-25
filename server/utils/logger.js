@@ -1,33 +1,83 @@
-/* eslint-disable no-console */
-// Production-grade logger with structured metadata support
-// Overcomes 'console.log' limitations while bypassing potential library-induced hangs
-const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
+// Winston logger configuration
 
-const format = (level, message, meta = {}) => {
-  const timestamp = new Date().toISOString();
-  if (isProduction) {
-    // Structured JSON for production monitoring
-    return JSON.stringify({
-      timestamp,
-      level,
-      message,
-      ...(typeof meta === 'object' ? meta : { data: meta })
-    });
+const winston = require('winston');
+const path = require('path');
+
+// Define log format
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  winston.format.json()
+);
+
+// Console format for development
+const consoleFormat = winston.format.combine(
+  winston.format.colorize(),
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    let msg = `${timestamp} [${level}]: ${message}`;
+    if (Object.keys(meta).length > 0) {
+      msg += ` ${JSON.stringify(meta)}`;
+    }
+    return msg;
+  })
+);
+
+// Create logs directory if it doesn't exist
+const logsDir = path.join(__dirname, '../../logs');
+
+// Create logger
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: logFormat,
+  defaultMeta: { service: 'click' },
+  transports: [
+    // Write all logs to console
+    new winston.transports.Console({
+      format: process.env.NODE_ENV === 'production' ? logFormat : consoleFormat
+    }),
+    // Write all logs with level 'error' and below to error.log
+    new winston.transports.File({
+      filename: path.join(logsDir, 'error.log'),
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    }),
+    // Write all logs to combined.log
+    new winston.transports.File({
+      filename: path.join(logsDir, 'combined.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    })
+  ],
+  // Handle exceptions and rejections
+  exceptionHandlers: [
+    new winston.transports.File({
+      filename: path.join(logsDir, 'exceptions.log')
+    })
+  ],
+  rejectionHandlers: [
+    new winston.transports.File({
+      filename: path.join(logsDir, 'rejections.log'),
+      // Filter out Redis localhost connection errors
+      format: winston.format((info) => {
+        if (info.reason && typeof info.reason === 'object' && info.reason.message &&
+            info.reason.message.includes('ECONNREFUSED') && info.reason.message.includes('127.0.0.1:6379')) {
+          return false; // Don't log this
+        }
+        return info;
+      })()
+    })
+  ]
+});
+
+// Create a stream object for Morgan HTTP request logging
+logger.stream = {
+  write: (message) => {
+    logger.info(message.trim());
   }
-  // Human-readable for development
-  const metaStr = Object.keys(meta).length ? ` | ${JSON.stringify(meta)}` : '';
-  return `[${timestamp}] ${level.toUpperCase()}: ${message}${metaStr}`;
 };
 
-module.exports = {
-  info: (msg, meta) => console.log(format('info', msg, meta)),
-  error: (msg, meta) => console.error(format('error', msg, meta)),
-  warn: (msg, meta) => console.warn(format('warn', msg, meta)),
-  debug: (msg, meta) => {
-    if (!isProduction) console.debug(format('debug', msg, meta));
-  },
-  stream: {
-    write: (msg) => console.log(format('info', msg.trim()))
-  }
-};
+module.exports = logger;
 

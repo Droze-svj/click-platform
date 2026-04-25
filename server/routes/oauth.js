@@ -101,7 +101,9 @@ router.get('/:platform/connect', auth, oauthLimiter, validateConnect, asyncHandl
     const callbackUrl = service.defaultRedirectUri?.(req) || 
       `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/${plat}/callback`;
     
-    const result = await service.getAuthorizationUrl(userId, callbackUrl);
+    // Pass the signed state and callback URL to the service
+    const result = await service.getAuthorizationUrl(userId, state, callbackUrl);
+    
     // Some services return {url, state}, others just url string
     const authUrl = typeof result === 'object' ? result.url : result;
 
@@ -312,6 +314,37 @@ router.get('/:platform/status', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/oauth/:platform/refresh
+ * Manually refresh a social media access token
+ */
+router.post('/:platform/refresh', auth, oauthLimiter, asyncHandler(async (req, res) => {
+  const { platform } = req.params;
+  const plat = platform.toLowerCase();
+  const service = getServiceByPlatform(plat);
+
+  if (!service || !service.refreshAccessToken) {
+    return res.status(400).json({ 
+      success: false, 
+      error: `Platform ${platform} does not support background token rotation.` 
+    });
+  }
+
+  const userId = req.user.id || req.user._id;
+  
+  try {
+    const newToken = await service.refreshAccessToken(userId);
+    res.json({ 
+      success: true, 
+      message: `${platform} token refreshed successfully`,
+      hasNewToken: !!newToken
+    });
+  } catch (error) {
+    logger.error('Manual OAuth refresh error', { error: error.message, platform });
+    res.status(500).json({ success: false, error: error.message || 'Failed to refresh token' });
+  }
+}));
+
+/**
  * GET /api/oauth/status
  */
 router.get('/status', (req, res) => {
@@ -327,7 +360,5 @@ router.get('/status', (req, res) => {
     }
   });
 });
-
-module.exports = router;
 
 module.exports = router;

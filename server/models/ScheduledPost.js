@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const scheduledPostSchema = new mongoose.Schema({
   userId: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -48,12 +49,8 @@ const scheduledPostSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled', 'pending', 'posted', 'failed', 'cancelled', 'needs_reconnect'],
+    enum: ['scheduled', 'pending', 'posted', 'failed', 'cancelled'],
     default: 'scheduled'
-  },
-  failureReason: {
-    type: String,
-    default: null
   },
   recurringScheduleId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -162,6 +159,7 @@ scheduledPostSchema.index({ userId: 1, platform: 1, scheduledTime: 1 }); // User
 scheduledPostSchema.index({ status: 1, scheduledTime: 1 }); // All posts by status (for cron jobs)
 scheduledPostSchema.index({ platform: 1, status: 1 }); // Posts by platform and status
 scheduledPostSchema.index({ contentId: 1 }); // Posts by content
+scheduledPostSchema.index({ scheduledTime: 1, status: 1 }); // For scheduled post processing
 scheduledPostSchema.index({ agencyWorkspaceId: 1, scheduledTime: 1 }); // Agency master calendar
 scheduledPostSchema.index({ clientWorkspaceId: 1, scheduledTime: 1 }); // Client workspace calendar
 scheduledPostSchema.index({ workspaceId: 1, scheduledTime: 1 }); // Workspace calendar

@@ -1,0 +1,437 @@
+[
+  {
+    "filePath": "/server/routes/export.js",
+    "errors": [
+      {
+        "line": 23,
+        "column": 3,
+        "message": "'logExportServer' is not defined."
+      },
+      {
+        "line": 34,
+        "column": 5,
+        "message": "'logExportServer' is not defined."
+      },
+      {
+        "line": 51,
+        "column": 5,
+        "message": "'logExportServer' is not defined."
+      },
+      {
+        "line": 60,
+        "column": 5,
+        "message": "'logExportServer' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/routes/model-versions.js",
+    "errors": [
+      {
+        "line": 103,
+        "column": 25,
+        "message": "'recordModelUpgrade' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/routes/subscription.js",
+    "errors": [
+      {
+        "line": 16,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 43,
+        "column": 7,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 54,
+        "column": 7,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 61,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 109,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 126,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 146,
+        "column": 9,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 155,
+        "column": 9,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 161,
+        "column": 5,
+        "message": "'logger' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/routes/upload/chunked.js",
+    "errors": [
+      {
+        "line": 33,
+        "column": 20,
+        "message": "'randomUUID' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/routes/video.js",
+    "errors": [
+      {
+        "line": 362,
+        "column": 30,
+        "message": "'contentId' is not defined."
+      },
+      {
+        "line": 370,
+        "column": 24,
+        "message": "'contentId' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/routes/video/enhance.js",
+    "errors": [
+      {
+        "line": 39,
+        "column": 23,
+        "message": "'path' is not defined."
+      },
+      {
+        "line": 48,
+        "column": 41,
+        "message": "'path' is not defined."
+      },
+      {
+        "line": 83,
+        "column": 23,
+        "message": "'path' is not defined."
+      },
+      {
+        "line": 93,
+        "column": 40,
+        "message": "'path' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/routes/workflows.js",
+    "errors": [
+      {
+        "line": 63,
+        "column": 116,
+        "message": "'userId' is not defined."
+      },
+      {
+        "line": 67,
+        "column": 101,
+        "message": "'userId' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/SyncEngine.test.js",
+    "errors": [
+      {
+        "line": 7,
+        "column": 1,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 8,
+        "column": 1,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 9,
+        "column": 1,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 10,
+        "column": 1,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 11,
+        "column": 22,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 14,
+        "column": 1,
+        "message": "'describe' is not defined."
+      },
+      {
+        "line": 15,
+        "column": 3,
+        "message": "'afterEach' is not defined."
+      },
+      {
+        "line": 16,
+        "column": 5,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 19,
+        "column": 3,
+        "message": "'describe' is not defined."
+      },
+      {
+        "line": 20,
+        "column": 5,
+        "message": "'it' is not defined."
+      },
+      {
+        "line": 24,
+        "column": 7,
+        "message": "'expect' is not defined."
+      },
+      {
+        "line": 25,
+        "column": 7,
+        "message": "'expect' is not defined."
+      },
+      {
+        "line": 28,
+        "column": 5,
+        "message": "'it' is not defined."
+      },
+      {
+        "line": 31,
+        "column": 7,
+        "message": "'expect' is not defined."
+      },
+      {
+        "line": 35,
+        "column": 3,
+        "message": "'describe' is not defined."
+      },
+      {
+        "line": 36,
+        "column": 5,
+        "message": "'it' is not defined."
+      },
+      {
+        "line": 43,
+        "column": 15,
+        "message": "'jest' is not defined."
+      },
+      {
+        "line": 52,
+        "column": 7,
+        "message": "'expect' is not defined."
+      },
+      {
+        "line": 53,
+        "column": 7,
+        "message": "'expect' is not defined."
+      },
+      {
+        "line": 54,
+        "column": 7,
+        "message": "'expect' is not defined."
+      },
+      {
+        "line": 55,
+        "column": 7,
+        "message": "'expect' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/advancedEvergreenService.js",
+    "errors": [
+      {
+        "line": 538,
+        "column": 78,
+        "message": "'conflicts' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/aiRecommendationsEngine.js",
+    "errors": [
+      {
+        "line": 143,
+        "column": 40,
+        "message": "'userContent' is not defined."
+      },
+      {
+        "line": 143,
+        "column": 61,
+        "message": "'limit' is not defined."
+      },
+      {
+        "line": 153,
+        "column": 13,
+        "message": "'preferences' is not defined."
+      },
+      {
+        "line": 155,
+        "column": 32,
+        "message": "'userContent' is not defined."
+      },
+      {
+        "line": 156,
+        "column": 30,
+        "message": "'preferences' is not defined."
+      },
+      {
+        "line": 157,
+        "column": 29,
+        "message": "'preferences' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/approvalAnalyticsService.js",
+    "errors": [
+      {
+        "line": 143,
+        "column": 19,
+        "message": "'result' is not defined."
+      },
+      {
+        "line": 143,
+        "column": 41,
+        "message": "'result' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/approvalWorkflowService.js",
+    "errors": [
+      {
+        "line": 284,
+        "column": 28,
+        "message": "'content' is not defined."
+      },
+      {
+        "line": 286,
+        "column": 20,
+        "message": "'content' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/contentRecyclingService.js",
+    "errors": [
+      {
+        "line": 1898,
+        "column": 15,
+        "message": "'testId' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/freeAIModelRateLimiter.js",
+    "errors": [
+      {
+        "line": 166,
+        "column": 26,
+        "message": "'FREE_AI_PROVIDERS' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/instagramOAuthService.js",
+    "errors": [
+      {
+        "line": 128,
+        "column": 11,
+        "message": "'OAuthService' is not defined."
+      },
+      {
+        "line": 135,
+        "column": 25,
+        "message": "'OAuthService' is not defined."
+      },
+      {
+        "line": 166,
+        "column": 25,
+        "message": "'OAuthService' is not defined."
+      },
+      {
+        "line": 175,
+        "column": 25,
+        "message": "'OAuthService' is not defined."
+      },
+      {
+        "line": 191,
+        "column": 13,
+        "message": "'OAuthService' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/multiModalSceneDetection.js",
+    "errors": [
+      {
+        "line": 278,
+        "column": 21,
+        "message": "'visualScenes' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/multiModelAIService.js",
+    "errors": [
+      {
+        "line": 142,
+        "column": 27,
+        "message": "'retryWithBackoff' is not defined."
+      },
+      {
+        "line": 161,
+        "column": 15,
+        "message": "'response' is not defined."
+      }
+    ]
+  },
+  {
+    "filePath": "/server/services/twitterOAuthService.js",
+    "errors": [
+      {
+        "line": 164,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 194,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 199,
+        "column": 5,
+        "message": "'logger' is not defined."
+      },
+      {
+        "line": 217,
+        "column": 5,
+        "message": "'logger' is not defined."
+      }
+    ]
+  }
+]

@@ -4,8 +4,9 @@
 
 const crypto = require('crypto');
 const axios = require('axios');
+const logger = require('../utils/logger');
 const User = require('../models/User');
-const oauthService = require('./OAuthService');
+const oauthService = require('./oauthService');
 
 const TOKEN_URL = 'https://api.twitter.com/2/oauth2/token';
 const API_BASE = 'https://api.twitter.com/2';
@@ -29,27 +30,17 @@ function defaultRedirectUri() {
 /**
  * Generate OAuth authorization URL
  */
-async function getAuthorizationUrl(userId, state, codeVerifier) {
+async function getAuthorizationUrl(userId, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Twitter OAuth not configured');
-  
-  const verifier = codeVerifier || crypto.randomBytes(32).toString('base64url');
-  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
-  
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: process.env.TWITTER_CLIENT_ID,
-    redirect_uri: defaultRedirectUri(),
-    scope: getScope(),
-    state,
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-  });
 
-  // Store verifier in User model
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');
 
-  user.oauth = user.oauth || {};
+  // Twitter uses PKCE, code_challenge is derived from code_verifier
+  const verifier = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+
+  if (!user.oauth) user.oauth = {};
   user.oauth.twitter = {
     ...user.oauth.twitter,
     codeVerifier: verifier,
@@ -60,7 +51,17 @@ async function getAuthorizationUrl(userId, state, codeVerifier) {
   user.markModified('oauth');
   await user.save();
 
-  return { url: `https://twitter.com/i/oauth2/authorize?${params.toString()}`, codeVerifier: verifier };
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: process.env.TWITTER_CLIENT_ID,
+    redirect_uri: callbackUrl || defaultRedirectUri(),
+    scope: getScope(),
+    state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256'
+  });
+
+  return `https://twitter.com/i/oauth2/authorize?${params.toString()}`;
 }
 
 /**
@@ -160,41 +161,64 @@ async function postTweet(userId, tweetText, options = {}) {
 
 async function refreshToken(userId) {
   const creds = await oauthService.getSocialCredentials(userId, 'twitter');
-  if (!creds?.refreshToken) throw new Error('No refresh token');
+  if (!creds?.refreshToken) {
+    logger.error('No refresh token available for Twitter', { userId });
+    throw new Error('No refresh token available. Please reconnect your Twitter account.');
+  }
 
   const credentials = Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString('base64');
   
-  const response = await axios.post(TOKEN_URL, new URLSearchParams({
-    refresh_token: creds.refreshToken,
-    grant_type: 'refresh_token',
-    client_id: process.env.TWITTER_CLIENT_ID,
-  }), {
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+  try {
+    const response = await axios.post(TOKEN_URL, new URLSearchParams({
+      refresh_token: creds.refreshToken,
+      grant_type: 'refresh_token',
+      client_id: process.env.TWITTER_CLIENT_ID,
+    }), {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      timeout: 10000 // 10s timeout
+    });
+
+    const { access_token, refresh_token: newRefresh, expires_in } = response.data;
+
+    await oauthService.saveSocialCredentials(userId, 'twitter', {
+      accessToken: access_token,
+      refreshToken: newRefresh || creds.refreshToken,
+      extra: {
+        expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null,
+        lastRefreshAt: new Date()
+      }
+    });
+
+    logger.info('Twitter token rotated successfully', { userId });
+    return access_token;
+  } catch (error) {
+    const status = error.response?.status;
+    const data = error.response?.data;
+    logger.error('Twitter token refresh failed', { userId, status, data, error: error.message });
+    
+    if (status === 400 || status === 401) {
+      throw new Error('Twitter authorization expired. Please reconnect your account.');
     }
-  });
-
-  const { access_token, refresh_token: newRefresh, expires_in } = response.data;
-
-  await oauthService.saveSocialCredentials(userId, 'twitter', {
-    accessToken: access_token,
-    refreshToken: newRefresh || creds.refreshToken,
-    extra: {
-      expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000) : null
-    }
-  });
-
-  return access_token;
+    throw new Error('Failed to refresh Twitter access token.');
+  }
 }
 
 async function getAccessTokenForAccount(userId) {
   const creds = await oauthService.getSocialCredentials(userId, 'twitter');
-  if (!creds || !creds.accessToken) throw new Error('Twitter not connected');
+  if (!creds || !creds.accessToken) {
+    throw new Error('Twitter not connected');
+  }
 
   const expiresAt = creds.expiresAt ? new Date(creds.expiresAt).getTime() : null;
-  if (expiresAt && Date.now() >= expiresAt - 300000) { // 5 min buffer
-    if (creds.refreshToken) return await refreshToken(userId);
+  // Use a 10-minute buffer for rotation
+  if (expiresAt && Date.now() >= expiresAt - 600000) { 
+    logger.info('Twitter token expiring soon, rotating...', { userId, expiresAt: new Date(expiresAt) });
+    if (creds.refreshToken) {
+      return await refreshToken(userId);
+    }
   }
 
   return creds.accessToken;
@@ -216,7 +240,7 @@ module.exports = {
   exchangeCodeForToken,
   getUserProfile,
   postTweet,
-  refreshAccessToken,
+  refreshToken,
   getAccessTokenForAccount,
   getConnectedAccounts,
   disconnectTwitter,

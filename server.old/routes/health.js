@@ -1,0 +1,343 @@
+// Enhanced health check endpoint with integration status
+
+const express = require('express');
+const router = express.Router();
+const { isCloudStorageEnabled } = require('../services/storageService');
+const twitterOAuth = require('../services/twitterOAuthService');
+const logger = require('../utils/logger');
+
+/**
+ * Check Supabase database connection
+ */
+async function checkDatabase() {
+  try {
+    // Check if Supabase is configured
+    if (!process.env.SUPABASE_URL) {
+      return { connected: false, error: 'SUPABASE_URL not set' };
+    }
+
+    if (!process.env.SUPABASE_ANON_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return { connected: false, error: 'SUPABASE keys not set' };
+    }
+
+    // Import Supabase client
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Test connection with a simple query
+    const start = Date.now();
+    const { data, error } = await supabase.from('users').select('count').limit(1);
+    const latency = Date.now() - start;
+
+    if (error) {
+      return { connected: false, error: `Supabase error: ${error.message}` };
+    }
+
+    return { connected: true, latency: `${latency}ms` };
+  } catch (error) {
+    return { connected: false, error: `Connection error: ${error.message}` };
+  }
+}
+
+/**
+ * Check Redis connection (if configured)
+ */
+async function checkRedis() {
+  try {
+    const redis = require('redis');
+    if (!process.env.REDIS_URL) {
+      return { enabled: false, status: 'not configured' };
+    }
+
+    const client = redis.createClient({ url: process.env.REDIS_URL });
+    await client.connect();
+    const start = Date.now();
+    await client.ping();
+    const latency = Date.now() - start;
+    await client.quit();
+
+    return { enabled: true, connected: true, latency: `${latency}ms` };
+  } catch (error) {
+    return { enabled: true, connected: false, error: error.message };
+  }
+}
+
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [Health]
+ */
+router.get('/', async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    // Simplified health check - always return OK for uptime monitoring
+    let dbStatus = { connected: false, error: 'Not checked' };
+    let redisStatus = { enabled: false, status: 'Not checked' };
+
+    try {
+      [dbStatus, redisStatus] = await Promise.all([
+        checkDatabase(),
+        checkRedis()
+      ]);
+    } catch (dbError) {
+      // Ignore database errors for uptime monitoring
+      dbStatus = { connected: false, error: dbError.message };
+    }
+
+    const health = {
+      status: 'ok', // Always report OK for uptime monitoring
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      responseTime: `${Date.now() - startTime}ms`,
+      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version || '1.0.0',
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+        unit: 'MB'
+      },
+      integrations: {
+        sentry: {
+          enabled: !!process.env.SENTRY_DSN,
+          status: process.env.SENTRY_DSN ? 'configured' : 'not configured',
+        },
+        s3: {
+          enabled: isCloudStorageEnabled(),
+          status: isCloudStorageEnabled() ? 'configured' : 'using local storage',
+          bucket: process.env.AWS_S3_BUCKET || null,
+        },
+        oauth: {
+          twitter: {
+            enabled: twitterOAuth.isConfigured(),
+            configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET),
+          },
+          youtube: {
+            enabled: !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET),
+          },
+          linkedin: {
+            enabled: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
+          },
+          facebook: {
+            enabled: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
+          },
+          encryption: {
+            enabled: !!process.env.OAUTH_ENCRYPTION_KEY,
+            status: process.env.OAUTH_ENCRYPTION_KEY ? 'configured' : 'using default (INSECURE)',
+          },
+          tokenHealth: {
+            status: 'monitored',
+            frequency: '15m'
+          }
+        },
+        database: dbStatus,
+        redis: redisStatus,
+      },
+    };
+
+    // Always return 200 OK for uptime monitoring
+    res.status(200).json(health);
+  } catch (error) {
+    // Even if everything fails, return 200 OK for uptime monitoring
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      service: 'running',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/health/trigger-sentry-error:
+ *   get:
+ *     summary: Trigger a real Sentry exception for DSN verification
+ *     tags: [Health]
+ */
+router.get('/trigger-sentry-error', (req, res) => {
+  const logger = require('../utils/logger');
+  logger.info('🚨 Manually triggering Sentry error for DSN verification...');
+  
+  // Create a real exception to be caught by Sentry middleware or explicit capture
+  try {
+    throw new Error('Sovereign Verification Exception: Testing SENTRY_DSN Configuration');
+  } catch (error) {
+    if (process.env.SENTRY_DSN) {
+      const Sentry = require('@sentry/node');
+      Sentry.captureException(error);
+      res.status(500).json({
+        success: true,
+        message: 'Exception triggered and sent to Sentry.',
+        error: error.message
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'SENTRY_DSN not configured, nothing to send.'
+      });
+    }
+  }
+});
+
+/**
+ * @swagger
+ * /api/health/test-sentry:
+ *   post:
+ *     summary: Test Sentry integration
+ *     tags: [Health]
+ */
+router.post('/test-sentry', (req, res) => {
+  try {
+    const { captureMessage, captureException } = require('../utils/sentry');
+    
+    // Test message
+    captureMessage('Health check test message', 'info', {
+      tags: { source: 'health_check' },
+    });
+
+    // Test exception
+    const testError = new Error('Health check test error');
+    captureException(testError, {
+      tags: { source: 'health_check', test: true },
+    });
+
+    res.json({
+      success: true,
+      message: 'Test messages sent to Sentry. Check your Sentry dashboard.',
+    });
+  } catch (error) {
+    logger.error('Sentry test error', { error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/health/uptime:
+ *   get:
+ *     summary: Simple uptime check (always returns 200 OK)
+ *     tags: [Health]
+ */
+router.get('/uptime', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: 'running'
+  });
+});
+
+/**
+ * @swagger
+ * /api/health/debug-redis:
+ *   get:
+ *     summary: Debug Redis configuration (for troubleshooting)
+ *     tags: [Health]
+ */
+router.get('/debug-redis', (req, res) => {
+  // SIMPLE endpoint - just reads process.env.REDIS_URL directly
+  // NO function calls, NO requires, NO dependencies
+  try {
+    const rawRedisUrl = process.env.REDIS_URL || '';
+    const redisUrl = rawRedisUrl.trim();
+    
+    // Simple inline masking
+    let masked = null;
+    if (rawRedisUrl) {
+      try {
+        masked = rawRedisUrl.replace(/:([^:@]+)@/, ':****@');
+      } catch (e) {
+        masked = 'error-masking';
+      }
+    }
+    
+    res.json({
+      success: true,
+      environment: process.env.NODE_ENV || 'unknown',
+      redisUrl: {
+        exists: !!rawRedisUrl && rawRedisUrl.length > 0,
+        length: rawRedisUrl.length,
+        firstChars: rawRedisUrl.length > 0 ? rawRedisUrl.substring(0, Math.min(30, rawRedisUrl.length)) : null,
+        lastChars: rawRedisUrl.length > 30 ? '...' + rawRedisUrl.substring(rawRedisUrl.length - 20) : null,
+        masked: masked,
+        hasQuotes: rawRedisUrl ? (rawRedisUrl.startsWith('"') || rawRedisUrl.startsWith("'") || rawRedisUrl.endsWith('"') || rawRedisUrl.endsWith("'")) : false,
+        hasSpaces: rawRedisUrl ? rawRedisUrl.trim() !== rawRedisUrl : false,
+        containsLocalhost: rawRedisUrl ? (rawRedisUrl.includes('localhost') || rawRedisUrl.includes('127.0.0.1')) : false,
+        startsWithRedis: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) : false,
+        isValid: redisUrl ? (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://')) && !redisUrl.includes('localhost') && !redisUrl.includes('127.0.0.1') : false,
+      },
+      redisHost: process.env.REDIS_HOST || null,
+      redisPort: process.env.REDIS_PORT || null,
+      redisPassword: process.env.REDIS_PASSWORD ? '***' : null,
+    });
+  } catch (error) {
+    // Even on error, return basic info
+    res.json({
+      success: false,
+      error: error.message,
+      redisUrl: {
+        exists: !!process.env.REDIS_URL,
+        length: process.env.REDIS_URL ? process.env.REDIS_URL.length : 0,
+      },
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/health/error-log:
+ *   post:
+ *     summary: Log client-side unhandled errors
+ *     tags: [Health]
+ */
+router.post('/error-log', (req, res) => {
+  try {
+    const errorData = req.body || {};
+    logger.error('Client-side UI Exception Detected', {
+      source: 'client_telemetry',
+      url: errorData.url,
+      agent: errorData.userAgent,
+      errorName: errorData.error,
+      errorMessage: errorData.message,
+      stack: errorData.stack,
+      componentStack: errorData.componentStack
+    });
+
+    // Optionally capture in Sentry if configured
+    if (process.env.SENTRY_DSN) {
+      try {
+        const { captureException } = require('../utils/sentry');
+        const err = new Error(errorData.message || 'Unknown Client Error');
+        err.name = errorData.error || 'ClientError';
+        err.stack = errorData.stack;
+        captureException(err, { 
+          tags: { source: 'client_ui' },
+          extra: { 
+            componentStack: errorData.componentStack, 
+            url: errorData.url, 
+            userAgent: errorData.userAgent 
+          } 
+        });
+      } catch (e) {
+        // Silently fail Sentry if not available
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'Telemetry received safely' });
+  } catch (err) {
+    logger.error('Failed to parse client telemetry', { error: err.message });
+    res.status(500).json({ success: false });
+  }
+});
+
+module.exports = router;

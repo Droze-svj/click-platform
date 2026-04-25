@@ -92,12 +92,22 @@ const userSchema = new mongoose.Schema({
       refreshToken: String,
       connected: { type: Boolean, default: false },
       connectedAt: Date,
+      expiresAt: Date,
+      platformUserId: String,
+      platformUsername: String,
+      avatar: String,
+      state: String, // Temporary, for OAuth flow
     },
     facebook: {
       accessToken: String,
       refreshToken: String,
       connected: { type: Boolean, default: false },
       connectedAt: Date,
+      expiresAt: Date,
+      platformUserId: String,
+      platformUsername: String,
+      pages: [mongoose.Schema.Types.Mixed],
+      state: String, // Temporary, for OAuth flow
     },
     youtube: {
       accessToken: String,
@@ -107,6 +117,7 @@ const userSchema = new mongoose.Schema({
       expiresAt: Date,
       platformUserId: String,
       platformUsername: String,
+      avatar: String,
       channelId: String,
       state: String, // Temporary, for OAuth flow
     },
@@ -118,6 +129,7 @@ const userSchema = new mongoose.Schema({
       expiresAt: Date,
       platformUserId: String,
       platformUsername: String,
+      avatar: String,
       state: String, // Temporary, for OAuth flow
     },
     instagram: {
@@ -125,6 +137,11 @@ const userSchema = new mongoose.Schema({
       refreshToken: String,
       connected: { type: Boolean, default: false },
       connectedAt: Date,
+      expiresAt: Date,
+      platformUserId: String,
+      platformUsername: String,
+      avatar: String,
+      state: String, // Temporary, for OAuth flow
     }
   },
   emailVerified: {
@@ -213,7 +230,14 @@ userSchema.index({ 'subscription.status': 1, 'subscription.endDate': 1 }); // Ac
 userSchema.index({ createdAt: -1 });
 userSchema.index({ lastLogin: -1 }); // Recently active users
 userSchema.index({ role: 1 }); // Users by role
-userSchema.index({ 'subscription.status': 1, createdAt: -1 }); // Users by subscription status
+
+// OAuth Refresh Indexes: Essential for the proactive token rotation engine
+userSchema.index({ 'oauth.twitter.expiresAt': 1, 'oauth.twitter.connected': 1 });
+userSchema.index({ 'oauth.linkedin.expiresAt': 1, 'oauth.linkedin.connected': 1 });
+userSchema.index({ 'oauth.facebook.expiresAt': 1, 'oauth.facebook.connected': 1 });
+userSchema.index({ 'oauth.instagram.expiresAt': 1, 'oauth.instagram.connected': 1 });
+userSchema.index({ 'oauth.youtube.expiresAt': 1, 'oauth.youtube.connected': 1 });
+userSchema.index({ 'oauth.tiktok.expiresAt': 1, 'oauth.tiktok.connected': 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {

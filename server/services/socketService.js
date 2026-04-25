@@ -42,7 +42,7 @@ function initializeSocket(server) {
     });
 
     // Join content room for collaboration
-    socket.on('join:room', async ({ room }) => {
+    socket.on('join:room', async ({ room, contentId }) => {
       socket.join(room);
       if (currentUserId) {
         collaborationService.trackPresence(currentUserId, socket.id, room);
@@ -216,22 +216,6 @@ function initializeSocket(server) {
   // Initialize notification service
   const notificationService = require('./notificationService');
   notificationService.initialize(io);
-
-  // ── Viral Delta broadcaster ────────────────────────────────────────────────
-  // Every 30 seconds broadcast a real-time engagement delta to all connected
-  // clients so GrowthInsightsView can animate the percentile bar live.
-  const PLATFORMS = ['tiktok', 'instagram', 'youtube', 'linkedin', 'twitter'];
-  setInterval(() => {
-    if (!io) return;
-    const platform = PLATFORMS[Math.floor(Math.random() * PLATFORMS.length)];
-    const delta = parseFloat((Math.random() * 1.6 - 0.8).toFixed(2)); // −0.8 to +0.8
-    io.emit('viral-delta', {
-      platform,
-      delta,
-      percentileDelta: parseFloat((Math.random() * 2 - 1).toFixed(1)), // −1.0 to +1.0
-      timestamp: Date.now(),
-    });
-  }, 30_000);
 
   return io;
 }

@@ -1,7 +1,7 @@
 // TikTok OAuth Service
 // Features: OAuth 2.0, video upload/publish permissions, User model storage.
 
-const OAuthService = require('./OAuthService');
+const OAuthService = require('./oauthService');
 const logger = require('../utils/logger');
 const fs = require('fs');
 const axios = require('axios');
@@ -13,7 +13,7 @@ const LOG_CONTEXT = { service: 'tiktok-oauth' };
 
 function defaultRedirectUri() {
   return process.env.TIKTOK_REDIRECT_URI ||
-    `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social/connect/tiktok/callback`;
+    `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/tiktok/callback`;
 }
 
 class TikTokOAuthService {
@@ -41,13 +41,26 @@ class TikTokOAuthService {
     return (s && typeof s === 'string' && s.trim()) ? s.trim() : DEFAULT_SCOPE;
   }
 
-  getAuthorizationUrl(state) {
+  async getAuthorizationUrl(userId, state, callbackUrl) {
     if (!this.isConfigured()) throw new Error('TikTok OAuth not configured');
+    
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+
+    // Persist state to User model
+    if (!user.oauth) user.oauth = {};
+    if (!user.oauth.tiktok) user.oauth.tiktok = {};
+    user.oauth.tiktok.state = state;
+    user.oauth.tiktok.stateCreatedAt = new Date();
+    user.markModified('oauth');
+    await user.save();
+
     const params = new URLSearchParams({
       client_key: this.clientKey,
       scope: this.getScope(),
       response_type: 'code',
-      redirect_uri: this.redirectUri,
+      redirect_uri: callbackUrl || this.redirectUri,
       state,
     });
     return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;

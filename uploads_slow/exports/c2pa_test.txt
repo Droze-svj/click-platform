@@ -1,0 +1,1 @@
+DUMMY VIDEO DATA CONTENTSVGN2026{"creator":"Sovereign Test Node","type":"human-verified","signature":"54b331f60c128bf471a34e46e63361fbd108ddb10bdd90bdb66e8696c9c0c673","embeddedAt":"2026-03-28T09:02:18.567Z"}

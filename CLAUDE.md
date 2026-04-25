@@ -1,6 +1,7 @@
-# WHOP AI V3 - Pro Max Protocol
+# CLAUDE.md - Master Instructions
 
-## Autonomous Execution
-- **Tool Priority**: If a bug is found, skip 'Planning Mode' and call `edit_file` immediately.
-- **8GB RAM Rules**: Never read more than 3 files at once. Use `grep` to find code snippets.
-- **Verification**: You must run `ls -R` after every folder fix to verify integrity.
+## Code Editing Protocol
+When I ask you to modify, fix, or write code, you must follow this sequence:
+1. **Read First:** Search for the relevant files and read them before typing.
+2. **Targeted Edits:** Do not rewrite entire files. Use your tools to only edit the exact lines that need changing.
+3. **No Placeholders:** Never write comments like `// ... existing code ...`. Write out the full, functioning block of code.
