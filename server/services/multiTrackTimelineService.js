@@ -188,32 +188,25 @@ async function addClipToTrack(videoId, trackId, clipData) {
 /**
  * Render multi-track timeline to video
  */
-async function renderMultiTrackTimeline(videoId, outputPath) {
-  try {
-    const timeline = await getTimelineConfig(videoId);
-    
-    // This would use FFmpeg to composite all tracks
-    // Simplified version - full implementation would handle complex compositing
-    
-    logger.info('Multi-track timeline render started', { videoId });
-    
-    // In production, would:
-    // 1. Collect all clips from all tracks
-    // 2. Build FFmpeg complex filter
-    // 3. Composite video tracks
-    // 4. Mix audio tracks
-    // 5. Overlay text/graphics
-    // 6. Render final video
-    
-    return {
-      success: true,
-      outputPath,
-      message: 'Multi-track rendering would be implemented with FFmpeg complex filters'
-    };
-  } catch (error) {
-    logger.error('Render multi-track timeline error', { error: error.message, videoId });
-    throw error;
-  }
+async function renderMultiTrackTimeline(videoId /*, outputPath */) {
+  // The previous implementation returned `{ success: true, ... }` without
+  // actually rendering anything — the same dishonest-success antipattern that
+  // hid the export-pipeline gap until v1 of the segment-aware renderer.
+  //
+  // For single-input timelines (split clips, reverse, freeze, J/L cut,
+  // trim-to-in/out), use renderFromEditorState in videoRenderService.js;
+  // its pre-pass calls segmentTimelineRenderer.renderSegmentTimeline.
+  //
+  // True multi-track compositing (V1+V3 layered B-roll, multi-source clips,
+  // graphics overlay tracks) still needs to be built. Throwing makes the
+  // missing capability obvious instead of pretending it works.
+  await getTimelineConfig(videoId).catch(() => null);
+  logger.warn('renderMultiTrackTimeline called but multi-track compositing is not implemented', { videoId });
+  throw new Error(
+    'Multi-track timeline rendering is not yet implemented. ' +
+    'Use renderFromEditorState (videoRenderService) for single-input timelines; ' +
+    'true multi-track compositing requires segmentTimelineRenderer extensions for V3+ B-roll layering and multi-source clips.'
+  );
 }
 
 module.exports = {

@@ -173,6 +173,20 @@ export interface TimelineSegment {
   audioEnvelope?: { time: number; volume: number }[]
   /** Optional transcript text associated with this segment (e.g. for cuts) */
   transcriptText?: string
+  /** Play this segment's video and audio in reverse. Wired through to the
+   *  ffmpeg `reverse,areverse` filters in renderSegmentTimeline. */
+  reversed?: boolean
+  /** Hold the frame at sourceStartTime for the segment's full duration.
+   *  Renderer extracts the single frame and pads with silent audio. */
+  freezeFrame?: boolean
+  /** J-Cut: this segment's audio starts N seconds BEFORE its visual startTime.
+   *  Implemented as an adelay offset on the segment's audio chain; video is
+   *  unaffected. Stacks with audioTailOutSec on adjacent segments. */
+  audioLeadInSec?: number
+  /** L-Cut: this segment's audio continues N seconds AFTER its visual endTime.
+   *  Implemented as an apad/atrim on the segment's audio chain; video is
+   *  unaffected. */
+  audioTailOutSec?: number
 }
 
 /** Timeline marker (named position for quick navigation) */

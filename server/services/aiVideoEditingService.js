@@ -1193,6 +1193,11 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     }
 
     // Generate smart captions if enabled
+    // NOTE: appliedEdits / creativeFeatures / warnings are declared here (not later)
+    // because the captions block is the first producer of edit results.
+    const appliedEdits = [];
+    const creativeFeatures = [];
+    const warnings = [];
     let smartCaptions = null;
     if (enableSmartCaptions && transcript) {
       emitProgress('captions', 15, 'Generating smart captions...');
@@ -1201,7 +1206,18 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       if (smartCaptions && smartCaptions.length > 0) {
         appliedEdits.push(`Smart Captions (${smartCaptions.length} lines, ${captionStyle} style)`);
         creativeFeatures.push('Smart Captions');
+      } else {
+        warnings.push({
+          feature: 'smartCaptions',
+          message: 'Smart captions were requested but could not be generated. Video will be produced without them.',
+        });
+        logger.warn('Smart captions requested but generation returned no captions', { videoId });
       }
+    } else if (enableSmartCaptions && !transcript) {
+      warnings.push({
+        feature: 'smartCaptions',
+        message: 'Smart captions were requested but no transcript is available. Run transcription first.',
+      });
     }
 
     emitProgress('editing', 20, 'Building edit plan...');
@@ -1295,10 +1311,9 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     }
 
     // 4. Build intelligent edit plan with creative & quality features
+    // (appliedEdits, creativeFeatures, warnings already declared above with the captions block)
     const videoFilters = [];
     const audioFilters = [];
-    const appliedEdits = [];
-    const creativeFeatures = [];
 
     // Quality: Video stabilization (if enabled)
     if (enableStabilization) {
@@ -1720,6 +1735,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
               editedVideoUrl: uploadResult.url,
               editsApplied: appliedEdits,
               creativeFeatures: creativeFeatures,
+              warnings: warnings.length > 0 ? warnings : undefined,
               qualityScore: {
                 before: qualityScore,
                 after: finalQualityScore,

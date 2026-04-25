@@ -410,46 +410,14 @@ async function autoColorCorrect(inputPath, outputPath, options = {}) {
  * @returns {Promise<Array>} Face detection results
  */
 async function detectFaces(videoPath) {
-  try {
-    logger.info('Detecting faces', { videoPath });
-
-    // Use FFmpeg to extract frames and detect faces
-    // In production, would use OpenCV or similar
-    const framesDir = path.join(path.dirname(videoPath), 'frames');
-    await fs.mkdir(framesDir, { recursive: true });
-
-    // Extract frames at 1fps
-    await new Promise((resolve, reject) => {
-      ffmpeg(videoPath)
-        .outputOptions(['-vf', 'fps=1'])
-        .output(path.join(framesDir, 'frame-%03d.jpg'))
-        .on('end', resolve)
-        .on('error', reject)
-        .run();
-    });
-
-    // Analyze frames for faces (simplified - would use actual face detection)
-    const frames = await fs.readdir(framesDir);
-    const faceDetections = frames.map((frame, index) => ({
-      frame: index,
-      timestamp: index, // 1 second per frame
-      hasFace: true, // Would use actual detection
-      boundingBox: { x: 0, y: 0, width: 100, height: 100 },
-    }));
-
-    // Cleanup
-    await fs.rm(framesDir, { recursive: true, force: true });
-
-    logger.info('Face detection complete', {
-      videoPath,
-      facesDetected: faceDetections.filter((f) => f.hasFace).length,
-    });
-
-    return faceDetections;
-  } catch (error) {
-    logger.error('Error detecting faces', { videoPath, error: error.message });
-    return [];
-  }
+  // No face-detection backend is wired up in this service. The previous
+  // implementation extracted frames and fabricated `hasFace:true` with a
+  // dummy bbox for every frame, which actively misled auto-frame/auto-zoom.
+  // Returning [] makes callers (e.g. autoFrameVideo gate at .length > 0)
+  // skip face-aware steps and fall back to safer center-crop / scene-change
+  // heuristics until a real detector (face-api, MediaPipe, OpenCV) is wired in.
+  logger.warn('detectFaces stub: no face-detection backend configured — returning no detections', { videoPath });
+  return [];
 }
 
 /**

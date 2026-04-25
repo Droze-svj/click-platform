@@ -65,7 +65,7 @@ const generatedReportSchema = new mongoose.Schema({
     keyHighlights: [String],
     recommendations: [String],
     generatedAt: Date,
-    model: { type: String, default: 'gpt-4' }
+    model: { type: String, default: 'gemini-1.5-flash' }
   },
   // Export files
   exports: {

@@ -49,16 +49,16 @@ async function uploadToYouTube(authData, contentData) {
     const uploadUrl = metadataResponse.headers.location;
     logger.info('YouTube resumable upload URL obtained', { uploadUrl });
 
-    // In a real implementation, we'd now PIPE the video file to this uploadUrl
-    // For now, return a placeholder ID if in dev
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.MOCK_PUBLISHING === '1') {
+      logger.warn('YouTube upload mocked via MOCK_PUBLISHING=1 — no media streamed');
       return {
-        id: `yt_${Date.now()}`,
-        url: `https://youtube.com/watch?v=dummy_yt_id`
+        id: `yt_mock_${Date.now()}`,
+        url: 'https://youtube.com/watch?v=dummy_yt_id',
+        mocked: true
       };
     }
 
-    throw new Error('Full YouTube video stream upload not implemented for production yet');
+    throw new Error('YouTube video stream upload is not yet implemented. Set MOCK_PUBLISHING=1 to simulate.');
   } catch (error) {
     logger.error('YouTube API error', { error: error.response?.data || error.message });
     throw new Error(`YouTube upload failed: ${error.message}`);

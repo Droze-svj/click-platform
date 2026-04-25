@@ -1,15 +1,14 @@
-// OpenAI Whisper API for real video transcript generation
+// Video transcription service.
+// Click is configured for Gemini-only AI: this service routes through
+// utils/googleAI.transcribeAudio (Gemini 1.5 native audio understanding).
+// The OpenAI/Whisper code path is fully removed — re-enable by reverting this
+// file *and* unsetting AI_GEMINI_ONLY.
 
-const OpenAI = require('openai');
 const fs = require('fs');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
-
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 300000, // 5 minutes for long videos
-}) : null;
+const { transcribeAudio: geminiTranscribe, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
 /**
  * Extract audio from video file (if needed)
@@ -39,110 +38,69 @@ async function extractAudioFromVideo(videoPath) {
  * @returns {Promise<string>} - Generated transcript
  */
 async function generateTranscriptFromVideo(videoPath, options = {}) {
-  if (!openai) {
-    logger.warn('OpenAI API key not configured, transcript generation unavailable');
+  if (!geminiConfigured) {
+    logger.warn('Gemini API key not configured, transcript generation unavailable');
     return null;
   }
 
   const {
     language = 'en',
-    responseFormat = 'text',
-    temperature = 0,
-    prompt = null, // Optional prompt to guide the model
-    useAudioExtraction = false, // Extract audio first for better results
+    prompt = null,
   } = options;
 
   try {
-    // Check if file exists
     if (!fs.existsSync(videoPath)) {
       throw new Error('Video file not found');
     }
 
+    // Gemini accepts audio inline — we always extract audio from video first
+    // because audio-only payloads are smaller and more reliably processed.
     let fileToTranscribe = videoPath;
     let shouldCleanupAudio = false;
-
-    // Extract audio if requested (better for large videos)
-    if (useAudioExtraction) {
-      try {
-        fileToTranscribe = await extractAudioFromVideo(videoPath);
-        shouldCleanupAudio = true;
-        logger.info('Audio extracted from video', { videoPath, audioPath: fileToTranscribe });
-      } catch (extractError) {
-        logger.warn('Audio extraction failed, using video directly', { error: extractError.message });
-      }
+    try {
+      fileToTranscribe = await extractAudioFromVideo(videoPath);
+      shouldCleanupAudio = true;
+      logger.info('Audio extracted from video for Gemini transcription', { videoPath, audioPath: fileToTranscribe });
+    } catch (extractError) {
+      logger.warn('Audio extraction failed, sending original file to Gemini', { error: extractError.message });
     }
 
-    // Create a readable stream from the file
-    const fileStream = fs.createReadStream(fileToTranscribe);
     const fileSize = fs.statSync(fileToTranscribe).size;
-
-    logger.info('Starting transcript generation', {
+    logger.info('Starting Gemini transcript generation', {
       videoPath,
       fileSize: `${(fileSize / 1024 / 1024).toFixed(2)}MB`,
       language,
     });
 
-    // Retry logic for API calls
-    const transcription = await retryWithBackoff(
-      async () => {
-        const transcriptionOptions = {
-          file: fileStream,
-          model: 'whisper-1',
-          response_format: responseFormat,
-          language: language !== 'auto' ? language : undefined,
-          temperature,
-        };
-
-        if (prompt) {
-          transcriptionOptions.prompt = prompt;
-        }
-
-        return await openai.audio.transcriptions.create(transcriptionOptions);
-      },
+    const transcript = await retryWithBackoff(
+      async () => geminiTranscribe(fileToTranscribe, { language, prompt }),
       {
         maxRetries: 3,
-        initialDelay: 1000,
+        initialDelay: 1500,
         maxDelay: 10000,
         onRetry: (attempt, error) => {
-          logger.warn('Transcript generation retry', {
-            attempt,
-            error: error.message,
-            videoPath,
-          });
+          logger.warn('Gemini transcript retry', { attempt, error: error.message, videoPath });
         },
       }
     );
 
-    // Cleanup extracted audio file if created
     if (shouldCleanupAudio && fs.existsSync(fileToTranscribe) && fileToTranscribe !== videoPath) {
-      try {
-        fs.unlinkSync(fileToTranscribe);
-      } catch (cleanupError) {
-        logger.warn('Failed to cleanup audio file', { error: cleanupError.message });
-      }
+      try { fs.unlinkSync(fileToTranscribe); } catch (e) { logger.warn('Failed to cleanup audio file', { error: e.message }); }
     }
 
-    const transcript = typeof transcription === 'string' ? transcription : transcription.text;
+    if (!transcript) return null;
     logger.info('Transcript generated successfully', {
       videoPath,
       length: transcript.length,
       wordCount: transcript.split(/\s+/).length,
     });
-
     return transcript;
   } catch (error) {
-    logger.error('Whisper transcription error', {
-      error: error.message,
-      videoPath,
-      stack: error.stack,
-    });
-
+    logger.error('Gemini transcription error', { error: error.message, videoPath, stack: error.stack });
     captureException(error, {
-      tags: { service: 'whisper', operation: 'transcription' },
+      tags: { service: 'gemini-transcription', operation: 'transcription' },
       extra: { videoPath, options },
     });
-
-    // Return null on error, caller can handle fallback
     return null;
   }
 }

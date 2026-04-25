@@ -10,10 +10,7 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
-const OpenAI = require('openai');
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../../utils/googleAI');
 
 const VIRAL_ANALYSIS_PROMPT = `You are an expert viral video analyst trained on millions of high-performing short-form videos (TikTok, YouTube Shorts, Instagram Reels).
 
@@ -45,39 +42,24 @@ router.post('/', auth, requireFeature('ai_analysis'), asyncHandler(async (req, r
     return sendError(res, 'Transcript is required (min 20 characters)', 400);
   }
 
-  if (!openai) {
-    // Return smart fallback analysis if no API key
-    logger.warn('OpenAI not configured — returning fallback hook analysis');
+  if (!geminiConfigured) {
+    logger.warn('Gemini not configured — returning fallback hook analysis');
     return sendSuccess(res, 'Hook analysis (fallback)', 200, generateFallbackAnalysis(transcript));
   }
 
   try {
-    logger.info('Starting AI hook analysis', { videoId, transcriptLength: transcript.length });
+    logger.info('Starting AI hook analysis (Gemini)', { videoId, transcriptLength: transcript.length });
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: VIRAL_ANALYSIS_PROMPT
-        },
-        {
-          role: 'user',
-          content: `Video Duration: ${duration || 'unknown'} seconds\n\nTranscript:\n${transcript.slice(0, 4000)}`
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 1200,
-      response_format: { type: 'json_object' }
-    });
+    const fullPrompt = `${VIRAL_ANALYSIS_PROMPT}\n\nVideo Duration: ${duration || 'unknown'} seconds\n\nTranscript:\n${transcript.slice(0, 4000)}`;
+    const rawContent = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 1200 });
 
-    const rawContent = completion.choices[0].message.content;
     let analysis;
-
     try {
-      analysis = JSON.parse(rawContent);
+      // Gemini sometimes wraps JSON output in ```json fences — strip them.
+      const cleaned = (rawContent || '').replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+      analysis = JSON.parse(cleaned);
     } catch (parseError) {
-      logger.error('Failed to parse GPT-4o response', { rawContent, parseError: parseError.message });
+      logger.error('Failed to parse Gemini response', { rawContent, parseError: parseError.message });
       analysis = generateFallbackAnalysis(transcript);
     }
 

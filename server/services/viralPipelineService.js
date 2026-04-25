@@ -13,9 +13,7 @@ const { autoEditVideo, exportMultipleFormats } = require('./aiVideoEditingServic
 const { getCompetitiveBenchmarks } = require('./competitiveBenchmarkingService');
 const { generateThumbnail } = require('./thumbnailService');
 const { optimizeImage } = require('../utils/imageOptimizer');
-const OpenAI = require('openai');
-
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
 /**
  * Main entry point for the One-Click Viral Pipeline (Phase 2)
@@ -177,24 +175,25 @@ function updateProgress(userId, contentId, status, progress, message) {
 }
 
 async function analyzeHooksLocally(transcript, duration) {
-  if (!openai) return generateFallbackAnalysis(transcript);
+  if (!geminiConfigured) return generateFallbackAnalysis(transcript);
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a viral video expert. Analyze script and return JSON: hookStrength(0-100), viralPotential(0-100), hookType, rewrites(array), directives(array).'
-        },
-        {
-          role: 'user',
-          content: `Duration: ${duration}s\nTranscript: ${transcript.substring(0, 4000)}`
-        }
-      ],
-      response_format: { type: 'json_object' }
-    });
-    return JSON.parse(completion.choices[0].message.content);
+    const prompt = `You are a viral video expert. Analyze the script and respond with ONLY a JSON object (no preamble, no markdown fences) with these exact keys:
+- hookStrength (number 0-100)
+- viralPotential (number 0-100)
+- hookType (string)
+- rewrites (array of strings)
+- directives (array of strings)
+
+Duration: ${duration}s
+Transcript: ${transcript.substring(0, 4000)}`;
+
+    const raw = await geminiGenerate(prompt, { temperature: 0.5, maxTokens: 1024 });
+    if (!raw) return generateFallbackAnalysis(transcript);
+
+    // Gemini sometimes wraps JSON in ```json fences — strip them defensively.
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    return JSON.parse(cleaned);
   } catch (error) {
     logger.error('Pipeline hook analysis failed', { error: error.message });
     return generateFallbackAnalysis(transcript);

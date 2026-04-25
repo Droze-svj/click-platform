@@ -6,6 +6,34 @@ const path = require('path')
 const fs = require('fs')
 const Content = require('../models/Content')
 const logger = require('../utils/logger')
+const { renderSegmentTimeline, isPrimaryVideoSegment } = require('./segmentTimelineRenderer')
+
+// Decide whether the given segments require the segment-aware pre-pass.
+// Conservative: any of these signals is enough.
+//   - More than one primary-video segment (i.e. the user actually split
+//     something or reordered clips).
+//   - A segment with reversed / freezeFrame / J-or-L-cut audio offsets.
+//   - A segment whose source range differs from its timeline range
+//     (Trim-to-In/Out has been applied).
+function needsSegmentPrePass(segments) {
+  if (!Array.isArray(segments) || segments.length === 0) return false
+  const primary = segments.filter(isPrimaryVideoSegment)
+  if (primary.length === 0) return false
+  if (primary.length > 1) return true
+  for (const s of primary) {
+    if (s.reversed) return true
+    if (s.freezeFrame) return true
+    if (Number(s.audioLeadInSec) > 0) return true
+    if (Number(s.audioTailOutSec) > 0) return true
+    if (typeof s.sourceStartTime === 'number'
+        && typeof s.sourceEndTime === 'number'
+        && (Math.abs(s.sourceStartTime - (s.startTime ?? 0)) > 0.01
+         || Math.abs(s.sourceEndTime - (s.endTime ?? 0)) > 0.01)) {
+      return true
+    }
+  }
+  return false
+}
 
 /**
  * Build FFmpeg video filter chain from editor videoFilters
@@ -164,7 +192,7 @@ async function renderFromEditorState(options) {
     bitrateMbps = Math.max(bitrateMbps, 50) // ProRes is high bitrate
   }
 
-  const inputPath = await resolveInputPath(videoId, videoUrl)
+  let inputPath = await resolveInputPath(videoId, videoUrl)
 
   if (!inputPath.startsWith('http') && !fs.existsSync(inputPath)) {
     throw new Error(`Input video not found: ${inputPath}`)
@@ -172,6 +200,34 @@ async function renderFromEditorState(options) {
 
   const outputDir = path.join(__dirname, '../../uploads/exports')
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true })
+
+  // Segment-aware pre-pass: if the timeline has segment-level ops the
+  // single-input filter chain below cannot express (split, reverse, freeze,
+  // J/L cut, source-range trim), we render those first into an intermediate
+  // file and feed that to the rest of the pipeline.
+  let intermediatePath = null
+  try {
+    if (needsSegmentPrePass(timelineSegments)) {
+      intermediatePath = path.join(outputDir, `seg-prepass-${videoId || 'export'}-${Date.now()}.mp4`)
+      logger.info('renderFromEditorState: running segment pre-pass', {
+        segments: timelineSegments.length,
+        intermediatePath,
+      })
+      const prePass = await renderSegmentTimeline({
+        inputPath,
+        segments: timelineSegments,
+        outputPath: intermediatePath,
+        exportOptions,
+      })
+      if (prePass.skipped?.length) {
+        logger.warn('renderSegmentTimeline skipped some segments', { skipped: prePass.skipped })
+      }
+      inputPath = intermediatePath
+    }
+  } catch (err) {
+    logger.error('Segment pre-pass failed; falling back to raw input', { error: err.message })
+    intermediatePath = null
+  }
   const ext = isProres ? 'mov' : 'mp4'
   const outputFilename = `render-${videoId || 'export'}-${Date.now()}.${ext}`
   const outputPath = path.join(outputDir, outputFilename)
@@ -267,6 +323,9 @@ async function renderFromEditorState(options) {
               if (fs.existsSync(outputPath)) {
                 const url = `/uploads/exports/${outputFilename}`
                 logger.info('Neural Node Handoff: Render Complete', { videoId, url })
+                if (intermediatePath && fs.existsSync(intermediatePath)) {
+                  try { fs.unlinkSync(intermediatePath) } catch (e) { logger.warn('Failed to remove intermediate', { error: e.message }) }
+                }
                 jobResolve({ outputPath, url })
               } else {
                 jobReject(new Error('Neural Node Error: Output Fragment Missing'))

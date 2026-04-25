@@ -254,6 +254,80 @@ interface RealTimeVideoPreviewProps {
   onUpdateVideoTransform?: (updates: { scale?: number, positionX?: number, positionY?: number, rotation?: number }) => void
 }
 
+/**
+ * Map a timeline-coordinate time to the underlying source-video time.
+ *
+ * The segment-aware export pipeline gives each segment its own source range
+ * (sourceStartTime/sourceEndTime), so once a user splits a clip and reorders
+ * pieces — or trims with In/Out, or freezes a frame — the timeline second
+ * `T=4.0` may correspond to source second `5.7` of the original video.
+ * Without this mapping, the preview ignores all segment ops and just plays
+ * the raw input file.
+ *
+ * Returns:
+ *   - segment: the segment containing `timelineSec` (or null if none / past end)
+ *   - sourceTime: where to seek the underlying <video> element
+ *   - flags: { freeze, reversed } so callers can adjust playback behavior
+ *
+ * Reverse and J/L-cuts are NOT reflected in the preview — they only show up
+ * in exports. Browsers can't play media in reverse natively without a
+ * pre-rendered proxy, and J/L audio offsets need a separate WebAudio mix.
+ * For those, the UI badges the segment as "export-only".
+ */
+function timelineToSource(
+  timelineSec: number,
+  segments: TimelineSegment[]
+): { segment: TimelineSegment | null; sourceTime: number; freeze: boolean; reversed: boolean } {
+  if (!segments || segments.length === 0) {
+    return { segment: null, sourceTime: timelineSec, freeze: false, reversed: false }
+  }
+  // Match the renderer's planSegments: only consider primary-video segments
+  // sorted by startTime. Effects/audio-only/text segments don't contribute.
+  const primary = segments
+    .filter((s) => {
+      const track = typeof s.track === 'number' ? s.track : 0
+      if (track !== 0 && track !== 1) return false
+      if (s.type && s.type !== 'video' && s.type !== 'broll' && s.type !== 'cut') return false
+      return true
+    })
+    .slice()
+    .sort((a, b) => (a.startTime ?? 0) - (b.startTime ?? 0))
+  if (primary.length === 0) {
+    return { segment: null, sourceTime: timelineSec, freeze: false, reversed: false }
+  }
+  for (const seg of primary) {
+    if (timelineSec >= seg.startTime && timelineSec < seg.endTime) {
+      const offsetIntoSeg = timelineSec - seg.startTime
+      const sourceStart = seg.sourceStartTime ?? seg.startTime
+      const sourceTime = sourceStart + offsetIntoSeg
+      return {
+        segment: seg,
+        sourceTime,
+        freeze: !!seg.freezeFrame,
+        reversed: !!seg.reversed,
+      }
+    }
+  }
+  // Past the last segment — clamp to its end.
+  const last = primary[primary.length - 1]
+  return {
+    segment: last,
+    sourceTime: last.sourceEndTime ?? last.endTime,
+    freeze: false,
+    reversed: false,
+  }
+}
+
+function timelineHasExportOnlyOps(segments: TimelineSegment[]): { reverse: number; jcut: number; lcut: number } {
+  let reverse = 0, jcut = 0, lcut = 0
+  for (const s of segments || []) {
+    if (s.reversed) reverse++
+    if ((s.audioLeadInSec ?? 0) > 0) jcut++
+    if ((s.audioTailOutSec ?? 0) > 0) lcut++
+  }
+  return { reverse, jcut, lcut }
+}
+
 function blendFiltersAtTime(base: import('../../types/editor').VideoFilter, effects: TimelineEffect[], t: number): import('../../types/editor').VideoFilter {
   let out = { ...base }
   for (const e of effects) {
@@ -297,6 +371,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   // V6 WebGPU Rendering Scaffold
   const webGpuCanvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<WebGPURenderer | null>(null)
+  const rendererReadyRef = useRef<boolean>(false)
+  const [gpuStatus, setGpuStatus] = useState<'pending' | 'ready' | 'unavailable'>('pending')
 
   const videoTransformRef = useRef(videoTransform)
   videoTransformRef.current = videoTransform
@@ -307,12 +383,30 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   useEffect(() => {
     if (!webGpuCanvasRef.current) return
+    if (typeof navigator === 'undefined' || !(navigator as any).gpu) {
+      // No WebGPU on this browser/device — preview falls back to the plain
+      // <video> element, which is the actual on-screen surface. The canvas
+      // overlay (opacity-0) just stays empty.
+      setGpuStatus('unavailable')
+      return
+    }
     const renderer = new WebGPURenderer()
     rendererRef.current = renderer
+    let cancelled = false
     renderer.init(webGpuCanvasRef.current).then(() => {
-      console.log('V6 Zero-Latency WebGPU Renderer Initialized')
-    }).catch(e => console.error('WebGPU Init Failed:', e))
-    return () => renderer.dispose()
+      if (cancelled) return
+      rendererReadyRef.current = true
+      setGpuStatus('ready')
+    }).catch(e => {
+      console.warn('WebGPU init failed; GPU-accelerated effects disabled, video preview unaffected.', e)
+      rendererReadyRef.current = false
+      setGpuStatus('unavailable')
+    })
+    return () => {
+      cancelled = true
+      rendererReadyRef.current = false
+      try { renderer.dispose() } catch { /* renderer may not have allocated yet */ }
+    }
   }, [])
 
   // Smart Guides State
@@ -323,15 +417,31 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const frameTimes = useRef<number[]>([])
   const lastTimeRef = useRef<number>(performance.now())
 
+  // Timeline time is tracked independently from video.currentTime so that
+  // segment ops (split/reorder/trim/freeze) can be honored — see
+  // timelineToSource. For a flat single-segment timeline the two are equal.
+  const timelineTimeRef = useRef<number>(currentTime)
+  const lastSegmentIdRef = useRef<string | null>(null)
+  const timelineSegmentsRef = useRef(timelineSegments)
+  timelineSegmentsRef.current = timelineSegments
+
+  // External currentTime → internal timeline cursor + underlying video seek.
   useEffect(() => {
     const v = videoRef.current
     if (!v || !isFinite(currentTime)) return
-    const diff = Math.abs(v.currentTime - currentTime)
+    const diffTimeline = Math.abs(timelineTimeRef.current - currentTime)
+    if (diffTimeline < 0.02) return
+
+    timelineTimeRef.current = currentTime
+    const mapping = timelineToSource(currentTime, timelineSegmentsRef.current || [])
     const seekThreshold = isPlaying ? 0.25 : 0.05
-    if (diff > seekThreshold) {
-      v.currentTime = currentTime
-      if (isSplit && videoRefRight.current) videoRefRight.current.currentTime = currentTime
+    if (Math.abs(v.currentTime - mapping.sourceTime) > seekThreshold) {
+      try { v.currentTime = mapping.sourceTime } catch (e) { /* seek may fail before metadata */ }
+      if (isSplit && videoRefRight.current) {
+        try { videoRefRight.current.currentTime = mapping.sourceTime } catch (e) { /* same */ }
+      }
     }
+    lastSegmentIdRef.current = mapping.segment?.id ?? null
   }, [currentTime, isPlaying, isSplit])
 
   useEffect(() => {
@@ -340,7 +450,6 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     if (!v) return
     let rafId: number
     const tick = (now: number) => {
-      // Performance tracking
       const delta = now - lastTimeRef.current
       lastTimeRef.current = now
 
@@ -351,25 +460,54 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
       setFps(frameTimes.current.length)
       setLatency(Math.round(delta))
 
-      const t = v.currentTime
-      if (rendererRef.current) {
-        // Send render command to offscreen worker
-        rendererRef.current.drawFrame({ timestamp: now }, {
-          quality: previewQuality === 'full' ? 'high' : 'low',
-          transform: interpolateTransformAtTime(videoTransformKeyframesRef.current, t, videoTransformRef.current as any),
-          crop: videoCropRef.current
-        })
+      // Advance timeline cursor independently from <video>.currentTime so
+      // freeze segments hold the video while the timeline still moves, and
+      // segment boundaries can trigger explicit source-time seeks.
+      timelineTimeRef.current += (delta / 1000) * (playbackSpeed || 1)
+      const t = timelineTimeRef.current
+      const mapping = timelineToSource(t, timelineSegmentsRef.current || [])
+      const segId = mapping.segment?.id ?? null
+
+      if (segId !== lastSegmentIdRef.current) {
+        // Crossed a segment boundary — seek to the new segment's source point.
+        if (segId && Math.abs(v.currentTime - mapping.sourceTime) > 0.1) {
+          try { v.currentTime = mapping.sourceTime } catch (e) { /* pre-metadata */ }
+        }
+        lastSegmentIdRef.current = segId
+      }
+
+      // Freeze segments: hold the video element, keep the timeline ticking.
+      if (mapping.freeze) {
+        if (!v.paused) { try { v.pause() } catch {} }
+      } else {
+        if (v.paused) { try { v.play() } catch {} }
+      }
+
+      if (rendererRef.current && rendererReadyRef.current) {
+        try {
+          rendererRef.current.drawFrame({ timestamp: now }, {
+            quality: previewQuality === 'full' ? 'high' : 'low',
+            transform: interpolateTransformAtTime(videoTransformKeyframesRef.current, t, videoTransformRef.current as any),
+            crop: videoCropRef.current
+          })
+        } catch (err) {
+          console.warn('WebGPU drawFrame failed; disabling renderer for this session.', err)
+          rendererReadyRef.current = false
+          setGpuStatus('unavailable')
+        }
       }
 
       if (isFinite(t)) {
         onTimeUpdateRef.current(t)
-        if (isSplit && videoRefRight.current) videoRefRight.current.currentTime = t
+        if (isSplit && videoRefRight.current) {
+          try { videoRefRight.current.currentTime = mapping.sourceTime } catch {}
+        }
       }
       rafId = requestAnimationFrame(tick)
     }
     rafId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafId)
-  }, [isPlaying, isSplit])
+  }, [isPlaying, isSplit, playbackSpeed])
 
   const handleBeforeAfterToggle = () => {
     const next = !showAppliedFilters
@@ -626,9 +764,42 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                    <span>{fps} FPS</span>
                    <span className="opacity-50">|</span>
                    <span>{latency}ms</span>
+                   <span className="opacity-50">|</span>
+                   <span
+                     className={
+                       gpuStatus === 'ready' ? 'text-emerald-400'
+                       : gpuStatus === 'unavailable' ? 'text-amber-400'
+                       : 'text-white/40'
+                     }
+                     title={
+                       gpuStatus === 'ready' ? 'WebGPU acceleration active'
+                       : gpuStatus === 'unavailable' ? 'WebGPU unavailable — using fallback video preview'
+                       : 'Initializing GPU renderer…'
+                     }
+                   >
+                     {gpuStatus === 'ready' ? 'GPU' : gpuStatus === 'unavailable' ? 'GPU off' : 'GPU…'}
+                   </span>
                  </div>
                </div>
             </div>
+            {(() => {
+              const ops = timelineHasExportOnlyOps(timelineSegments || [])
+              const total = ops.reverse + ops.jcut + ops.lcut
+              if (total === 0) return null
+              const parts: string[] = []
+              if (ops.reverse) parts.push(`${ops.reverse}× reverse`)
+              if (ops.jcut) parts.push(`${ops.jcut}× J-cut`)
+              if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
+              return (
+                <div
+                  className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2"
+                  title="These ops are applied at export time only — preview shows segments in their original direction with normal audio sync."
+                >
+                  <span className="text-[9px] font-black uppercase text-amber-300/80 tracking-wider">Export-only</span>
+                  <span className="text-[10px] font-mono font-bold text-amber-200">{parts.join(' · ')}</span>
+                </div>
+              )
+            })()}
             {/* Resolution Toggle */}
             <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-1 border border-white/10 shadow-2xl items-center gap-1">
               {(['Full', '1/2', '1/4'] as const).map(res => (

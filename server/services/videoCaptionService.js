@@ -1,72 +1,83 @@
-// Video Caption Service - AI-powered auto-captions using OpenAI Whisper API
+// Video Caption Service - AI-powered auto-captions
+// Click is configured for Gemini-only AI: this service routes through
+// utils/googleAI.transcribeAudio. Gemini returns plain transcript text only,
+// so segment/word timing is approximated by even time-distribution. Callers
+// that need true word-level timing should treat `wordTimingsApproximate=true`
+// as a signal to fall back to a dedicated speech recognizer.
 
-const OpenAI = require('openai');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
+const { transcribeAudio: geminiTranscribe, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
-// Initialize OpenAI client
-let openai = null;
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
+function getAudioDurationSec(filePath) {
+  try {
+    const ffmpeg = require('fluent-ffmpeg');
+    return new Promise((resolve) => {
+      ffmpeg.ffprobe(filePath, (err, data) => {
+        if (err || !data?.format?.duration) return resolve(null);
+        resolve(Number(data.format.duration));
       });
-    } catch (error) {
-      logger.warn('OpenAI not configured for video captions', { error: error.message });
-    }
+    });
+  } catch (_) {
+    return Promise.resolve(null);
   }
-  return openai;
 }
 
-/**
- * Generate transcript from video file using Whisper API
- * @param {string} videoFilePath - Path to video file
- * @param {string} language - Language code (optional, auto-detect if not provided)
- * @returns {Promise<Object>} Transcript with text and segments
- */
 async function generateTranscript(videoFilePath, language = null) {
-  const client = getOpenAIClient();
-  if (!client) {
-    throw new Error('OpenAI API not configured');
+  if (!geminiConfigured) {
+    throw new Error('Gemini API not configured (GOOGLE_AI_API_KEY missing)');
   }
 
   try {
-    logger.info('Generating transcript', { videoFilePath, language });
+    logger.info('Generating transcript via Gemini', { videoFilePath, language });
 
-    // Read video file
-    // Create file stream for OpenAI (using fs.createReadStream for Node.js)
-    const { createReadStream } = require('fs');
-    const fileStream = createReadStream(videoFilePath);
+    const text = await geminiTranscribe(videoFilePath, { language: language || 'en' });
+    if (!text) {
+      return { text: '', language: language || 'en', duration: 0, segments: [], words: [], wordTimingsApproximate: true };
+    }
 
-    // Call Whisper API
-    const response = await client.audio.transcriptions.create({
-      file: fileStream,
-      model: 'whisper-1',
-      language: language || undefined, // Auto-detect if not provided
-      response_format: 'verbose_json', // Get detailed response with segments
-      timestamp_granularities: ['segment', 'word'], // Get both segment and word-level timestamps
-    });
+    const duration = (await getAudioDurationSec(videoFilePath)) || 0;
+    const wordTokens = text.split(/\s+/).filter(Boolean);
+    const perWordSec = duration && wordTokens.length > 0 ? duration / wordTokens.length : 0.4;
 
-    logger.info('Transcript generated successfully', {
-      textLength: response.text?.length || 0,
-      segmentsCount: response.segments?.length || 0,
+    const words = wordTokens.map((w, i) => ({
+      word: w,
+      start: i * perWordSec,
+      end: (i + 1) * perWordSec,
+    }));
+
+    // Build naive segment groups of ~6 words each so SRT export still produces
+    // readable cue blocks. Real segment boundaries would require a recognizer
+    // that emits punctuation+pause data; this approximation is fine for UX.
+    const segments = [];
+    const groupSize = 6;
+    for (let i = 0; i < words.length; i += groupSize) {
+      const group = words.slice(i, i + groupSize);
+      if (group.length === 0) continue;
+      segments.push({
+        id: segments.length,
+        start: group[0].start,
+        end: group[group.length - 1].end,
+        text: group.map((g) => g.word).join(' '),
+      });
+    }
+
+    logger.info('Transcript generated successfully (Gemini)', {
+      textLength: text.length,
+      segmentsCount: segments.length,
     });
 
     return {
-      text: response.text,
-      language: response.language,
-      duration: response.duration,
-      segments: response.segments || [],
-      words: response.words || [],
+      text,
+      language: language || 'en',
+      duration,
+      segments,
+      words,
+      wordTimingsApproximate: true,
     };
   } catch (error) {
-    logger.error('Error generating transcript', {
-      videoFilePath,
-      error: error.message,
-      stack: error.stack,
-    });
+    logger.error('Error generating transcript', { videoFilePath, error: error.message, stack: error.stack });
     captureException(error, {
       tags: { service: 'videoCaptionService', action: 'generateTranscript' },
     });

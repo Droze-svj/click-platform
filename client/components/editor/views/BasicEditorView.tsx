@@ -269,6 +269,20 @@ interface BasicEditorViewProps {
   /** When set, show "Back to videos" and segment count in summary */
   videoId?: string
   segmentCount?: number
+  /** Split the timeline segment under the playhead at the current time */
+  onSplitAtPlayhead?: () => void
+  /** Toggle the `reversed` flag on the selected (or playhead) segment */
+  onReverseSelected?: () => void
+  /** Insert a freeze-frame segment at the playhead (default 1s) */
+  onFreezeAtPlayhead?: (durationSec?: number) => void
+  /** Trim the selected segment to a [in, out] timeline range */
+  onTrimSelectedToRange?: (inTime: number, outTime: number) => void
+  /** Toggle a J-Cut on the selected segment (audio leads video) */
+  onJCutSelected?: (leadSec?: number) => void
+  /** Toggle an L-Cut on the selected segment (audio tail past visual cut) */
+  onLCutSelected?: (tailSec?: number) => void
+  /** Whether a segment is currently selected (for enabling segment-only ops) */
+  hasSegmentSelection?: boolean
 }
 
 
@@ -355,11 +369,23 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   videoId,
   segmentCount = 0,
   transcript,
+  onSplitAtPlayhead,
+  onReverseSelected,
+  onFreezeAtPlayhead,
+  onTrimSelectedToRange,
+  onJCutSelected,
+  onLCutSelected,
+  hasSegmentSelection = false,
 }) => {
   const currentTime = videoState?.currentTime ?? 0
   const duration = videoState?.duration ?? 60
   const [selectedTextId, setSelectedTextId] = useState<string | null>(null)
   const [isDraftMode, setIsDraftMode] = useState<boolean>(true)
+  // Trim-tab In/Out markers (timeline-coordinate seconds). Local to this view —
+  // the actual trim is applied via onTrimSelectedToRange when the user clicks
+  // "Trim to In/Out", which mutates the selected segment's source range.
+  const [trimInPoint, setTrimInPoint] = useState<number | null>(null)
+  const [trimOutPoint, setTrimOutPoint] = useState<number | null>(null)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ platform: true, styleBundles: false, quickFilters: true, text: false, quickNav: false, currentOverlays: false })
 
   // --- UNDO / REDO SYSTEM (Hoisted for scope) ---
@@ -1361,26 +1387,107 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               </div>
             </div>
 
-            {/* Edit tools grid */}
+            {/* Edit tools grid
+                All six ops route to ModernVideoEditor handlers backed by the
+                segment-aware ffmpeg renderer (server/services/segmentTimelineRenderer.js).
+                Reverse / J-Cut / L-Cut require a selected segment; the others
+                operate on the segment under the playhead. */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: RotateCcw, label: 'Reverse',         sub: 'Flip clip direction',    color: 'text-violet-400',  action: () => showToast('Reverse applied', 'success') },
-                { icon: Split,     label: 'Split at Playhead', sub: `@ ${currentTime.toFixed(1)}s`, color: 'text-indigo-400', action: () => showToast(`Split at ${currentTime.toFixed(1)}s`, 'success') },
-                { icon: Maximize,  label: 'Freeze Frame',    sub: 'Still photo insert',     color: 'text-amber-400',   action: () => showToast(`Freeze frame at ${currentTime.toFixed(1)}s`, 'success') },
-                { icon: Scissors,  label: 'Trim to In/Out',  sub: 'Cut to selection',       color: 'text-emerald-400', action: () => showToast('Trim applied', 'success') },
-                { icon: ArrowLeft, label: 'J-Cut',           sub: 'Audio leads video',      color: 'text-rose-400',    action: () => showToast('J-Cut applied — audio leads by 0.5s', 'success') },
-                { icon: ChevronRight, label: 'L-Cut',        sub: 'Video leads audio',      color: 'text-pink-400',    action: () => showToast('L-Cut applied — video leads by 0.5s', 'success') },
-              ].map(({ icon: Icon, label, sub, color, action }) => (
-                <motion.button key={label} onClick={action} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
-                  className="flex items-start gap-2.5 px-3 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-white/20 transition-all text-left"
+                { icon: RotateCcw, label: 'Reverse', sub: hasSegmentSelection ? 'Flip selected clip' : 'Select a clip first', color: 'text-violet-400', action: () => onReverseSelected?.(), comingSoon: !onReverseSelected, requiresSelection: true },
+                { icon: Split, label: 'Split at Playhead', sub: `@ ${currentTime.toFixed(1)}s`, color: 'text-indigo-400', action: () => onSplitAtPlayhead?.(), comingSoon: !onSplitAtPlayhead, requiresSelection: false },
+                { icon: Maximize, label: 'Freeze Frame', sub: `Hold 1s @ ${currentTime.toFixed(1)}s`, color: 'text-amber-400', action: () => onFreezeAtPlayhead?.(1.0), comingSoon: !onFreezeAtPlayhead, requiresSelection: false },
+                { icon: Scissors, label: 'Trim to In/Out', sub: trimInPoint != null && trimOutPoint != null ? `${(trimOutPoint - trimInPoint).toFixed(2)}s` : 'Set In + Out below', color: 'text-emerald-400', action: () => {
+                  if (trimInPoint == null || trimOutPoint == null) {
+                    showToast('Set both In and Out points first', 'info')
+                    return
+                  }
+                  onTrimSelectedToRange?.(trimInPoint, trimOutPoint)
+                }, comingSoon: !onTrimSelectedToRange, requiresSelection: true },
+                { icon: ArrowLeft, label: 'J-Cut', sub: hasSegmentSelection ? 'Audio leads 0.5s' : 'Select a clip first', color: 'text-rose-400', action: () => onJCutSelected?.(0.5), comingSoon: !onJCutSelected, requiresSelection: true },
+                { icon: ChevronRight, label: 'L-Cut', sub: hasSegmentSelection ? 'Audio tail 0.5s' : 'Select a clip first', color: 'text-pink-400', action: () => onLCutSelected?.(0.5), comingSoon: !onLCutSelected, requiresSelection: true },
+              ].map(({ icon: Icon, label, sub, color, action, comingSoon, requiresSelection }) => {
+                const disabled = !!comingSoon || (requiresSelection && !hasSegmentSelection)
+                const titleText = comingSoon
+                  ? `${label} — coming soon`
+                  : (requiresSelection && !hasSegmentSelection ? `${label} — select a clip first` : label)
+                return (
+                  <motion.button
+                    key={label}
+                    type="button"
+                    onClick={disabled ? undefined : action}
+                    disabled={disabled}
+                    whileHover={disabled ? undefined : { y: -1 }}
+                    whileTap={disabled ? undefined : { scale: 0.97 }}
+                    title={titleText}
+                    aria-disabled={disabled || undefined}
+                    className={`relative flex items-start gap-2.5 px-3 py-3 rounded-xl border transition-all text-left ${
+                      disabled
+                        ? 'bg-white/[0.015] border-white/[0.04] opacity-50 cursor-not-allowed'
+                        : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.07] hover:border-white/20'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${color} shrink-0 mt-0.5`} />
+                    <div>
+                      <div className="text-[10px] font-black text-slate-200 leading-tight">{label}</div>
+                      <div className="text-[8px] text-slate-600 mt-0.5">{sub}</div>
+                    </div>
+                    {comingSoon && (
+                      <span className="absolute top-1.5 right-1.5 text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/20">
+                        Soon
+                      </span>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
+
+            {/* In / Out marker controls — drives the Trim to In/Out op above. */}
+            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">In / Out Markers</span>
+                <span className="text-[9px] font-mono text-slate-500">
+                  {trimInPoint != null ? `In ${trimInPoint.toFixed(2)}s` : 'No In'} · {trimOutPoint != null ? `Out ${trimOutPoint.toFixed(2)}s` : 'No Out'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTrimInPoint(currentTime)
+                    if (trimOutPoint != null && currentTime >= trimOutPoint) setTrimOutPoint(null)
+                    showToast(`In set @ ${currentTime.toFixed(2)}s`, 'success')
+                  }}
+                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all"
                 >
-                  <Icon className={`w-4 h-4 ${color} shrink-0 mt-0.5`} />
-                  <div>
-                    <div className="text-[10px] font-black text-slate-200 leading-tight">{label}</div>
-                    <div className="text-[8px] text-slate-600 mt-0.5">{sub}</div>
-                  </div>
-                </motion.button>
-              ))}
+                  Set In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (trimInPoint != null && currentTime <= trimInPoint) {
+                      showToast('Out must come after In', 'error')
+                      return
+                    }
+                    setTrimOutPoint(currentTime)
+                    showToast(`Out set @ ${currentTime.toFixed(2)}s`, 'success')
+                  }}
+                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all"
+                >
+                  Set Out
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTrimInPoint(null)
+                    setTrimOutPoint(null)
+                  }}
+                  disabled={trimInPoint == null && trimOutPoint == null}
+                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-white/[0.04] text-slate-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
 
             {/* Format / Aspect Ratio */}

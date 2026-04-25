@@ -486,6 +486,190 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     }
   }, [videoState.currentTime, selectedVoice, voiceoverText, setTimelineSegments, setTextOverlays, showToast])
 
+  // Split the segment under the playhead at the current time. Mirrors the
+  // logic in ResizableTimeline.splitSegmentAt so the BasicEditorView Trim tab
+  // can drive the same operation.
+  const handleSplitAtPlayhead = useCallback(() => {
+    const t = videoState.currentTime
+    const seg = timelineSegments.find((s: TimelineSegment) => t > s.startTime && t < s.endTime)
+    if (!seg) {
+      showToast('Move the playhead inside a clip to split it', 'info')
+      return
+    }
+    const durLeft = t - seg.startTime
+    const durRight = seg.endTime - t
+    if (durLeft < 0.25 || durRight < 0.25) {
+      showToast('Cannot split: too close to the clip edge (min 0.25s on each side)', 'info')
+      return
+    }
+    const newId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
+      ? (crypto as any).randomUUID()
+      : `seg-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const right: TimelineSegment = { ...seg, id: newId, startTime: t, endTime: seg.endTime, duration: durRight }
+    setTimelineSegments((prev: TimelineSegment[]) => prev.flatMap((s: TimelineSegment) => {
+      if (s.id !== seg.id) return [s]
+      const left: TimelineSegment = { ...seg, endTime: t, duration: durLeft }
+      return [left, right]
+    }))
+    showToast(`Split clip at ${t.toFixed(2)}s`, 'success')
+  }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast])
+
+  // Toggle the `reversed` flag on the currently selected segment. Wired to the
+  // segment-aware renderer's reverse,areverse path. Operates on the first
+  // selected segment, or on the segment under the playhead if none selected.
+  const handleReverseSelected = useCallback(() => {
+    const targetId = selectedSegmentId
+      || timelineSegments.find((s: TimelineSegment) => videoState.currentTime > s.startTime && videoState.currentTime < s.endTime)?.id
+    if (!targetId) {
+      showToast('Select a clip (or move the playhead inside one) to reverse', 'info')
+      return
+    }
+    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) =>
+      s.id === targetId ? { ...s, reversed: !s.reversed } : s
+    ))
+    const seg = timelineSegments.find((s: TimelineSegment) => s.id === targetId)
+    showToast(seg?.reversed ? 'Reverse removed from clip' : 'Reverse applied — visible after export', 'success')
+  }, [selectedSegmentId, timelineSegments, setTimelineSegments, videoState.currentTime, showToast])
+
+  // Insert a freeze-frame segment at the playhead. The host segment is split
+  // around the playhead, and a freeze segment of `freezeDurationSec` is
+  // inserted between the two halves. The renderer turns this into a tpad
+  // clone with silent audio.
+  const handleFreezeAtPlayhead = useCallback((freezeDurationSec: number = 1.0) => {
+    const t = videoState.currentTime
+    const host = timelineSegments.find((s: TimelineSegment) => t > s.startTime && t < s.endTime)
+    if (!host) {
+      showToast('Move the playhead inside a clip to insert a freeze frame', 'info')
+      return
+    }
+    const durLeft = t - host.startTime
+    const durRight = host.endTime - t
+    if (durLeft < 0.05 || durRight < 0.05) {
+      showToast('Cannot freeze: too close to the clip edge', 'info')
+      return
+    }
+    const freezeId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
+      ? (crypto as any).randomUUID() : `freeze-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const rightId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
+      ? (crypto as any).randomUUID() : `seg-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+    const sourceStartLeft = host.sourceStartTime ?? host.startTime
+    const sourceCutPoint = sourceStartLeft + durLeft
+    const sourceEndRight = host.sourceEndTime ?? host.endTime
+
+    const left: TimelineSegment = {
+      ...host,
+      endTime: t,
+      duration: durLeft,
+      sourceStartTime: sourceStartLeft,
+      sourceEndTime: sourceCutPoint,
+    }
+    const freeze: TimelineSegment = {
+      ...host,
+      id: freezeId,
+      startTime: t,
+      endTime: t + freezeDurationSec,
+      duration: freezeDurationSec,
+      sourceStartTime: sourceCutPoint,
+      sourceEndTime: sourceCutPoint + 0.05,
+      freezeFrame: true,
+      reversed: false,
+      audioLeadInSec: 0,
+      audioTailOutSec: 0,
+    }
+    const right: TimelineSegment = {
+      ...host,
+      id: rightId,
+      startTime: t + freezeDurationSec,
+      endTime: host.endTime + freezeDurationSec,
+      duration: durRight,
+      sourceStartTime: sourceCutPoint,
+      sourceEndTime: sourceEndRight,
+    }
+    setTimelineSegments((prev: TimelineSegment[]) => prev.flatMap((s: TimelineSegment) => {
+      if (s.id !== host.id) {
+        // Push later segments by freezeDurationSec to make room for the freeze.
+        if (s.startTime >= host.endTime) {
+          return [{ ...s, startTime: s.startTime + freezeDurationSec, endTime: s.endTime + freezeDurationSec }]
+        }
+        return [s]
+      }
+      return [left, freeze, right]
+    }))
+    showToast(`Freeze frame inserted (${freezeDurationSec.toFixed(1)}s)`, 'success')
+  }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast])
+
+  // Trim the selected segment's source range to [inTime, outTime] (timeline
+  // coordinates). Adjusts both the timeline range and the source range so the
+  // segment-aware renderer plays only the requested slice.
+  const handleTrimSelectedToRange = useCallback((inTime: number, outTime: number) => {
+    if (!selectedSegmentId) {
+      showToast('Select a clip first to trim it', 'info')
+      return
+    }
+    if (!(outTime > inTime)) {
+      showToast('Out point must be after the in point', 'error')
+      return
+    }
+    const seg = timelineSegments.find((s: TimelineSegment) => s.id === selectedSegmentId)
+    if (!seg) return
+    const segIn = Math.max(seg.startTime, inTime)
+    const segOut = Math.min(seg.endTime, outTime)
+    if (!(segOut - segIn >= 0.1)) {
+      showToast('Trim range must overlap the selected clip by at least 0.1s', 'error')
+      return
+    }
+    const sourceStart = seg.sourceStartTime ?? seg.startTime
+    const offsetIntoSeg = segIn - seg.startTime
+    const newDuration = segOut - segIn
+    const newSourceStart = sourceStart + offsetIntoSeg
+    const newSourceEnd = newSourceStart + newDuration
+
+    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) =>
+      s.id !== selectedSegmentId ? s
+        : {
+            ...s,
+            startTime: segIn,
+            endTime: segOut,
+            duration: newDuration,
+            sourceStartTime: newSourceStart,
+            sourceEndTime: newSourceEnd,
+          }
+    ))
+    showToast(`Trimmed clip to ${newDuration.toFixed(2)}s`, 'success')
+  }, [selectedSegmentId, timelineSegments, setTimelineSegments, showToast])
+
+  // J-Cut on the selected segment: audio leads video by N seconds. Toggles
+  // between off and 0.5s for v1 — the renderer uses adelay to slide the
+  // segment's audio earlier on the final timeline.
+  const handleJCutSelected = useCallback((leadSec: number = 0.5) => {
+    if (!selectedSegmentId) {
+      showToast('Select a clip first to apply a J-cut', 'info')
+      return
+    }
+    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) => {
+      if (s.id !== selectedSegmentId) return s
+      const next = s.audioLeadInSec && s.audioLeadInSec > 0 ? 0 : leadSec
+      return { ...s, audioLeadInSec: next }
+    }))
+    showToast('J-cut toggled — audio leads video by 0.5s', 'success')
+  }, [selectedSegmentId, setTimelineSegments, showToast])
+
+  // L-Cut on the selected segment: audio tail extends past the visual cut
+  // by N seconds (audioTailOutSec). Renderer uses an extended atrim range.
+  const handleLCutSelected = useCallback((tailSec: number = 0.5) => {
+    if (!selectedSegmentId) {
+      showToast('Select a clip first to apply an L-cut', 'info')
+      return
+    }
+    setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) => {
+      if (s.id !== selectedSegmentId) return s
+      const next = s.audioTailOutSec && s.audioTailOutSec > 0 ? 0 : tailSec
+      return { ...s, audioTailOutSec: next }
+    }))
+    showToast('L-cut toggled — audio continues 0.5s after cut', 'success')
+  }, [selectedSegmentId, setTimelineSegments, showToast])
+
   // ── Consolidated UI Preference State ──
   const [layoutPrefs, setLayoutPrefs] = useState<EditorLayoutPreferences>(loadLayoutPreferences)
   const [previewQuality, setPreviewQuality] = useState<'draft' | 'full'>('full')
@@ -1243,7 +1427,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
         onApplyStyleProfile={handleApplyStyleProfile}
         onBeatSync={handleBeatSync}
       />
-      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} />
+      case 'edit': return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} hasSegmentSelection={!!selectedSegmentId} />
       case 'short-clips': return <ShortClipsView videoState={videoState} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} setActiveCategory={setActiveCategory} showToast={showToast} transcript={transcript} />
       case 'growth': return <GrowthInsightsView isOledTheme={true} />
       case 'predict': return <PredictionEngineView timelineSegments={timelineSegments} transcript={transcript} showToast={showToast} />
@@ -1358,7 +1542,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
         />
       }
 
-      default: return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} />
+      default: return <BasicEditorView videoFilters={videoFilters} setVideoFilters={setVideoFilters} setColorGradeSettings={setColorGradeSettings} textOverlays={textOverlays} setTextOverlays={setTextOverlays} shapeOverlays={shapeOverlays} setShapeOverlays={setShapeOverlays} imageOverlays={imageOverlays} setImageOverlays={setImageOverlays} svgOverlays={svgOverlays} setSvgOverlays={setSvgOverlays} gradientOverlays={gradientOverlays} setGradientOverlays={setGradientOverlays} showToast={showToast} setActiveCategory={setActiveCategory} templateLayout={templateLayout} setTemplateLayout={setTemplateLayout} videoState={videoState} filterStrength={filterStrength} setFilterStrength={setFilterStrength} showBeforeAfter={showBeforeAfter} setShowBeforeAfter={setShowBeforeAfter} compareMode={compareMode} setCompareMode={setCompareMode} videoId={videoId ?? undefined} segmentCount={timelineSegments.length} transcript={transcript} onSplitAtPlayhead={handleSplitAtPlayhead} onReverseSelected={handleReverseSelected} onFreezeAtPlayhead={handleFreezeAtPlayhead} onTrimSelectedToRange={handleTrimSelectedToRange} onJCutSelected={handleJCutSelected} onLCutSelected={handleLCutSelected} hasSegmentSelection={!!selectedSegmentId} />
     }
   }
 

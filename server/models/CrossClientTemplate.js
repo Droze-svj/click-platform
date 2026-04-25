@@ -60,7 +60,7 @@ const crossClientTemplateSchema = new mongoose.Schema({
   },
   aiConfig: {
     useAI: { type: Boolean, default: true },
-    model: { type: String, default: 'gpt-4' },
+    model: { type: String, default: 'gemini-1.5-flash' },
     temperature: { type: Number, default: 0.7 },
     maxTokens: Number,
     customPrompts: mongoose.Schema.Types.Mixed

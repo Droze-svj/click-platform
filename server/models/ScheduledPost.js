@@ -48,8 +48,12 @@ const scheduledPostSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled', 'pending', 'posted', 'failed', 'cancelled'],
+    enum: ['scheduled', 'pending', 'posted', 'failed', 'cancelled', 'needs_reconnect'],
     default: 'scheduled'
+  },
+  failureReason: {
+    type: String,
+    default: null
   },
   recurringScheduleId: {
     type: mongoose.Schema.Types.ObjectId,

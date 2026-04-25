@@ -1,34 +1,37 @@
-const { OpenAI } = require('openai');
 const logger = require('../utils/logger');
 const path = require('path');
 const fs = require('fs');
+const { transcribeAudio: geminiTranscribe, isConfigured: geminiConfigured } = require('../utils/googleAI');
 
-let openai = null;
+// Click is configured for Gemini-only AI. This service used to call OpenAI
+// Whisper for transcription with word-level timestamps. Gemini's audio
+// understanding returns plain text without word-level timestamps, so we now
+// approximate per-word timestamps by even time-distribution across the
+// estimated duration. Callers that need true word-level timing should ingest
+// the audio in their own pipeline; the enrichment below is best-effort.
 
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return openai;
-}
-
-/**
- * Check if transcription (Whisper) is available.
- * Requires OPENAI_API_KEY to be set.
- */
 function isTranscriptionConfigured() {
-  const key = process.env.OPENAI_API_KEY;
-  return !!(typeof key === 'string' && key.trim().length > 0);
+  return !!geminiConfigured;
 }
 
-/**
- * Generate Transcription for a video file
- */
+function getAudioDurationSec(filePath) {
+  try {
+    const ffmpeg = require('fluent-ffmpeg');
+    return new Promise((resolve) => {
+      ffmpeg.ffprobe(filePath, (err, data) => {
+        if (err || !data?.format?.duration) return resolve(null);
+        resolve(Number(data.format.duration));
+      });
+    });
+  } catch (_) {
+    return Promise.resolve(null);
+  }
+}
+
 async function transcribeVideo(userId, videoId, videoPath) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
-      throw new Error('OpenAI API key not configured. Set OPENAI_API_KEY in your environment to enable transcription.');
+    if (!geminiConfigured) {
+      throw new Error('Gemini API key not configured. Set GOOGLE_AI_API_KEY in your environment to enable transcription.');
     }
 
     const fullPath = videoPath.startsWith('/')
@@ -37,46 +40,44 @@ async function transcribeVideo(userId, videoId, videoPath) {
 
     if (!fs.existsSync(fullPath)) throw new Error('Video file not found for transcription: ' + fullPath);
 
-    logger.info('Starting transcription', { videoId, userId });
+    logger.info('Starting Gemini transcription', { videoId, userId });
 
-    const transcription = await client.audio.transcriptions.create({
-      file: fs.createReadStream(fullPath),
-      model: 'whisper-1',
-      response_format: 'verbose_json',
-      timestamp_granularities: ['word']
-    });
+    const text = await geminiTranscribe(fullPath, { language: 'en' });
+    if (!text) {
+      return { success: false, text: '', words: [], error: 'Empty transcript from Gemini' };
+    }
 
-    // Task 3.3 Semantic analysis mock
-    // In a true environment, we'd pass `transcription.text` to an LLM or use audio loudness metrics
-    // Here we simulate attaching "loudness" and "sentiment" to each word for the UI to interpret
-    const enrichedWords = (transcription.words || []).map(wordObj => {
-      const lowerWord = wordObj.word.toLowerCase();
+    const words = text.split(/\s+/).filter(Boolean);
+    const duration = await getAudioDurationSec(fullPath);
+    const perWordSec = duration && words.length > 0 ? duration / words.length : 0.4;
+
+    const enrichedWords = words.map((w, i) => {
+      const lower = w.toLowerCase().replace(/[^a-z0-9']/g, '');
       let sentiment = 'neutral';
-      let volume = 50; // out of 100
+      let volume = 50;
 
-      // Simple heuristic for Emotion-Synced Semantic Captions (Task 3.3)
-      if (['amazing', 'wow', 'incredible', 'best'].includes(lowerWord)) {
-        sentiment = 'positive';
-        volume = 90;
-      } else if (['terrible', 'worst', 'angry', 'stop'].includes(lowerWord)) {
-        sentiment = 'negative';
-        volume = 85;
-      } else if (wordObj.word === wordObj.word.toUpperCase() && wordObj.word.length > 1) {
-        // ALL CAPS inferred as shouting/emphasis
+      if (['amazing', 'wow', 'incredible', 'best'].includes(lower)) {
+        sentiment = 'positive'; volume = 90;
+      } else if (['terrible', 'worst', 'angry', 'stop'].includes(lower)) {
+        sentiment = 'negative'; volume = 85;
+      } else if (w === w.toUpperCase() && w.length > 1 && /[A-Z]/.test(w)) {
         volume = 95;
       }
 
       return {
-        ...wordObj,
+        word: w,
+        start: i * perWordSec,
+        end: (i + 1) * perWordSec,
         sentiment,
-        volume
+        volume,
       };
     });
 
     return {
       success: true,
-      text: transcription.text,
-      words: enrichedWords
+      text,
+      words: enrichedWords,
+      wordTimingsApproximate: true,
     };
   } catch (error) {
     logger.error('Transcription error', { error: error.message, userId });
@@ -86,5 +87,5 @@ async function transcribeVideo(userId, videoId, videoPath) {
 
 module.exports = {
   transcribeVideo,
-  isTranscriptionConfigured
+  isTranscriptionConfigured,
 };
