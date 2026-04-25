@@ -11,7 +11,7 @@ void _self;
 // Set correct WASM paths for Next.js explicitly if needed
 ort.env.wasm.wasmPaths = '/_next/static/wasm/'
 
-let session: ort.InferenceSession | null = null
+let session: any = null  // would be ort.InferenceSession once onnxruntime-web is wired in
 
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload } = e.data

@@ -168,8 +168,18 @@ async function initializeNexusEngine() {
       }
     };
 
-    // Load API routes
+    // Load API routes.
+    //
+    // Each entry below corresponds to a real client API call AND a route file
+    // that exports an Express router. The 21 routes below the original block
+    // were written but never mounted — every client call to those endpoints
+    // (analytics, jobs, search, workflows, etc.) was silently 404'ing. Same
+    // antipattern as /api/scheduler and /api/upload that we already fixed.
+    //
+    // safeUse is fault-tolerant: if a route file fails to load (missing
+    // dependency, etc.) it logs a warning instead of crashing the server.
     const routes = [
+      // Core
       ['/api/auth', './routes/auth'],
       ['/api/oauth', './routes/oauth'],
       ['/api/user', './routes/user'],
@@ -180,7 +190,30 @@ async function initializeNexusEngine() {
       ['/api/social', './routes/social'],
       ['/api/upload', './routes/upload'],
       ['/api/health', './routes/health'],
-      ['/api/status/production-mode', (req, res) => res.json({ status: 'ready', engine: 'Next.js 14' })]
+      ['/api/status/production-mode', (req, res) => res.json({ status: 'ready', engine: 'Next.js 14' })],
+
+      // Previously dead — now mounted (client calls these directly)
+      ['/api/admin', './routes/admin'],
+      ['/api/agentic', './routes/agentic'],
+      ['/api/analytics', './routes/analytics'],
+      ['/api/approvals', './routes/approvals'],
+      ['/api/backup', './routes/backup'],
+      ['/api/batch', './routes/batch'],
+      ['/api/collaboration', './routes/collaboration'],
+      ['/api/collections', './routes/collections'],
+      ['/api/content', './routes/content'],
+      ['/api/debug', './routes/debug'],
+      ['/api/export', './routes/export'],
+      ['/api/feature-flags', './routes/feature-flags'],
+      ['/api/intelligence', './routes/intelligence'],
+      ['/api/jobs', './routes/jobs'],
+      ['/api/marketing-intelligence', './routes/marketing-intelligence'],
+      ['/api/moderation', './routes/moderation'],
+      ['/api/privacy', './routes/privacy'],
+      ['/api/retention-heatmap', './routes/retention-heatmap'],
+      ['/api/search', './routes/search'],
+      ['/api/security', './routes/security'],
+      ['/api/workflows', './routes/workflows'],
     ];
     routes.forEach(([path, file]) => typeof file === 'string' ? safeUse(path, file) : app.get(path, file));
 

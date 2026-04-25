@@ -3,16 +3,15 @@ import LogEmitter from '../utils/logEmitter';
 
 const DirectorLog = () => {
     useEffect(() => {
-        const emitter = LogEmitter.getInstance();
-
-        emitter.addEventListener('log', (event) => {
-            console.log(event.detail);
-        });
-
+        // logEmitter is a singleton instance, not a class with getInstance().
+        const emitter = LogEmitter;
+        const handler = (event: Event) => {
+            const detail = (event as CustomEvent).detail;
+            console.log(detail);
+        };
+        emitter.addEventListener('log', handler);
         return () => {
-            emitter.removeEventListener('log', (event) => {
-                console.log(event.detail);
-            });
+            emitter.removeEventListener('log', handler);
         };
     }, []);
 

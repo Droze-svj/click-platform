@@ -219,7 +219,7 @@ export default function BackgroundFluxTerminalPage() {
               <SectionHeader title="ANOMALOUS_FLUX_LOGS" subtitle="Diffracted execution intercepts requiring audit" icon={<ShieldAlert className="text-rose-500 animate-pulse"/>} />
               <div className="grid grid-cols-1 gap-8">
                  {userJobs.failed.length === 0 ? (
-                    <EmptyHUD text="RESONANCE_INTEGRITY_MAXIMAL" icon={<Monitor check size={80}/>} />
+                    <EmptyHUD text="RESONANCE_INTEGRITY_MAXIMAL" icon={<Monitor size={80}/>} />
                  ) : (
                     userJobs.failed.filter(j => searchQuery === '' || j.name.toLowerCase().includes(searchQuery.toLowerCase())).map((j, idx) => (
                        <FluxCard key={j.id} job={j} onCancel={handleCancel} onView={() => setSelectedJob({ id: j.id, queue: j.queue || 'unknown' })} index={idx} isDiffracted />

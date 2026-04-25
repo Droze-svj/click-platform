@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const LogEmitter = {
-  emit: (event, message) => {
+  emit: (event: string, message: string) => {
     console.log(`Event ${event}: ${message}`);
   }
 };

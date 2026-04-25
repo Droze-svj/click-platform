@@ -217,7 +217,7 @@ class NetworkDebugger {
 
     XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
       if (!networkDebugger.enabled || !(this as any).__networkRequestId) {
-        return originalSend.call(this, body)
+        return originalSend.call(this, body as XMLHttpRequestBodyInit | null | undefined)
       }
 
       const requestId = (this as any).__networkRequestId
@@ -281,7 +281,7 @@ class NetworkDebugger {
         }
       }
 
-      return originalSend.call(this, body)
+      return originalSend.call(this, body as XMLHttpRequestBodyInit | null | undefined)
     }
   }
 

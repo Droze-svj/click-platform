@@ -69,6 +69,44 @@ router.post('/', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/export/batch
+ * Create export jobs for multiple formats in one call. Mirrors the contract
+ * MultiFormatExportView expects: { videoId, formatIds, options } → returns
+ * { results: [{ formatId, jobId, status }] }. Without this endpoint, batch
+ * export silently 404'd.
+ */
+router.post('/batch', auth, asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { videoId, formatIds, options } = req.body;
+
+  if (!videoId || !Array.isArray(formatIds) || formatIds.length === 0) {
+    return sendError(res, 'videoId and a non-empty formatIds[] are required', 400);
+  }
+
+  const results = [];
+  for (const formatId of formatIds) {
+    try {
+      const job = await createExportJob(userId, {
+        type: 'video',
+        format: formatId,
+        filters: { videoId },
+        options: options || {},
+      });
+      results.push({
+        formatId,
+        jobId: job?.id || job?._id || null,
+        status: 'queued',
+      });
+    } catch (e) {
+      logger.warn('export_batch_format_failed', { userId, videoId, formatId, error: e.message });
+      results.push({ formatId, jobId: null, status: 'failed', error: e.message });
+    }
+  }
+
+  sendSuccess(res, 'Batch export jobs created', 201, { videoId, results });
+}));
+
+/**
  * GET /api/export/:jobId
  * Get export job status
  */
