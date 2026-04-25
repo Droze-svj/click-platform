@@ -231,6 +231,16 @@ const socialPostLimiter = createRateLimiter({
   },
 });
 
+// OAuth initiation rate limiter
+const oauthLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 attempts per window
+  message: {
+    error: 'Too many OAuth connection attempts, please try again later',
+  },
+  skip: (req) => process.env.NODE_ENV !== 'production'
+});
+
 // Subscription tier-based rate limiter
 function getSubscriptionLimiter(tier = 'free') {
   const limits = {
@@ -294,6 +304,7 @@ module.exports = {
   uploadLimiter,
   aiLimiter,
   socialPostLimiter,
+  oauthLimiter,
   subscriptionRateLimiter,
   getSubscriptionLimiter,
   endpointLimiters,

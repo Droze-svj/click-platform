@@ -73,12 +73,6 @@ async function getAuthorizationUrl(userId, state, callbackUrl) {
     scope: getScope(),
   });
 
-    stateCreatedAt: new Date()
-  };
-
-  user.markModified('oauth');
-  await user.save();
-
   return `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
 }
 

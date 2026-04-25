@@ -154,6 +154,11 @@ if (__isHosted) {
   console.log('📝 Dev mode: skipping separate health check server (starting Express directly)');
 }
 
+// Initialize middleware variables at top level to ensure scope availability
+let apiOptimizer = null;
+let apmMiddleware = null;
+let redisCache = null;
+
 console.log('REQUIRING EXPRESS'); const express = require('express');
 console.log('REQUIRING CORS'); const cors = require('cors');
 console.log('REQUIRING MONGOOSE'); const mongoose = require('mongoose');
@@ -228,7 +233,6 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
   }
 
   // Initialize APM (Application Performance Monitoring)
-  let apmMiddleware = null;
   try {
     console.log('REQUIRING APM');
     const { apmMonitor, apmMiddleware: apmMiddlewareExport } = require('./utils/apm');
@@ -253,7 +257,6 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
   }
 
   // Initialize API Optimization Middleware
-  let apiOptimizer = null;
   try {
     console.log('REQUIRING API OPTIMIZER');
     apiOptimizer = require('./middleware/apiOptimizer');
@@ -1748,7 +1751,7 @@ app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api/integrations', require('./routes/integrations'));
 
 // Event streaming routes
-app.use('/api/events', require('./routes/events').router);
+app.use('/api/events', require('./routes/events'));
 
 // Billing routes
 app.use('/api/billing', require('./routes/billing'));

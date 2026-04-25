@@ -21,10 +21,14 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 // Prisma client initialization
 let prisma = null;
-if (PrismaClient) {
-  prisma = new PrismaClient({
-    log: ['error'], // Keep logs minimal to prevent noise
-  });
+if (PrismaClient && process.env.DATABASE_URL) {
+  try {
+    prisma = new PrismaClient({
+      log: ['error'],
+    });
+  } catch (e) {
+    logger.warn('Prisma client failed to initialize', { error: e.message });
+  }
 }
 
 module.exports = {
