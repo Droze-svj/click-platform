@@ -12,7 +12,7 @@ import {
   ArrowLeft, Sliders, ChevronRight, Fingerprint, Gauge, Sparkles, Brain,
   Network, Database, Target, Activity, X, Plus, Scan, Binary, Anchor,
   Orbit, Wind, Ghost, Signal, ShieldAlert, CpuIcon, ActivityIcon,
-  HardDrive, Workflow, ShieldQuestion, UserCheck, Key
+  HardDrive, Workflow, ShieldQuestion, UserCheck, Key, Trash2
 } from 'lucide-react'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'

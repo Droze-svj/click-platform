@@ -59,6 +59,11 @@ export default function SignalDiffusionLedgerPage() {
   const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set())
   const [liveStatus, setLiveStatus] = useState<LiveStatusState>({ tasks: [], jobs: [], lastUpdated: null })
   const [refreshing, setRefreshing] = useState(false)
+  // Disables the bulk action buttons while a mark-read / purge round-trip is
+  // in flight. Was referenced by the bulk action onClick handlers but never
+  // declared, which would have ReferenceError'd the moment a user clicked.
+  const [busy, setBusy] = useState(false)
+  void busy
 
   const loadSignals = useCallback(async () => {
     setRefreshing(true)

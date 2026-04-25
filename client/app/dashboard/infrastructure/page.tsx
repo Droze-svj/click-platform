@@ -10,7 +10,7 @@ import {
   Monitor, ChevronRight, X, Eye, RefreshCw, Zap, Target,
   Workflow, Binary, Orbit, Scan, Command, Wind, Ghost,
   Signal, ShieldCheck, ActivityIcon, CpuIcon, Shield,
-  Lock, Key, Anchor, Sparkle, Gauge, Network, UserCheck
+  Lock, Key, Anchor, Sparkle, Gauge, Network, UserCheck, Brain
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import InfrastructureDashboard from '../../../components/InfrastructureDashboard';

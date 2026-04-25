@@ -90,6 +90,14 @@ export interface EngagementScore {
   trendAlignment: number // 0-100
   retentionHeatmap: number[] // array of scores per second or frame region
   platformInsights?: PlatformInsights // AI-analyzed algorithm data specific to a platform
+  // Psychological breakdown surfaced in InsightsSidebar — fomo, curiosity, value, etc.
+  // Optional because some legacy callers don't populate it.
+  psychology?: {
+    fomo: number
+    curiosity: number
+    value: number
+    [key: string]: number
+  }
 }
 
 export interface VideoMetadata {
@@ -110,6 +118,14 @@ export interface VideoMetadata {
 }
 
 export type ContentNiche = 'educational' | 'gaming' | 'b2b' | 'comedy' | 'vlog' | 'fitness'
+
+// Stub types for OmnipresenceNetworkView — the view was added without
+// formal type exports. Loose `any` shapes are acceptable here because the
+// view is consuming server-shaped JSON whose exact shape isn't pinned down.
+// Tighten these once the corresponding API contract is stable.
+export type OmnipresencePulse = any
+export type AgentDraft = any
+export type NeuralPipeline = any
 
 export interface AutoEditClip {
   id: string

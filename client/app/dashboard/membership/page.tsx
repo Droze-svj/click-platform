@@ -11,7 +11,7 @@ import {
   ArrowLeft, Fingerprint, Gauge, Network, Brain, ArrowRight,
   Workflow, Binary, Orbit, Scan, Command, Wind, Ghost,
   Signal, ShieldCheck, ActivityIcon, CpuIcon, HardDrive,
-  UserCheck, Key, Anchor, Sparkle
+  UserCheck, Key, Anchor, Sparkle, RefreshCw
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'

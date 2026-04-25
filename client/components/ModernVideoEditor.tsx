@@ -114,6 +114,7 @@ import { formatTime } from '../utils/editorUtils'
 const NEUTRAL_FILTER: VideoFilter = {
   brightness: 100, contrast: 100, saturation: 100, hue: 0, blur: 0, sepia: 0, vignette: 0, sharpen: 0,
   noise: 0, temperature: 100, tint: 0, highlights: 0, shadows: 0, clarity: 0, dehaze: 0, vibrance: 100,
+  exposure: 0,
   lift: { r: 0, g: 0, b: 0 },
   gamma: { r: 0, g: 0, b: 0 },
   gain: { r: 0, g: 0, b: 0 }

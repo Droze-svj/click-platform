@@ -178,6 +178,7 @@ async function initializeNexusEngine() {
       ['/api/ai', './routes/ai-content'],
       ['/api/scheduler', './routes/scheduler'],
       ['/api/social', './routes/social'],
+      ['/api/upload', './routes/upload'],
       ['/api/health', './routes/health'],
       ['/api/status/production-mode', (req, res) => res.json({ status: 'ready', engine: 'Next.js 14' })]
     ];
