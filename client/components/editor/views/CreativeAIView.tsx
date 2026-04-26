@@ -192,9 +192,9 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       
       if (res?.success) {
         setAvatarGenerated(true)
-        showToast('Digital Twin synthesis initiated. Check Sovereign Ledger for status.', 'success')
+        showToast('Digital twin generation started. Check the activity log for status.', 'success')
       } else {
-        showToast('Avatar synthesis failed.', 'error')
+        showToast('Avatar generation failed.', 'error')
       }
     } catch (e) {
       showToast('Engine fault during avatar synthesis.', 'error')

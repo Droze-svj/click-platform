@@ -247,7 +247,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
                 setSamMode(!samMode)
                 showToast(samMode ? 'SAM Node Offline' : 'SAM Model Loaded - Points Initialized', 'success')
               }}
-              title={samMode ? 'Disengage SAM Neural Engine' : 'Engage SAM Neural Engine'}
+              title={samMode ? 'Disengage SAM Engine' : 'Engage SAM Engine'}
               className={`px-10 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.3em] italic transition-all border ${samMode ? 'bg-blue-600 text-white border-blue-400 shadow-2xl' : 'bg-white/5 text-slate-500 border-white/10 hover:bg-white/10 hover:text-white'}`}
             >
               {samMode ? 'DISENGAGE ENGINE' : 'ENGAGE SAM MATRIX'}

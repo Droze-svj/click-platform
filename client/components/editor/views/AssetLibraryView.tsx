@@ -409,7 +409,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
             <Cpu className="w-4 h-4 animate-pulse" />
             Resource Repository
           </div>
-          <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">NEURAL<br />REPOSITORY</h2>
+          <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">AI<br />ASSETS</h2>
         </div>
 
         <div className="flex items-center gap-4 p-2 bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-3xl">

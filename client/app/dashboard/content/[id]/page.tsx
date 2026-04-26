@@ -170,7 +170,7 @@ export default function ContentDetailPage() {
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#020205]">
       <Activity size={80} className="text-indigo-500 animate-pulse mb-8" />
-      <span className="text-[14px] font-black text-slate-800 uppercase tracking-[1em] animate-pulse italic">Scanning Neural Patterns...</span>
+      <span className="text-[14px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Scanning Neural Patterns...</span>
     </div>
   )
 
@@ -196,12 +196,12 @@ export default function ContentDetailPage() {
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard/content')} title="Back"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <CircuitBoard size={48} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-1000" />
+                <CircuitBoard size={48} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -214,18 +214,18 @@ export default function ContentDetailPage() {
                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">OP_INTEGRITY_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{content.title || 'NULL_NODE'}</h1>
-                 <p className="text-slate-800 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Analyzing spectral resonance and temporal deployment vectors for asset {content._id}.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{content.title || 'NULL_NODE'}</h1>
+                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Analyzing spectral resonance and temporal deployment vectors for asset {content._id}.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <button onClick={handleToggleFavorite}
-                className={`w-20 h-20 rounded-[2.2rem] flex items-center justify-center transition-all duration-1000 shadow-2xl ${content.isFavorite ? 'bg-amber-500 text-white' : 'bg-white/[0.03] border border-white/10 text-slate-800 hover:text-white'}`}>
+                className={`w-20 h-20 rounded-[2.2rem] flex items-center justify-center transition-all duration-300 shadow-2xl ${content.isFavorite ? 'bg-amber-500 text-white' : 'bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white'}`}>
                 <Star size={36} className={content.isFavorite ? 'fill-current' : ''} />
               </button>
               <button onClick={() => router.push('/dashboard/library')}
-                className="px-16 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-2xl transition-all duration-1000 flex items-center gap-8 italic active:scale-95 group border-none">
+                className="px-16 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-2xl transition-all duration-300 flex items-center gap-8 italic active:scale-95 group border-none">
                 <Box size={28} className="group-hover:rotate-12 transition-transform" />
                 ORGANIZE_NODE
               </button>
@@ -242,8 +242,8 @@ export default function ContentDetailPage() {
              { id: 'translations', label: 'Transpositions', icon: Languages },
            ].map(t => (
              <button key={t.id} onClick={() => setActiveTab(t.id as any)}
-               className={`flex items-center gap-6 px-10 py-6 rounded-[2.5rem] transition-all duration-1000 relative overflow-hidden group ${activeTab === t.id ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)]' : 'bg-white/[0.02] border border-white/5 text-slate-800 hover:text-white hover:border-white/20'}`}>
-               <t.icon size={28} className={activeTab === t.id ? 'text-black' : 'text-slate-900 group-hover:text-white transition-colors'} />
+               className={`flex items-center gap-6 px-10 py-6 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${activeTab === t.id ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)]' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
+               <t.icon size={28} className={activeTab === t.id ? 'text-black' : 'text-slate-500 group-hover:text-white transition-colors'} />
                <span className="text-[14px] font-black uppercase tracking-[0.2em] italic">{t.label}</span>
                {activeTab === t.id && <motion.div layoutId="tab-glow" className="absolute inset-0 bg-white/10" />}
              </button>
@@ -262,7 +262,7 @@ export default function ContentDetailPage() {
                               <Info size={32} className="text-indigo-400" />
                               <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Strategic Intent</h2>
                            </div>
-                           <p className="text-2xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity duration-1000">{content.description}</p>
+                           <p className="text-2xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity duration-300">{content.description}</p>
                         </div>
                      )}
 
@@ -272,7 +272,7 @@ export default function ContentDetailPage() {
                               <CircuitBoard size={32} className="text-emerald-400" />
                               <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Spectral Transcript</h2>
                            </div>
-                           <p className="text-xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity duration-1000 whitespace-pre-wrap">{content.transcript}</p>
+                           <p className="text-xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity duration-300 whitespace-pre-wrap">{content.transcript}</p>
                         </div>
                      )}
 
@@ -288,7 +288,7 @@ export default function ContentDetailPage() {
                            {content.generatedContent.socialPosts && (
                               <div className="space-y-12">
                                  {content.generatedContent.socialPosts.map((post: any, idx: number) => (
-                                    <div key={idx} className="p-10 bg-white/[0.02] border border-white/5 rounded-[4rem] group/post hover:bg-white/[0.04] transition-all duration-1000 shadow-2xl relative overflow-hidden">
+                                    <div key={idx} className="p-10 bg-white/[0.02] border border-white/5 rounded-[4rem] group/post hover:bg-white/[0.04] transition-all duration-300 shadow-2xl relative overflow-hidden">
                                        <div className="absolute top-0 right-0 p-10 opacity-[0.02] group-hover/post:opacity-5 transition-opacity rotate-12"><Share2 size={150} /></div>
                                        <div className="flex justify-between items-center mb-10 relative z-10">
                                           <div className="flex items-center gap-6">
@@ -300,7 +300,7 @@ export default function ContentDetailPage() {
                                              <Copy size={24} />
                                           </button>
                                        </div>
-                                       <p className="text-3xl font-black text-slate-200 italic leading-tight uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-1000 relative z-10">{post.content}</p>
+                                       <p className="text-3xl font-black text-slate-200 italic leading-tight uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 relative z-10">{post.content}</p>
                                        {post.hashtags && post.hashtags.length > 0 && (
                                           <div className="flex flex-wrap gap-4 relative z-10">
                                              {post.hashtags.map((tag: string, i: number) => (
@@ -353,7 +353,7 @@ export default function ContentDetailPage() {
                      {/* Node Metadata Diagnostic */}
                      <div className={`${glassStyle} rounded-[5rem] p-16 space-y-12 bg-black/40`}>
                         <div className="flex items-center gap-6 mb-4">
-                           <Settings size={32} className="text-slate-800" />
+                           <Settings size={32} className="text-slate-400" />
                            <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Node Diagnostic</h2>
                         </div>
                         <div className="space-y-10">
@@ -366,8 +366,8 @@ export default function ContentDetailPage() {
                            ].map((s, i) => (
                               <div key={i} className="flex items-center justify-between group/stat">
                                  <div className="flex items-center gap-5">
-                                    <s.icon size={18} className="text-slate-900 group-hover/stat:text-indigo-400 transition-colors" />
-                                    <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none">{s.label}</p>
+                                    <s.icon size={18} className="text-slate-500 group-hover/stat:text-indigo-400 transition-colors" />
+                                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{s.label}</p>
                                  </div>
                                  <p className="text-[14px] font-black text-white uppercase tracking-widest italic group-hover/stat:text-indigo-400 transition-colors leading-none">{s.val}</p>
                               </div>
@@ -390,8 +390,8 @@ export default function ContentDetailPage() {
                         </div>
                         <div className="relative group/tag-in">
                            <input type="text" placeholder="INITIALIZE_TAG..." onKeyPress={(e) => { if (e.key === 'Enter') { handleAddTag(e.currentTarget.value); e.currentTarget.value = '' } }}
-                              className="w-full bg-black/60 border-2 border-white/5 rounded-[2.5rem] px-10 py-6 text-xl font-black text-white uppercase italic tracking-tighter focus:border-indigo-500/50 transition-all placeholder:text-slate-950 shadow-inner" />
-                           <Search size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-950 group-focus-within/tag-in:text-indigo-500 transition-colors" />
+                              className="w-full bg-black/60 border-2 border-white/5 rounded-[2.5rem] px-10 py-6 text-xl font-black text-white uppercase italic tracking-tighter focus:border-indigo-500/50 transition-all placeholder:text-slate-600 shadow-inner" />
+                           <Search size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/tag-in:text-indigo-500 transition-colors" />
                         </div>
                      </div>
                   </aside>
@@ -428,11 +428,11 @@ export default function ContentDetailPage() {
                      <div className="flex items-center justify-between border-b border-white/5 pb-12">
                         <div className="flex items-center gap-10">
                            <div className="w-20 h-20 rounded-[2.5rem] bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-2xl relative group overflow-hidden">
-                              <Languages size={40} className="text-purple-400 group-hover:rotate-180 transition-transform duration-1000" />
+                              <Languages size={40} className="text-purple-400 group-hover:rotate-180 transition-transform duration-300" />
                            </div>
                            <div>
                               <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{t('translation.title')}</h2>
-                              <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">{t('translation.translateTo')} operational nodes.</p>
+                              <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">{t('translation.translateTo')} operational nodes.</p>
                            </div>
                         </div>
                         <div className="flex gap-8">
@@ -443,14 +443,14 @@ export default function ContentDetailPage() {
                               ))}
                            </select>
                            <button onClick={handleTranslate} disabled={isTranslating}
-                              className="px-16 py-8 bg-purple-600 text-white rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(147,51,234,0.3)] hover:bg-white hover:text-black transition-all duration-1000 italic disabled:opacity-20 active:scale-95 group">
+                              className="px-16 py-8 bg-purple-600 text-white rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(147,51,234,0.3)] hover:bg-white hover:text-black transition-all duration-300 italic disabled:opacity-20 active:scale-95 group">
                               {isTranslating ? t('translation.translating') : <span><Zap className="inline mr-4 group-hover:scale-125 transition-transform" /> {t('translation.translate')}</span>}
                            </button>
                         </div>
                      </div>
                      
                      <div className="flex flex-wrap gap-6 items-center">
-                        <span className="text-[11px] font-black text-slate-800 uppercase tracking-[1em] italic leading-none mr-6">SYNCHRONIZED_MATRICES:</span>
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none mr-6">SYNCHRONIZED_MATRICES:</span>
                         {viewingLang && (
                            <button onClick={() => setViewingLang(null)}
                               className="px-10 py-5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic shadow-inner hover:bg-amber-500 hover:text-white transition-all">
@@ -459,7 +459,7 @@ export default function ContentDetailPage() {
                         )}
                         {translationList.map((tr) => (
                            <button key={tr._id} onClick={() => handleViewInLanguage(tr.language)}
-                              className={`px-10 py-5 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-1000 ${viewingLang === tr.language ? 'bg-purple-600 text-white shadow-2xl' : 'bg-white/[0.02] border border-white/5 text-slate-800 hover:text-white hover:border-white/20 shadow-inner'}`}>
+                              className={`px-10 py-5 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${viewingLang === tr.language ? 'bg-purple-600 text-white shadow-2xl' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20 shadow-inner'}`}>
                               {t('translation.viewIn')} {tr.language.toUpperCase()}_NODE
                            </button>
                         ))}
@@ -475,21 +475,21 @@ export default function ContentDetailPage() {
                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
                               <div className="flex items-center gap-6 mb-12 border-l-8 border-purple-500 pl-8">
                                  <div>
-                                    <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-1000">{display.title || 'NULL_TITLE'}</h3>
+                                    <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-300">{display.title || 'NULL_TITLE'}</h3>
                                     {display._lang && <span className="text-[12px] font-black text-purple-500 uppercase tracking-[0.8em] italic leading-none">{t('translation.viewIn')} {display._lang.toUpperCase()}_NODE</span>}
                                  </div>
                               </div>
                               <div className="space-y-16">
                                  {display.description && (
                                     <div className="space-y-6">
-                                       <h4 className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none border-b border-white/5 pb-4">Logic Intent Mapping</h4>
-                                       <p className="text-3xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-1000">{display.description}</p>
+                                       <h4 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-b border-white/5 pb-4">Logic Intent Mapping</h4>
+                                       <p className="text-3xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">{display.description}</p>
                                     </div>
                                  )}
                                  {display.body && (
                                     <div className="space-y-6">
-                                       <h4 className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none border-b border-white/5 pb-4">Manifest Payload Core</h4>
-                                       <p className="text-2xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-60 group-hover:opacity-90 transition-opacity duration-1000 whitespace-pre-wrap">{display.body}</p>
+                                       <h4 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-b border-white/5 pb-4">Manifest Payload Core</h4>
+                                       <p className="text-2xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-60 group-hover:opacity-90 transition-opacity duration-300 whitespace-pre-wrap">{display.body}</p>
                                     </div>
                                  )}
                                  {display.tags && display.tags.length > 0 && (

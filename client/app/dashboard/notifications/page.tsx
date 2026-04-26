@@ -139,7 +139,7 @@ export default function SignalDiffusionLedgerPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
         <Radio size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
-        <span className="text-[16px] font-black text-slate-800 uppercase tracking-[1em] animate-pulse italic">Decoding Signal Spectrum...</span>
+        <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Decoding Signal Spectrum...</span>
      </div>
   )
 
@@ -155,12 +155,12 @@ export default function SignalDiffusionLedgerPage() {
         <header className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Bell size={48} className="text-indigo-400 relative z-10 group-hover:rotate-12 transition-transform duration-1000 animate-pulse" />
+                <Bell size={48} className="text-indigo-400 relative z-10 group-hover:rotate-12 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -175,17 +175,17 @@ export default function SignalDiffusionLedgerPage() {
                       </div>
                    )}
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Signal Diffusion</h1>
-                 <p className="text-slate-800 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">High-priority telemetry intercepts and mission-critical resonance triggers.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Signal Diffusion</h1>
+                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">High-priority telemetry intercepts and mission-critical resonance triggers.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <button onClick={loadSignals} className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group shadow-2xl active:scale-95 border-none bg-white/[0.02]`}>
-                 <RefreshCw size={36} className={`text-slate-800 group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000'}`} />
+                 <RefreshCw size={36} className={`text-slate-400 group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
               </button>
               <button onClick={() => setShowPreferences(!showPreferences)} 
-                className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-all duration-1000 flex items-center gap-8 italic border-2 active:scale-95 ${showPreferences ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-slate-800 hover:text-white'}`}
+                className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center gap-8 italic border-2 active:scale-95 ${showPreferences ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'}`}
               >
                 <Sliders size={28} className={showPreferences ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} /> SENSOR_FUSION_CALIBRATION
               </button>
@@ -206,7 +206,7 @@ export default function SignalDiffusionLedgerPage() {
                       </div>
                       <div>
                          <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Mission Telemetry</h2>
-                         <p className="text-[14px] text-slate-800 font-black uppercase tracking-[0.6em] italic leading-none">Real-time kinetic execution downlink_v14.2</p>
+                         <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">Real-time kinetic execution downlink_v14.2</p>
                       </div>
                    </div>
                    {liveStatus.lastUpdated && <div className="px-10 py-5 rounded-[2.5rem] bg-black/60 border-2 border-white/5 text-[12px] font-black text-indigo-400 uppercase tracking-widest italic shadow-inner">LAST_SIGNAL_BURST: {new Date(liveStatus.lastUpdated).toLocaleTimeString().toUpperCase()}</div>}
@@ -217,42 +217,42 @@ export default function SignalDiffusionLedgerPage() {
                       <div className="flex items-center gap-6 pl-10 border-l-[6px] border-indigo-500/40"><span className="text-[16px] font-black text-indigo-400 uppercase tracking-[1em] italic leading-none">ACTIVE_OPERATIONS_RESONANCE</span></div>
                       <div className="space-y-8">
                          {liveStatus.tasks.map(t => (
-                            <motion.div whileHover={{ x: 30, scale: 1.02 }} key={t.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 hover:bg-white/[0.04] transition-all duration-1000 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+                            <motion.div whileHover={{ x: 30, scale: 1.02 }} key={t.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 hover:bg-white/[0.04] transition-all duration-300 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                                <div className="flex items-center gap-10">
-                                  <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors duration-1000"><Zap size={32} className="text-amber-500 animate-pulse" /></div>
+                                  <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors duration-300"><Zap size={32} className="text-amber-500 animate-pulse" /></div>
                                   <div>
-                                     <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-1000 leading-none mb-3">{t.title}</p>
+                                     <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-300 leading-none mb-3">{t.title}</p>
                                      <div className="flex items-center gap-4">
                                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]" />
-                                        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.4em] font-mono leading-none">{t.status.toUpperCase()} // DIRECTIVE_LOCKED</span>
+                                        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] font-mono leading-none">{t.status.toUpperCase()} // DIRECTIVE_LOCKED</span>
                                      </div>
                                   </div>
                                </div>
-                               <button onClick={() => router.push(`/dashboard/tasks?open=${t.id}`)} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all duration-1000 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
+                               <button onClick={() => router.push(`/dashboard/tasks?open=${t.id}`)} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
                             </motion.div>
                          ))}
-                         {liveStatus.tasks.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Ghost size={48} className="text-slate-950 mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-slate-950 uppercase tracking-[0.8em] italic">NO_KINETIC_TRAJECTORIES_ARMED</p></div>}
+                         {liveStatus.tasks.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Ghost size={48} className="text-slate-500 mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] italic">NO_KINETIC_TRAJECTORIES_ARMED</p></div>}
                       </div>
                    </div>
                    <div className="space-y-12">
                       <div className="flex items-center gap-6 pl-10 border-l-[6px] border-purple-500/40"><span className="text-[16px] font-black text-purple-400 uppercase tracking-[1em] italic leading-none">BACKGROUND_ASYNC_CYCLES</span></div>
                       <div className="space-y-8">
                          {liveStatus.jobs.map(j => (
-                            <motion.div whileHover={{ x: 30, scale: 1.02 }} key={j.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-purple-500/50 hover:bg-white/[0.04] transition-all duration-1000 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+                            <motion.div whileHover={{ x: 30, scale: 1.02 }} key={j.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-purple-500/50 hover:bg-white/[0.04] transition-all duration-300 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                                <div className="flex items-center gap-10">
-                                  <div className="w-16 h-16 rounded-[2rem] bg-purple-500/5 border-2 border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-1000"><RefreshCw size={32} className="text-purple-500 animate-spin" style={{ animationDuration: '6s' }} /></div>
+                                  <div className="w-16 h-16 rounded-[2rem] bg-purple-500/5 border-2 border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300"><RefreshCw size={32} className="text-purple-500 animate-spin" style={{ animationDuration: '6s' }} /></div>
                                   <div>
-                                     <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-purple-400 transition-colors duration-1000 leading-none mb-3">{j.title}</p>
+                                     <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-purple-400 transition-colors duration-300 leading-none mb-3">{j.title}</p>
                                      <div className="flex items-center gap-4">
                                         <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-                                        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.4em] font-mono leading-none">{j.status.toUpperCase()} // QUEUE::{j.queue?.toUpperCase()}</span>
+                                        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] font-mono leading-none">{j.status.toUpperCase()} // QUEUE::{j.queue?.toUpperCase()}</span>
                                      </div>
                                   </div>
                                </div>
-                               <button onClick={() => router.push('/dashboard/jobs')} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all duration-1000 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
+                               <button onClick={() => router.push('/dashboard/jobs')} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
                             </motion.div>
                          ))}
-                         {liveStatus.jobs.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Wind size={48} className="text-slate-950 mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-slate-950 uppercase tracking-[0.8em] italic">ASYNC_LATTICE_QUIESCENT</p></div>}
+                         {liveStatus.jobs.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Wind size={48} className="text-slate-500 mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] italic">ASYNC_LATTICE_QUIESCENT</p></div>}
                       </div>
                    </div>
                 </div>
@@ -273,23 +273,23 @@ export default function SignalDiffusionLedgerPage() {
 
         {/* Global Signal Matrix (Main Feed) */}
         <div className={`${glassStyle} rounded-[7rem] p-24 border-white/5 relative overflow-hidden flex flex-col min-h-[1200px] shadow-[0_100px_300px_rgba(0,0,0,0.9)] bg-black/40`}>
-           <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none group-hover/matrix:scale-110 transition-transform duration-1000 group/matrix"><Terminal size={800} className="text-white" /></div>
+           <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none group-hover/matrix:scale-110 transition-transform duration-300 group/matrix"><Terminal size={800} className="text-white" /></div>
            
            <header className="flex flex-col xl:flex-row items-center justify-between gap-20 mb-32 relative z-10 border-b border-white/5 pb-20">
               <div className="flex items-center gap-12 flex-1 w-full relative group/search">
                  <div className="absolute left-12 top-1/2 -translate-y-1/2 flex items-center gap-6 pointer-events-none">
-                    <Search className="text-slate-950 group-focus-within/search:text-indigo-400 transition-all duration-1000" size={40} />
+                    <Search className="text-slate-500 group-focus-within/search:text-indigo-400 transition-all duration-300" size={40} />
                     <div className="w-1 h-10 bg-white/5 rounded-full" />
                  </div>
                  <input type="text" placeholder="SCAN_GLOBAL_SIGNAL_MATRIX..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                   className="w-full bg-black/80 border-4 border-white/5 rounded-[5.5rem] pl-32 pr-16 py-12 text-5xl font-black text-white uppercase italic tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all duration-1000 shadow-inner placeholder:text-slate-950 font-mono"
+                   className="w-full bg-black/80 border-4 border-white/5 rounded-[5.5rem] pl-32 pr-16 py-12 text-5xl font-black text-white uppercase italic tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all duration-300 shadow-inner placeholder:text-slate-600 font-mono"
                  />
               </div>
               
               <nav className="flex items-center gap-8 bg-black/60 p-6 rounded-[4.5rem] border-2 border-white/5 shadow-inner">
                  {(['all', 'unread', 'read'] as const).map(f => (
                    <button key={f} onClick={() => setFilter(f)}
-                     className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-1000 italic ${filter === f ? 'bg-white text-black shadow-2xl scale-110' : 'bg-transparent text-slate-800 hover:text-white hover:bg-white/5'}`}
+                     className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic ${filter === f ? 'bg-white text-black shadow-2xl scale-110' : 'bg-transparent text-slate-400 hover:text-white hover:bg-white/5'}`}
                    >
                      {f.toUpperCase()}
                    </button>
@@ -328,17 +328,17 @@ export default function SignalDiffusionLedgerPage() {
                    </div>
                    <div className="flex-1 flex items-center justify-center gap-12 px-16">
                       <button onClick={async () => { setBusy(true); await Promise.all(Array.from(selectedNotifications).map(id => apiPut(`/notifications/${id}/read`, {}))); await loadSignals(); setSelectedNotifications(new Set()); setBusy(false) }}
-                        className="px-20 py-10 bg-white text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-1000 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 group/ack"
+                        className="px-20 py-10 bg-white text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 group/ack"
                       >
                          <CheckCircle2 size={40} className="group-hover/ack:scale-125 transition-transform" /> SYNCHRONIZE_SIGNALS
                       </button>
                       <button onClick={async () => { if (!confirm('CRITICAL: PURGE_SELECTED_TELEMETRY?_THIS_ACTION_IS_PERMANENT.')) return; setBusy(true); await Promise.all(Array.from(selectedNotifications).map(id => apiDelete(`/notifications/${id}`))); await loadSignals(); setSelectedNotifications(new Set()); setBusy(false) }}
-                        className="px-20 py-10 bg-rose-600 text-white rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-rose-500 transition-all duration-1000 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 group/purge"
+                        className="px-20 py-10 bg-rose-600 text-white rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-rose-500 transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 group/purge"
                       >
                          <Trash2 size={40} className="group-hover/purge:rotate-12 transition-transform" /> PURGE_LEDGER_DATA
                       </button>
                    </div>
-                   <button onClick={() => setSelectedNotifications(new Set())} className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-slate-950 hover:text-white hover:bg-rose-500/20 transition-all duration-1000 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
+                   <button onClick={() => setSelectedNotifications(new Set())} className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-slate-500 hover:text-white hover:bg-rose-500/20 transition-all duration-300 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
                 </motion.div>
              )}
            </AnimatePresence>
@@ -348,19 +348,19 @@ export default function SignalDiffusionLedgerPage() {
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-[0.05] gap-20 py-80">
                    <div className="w-80 h-80 bg-white/5 rounded-[12rem] border-4 border-white/5 flex items-center justify-center animate-pulse shadow-inner"><Bell size={160} className="text-white opacity-40" /></div>
                    <div className="space-y-10 max-w-4xl">
-                      <h3 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-6">Signal Spectrum Void</h3>
-                      <p className="text-3xl font-black text-slate-800 uppercase tracking-[1em] italic leading-relaxed">No active resonance triggered in the current temporal resolution.</p>
+                      <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-6">Signal Spectrum Void</h3>
+                      <p className="text-3xl font-black text-slate-400 uppercase tracking-[1em] italic leading-relaxed">No active resonance triggered in the current temporal resolution.</p>
                    </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-12">
                    {filteredNotifications.map((n, idx) => (
                      <motion.div layout key={n._id} initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05, duration: 1 }}
-                       className={`group relative p-16 rounded-[6rem] border-2 transition-all duration-1000 overflow-hidden shadow-[0_60px_150px_rgba(0,0,0,0.6)] ${
+                       className={`group relative p-16 rounded-[6rem] border-2 transition-all duration-300 overflow-hidden shadow-[0_60px_150px_rgba(0,0,0,0.6)] ${
                          !n.read ? 'bg-indigo-500/[0.04] border-indigo-500/20 shadow-[0_0_150px_rgba(99,102,241,0.08)] ring-4 ring-indigo-500/10' : 'bg-black/60 border-white/[0.03] hover:border-white/10 hover:bg-white/[0.02]'
                        } ${selectedNotifications.has(n._id) ? 'bg-indigo-500/20 border-indigo-500 shadow-[0_0_200px_rgba(99,102,241,0.3)] ring-[10px] ring-indigo-500/10' : ''}`}
                      >
-                        <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-1000 pointer-events-none scale-150 group-hover:rotate-12"><Radio size={400} className="text-white" /></div>
+                        <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-300 pointer-events-none scale-150 group-hover:rotate-12"><Radio size={400} className="text-white" /></div>
                         
                         <div className="flex items-start gap-16 relative z-10">
                            <div className="pt-8">
@@ -370,7 +370,7 @@ export default function SignalDiffusionLedgerPage() {
                               />
                            </div>
                            
-                           <div className={`w-32 h-32 rounded-[3.5rem] flex items-center justify-center shadow-inner flex-shrink-0 border-2 group-hover:scale-110 transition-transform duration-1000 relative overflow-hidden ${getTypeStyle(n.type)}`}>
+                           <div className={`w-32 h-32 rounded-[3.5rem] flex items-center justify-center shadow-inner flex-shrink-0 border-2 group-hover:scale-110 transition-transform duration-300 relative overflow-hidden ${getTypeStyle(n.type)}`}>
                                <div className="absolute inset-0 bg-white/[0.02] group-hover:opacity-100 opacity-0 transition-opacity" />
                                {getTypeIcon(n.type)}
                            </div>
@@ -378,9 +378,9 @@ export default function SignalDiffusionLedgerPage() {
                            <div className="flex-1 min-w-0 space-y-10 group/content">
                               <div className="flex items-center justify-between border-b border-white/5 pb-8 mb-4">
                                  <div className="flex items-center gap-10">
-                                    {n.category && <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic bg-indigo-500/10 px-10 py-3 rounded-[2.5rem] border-2 border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-all duration-1000">{n.category.replace('_', ' ')}</span>}
-                                    <div className="flex items-center gap-4 text-slate-800">
-                                       <Timer size={16} className="text-slate-950" />
+                                    {n.category && <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic bg-indigo-500/10 px-10 py-3 rounded-[2.5rem] border-2 border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-all duration-300">{n.category.replace('_', ' ')}</span>}
+                                    <div className="flex items-center gap-4 text-slate-400">
+                                       <Timer size={16} className="text-slate-500" />
                                        <span className="text-[12px] font-black uppercase tracking-[0.4em] italic font-mono">{new Date(n.createdAt).toLocaleString().toUpperCase()}</span>
                                     </div>
                                  </div>
@@ -388,13 +388,13 @@ export default function SignalDiffusionLedgerPage() {
                               </div>
 
                               <div className="space-y-10">
-                                 <h3 className="text-7xl font-black text-white uppercase italic tracking-tighter leading-none mb-10 group-hover:text-indigo-400 transition-colors duration-1000 drop-shadow-2xl">{n.title}</h3>
-                                 <p className="text-slate-400 font-black text-3xl uppercase tracking-tighter italic leading-tight max-w-5xl opacity-80 group-hover:opacity-100 transition-opacity duration-1000 group-hover:text-slate-200">{n.message || n.aiSummary || 'NULL_SIGNAL_PAYLOAD'}</p>
+                                 <h3 className="text-7xl font-black text-white uppercase italic tracking-tighter leading-none mb-10 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{n.title}</h3>
+                                 <p className="text-slate-400 font-black text-3xl uppercase tracking-tighter italic leading-tight max-w-5xl opacity-80 group-hover:opacity-100 transition-opacity duration-300 group-hover:text-slate-200">{n.message || n.aiSummary || 'NULL_SIGNAL_PAYLOAD'}</p>
                                  
                                  <AnimatePresence>
                                    {n.suggestion && (
                                      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} 
-                                       className="mt-12 flex items-start gap-10 p-10 rounded-[4rem] bg-indigo-500/10 border-2 border-indigo-500/20 w-fit shadow-2xl group-hover:border-indigo-500/50 transition-all duration-1000 relative overflow-hidden"
+                                       className="mt-12 flex items-start gap-10 p-10 rounded-[4rem] bg-indigo-500/10 border-2 border-indigo-500/20 w-fit shadow-2xl group-hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden"
                                      >
                                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent animate-shimmer" />
                                         <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/20 flex items-center justify-center relative z-10"><Zap size={36} className="text-indigo-400 animate-pulse" /></div>
@@ -407,18 +407,18 @@ export default function SignalDiffusionLedgerPage() {
                                  </AnimatePresence>
                               </div>
 
-                              <footer className="flex items-center gap-16 pt-12 border-t border-white/5 bg-white/[0.01] -mx-16 -mb-16 px-16 py-12 mt-12 transition-colors duration-1000 group-hover:bg-white/[0.03]">
+                              <footer className="flex items-center gap-16 pt-12 border-t border-white/5 bg-white/[0.01] -mx-16 -mb-16 px-16 py-12 mt-12 transition-colors duration-300 group-hover:bg-white/[0.03]">
                                  {n.link && (
                                    <button type="button" onClick={() => { if (!n.read) apiPut(`/notifications/${n._id}/read`, {}); router.push(n.link!) }}
                                      className="text-[18px] font-black text-indigo-400 hover:text-white uppercase tracking-[0.8em] flex items-center gap-10 transition-all group/link italic border-none outline-none group-link:scale-110"
                                    >
-                                     <Compass className="group-hover/link:rotate-180 transition-transform duration-1000" size={32} /> ACCESS_ORIGIN_NODE <ArrowRight size={32} className="group-hover/link:translate-x-6 transition-all duration-700" />
+                                     <Compass className="group-hover/link:rotate-180 transition-transform duration-300" size={32} /> ACCESS_ORIGIN_NODE <ArrowRight size={32} className="group-hover/link:translate-x-6 transition-all duration-700" />
                                    </button>
                                  )}
-                                 <div className="flex items-center gap-10 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-1000 scale-90 group-hover:scale-100">
+                                 <div className="flex items-center gap-10 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
                                     {!n.read && (
                                       <button onClick={() => { apiPut(`/notifications/${n._id}/read`, {}); loadSignals() }} 
-                                        className="px-16 py-8 bg-indigo-500 text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] italic shadow-2xl hover:bg-white hover:text-indigo-600 transition-all duration-1000 border-none scale-105 active:scale-95"
+                                        className="px-16 py-8 bg-indigo-500 text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] italic shadow-2xl hover:bg-white hover:text-indigo-600 transition-all duration-300 border-none scale-105 active:scale-95"
                                       >
                                         RESONANCE_ACK
                                       </button>

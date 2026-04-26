@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   User, Mail, Camera, Save, Key, ArrowLeft, 
@@ -34,13 +34,9 @@ export default function IdentityMatrixInterfacePage() {
   })
   const [preview, setPreview] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
-      const profileData = await apiGet('/auth/profile')
+      const profileData: any = await apiGet('/auth/profile')
       const u = profileData.user || profileData;
       setProfile({
         name: u.name || '',
@@ -52,7 +48,7 @@ export default function IdentityMatrixInterfacePage() {
         niche: u.niche || '',
         profilePicture: null,
       })
-    } catch (error) {
+    } catch {
       if (user) {
         setProfile({
           name: user.name || '',
@@ -68,7 +64,11 @@ export default function IdentityMatrixInterfacePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -103,7 +103,7 @@ export default function IdentityMatrixInterfacePage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
         <Fingerprint size={64} className="text-indigo-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Identity DNA...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Identity DNA...</span>
      </div>
   );
 
@@ -119,7 +119,7 @@ export default function IdentityMatrixInterfacePage() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
               <button onClick={() => router.push('/dashboard/settings')} title="Back"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={32} />
               </button>
               <div className="w-20 h-20 bg-indigo-500/5 border border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
@@ -138,7 +138,7 @@ export default function IdentityMatrixInterfacePage() {
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Identity</h1>
-                 <p className="text-slate-800 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Calibrating neural bio-synthesis, visual signature, and global node coordinates.</p>
+                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Calibrating neural bio-synthesis, visual signature, and global node coordinates.</p>
               </div>
            </div>
 
@@ -160,14 +160,14 @@ export default function IdentityMatrixInterfacePage() {
                 className={`${glassStyle} p-16 rounded-[6rem] flex flex-col items-center text-center space-y-12 border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.6)]`}
               >
                  <div className="relative group/avatar">
-                    <div className="w-56 h-56 rounded-[4.5rem] bg-black/60 border border-white/10 p-3 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-1000 group-hover/avatar:border-indigo-500/40 group-hover/avatar:scale-105">
+                    <div className="w-56 h-56 rounded-[4.5rem] bg-black/60 border border-white/10 p-3 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300 group-hover/avatar:border-indigo-500/40 group-hover/avatar:scale-105">
                        <div className="w-full h-full rounded-[3.8rem] overflow-hidden bg-white/[0.02] flex items-center justify-center relative">
                           {preview ? (
-                            <img src={preview} alt="Profile" className="w-full h-full object-cover transition-transform duration-[3s] group-hover/avatar:scale-110 grayscale group-hover/avatar:grayscale-0" />
+                            <img src={preview} alt="Profile" className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110 grayscale group-hover/avatar:grayscale-0" />
                           ) : (
-                            <User className="w-24 h-24 text-slate-900 group-hover/avatar:text-indigo-400 transition-all duration-1000" />
+                            <User className="w-24 h-24 text-slate-500 group-hover/avatar:text-indigo-400 transition-all duration-300" />
                           )}
-                          <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-1000" />
+                          <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
                        </div>
                     </div>
                     <label className="absolute -bottom-4 -right-4 w-20 h-20 bg-white text-black border-4 border-[#020205] rounded-[2rem] flex items-center justify-center cursor-pointer hover:bg-indigo-500 hover:text-white transition-all duration-700 shadow-2xl scale-100 hover:rotate-12 active:scale-90 group-hover/avatar:translate-x-2 group-hover/avatar:-translate-y-2">
@@ -179,7 +179,7 @@ export default function IdentityMatrixInterfacePage() {
                  <div className="space-y-4">
                     <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none truncate max-w-xs drop-shadow-2xl">{profile.name || 'Sovereign_Node'}</h3>
                     <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <p className="text-[11px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">{profile.email || 'NULL_SIGNAL_PROTOCOL'}</p>
+                       <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{profile.email || 'NULL_SIGNAL_PROTOCOL'}</p>
                     </div>
                  </div>
 
@@ -193,8 +193,8 @@ export default function IdentityMatrixInterfacePage() {
                           </div>
                        </button>
                     )}
-                    <div className="p-8 rounded-[3rem] bg-black/60 border border-white/5 flex items-center justify-between group cursor-default shadow-inner hover:border-indigo-500/30 transition-all duration-1000">
-                       <div className="flex items-center gap-5 text-slate-800 group-hover:text-indigo-400 transition-colors duration-700">
+                    <div className="p-8 rounded-[3rem] bg-black/60 border border-white/5 flex items-center justify-between group cursor-default shadow-inner hover:border-indigo-500/30 transition-all duration-300">
+                       <div className="flex items-center gap-5 text-slate-400 group-hover:text-indigo-400 transition-colors duration-700">
                           <Activity size={20} className="animate-pulse" />
                           <span className="text-[12px] font-black uppercase tracking-[0.4em] italic">Logic Tier</span>
                        </div>
@@ -207,8 +207,8 @@ export default function IdentityMatrixInterfacePage() {
                 className={`${glassStyle} p-12 rounded-[5rem] space-y-12 border-white/5 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]`}
               >
                  <div className="flex items-center gap-6 border-b border-white/5 pb-8">
-                    <Network size={20} className="text-slate-900 group-hover:text-indigo-400 transition-colors" />
-                    <h3 className="text-[13px] font-black text-slate-900 uppercase tracking-[0.6em] italic leading-none">Mesh Hub Uplinks</h3>
+                    <Network size={20} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
+                    <h3 className="text-[13px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">Mesh Hub Uplinks</h3>
                  </div>
                  <div className="space-y-10">
                     <UplinkField icon={Twitter} label="X_SIGNAL" value={profile.social_links.twitter || ''} placeholder="https://x.com/..." 
@@ -232,7 +232,7 @@ export default function IdentityMatrixInterfacePage() {
                     <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Target size={40} className="text-indigo-400 animate-pulse" /></div>
                     <div>
                        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Signature Terminal</h2>
-                       <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">Calibrating neural bio-synthesis, operational parameters and mission hub coordinates.</p>
+                       <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Calibrating neural bio-synthesis, operational parameters and mission hub coordinates.</p>
                     </div>
                  </div>
 
@@ -245,14 +245,14 @@ export default function IdentityMatrixInterfacePage() {
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[13px] font-black text-slate-800 uppercase tracking-[0.6em] italic pl-6">Neural Bio-Synthesis</label>
+                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-6">Neural Bio-Synthesis</label>
                        <div className="group relative">
                           <textarea
                             value={profile.bio}
                             onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value.slice(0, 500) }))}
                             rows={8}
                             placeholder="OUTLINE YOUR LOGIC PARADIGM AND CORE HEURISTICS..."
-                            className="w-full bg-black/60 border border-white/10 rounded-[4rem] px-12 py-12 text-[18px] font-black text-white uppercase italic tracking-[0.1em] focus:outline-none focus:border-indigo-500/40 transition-all placeholder:text-slate-950 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] leading-relaxed min-h-[300px] font-mono"
+                            className="w-full bg-black/60 border border-white/10 rounded-[4rem] px-12 py-12 text-[18px] font-black text-white uppercase italic tracking-[0.1em] focus:outline-none focus:border-indigo-500/40 transition-all placeholder:text-slate-600 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] leading-relaxed min-h-[300px] font-mono"
                             title="Bio"
                           />
                           <div className="absolute top-8 right-8 pointer-events-none opacity-5 group-focus-within:opacity-20 transition-opacity">
@@ -260,10 +260,10 @@ export default function IdentityMatrixInterfacePage() {
                           </div>
                        </div>
                        <div className="flex justify-between items-center px-10">
-                          <div className="flex items-center gap-4 text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic">
+                          <div className="flex items-center gap-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic">
                              <Activity size={12} className="text-indigo-500 animate-pulse" /> RECURSIVE_OUTPUT_BUFFER
                           </div>
-                          <span className={`text-[12px] font-black italic tracking-widest ${profile.bio.length > 450 ? 'text-rose-500' : 'text-slate-800'}`}>
+                          <span className={`text-[12px] font-black italic tracking-widest ${profile.bio.length > 450 ? 'text-rose-500' : 'text-slate-400'}`}>
                              {profile.bio.length} / 500_IDEATION_BITS
                           </span>
                        </div>
@@ -277,7 +277,7 @@ export default function IdentityMatrixInterfacePage() {
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[13px] font-black text-slate-800 uppercase tracking-[0.6em] italic pl-6">Domain Expertise (Niche)</label>
+                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-6">Domain Expertise (Niche)</label>
                        <div className="relative group/select">
                           <select
                             value={profile.niche}
@@ -301,16 +301,16 @@ export default function IdentityMatrixInterfacePage() {
                  </div>
 
                  <div className="pt-20 mt-20 border-t border-white/5 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-6 text-slate-900 group-hover:text-indigo-400 transition-colors duration-1000">
+                    <div className="flex items-center gap-6 text-slate-500 group-hover:text-indigo-400 transition-colors duration-300">
                        <Shield size={24} className="text-indigo-600/50" />
                        <span className="text-[12px] font-black uppercase tracking-[0.4em] italic leading-none">Encryption_Standard: AES-256_SOVEREIGN</span>
                     </div>
                     <button onClick={saveProfile} disabled={saving}
-                      className="px-24 py-10 bg-white text-black font-black uppercase text-[18px] tracking-[0.6em] italic rounded-[4rem] hover:bg-indigo-600 hover:text-white transition-all duration-1000 shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-10 group/lock relative overflow-hidden"
+                      className="px-24 py-10 bg-white text-black font-black uppercase text-[18px] tracking-[0.6em] italic rounded-[4rem] hover:bg-indigo-600 hover:text-white transition-all duration-300 shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-10 group/lock relative overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
                       <div className="relative z-10 flex items-center gap-10">
-                        {saving ? <RefreshCw className="animate-spin" size={32} /> : <Lock size={32} className="group-hover/lock:scale-110 transition-transform duration-1000" />}
+                        {saving ? <RefreshCw className="animate-spin" size={32} /> : <Lock size={32} className="group-hover/lock:scale-110 transition-transform duration-300" />}
                         {saving ? 'SYNCHRONIZING...' : 'LOCK_MISSION_IDENTITY'}
                       </div>
                     </button>
@@ -332,13 +332,13 @@ export default function IdentityMatrixInterfacePage() {
 function UplinkField({ icon: Icon, label, value, placeholder, onChange }: { icon: any; label: string; value: string; placeholder: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-5 group/uplink">
-       <div className="flex items-center gap-4 text-slate-800 italic px-4 group-hover/uplink:text-indigo-400 transition-colors duration-700">
+       <div className="flex items-center gap-4 text-slate-400 italic px-4 group-hover/uplink:text-indigo-400 transition-colors duration-700">
           <Icon size={18} />
           <span className="text-[11px] font-black uppercase tracking-[0.5em]">{label}</span>
        </div>
        <div className="relative">
           <input type="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} title={label}
-            className="w-full bg-black/40 border border-white/5 rounded-[2rem] px-10 py-6 text-[13px] font-mono text-indigo-400 focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-950 italic shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]"
+            className="w-full bg-black/40 border border-white/5 rounded-[2rem] px-10 py-6 text-[13px] font-mono text-indigo-400 focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-600 italic shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]"
           />
           <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/uplink:opacity-100 transition-opacity">
              <Zap size={14} className="text-indigo-400 animate-pulse" />
@@ -351,15 +351,15 @@ function UplinkField({ icon: Icon, label, value, placeholder, onChange }: { icon
 function ConfigField({ icon: Icon, label, value, placeholder, onChange, isLarge = false, isLocked = false }: { icon: any; label: string; value: string; placeholder: string; onChange: (v: string) => void; isLarge?: boolean; isLocked?: boolean }) {
   return (
     <div className="space-y-6 group/field">
-       <label className="text-[13px] font-black text-slate-800 uppercase tracking-[0.6em] italic pl-8 group-hover/field:text-indigo-400/50 transition-colors duration-700">{label}</label>
+       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-8 group-hover/field:text-indigo-400/50 transition-colors duration-700">{label}</label>
        <div className="relative group">
-          <Icon className={`absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-1000 ${isLocked ? 'text-slate-900 group-hover:text-amber-500/50' : 'text-slate-900 group-focus-within:text-indigo-400 group-hover:scale-110'}`} size={isLarge ? 28 : 22} />
+          <Icon className={`absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-300 ${isLocked ? 'text-slate-500 group-hover:text-amber-500/50' : 'text-slate-500 group-focus-within:text-indigo-400 group-hover:scale-110'}`} size={isLarge ? 28 : 22} />
           <input
             type="text"
             value={value}
             onChange={(e) => !isLocked && onChange(e.target.value)}
             disabled={isLocked}
-            className={`w-full bg-black/60 border border-white/10 rounded-[3rem] pl-20 pr-10 py-8 transition-all duration-700 placeholder:text-slate-950 italic shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] font-black uppercase tracking-widest ${
+            className={`w-full bg-black/60 border border-white/10 rounded-[3rem] pl-20 pr-10 py-8 transition-all duration-700 placeholder:text-slate-600 italic shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] font-black uppercase tracking-widest ${
                isLarge ? 'text-3xl' : 'text-xl'
             } ${
                isLocked ? 'opacity-40 text-slate-500 cursor-not-allowed border-dashed' : 'text-white focus:outline-none focus:border-indigo-500/50'
@@ -367,7 +367,7 @@ function ConfigField({ icon: Icon, label, value, placeholder, onChange, isLarge 
             placeholder={placeholder}
             title={label}
           />
-          {isLocked && <Lock size={16} className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-900" />}
+          {isLocked && <Lock size={16} className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-500" />}
        </div>
     </div>
   )

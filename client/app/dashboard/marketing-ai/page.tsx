@@ -143,13 +143,13 @@ export default function MarketingOraclePage() {
           <button 
             onClick={syncSignals}
             disabled={syncing}
-            className={`group relative flex items-center gap-6 px-12 py-8 rounded-[3rem] font-black uppercase tracking-[0.4em] italic text-sm transition-all duration-1000 overflow-hidden ${
+            className={`group relative flex items-center gap-6 px-12 py-8 rounded-[3rem] font-black uppercase tracking-[0.4em] italic text-sm transition-all duration-300 overflow-hidden ${
               syncing 
               ? 'bg-indigo-600/30 text-indigo-300 cursor-wait' 
               : 'bg-white text-black hover:bg-slate-100 shadow-[0_40px_100px_rgba(255,255,255,0.2)]'
             }`}
           >
-            <div className={`absolute inset-0 bg-indigo-600/20 translate-x-[-100%] ${syncing ? 'animate-shimmer' : 'group-hover:translate-x-[100%] transition-transform duration-[2s]'}`} />
+            <div className={`absolute inset-0 bg-indigo-600/20 translate-x-[-100%] ${syncing ? 'animate-shimmer' : 'group-hover:translate-x-[100%] transition-transform duration-500'}`} />
             {syncing ? (
               <>
                 <RefreshCw size={24} className="animate-spin" />
@@ -174,10 +174,10 @@ export default function MarketingOraclePage() {
           { label: 'Quantum_Load', value: 'MINIMAL', sub: '42.1_PFLOPS', color: 'text-rose-400' },
         ].map((stat, i) => (
           <div key={i} className={`${glass} p-8 rounded-[2.5rem] border-white/5 space-y-3 group hover:border-white/20 transition-all`}>
-             <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
              <div className="flex items-end justify-between">
                 <span className={`text-4xl font-black italic tracking-tighter ${stat.color}`}>{stat.value}</span>
-                <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1">{stat.sub}</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{stat.sub}</span>
              </div>
           </div>
         ))}

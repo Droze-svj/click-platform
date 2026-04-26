@@ -28,7 +28,7 @@ interface AgentVote {
 
 interface ConsensusResult {
   consensus: boolean
-  executionStatus: 'PENDING' | 'AUTONOMOUS_LOCKED' | 'AWAITING_HUMAN_OVERRIDE' | 'REJECTED'
+  executionStatus: 'PENDING' | 'AUTO_LOCKED' | 'AWAITING_REVIEW' | 'REJECTED'
   isBudgetImpacting: boolean
   approvals: number
   votes: AgentVote[]
@@ -212,7 +212,7 @@ export const SyndicateConsensusView: React.FC = () => {
                                         </div>
                                         <div>
                                             <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">
-                                                {result.consensus ? 'Consensus High-Resonance' : 'Diffraction Detected'}
+                                                {result.consensus ? 'Strong consensus' : 'Disagreement detected'}
                                             </h5>
                                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 block italic">
                                                 {result.executionStatus.replace(/_/g, ' ')}

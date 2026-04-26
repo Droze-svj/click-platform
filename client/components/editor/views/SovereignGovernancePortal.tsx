@@ -63,7 +63,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white">Sovereign Governance</h2>
+            <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white">Governance</h2>
             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] mt-1 italic">
               User-In-The-Loop Validation // Decision Consensus
             </p>

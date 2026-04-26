@@ -18,6 +18,20 @@ const createSupabaseClient = () => {
  * Get user's posts with pagination and filtering
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
+  // Dev users + supabase-less stacks: return empty list so the Posts page
+  // renders "No posts yet" instead of 500ing.
+  const userId = req.user._id || req.user.id;
+  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
+  const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (isDevUser || !supabaseConfigured) {
+    return res.json({
+      success: true,
+      posts: [],
+      pagination: { page: 1, limit: 20, total: 0, pages: 0 },
+      isEmpty: true,
+    });
+  }
+
   try {
     const {
       page = 1,

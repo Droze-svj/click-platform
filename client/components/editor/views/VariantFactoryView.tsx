@@ -85,7 +85,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
       </div>
 
       <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic border-l-2 border-fuchsia-500/30 pl-4">
-        Synthesize multiple &quot;Hook&quot; variations. Our Neural Engine predicts which opening will achieve
+        Synthesize multiple &quot;Hook&quot; variations. Our Engine predicts which opening will achieve
         <span className="text-white"> maximum conversion</span> based on trending social patterns.
       </p>
 

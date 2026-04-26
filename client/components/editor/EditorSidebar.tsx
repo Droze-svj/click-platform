@@ -20,10 +20,10 @@ import {
   Keyboard,
   Star,
   Lock,
-  Bot,
-  Globe,
-  Box,
-  ImageDown,
+  Sparkles,
+  Library,
+  Wand2,
+  Type,
 } from 'lucide-react'
 import { EditorCategory } from '../../types/editor'
 import { CATEGORIES } from '../../utils/editorConstants'
@@ -51,21 +51,15 @@ const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 s
 
 // Keyboard shortcut map (shown in tooltip when sidebar is expanded)
 const KB_SHORTCUTS: Record<string, string> = {
-  'ai-edit': '1', 'effects': '2', 'color': '3', 'automate': '4',
-  'timeline': '5', 'assets': '6', 'export': '7', 'growth': '8',
-  'spatial': 'S', 'agent': 'A', 'dub': 'D', 'thumbnails': 'T',
+  'ai-edit': '1', 'edit': '2', 'timeline': '3', 'effects': '4',
+  'color': '5', 'assets': '6', 'export': '7',
+  'stock-library': 'L', 'creative-packs': 'P', 'creative-tools': 'C', 'text-motion': 'X',
 }
 
-// Tier requirement per category
-const CATEGORY_TIER: Partial<Record<EditorCategory, 'creator' | 'pro' | 'team' | 'elite'>> = {
-  'spatial':     'pro',
-  'agent':       'pro',
-  'dub':         'pro',
-  'short-clips': 'creator',
-  'style-vault': 'creator',
-  'predict':     'pro',
-  'thumbnails':  'creator',
-}
+// Tier requirement per category — empty in the lean sidebar; everything
+// in CATEGORIES is unlocked. Keep the type so the tier-gating logic still works
+// if you re-add gated categories later.
+const CATEGORY_TIER: Partial<Record<EditorCategory, 'creator' | 'pro' | 'team' | 'elite'>> = {}
 
 const TIER_ORDER = ['free', 'creator', 'pro', 'team', 'elite'] as const
 type Tier = typeof TIER_ORDER[number]
@@ -74,47 +68,48 @@ function tierUnlocks(userTier: Tier, required: Tier): boolean {
   return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(required)
 }
 
-// 2026 categories to append (if not already in CATEGORIES list)
+// 2026 categories — kept lean. Removed: spatial, agent, dub (orphaned views
+// that fell through to BasicEditorView). Thumbnail AI moved out of sidebar
+// since it's accessible via the dashboard's Studio zone.
 const NEW_2026_CATEGORIES = [
   {
-    id: 'spatial' as EditorCategory,
-    label: 'Spatial / XR',
-    icon: Box,
-    color: 'from-indigo-600 to-violet-700',
-    bgColor: 'bg-indigo-900/20',
-    textColor: 'text-indigo-400',
-    description: 'Apple Vision Pro & Meta Quest editing',
-    badge: '2026',
+    id: 'stock-library' as EditorCategory,
+    label: 'Stock Library',
+    icon: Library,
+    color: 'from-rose-500 to-fuchsia-600',
+    bgColor: 'bg-rose-900/20',
+    textColor: 'text-rose-400',
+    description: 'B-roll · music · GIFs · stickers · transitions · SFX',
+    badge: 'NEW',
   },
   {
-    id: 'agent' as EditorCategory,
-    label: 'AI Agent',
-    icon: Bot,
+    id: 'creative-packs' as EditorCategory,
+    label: 'Creative Packs',
+    icon: Wand2,
+    color: 'from-amber-500 to-rose-500',
+    bgColor: 'bg-amber-900/20',
+    textColor: 'text-amber-400',
+    description: 'One-click style bundles',
+    badge: 'NEW',
+  },
+  {
+    id: 'text-motion' as EditorCategory,
+    label: 'Text & Motion',
+    icon: Type,
+    color: 'from-fuchsia-500 to-purple-700',
+    bgColor: 'bg-fuchsia-900/20',
+    textColor: 'text-fuchsia-400',
+    description: 'Captions · animations · motion · fonts',
+    badge: 'NEW',
+  },
+  {
+    id: 'creative-tools' as EditorCategory,
+    label: 'AI Tools',
+    icon: Sparkles,
     color: 'from-fuchsia-600 to-purple-700',
     bgColor: 'bg-fuchsia-900/20',
     textColor: 'text-fuchsia-400',
-    description: 'Autonomous content pipeline',
-    badge: '2026',
-  },
-  {
-    id: 'dub' as EditorCategory,
-    label: 'Dub Studio',
-    icon: Globe,
-    color: 'from-violet-600 to-fuchsia-600',
-    bgColor: 'bg-violet-900/20',
-    textColor: 'text-violet-400',
-    description: '10-language voice cloning + foley',
-    badge: '2026',
-  },
-  {
-    id: 'thumbnails' as EditorCategory,
-    label: 'Thumbnail AI',
-    icon: ImageDown,
-    color: 'from-orange-600 to-amber-500',
-    bgColor: 'bg-orange-900/20',
-    textColor: 'text-orange-400',
-    description: 'AI-enhanced viral thumbnail generator',
-    badge: 'NEW',
+    description: 'Hooks · beats · engagement predictor',
   },
 ]
 
@@ -220,7 +215,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
     `}>
       {/* Gradient top decoration */}
       <div className="absolute inset-x-0 top-0 h-[30rem] bg-gradient-to-b from-indigo-500/10 via-transparent to-transparent pointer-events-none opacity-50" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none mix-blend-overlay" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.05] pointer-events-none mix-blend-overlay" />
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="p-4 flex-shrink-0 relative z-10">

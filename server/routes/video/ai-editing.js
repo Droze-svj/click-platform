@@ -103,8 +103,21 @@ router.post('/analyze', auth, asyncHandler(async (req, res) => {
     const analysis = await analyzeVideoForEditing(payload);
     sendSuccess(res, 'Video analyzed for editing', 200, analysis);
   } catch (error) {
-    logger.error('Analyze video for editing error', { error: error.message });
-    sendError(res, error.message, 500);
+    const msg = error?.message || '';
+    const isQuotaError =
+      /429|too many requests|resource_exhausted|quota exceeded|rate limit/i.test(msg);
+    if (isQuotaError) {
+      logger.warn('AI provider quota exceeded for /analyze', { videoId, snippet: msg.slice(0, 200) });
+      // Return 503 with a friendly message — the editor will surface this via analysisError
+      // and the user can still proceed with manual edit / preset-based AI auto-edit.
+      return sendError(
+        res,
+        'AI analysis is temporarily unavailable (provider quota exceeded). You can still run AI auto-edit with preset options or use the manual editor.',
+        503
+      );
+    }
+    logger.error('Analyze video for editing error', { error: msg });
+    sendError(res, msg || 'Analysis failed', 500);
   }
 }));
 

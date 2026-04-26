@@ -23,7 +23,7 @@ interface VideoStat {
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
-  tiktok: 'from-slate-800 to-black', instagram: 'from-pink-500 to-purple-600', youtube: 'from-red-600 to-red-900', other: 'from-slate-600 to-slate-500'
+  tiktok: 'from-slate-800 to-black', instagram: 'from-pink-500 to-purple-600', youtube: 'from-red-600 to-red-900', other: 'from-slate-600 to-slate-900'
 }
 
 const PLATFORM_ICON: Record<string, string> = {
@@ -136,7 +136,7 @@ export default function HeuristicMatrixPage() {
            <div className="flex items-center gap-12">
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-1000" />
+                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -146,11 +146,11 @@ export default function HeuristicMatrixPage() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <ActivitySquare size={12} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">NODE_DIAGNOSTIC_READY</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">NODE_DIAGNOSTIC_READY</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Heuristic Matrix</h1>
-                 <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and temporal resonance forecasting.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Heuristic Matrix</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and temporal resonance forecasting.</p>
               </div>
            </div>
 
@@ -159,7 +159,7 @@ export default function HeuristicMatrixPage() {
                 {['all', 'tiktok', 'instagram', 'youtube'].map(p => (
                   <button key={p} onClick={() => setSelectedPlatform(p)}
                     className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-700 ${
-                      selectedPlatform === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-800 hover:text-white'
+                      selectedPlatform === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {p === 'all' ? 'CLUSTER' : p.toUpperCase()}
@@ -188,12 +188,12 @@ export default function HeuristicMatrixPage() {
             {/* Neural Potency Ring */}
             <div className="flex flex-col items-center gap-8">
               <div className={`w-56 h-56 rounded-full border-[12px] ${scoreBorder(totals.avgViralScore)} flex flex-col items-center justify-center ${scoreBg(totals.avgViralScore)} shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] relative group`}>
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                <span className={`text-8xl font-black italic tracking-tighter ${scoreColor(totals.avgViralScore)} tabular-nums leading-none`}>{totals.avgViralScore}</span>
-                <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] mt-2">POTENCY</span>
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className={`text-6xl font-black italic tracking-tighter ${scoreColor(totals.avgViralScore)} tabular-nums leading-none`}>{totals.avgViralScore}</span>
+                <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] mt-2">POTENCY</span>
               </div>
               <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5">
-                 <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none">Neural Affinity Master</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">Neural Affinity Master</span>
               </div>
             </div>
 
@@ -240,7 +240,7 @@ export default function HeuristicMatrixPage() {
                   <k.icon size={24} className={`${k.color} opacity-60 group-hover:scale-110 transition-transform`} />
                   <div className="text-right">
                     <div className={`text-2xl font-black italic uppercase ${k.color} tracking-tighter leading-none`}>{k.value}</div>
-                    <div className="text-[9px] text-slate-800 font-black uppercase tracking-widest mt-1 italic">{k.label}</div>
+                    <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1 italic">{k.label}</div>
                   </div>
                 </div>
               ))}
@@ -265,7 +265,7 @@ export default function HeuristicMatrixPage() {
                 <Icon size={24} className={color} />
               </div>
               <div className={`text-5xl font-black italic tracking-tighter tabular-nums leading-none mb-3 ${color} drop-shadow-2xl`}>{value}</div>
-              <div className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-800 italic">{label}</div>
+              <div className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 italic">{label}</div>
             </motion.div>
           ))}
         </div>
@@ -281,7 +281,7 @@ export default function HeuristicMatrixPage() {
                    <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20"><Boxes size={32} className="text-indigo-400" /></div>
                    <div>
                       <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Operational Nodes</h3>
-                      <p className="text-[10px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">Cluster repository of manifested content nodes.</p>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Cluster repository of manifested content nodes.</p>
                    </div>
                 </div>
                 <div className="flex gap-3 bg-black/60 p-2 rounded-[2.5rem] border border-white/5">
@@ -301,15 +301,15 @@ export default function HeuristicMatrixPage() {
                    onClick={() => setSelectedVideo(video === selectedVideo ? null : video)}
                    className={`flex items-center gap-10 px-16 py-10 cursor-pointer group transition-all duration-700 relative ${selectedVideo?.id === video.id ? 'bg-indigo-500/10 border-l-[12px] border-l-indigo-500' : 'hover:bg-white/[0.03] border-l-[12px] border-l-transparent'}`}
                  >
-                   <div className="text-[16px] font-black text-slate-900 w-8 tabular-nums italic">{String(idx + 1).padStart(2, '0')}</div>
+                   <div className="text-[16px] font-black text-slate-500 w-8 tabular-nums italic">{String(idx + 1).padStart(2, '0')}</div>
 
-                   <div className={`w-16 h-16 rounded-[2rem] bg-gradient-to-br ${PLATFORM_COLORS[video.platform]} flex items-center justify-center text-white text-3xl shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform duration-1000 border border-white/10`}>
+                   <div className={`w-16 h-16 rounded-[2rem] bg-gradient-to-br ${PLATFORM_COLORS[video.platform]} flex items-center justify-center text-white text-3xl shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform duration-300 border border-white/10`}>
                      {PLATFORM_ICON[video.platform]}
                    </div>
 
                    <div className="flex-1 min-w-0">
                      <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-700">{video.title}</p>
-                     <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-800 uppercase tracking-widest italic leading-none">
+                     <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none">
                         <div className="flex items-center gap-2"><Cpu size={14} /> <span>{video.editStyle} SUBSTRATE</span></div>
                         <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
                         <div className="flex items-center gap-2"><Target size={14} /> <span>{video.hookType.replace(/-/g, '_')} SIGNAL</span></div>
@@ -319,7 +319,7 @@ export default function HeuristicMatrixPage() {
                    <div className="flex items-center gap-12 shrink-0">
                      <div className="text-right hidden sm:block">
                        <div className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{fmt(video.views)}</div>
-                       <div className="text-[10px] text-slate-900 font-black uppercase tracking-widest mt-1">VE_SATURATION</div>
+                       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">VE_SATURATION</div>
                      </div>
                      <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl font-black border-2 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${scoreBorder(video.viralScore)} ${scoreColor(video.viralScore)} ${scoreBg(video.viralScore)}`}>
                        {video.viralScore}
@@ -327,7 +327,7 @@ export default function HeuristicMatrixPage() {
                      <div className="flex flex-col items-center gap-1">
                         {video.trend === 'up'   && <ArrowUp   size={24} className="text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />}
                         {video.trend === 'down' && <ArrowDown  size={24} className="text-rose-400 drop-shadow-[0_0_10px_rgba(225,29,72,0.5)]" />}
-                        {video.trend === 'flat' && <Minus      size={24} className="text-slate-800" />}
+                        {video.trend === 'flat' && <Minus      size={24} className="text-slate-400" />}
                      </div>
                    </div>
 
@@ -346,7 +346,7 @@ export default function HeuristicMatrixPage() {
             <div className="flex gap-3 p-2 rounded-[3rem] bg-black/40 border border-white/10 shadow-inner">
               {(['ai', 'hooks', 'forecast'] as const).map(t => (
                 <button key={t} onClick={() => setInsightTab(t)}
-                  className={`flex-1 py-5 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] italic transition-all duration-700 ${insightTab === t ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-800 hover:text-white'}`}
+                  className={`flex-1 py-5 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] italic transition-all duration-700 ${insightTab === t ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'}`}
                 >
                   {t === 'ai' ? 'NEURAL' : t === 'hooks' ? 'PULSE' : 'CYCLE'}
                 </button>
@@ -367,7 +367,7 @@ export default function HeuristicMatrixPage() {
                     {CONTENT_DNA.map(({ trait, score }, i) => (
                       <div key={trait}>
                         <div className="flex items-center justify-between mb-3 border-l-2 border-indigo-500/20 pl-4">
-                          <span className="text-[12px] font-black text-slate-800 uppercase tracking-widest italic">{trait}</span>
+                          <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{trait}</span>
                           <span className={`text-[16px] font-black italic tabular-nums ${scoreColor(score)}`}>{score}_POTENCY</span>
                         </div>
                         <div className="h-3 bg-black/40 rounded-full overflow-hidden shadow-inner border border-white/5">
@@ -382,7 +382,7 @@ export default function HeuristicMatrixPage() {
                   <div className="pt-12 border-t border-white/5 space-y-8 relative z-10">
                     <div className="flex items-center gap-4">
                        <Target className="text-indigo-400" size={24} />
-                       <span className="text-[12px] font-black uppercase text-slate-800 italic tracking-[0.4em]">Substrate Sync Velocity</span>
+                       <span className="text-[12px] font-black uppercase text-slate-400 italic tracking-[0.4em]">Substrate Sync Velocity</span>
                     </div>
                     {styleAttribution.map(({ style, avg }, i) => (
                       <div key={style} className="flex items-center gap-6 group">
@@ -421,7 +421,7 @@ export default function HeuristicMatrixPage() {
                           <span className="text-4xl opacity-40 grayscale">{emoji}</span>
                           <div>
                             <div className="text-[16px] font-black text-white uppercase tracking-tighter italic">{type}</div>
-                            <div className="text-[10px] text-slate-900 font-black uppercase tracking-[0.2em] mt-1 italic">{label}</div>
+                            <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-1 italic">{label}</div>
                           </div>
                         </div>
                         <div className={`text-4xl font-black italic ${scoreColor(score)} tabular-nums drop-shadow-2xl`}>{score}</div>
@@ -448,14 +448,14 @@ export default function HeuristicMatrixPage() {
                   <div className="space-y-6 relative z-10">
                     {FORECAST_SLOTS.map(slot => (
                       <div key={`${slot.day}-${slot.time}`}
-                        className={`flex items-center gap-10 p-8 rounded-[3.5rem] border transition-all duration-1000 group ${slot.hot ? 'bg-indigo-500/10 border-indigo-500/30 shadow-[0_30px_60px_rgba(79,70,229,0.2)]' : 'bg-black/40 border-white/5 shadow-inner'}`}
+                        className={`flex items-center gap-10 p-8 rounded-[3.5rem] border transition-all duration-300 group ${slot.hot ? 'bg-indigo-500/10 border-indigo-500/30 shadow-[0_30px_60px_rgba(79,70,229,0.2)]' : 'bg-black/40 border-white/5 shadow-inner'}`}
                       >
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl transition-all duration-1000 group-hover:rotate-12 ${slot.hot ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-800'}`}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl transition-all duration-300 group-hover:rotate-12 ${slot.hot ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-400'}`}>
                            {slot.hot ? <ActivitySquare size={24} /> : <Clock size={24} />}
                         </div>
                         <div className="flex-1">
                           <div className="text-[18px] font-black text-white italic uppercase tracking-tighter leading-none mb-1">{slot.day} · {slot.time}</div>
-                          <div className={`text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-800`}>
+                          <div className={`text-[11px] font-black uppercase tracking-[0.4em] italic text-slate-400`}>
                              NODE_{slot.platform.toUpperCase()}_SLOT
                           </div>
                         </div>
@@ -463,7 +463,7 @@ export default function HeuristicMatrixPage() {
                       </div>
                     ))}
                   </div>
-                  <button className="w-full py-8 rounded-[3.5rem] bg-white text-black text-[14px] font-black uppercase tracking-[0.4em] italic hover:bg-emerald-500 hover:text-white transition-all duration-1000 border-none shadow-[0_50px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center justify-center gap-6 group">
+                  <button className="w-full py-8 rounded-[3.5rem] bg-white text-black text-[14px] font-black uppercase tracking-[0.4em] italic hover:bg-emerald-500 hover:text-white transition-all duration-300 border-none shadow-[0_50px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center justify-center gap-6 group">
                     Sync Temporal Nodes <ArrowRight size={24} className="group-hover:translate-x-4 transition-transform duration-700" />
                   </button>
                 </motion.div>
@@ -492,8 +492,8 @@ export default function HeuristicMatrixPage() {
                     ].map(m => (
                       <div key={m.label} className={`rounded-[3.5rem] p-8 border-2 flex flex-col justify-between min-h-[160px] transition-all duration-700 shadow-2xl ${m.good ? 'bg-emerald-500/5 border-emerald-500/20' : m.bad ? 'bg-rose-500/5 border-rose-500/20' : 'bg-white/5 border-white/10'}`}>
                         <div className="flex items-center justify-between">
-                           <div className="text-[10px] text-slate-800 font-black uppercase tracking-[0.4em] italic">{m.label}</div>
-                           <m.icon size={20} className={m.good ? 'text-emerald-400' : m.bad ? 'text-rose-400' : 'text-slate-800'} />
+                           <div className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic">{m.label}</div>
+                           <m.icon size={20} className={m.good ? 'text-emerald-400' : m.bad ? 'text-rose-400' : 'text-slate-400'} />
                         </div>
                         <div className={`text-6xl font-black italic tracking-tighter tabular-nums leading-none ${(m.good || (!m.bad && !m.good)) ? 'text-white' : 'text-rose-500'} drop-shadow-2xl`}>{m.value}</div>
                       </div>
@@ -508,7 +508,7 @@ export default function HeuristicMatrixPage() {
 
                   <button 
                     onClick={() => setSelectedVideo(null)}
-                    className="w-full py-8 rounded-[3.5rem] bg-indigo-600 text-white text-[15px] font-black uppercase tracking-[0.4em] italic hover:bg-rose-600 transition-all duration-1000 flex items-center justify-center gap-6 shadow-[0_40px_80px_rgba(79,70,229,0.3)] border-none active:scale-95"
+                    className="w-full py-8 rounded-[3.5rem] bg-indigo-600 text-white text-[15px] font-black uppercase tracking-[0.4em] italic hover:bg-rose-600 transition-all duration-300 flex items-center justify-center gap-6 shadow-[0_40px_80px_rgba(79,70,229,0.3)] border-none active:scale-95"
                   >
                     DISMISS_DIAGNOSTIC <X size={24} />
                   </button>

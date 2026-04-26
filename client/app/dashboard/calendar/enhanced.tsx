@@ -46,7 +46,7 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
 
   return (
     <div className={`${glassStyle} rounded-[3rem] p-10 overflow-hidden relative group border-white/5 hover:border-indigo-500/30 transition-all`}>
-      <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-1000">
+      <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-300">
          <Radio size={120} className="text-white" />
       </div>
 
@@ -74,7 +74,7 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
 
       <div className="grid grid-cols-7 mb-6 relative z-10">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-          <div key={i} className="text-center text-[9px] font-black text-slate-800 uppercase tracking-widest py-3 italic">
+          <div key={i} className="text-center text-[9px] font-black text-slate-400 uppercase tracking-widest py-3 italic">
             {day}
           </div>
         ))}
@@ -127,7 +127,7 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
          </div>
          <div className="flex items-center gap-3">
             <Activity size={12} className="text-indigo-500 animate-pulse" />
-            <span className="text-[9px] font-black text-slate-800 uppercase tracking-[0.2em] italic">Temporal Flux Normal</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Temporal Flux Normal</span>
          </div>
       </div>
     </div>

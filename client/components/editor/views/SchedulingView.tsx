@@ -252,7 +252,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
               <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
                 <MessageSquare className="w-6 h-6 text-indigo-400" />
               </div>
-              <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">STRATEGIC<br />FORECAST</h4>
+              <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">STRATEGY<br />FORECAST</h4>
             </div>
             <p className="text-lg text-slate-400 font-medium leading-relaxed italic pr-10">
               Engagement telemetry suggests optimal window: <span className="text-white font-black italic underline decoration-indigo-500/30">18:00 — 20:00</span> for synchronized TikTok nodes.

@@ -871,7 +871,7 @@ export interface EditorProject {
   styleDNASnapshot?: StyleDNA // Snapshot of the creator's DNA when this project was started
 }
 
-export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights'
+export type EditorCategory = 'edit' | 'effects' | 'timeline' | 'export' | 'ai' | 'color' | 'chromakey' | 'visual-fx' | 'ai-analysis' | 'collaborate' | 'assets' | 'automate' | 'ai-edit' | 'growth' | 'remix' | 'settings' | 'intelligence' | 'accounts' | 'scripts' | 'scheduling' | 'short-clips' | 'predict' | 'distribution' | 'style-vault' | 'spatial' | 'agent' | 'dub' | 'thumbnails' | 'insights' | 'creative-tools' | 'stock-library' | 'creative-packs' | 'text-motion'
 
 export interface StyleProfile {
   id: string

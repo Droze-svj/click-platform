@@ -345,7 +345,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
         ))}
       </div>
 
-      {/* Recursive Reach Toggle */}
+      {/* Cross-Post Toggle */}
       <div className="mt-8 p-5 bg-gradient-to-br from-indigo-900/40 to-blue-900/40 border border-blue-500/30 rounded-3xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -353,7 +353,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
               <Repeat className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h4 className="font-bold text-sm">Recursive Reach</h4>
+              <h4 className="font-bold text-sm">Cross-Post</h4>
               <p className="text-[10px] text-blue-300/70">Auto-repost sequence (+24h delay)</p>
             </div>
           </div>

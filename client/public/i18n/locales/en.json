@@ -19,7 +19,8 @@
     "logout": "Logout",
     "yes": "Yes",
     "no": "No",
-    "redirecting": "Taking you to sign in…"
+    "redirecting": "Taking you to sign in…",
+    "dismiss": "Dismiss"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -46,6 +47,66 @@
     "templates": "Templates",
     "infrastructure": "Infrastructure",
     "clickTagline": "AI-Powered Content"
+  },
+  "workflow": {
+    "niche": "Niche",
+    "setNiche": "Set niche",
+    "next": "Next",
+    "stages": {
+      "ingest":   { "label": "Ingest",   "description": "Bring footage in — upload, paste a link, or record live." },
+      "script":   { "label": "Script",   "description": "AI drafts hook, body, and CTA tuned to your niche." },
+      "edit":     { "label": "Edit",     "description": "Cut, caption, and brand the video with style intelligence." },
+      "schedule": { "label": "Schedule", "description": "Queue across platforms at optimal post times." },
+      "analyze":  { "label": "Analyze",  "description": "Measure performance and learn what to repeat." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "Upload",
+      "link": "Paste link",
+      "record": "Record",
+      "cloud": "Cloud",
+      "remix": "Remix"
+    },
+    "paste": "Paste",
+    "dropTitle": "Drop a video here",
+    "dropHint": "Or pick a file from your computer. MP4, MOV, WebM up to 500MB.",
+    "chooseFile": "Choose file",
+    "linkLabel": "Video URL",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 or https://cdn/clip.mp4",
+    "linkAction": "Ingest",
+    "linkSupports": "Supports {platforms}. Platform downloads need {ytdlp} on the server.",
+    "recordStart": "Start recording",
+    "recordStop": "Stop & upload",
+    "recordHint": "Camera + mic — saved as WebM, then uploaded to your library.",
+    "cloudHint": "Paste a Google Drive, Dropbox, or S3 share link below. We download the file server-side, so the share must be set to {visibility}.",
+    "cloudVisibility": "Anyone with the link → can view",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "Pull",
+    "remixHint": "Pick a previous project to clone into a fresh edit.",
+    "remixRefresh": "Refresh",
+    "remixEmpty": "No previous ingests yet — upload your first video to start a remix-able library.",
+    "tip": "Tip",
+    "tipPaste": "⌘V on this page to paste a clipboard URL.",
+    "tipReversible": "All ingests appear in your Asset Library and are reversible.",
+    "uploading": "Uploading {percent}%",
+    "processing": "Processing…",
+    "errors": {
+      "noUrl": "Paste a video URL first",
+      "notVideo": "Drop a video file (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "Clipboard is empty",
+      "clipboardNotUrl": "Clipboard does not contain a URL",
+      "clipboardDenied": "Clipboard access denied — paste manually instead",
+      "uploadFailed": "Upload failed: {message}",
+      "ingestFailed": "Ingest failed: {message}",
+      "remixFailed": "Remix failed",
+      "noContentId": "Server did not return a contentId",
+      "cameraDenied": "Could not access camera/mic"
+    }
+  },
+  "language": {
+    "label": "Language",
+    "picker": "Select language"
   },
   "dashboard": {
     "title": "Dashboard",

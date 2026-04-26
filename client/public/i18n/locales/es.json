@@ -19,7 +19,8 @@
     "logout": "Cerrar sesión",
     "yes": "Sí",
     "no": "No",
-    "redirecting": "Redirigiendo a iniciar sesión…"
+    "redirecting": "Redirigiendo a iniciar sesión…",
+    "dismiss": "Descartar"
   },
   "nav": {
     "dashboard": "Panel",
@@ -29,138 +30,94 @@
     "library": "Biblioteca",
     "scripts": "Guiones",
     "workflows": "Flujos",
-    "jobs": "Tareas",
+    "tasks": "Tareas",
+    "projects": "Proyectos",
+    "jobs": "Trabajos",
     "teams": "Equipos",
     "approvals": "Aprobaciones",
     "quotes": "Citas",
     "scheduler": "Programador",
     "calendar": "Calendario",
-    "social": "Redes sociales",
-    "analytics": "Analíticas",
+    "social": "Social",
+    "analytics": "Analítica",
     "achievements": "Logros",
-    "membership": "Suscripción",
+    "membership": "Membresía",
     "notifications": "Notificaciones",
     "settings": "Ajustes",
     "templates": "Plantillas",
     "infrastructure": "Infraestructura",
-    "clickTagline": "Contenido potenciado por IA"
+    "clickTagline": "Contenido con IA"
   },
-  "dashboard": {
-    "title": "Panel",
-    "welcome": "Bienvenido de nuevo",
-    "heroWelcome": "Bienvenido a Click",
-    "heroTitle": "Crea, reutiliza y publica",
-    "heroSubtitle": "Herramientas con IA, programación inteligente y analíticas en un solo espacio.",
-    "heroDescription": "Tu espacio de trabajo con IA para crear, reutilizar y publicar en 6 plataformas. Convierte contenido largo en formatos para redes—más rápido.",
-    "stats": {
-      "videosProcessed": "Videos procesados",
-      "contentGenerated": "Contenido generado",
-      "contentCreated": "Contenido creado",
-      "quotesCreated": "Citas creadas",
-      "postsScheduled": "Publicaciones programadas"
+  "workflow": {
+    "niche": "Nicho",
+    "setNiche": "Elegir nicho",
+    "next": "Siguiente",
+    "stages": {
+      "ingest":   { "label": "Importar",   "description": "Sube material — archivo, enlace o grabación en vivo." },
+      "script":   { "label": "Guion",      "description": "La IA redacta gancho, cuerpo y CTA según tu nicho." },
+      "edit":     { "label": "Editar",     "description": "Corta, subtitula y añade tu identidad de marca." },
+      "schedule": { "label": "Programar",  "description": "Publica en cada plataforma a la mejor hora." },
+      "analyze":  { "label": "Analizar",   "description": "Mide resultados y aprende qué repetir." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "Subir",
+      "link": "Pegar enlace",
+      "record": "Grabar",
+      "cloud": "Nube",
+      "remix": "Remix"
     },
-    "clickToView": "Ver detalles →"
+    "paste": "Pegar",
+    "dropTitle": "Arrastra un video aquí",
+    "dropHint": "O elige un archivo. MP4, MOV, WebM hasta 500 MB.",
+    "chooseFile": "Elegir archivo",
+    "linkLabel": "URL del video",
+    "linkPlaceholder": "https://www.tiktok.com/@usuario/video/12345 o https://cdn/clip.mp4",
+    "linkAction": "Importar",
+    "linkSupports": "Acepta {platforms}. Las descargas de plataforma necesitan {ytdlp} en el servidor.",
+    "recordStart": "Iniciar grabación",
+    "recordStop": "Detener y subir",
+    "recordHint": "Cámara + micrófono — se guarda como WebM y se sube a tu biblioteca.",
+    "cloudHint": "Pega un enlace de Google Drive, Dropbox o S3. Lo descargamos en el servidor, así que el enlace debe estar como {visibility}.",
+    "cloudVisibility": "Cualquiera con el enlace → puede ver",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "Traer",
+    "remixHint": "Elige un proyecto anterior para clonarlo y editarlo nuevo.",
+    "remixRefresh": "Actualizar",
+    "remixEmpty": "Aún no hay imports — sube tu primer video para empezar tu biblioteca remixable.",
+    "tip": "Truco",
+    "tipPaste": "⌘V en esta página para pegar una URL del portapapeles.",
+    "tipReversible": "Todo aparece en tu Biblioteca y es reversible.",
+    "uploading": "Subiendo {percent}%",
+    "processing": "Procesando…",
+    "errors": {
+      "noUrl": "Pega una URL primero",
+      "notVideo": "Suelta un archivo de video (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "El portapapeles está vacío",
+      "clipboardNotUrl": "El portapapeles no contiene una URL",
+      "clipboardDenied": "Acceso al portapapeles denegado — pega manualmente",
+      "uploadFailed": "Error al subir: {message}",
+      "ingestFailed": "Error al importar: {message}",
+      "remixFailed": "Error al hacer remix",
+      "noContentId": "El servidor no devolvió un contentId",
+      "cameraDenied": "No se pudo acceder a cámara/micrófono"
+    }
   },
-  "auth": {
-    "login": "Iniciar sesión",
-    "register": "Registrarse",
-    "logout": "Cerrar sesión",
-    "loggingIn": "Iniciando sesión...",
-    "email": "Correo electrónico",
-    "password": "Contraseña",
-    "passwordPlaceholder": "Introduce tu contraseña",
-    "forgotPassword": "¿Olvidaste tu contraseña?",
-    "noAccount": "¿No tienes cuenta?",
-    "hasAccount": "¿Ya tienes cuenta?",
-    "loginTitle": "Bienvenido a Click",
-    "loginSubtitle": "Inicia sesión para acceder a la creación de contenido con IA.",
-    "registerTitle": "Crea tu cuenta",
-    "registerSubtitle": "Empieza con la creación de contenido potenciada por IA."
+  "language": {
+    "label": "Idioma",
+    "picker": "Seleccionar idioma"
   },
   "settings": {
     "title": "Ajustes",
     "subtitle": "Gestiona las preferencias de tu cuenta",
-    "profile": "Perfil",
-    "editProfile": "Editar perfil",
-    "general": "General",
-    "notifications": "Notificaciones",
-    "privacy": "Privacidad",
-    "security": "Seguridad",
-    "appearance": "Apariencia",
-    "theme": "Tema",
-    "themeLight": "Claro",
-    "themeDark": "Oscuro",
-    "themeAuto": "Automático (sistema)",
     "language": "Idioma",
-    "timezone": "Zona horaria",
-    "saveSettings": "Guardar ajustes",
-    "saving": "Guardando...",
-    "saved": "Ajustes guardados correctamente",
-    "saveFailed": "Error al guardar los ajustes"
-  },
-  "content": {
-    "title": "Contenido",
-    "create": "Crear contenido",
-    "edit": "Editar contenido",
-    "delete": "Eliminar contenido",
-    "duplicate": "Duplicar",
-    "publish": "Publicar",
-    "schedule": "Programar"
+    "saveSettings": "Guardar"
   },
   "video": {
     "title": "Videos",
     "upload": "Subir",
     "edit": "Editar",
-    "processing": "Procesando...",
-    "noVideo": "Sin video",
-    "noVideoHint": "Añade una URL de video para empezar a editar.",
-    "goToVideos": "Ir a Videos"
-  },
-  "analytics": {
-    "title": "Analíticas",
-    "overview": "Resumen",
-    "trends": "Tendencias",
-    "platforms": "Plataformas",
-    "engagement": "Participación",
-    "views": "Visualizaciones",
-    "likes": "Me gusta",
-    "shares": "Compartidos"
-  },
-  "moderation": {
-    "title": "Moderación de contenido",
-    "checking": "Verificando contenido...",
-    "approved": "Contenido aprobado",
-    "flagged": "Contenido marcado para revisión",
-    "profanity": "Lenguaje ofensivo detectado",
-    "spam": "Spam detectado"
-  },
-  "backup": {
-    "title": "Copias de seguridad",
-    "create": "Crear copia",
-    "download": "Descargar",
-    "delete": "Eliminar",
-    "passwordRequired": "Contraseña necesaria para copia cifrada",
-    "created": "Copia creada correctamente",
-    "createFailed": "Error al crear la copia",
-    "downloaded": "Copia descargada",
-    "downloadFailed": "Error al descargar la copia",
-    "deleted": "Copia eliminada",
-    "deleteFailed": "Error al eliminar la copia"
-  },
-  "translation": {
-    "title": "Traducción",
-    "translate": "Traducir",
-    "translateTo": "Traducir a",
-    "translateToAll": "Traducir a todos",
-    "targetLanguage": "Idioma de destino",
-    "viewIn": "Ver en",
-    "original": "Original",
-    "translations": "Traducciones",
-    "noTranslations": "Sin traducciones aún",
-    "translating": "Traduciendo…",
-    "translated": "Traducido",
-    "translationFailed": "Error al traducir",
-    "viewOriginal": "Ver original",
-    "selectLanguage": "Seleccionar idioma"
+    "processing": "Procesando..."
   }
 }

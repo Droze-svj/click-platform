@@ -19,6 +19,14 @@ const nextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' }
     ],
   },
+  rewrites: async () => {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:5001/api/:path*',
+      },
+    ]
+  },
   transpilePackages: ['lucide-react'],
   webpack: (config, { isServer }) => {
     // The video editor pulls in konva → canvas (a native binding) via a

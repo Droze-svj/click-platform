@@ -190,7 +190,7 @@ function ImageOverlayKeyframePanel({
         <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
           <Timer className="w-4 h-4 text-amber-500" />
         </div>
-        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] italic">Kinetic Image Keyframes</span>
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Image Keyframes</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
@@ -212,7 +212,7 @@ function ImageOverlayKeyframePanel({
           className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest italic shadow-xl shadow-amber-600/20 border border-white/10"
         >
           <PlusCircle className="w-4 h-4" />
-          Inject Temporal Marker
+          Add keyframe at playhead
         </motion.button>
 
         {setActiveCategory && (

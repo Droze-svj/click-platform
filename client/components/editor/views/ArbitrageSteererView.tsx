@@ -56,7 +56,7 @@ export const ArbitrageSteererView: React.FC = () => {
             const data = await apiGet('/phase10_12/arbitrage/manifest')
             setManifest(data)
         } catch (err) {
-            console.error('Manifest fetch failed')
+            console.error('Failed to fetch monetization data')
         } finally {
             setLoading(false)
         }
@@ -156,7 +156,7 @@ export const ArbitrageSteererView: React.FC = () => {
                 <div className="xl:col-span-2 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8`}>
                         <div className="flex items-center justify-between">
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Monetization Manifest</h5>
+                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Monetization Plan</h5>
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{manifest?.manifest.length} Active Nodes</span>
                         </div>
 

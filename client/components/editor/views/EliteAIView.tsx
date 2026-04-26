@@ -109,13 +109,13 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   ] as const
 
   const aiThoughts = useMemo(() => [
-    "Analyzing semantic resonance loops...",
-    "Calibrating viral coefficient filters...",
-    "Extracting high-authority narrative clusters...",
-    "Processing neural transcript layers...",
-    "Optimizing narrative flow for retention...",
-    "Synthesizing alpha-tier engagement nodes...",
-    "Syncing repository with global semantic signals..."
+    "Analyzing pacing and engagement…",
+    "Tuning viral hook detection…",
+    "Extracting high-impact moments…",
+    "Processing transcript layers…",
+    "Optimizing for retention…",
+    "Identifying top engagement segments…",
+    "Syncing with trending signals…"
   ], [])
 
   useEffect(() => {
@@ -147,7 +147,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       } catch {
         if (cancelled) return
         setRequirementsReady(false)
-        setRequirementsMessage('Neural engine verification failed. Check configuration repository.')
+        setRequirementsMessage('AI engine verification failed. Check your configuration.')
       }
     }
     check()
@@ -167,11 +167,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
   const handleExtractQuotes = async () => {
     if (!transcript) {
-      showToast('Neural transcript required', 'error')
+      showToast('Transcribe the video first', 'error')
       return
     }
 
-    setSwarmHUDTask('Semantic Quote Analysis')
+    setSwarmHUDTask('Extracting key quotes')
     setShowSwarmHUD(true)
     setPendingAction(() => executeExtractQuotes)
   }
@@ -179,7 +179,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const executeExtractQuotes = async () => {
     try {
       setIsExtractingQuotes(true)
-      showToast(`Analyzing semantic weight (${engines.find(e => e.id === activeEngine)?.name})...`, 'info')
+      showToast(`Extracting quotes via ${engines.find(e => e.id === activeEngine)?.name}…`, 'info')
       const fullText = editingWords.map(w => w.word).join(' ')
       const data = await apiPost<{ success?: boolean; quotes?: any[] }>('/ai/extract-quotes', {
         transcript: fullText,
@@ -188,10 +188,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       })
       if (data?.success && data.quotes) {
         setViralQuotes(data.quotes)
-        showToast(`Extraction Complete: ${data.quotes.length} High-Resonance Quotes`, 'success')
+        showToast(`✓ Extracted ${data.quotes.length} key quotes`, 'success')
       }
     } catch (e) {
-      showToast('Semantic analysis failed', 'error')
+      showToast('Quote extraction failed', 'error')
     } finally {
       setIsExtractingQuotes(false)
     }
@@ -200,7 +200,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   const applySemanticCaptions = () => {
     if (!transcript?.words || !setTextOverlays) return
 
-    showToast('Synthesizing Semantic Captions...', 'info')
+    showToast('Generating styled captions…', 'info')
 
     const categories = {
       urgency: {
@@ -383,12 +383,12 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       <motion.div variants={itemVariants} className="space-y-10">
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-12">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-4 px-6 py-2.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-[11px] font-black uppercase tracking-[0.5em] italic shadow-lg">
-              <Radio className="w-4 h-4 animate-pulse" />
-              ELITE AI CORE // {String(activeEngine || '').toUpperCase()}
+            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-[10px] font-bold uppercase tracking-[0.3em] shadow-lg">
+              <Radio className="w-3.5 h-3.5 animate-pulse" />
+              Elite AI · {String(activeEngine || 'idle')}
             </div>
-            <h1 className="text-7xl font-black text-white italic tracking-tighter uppercase leading-[0.9]">
-              Neural<br />Storyteller
+            <h1 className="text-6xl font-black text-white tracking-tighter leading-[1.05]">
+              AI Storyteller
             </h1>
 
             <div className="flex items-center gap-4 mt-6">
@@ -507,8 +507,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                      ) : (
                        <Zap className="w-8 h-8 text-white mb-2 animate-bounce" />
                      )}
-                     <div className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">THE AGENTIC FORGE</div>
-                     <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">One-Click Directive Synthesis</div>
+                     <div className="text-xl font-black text-white tracking-tight leading-tight">Agentic Forge</div>
+                     <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1.5">One-click generate</div>
                   </div>
 
                   {/* Progress Bar (Mock) */}
@@ -544,7 +544,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
         <motion.div variants={itemVariants} className="space-y-8">
            <div className="flex items-center gap-6">
               <div className="w-10 h-2 bg-indigo-500 rounded-full" />
-              <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Neural Asset Overlay</h3>
+              <h3 className="text-xl font-black text-white tracking-tight">Suggested Assets</h3>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {suggestedAssets.map((asset, i) => (
@@ -684,8 +684,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 <Zap className="w-10 h-10 text-fuchsia-500 animate-pulse" />
               </div>
               <div className="space-y-1 text-center xl:text-left">
-                <h4 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Global AI Execution</h4>
-                <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.4em] italic mt-2">Apply Alpha-tier semantic optimizations</p>
+                <h4 className="text-2xl font-black text-white tracking-tight leading-tight">Apply all AI suggestions</h4>
+                <p className="text-[12px] text-slate-400 font-medium mt-2">Auto-edit cuts, captions, and pacing in one click.</p>
               </div>
             </div>
             <motion.button
@@ -718,10 +718,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 }
                 setActiveCategory?.('timeline')
               }}
-              title="Execute all suggested AI edits"
-              className="px-16 py-6 bg-fuchsia-500 text-white rounded-[2rem] font-black text-xs tracking-[0.5em] hover:bg-fuchsia-600 transition-all shadow-3xl shadow-fuchsia-500/30 border border-white/10 italic"
+              title="Apply all AI suggestions"
+              className="px-10 py-3.5 bg-fuchsia-500 text-white rounded-full font-bold text-[12px] uppercase tracking-[0.2em] hover:bg-fuchsia-600 transition-colors shadow-xl shadow-fuchsia-500/30"
             >
-              EXECUTE NODES
+              Apply all
             </motion.button>
           </div>
 
@@ -733,18 +733,18 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                   <Layers className="w-7 h-7 text-indigo-400" />
                 </div>
                 <div>
-                  <h4 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Neural Variation Engine</h4>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic">Auto-Edit CLIP GENERATOR</span>
+                  <h4 className="text-2xl font-black text-white tracking-tight leading-tight">Auto-edit clips</h4>
+                  <span className="text-[11px] font-medium text-slate-400 mt-1.5 block">Generate short-form variations from your video</span>
                 </div>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onGenerateClips}
-                className="px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all flex items-center gap-3 italic"
+                className="px-7 py-3 bg-white/5 border border-white/10 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] text-white hover:bg-white/10 transition-colors flex items-center gap-2.5"
               >
-                <Sparkles className="w-4 h-4 text-fuchsia-400" />
-                GENERATE CLIP STACK
+                <Sparkles className="w-3.5 h-3.5 text-fuchsia-400" />
+                Generate clips
               </motion.button>
             </div>
 
@@ -820,18 +820,18 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                </div>
 
                <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 relative z-10">
-                  <div className="space-y-4">
-                     <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">Neural Transcript</h3>
-                     <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic">Refine indices // Map semantic resonance</p>
+                  <div className="space-y-2">
+                     <h3 className="text-2xl font-black text-white tracking-tight">Transcript</h3>
+                     <p className="text-[12px] font-medium text-slate-400">Click any word to seek the player. Extract quotes for overlays.</p>
                   </div>
                   <motion.button
-                    whileHover={{ scale: 1.05, x: 10 }}
+                    whileHover={{ scale: 1.05 }}
                     onClick={handleExtractQuotes}
                     disabled={isExtractingQuotes}
-                    className="px-10 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-xs tracking-[0.4em] flex items-center gap-6 shadow-2xl shadow-indigo-500/40 border border-white/10 uppercase italic transition-all disabled:opacity-50"
+                    className="px-7 py-3 bg-indigo-600 text-white rounded-full font-bold text-[11px] uppercase tracking-[0.2em] flex items-center gap-2.5 shadow-lg shadow-indigo-500/30 transition-colors disabled:opacity-50"
                   >
-                    {isExtractingQuotes ? <Loader2 className="w-5 h-5 animate-spin" /> : <TrendingUp className="w-5 h-5 text-indigo-400" />}
-                    {isExtractingQuotes ? 'Extracting Alpha-Resonance...' : 'Synthesize Key Quotes'}
+                    {isExtractingQuotes ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
+                    {isExtractingQuotes ? 'Extracting…' : 'Extract key quotes'}
                   </motion.button>
                </div>
 
@@ -859,7 +859,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             <motion.div variants={itemVariants} className="space-y-12">
                <div className="flex items-center gap-8">
                   <div className="w-1.5 h-12 bg-orange-500 rounded-full" />
-                  <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Resonance Highlights</h3>
+                  <h3 className="text-2xl font-black text-white tracking-tight">Viral-worthy quotes</h3>
                </div>
 
               <div className="relative z-10">
@@ -893,7 +893,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                               )}
                             </div>
                             <div className="flex items-center gap-4">
-                               <span className="text-[11px] text-slate-600 font-black uppercase tracking-[0.3em] italic group-hover/quote:text-orange-500 transition-colors">Tier-01 Resonance // Logic 0{i + 1}</span>
+                               <span className="text-[11px] text-slate-600 font-black uppercase tracking-[0.3em] italic group-hover/quote:text-orange-500 transition-colors">Top tier // Logic 0{i + 1}</span>
                                <div className="h-1 w-24 bg-white/5 rounded-full overflow-hidden relative" title={`Originality Score: ${quote.originalityScore}%`}>
                                   <motion.div 
                                     initial={{ width: 0 }}
@@ -944,7 +944,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                             <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group-hover/quote:border-indigo-500/30 transition-all">
                               <Brain className="w-6 h-6 text-indigo-400 shrink-0 mt-0.5" />
                               <div className="space-y-1">
-                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Neural Niche Relevance</span>
+                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Niche Relevance</span>
                                 <p className="text-[12px] text-indigo-200 font-medium italic leading-relaxed">
                                   {quote.nicheRelevance}
                                 </p>
@@ -963,7 +963,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       </motion.div>
                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }} transition={{ duration: 3, repeat: Infinity }} className="absolute inset-0 bg-orange-500 blur-3xl rounded-full" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.5em] italic">Neural Extraction Pending // System Idle</p>
+                    <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.5em] italic">Processing // System Idle</p>
                   </div>
                 )}
               </div>

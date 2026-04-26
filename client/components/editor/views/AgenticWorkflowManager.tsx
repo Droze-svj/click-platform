@@ -101,7 +101,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
     // Reset
     const initialTasks: AgentTask[] = PIPELINE_STEPS.map(s => ({ ...s, status: 'queued' }))
     setTasks(initialTasks)
-    setSwarmHUDTask('Initialize Sovereign Swarm Workflow')
+    setSwarmHUDTask('Initialize agent workflow')
     setShowSwarmHUD(true)
     setIsRunning(true)
     setCurrentStep(0)

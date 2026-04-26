@@ -41,7 +41,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
     setIsSyncing(true)
     setSyncProgress(0)
 
-    // Simulate Neural Pulse Distribution
+    // Simulate Pulse Distribution
     const interval = setInterval(() => {
       setSyncProgress(prev => {
         if (prev >= 100) {

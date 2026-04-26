@@ -171,7 +171,7 @@ export default function TeamDetailsPage() {
            <Users size={80} className="text-rose-500/40" />
         </div>
         <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-6">SWARM_CLUSTER_ABSENT</h2>
-        <p className="text-slate-1000 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested swarm cluster is not registered in the neural lattice.</p>
+        <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested swarm cluster is not registered in the neural lattice.</p>
         <button onClick={() => router.push('/dashboard/teams')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">REVERT_TO_COLLECTIVE</button>
       </div>
     )
@@ -189,7 +189,7 @@ export default function TeamDetailsPage() {
         <button
           onClick={() => router.push('/dashboard/teams')}
           title="Return to Swarm Matrix"
-          className="inline-flex items-center gap-4 text-slate-1000 hover:text-indigo-400 transition-all text-[12px] font-black uppercase tracking-[0.6em] italic"
+          className="inline-flex items-center gap-4 text-slate-500 hover:text-indigo-400 transition-all text-[12px] font-black uppercase tracking-[0.6em] italic"
         >
           <ArrowLeft className="w-5 h-5" />
           BACK_TO_COLLECTIVE
@@ -206,9 +206,9 @@ export default function TeamDetailsPage() {
              </div>
              <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">{team.name.toUpperCase()}</h1>
              {team.description && (
-               <p className="text-[18px] font-black text-slate-1000 uppercase tracking-widest italic leading-relaxed max-w-2xl opacity-60">{team.description.toUpperCase()}</p>
+               <p className="text-[18px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed max-w-2xl opacity-60">{team.description.toUpperCase()}</p>
              )}
-             <div className="flex flex-wrap gap-10 text-[12px] font-black text-slate-1000 uppercase tracking-[0.4em] italic leading-none opacity-40 pt-4">
+             <div className="flex flex-wrap gap-10 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none opacity-40 pt-4">
                <span className="flex items-center gap-3"><Shield size={16} className="text-indigo-400" /> ARCHITECT: {team.ownerId?.name?.toUpperCase()}</span>
                <span className="flex items-center gap-3"><Users size={16} className="text-indigo-400" /> {team.members.length} NEURAL_UNITS</span>
                <span className="flex items-center gap-3"><Activity size={16} className="text-indigo-400" /> UPTIME: {new Date(team.createdAt).toLocaleDateString().toUpperCase()}</span>
@@ -225,7 +225,7 @@ export default function TeamDetailsPage() {
                      <Users className="w-6 h-6 text-indigo-400" />
                      <h2 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">CLUSTER_MEMBERS</h2>
                   </div>
-                  <div className="text-[11px] font-black text-slate-1000 uppercase tracking-widest italic opacity-40">{team.members.length} UNITS_SYNCED</div>
+                  <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{team.members.length} UNITS_SYNCED</div>
                 </div>
                 <div className="divide-y-2 divide-white/5">
                   {team.members.map((m) => (
@@ -239,7 +239,7 @@ export default function TeamDetailsPage() {
                         </div>
                         <div>
                           <p className="text-[20px] font-black text-white italic uppercase tracking-tighter leading-tight">{m.userId?.name}</p>
-                          <p className="text-[12px] font-black text-slate-1000 uppercase tracking-widest italic opacity-60 mb-2">{m.userId?.email}</p>
+                          <p className="text-[12px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 mb-2">{m.userId?.email}</p>
                           <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic opacity-40">
                             INITIALIZED: {new Date(m.joinedAt).toLocaleDateString().toUpperCase()}
                           </p>
@@ -293,7 +293,7 @@ export default function TeamDetailsPage() {
                        <Share2 className="w-6 h-6 text-indigo-400" />
                        <h3 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">LATTICE_INTEGRATION</h3>
                     </div>
-                    <p className="text-[13px] font-black text-slate-1000 uppercase tracking-widest italic opacity-60 leading-relaxed">Cross-link modular components with this cluster to synchronize narrative and kinetic assets.</p>
+                    <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">Cross-link modular components with this cluster to synchronize narrative and kinetic assets.</p>
                     <button
                       onClick={() => router.push('/dashboard/content')}
                       className="w-full py-5 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] transition-all italic active:scale-95 shadow-2xl"
@@ -308,11 +308,11 @@ export default function TeamDetailsPage() {
                     </div>
                     <div className="space-y-4">
                        <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
-                          <span className="text-[10px] font-black text-slate-1000 uppercase tracking-widest italic opacity-60">ID_DNA_REGISTRY</span>
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">ID_DNA_REGISTRY</span>
                           <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">VERIFIED</span>
                        </div>
                        <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
-                          <span className="text-[10px] font-black text-slate-1000 uppercase tracking-widest italic opacity-60">NEURAL_SYNC_RATE</span>
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">NEURAL_SYNC_RATE</span>
                           <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">99.8%</span>
                        </div>
                     </div>
@@ -328,19 +328,19 @@ export default function TeamDetailsPage() {
                       <UserPlus className="w-6 h-6 text-indigo-400" />
                       <h2 className="text-[20px] font-black text-white italic uppercase tracking-tighter">NODE_INDUCTION</h2>
                    </div>
-                   <p className="text-[13px] font-black text-slate-1000 uppercase tracking-widest italic opacity-60 leading-relaxed">
+                   <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">
                      Inject a new unit into the cluster by specifying their neural coordinate (email).
                    </p>
                    <div className="space-y-6">
                       <div className="relative group/input">
-                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-1000 group-focus-within/input:text-indigo-400 transition-colors" />
+                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/input:text-indigo-400 transition-colors" />
                         <input
                           type="email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
                           placeholder="NEURAL_COORDINATE (EMAIL)"
                           title="Enter induction email"
-                          className="w-full pl-16 pr-8 py-5 bg-black/60 border-2 border-white/5 rounded-3xl text-[12px] font-black text-indigo-200 uppercase tracking-[0.2em] italic placeholder:text-slate-950 focus:border-indigo-500/50 transition-all shadow-inner"
+                          className="w-full pl-16 pr-8 py-5 bg-black/60 border-2 border-white/5 rounded-3xl text-[12px] font-black text-indigo-200 uppercase tracking-[0.2em] italic placeholder:text-slate-600 focus:border-indigo-500/50 transition-all shadow-inner"
                         />
                       </div>
                       <select
@@ -375,7 +375,7 @@ export default function TeamDetailsPage() {
                   <div className="flex items-center justify-between p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
                     <div>
                       <p className="text-[12px] font-black text-white uppercase tracking-widest italic mb-1">UNIT_AUTONOMY</p>
-                      <p className="text-[9px] font-black text-slate-1000 uppercase tracking-widest italic opacity-40">AUTO_INDUCTION_PERMIT</p>
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">AUTO_INDUCTION_PERMIT</p>
                     </div>
                     <div className={`w-14 h-8 rounded-full p-1.5 transition-colors duration-500 ${team.settings?.allowMemberInvites ? 'bg-indigo-500' : 'bg-white/10'}`}>
                        <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-500 shadow-xl ${team.settings?.allowMemberInvites ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -384,7 +384,7 @@ export default function TeamDetailsPage() {
                   <div className="flex items-center justify-between p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
                     <div>
                       <p className="text-[12px] font-black text-white uppercase tracking-widest italic mb-1">CONSENSUS_PROTOCOL</p>
-                      <p className="text-[9px] font-black text-slate-1000 uppercase tracking-widest italic opacity-40">MANDATORY_VALIDATION</p>
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">MANDATORY_VALIDATION</p>
                     </div>
                     <div className={`w-14 h-8 rounded-full p-1.5 transition-colors duration-500 ${team.settings?.requireApproval ? 'bg-indigo-500' : 'bg-white/10'}`}>
                        <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-500 shadow-xl ${team.settings?.requireApproval ? 'translate-x-6' : 'translate-x-0'}`} />

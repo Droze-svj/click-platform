@@ -91,30 +91,57 @@ router.post('/promo-code/validate', auth, asyncHandler(async (req, res) => {
  * Get current usage and limits
  */
 router.get('/usage', auth, asyncHandler(async (req, res) => {
-  const usage = await getCurrentUsage(req.user._id);
-  const user = await User.findById(req.user._id).populate('membershipPackage');
+  const userId = req.user._id || req.user.id;
+  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
 
-  // Calculate percentages
-  const usagePercentages = {};
-  Object.keys(usage.usage).forEach(key => {
-    const limit = usage.limits[key];
-    if (limit !== -1 && limit > 0) {
-      usagePercentages[key] = Math.round((usage.usage[key] / limit) * 100);
-    } else {
-      usagePercentages[key] = -1; // Unlimited
-    }
-  });
+  // Dev users may not have a real Mongo record; return a safe empty payload
+  // so the dashboard's billing card renders zeroes instead of 500ing.
+  if (isDevUser) {
+    return sendSuccess(res, 'Usage retrieved', 200, {
+      usage: { videosProcessed: 0, contentGenerated: 0, quotesCreated: 0, postsScheduled: 0, storageUsedMb: 0 },
+      limits: { videosProcessed: -1, contentGenerated: -1, quotesCreated: -1, postsScheduled: -1, storageUsedMb: -1 },
+      overage: {},
+      percentages: {},
+      package: { name: 'Dev', slug: 'dev' },
+      isEmpty: true,
+    });
+  }
 
-  sendSuccess(res, 'Usage retrieved', 200, {
-    usage: usage.usage,
-    limits: usage.limits,
-    overage: usage.overage,
-    percentages: usagePercentages,
-    package: {
-      name: user.membershipPackage?.name,
-      slug: user.membershipPackage?.slug
-    }
-  });
+  try {
+    const usage = await getCurrentUsage(userId);
+    const user = await User.findById(userId).populate('membershipPackage');
+
+    // Calculate percentages
+    const usagePercentages = {};
+    Object.keys(usage.usage || {}).forEach(key => {
+      const limit = usage.limits?.[key];
+      if (limit !== -1 && limit > 0) {
+        usagePercentages[key] = Math.round((usage.usage[key] / limit) * 100);
+      } else {
+        usagePercentages[key] = -1; // Unlimited
+      }
+    });
+
+    sendSuccess(res, 'Usage retrieved', 200, {
+      usage: usage.usage || {},
+      limits: usage.limits || {},
+      overage: usage.overage || {},
+      percentages: usagePercentages,
+      package: {
+        name: user?.membershipPackage?.name || 'Free',
+        slug: user?.membershipPackage?.slug || 'free',
+      }
+    });
+  } catch (error) {
+    // Degrade gracefully so the billing page stays usable when Mongo is empty
+    // or services are flaky. Log so engineers can see real failures.
+    require('../utils/logger').error('billing/usage failed', { error: error?.message, userId });
+    sendSuccess(res, 'Usage retrieved', 200, {
+      usage: {}, limits: {}, overage: {}, percentages: {},
+      package: { name: 'Free', slug: 'free' },
+      degraded: true,
+    });
+  }
 }));
 
 /**

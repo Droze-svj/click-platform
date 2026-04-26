@@ -194,7 +194,7 @@ export const GovernanceDashboard: React.FC = () => {
                          <Search className="w-5 h-5" />
                      </div>
                      <div>
-                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Total Neural Audits</span>
+                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Total Audits</span>
                          <h6 className="text-[10px] font-black text-white uppercase italic">{actions.length} Decisions Logged</h6>
                      </div>
                 </div>

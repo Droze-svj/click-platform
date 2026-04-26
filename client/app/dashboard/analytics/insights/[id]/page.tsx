@@ -64,7 +64,7 @@ export default function StrategicSynthesisHub() {
     <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center p-12 text-center">
       <AlertCircle size={80} className="text-rose-500 mb-8 animate-pulse" />
       <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-6">Link Error</h1>
-      <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] mb-12">{error}</p>
+      <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] mb-12">{error}</p>
       <button onClick={() => router.back()} className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all hover:bg-rose-500 hover:text-white">
         Return to Matrix
       </button>
@@ -80,7 +80,7 @@ export default function StrategicSynthesisHub() {
         <div className="fixed inset-0 pointer-events-none">
            <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-violet-600/10 blur-[250px] rounded-full animate-pulse" />
            <div className="absolute bottom-[-5%] left-[-5%] w-[50%] h-[50%] bg-indigo-600/10 blur-[200px] rounded-full" />
-           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.03] mix-blend-overlay" />
            <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12 opacity-[0.03]" />
         </div>
 
@@ -102,11 +102,11 @@ export default function StrategicSynthesisHub() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Sparkles size={12} className="text-white animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">{matrix?.headline || 'MANIFESTING'}</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{matrix?.headline || 'MANIFESTING'}</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
-                 <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-scan complete. Heuristic optimization manifest generated.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-scan complete. Heuristic optimization manifest generated.</p>
               </div>
            </div>
         </header>
@@ -121,7 +121,7 @@ export default function StrategicSynthesisHub() {
                     <div className="p-6 rounded-[2.5rem] bg-violet-500/5 border border-violet-500/20 shadow-2xl"><TrendingUp size={40} className="text-violet-400" /></div>
                     <div>
                        <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Predictive ROI Projection</h3>
-                       <p className="text-[10px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">Heuristic outcome modeling for next 30 global cycles.</p>
+                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Heuristic outcome modeling for next 30 global cycles.</p>
                     </div>
                  </div>
 
@@ -133,7 +133,7 @@ export default function StrategicSynthesisHub() {
                        <div className="text-[120px] font-black italic text-white tracking-tighter tabular-nums leading-none">
                           +{matrix?.predictiveROI || 0}%
                        </div>
-                       <div className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] mt-4">Growth Resonance</div>
+                       <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] mt-4">Growth Resonance</div>
                     </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
@@ -165,7 +165,7 @@ export default function StrategicSynthesisHub() {
                     <div className="p-5 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/20"><Brain size={32} className="text-indigo-400" /></div>
                     <div>
                        <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Signal Diagnostic</h3>
-                       <p className="text-[10px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">Detected resonance gaps in content DNA.</p>
+                       <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Detected resonance gaps in content DNA.</p>
                     </div>
                  </div>
 
@@ -180,7 +180,7 @@ export default function StrategicSynthesisHub() {
                              className="h-full bg-gradient-to-r from-violet-600 to-indigo-500 shadow-[0_0_20px_rgba(139,92,246,0.5)]"
                           />
                        </div>
-                       <div className="flex justify-between items-center text-[14px] font-black text-slate-800 italic uppercase">
+                       <div className="flex justify-between items-center text-[14px] font-black text-slate-400 italic uppercase">
                           <span>Neutral</span>
                           <span className="text-white text-3xl tracking-tighter">{matrix?.potencyScore || 0}/100</span>
                           <span>Overdrive</span>
@@ -200,7 +200,7 @@ export default function StrategicSynthesisHub() {
                     </div>
 
                     <div className="mt-12 p-8 rounded-[3rem] bg-white/[0.01] border border-white/5 space-y-4">
-                       <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.5em] italic">Manifest Platform</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">Manifest Platform</span>
                        <div className="flex items-center gap-6">
                           <div className={`w-14 h-14 rounded-2xl bg-black/80 border border-white/10 flex items-center justify-center text-white text-2xl uppercase font-black italic`}>
                              {matrix?.platform_context === 'tiktok' ? '♪' : matrix?.platform_context === 'instagram' ? '◈' : '▶'}
@@ -214,7 +214,7 @@ export default function StrategicSynthesisHub() {
                   onClick={initiateScan}
                   className="w-full mt-16 py-8 bg-white text-black hover:bg-violet-600 hover:text-white font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-6 group relative z-10"
                  >
-                    <RefreshCw size={24} className="group-hover:rotate-180 transition-transform duration-1000" />
+                    <RefreshCw size={24} className="group-hover:rotate-180 transition-transform duration-300" />
                     RE_INITIALIZE_SCAN
                  </button>
               </div>

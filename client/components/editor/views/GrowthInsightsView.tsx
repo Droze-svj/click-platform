@@ -292,7 +292,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all disabled:opacity-40 flex items-center gap-2 shadow-2xl shadow-indigo-600/20"
                     >
                       {trackLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BrainCircuit className="w-3.5 h-3.5" />}
-                      Engage Swarm
+                      Analyze handle
                     </button>
                   </form>
                 </div>
@@ -307,7 +307,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       <div className="flex justify-between items-center border-b border-indigo-500/20 pb-2">
                         <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                           <TrendingUp className="w-3 h-3" />
-                          Swarm Analysis: {trackResult.handle}
+                          Analysis: {trackResult.handle}
                         </span>
                         <button title="Dismiss" onClick={() => setTrackResult(null)} className="text-indigo-400 hover:text-white transition-colors text-[9px]">✕</button>
                       </div>
@@ -318,7 +318,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                          </div>
                          <div className="space-y-1">
                             <p className="text-[8px] font-black text-slate-500 uppercase">Opportunity</p>
-                            <p className="text-[10px] text-indigo-400 font-black italic">Temporal Shift Gap (0:15)</p>
+                            <p className="text-[10px] text-indigo-400 font-bold">Hook timing gap (0:15)</p>
                          </div>
                       </div>
                     </motion.div>
@@ -360,7 +360,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <Stat label="Avg Engagement" value={benchmark?.user.avgEngagement ?? 0} sub={`Median: ${benchmark?.industry.median ?? 0}`} color={percentile >= 50 ? 'text-emerald-400' : 'text-rose-400'} />
-                          <Stat label="Sovereignty Score" value="98.2%" sub="Integrity / No Clichés" color="text-amber-400" />
+                          <Stat label="Originality Score" value="98.2%" sub="No clichés detected" color="text-amber-400" />
                           <Stat label="Posts Analysed" value={benchmark?.user.postCount ?? 0} sub="30-day window" />
                           <Stat label="Avg Reach" value={(benchmark?.user.avgReach ?? 0).toLocaleString()} sub="Per post" color="text-indigo-400" />
                         </div>
