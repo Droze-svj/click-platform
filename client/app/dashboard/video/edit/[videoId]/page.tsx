@@ -34,6 +34,19 @@ interface Video {
 
 type EditMode = 'selection' | 'manual' | 'ai-auto'
 
+const STORAGE_KEYS = {
+  lastPreset: 'click-ai-edit-last-preset',
+  lastCaptionStyle: 'click-ai-edit-last-caption-style',
+  preciseScenes: 'click-ai-edit-precise-scenes',
+  minSceneLength: 'click-ai-edit-min-scene-length',
+  clipTargetLength: 'click-ai-edit-clip-target-length',
+  clipCount: 'click-ai-edit-clip-count',
+  contentGenre: 'click-ai-edit-content-genre',
+  prioritizeHook: 'click-ai-edit-prioritize-hook',
+  exportFormats: 'click-ai-edit-export-formats',
+  pacingIntensity: 'click-ai-edit-pacing-intensity',
+} as const
+
 export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
   const videoId = params.videoId
@@ -134,21 +147,17 @@ export default function VideoEditPage({ params }: PageProps) {
     generateClips: true,
     addCaptions: false,
     enhanceColor: false,
-    stabilizeVideo: false
+    stabilizeVideo: false,
+    // 2026 creative tools
+    hookDetection: true,
+    beatMatchedCuts: false,
+    brollAutoInsert: false,
+    predictEngagement: true,
+    viralOverlays: false,
+    voiceCloneNarration: false,
   })
-  const STORAGE_KEYS = {
-    lastPreset: 'click-ai-edit-last-preset',
-    lastCaptionStyle: 'click-ai-edit-last-caption-style',
-    preciseScenes: 'click-ai-edit-precise-scenes',
-    minSceneLength: 'click-ai-edit-min-scene-length',
-    clipTargetLength: 'click-ai-edit-clip-target-length',
-    clipCount: 'click-ai-edit-clip-count',
-    contentGenre: 'click-ai-edit-content-genre',
-    prioritizeHook: 'click-ai-edit-prioritize-hook',
-    exportFormats: 'click-ai-edit-export-formats',
-    pacingIntensity: 'click-ai-edit-pacing-intensity',
-  }
-
+  const [captionLanguage, setCaptionLanguage] = useState<string>('en')
+  const [trendingSoundMatch, setTrendingSoundMatch] = useState<string>('off')
   const [editPreset, setEditPreset] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.lastPreset) || '' : ''))
   const [captionStyle, setCaptionStyle] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.lastCaptionStyle) || 'modern' : 'modern'))
   const [outputFormat, setOutputFormat] = useState<'auto' | 'vertical' | 'square' | 'standard'>('auto')
@@ -332,6 +341,7 @@ export default function VideoEditPage({ params }: PageProps) {
         enableStabilization: editingOptions.stabilizeVideo,
         enableSmartCaptions: editingOptions.addCaptions,
         captionStyle: captionStyle,
+        captionLanguage: editingOptions.addCaptions ? captionLanguage : undefined,
         outputFormat,
         clipTargetLength,
         clipCount: editingOptions.generateClips ? clipCount : 1,
@@ -339,6 +349,14 @@ export default function VideoEditPage({ params }: PageProps) {
         prioritizeHook,
         aspectFormats: exportFormats.length > 0 ? exportFormats : undefined,
         pacingIntensity,
+        // 2026 creative tools
+        hookDetection: editingOptions.hookDetection,
+        beatMatchedCuts: editingOptions.beatMatchedCuts,
+        brollAutoInsert: editingOptions.brollAutoInsert,
+        predictEngagement: editingOptions.predictEngagement,
+        viralOverlays: editingOptions.viralOverlays,
+        voiceCloneNarration: editingOptions.voiceCloneNarration,
+        trendingSoundMatch: trendingSoundMatch !== 'off' ? trendingSoundMatch : undefined,
       }
       if (editPreset) {
         backendOptions.preset = editPreset
@@ -404,7 +422,7 @@ export default function VideoEditPage({ params }: PageProps) {
           </p>
           <button
             onClick={() => router.push('/dashboard/video')}
-            className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium text-sm hover:opacity-90 transition-opacity"
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-500 font-medium text-sm hover:opacity-90 transition-opacity"
           >
             Back to library
           </button>
@@ -541,7 +559,7 @@ export default function VideoEditPage({ params }: PageProps) {
               </button>
               <button
                 onClick={() => router.push('/dashboard/video')}
-                className="py-2.5 px-5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium text-sm hover:opacity-90 transition-opacity shadow-theme-card"
+                className="py-2.5 px-5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-500 font-medium text-sm hover:opacity-90 transition-opacity shadow-theme-card"
               >
                 Back to library
               </button>
@@ -582,7 +600,13 @@ export default function VideoEditPage({ params }: PageProps) {
         generateClips: true,
         addCaptions: true,
         enhanceColor: false,
-        stabilizeVideo: false
+        stabilizeVideo: false,
+        hookDetection: true,
+        beatMatchedCuts: true,
+        brollAutoInsert: false,
+        predictEngagement: true,
+        viralOverlays: false,
+        voiceCloneNarration: false,
       })
     }
     const jsx = (
@@ -744,7 +768,7 @@ export default function VideoEditPage({ params }: PageProps) {
           {showAnalysis && aiAnalysis && (
             <div className="bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 mb-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-base font-semibold text-slate-500 dark:text-white flex items-center gap-2">
                   <span className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </span>
@@ -772,7 +796,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 )}
                 {aiAnalysis.suggestedEdits && aiAnalysis.suggestedEdits.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Suggested Edits</h3>
+                    <h3 className="font-semibold text-slate-500 dark:text-white mb-2">Suggested Edits</h3>
                     <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                       {aiAnalysis.suggestedEdits.slice(0, 5).map((edit: any, index: number) => (
                         <li key={index} className="flex items-start gap-2">
@@ -785,7 +809,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 )}
                 {aiAnalysis.contentType && (
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Content Type</h3>
+                    <h3 className="font-semibold text-slate-500 dark:text-white mb-2">Content Type</h3>
                     <p className="text-sm text-slate-600 dark:text-slate-400 capitalize">{aiAnalysis.contentType}</p>
                   </div>
                 )}
@@ -801,7 +825,7 @@ export default function VideoEditPage({ params }: PageProps) {
               {/* Profile video analytics (when available) */}
               {aiAnalysis.profileInsights && (
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-500 dark:text-white mb-2 flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-indigo-500" />
                     Your profile insights
                   </h3>
@@ -830,7 +854,7 @@ export default function VideoEditPage({ params }: PageProps) {
               {aiAnalysis.editStyles && aiAnalysis.editStyles.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                    <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="font-semibold text-slate-500 dark:text-white flex items-center gap-2">
                       <Award className="w-4 h-4 text-amber-500" />
                       Edit styles (ranked by potential score)
                     </h3>
@@ -848,7 +872,13 @@ export default function VideoEditPage({ params }: PageProps) {
                             generateClips: true,
                             addCaptions: true,
                             enhanceColor: top.preset === 'tiktok' || top.preset === 'youtube',
-                            stabilizeVideo: top.preset === 'tiktok' || top.preset === 'youtube'
+                            stabilizeVideo: top.preset === 'tiktok' || top.preset === 'youtube',
+                            hookDetection: true,
+                            beatMatchedCuts: top.preset === 'tiktok' || top.preset === 'reels',
+                            brollAutoInsert: false,
+                            predictEngagement: true,
+                            viralOverlays: top.preset === 'tiktok' || top.preset === 'reels',
+                            voiceCloneNarration: false,
                           })
                           setOutputFormat(top.preset === 'tiktok' ? 'vertical' : top.preset === 'youtube' ? 'standard' : outputFormat)
                           setPrioritizeHook(true)
@@ -877,7 +907,7 @@ export default function VideoEditPage({ params }: PageProps) {
                           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">#{style.rank ?? idx + 1}</span>
                           <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{style.potentialScore}</span>
                         </div>
-                        <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{style.name}</h4>
+                        <h4 className="font-semibold text-slate-500 dark:text-white text-sm">{style.name}</h4>
                         <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{style.description}</p>
                         <button
                           type="button"
@@ -891,7 +921,13 @@ export default function VideoEditPage({ params }: PageProps) {
                               generateClips: true,
                               addCaptions: true,
                               enhanceColor: true,
-                              stabilizeVideo: style.preset === 'tiktok' || style.preset === 'youtube'
+                              stabilizeVideo: style.preset === 'tiktok' || style.preset === 'youtube',
+                              hookDetection: true,
+                              beatMatchedCuts: style.preset === 'tiktok' || style.preset === 'reels',
+                              brollAutoInsert: false,
+                              predictEngagement: true,
+                              viralOverlays: style.preset === 'tiktok' || style.preset === 'reels',
+                              voiceCloneNarration: false,
                             })
                           }}
                           className="mt-3 w-full py-2 rounded-xl bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors"
@@ -957,7 +993,7 @@ export default function VideoEditPage({ params }: PageProps) {
                   {editingOptions.generateClips && (
                     <div>
                       <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Max clips</label>
-                      <select value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2">
+                      <select value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-200 text-sm px-3 py-2">
                         {[1, 3, 5, 10].map((n) => <option key={n} value={n}>{n} clip{n > 1 ? 's' : ''}</option>)}
                       </select>
                     </div>
@@ -981,7 +1017,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Content type</label>
-                  <select value={contentGenre} onChange={(e) => setContentGenre(e.target.value)} className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2">
+                  <select value={contentGenre} onChange={(e) => setContentGenre(e.target.value)} className="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-200 text-sm px-3 py-2">
                     <option value="auto">Auto</option>
                     <option value="tutorial">Tutorial</option>
                     <option value="vlog">Vlog</option>
@@ -1036,9 +1072,9 @@ export default function VideoEditPage({ params }: PageProps) {
                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Quick presets</p>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { label: 'TikTok / Reels', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: false }, output: 'vertical' as const, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
-                        { label: 'Podcast', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: false, addCaptions: true, enhanceColor: false, stabilizeVideo: false }, output: 'auto' as const, clipLength: 'full' as const, genre: 'podcast', hook: false, pacing: 'gentle' as const },
-                        { label: 'All-in-one', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true }, output: outputFormat, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
+                        { label: 'TikTok / Reels', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: false, hookDetection: true,  beatMatchedCuts: true,  brollAutoInsert: false, predictEngagement: true, viralOverlays: true,  voiceCloneNarration: false }, output: 'vertical' as const, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
+                        { label: 'Podcast',        opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: false, addCaptions: true, enhanceColor: false, stabilizeVideo: false, hookDetection: true,  beatMatchedCuts: false, brollAutoInsert: false, predictEngagement: true, viralOverlays: false, voiceCloneNarration: false }, output: 'auto' as const, clipLength: 'full' as const, genre: 'podcast', hook: false, pacing: 'gentle' as const },
+                        { label: 'All-in-one',     opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true, hookDetection: true,  beatMatchedCuts: true,  brollAutoInsert: true,  predictEngagement: true, viralOverlays: true,  voiceCloneNarration: false }, output: outputFormat, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
                       ].map((preset) => (
                         <button
                           key={preset.label}
@@ -1059,12 +1095,12 @@ export default function VideoEditPage({ params }: PageProps) {
                     <p className="text-[10px] text-slate-500 mt-2 mb-1">Creative presets (Opus+) — export per platform (TikTok / Reels / Shorts) for native feel.</p>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { label: 'Viral Hooks', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: false }, output: 'vertical' as const, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'aggressive' as const },
-                        { label: 'Sharp & Niche', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: false, stabilizeVideo: false }, output: 'vertical' as const, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
-                        { label: 'Educational', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: false, stabilizeVideo: false }, output: 'vertical' as const, clipLength: 'mid-3-5' as const, genre: 'tutorial', hook: false, pacing: 'gentle' as const },
-                        { label: 'Storytelling', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: false, addCaptions: true, enhanceColor: true, stabilizeVideo: false }, output: 'auto' as const, clipLength: 'full' as const, genre: 'vlog', hook: true, pacing: 'gentle' as const },
-                        { label: 'Punchy Ads', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true }, output: 'square' as const, clipLength: 'short' as const, genre: 'product', hook: true, pacing: 'aggressive' as const },
-                        { label: 'Cinematic Recap', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true }, output: 'standard' as const, clipLength: 'mid-5-10' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
+                        { label: 'Viral Hooks',     opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: false, hookDetection: true,  beatMatchedCuts: true,  brollAutoInsert: true,  predictEngagement: true, viralOverlays: true,  voiceCloneNarration: false }, output: 'vertical' as const, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'aggressive' as const },
+                        { label: 'Sharp & Niche',   opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: false, stabilizeVideo: false, hookDetection: true,  beatMatchedCuts: false, brollAutoInsert: false, predictEngagement: true, viralOverlays: false, voiceCloneNarration: false }, output: 'vertical' as const, clipLength: 'short' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
+                        { label: 'Educational',     opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: false, stabilizeVideo: false, hookDetection: true,  beatMatchedCuts: false, brollAutoInsert: true,  predictEngagement: true, viralOverlays: false, voiceCloneNarration: false }, output: 'vertical' as const, clipLength: 'mid-3-5' as const, genre: 'tutorial', hook: false, pacing: 'gentle' as const },
+                        { label: 'Storytelling',    opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: false, addCaptions: true, enhanceColor: true, stabilizeVideo: false, hookDetection: true,  beatMatchedCuts: false, brollAutoInsert: true,  predictEngagement: true, viralOverlays: false, voiceCloneNarration: false }, output: 'auto' as const, clipLength: 'full' as const, genre: 'vlog', hook: true, pacing: 'gentle' as const },
+                        { label: 'Punchy Ads',      opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true, hookDetection: true,  beatMatchedCuts: true,  brollAutoInsert: false, predictEngagement: true, viralOverlays: true,  voiceCloneNarration: false }, output: 'square' as const, clipLength: 'short' as const, genre: 'product', hook: true, pacing: 'aggressive' as const },
+                        { label: 'Cinematic Recap', opts: { removeSilence: true, optimizePacing: true, enhanceAudio: true, generateClips: true, addCaptions: true, enhanceColor: true, stabilizeVideo: true, hookDetection: true,  beatMatchedCuts: true,  brollAutoInsert: true,  predictEngagement: true, viralOverlays: false, voiceCloneNarration: true  }, output: 'standard' as const, clipLength: 'mid-5-10' as const, genre: 'auto', hook: true, pacing: 'medium' as const },
                       ].map((preset) => (
                         <button
                           key={preset.label}
@@ -1090,7 +1126,7 @@ export default function VideoEditPage({ params }: PageProps) {
                         <select
                           value={editPreset}
                           onChange={(e) => setEditPreset(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2"
+                          className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-400 dark:text-slate-200 text-sm px-3 py-2"
                         >
                           <option value="">Custom (use toggles below)</option>
                           <option value="cinematic">Cinematic</option>
@@ -1106,7 +1142,7 @@ export default function VideoEditPage({ params }: PageProps) {
                         <select
                           value={captionStyle}
                           onChange={(e) => setCaptionStyle(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2"
+                          className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-400 dark:text-slate-200 text-sm px-3 py-2"
                         >
                           <option value="modern">Modern</option>
                           <option value="bold">Bold</option>
@@ -1172,7 +1208,7 @@ export default function VideoEditPage({ params }: PageProps) {
                       <button
                         type="button"
                         onClick={() => setShowAdvanced(!showAdvanced)}
-                        className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2"
+                        className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-400 dark:hover:text-slate-200 flex items-center gap-2"
                       >
                         {showAdvanced ? '▼' : '▶'} Advanced (scene detection)
                       </button>
@@ -1199,7 +1235,7 @@ export default function VideoEditPage({ params }: PageProps) {
                               step="0.5"
                               value={minSceneLength}
                               onChange={(e) => setMinSceneLength(e.target.value)}
-                              className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-800 dark:text-slate-200 text-sm px-3 py-2"
+                              className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-400 dark:text-slate-200 text-sm px-3 py-2"
                             />
                           </div>
                         </div>
@@ -1236,6 +1272,96 @@ export default function VideoEditPage({ params }: PageProps) {
                         </label>
                       ))}
                     </div>
+
+                    {/* 2026 Creative AI Tools */}
+                    <div className="border-t border-gray-100 dark:border-gray-700/50 pt-5 mt-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-fuchsia-500" />
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Creative AI Tools <span className="text-[9px] font-black uppercase tracking-widest text-fuchsia-500/80 ml-1.5">2026</span></h4>
+                        </div>
+                        <span className="text-[10px] text-slate-500">Tuned for short-form virality across niches</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {[
+                          { key: 'hookDetection',       label: 'AI Hook Detector',         hint: 'Auto-pick the strongest 3-second opener',   tag: 'HOOK' },
+                          { key: 'beatMatchedCuts',     label: 'Beat-Matched Cuts',        hint: 'Sync cuts to audio beats for momentum',     tag: 'AUDIO' },
+                          { key: 'brollAutoInsert',     label: 'B-roll Auto-Insert',       hint: 'Contextual stock footage between segments', tag: 'VISUAL' },
+                          { key: 'predictEngagement',   label: 'Engagement Predictor',     hint: 'Score retention & CTR before publishing',   tag: 'INSIGHT' },
+                          { key: 'viralOverlays',       label: 'Pattern-Interrupt FX',     hint: 'Zoom-ins, arrows, countdowns, swipes',      tag: 'MOTION' },
+                          { key: 'voiceCloneNarration', label: 'Voice Clone Narration',    hint: 'Clone your voice for missing voiceover',    tag: 'VOICE' },
+                        ].map(({ key, label, hint, tag }) => (
+                          <label
+                            key={key}
+                            className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border-2 transition-colors ${(editingOptions as any)[key]
+                              ? 'border-fuchsia-300 dark:border-fuchsia-700 bg-fuchsia-50/50 dark:bg-fuchsia-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-fuchsia-300/60 dark:hover:border-fuchsia-700/60 bg-gray-50/50 dark:bg-gray-900/30'
+                              }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(editingOptions as any)[key] as boolean}
+                              onChange={(e) => setEditingOptions({ ...editingOptions, [key]: e.target.checked })}
+                              className="w-4 h-4 mt-0.5 text-fuchsia-600 rounded focus:ring-2 focus:ring-fuchsia-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-fuchsia-500/70">{tag}</span>
+                              </div>
+                              <span className="block text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">{hint}</span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      {/* Trending Sound Match + Caption Language */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <div>
+                          <label htmlFor="trending-sound-match" className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">Trending Sound Match</label>
+                          <select
+                            id="trending-sound-match"
+                            value={trendingSoundMatch}
+                            onChange={(e) => setTrendingSoundMatch(e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-200 text-sm px-3 py-2"
+                          >
+                            <option value="off">Off (use original audio)</option>
+                            <option value="auto">Auto (match niche & vibe)</option>
+                            <option value="trending-tiktok">TikTok trending</option>
+                            <option value="trending-reels">Reels trending</option>
+                            <option value="trending-shorts">YouTube Shorts trending</option>
+                            <option value="ambient">Ambient / lo-fi</option>
+                            <option value="cinematic">Cinematic score</option>
+                          </select>
+                          <p className="text-[10px] text-slate-500 mt-1">Pulls from current week&apos;s viral sound library.</p>
+                        </div>
+                        {editingOptions.addCaptions && (
+                          <div>
+                            <label htmlFor="caption-language" className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1 block">Caption Language</label>
+                            <select
+                              id="caption-language"
+                              value={captionLanguage}
+                              onChange={(e) => setCaptionLanguage(e.target.value)}
+                              className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-slate-700 dark:text-slate-200 text-sm px-3 py-2"
+                            >
+                              <option value="en">English (auto-detect)</option>
+                              <option value="es">Spanish</option>
+                              <option value="pt">Portuguese</option>
+                              <option value="fr">French</option>
+                              <option value="de">German</option>
+                              <option value="it">Italian</option>
+                              <option value="ja">Japanese</option>
+                              <option value="ko">Korean</option>
+                              <option value="zh">Chinese (Simplified)</option>
+                              <option value="ar">Arabic</option>
+                              <option value="hi">Hindi</option>
+                              <option value="multi">Multi-language burn-in</option>
+                            </select>
+                            <p className="text-[10px] text-slate-500 mt-1">Burns in localized captions for global reach.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1248,7 +1374,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 <div className="inline-flex p-5 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-200/80 dark:from-blue-900/40 dark:to-blue-800/30 mb-5 shadow-inner">
                   <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-spin" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Processing your video</h2>
+                <h2 className="text-2xl font-bold mb-2 text-slate-500 dark:text-white">Processing your video</h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Applying your options. Don’t close this page.
                 </p>
@@ -1298,7 +1424,7 @@ export default function VideoEditPage({ params }: PageProps) {
 
               {/* Active Editing Options */}
               <div className="mt-6">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Active Editing Options:</p>
+                <p className="text-sm font-semibold text-slate-500 dark:text-white mb-3">Active Editing Options:</p>
                 <div className="grid md:grid-cols-2 gap-2">
                   {Object.entries(editingOptions).filter(([_, enabled]) => enabled).map(([key, _]) => (
                     <div key={key} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
@@ -1319,7 +1445,7 @@ export default function VideoEditPage({ params }: PageProps) {
               <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-2xl mb-5 mx-auto">
                 <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h2 className="text-xl font-bold mb-2 text-center text-slate-900 dark:text-white" id="processing-failed-heading">Processing failed</h2>
+              <h2 className="text-xl font-bold mb-2 text-center text-slate-500 dark:text-white" id="processing-failed-heading">Processing failed</h2>
               <p className="text-slate-600 dark:text-slate-400 text-center mb-6 max-w-md mx-auto">
                 {processingError}
               </p>
@@ -1362,7 +1488,7 @@ export default function VideoEditPage({ params }: PageProps) {
                       <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-slate-900 dark:text-white" id="edit-complete-heading">Edit complete</h2>
+                      <h2 className="text-xl font-bold text-slate-500 dark:text-white" id="edit-complete-heading">Edit complete</h2>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5" id="edit-complete-desc">Your video is ready. Choose what to do next.</p>
                     </div>
                   </div>
@@ -1445,7 +1571,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 {/* New video score */}
                 {newVideoScore != null && (
                   <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200/80 dark:border-amber-800/50">
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-slate-500 dark:text-white mb-2 flex items-center gap-2">
                       <Award className="w-4 h-4 text-amber-500" />
                       New video score
                     </h3>
@@ -1467,7 +1593,7 @@ export default function VideoEditPage({ params }: PageProps) {
 
                 {/* Success summary */}
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <p className="text-sm font-medium text-slate-500 dark:text-white mb-3 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                     Applied to your video
                   </p>

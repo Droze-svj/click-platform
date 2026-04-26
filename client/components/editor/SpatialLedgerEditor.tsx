@@ -118,7 +118,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[9px] font-black text-slate-1000 uppercase tracking-widest mb-1 italic">Continuity Risk</p>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Continuity Risk</p>
           <p className={`text-2xl font-black italic leading-none ${ledger.riskScore > 50 ? 'text-rose-500' : 'text-emerald-400'}`}>
             {ledger.riskScore}%
           </p>

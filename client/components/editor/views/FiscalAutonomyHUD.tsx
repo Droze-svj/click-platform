@@ -63,7 +63,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-3xl font-black text-white italic tracking-tighter leading-none uppercase">Fiscal Autonomy HUD</h4>
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic text-indigo-500/70">Sovereign Revenue Steering Loop</span>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic text-indigo-500/70">Revenue Steering</span>
                     </div>
                 </div>
 
@@ -124,7 +124,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
 
                         <div className="space-y-6">
                             {[
-                                { name: 'Sovereign Alpha Access (Whop)', yield: 0.92, status: 'Active', trend: '+12%', color: 'bg-emerald-500' },
+                                { name: 'Alpha Access (Whop)', yield: 0.92, status: 'Active', trend: '+12%', color: 'bg-emerald-500' },
                                 { name: 'Click Pro Subscription', yield: 0.78, status: 'Active', trend: '+5%', color: 'bg-indigo-500' },
                                 { name: 'Vultr Node Hardware (Ref)', yield: 0.45, status: 'Dormant', trend: '-2%', color: 'bg-slate-500' }
                             ].map((node, i) => (
@@ -157,7 +157,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                                 <div>
                                     <p className="text-[11px] font-black text-indigo-300 uppercase italic tracking-widest text-balance">Autonomous Pivot Advisory</p>
                                     <p className="text-[10px] font-bold text-slate-400 mt-2 leading-relaxed">
-                                        Neural engine detected a 22% yield potential increase for 'Sovereign Alpha'. Redirecting 30% of LinkedIn dispatch manifests to this node.
+                                        AI engine detected a 22% yield potential increase for 'Alpha Access'. Redirecting 30% of LinkedIn dispatch manifests to this node.
                                     </p>
                                 </div>
                             </div>

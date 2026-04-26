@@ -17,43 +17,67 @@ function isValidLanguage(lang: string): lang is SupportedLanguage {
   return supportedLanguages.includes(lang as SupportedLanguage)
 }
 
+// Cache English once — it's the universal fallback. Loaded lazily on first use.
+let enCache: Record<string, any> | null = null
+async function loadEn(): Promise<Record<string, any>> {
+  if (enCache) return enCache
+  try {
+    const res = await fetch('/i18n/locales/en.json')
+    if (res.ok) {
+      enCache = await res.json()
+      return enCache as Record<string, any>
+    }
+  } catch {
+    /* network failure — give up and return empty */
+  }
+  return {}
+}
+
+function lookup(dict: Record<string, any> | null | undefined, key: string): string | undefined {
+  if (!dict) return undefined
+  const keys = key.split('.')
+  let v: any = dict
+  for (const k of keys) {
+    v = v?.[k]
+    if (v === undefined) return undefined
+  }
+  return typeof v === 'string' ? v : undefined
+}
+
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
   const { preferences, updatePreference } = usePreferences()
   const lang = isValidLanguage(preferences.language) ? preferences.language : defaultLanguage
   const [translations, setTranslations] = useState<Record<string, any>>({})
+  const [enFallback, setEnFallback] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(true)
 
   const loadTranslations = useCallback(async (language: SupportedLanguage) => {
+    // Always have English available as a fallback for missing keys.
+    const en = await loadEn()
+    setEnFallback(en)
+
+    if (language === 'en') {
+      setTranslations(en)
+      return
+    }
     try {
       const res = await fetch(`/i18n/locales/${language}.json`)
       if (res.ok) {
-        const data = await res.json()
-        setTranslations(data)
+        setTranslations(await res.json())
         return
       }
       throw new Error(`HTTP ${res.status}`)
     } catch {
-      if (language !== 'en') {
-        try {
-          const fallback = await fetch('/i18n/locales/en.json')
-          if (fallback.ok) {
-            const data = await fallback.json()
-            setTranslations(data)
-            return
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-      setTranslations({})
-    } finally {
-      setIsLoading(false)
+      // Missing/invalid locale file — keep English so the UI never shows raw keys.
+      setTranslations(en)
     }
   }, [])
 
   useEffect(() => {
+    let cancelled = false
     setIsLoading(true)
-    loadTranslations(lang)
+    loadTranslations(lang).finally(() => { if (!cancelled) setIsLoading(false) })
+    return () => { cancelled = true }
   }, [lang, loadTranslations])
 
   const setLanguage = useCallback(
@@ -65,15 +89,13 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
   const t = useCallback(
     (key: string): string => {
-      const keys = key.split('.')
-      let value: any = translations
-      for (const k of keys) {
-        value = value?.[k]
-        if (value === undefined) return key
-      }
-      return typeof value === 'string' ? value : key
+      const primary = lookup(translations, key)
+      if (primary !== undefined) return primary
+      const fallback = lookup(enFallback, key)
+      if (fallback !== undefined) return fallback
+      return key
     },
-    [translations]
+    [translations, enFallback]
   )
 
   return (

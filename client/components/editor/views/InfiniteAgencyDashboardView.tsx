@@ -81,10 +81,10 @@ const InfiniteAgencyDashboardView: React.FC = () => {
   const [whopProducts, setWhopProducts] = useState<any[]>([])
   const [loadingPivots, setLoadingPivots] = useState(false)
   const [thoughts, setThoughts] = useState<string[]>([
-    "ora-1: Ingesting high-velocity meta-patterns from TikTok #tech... Done.",
-    "dna-4: Extracted 12.4s hook rhythm from client_vault_02... Matching.",
-    "mon-9: Auditing timeline 0x882... Warning: Retention drop detected at 0:15.",
-    "vis-x: Synthesizing emerald-tinted overlays via Sora core... 42%",
+    "Strategy Oracle: Imported trending topics from TikTok #tech.",
+    "Style DNA: Extracted 12.4s hook rhythm from your top performer.",
+    "Retention Critic: Warning — predicted retention drop at 0:15.",
+    "Visual Synthesizer: Rendering B-roll overlays… 42%",
   ])
   const [ledgerState, setLedgerState] = useState<any>({ height: 4280, lastHash: '0x882_ALPHA', transactions: 1240 })
   const [audits, setAudits] = useState<any[]>([])
@@ -184,21 +184,21 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Neural Command Terminal v14.2.0</span>
                  </div>
                  <div className="px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
-                    <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SWARM_STABLE</span>
+                    <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">STABLE</span>
                  </div>
               </div>
-              <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">Sovereign Agency</h1>
-              <p className="text-slate-800 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Autonomous orchestration matrix for distributed meta-cognitive global deployment.</p>
+              <h1 className="text-6xl font-black text-white tracking-tighter leading-none drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">Agency Console</h1>
+              <p className="text-slate-400 text-[13px] font-medium tracking-wide mt-4 leading-relaxed">Manage every brand, campaign, and creator from a single workspace.</p>
            </div>
         </div>
 
         <div className="flex items-center gap-12">
            <nav className="flex gap-6 p-4 rounded-[4rem] bg-white/[0.02] border border-white/10 shadow-[0_60px_200px_rgba(0,0,0,0.8)] backdrop-blur-3xl">
               {[
-                { id: 'strategic', label: 'OPERATIONAL_INTENT', icon: Lightbulb, color: 'text-indigo-400' },
-                { id: 'monetization', label: 'ASSET_REPOSITORY', icon: ShoppingCart, color: 'text-emerald-400' },
-                { id: 'distribution', label: 'PRESENCE_GRID', icon: Globe, color: 'text-blue-400' },
-                { id: 'ab_test', label: 'DIFFRACTION_MATRIX', icon: Split, color: 'text-purple-400' }
+                { id: 'strategic', label: 'INTENT', icon: Lightbulb, color: 'text-indigo-400' },
+                { id: 'monetization', label: 'ASSETS', icon: ShoppingCart, color: 'text-emerald-400' },
+                { id: 'distribution', label: 'PRESENCE', icon: Globe, color: 'text-blue-400' },
+                { id: 'ab_test', label: 'PATTERN', icon: Split, color: 'text-purple-400' }
               ].map(v => (
                  <button key={v.id} onClick={() => setActiveView(v.id as any)}
                    className={`px-12 py-6 rounded-[2.8rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-1000 flex items-center gap-4 italic active:scale-90 border-2 ${activeView === v.id ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'text-slate-700 border-transparent hover:text-white hover:bg-white/5'}`}>
@@ -210,7 +210,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
            
            <div className="flex flex-col items-end gap-4 pl-12 border-l-2 border-white/10">
               <div className="flex items-center gap-4">
-                 <span className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.6em] italic">NEURAL_COHERENCE</span>
+                 <span className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.6em] italic">COHERENCE</span>
                  <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 text-[10px] font-black text-emerald-400 italic shadow-2xl">OPTIMIZED_v18</div>
               </div>
               <div className="flex items-center gap-6">
@@ -307,10 +307,10 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              </div>
                           </div>
                           <button onClick={loadAll} className="flex flex-col items-end group">
-                             <span className="text-[12px] font-black text-slate-900 uppercase tracking-[0.6em] italic mb-4 group-hover:text-white transition-all duration-700">Sector Origin Telemetry</span>
-                             <div className="flex items-center gap-10">
-                                <span className="text-4xl font-black text-white italic uppercase tracking-tighter group-hover:text-indigo-400 transition-all duration-700 leading-none">Global TikTok Lattice</span>
-                                <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border-2 border-white/5 flex items-center justify-center text-slate-950 group-hover:text-white group-hover:border-indigo-500/50 transition-all duration-700 shadow-2xl">
+                             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3 group-hover:text-white transition-colors">Top Performing Region</span>
+                             <div className="flex items-center gap-6">
+                                <span className="text-3xl font-black text-white tracking-tighter group-hover:text-indigo-400 transition-colors leading-tight">Global · TikTok</span>
+                                <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border-2 border-white/5 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:border-indigo-500/50 transition-colors">
                                    <ArrowRight size={36} className="group-hover:translate-x-4 transition-transform duration-1000" />
                                 </div>
                              </div>
@@ -369,7 +369,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              <div className="absolute top-4 right-8 flex flex-col items-end gap-3 text-right">
                                 <span className="text-6xl font-black italic text-white tracking-tighter drop-shadow-2xl">92.4 <span className="text-2xl text-emerald-500">ND</span></span>
                                 <div className="px-5 py-1.5 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 shadow-3xl">
-                                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">GROWTH_PERCENTILE</span>
+                                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">GROWTH</span>
                                 </div>
                              </div>
                           </div>
@@ -400,7 +400,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              <div className="flex justify-between items-center pt-6 border-t-2 border-white/5">
                                 <div className="flex items-center gap-4">
                                    <div className="w-3 h-3 rounded-full bg-indigo-500 animate-ping" />
-                                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic">SYNTH_LOCK</span>
+                                   <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic">LOCKED</span>
                                 </div>
                                 <div className="flex items-baseline gap-2">
                                    <span className="text-[9px] font-black text-slate-900 uppercase italic">FIDELITY:</span>
@@ -420,18 +420,18 @@ const InfiniteAgencyDashboardView: React.FC = () => {
            </AnimatePresence>
         </section>
 
-        {/* Distributed Neural Labor Lattice */}
+        {/* AI Agent Pool */}
         <aside className="col-span-4 flex flex-col gap-12 overflow-hidden">
            <div className={`${glassStyle} rounded-[6rem] p-16 flex-1 flex flex-col overflow-hidden relative group bg-black/40 border-white/5 shadow-[0_100px_300px_rgba(0,0,0,1)]`}>
               <div className="absolute inset-0 bg-indigo-500/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-[3s] pointer-events-none" />
               <div className="flex items-center justify-between mb-16 relative z-10 px-6 pt-4">
                  <div>
-                    <h3 className="text-[17px] font-black text-white uppercase tracking-[0.4em] mb-3 leading-none italic">Neural Labor Lattice</h3>
-                    <p className="text-[11px] font-black text-slate-800 uppercase tracking-widest italic leading-none border-l-2 border-indigo-500/20 pl-6 ml-2">Distributed Autonomous Agents</p>
+                    <h3 className="text-[17px] font-black text-white tracking-tight mb-2 leading-tight">AI Agent Pool</h3>
+                    <p className="text-[11px] font-medium text-slate-400 leading-tight border-l-2 border-indigo-500/20 pl-4 ml-1">Autonomous workers handling content tasks</p>
                  </div>
                  <div className="flex items-center gap-8">
                     <button onClick={() => setDebateMode(!debateMode)} className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] border-2 transition-all duration-1000 italic active:scale-90 ${debateMode ? 'bg-indigo-600 border-indigo-400 text-white animate-pulse shadow-[0_0_50px_rgba(99,102,241,0.6)]' : 'bg-white/5 border-white/10 text-slate-800 hover:text-white hover:bg-white/10 hover:border-white/20'}`}>
-                       {debateMode ? 'SWARM_DEBATING' : 'INIT_DEBATE'}
+                       {debateMode ? 'DEBATING' : 'START_DEBATE'}
                     </button>
                  </div>
               </div>
@@ -480,7 +480,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
               </div>
 
               <div className="mt-12 relative z-10 space-y-12">
-                 {/* Sovereign Bridge Controller HUD */}
+                 {/* Auto-Publish Bridge HUD */}
                  <div className={`p-12 rounded-[5rem] border-4 transition-all duration-1000 relative overflow-hidden group shadow-[0_80px_200px_rgba(0,0,0,1)] ${autoSurgeActive ? 'bg-indigo-500/10 border-indigo-500/30 shadow-[0_40px_100px_rgba(99,102,241,0.2)]' : 'bg-black/60 border-white/5'}`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                     
@@ -490,10 +490,10 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              <Zap size={40} className={autoSurgeActive ? 'animate-pulse' : ''} />
                           </div>
                           <div>
-                             <h4 className="text-3xl font-black text-white uppercase tracking-tighter italic leading-none mb-3 drop-shadow-2xl">Sovereign Bridge</h4>
+                             <h4 className="text-2xl font-black text-white tracking-tight leading-tight mb-2 drop-shadow-xl">Auto-Publish Bridge</h4>
                              <div className="flex items-center gap-3">
                                 <div className={`w-2 h-2 rounded-full ${autoSurgeActive ? 'bg-indigo-500' : 'bg-amber-500'} animate-ping`} />
-                                <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic leading-none">{autoSurgeActive ? 'PREDICTIVE_SURGE_ARMED' : 'MANUAL_STREAMS_ONLY'}</p>
+                                <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic leading-none">{autoSurgeActive ? 'PREDICTION_READY' : 'MANUAL_ONLY'}</p>
                              </div>
                           </div>
                        </div>
@@ -503,15 +503,15 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-8 relative z-10 px-2">
-                       <button onClick={() => setActiveView('surge_ledger')} className="py-6 rounded-[2.5rem] bg-black/80 border-2 border-white/5 text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic hover:bg-white hover:text-black hover:scale-105 active:scale-90 transition-all duration-700 shadow-2xl">VIEW_SURGE_LEDGER</button>
+                       <button onClick={() => setActiveView('surge_ledger')} className="py-6 rounded-[2.5rem] bg-black/80 border-2 border-white/5 text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic hover:bg-white hover:text-black hover:scale-105 active:scale-90 transition-all duration-700 shadow-2xl">View ledger</button>
                        <div className="px-8 py-6 rounded-[2.5rem] bg-black/40 border-2 border-white/5 flex flex-col justify-center shadow-inner group-hover:border-indigo-500/20 transition-all duration-1000">
-                          <span className="text-[10px] font-black text-slate-950 uppercase italic leading-none mb-2 tracking-[0.2em] opacity-40">SURGE_THRESHOLD</span>
+                          <span className="text-[10px] font-black text-slate-950 uppercase italic leading-none mb-2 tracking-[0.2em] opacity-40">THRESHOLD</span>
                           <span className="text-[17px] font-black text-white leading-none italic uppercase tracking-widest drop-shadow-2xl">{">"} 90% PROB</span>
                        </div>
                     </div>
                  </div>
 
-                 {/* Sovereign Fiscal Bridge HUD */}
+                 {/* Revenue HUD */}
                  <div className="p-12 rounded-[5rem] bg-emerald-500/5 border-4 border-emerald-500/10 flex flex-col gap-8 shadow-[0_80px_200px_rgba(0,0,0,1)] group hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all duration-1000 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                     <div className="flex justify-between items-center relative z-10 px-4">
@@ -519,11 +519,11 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-transform duration-1000"><ShoppingCart size={32} className="text-emerald-500" /></div>
                           <p className="text-[15px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none group-hover:text-white transition-colors">Settled Revenue</p>
                        </div>
-                       <div className="px-6 py-2 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 text-[11px] font-black text-emerald-400 italic shadow-3xl animate-pulse">LATTICE_VERIFIED</div>
+                       <div className="px-6 py-2 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 text-[11px] font-black text-emerald-400 italic shadow-3xl animate-pulse">VERIFIED</div>
                     </div>
                     <div className="flex items-baseline gap-6 px-4 pb-2 relative z-10">
                        <span className="text-7xl font-black text-white italic tabular-nums leading-none tracking-tighter drop-shadow-[0_10px_40px_rgba(0,0,0,0.5)] group-hover:text-emerald-400 transition-colors duration-1000">${(financials.totalSettledUSD || 4284).toLocaleString()}</span>
-                       <span className="text-[13px] font-black text-emerald-500/40 uppercase italic tracking-[0.6em] mb-1">USD_SETTLED</span>
+                       <span className="text-[13px] font-black text-emerald-500/40 uppercase italic tracking-[0.6em] mb-1">Settled</span>
                     </div>
                  </div>
 
@@ -549,7 +549,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                        <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none border-l-4 border-emerald-500/20 pl-8 ml-4">Cryptographic Decision Entropy Logs</p>
                     </div>
                  </div>
-                 <button onClick={() => setGovernanceOpen(true)} className="px-12 py-5 bg-emerald-600 text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic hover:bg-white hover:scale-110 active:scale-75 transition-all duration-700 shadow-[0_40px_100px_rgba(16,185,129,0.3)]">REVIEW_BLOCK</button>
+                 <button onClick={() => setGovernanceOpen(true)} className="px-12 py-5 bg-emerald-600 text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic hover:bg-white hover:scale-110 active:scale-75 transition-all duration-700 shadow-[0_40px_100px_rgba(16,185,129,0.3)]">Review</button>
               </div>
 
               <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-8 relative z-10 px-8">
@@ -567,7 +567,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     <span className="opacity-40">TX_TOTAL_CONSENSUS: {ledgerState.transactions}</span>
                  </div>
                  <div className="text-right flex flex-col items-end gap-6">
-                    <div className="px-8 py-3 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-black border-2 border-emerald-500/20 shadow-[0_0_50px_rgba(16,185,129,0.2)]">IMMUTABLE_BLOCK_VERIFIED</div>
+                    <div className="px-8 py-3 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-black border-2 border-emerald-500/20 shadow-[0_0_50px_rgba(16,185,129,0.2)]">VERIFIED</div>
                     <div className="flex items-center gap-4 text-[10px] font-mono opacity-20 uppercase">
                        <Scan size={14} />
                        <span className="truncate w-48 text-right">HASH_ROOT: {ledgerState.lastHash}_SOVEREIGN</span>

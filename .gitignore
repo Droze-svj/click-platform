@@ -2,6 +2,10 @@ node_modules/
 client/node_modules/
 .env
 .env.local
+.env.nosync
+.env.local.nosync
+*.nosync
+*.bak
 uploads/
 dist/
 build/

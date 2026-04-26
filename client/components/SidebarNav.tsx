@@ -6,20 +6,21 @@ import Link from 'next/link'
 import { useAuth } from '../hooks/useAuth'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Zap, ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight,
   // Studio
-  LayoutDashboard, Video, Sparkles, FileText, Quote, BookOpen, Wand2,
+  LayoutDashboard, Video, Sparkles, FileText, Quote, BookOpen, Wand2, Hammer, Palette,
   // Publish
   Send, CalendarDays, Workflow, RefreshCw,
   // Grow
-  BarChart3, TrendingUp, Target, Flame, Brain, Activity,
+  BarChart3, TrendingUp, Target, Flame, Brain, Activity, Megaphone,
   // Manage
-  FolderKanban, Users, CheckSquare, ThumbsUp, Gem,
+  FolderKanban, Users, CheckSquare, ThumbsUp, Gem, Trophy, Boxes, Plug, Compass,
   // Settings
-  Settings, Bell, LogOut, HelpCircle, Sun, Moon, Monitor,
+  Settings, Bell, LogOut, HelpCircle, Sun, Moon, Monitor, Search,
 } from 'lucide-react'
 import ThemeToggle from './DarkModeToggle'
 import { useTheme } from './ThemeProvider'
+import ClickLogo from './ClickLogo'
 
 // ── Zone definitions ───────────────────────────────────────────────────────
 const ZONES = [
@@ -31,13 +32,16 @@ const ZONES = [
     accent: 'text-violet-400',
     activeBg: 'bg-violet-600/15 border-violet-500/30',
     items: [
-      { path: '/dashboard',         label: 'Home',         icon: LayoutDashboard, badge: null },
-      { path: '/dashboard/video',   label: 'Video Editor', icon: Video,           badge: 'AI' },
-      { path: '/dashboard/content', label: 'Content AI',   icon: Sparkles,        badge: null },
-      { path: '/dashboard/scripts', label: 'Scripts',      icon: FileText,        badge: null },
-      { path: '/dashboard/quotes',  label: 'Quote Cards',  icon: Quote,           badge: null },
-      { path: '/dashboard/library', label: 'Asset Library',icon: BookOpen,        badge: null },
-      { path: '/dashboard/templates', label: 'Templates',  icon: Wand2,           badge: null },
+      { path: '/dashboard',             label: 'Home',         icon: LayoutDashboard, badge: null },
+      { path: '/dashboard/onboarding',  label: 'Get Started',  icon: Compass,         badge: 'Start' },
+      { path: '/dashboard/forge',       label: 'One-Click Forge', icon: Hammer,       badge: 'AI' },
+      { path: '/dashboard/video',       label: 'Video Editor', icon: Video,           badge: 'AI' },
+      { path: '/dashboard/content',     label: 'Content AI',   icon: Sparkles,        badge: null },
+      { path: '/dashboard/scripts',     label: 'Scripts',      icon: FileText,        badge: null },
+      { path: '/dashboard/quotes',      label: 'Quote Cards',  icon: Quote,           badge: null },
+      { path: '/dashboard/library',     label: 'Asset Library',icon: BookOpen,        badge: null },
+      { path: '/dashboard/templates',   label: 'Templates',    icon: Wand2,           badge: null },
+      { path: '/dashboard/brand-kit',   label: 'Brand Kit',    icon: Palette,         badge: null },
     ],
   },
   {
@@ -48,10 +52,11 @@ const ZONES = [
     accent: 'text-amber-400',
     activeBg: 'bg-amber-600/15 border-amber-500/30',
     items: [
-      { path: '/dashboard/scheduler',  label: 'Scheduler',    icon: Send,        badge: null },
-      { path: '/dashboard/calendar',   label: 'Calendar',     icon: CalendarDays, badge: null },
-      { path: '/dashboard/workflows',  label: 'Automations',  icon: Workflow,     badge: null },
-      { path: '/dashboard/recycling',  label: 'Content Remix',icon: RefreshCw,    badge: 'New' },
+      { path: '/dashboard/scheduler',     label: 'Scheduler',    icon: Send,         badge: null },
+      { path: '/dashboard/calendar',      label: 'Calendar',     icon: CalendarDays, badge: null },
+      { path: '/dashboard/integrations',  label: 'Integrations', icon: Plug,         badge: 'New' },
+      { path: '/dashboard/workflows',     label: 'Automations',  icon: Workflow,     badge: null },
+      { path: '/dashboard/recycling',     label: 'Content Remix',icon: RefreshCw,    badge: null },
     ],
   },
   {
@@ -65,7 +70,9 @@ const ZONES = [
       { path: '/dashboard/analytics',            label: 'Analytics',         icon: BarChart3,  badge: null },
       { path: '/dashboard/analytics/creator',    label: 'Creator Stats',     icon: Flame,      badge: 'AI' },
       { path: '/dashboard/analytics/engagement', label: 'Command Center',    icon: Activity,   badge: 'Live' },
+      { path: '/dashboard/trends',               label: 'Discover',          icon: Flame,      badge: 'New' },
       { path: '/dashboard/insights',             label: 'AI Insights',       icon: Brain,      badge: null },
+      { path: '/dashboard/marketing-ai',         label: 'Marketing Oracle',  icon: Megaphone,  badge: 'AI' },
       { path: '/dashboard/niche',                label: 'Niche Intel',       icon: Target,     badge: null },
       { path: '/dashboard/social',               label: 'Social Sync',       icon: TrendingUp, badge: null },
     ],
@@ -78,17 +85,21 @@ const ZONES = [
     accent: 'text-sky-400',
     activeBg: 'bg-sky-600/15 border-sky-500/30',
     items: [
-      { path: '/dashboard/posts',        label: 'Posts',       icon: BookOpen,     badge: null },
-      { path: '/dashboard/projects',     label: 'Projects',    icon: FolderKanban, badge: null },
-      { path: '/dashboard/teams',        label: 'Team',        icon: Users,        badge: null },
-      { path: '/dashboard/tasks',        label: 'Tasks',       icon: CheckSquare,  badge: null },
-      { path: '/dashboard/approvals',    label: 'Approvals',   icon: ThumbsUp,     badge: null },
-      { path: '/dashboard/membership',   label: 'Membership',  icon: Gem,          badge: null },
+      { path: '/dashboard/workspaces',   label: 'Workspaces',    icon: Boxes,        badge: 'New' },
+      { path: '/dashboard/posts',        label: 'Posts',         icon: BookOpen,     badge: null },
+      { path: '/dashboard/projects',     label: 'Projects',      icon: FolderKanban, badge: null },
+      { path: '/dashboard/teams',        label: 'Team',          icon: Users,        badge: null },
+      { path: '/dashboard/tasks',        label: 'Tasks',         icon: CheckSquare,  badge: null },
+      { path: '/dashboard/approvals',    label: 'Approvals',     icon: ThumbsUp,     badge: null },
+      { path: '/dashboard/achievements', label: 'Achievements',  icon: Trophy,       badge: null },
+      { path: '/dashboard/billing',      label: 'Billing',       icon: Gem,          badge: null },
+      { path: '/dashboard/membership',   label: 'Membership',    icon: Gem,          badge: null },
     ],
   },
 ]
 
 const BOTTOM_ITEMS = [
+  { path: '/dashboard/search',        label: 'Search',   icon: Search,      badge: null },
   { path: '/dashboard/notifications', label: 'Alerts',   icon: Bell,        badge: null },
   { path: '/dashboard/settings',      label: 'Settings', icon: Settings,    badge: null },
   { path: '/dashboard/ai',            label: 'AI Help',  icon: HelpCircle,  badge: null },
@@ -132,21 +143,18 @@ export default function SidebarNav() {
       <div className="flex items-center justify-between px-4 py-5 border-b border-white/[0.06]">
         <AnimatePresence>
           {!collapsed && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex items-center gap-2.5"
-            >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-600/20 flex-shrink-0">
-                <Zap size={15} className="text-white" />
-              </div>
-              <span className={`text-lg font-black italic bg-gradient-to-r ${isDark ? 'from-indigo-400 to-violet-400' : 'from-indigo-600 to-violet-600'} bg-clip-text text-transparent leading-none`}>
-                Click
-              </span>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <ClickLogo
+                size={32}
+                showWordmark
+                wordmarkClassName={isDark ? 'text-white' : 'text-slate-900'}
+              />
             </motion.div>
           )}
         </AnimatePresence>
         {collapsed && (
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-600 flex items-center justify-center shadow-lg mx-auto">
-            <Zap size={15} className="text-white" />
+          <div className="mx-auto">
+            <ClickLogo size={28} />
           </div>
         )}
         {!collapsed && (
@@ -246,8 +254,31 @@ export default function SidebarNav() {
         })}
       </nav>
 
+      {/* ── Cmd+K hint ── */}
+      <div className="border-t border-white/[0.06] px-2 pt-3 pb-1">
+        <button
+          type="button"
+          onClick={() => {
+            // Same key combo we listen for in GlobalCommandPalette
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: true }))
+          }}
+          title="Open command palette (⌘K)"
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition-colors text-slate-500 hover:text-white hover:bg-white/[0.04] ${
+            collapsed ? 'justify-center' : ''
+          }`}
+        >
+          <Search size={13} />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left">Quick search</span>
+              <kbd className="text-[9px] font-mono text-slate-500 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">⌘K</kbd>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* ── Bottom Items ── */}
-      <div className="border-t border-white/[0.06] px-2 py-3 space-y-0.5 relative group/bottom">
+      <div className="px-2 py-3 space-y-0.5 relative group/bottom">
         {BOTTOM_ITEMS.map(item => {
           const active = isActive(item.path)
           return (

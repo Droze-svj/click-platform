@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Изменить",
+    "create": "Создать",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "loading": "Загрузка…",
+    "error": "Ошибка",
+    "success": "Готово",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Далее",
+    "retry": "Повторить",
+    "more": "Ещё",
+    "menu": "Меню",
+    "logout": "Выйти",
+    "yes": "Да",
+    "no": "Нет",
+    "redirecting": "Переход на вход…",
+    "dismiss": "Скрыть"
+  },
+  "nav": {
+    "dashboard": "Панель",
+    "videos": "Видео",
+    "content": "Контент",
+    "aiFeatures": "ИИ‑функции",
+    "library": "Библиотека",
+    "scripts": "Сценарии",
+    "workflows": "Сценарии работы",
+    "tasks": "Задачи",
+    "projects": "Проекты",
+    "jobs": "Задания",
+    "teams": "Команды",
+    "approvals": "Согласования",
+    "quotes": "Цитаты",
+    "scheduler": "Планировщик",
+    "calendar": "Календарь",
+    "social": "Соцсети",
+    "analytics": "Аналитика",
+    "achievements": "Достижения",
+    "membership": "Подписка",
+    "notifications": "Уведомления",
+    "settings": "Настройки",
+    "templates": "Шаблоны",
+    "infrastructure": "Инфраструктура",
+    "clickTagline": "Контент с ИИ"
+  },
+  "workflow": {
+    "niche": "Ниша",
+    "setNiche": "Выбрать нишу",
+    "next": "Далее",
+    "stages": {
+      "ingest":   { "label": "Загрузка",   "description": "Загрузите материал — файл, ссылку или живую запись." },
+      "script":   { "label": "Сценарий",   "description": "ИИ пишет хук, основу и CTA под вашу нишу." },
+      "edit":     { "label": "Монтаж",     "description": "Резка, субтитры и брендинг с интеллектом стиля." },
+      "schedule": { "label": "Расписание", "description": "Публикуйте на каждой платформе в оптимальное время." },
+      "analyze":  { "label": "Анализ",     "description": "Измеряйте показатели и понимайте, что повторять." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "Загрузить",
+      "link": "Вставить ссылку",
+      "record": "Запись",
+      "cloud": "Облако",
+      "remix": "Ремикс"
+    },
+    "paste": "Вставить",
+    "dropTitle": "Перетащите видео сюда",
+    "dropHint": "Или выберите файл. MP4, MOV, WebM до 500 МБ.",
+    "chooseFile": "Выбрать файл",
+    "linkLabel": "URL видео",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 или https://cdn/clip.mp4",
+    "linkAction": "Загрузить",
+    "linkSupports": "Поддержка {platforms}. Скачивание с платформ требует {ytdlp} на сервере.",
+    "recordStart": "Начать запись",
+    "recordStop": "Остановить и загрузить",
+    "recordHint": "Камера + микрофон — сохраняется в WebM и загружается в библиотеку.",
+    "cloudHint": "Вставьте ссылку на Google Drive, Dropbox или S3. Скачивание идёт с сервера, поэтому доступ должен быть {visibility}.",
+    "cloudVisibility": "Любой по ссылке → может смотреть",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "Загрузить",
+    "remixHint": "Выберите старый проект, чтобы клонировать его и начать новый монтаж.",
+    "remixRefresh": "Обновить",
+    "remixEmpty": "Импорта пока нет — загрузите первое видео, чтобы начать ремикс‑библиотеку.",
+    "tip": "Совет",
+    "tipPaste": "Нажмите ⌘V на этой странице, чтобы вставить URL из буфера обмена.",
+    "tipReversible": "Всё появляется в библиотеке и может быть отменено.",
+    "uploading": "Загрузка {percent}%",
+    "processing": "Обработка…",
+    "errors": {
+      "noUrl": "Сначала вставьте URL",
+      "notVideo": "Перетащите видеофайл (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "Буфер обмена пуст",
+      "clipboardNotUrl": "В буфере обмена нет URL",
+      "clipboardDenied": "Доступ к буферу запрещён — вставьте вручную",
+      "uploadFailed": "Ошибка загрузки: {message}",
+      "ingestFailed": "Ошибка импорта: {message}",
+      "remixFailed": "Ошибка ремикса",
+      "noContentId": "Сервер не вернул contentId",
+      "cameraDenied": "Нет доступа к камере/микрофону"
+    }
+  },
+  "language": {
+    "label": "Язык",
+    "picker": "Выбрать язык"
+  },
+  "settings": {
+    "title": "Настройки",
+    "subtitle": "Управляйте параметрами учётной записи",
+    "language": "Язык",
+    "saveSettings": "Сохранить"
+  },
+  "video": {
+    "title": "Видео",
+    "upload": "Загрузить",
+    "edit": "Изменить",
+    "processing": "Обработка…"
+  }
+}

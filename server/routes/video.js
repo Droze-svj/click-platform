@@ -533,7 +533,7 @@ async function processVideo(contentId, videoPath, user) {
       );
 
       // Generate caption for clip
-      const caption = await generateCaptions(highlight.text, user.niche);
+      const caption = await generateCaptions(highlight.text, user.niche, highlight.platform || 'tiktok', req.language || 'en');
 
       // Base clip path (before any effects/overlays). If we later add music mixing or other transforms,
       // update this to point at the new output file.

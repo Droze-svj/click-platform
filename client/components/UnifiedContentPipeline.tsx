@@ -229,7 +229,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
     <div className={`rounded-[4.5rem] overflow-hidden border border-white/5 shadow-3xl bg-[#020202] text-slate-200 ${cosmicBg}`}>
       {/* Immersive Interior Background */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03]" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.03]" />
         <div className={`absolute top-0 right-0 w-[500px] h-[500px] bg-${currentTheme.accent}/5 blur-[120px] rounded-full`} />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/5 blur-[120px] rounded-full" />
       </div>

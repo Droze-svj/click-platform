@@ -11,7 +11,7 @@ const ResonanceCommandMatrix = dynamic(
   { ssr: false, loading: () => (
     <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center">
        <Brain size={64} className="text-indigo-500 animate-pulse mb-8" />
-       <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Manifesting Resonance Interface...</span>
+       <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Manifesting Resonance Interface...</span>
     </div>
   )}
 )

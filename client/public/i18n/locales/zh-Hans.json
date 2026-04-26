@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "search": "搜索",
+    "filter": "筛选",
+    "loading": "加载中…",
+    "error": "错误",
+    "success": "成功",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "retry": "重试",
+    "more": "更多",
+    "menu": "菜单",
+    "logout": "退出",
+    "yes": "是",
+    "no": "否",
+    "redirecting": "正在跳转到登录…",
+    "dismiss": "关闭"
+  },
+  "nav": {
+    "dashboard": "仪表盘",
+    "videos": "视频",
+    "content": "内容",
+    "aiFeatures": "AI 功能",
+    "library": "素材库",
+    "scripts": "脚本",
+    "workflows": "工作流",
+    "tasks": "任务",
+    "projects": "项目",
+    "jobs": "作业",
+    "teams": "团队",
+    "approvals": "审批",
+    "quotes": "引用",
+    "scheduler": "排程",
+    "calendar": "日历",
+    "social": "社交",
+    "analytics": "分析",
+    "achievements": "成就",
+    "membership": "会员",
+    "notifications": "通知",
+    "settings": "设置",
+    "templates": "模板",
+    "infrastructure": "基础设施",
+    "clickTagline": "AI 驱动的内容"
+  },
+  "workflow": {
+    "niche": "细分领域",
+    "setNiche": "选择领域",
+    "next": "下一步",
+    "stages": {
+      "ingest":   { "label": "导入", "description": "导入素材 — 文件、链接或现场录制。" },
+      "script":   { "label": "脚本", "description": "AI 根据你的领域撰写钩子、正文和 CTA。" },
+      "edit":     { "label": "编辑", "description": "用风格智能进行剪辑、字幕和品牌化。" },
+      "schedule": { "label": "排程", "description": "在每个平台的最佳时间发布。" },
+      "analyze":  { "label": "分析", "description": "衡量表现，找出值得复制的要素。" }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "上传",
+      "link": "粘贴链接",
+      "record": "录制",
+      "cloud": "云端",
+      "remix": "再创作"
+    },
+    "paste": "粘贴",
+    "dropTitle": "把视频拖到这里",
+    "dropHint": "或选择文件。支持 MP4、MOV、WebM，最大 500MB。",
+    "chooseFile": "选择文件",
+    "linkLabel": "视频网址",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 或 https://cdn/clip.mp4",
+    "linkAction": "导入",
+    "linkSupports": "支持 {platforms}。平台下载需要服务器安装 {ytdlp}。",
+    "recordStart": "开始录制",
+    "recordStop": "停止并上传",
+    "recordHint": "摄像头 + 麦克风 — 保存为 WebM，上传到素材库。",
+    "cloudHint": "粘贴 Google Drive、Dropbox 或 S3 共享链接。下载在服务器端进行,所以共享需要设置为{visibility}。",
+    "cloudVisibility": "知道链接的任何人 → 可查看",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "拉取",
+    "remixHint": "选择以前的项目克隆出来开始新的剪辑。",
+    "remixRefresh": "刷新",
+    "remixEmpty": "还没有导入 — 上传第一个视频来开启可再创作的素材库。",
+    "tip": "提示",
+    "tipPaste": "在此页面按 ⌘V 即可粘贴剪贴板中的 URL。",
+    "tipReversible": "所有内容都会出现在素材库中,且可撤销。",
+    "uploading": "上传中 {percent}%",
+    "processing": "处理中…",
+    "errors": {
+      "noUrl": "请先粘贴一个 URL",
+      "notVideo": "请拖入视频文件 (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "剪贴板为空",
+      "clipboardNotUrl": "剪贴板中没有 URL",
+      "clipboardDenied": "剪贴板访问被拒绝 — 请手动粘贴",
+      "uploadFailed": "上传失败: {message}",
+      "ingestFailed": "导入失败: {message}",
+      "remixFailed": "再创作失败",
+      "noContentId": "服务器未返回 contentId",
+      "cameraDenied": "无法访问摄像头/麦克风"
+    }
+  },
+  "language": {
+    "label": "语言",
+    "picker": "选择语言"
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "管理你的账户偏好",
+    "language": "语言",
+    "saveSettings": "保存"
+  },
+  "video": {
+    "title": "视频",
+    "upload": "上传",
+    "edit": "编辑",
+    "processing": "处理中…"
+  }
+}

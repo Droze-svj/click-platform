@@ -132,7 +132,7 @@ export default function SovereignOversightTerminalPage() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
        <Fingerprint size={64} className="text-amber-500 animate-pulse mb-8" />
-       <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Oversight Protocols...</span>
+       <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Oversight Protocols...</span>
     </div>
   )
 
@@ -141,7 +141,7 @@ export default function SovereignOversightTerminalPage() {
        <div className={`${glassStyle} p-12 rounded-[3rem] border-rose-500/20 text-center max-w-xl`}>
           <ShieldAlert size={64} className="text-rose-500 mx-auto mb-8 animate-bounce" />
           <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Oversight Error</h2>
-          <p className="text-slate-800 text-[13px] font-black uppercase tracking-widest italic mb-10">{error || 'UNAUTHORIZED_ACCESS_DETECTED'}</p>
+          <p className="text-slate-400 text-[13px] font-black uppercase tracking-widest italic mb-10">{error || 'UNAUTHORIZED_ACCESS_DETECTED'}</p>
           <button onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">RETRY_SYNC</button>
        </div>
     </div>
@@ -176,13 +176,13 @@ export default function SovereignOversightTerminalPage() {
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Oversight</h1>
-                 <p className="text-slate-800 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Monitoring global node operatives, hive cluster health and lattice vitality.</p>
+                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Monitoring global node operatives, hive cluster health and lattice vitality.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-6">
               <button onClick={loadDashboard}
-                className="px-10 py-5 bg-white/[0.03] border border-white/10 text-slate-800 hover:text-white hover:bg-white/[0.05] font-black uppercase text-[11px] tracking-[0.4em] italic rounded-2xl transition-all flex items-center gap-4 group shadow-xl">
+                className="px-10 py-5 bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white hover:bg-white/[0.05] font-black uppercase text-[11px] tracking-[0.4em] italic rounded-2xl transition-all flex items-center gap-4 group shadow-xl">
                  <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700" /> REFRESH_LATTICE
               </button>
               <button title="Scan Matrix" className="p-5 bg-white text-black hover:bg-amber-500 hover:text-white transition-all rounded-2xl shadow-2xl group active:scale-90">
@@ -208,7 +208,7 @@ export default function SovereignOversightTerminalPage() {
                        <Scan size={24} className="text-amber-400" />
                        <h3 className="text-[14px] font-black text-white uppercase tracking-[0.5em] italic">Resonance Feed</h3>
                     </div>
-                    <button className="text-[10px] font-black text-slate-800 uppercase tracking-widest hover:text-white transition-colors italic">VIEW_ALL_LOGS</button>
+                    <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-white transition-colors italic">VIEW_ALL_LOGS</button>
                  </div>
                  
                  <div className="space-y-12 p-4">
@@ -223,11 +223,11 @@ export default function SovereignOversightTerminalPage() {
                                   </div>
                                   <div>
                                      <p className="text-[15px] font-black text-white uppercase italic tracking-widest leading-none mb-2">{user.first_name} {user.last_name}</p>
-                                     <p className="text-[11px] font-black text-slate-800 uppercase italic tracking-[0.2em] leading-none">{user.email}</p>
+                                     <p className="text-[11px] font-black text-slate-400 uppercase italic tracking-[0.2em] leading-none">{user.email}</p>
                                   </div>
                                </div>
                                <div className="text-right">
-                                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic opacity-40">{new Date(user.created_at).toLocaleTimeString()}</span>
+                                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{new Date(user.created_at).toLocaleTimeString()}</span>
                                   <p className="text-[9px] font-black text-indigo-500/60 uppercase tracking-tighter italic mt-1 font-mono">NODE_INIT_COMPLETED</p>
                                </div>
                             </div>
@@ -246,7 +246,7 @@ export default function SovereignOversightTerminalPage() {
                                   </div>
                                   <div className="truncate">
                                      <p className="text-[15px] font-black text-white uppercase italic tracking-widest leading-none mb-2 truncate">{post.title || 'NULL_TITLE'}</p>
-                                     <p className="text-[11px] font-black text-slate-800 uppercase italic tracking-[0.2em] leading-none">{post.users.email}</p>
+                                     <p className="text-[11px] font-black text-slate-400 uppercase italic tracking-[0.2em] leading-none">{post.users.email}</p>
                                   </div>
                                </div>
                                <div className="text-right">
@@ -255,7 +255,7 @@ export default function SovereignOversightTerminalPage() {
                                   }`}>
                                      {post.status.toUpperCase()}
                                   </span>
-                                  <p className="text-[9px] font-black text-slate-900 uppercase tracking-tighter italic mt-2 opacity-40">{new Date(post.created_at).toLocaleDateString()}</p>
+                                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-tighter italic mt-2 opacity-40">{new Date(post.created_at).toLocaleDateString()}</p>
                                </div>
                             </div>
                           ))}
@@ -279,7 +279,7 @@ export default function SovereignOversightTerminalPage() {
                     
                     <div className="pt-6 border-t border-white/5">
                        <div className="flex justify-between items-center mb-4 px-2">
-                          <label className="text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic">Cognitive Buffer</label>
+                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Cognitive Buffer</label>
                           <span className="text-[11px] font-mono text-indigo-400 font-bold">
                              {formatMemory(data.system_health.memory.heapUsed)}/ {formatMemory(data.system_health.memory.heapTotal)}
                           </span>
@@ -291,14 +291,14 @@ export default function SovereignOversightTerminalPage() {
                     </div>
 
                     <div className="flex justify-between items-center pt-8 border-t border-white/5 px-2">
-                       <label className="text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic">Total Uptime</label>
+                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Total Uptime</label>
                        <span className="text-[13px] font-black text-white italic tracking-widest">{formatUptime(data.system_health.uptime).toUpperCase()}</span>
                     </div>
                  </div>
               </div>
 
               <div className="space-y-6">
-                 <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.8em] italic pl-8">Quick Oversight Commands</h4>
+                 <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.8em] italic pl-8">Quick Oversight Commands</h4>
                  <div className="grid grid-cols-1 gap-6">
                     <CommandButton icon={Users} label="Manage_Node_Operatives" desc="View and calibrate operative permissions" color="text-indigo-400" onClick={() => router.push('/dashboard/admin/users')} />
                     <CommandButton icon={FileText} label="Moderate_Payloads" desc="Review and authorize content flows" color="text-emerald-400" onClick={() => router.push('/dashboard/admin/posts')} />
@@ -320,15 +320,15 @@ export default function SovereignOversightTerminalPage() {
 function VitalityCard({ icon: Icon, label, value, trend, color, bg, isHealthy = true }: { icon: any; label: string; value: string | number; trend: string; color: string; bg: string; isHealthy?: boolean }) {
   return (
     <motion.div whileHover={{ y: -10 }} className={`${glassStyle} p-12 rounded-[4rem] group hover:bg-white/[0.05] transition-all relative overflow-hidden flex flex-col items-center text-center`}>
-       <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-1000 -rotate-12 scale-150 pointer-events-none"><Icon size={120} /></div>
+       <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-300 -rotate-12 scale-150 pointer-events-none"><Icon size={120} /></div>
        <div className={`w-20 h-20 rounded-[2.5rem] ${bg} border border-white/5 flex items-center justify-center mb-8 shadow-2xl group-hover:rotate-12 transition-all`}>
           <Icon className={color} size={36} />
        </div>
-       <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] mb-4 italic leading-none">{label}</p>
+       <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] mb-4 italic leading-none">{label}</p>
        <h3 className="text-5xl font-black text-white italic tracking-tighter leading-none mb-6">{value}</h3>
        <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/40 border border-white/5">
           <div className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-          <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest italic">{trend}</span>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">{trend}</span>
        </div>
     </motion.div>
   )
@@ -356,9 +356,9 @@ function CommandButton({ icon: Icon, label, desc, color, onClick }: { icon: any;
        </div>
        <div className="flex-1">
           <p className="text-[15px] font-black text-white uppercase italic tracking-[0.4em] mb-2 leading-none group-hover:translate-x-2 transition-transform duration-700">{label}</p>
-          <p className="text-[10px] font-black text-slate-800 uppercase italic tracking-widest leading-none opacity-60">{desc}</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase italic tracking-widest leading-none opacity-60">{desc}</p>
        </div>
-       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-slate-900 group-hover:text-white group-hover:bg-white/10 transition-all">
+       <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 text-slate-500 group-hover:text-white group-hover:bg-white/10 transition-all">
           <ArrowUpRight size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
        </div>
     </button>

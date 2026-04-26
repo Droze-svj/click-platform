@@ -105,13 +105,13 @@ export default function SovereignPostDiagnosticHub() {
               <button 
                 onClick={() => router.push('/dashboard/analytics')}
                 title="BACK_TO_ANALYTICS_MATRIX"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl"
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl"
               >
                 <ArrowLeft size={32} />
               </button>
               <div className="w-20 h-20 bg-indigo-500/5 border border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Terminal size={40} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-1000" />
+                <Terminal size={40} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
               </div>
               <div className="max-w-2xl">
                  <div className="flex items-center gap-6 mb-3">
@@ -121,17 +121,17 @@ export default function SovereignPostDiagnosticHub() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Shield size={12} className="text-violet-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">{data.post.id?.slice(0, 8).toUpperCase() || 'EXTERNAL'}_NODE</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{data.post.id?.slice(0, 8).toUpperCase() || 'EXTERNAL'}_NODE</span>
                    </div>
                  </div>
                  <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-[0.9] mb-4 truncate max-w-4xl">{data.post.title || 'Untitled Node'}</h1>
-                 <p className="text-slate-800 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Detailed performance breakdown and heuristic optimization matrix.</p>
+                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Detailed performance breakdown and heuristic optimization matrix.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <div className="text-right">
-                 <div className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1 italic">Published_Cycle</div>
+                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Published_Cycle</div>
                  <div className="text-xl font-black text-white italic tracking-widest">{new Date(data.post.published_at || data.post.created_at || Date.now()).toLocaleDateString()}</div>
               </div>
               <div className={`w-20 h-20 rounded-[2.5rem] bg-gradient-to-br ${data.post.platform === 'tiktok' ? 'from-slate-800 to-black' : 'from-indigo-600 to-indigo-900'} flex items-center justify-center text-white text-4xl shadow-2xl font-black italic border border-white/10`}>
@@ -149,7 +149,7 @@ export default function SovereignPostDiagnosticHub() {
                     <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Activity size={40} className="text-indigo-400" /></div>
                     <div>
                        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Kinetic Path</h2>
-                       <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">Chronological engagement gravity mapped across the 30-day kinetic window.</p>
+                       <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Chronological engagement gravity mapped across the 30-day kinetic window.</p>
                     </div>
                  </div>
 
@@ -173,7 +173,7 @@ export default function SovereignPostDiagnosticHub() {
                                   return (
                                     <div className="bg-black/90 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl border-l-[12px] border-l-indigo-500">
                                       <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4 italic">{payload[0].payload.name}</p>
-                                      <div className="text-4xl font-black text-white italic tracking-tighter leading-none">{payload[0].value} <span className="text-[14px] text-slate-800 uppercase not-italic tracking-[0.4em] ml-2">Engagements</span></div>
+                                      <div className="text-4xl font-black text-white italic tracking-tighter leading-none">{payload[0].value} <span className="text-[14px] text-slate-400 uppercase not-italic tracking-[0.4em] ml-2">Engagements</span></div>
                                     </div>
                                   );
                                 }
@@ -213,16 +213,16 @@ export default function SovereignPostDiagnosticHub() {
                  <AnimatePresence mode="wait">
                     {data.insights ? (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 relative z-10 flex-1">
-                         <div className="bg-black/40 border border-white/5 rounded-[4rem] p-12 text-center shadow-inner group/score hover:border-emerald-500/40 transition-all duration-1000">
-                            <div className="text-[10rem] font-black italic tracking-tighter text-emerald-400 leading-none drop-shadow-2xl group-hover:scale-110 transition-transform duration-1000">
+                         <div className="bg-black/40 border border-white/5 rounded-[4rem] p-12 text-center shadow-inner group/score hover:border-emerald-500/40 transition-all duration-300">
+                            <div className="text-[10rem] font-black italic tracking-tighter text-emerald-400 leading-none drop-shadow-2xl group-hover:scale-110 transition-transform duration-300">
                                {data.insights.performance_score}
                             </div>
-                            <div className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic border-t border-white/5 pt-8 mt-4 leading-none">SIGNAL_INTEGRITY</div>
+                            <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic border-t border-white/5 pt-8 mt-4 leading-none">SIGNAL_INTEGRITY</div>
                          </div>
 
                          <div className="grid grid-cols-1 gap-12 pt-8">
                             <div className="space-y-4">
-                               <label className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic pl-6">OPTIMAL_MANIFEST_WINDOW</label>
+                               <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">OPTIMAL_MANIFEST_WINDOW</label>
                                <div className="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 text-white font-black italic tracking-widest text-2xl uppercase shadow-inner border-l-4 border-l-emerald-500">
                                   {data.insights.best_posting_time}
                                </div>
@@ -230,7 +230,7 @@ export default function SovereignPostDiagnosticHub() {
 
                             {data.insights.metadata?.signalGaps && (
                               <div className="space-y-6">
-                                <label className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic pl-6">SIGNAL_GAPS_DETECTED</label>
+                                <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">SIGNAL_GAPS_DETECTED</label>
                                 <div className="flex flex-wrap gap-3 pl-4">
                                   {data.insights.metadata.signalGaps.map((gap: string, i: number) => (
                                     <span key={i} className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-full text-[10px] font-black text-rose-400 uppercase tracking-widest italic">
@@ -242,7 +242,7 @@ export default function SovereignPostDiagnosticHub() {
                             )}
 
                             <div className="space-y-6">
-                               <label className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic pl-6">SUBSTRATE_SPECIFIC_ADVICE</label>
+                               <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">SUBSTRATE_SPECIFIC_ADVICE</label>
                                <div className="space-y-4">
                                   {data.insights.metadata?.platformAdvice ? Object.entries(data.insights.metadata.platformAdvice).map(([plat, advice], i) => (
                                     <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.01] border border-white/5 group/advice hover:bg-violet-500/5 transition-all">
@@ -254,11 +254,11 @@ export default function SovereignPostDiagnosticHub() {
                                        </p>
                                     </div>
                                   )) : (
-                                    <p className="text-[11px] text-slate-800 uppercase italic pl-6 tracking-widest">NO_SUBSTRATE_SIGNAL</p>
+                                    <p className="text-[11px] text-slate-400 uppercase italic pl-6 tracking-widest">NO_SUBSTRATE_SIGNAL</p>
                                   )}
                                </div>
                                                          <div className="space-y-6 pt-4">
-                                   <label className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic pl-6">GENERAL_OPTIMIZATIONS</label>
+                                   <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">GENERAL_OPTIMIZATIONS</label>
                                    <div className="space-y-5">
                                       {data.insights.content_improvements?.map((imp: string, i: number) => (
                                         <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: i * 0.1 }}
@@ -282,7 +282,7 @@ export default function SovereignPostDiagnosticHub() {
                          <Waves size={100} className="text-violet-500/20 animate-pulse" />
                          <div className="space-y-6">
                             <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter">GENERATE_HEURISTICS</h4>
-                            <p className="text-[13px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-relaxed max-w-xs">Initialize AI recursive logic to extract performance signals and optimization nodes.</p>
+                            <p className="text-[13px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed max-w-xs">Initialize AI recursive logic to extract performance signals and optimization nodes.</p>
                          </div>
                          <button onClick={() => router.push(`/dashboard/analytics/insights/${params.id}`)}
                            className="px-16 py-8 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3rem] hover:bg-violet-600 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6 group"
@@ -294,10 +294,10 @@ export default function SovereignPostDiagnosticHub() {
                  </AnimatePresence>
 
                  <div className="mt-auto pt-16 border-t border-white/5 flex items-center justify-between px-8 relative z-10">
-                    <div className="flex items-center gap-4 text-slate-800 italic text-[11px] font-black uppercase tracking-widest">
+                    <div className="flex items-center gap-4 text-slate-400 italic text-[11px] font-black uppercase tracking-widest">
                        <ActivitySquare size={16} /> DATA_PROTOCOL_SYMMETRIC
                     </div>
-                    <div className="text-slate-800 text-[11px] font-black uppercase tracking-widest italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
+                    <div className="text-slate-400 text-[11px] font-black uppercase tracking-widest italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
                        PHANTOM_STREAM_V9.2
                     </div>
                  </div>
@@ -308,21 +308,21 @@ export default function SovereignPostDiagnosticHub() {
                  <div className={`${premiumCard} p-10 flex items-center gap-8`}>
                     <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center"><Target size={32} className="text-indigo-400" /></div>
                     <div>
-                       <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest block mb-1">Potency Score</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Potency Score</span>
                        <div className="text-4xl font-black text-white italic tracking-tighter">{data.insights?.performance_score || 0}%</div>
                     </div>
                  </div>
                  <div className={`${premiumCard} p-10 flex items-center gap-8`}>
                     <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center"><TrendingUp size={32} className="text-emerald-400" /></div>
                     <div>
-                       <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest block mb-1">Predictive ROI</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Predictive ROI</span>
                        <div className="text-4xl font-black text-emerald-400 italic tracking-tighter">+{data.insights?.metadata?.predictiveROI || 85}%</div>
                     </div>
                  </div>
                  <div className={`${premiumCard} md:col-span-2 p-10 flex items-center gap-8 group`}>
                     <div className="w-16 h-16 rounded-[2rem] bg-violet-500/10 flex items-center justify-center shrink-0"><Cpu size={32} className="text-violet-400 group-hover:scale-110 transition-transform" /></div>
                     <div>
-                       <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest block mb-1">Strategic Intervention</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Strategic Intervention</span>
                        <div className="text-[14px] font-black text-white italic uppercase tracking-tight leading-tight opacity-90">
                           {data.insights?.metadata?.specificAdvice || "System analyzing kinetic resonance signatures for optimal intervention."}
                        </div>
@@ -345,7 +345,7 @@ function DiagnosticParam({ label, value, color }: { label: string; value: string
   return (
     <div className="bg-black/40 rounded-[2.5rem] p-6 border border-white/5 flex flex-col items-center justify-center group hover:bg-white/5 transition-all shadow-inner relative overflow-hidden">
        <div className={`text-4xl font-black italic uppercase ${color} tracking-tighter leading-none mb-3`}>{value}</div>
-       <div className="text-[9px] text-slate-800 font-black uppercase tracking-widest italic">{label}</div>
+       <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest italic">{label}</div>
     </div>
   )
 }

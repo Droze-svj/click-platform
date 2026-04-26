@@ -20,7 +20,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-3xl transition-all duration-1000'
+const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-3xl transition-all duration-300'
 
 interface ScheduledPost {
   _id: string
@@ -128,7 +128,7 @@ export default function ChronosLatticePage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
         <Timer size={64} className="text-indigo-500 animate-spin mb-8" />
-        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Chronos Lattice...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Chronos Lattice...</span>
      </div>
   )
 
@@ -149,12 +149,12 @@ export default function ChronosLatticePage() {
       <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
         <div className="flex items-center gap-10">
           <button onClick={() => router.push('/dashboard')} title="Abort"
-            className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
+            className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
             <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
           </button>
           <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-             <Calendar size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-1000 animate-pulse" />
+             <Calendar size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-6 mb-4">
@@ -167,19 +167,19 @@ export default function ChronosLatticePage() {
               </div>
             </div>
             <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-2xl">Chronos</h1>
-            <p className="text-slate-800 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Comprehensive chronological mapping of sovereign content trajectories and temporal clusters.</p>
+            <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Comprehensive chronological mapping of sovereign content trajectories and temporal clusters.</p>
           </div>
         </div>
 
         <div className="flex items-center gap-12">
             <button onClick={() => loadLattice(true)} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-               <RefreshCw size={32} className={`text-slate-900 group-hover:text-indigo-400 transition-colors duration-700 ${refreshing ? 'animate-spin' : ''}`} />
+               <RefreshCw size={32} className={`text-slate-500 group-hover:text-indigo-400 transition-colors duration-700 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
             <button 
               onClick={() => router.push('/dashboard/scheduler')}
-              className="px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] transition-all duration-1000 flex items-center gap-8 italic bg-white text-black hover:bg-indigo-600 hover:text-white hover:scale-110 active:scale-95 group relative overflow-hidden outline-none border-none">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[2s]" />
-              <Plus size={32} className="group-hover:rotate-90 transition-transform duration-1000" /> INITIALIZE_TRAJECTORY
+              className="px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] transition-all duration-300 flex items-center gap-8 italic bg-white text-black hover:bg-indigo-600 hover:text-white hover:scale-110 active:scale-95 group relative overflow-hidden outline-none border-none">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+              <Plus size={32} className="group-hover:rotate-90 transition-transform duration-300" /> INITIALIZE_TRAJECTORY
             </button>
         </div>
       </header>
@@ -197,12 +197,12 @@ export default function ChronosLatticePage() {
              initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, delay: i * 0.1 }}
              key={i} className={`${glassStyle} rounded-[4rem] p-12 relative overflow-hidden group bg-black/40 border-white/5 hover:bg-white/[0.04] shadow-inner flex flex-col items-center text-center`}
            >
-              <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.02] flex items-center justify-center border-2 border-white/10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000 mb-8 shadow-3xl">
+              <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.02] flex items-center justify-center border-2 border-white/10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 mb-8 shadow-3xl">
                  <s.icon size={36} className={s.color} />
               </div>
               <div className="space-y-4">
                  <p className={`text-5xl font-black italic tracking-tighter leading-none drop-shadow-2xl ${s.color}`}>{s.val}</p>
-                 <p className="text-[11px] font-black text-slate-900 uppercase tracking-[0.5em] italic leading-none">{s.label}</p>
+                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none">{s.label}</p>
               </div>
            </motion.div>
          ))}
@@ -211,7 +211,7 @@ export default function ChronosLatticePage() {
       {/* Main Lattice Interface */}
       <section className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 shadow-[0_100px_300px_rgba(0,0,0,1)] border-white/5 bg-black/40`}>
          <div className="p-16 border-b border-white/5 flex flex-col xl:flex-row items-center justify-between gap-16 bg-white/[0.02] relative overflow-hidden backdrop-blur-3xl">
-            <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-[3s]"><LayoutGrid size={800} className="text-white" /></div>
+            <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-700"><LayoutGrid size={800} className="text-white" /></div>
             
             <div className="flex items-center gap-16 relative z-10 w-full xl:w-auto">
                <div className="flex items-center gap-8 p-3 bg-black/60 rounded-[3rem] border-2 border-white/10 shadow-inner">
@@ -220,7 +220,7 @@ export default function ChronosLatticePage() {
                   <button onClick={() => navigateCycle(1)} className="w-16 h-16 rounded-[1.8rem] bg-white/5 border-2 border-white/10 text-white hover:text-indigo-400 transition-all duration-700 active:scale-75 flex items-center justify-center shadow-3xl"><ChevronRight size={36} /></button>
                </div>
                <div className="relative group">
-                  <div className="absolute inset-0 bg-indigo-500 blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-[2s]" />
+                  <div className="absolute inset-0 bg-indigo-500 blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-500" />
                   <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none px-6 drop-shadow-2xl">{view === 'month' ? `${MONTH_NAMES[currentDate.getMonth()]} ${currentDate.getFullYear()}` : view === 'week' ? 'CURRENT_WEEK_CYCLE' : 'NODE_RESIDENCE'}</h2>
                </div>
             </div>
@@ -230,7 +230,7 @@ export default function ChronosLatticePage() {
                  <button
                    key={v}
                    onClick={() => setView(v as any)}
-                   className={`px-14 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] transition-all duration-1000 italic active:scale-90 border-2 ${view === v ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'text-slate-800 border-transparent hover:text-white hover:bg-white/[0.04]'}`}
+                   className={`px-14 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.5em] transition-all duration-300 italic active:scale-90 border-2 ${view === v ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'text-slate-400 border-transparent hover:text-white hover:bg-white/[0.04]'}`}
                  >
                    {v === 'month' ? 'LATTICE_EPOCH' : v === 'week' ? 'SYNC_CYCLE' : 'CHRONOS_NODE'}
                  </button>
@@ -243,7 +243,7 @@ export default function ChronosLatticePage() {
               <div className="flex-1">
                  <div className="grid grid-cols-7 gap-6 mb-12 border-b-2 border-white/5 pb-8">
                     {DAY_SHORT.map(d => (
-                      <div key={d} className="text-center text-[12px] font-black text-slate-900 uppercase tracking-[1em] py-8 italic border-l border-white/5 last:border-r">{d}</div>
+                      <div key={d} className="text-center text-[12px] font-black text-slate-500 uppercase tracking-[1em] py-8 italic border-l border-white/5 last:border-r">{d}</div>
                     ))}
                  </div>
                  <div className="grid grid-cols-7 gap-8">
@@ -270,15 +270,15 @@ export default function ChronosLatticePage() {
                              onDragLeave={() => setDragOverDate(null)}
                              onDrop={e => handleDrop(e, date)}
                              whileHover={{ scale: 1.05, y: -15, zIndex: 100 }}
-                             className={`min-h-[220px] rounded-[4.5rem] p-10 border-2 transition-all duration-1000 relative group overflow-hidden shadow-3xl ${
+                             className={`min-h-[220px] rounded-[4.5rem] p-10 border-2 transition-all duration-300 relative group overflow-hidden shadow-3xl ${
                                isTarget ? 'border-indigo-400 bg-indigo-500/20 shadow-[0_0_100px_rgba(99,102,241,0.4)] z-50' :
                                isToday ? 'border-indigo-500/60 bg-indigo-500/10 shadow-[0_0_60px_rgba(99,102,241,0.2)]' :
                                'border-white/5 bg-white/[0.01] hover:border-white/20 hover:bg-white/[0.04]'
                              } ${isPast && !isToday ? 'opacity-30 grayscale' : ''}`}
                            >
-                              <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-transparent blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                              <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-transparent blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                               <div className="flex justify-between items-start mb-8 relative z-10">
-                                 <span className={`text-4xl font-black italic tabular-nums transition-all duration-1000 leading-none drop-shadow-2xl ${isToday ? 'text-indigo-400' : 'text-slate-900 group-hover:text-white'}`}>{date.getDate()}</span>
+                                 <span className={`text-4xl font-black italic tabular-nums transition-all duration-300 leading-none drop-shadow-2xl ${isToday ? 'text-indigo-400' : 'text-slate-500 group-hover:text-white'}`}>{date.getDate()}</span>
                                  {dp.length > 0 && (
                                    <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest italic animate-pulse shadow-3xl">LATTICE_{dp.length}</div>
                                  )}
@@ -300,7 +300,7 @@ export default function ChronosLatticePage() {
                                      </div>
                                    )
                                  })}
-                                 {dp.length > 3 && <p className="text-[11px] font-black text-slate-950 italic text-center uppercase tracking-[0.4em] opacity-40">+{dp.length - 3} OVERFLOW</p>}
+                                 {dp.length > 3 && <p className="text-[11px] font-black text-slate-500 italic text-center uppercase tracking-[0.4em] opacity-40">+{dp.length - 3} OVERFLOW</p>}
                               </div>
                            </motion.div>
                          )
@@ -320,20 +320,20 @@ export default function ChronosLatticePage() {
                        const dp = posts.filter(p => new Date(p.scheduledTime).toISOString().split('T')[0] === ds)
                        const isToday = date.toDateString() === new Date().toDateString()
                        return (
-                         <div key={i} className={`min-h-[700px] rounded-[5rem] p-12 border-2 transition-all duration-1000 shadow-3xl ${isToday ? 'border-indigo-500/60 bg-indigo-500/10 shadow-[0_40px_100px_rgba(99,102,241,0.2)]' : 'border-white/5 bg-white/[0.01]'}`}>
+                         <div key={i} className={`min-h-[700px] rounded-[5rem] p-12 border-2 transition-all duration-300 shadow-3xl ${isToday ? 'border-indigo-500/60 bg-indigo-500/10 shadow-[0_40px_100px_rgba(99,102,241,0.2)]' : 'border-white/5 bg-white/[0.01]'}`}>
                             <div className="text-center mb-16 border-b-2 border-white/5 pb-10 relative overflow-hidden group">
-                               <div className="absolute inset-0 bg-indigo-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-1000" />
-                               <p className="text-[14px] font-black text-slate-950 uppercase tracking-[0.8em] mb-4 italic transition-colors leading-none relative z-10">{DAY_SHORT[date.getDay()]}</p>
-                               <p className={`text-6xl font-black italic tabular-nums relative z-10 drop-shadow-2xl transition-colors duration-1000 ${isToday ? 'text-indigo-400' : 'text-white'}`}>{date.getDate()}</p>
+                               <div className="absolute inset-0 bg-indigo-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                               <p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] mb-4 italic transition-colors leading-none relative z-10">{DAY_SHORT[date.getDay()]}</p>
+                               <p className={`text-6xl font-black italic tabular-nums relative z-10 drop-shadow-2xl transition-colors duration-300 ${isToday ? 'text-indigo-400' : 'text-white'}`}>{date.getDate()}</p>
                             </div>
                             <div className="space-y-6">
                                {dp.map(p => {
                                  const cfg = PC[p.platform] || { label: p.platform, gradient: 'from-slate-600 to-black', icon: '?' }
                                  return (
-                                   <motion.div whileHover={{ y: -15, scale: 1.02 }} key={p._id} onClick={() => setSelectedPost(p)} className={`p-8 rounded-[3rem] bg-gradient-to-br ${cfg.gradient} text-white cursor-pointer shadow-3xl transition-all duration-1000 border-2 border-white/10 group/w relative overflow-hidden`}>
-                                      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/w:opacity-100 transition-opacity duration-1000" />
+                                   <motion.div whileHover={{ y: -15, scale: 1.02 }} key={p._id} onClick={() => setSelectedPost(p)} className={`p-8 rounded-[3rem] bg-gradient-to-br ${cfg.gradient} text-white cursor-pointer shadow-3xl transition-all duration-300 border-2 border-white/10 group/w relative overflow-hidden`}>
+                                      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/w:opacity-100 transition-opacity duration-300" />
                                       <div className="flex items-center gap-6 mb-6">
-                                         <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner group-hover/w:rotate-12 transition-transform duration-1000">
+                                         <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner group-hover/w:rotate-12 transition-transform duration-300">
                                             <span className="text-3xl">{cfg.icon}</span>
                                          </div>
                                          <span className="text-[11px] font-black uppercase tracking-[0.5em] italic opacity-60 group-hover:opacity-100 transition-opacity">{cfg.label}</span>
@@ -364,7 +364,7 @@ export default function ChronosLatticePage() {
                        <div className="w-24 h-24 bg-indigo-500/10 rounded-[2.5rem] border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl animate-pulse"><Timer size={48} className="text-indigo-400" /></div>
                        <div>
                           <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Terminal Residency: {currentDate.toLocaleDateString().toUpperCase()}</h3>
-                          <p className="text-[13px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Temporal core scan of scheduled particle diffractions.</p>
+                          <p className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Temporal core scan of scheduled particle diffractions.</p>
                        </div>
                     </div>
                     <div className="flex flex-col items-end gap-5">
@@ -378,30 +378,30 @@ export default function ChronosLatticePage() {
                       const cfg = PC[p.platform] || { label: p.platform, gradient: 'from-slate-600 to-black', icon: '?' }
                       const scc = SC[p.status] || SC.draft
                       return (
-                        <motion.div whileHover={{ x: 30, scale: 1.02 }} key={p._id} onClick={() => setSelectedPost(p)} className="p-14 rounded-[5rem] bg-[#050505] border-2 border-white/5 hover:border-indigo-500/40 transition-all duration-1000 flex items-center gap-16 group cursor-pointer relative overflow-hidden backdrop-blur-3xl shadow-[0_60px_150px_rgba(0,0,0,0.8)]">
-                           <div className="absolute top-0 left-0 w-3 h-full bg-indigo-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
-                           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                        <motion.div whileHover={{ x: 30, scale: 1.02 }} key={p._id} onClick={() => setSelectedPost(p)} className="p-14 rounded-[5rem] bg-[#050505] border-2 border-white/5 hover:border-indigo-500/40 transition-all duration-300 flex items-center gap-16 group cursor-pointer relative overflow-hidden backdrop-blur-3xl shadow-[0_60px_150px_rgba(0,0,0,0.8)]">
+                           <div className="absolute top-0 left-0 w-3 h-full bg-indigo-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
+                           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                            
                            <div className="w-32 text-center flex-shrink-0 border-r-2 border-white/5 pr-16 relative z-10">
                               <p className="text-[28px] font-black text-white italic tabular-nums leading-none drop-shadow-2xl">{new Date(p.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                              <p className="text-[10px] font-black text-slate-950 uppercase tracking-[0.4em] mt-3 italic leading-none opacity-40">UTC_SYNC</p>
+                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-3 italic leading-none opacity-40">UTC_SYNC</p>
                            </div>
                            
-                           <div className={`w-24 h-24 rounded-[2.5rem] bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white text-5xl shadow-3xl group-hover:rotate-12 transition-transform duration-1000 border-2 border-white/20 relative z-10 flex-shrink-0`}>{cfg.icon}</div>
+                           <div className={`w-24 h-24 rounded-[2.5rem] bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white text-5xl shadow-3xl group-hover:rotate-12 transition-transform duration-300 border-2 border-white/20 relative z-10 flex-shrink-0`}>{cfg.icon}</div>
                            
                            <div className="flex-1 min-w-0 relative z-10">
-                              <h4 className="text-3xl font-black text-white uppercase italic truncate mb-6 group-hover:text-indigo-400 transition-colors duration-1000 drop-shadow-2xl">{p.content.text?.toUpperCase() || 'NULL_PAYLOAD'}</h4>
+                              <h4 className="text-3xl font-black text-white uppercase italic truncate mb-6 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{p.content.text?.toUpperCase() || 'NULL_PAYLOAD'}</h4>
                               <div className="flex items-center gap-8">
-                                 <div className={`px-6 py-2.5 rounded-2xl text-[12px] font-black uppercase tracking-[0.4em] border-2 shadow-inner transition-all duration-1000 italic ${scc.bg} ${scc.text}`}>
+                                 <div className={`px-6 py-2.5 rounded-2xl text-[12px] font-black uppercase tracking-[0.4em] border-2 shadow-inner transition-all duration-300 italic ${scc.bg} ${scc.text}`}>
                                    {scc.label}
                                  </div>
                                  <div className="px-6 py-2.5 rounded-2xl bg-white/[0.03] border-2 border-white/5">
-                                   <span className="text-[11px] font-black text-slate-800 uppercase tracking-[0.6em] italic">{cfg.label} NODE ARCHEADYNE</span>
+                                   <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.6em] italic">{cfg.label} NODE ARCHEADYNE</span>
                                  </div>
                               </div>
                            </div>
                            
-                           <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-all duration-1000 translate-x-20 group-hover:translate-x-0 pr-6">
+                           <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-20 group-hover:translate-x-0 pr-6">
                               <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-3xl active:scale-75 transition-all">
                                 <ArrowRight size={40} className="group-hover:translate-x-2 transition-transform duration-700" />
                               </div>
@@ -410,7 +410,7 @@ export default function ChronosLatticePage() {
                       )
                     })}
                     {posts.filter(p => new Date(p.scheduledTime).toDateString() === currentDate.toDateString()).length === 0 && (
-                      <div className="py-64 text-center border-[6px] border-dashed border-white/[0.02] rounded-[7rem] opacity-[0.05] group hover:opacity-[0.1] transition-opacity duration-1000">
+                      <div className="py-64 text-center border-[6px] border-dashed border-white/[0.02] rounded-[7rem] opacity-[0.05] group hover:opacity-[0.1] transition-opacity duration-300">
                          <Radio size={160} className="text-white mx-auto mb-16 animate-pulse" />
                          <p className="text-5xl font-black text-white uppercase tracking-[1em] italic drop-shadow-2xl">NULL_TEMPORAL_ACTIVITY</p>
                       </div>
@@ -423,18 +423,18 @@ export default function ChronosLatticePage() {
 
       {/* Pulse Flux Ledger Visualizer */}
       <section className={`${glassStyle} rounded-[6rem] p-24 bg-black/60 shadow-[0_100px_300px_rgba(0,0,0,1)] border-white/5 relative overflow-hidden group`}>
-         <div className="absolute inset-0 bg-indigo-500/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-[3s] pointer-events-none" />
+         <div className="absolute inset-0 bg-indigo-500/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
          <div className="flex flex-col lg:flex-row items-center justify-between mb-20 gap-12 px-10 pt-4 relative z-10">
             <div className="flex items-center gap-10">
-               <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl group-hover:rotate-[30deg] transition-transform duration-1000 backdrop-blur-3xl"><Activity size={40} className="text-indigo-400 animate-pulse" /></div>
+               <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl group-hover:rotate-[30deg] transition-transform duration-300 backdrop-blur-3xl"><Activity size={40} className="text-indigo-400 animate-pulse" /></div>
                <div>
                  <h3 className="text-4xl font-black text-white uppercase tracking-tighter italic leading-none mb-4 drop-shadow-2xl">Synchronous Flux Ledger</h3>
-                 <p className="text-[13px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Real-time meta-data visualization of historical trajectory clusters.</p>
+                 <p className="text-[13px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Real-time meta-data visualization of historical trajectory clusters.</p>
                </div>
             </div>
             <div className="flex items-center gap-10">
                <div className="px-10 py-4 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner backdrop-blur-3xl">
-                  <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.6em] italic leading-none">LATTICE_HEURISTICS_SCANNING_v18</span>
+                  <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">LATTICE_HEURISTICS_SCANNING_v18</span>
                </div>
                <div className="w-3 h-3 rounded-full bg-indigo-500 animate-ping shadow-[0_0_20px_rgba(99,102,241,0.8)]" />
             </div>
@@ -461,7 +461,7 @@ export default function ChronosLatticePage() {
                })}
             </div>
          </div>
-         <div className="flex justify-between items-center px-14 text-[11px] font-black text-slate-900 tracking-[0.8em] italic border-t-2 border-white/5 pt-12 relative z-10 bg-black/40 -mx-24 px-36 -mb-4 pb-12 rounded-b-[6rem]">
+         <div className="flex justify-between items-center px-14 text-[11px] font-black text-slate-500 tracking-[0.8em] italic border-t-2 border-white/5 pt-12 relative z-10 bg-black/40 -mx-24 px-36 -mb-4 pb-12 rounded-b-[6rem]">
             <span className="opacity-40">TEMPORAL_WAVE_OFFSET: 0x882_ALPHA</span>
             <div className="flex items-center gap-12">
                <span className="opacity-30">SCANNING_EPOCH_90D</span>
@@ -491,43 +491,43 @@ export default function ChronosLatticePage() {
                    <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none -translate-y-1/2 translate-x-1/2 scale-150 group-hover:rotate-12 transition-transform duration-[5s]"><Boxes size={800} className="text-white" /></div>
                    
                    <div className="flex items-center gap-16 mb-24 relative z-10 border-b-2 border-white/5 pb-16">
-                      <div className={`w-32 h-32 rounded-[3.5rem] bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white text-6xl shadow-3xl border-4 border-white/20 group-hover:rotate-[30deg] transition-transform duration-1000`}>{cfg.icon}</div>
+                      <div className={`w-32 h-32 rounded-[3.5rem] bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white text-6xl shadow-3xl border-4 border-white/20 group-hover:rotate-[30deg] transition-transform duration-300`}>{cfg.icon}</div>
                       <div>
                          <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Trajectory Parameters</h2>
                          <div className="flex items-center gap-6">
                             <div className={`px-8 py-2 rounded-2xl ${scc.bg} ${scc.text} border-2 border-white/5 text-[12px] font-black uppercase tracking-[0.5em] italic shadow-2xl shadow-black/80`}>{scc.label}</div>
                             <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping shadow-[0_0_20px_rgba(99,102,241,0.5)]" />
-                            <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">{cfg.label} NODE RESIDENCE</p>
+                            <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">{cfg.label} NODE RESIDENCE</p>
                          </div>
                       </div>
-                      <button onClick={() => setSelectedPost(null)} className="ml-auto w-24 h-24 rounded-[3rem] bg-white/[0.03] border-4 border-white/10 flex items-center justify-center text-slate-900 hover:text-white hover:bg-rose-600 hover:border-rose-400 transition-all duration-700 hover:scale-110 active:scale-75 shadow-3xl group/close">
-                         <X size={48} className="group-hover/close:rotate-180 transition-transform duration-1000" />
+                      <button onClick={() => setSelectedPost(null)} className="ml-auto w-24 h-24 rounded-[3rem] bg-white/[0.03] border-4 border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:bg-rose-600 hover:border-rose-400 transition-all duration-700 hover:scale-110 active:scale-75 shadow-3xl group/close">
+                         <X size={48} className="group-hover/close:rotate-180 transition-transform duration-300" />
                       </button>
                    </div>
 
                    <div className="space-y-20 relative z-10">
-                      <div className="p-16 rounded-[5rem] bg-black/60 border-4 border-white/5 shadow-inner group hover:border-indigo-500/30 transition-all duration-1000 relative overflow-hidden">
-                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                         <p className="text-[13px] font-black text-slate-900 uppercase tracking-[0.8em] mb-10 italic leading-none ml-6 border-l-2 border-white/5 pl-8">PAYLOAD_BUFFER_LOGIC</p>
-                         <p className="text-4xl font-black italic text-white leading-relaxed uppercase tracking-tighter group-hover:text-indigo-400 transition-colors duration-1000 drop-shadow-2xl">{selectedPost.content.text || 'NULL_PAYLOAD_DETECTED'}</p>
+                      <div className="p-16 rounded-[5rem] bg-black/60 border-4 border-white/5 shadow-inner group hover:border-indigo-500/30 transition-all duration-300 relative overflow-hidden">
+                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                         <p className="text-[13px] font-black text-slate-500 uppercase tracking-[0.8em] mb-10 italic leading-none ml-6 border-l-2 border-white/5 pl-8">PAYLOAD_BUFFER_LOGIC</p>
+                         <p className="text-4xl font-black italic text-white leading-relaxed uppercase tracking-tighter group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{selectedPost.content.text || 'NULL_PAYLOAD_DETECTED'}</p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-20 px-16">
                          <div className="space-y-8 border-l-8 border-indigo-500/20 pl-12 group/param">
-                            <p className="text-[13px] font-black text-slate-900 uppercase tracking-[0.8em] italic leading-none group-hover/param:text-indigo-400 transition-colors duration-700">SYNCHRONIZED_NODAL_TIME</p>
-                            <p className="text-6xl font-black text-white italic tabular-nums group-hover/param:scale-105 transition-transform duration-1000 origin-left drop-shadow-2xl">{new Date(selectedPost.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            <p className="text-[13px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none group-hover/param:text-indigo-400 transition-colors duration-700">SYNCHRONIZED_NODAL_TIME</p>
+                            <p className="text-6xl font-black text-white italic tabular-nums group-hover/param:scale-105 transition-transform duration-300 origin-left drop-shadow-2xl">{new Date(selectedPost.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                          </div>
                          <div className="space-y-8 border-l-8 border-indigo-500/20 pl-12 group/param">
-                            <p className="text-[13px] font-black text-slate-900 uppercase tracking-[0.8em] italic leading-none group-hover/param:text-indigo-400 transition-colors duration-700">TEMPORAL_EPOCH_REFERENCE</p>
-                            <p className="text-6xl font-black text-white italic tabular-nums group-hover/param:scale-105 transition-transform duration-1000 origin-left drop-shadow-2xl">{new Date(selectedPost.scheduledTime).toLocaleDateString().toUpperCase()}</p>
+                            <p className="text-[13px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none group-hover/param:text-indigo-400 transition-colors duration-700">TEMPORAL_EPOCH_REFERENCE</p>
+                            <p className="text-6xl font-black text-white italic tabular-nums group-hover/param:scale-105 transition-transform duration-300 origin-left drop-shadow-2xl">{new Date(selectedPost.scheduledTime).toLocaleDateString().toUpperCase()}</p>
                          </div>
                       </div>
 
                       <div className="flex items-center justify-between gap-16 pt-20 border-t-2 border-white/5">
-                         <button onClick={() => handlePurge(selectedPost._id)} className="px-16 py-8 text-[15px] font-black text-rose-500/30 hover:text-rose-600 uppercase tracking-[1em] italic transition-all duration-1000 hover:scale-110 active:scale-75 group/purge flex items-center gap-6">
+                         <button onClick={() => handlePurge(selectedPost._id)} className="px-16 py-8 text-[15px] font-black text-rose-500/30 hover:text-rose-600 uppercase tracking-[1em] italic transition-all duration-300 hover:scale-110 active:scale-75 group/purge flex items-center gap-6">
                             <Trash2 size={24} className="group-hover/purge:rotate-12 transition-transform" /> TERMINATE_PARTICLE
                          </button>
-                         <button onClick={() => setSelectedPost(null)} className="px-28 py-10 bg-white text-black rounded-[4rem] text-[20px] font-black uppercase tracking-[0.8em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:bg-indigo-600 hover:text-white transition-all duration-1000 italic active:scale-95 group/seal relative overflow-hidden border-none outline-none">
+                         <button onClick={() => setSelectedPost(null)} className="px-28 py-10 bg-white text-black rounded-[4rem] text-[20px] font-black uppercase tracking-[0.8em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:bg-indigo-600 hover:text-white transition-all duration-300 italic active:scale-95 group/seal relative overflow-hidden border-none outline-none">
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/seal:translate-x-full transition-transform duration-[1.5s]" />
                             SEAL_NODE_RESIDENCE
                          </button>

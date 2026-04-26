@@ -171,7 +171,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                )
             })}
 
-           {/* Neural Lattice Overlay */}
+           {/* Network Overlay */}
            <div className="absolute inset-0 opacity-10 pointer-events-none">
              <div className="w-full h-full bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:40px_40px]" />
            </div>

@@ -203,7 +203,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
               <Sparkles className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">CHROMA MATRIX</h2>
+              <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">Chroma Key</h2>
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Premium Graded Presets</span>
             </div>
           </div>
@@ -252,7 +252,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
             <Activity className="w-6 h-6 text-fuchsia-400" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">SYNTHESIS</h2>
+            <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">GENERATE</h2>
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Linear Neural Adjustments</span>
           </div>
         </div>
@@ -320,7 +320,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
             <CircleDot className="w-6 h-6 text-amber-400" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">PRIMARY WHEELS</h2>
+            <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">Color Wheels</h2>
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block">Surgical Chromatic Balance</span>
           </div>
         </div>

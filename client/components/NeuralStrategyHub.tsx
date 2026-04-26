@@ -333,7 +333,7 @@ export default function NeuralStrategyHub() {
                 <PacingHeatmap segments={prediction.pacingHeatmap} />
  
                 <div className="p-10 rounded-[2.5rem] bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-10 pointer-events-none" />
                   <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center animate-pulse border border-amber-500/30 flex-shrink-0 relative z-10">
                     <Zap className="w-10 h-10 text-amber-400" />
                   </div>

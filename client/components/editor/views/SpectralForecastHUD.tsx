@@ -37,7 +37,7 @@ interface SpectralAnalysis {
   }
   spectralAnalysis: {
     sentimentDrift: number
-    elasticityState: 'CRITICAL_MARKDOWN' | 'GROWTH_RESONANCE' | 'STABLE_NOISE'
+    elasticityState: 'CRITICAL' | 'GROWTH' | 'STABLE'
     marketAlignment: string
   }
 }
@@ -66,8 +66,8 @@ export const SpectralForecastHUD: React.FC = () => {
 
     const getStatusColor = (state: string) => {
         switch (state) {
-            case 'CRITICAL_MARKDOWN': return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-            case 'GROWTH_RESONANCE': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+            case 'CRITICAL': return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+            case 'GROWTH': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
             default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20'
         }
     }
@@ -81,7 +81,7 @@ export const SpectralForecastHUD: React.FC = () => {
                         <BarChart3 className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Spectral Revenue HUD</h4>
+                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Revenue Forecast</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-blue-500/70">Neural Value Forecasting & Yield Steering</span>
                     </div>
                 </div>
@@ -89,7 +89,7 @@ export const SpectralForecastHUD: React.FC = () => {
                 <div className="flex items-center gap-4">
                     {data?.spectralAnalysis && (
                         <div className={`px-6 py-3 rounded-2xl flex items-center gap-3 border font-black text-[10px] uppercase tracking-widest italic transition-all ${getStatusColor(data.spectralAnalysis.elasticityState)}`}>
-                            {data.spectralAnalysis.elasticityState === 'CRITICAL_MARKDOWN' ? <Activity className="w-3 h-3 animate-pulse" /> : <Zap className="w-3 h-3" />}
+                            {data.spectralAnalysis.elasticityState === 'CRITICAL' ? <Activity className="w-3 h-3 animate-pulse" /> : <Zap className="w-3 h-3" />}
                             State: {data.spectralAnalysis.elasticityState.replace(/_/g, ' ')}
                         </div>
                     )}
@@ -114,7 +114,7 @@ export const SpectralForecastHUD: React.FC = () => {
                         <h3 className="text-4xl font-black text-white italic tracking-tighter leading-none uppercase">
                             ${data?.totals.revenue.toLocaleString() ?? '0'}
                         </h3>
-                        <span className="text-[10px] font-black text-emerald-400 uppercase italic pb-1">Spectral</span>
+                        <span className="text-[10px] font-black text-emerald-400 uppercase italic pb-1">Forecast</span>
                     </div>
                 </div>
 
@@ -163,11 +163,11 @@ export const SpectralForecastHUD: React.FC = () => {
             {/* Main Charts Mock (Phase 21 visualization) */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 
-                {/* Spectral Projection Chart */}
+                {/* Projection Chart */}
                 <div className={`${glassStyle} xl:col-span-2 rounded-[2.5rem] p-10 space-y-8 h-[450px] relative overflow-hidden group`}>
                     <div className="flex items-center justify-between relative z-10">
                         <div>
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Spectral Projection</h5>
+                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Projection</h5>
                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 block italic">7-Day Value Velocity</span>
                         </div>
                         <div className="flex items-center gap-6">
@@ -214,7 +214,7 @@ export const SpectralForecastHUD: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Spectral Indicators */}
+                {/* Indicators */}
                 <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 flex flex-col`}>
                     <div className="flex items-center justify-between">
                          <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Growth Signals</h5>
@@ -224,7 +224,7 @@ export const SpectralForecastHUD: React.FC = () => {
                     <div className="space-y-6 flex-1">
                          <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
                              <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sentiment Resonance</span>
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sentiment</span>
                                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Optimized</span>
                              </div>
                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">

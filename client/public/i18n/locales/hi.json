@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "मिटाएँ",
+    "edit": "संपादित करें",
+    "create": "बनाएँ",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "loading": "लोड हो रहा है…",
+    "error": "त्रुटि",
+    "success": "सफल",
+    "close": "बंद करें",
+    "back": "वापस",
+    "next": "आगे",
+    "retry": "पुनः प्रयास",
+    "more": "और",
+    "menu": "मेनू",
+    "logout": "लॉगआउट",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "redirecting": "साइन इन पर ले जा रहे हैं…",
+    "dismiss": "अनदेखा करें"
+  },
+  "nav": {
+    "dashboard": "डैशबोर्ड",
+    "videos": "वीडियो",
+    "content": "कंटेंट",
+    "aiFeatures": "AI सुविधाएँ",
+    "library": "लाइब्रेरी",
+    "scripts": "स्क्रिप्ट",
+    "workflows": "वर्कफ़्लो",
+    "tasks": "कार्य",
+    "projects": "प्रोजेक्ट",
+    "jobs": "नौकरियाँ",
+    "teams": "टीम",
+    "approvals": "स्वीकृतियाँ",
+    "quotes": "उद्धरण",
+    "scheduler": "शेड्यूलर",
+    "calendar": "कैलेंडर",
+    "social": "सोशल",
+    "analytics": "एनालिटिक्स",
+    "achievements": "उपलब्धियाँ",
+    "membership": "मेम्बरशिप",
+    "notifications": "सूचनाएँ",
+    "settings": "सेटिंग्स",
+    "templates": "टेम्पलेट",
+    "infrastructure": "इन्फ्रास्ट्रक्चर",
+    "clickTagline": "AI आधारित कंटेंट"
+  },
+  "workflow": {
+    "niche": "निच",
+    "setNiche": "निच चुनें",
+    "next": "आगे",
+    "stages": {
+      "ingest":   { "label": "इनजेस्ट",  "description": "फ़ुटेज लाएँ — अपलोड, लिंक या लाइव रिकॉर्डिंग।" },
+      "script":   { "label": "स्क्रिप्ट", "description": "AI आपके निच के अनुसार हुक, बॉडी और CTA लिखता है।" },
+      "edit":     { "label": "एडिट",     "description": "स्टाइल इंटेलिजेंस के साथ कट, कैप्शन और ब्रांडिंग।" },
+      "schedule": { "label": "शेड्यूल",  "description": "हर प्लेटफ़ॉर्म पर सबसे अच्छे समय पर पोस्ट करें।" },
+      "analyze":  { "label": "विश्लेषण",  "description": "प्रदर्शन मापें और जानें क्या दोहराना है।" }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "अपलोड",
+      "link": "लिंक चिपकाएँ",
+      "record": "रिकॉर्ड",
+      "cloud": "क्लाउड",
+      "remix": "रीमिक्स"
+    },
+    "paste": "पेस्ट",
+    "dropTitle": "वीडियो यहाँ छोड़ें",
+    "dropHint": "या फ़ाइल चुनें। MP4, MOV, WebM, अधिकतम 500MB।",
+    "chooseFile": "फ़ाइल चुनें",
+    "linkLabel": "वीडियो URL",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 या https://cdn/clip.mp4",
+    "linkAction": "इनजेस्ट",
+    "linkSupports": "समर्थन: {platforms}. प्लेटफ़ॉर्म डाउनलोड के लिए सर्वर पर {ytdlp} ज़रूरी है।",
+    "recordStart": "रिकॉर्डिंग शुरू करें",
+    "recordStop": "रोकें और अपलोड करें",
+    "recordHint": "कैमरा + माइक — WebM में सहेजकर लाइब्रेरी में अपलोड किया जाता है।",
+    "cloudHint": "Google Drive, Dropbox या S3 का शेयर लिंक चिपकाएँ। डाउनलोड सर्वर पर होता है, इसलिए शेयर {visibility} पर सेट होना चाहिए।",
+    "cloudVisibility": "लिंक वाले सभी → देख सकते हैं",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "खींचें",
+    "remixHint": "नया एडिट शुरू करने के लिए पिछला प्रोजेक्ट चुनें।",
+    "remixRefresh": "रिफ़्रेश",
+    "remixEmpty": "अभी कोई इनजेस्ट नहीं — पहली वीडियो अपलोड करके रीमिक्स लाइब्रेरी शुरू करें।",
+    "tip": "टिप",
+    "tipPaste": "इस पेज पर ⌘V दबाकर क्लिपबोर्ड URL पेस्ट करें।",
+    "tipReversible": "सब कुछ आपकी लाइब्रेरी में दिखता है और रिवर्सिबल है।",
+    "uploading": "अपलोड हो रहा है {percent}%",
+    "processing": "प्रोसेसिंग…",
+    "errors": {
+      "noUrl": "पहले URL पेस्ट करें",
+      "notVideo": "वीडियो फ़ाइल छोड़ें (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "क्लिपबोर्ड खाली है",
+      "clipboardNotUrl": "क्लिपबोर्ड में कोई URL नहीं है",
+      "clipboardDenied": "क्लिपबोर्ड एक्सेस अस्वीकृत — मैन्युअली पेस्ट करें",
+      "uploadFailed": "अपलोड विफल: {message}",
+      "ingestFailed": "इनजेस्ट विफल: {message}",
+      "remixFailed": "रीमिक्स विफल",
+      "noContentId": "सर्वर ने contentId नहीं भेजी",
+      "cameraDenied": "कैमरा/माइक तक पहुँच नहीं हो सकी"
+    }
+  },
+  "language": {
+    "label": "भाषा",
+    "picker": "भाषा चुनें"
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "subtitle": "अपने अकाउंट की प्राथमिकताएँ प्रबंधित करें",
+    "language": "भाषा",
+    "saveSettings": "सहेजें"
+  },
+  "video": {
+    "title": "वीडियो",
+    "upload": "अपलोड",
+    "edit": "एडिट",
+    "processing": "प्रोसेसिंग…"
+  }
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
 import { ArrowLeft, Edit3, Save, X, Download, FileText, Code, Clock, Hash, Key, Layout, Layers, RefreshCw } from 'lucide-react'
@@ -45,30 +45,29 @@ export default function ScriptDetailPage() {
   const [editedScript, setEditedScript] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/login')
-      return
-    }
-    loadScript()
-  }, [user, router, params.id])
-
-  const loadScript = async () => {
+  const loadScript = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/scripts/${params.id}`, {
       })
       if (response.data.success) {
         setScript(response.data.data)
         setEditedScript(response.data.data.script)
       }
-    } catch (error: any) {
+    } catch {
       showToast('Failed to load script', 'error')
       router.push('/dashboard/scripts')
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id, router, showToast])
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    loadScript()
+  }, [user, router, loadScript])
 
   const handleSave = async () => {
     if (!script) return
@@ -141,13 +140,13 @@ export default function ScriptDetailPage() {
            <X size={80} className="text-rose-500/40" />
         </div>
         <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-6">NARRATIVE_NODE_ABSENT</h2>
-        <p className="text-slate-1000 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested logic cluster does not exist in the current lattice.</p>
+        <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested logic cluster does not exist in the current lattice.</p>
         <button onClick={() => router.push('/dashboard/scripts')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">ABORT_TO_MATRIX</button>
       </div>
     )
   }
 
-  const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-1000'
+  const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-300'
 
   return (
     <div className="min-h-screen bg-[#020205] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
@@ -162,7 +161,7 @@ export default function ScriptDetailPage() {
             <button
               onClick={() => router.push('/dashboard/scripts')}
               title="Abort to Matrix"
-              className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-1000 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl"
+              className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl"
             >
               <ArrowLeft size={32} />
             </button>
@@ -172,10 +171,10 @@ export default function ScriptDetailPage() {
                      <Layers size={16} className="text-indigo-400" />
                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Narrative Node v8.9</span>
                   </div>
-                  <div className="px-4 py-1.5 rounded-full bg-black/40 border border-white/5 text-[9px] font-black text-slate-1000 tracking-widest uppercase italic leading-none">{script.type.toUpperCase()}_PROTOCOL</div>
+                  <div className="px-4 py-1.5 rounded-full bg-black/40 border border-white/5 text-[9px] font-black text-slate-500 tracking-widest uppercase italic leading-none">{script.type.toUpperCase()}_PROTOCOL</div>
                </div>
                <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">{script.title.toUpperCase()}</h1>
-               <div className="flex items-center gap-10 text-[12px] font-black text-slate-1000 uppercase tracking-[0.4em] italic leading-none opacity-60">
+               <div className="flex items-center gap-10 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none opacity-60">
                  <span className="flex items-center gap-3"><FileText size={16} className="text-indigo-400" /> {script.wordCount} PARTICLES</span>
                  {script.duration && <span className="flex items-center gap-3"><Clock size={16} className="text-indigo-400" /> {script.duration} MIN_SYNC</span>}
                </div>
@@ -196,7 +195,7 @@ export default function ScriptDetailPage() {
                   <button
                     onClick={() => handleExport('txt')}
                     title="Export as RAW_TXT"
-                    className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-1000 hover:text-white transition-all hover:border-indigo-500/50"
+                    className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:border-indigo-500/50"
                   >
                     <Download size={24} />
                   </button>
@@ -240,7 +239,7 @@ export default function ScriptDetailPage() {
             <textarea
               value={editedScript}
               onChange={(e) => setEditedScript(e.target.value)}
-              className="w-full h-[600px] bg-black/60 border-2 border-white/5 rounded-[4rem] p-16 text-xl font-black text-slate-300 italic uppercase focus:border-indigo-500/50 transition-all shadow-inner leading-relaxed custom-scrollbar placeholder:text-slate-950"
+              className="w-full h-[600px] bg-black/60 border-2 border-white/5 rounded-[4rem] p-16 text-xl font-black text-slate-300 italic uppercase focus:border-indigo-500/50 transition-all shadow-inner leading-relaxed custom-scrollbar placeholder:text-slate-600"
               placeholder="Edit your narrative logic cluster..."
               aria-label="Edit Script"
             />
@@ -267,7 +266,7 @@ export default function ScriptDetailPage() {
                       <div key={index} className="p-12 rounded-[3.5rem] bg-white/[0.02] border-2 border-white/10 hover:border-indigo-500/30 transition-all duration-700 shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
                            <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.5em] italic leading-none">0{index + 1}_{point.title.replace(/\s+/g, '_').toUpperCase()}</h4>
-                           {point.duration && <span className="text-[10px] font-black text-slate-1000 uppercase tracking-widest italic opacity-40">{point.duration} MIN_SEGMENT</span>}
+                           {point.duration && <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{point.duration} MIN_SEGMENT</span>}
                         </div>
                         <p className="text-[18px] font-black text-white uppercase tracking-widest leading-relaxed italic">{point.content}</p>
                       </div>
@@ -296,7 +295,7 @@ export default function ScriptDetailPage() {
                       {script.metadata.timestamps.map((ts, index) => (
                         <div key={index} className="flex gap-6 items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5 group/ts transition-all duration-700 hover:bg-white/[0.05]">
                           <span className="font-mono font-black text-indigo-400 text-[14px] shadow-inner">{ts.time}</span>
-                          <span className="text-[11px] font-black text-slate-1000 uppercase tracking-widest italic group-ts:text-white transition-colors">{ts.section}</span>
+                          <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic group-ts:text-white transition-colors">{ts.section}</span>
                         </div>
                       ))}
                     </div>

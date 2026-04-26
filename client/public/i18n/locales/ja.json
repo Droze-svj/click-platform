@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "create": "作成",
+    "search": "検索",
+    "filter": "フィルター",
+    "loading": "読み込み中…",
+    "error": "エラー",
+    "success": "完了",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "retry": "再試行",
+    "more": "もっと見る",
+    "menu": "メニュー",
+    "logout": "ログアウト",
+    "yes": "はい",
+    "no": "いいえ",
+    "redirecting": "サインインへ移動中…",
+    "dismiss": "閉じる"
+  },
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "videos": "動画",
+    "content": "コンテンツ",
+    "aiFeatures": "AI機能",
+    "library": "ライブラリ",
+    "scripts": "台本",
+    "workflows": "ワークフロー",
+    "tasks": "タスク",
+    "projects": "プロジェクト",
+    "jobs": "ジョブ",
+    "teams": "チーム",
+    "approvals": "承認",
+    "quotes": "引用",
+    "scheduler": "スケジューラ",
+    "calendar": "カレンダー",
+    "social": "ソーシャル",
+    "analytics": "分析",
+    "achievements": "実績",
+    "membership": "メンバーシップ",
+    "notifications": "通知",
+    "settings": "設定",
+    "templates": "テンプレート",
+    "infrastructure": "インフラ",
+    "clickTagline": "AIで作るコンテンツ"
+  },
+  "workflow": {
+    "niche": "ニッチ",
+    "setNiche": "ニッチを選択",
+    "next": "次へ",
+    "stages": {
+      "ingest":   { "label": "取り込み",   "description": "素材を取り込みます — ファイル、リンク、ライブ録画。" },
+      "script":   { "label": "台本",       "description": "AIがニッチに合わせてフック・本編・CTAを作成します。" },
+      "edit":     { "label": "編集",       "description": "カット、字幕、ブランディングをスタイル分析で。" },
+      "schedule": { "label": "スケジュール", "description": "各プラットフォームで最適な時間に投稿します。" },
+      "analyze":  { "label": "分析",       "description": "成果を測定し、繰り返すべき要素を学習します。" }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "アップロード",
+      "link": "リンク貼付",
+      "record": "録画",
+      "cloud": "クラウド",
+      "remix": "リミックス"
+    },
+    "paste": "貼り付け",
+    "dropTitle": "ここに動画をドロップ",
+    "dropHint": "またはファイルを選択。MP4、MOV、WebM、500MBまで。",
+    "chooseFile": "ファイルを選ぶ",
+    "linkLabel": "動画URL",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 または https://cdn/clip.mp4",
+    "linkAction": "取り込み",
+    "linkSupports": "対応：{platforms}。プラットフォーム経由のダウンロードはサーバーに{ytdlp}が必要です。",
+    "recordStart": "録画開始",
+    "recordStop": "停止してアップロード",
+    "recordHint": "カメラ＋マイク — WebMで保存し、ライブラリにアップロードします。",
+    "cloudHint": "Google Drive、Dropbox、S3の共有リンクを貼ってください。サーバー側でダウンロードするため、{visibility}に設定が必要です。",
+    "cloudVisibility": "リンクを知っている全員 → 閲覧可能",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "取得",
+    "remixHint": "以前のプロジェクトを選んで複製し、新しい編集を始めます。",
+    "remixRefresh": "更新",
+    "remixEmpty": "まだ取り込みがありません — 最初の動画をアップロードしてリミックス可能なライブラリを作りましょう。",
+    "tip": "ヒント",
+    "tipPaste": "このページで⌘Vを押すと、クリップボードのURLを貼り付けられます。",
+    "tipReversible": "すべてはアセットライブラリに表示され、いつでも戻せます。",
+    "uploading": "アップロード中 {percent}%",
+    "processing": "処理中…",
+    "errors": {
+      "noUrl": "先にURLを貼ってください",
+      "notVideo": "動画ファイル(.mp4 / .mov / .webm)をドロップしてください",
+      "clipboardEmpty": "クリップボードが空です",
+      "clipboardNotUrl": "クリップボードにURLがありません",
+      "clipboardDenied": "クリップボードへのアクセスが拒否されました — 手動で貼り付けてください",
+      "uploadFailed": "アップロード失敗：{message}",
+      "ingestFailed": "取り込み失敗：{message}",
+      "remixFailed": "リミックスに失敗しました",
+      "noContentId": "サーバーがcontentIdを返しませんでした",
+      "cameraDenied": "カメラ／マイクにアクセスできません"
+    }
+  },
+  "language": {
+    "label": "言語",
+    "picker": "言語を選択"
+  },
+  "settings": {
+    "title": "設定",
+    "subtitle": "アカウント設定を管理します",
+    "language": "言語",
+    "saveSettings": "保存"
+  },
+  "video": {
+    "title": "動画",
+    "upload": "アップロード",
+    "edit": "編集",
+    "processing": "処理中…"
+  }
+}

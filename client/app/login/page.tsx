@@ -20,24 +20,15 @@ export default function Login() {
 
   // Check if user is already authenticated and redirect if so
   useEffect(() => {
-    const checkAuth = () => {
+    if (process.env.NODE_ENV === 'development') {
       const token = localStorage.getItem('token')
       if (token && token.startsWith('dev-jwt-token-')) {
-        // User has a dev token, redirect to dashboard
-        console.log('🔧 [Login] Dev token found, redirecting to dashboard')
-        router.push('/dashboard')
-        return
+        console.log('🔧 [Login] Found old dev token, allowing manual login')
       }
-
-      // In development mode, set dev credentials for easy login
-      if (process.env.NODE_ENV === 'development') {
-        setEmail('admin@example.com')
-        setPassword('admin123')
-      }
+      setEmail('admin@example.com')
+      setPassword('admin123')
     }
-
-    checkAuth()
-  }, [router])
+  }, [])
   const __loginDebugPanelRenderedRef = useRef(false)
   const __stateRef = useRef<{ emailLen: number; passwordLen: number; loading: boolean }>({
     emailLen: 0,

@@ -91,15 +91,23 @@ router.post('/factory/save', async (req, res) => {
  * Retrieves the last 10 manifest manifests from the Neural Archive.
  */
 router.get('/factory/history', async (req, res) => {
+  // Dev users have a non-ObjectId userId (e.g. 'dev-user-123') which would throw
+  // Mongoose CastError on Script.find. Short-circuit to an empty list.
+  const userId = req.user._id || req.user.id;
+  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
+  if (isDevUser) {
+    return res.json({ success: true, data: [] });
+  }
   try {
-    const history = await Script.find({ userId: req.user.id })
+    const history = await Script.find({ userId })
       .sort({ createdAt: -1 })
       .limit(10);
-      
+
     res.json({ success: true, data: history });
   } catch (error) {
-    logger.error('Forge Factory history error', { error: error.message, userId: req.user.id });
-    res.status(500).json({ success: false, error: 'Failed to retrieve archive.' });
+    logger.error('Forge Factory history error', { error: error.message, userId });
+    // Degrade rather than 500 — empty history is the right UX when DB throws.
+    res.json({ success: true, data: [], degraded: true });
   }
 });
 

@@ -322,9 +322,35 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
  * Get dashboard overview with key metrics
  */
 router.get('/dashboard', auth, asyncHandler(async (req, res) => {
+  // Dev users + stacks without Supabase configured: return a safe empty payload
+  // shaped for both the legacy nested consumers and the new flat dashboard reads.
+  const userId = req.user._id || req.user.id;
+  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
+  const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  if (isDevUser || !supabaseConfigured) {
+    return res.json({
+      success: true,
+      totalPosts: 0,
+      publishedPosts: 0,
+      totalViews: 0,
+      totalEngagement: 0,
+      overview: {
+        total_posts: 0,
+        published_posts: 0,
+        total_views: 0,
+        total_engagement: 0,
+        avg_engagement_rate: 0,
+      },
+      platform_distribution: {},
+      recent_posts: [],
+      top_performing_posts: [],
+      isEmpty: true,
+    });
+  }
+
   try {
     const supabase = getSupabaseClient();
-    const userId = req.user.id;
 
     // Get aggregated stats
     const { data: statsData } = await supabase
@@ -460,6 +486,10 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
 
     res.json({
       success: true,
+      totalPosts: totalPosts || 0,
+      publishedPosts: publishedPosts || 0,
+      totalViews: totalViews,
+      totalEngagement: totalEngagement,
       overview: {
         total_posts: totalPosts || 0,
         published_posts: publishedPosts || 0,
@@ -473,8 +503,22 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    
-    res.status(500).json({ success: false, error: 'Server error' });
+    logger.error('analytics/dashboard failed', { error: error?.message, userId });
+    // Degrade to an empty payload rather than 500 — keeps the dashboard alive even when
+    // Supabase tables are missing or rate-limited.
+    res.json({
+      success: true,
+      totalPosts: 0,
+      publishedPosts: 0,
+      totalViews: 0,
+      totalEngagement: 0,
+      overview: { total_posts: 0, published_posts: 0, total_views: 0, total_engagement: 0, avg_engagement_rate: 0 },
+      platform_distribution: {},
+      recent_posts: [],
+      top_performing_posts: [],
+      isEmpty: true,
+      degraded: true,
+    });
   }
 }));
 

@@ -101,7 +101,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
   const broadcastS2SPulse = async (tactic: string) => {
     try {
       await apiPost('/phase10_12/intelligence/pulse', { tactic, confidence: 0.95 })
-      showToast('Swarm Knowledge Pulse Propagated', 'success')
+      showToast('Knowledge sync propagated', 'success')
       fetchPulse()
     } catch (err) {
       showToast('Pulse Broadcast Failed', 'error')
@@ -151,7 +151,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
-        {/* Left Column: Swarm Intelligence */}
+        {/* Left Column: Network Insights */}
         <div className="xl:col-span-1 space-y-6">
             <div className={`${glassStyle} rounded-[3rem] p-8 space-y-8`}>
                 <div className="flex items-center gap-6">
@@ -159,7 +159,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                         <BrainCircuit className="w-6 h-6 text-indigo-400" />
                     </div>
                     <div>
-                        <h4 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Swarm Signals</h4>
+                        <h4 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Network Signals</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Expert Viral Pulse</span>
                     </div>
                 </div>
@@ -348,7 +348,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
 
       </div>
 
-      {/* Swarm Consensus Marquee (Background element) */}
+      {/* Marquee (Background element) */}
       <div className="fixed bottom-0 left-0 right-0 h-10 bg-indigo-600/10 backdrop-blur-3xl border-t border-indigo-500/20 flex items-center overflow-hidden z-[100]">
           <div className="flex gap-20 animate-marquee whitespace-nowrap px-10">
               {[1,2,3,4].map(i => (

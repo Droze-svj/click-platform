@@ -2,6 +2,7 @@
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const { buildSystemPrompt } = require('./marketingKnowledge');
 
 /**
  * Generate YouTube video script with Strategic Upgrades (Phase 11)
@@ -24,14 +25,24 @@ async function generateYouTubeScript(topic, options = {}) {
   } = options;
 
   try {
-    const prompt = `Create a ${duration}-minute YouTube video script about "${topic}".
+    const system = buildSystemPrompt({
+      persona: 'script-writer',
+      niche: targetAudience,
+      platform: options.platform || 'youtube',
+      stage: 'script',
+      language: options.language || 'en',
+    });
+    const prompt = `${system}
+
+── Task ──
+Create a ${duration}-minute YouTube video script about "${topic}".
 
     Current Trend Strategy: ${strategy.mold} (${strategy.explanation})
 
     Requirements:
     - Target audience: ${targetAudience}
     - Tone: ${tone}
-    - Include 3 distinct "3-Second Hooks" (Visual/Audio combinations)
+    - Include 3 distinct "3-Second Hooks" (Visual/Audio combinations) — each MUST come from a different framework in the playbook above (curiosity-gap / pattern-break / before-after / etc.).
     - Provide an "Engagement Score" (1-100) for each hook based on current trends.
     - Break the script into segments with word counts for pacing analysis.
     - Word count: approximately ${duration * 150} words.
@@ -179,7 +190,14 @@ Requirements:
 - Include a call-to-action
 - Format as JSON with: title, content, hashtags, callToAction`;
 
-    const fullPrompt = `You are an expert social media content creator.\n\n${prompt}`;
+    const system = buildSystemPrompt({
+      persona: 'script-writer',
+      niche: options.targetAudience || 'other',
+      platform,
+      stage: 'script',
+      language: options.language || 'en',
+    });
+    const fullPrompt = `${system}\n\n── Task ──\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 500 });
     const script = JSON.parse(content);
 

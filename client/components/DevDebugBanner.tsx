@@ -319,7 +319,10 @@ export default function DevDebugBanner() {
     } catch {
       setPingStatus('fail')
     }
-  }, [marker]) // Only depend on marker, not all the changing state
+    // Adding the runtime stats here would clear and recreate the 30s interval
+    // every time any counter ticks — defeats the purpose of a heartbeat ping.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marker])
 
 
   // Only show in local dev contexts - DISABLED for cleaner UI

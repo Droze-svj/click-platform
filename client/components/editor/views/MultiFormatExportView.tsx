@@ -73,7 +73,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
 
   const handleStartBatch = async () => {
     if (selectedFormats.length === 0) {
-      toast.error('Neural Logic Error: No formats selected for synthesis')
+      toast.error('Logic Error: No formats selected for synthesis')
       return
     }
 
@@ -86,7 +86,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
       })
 
       setExportResults(response.data.data.results)
-      toast.success('Batch Synthesis Initialized in the Neural Lattice')
+      toast.success('Batch export started')
       
       // Simulate/poll progress for each job (simplified for UX demo)
       selectedFormats.forEach(formatId => {

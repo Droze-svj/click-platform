@@ -52,6 +52,7 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
     case 'video':
       scriptData = await generateYouTubeScript(topic, {
         ...options,
+        language: options.language || req.language || 'en',
         targetAudience: options.targetAudience || req.user.niche || 'general audience'
       });
       break;
@@ -64,6 +65,8 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
     case 'social-media':
       scriptData = await generateSocialMediaScript(topic, {
         ...options,
+        language: options.language || req.language || 'en',
+        targetAudience: options.targetAudience || req.user.niche || 'general audience',
         platform: options.platform || 'instagram'
       });
       break;

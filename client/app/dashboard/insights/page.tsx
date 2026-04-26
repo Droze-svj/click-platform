@@ -110,7 +110,7 @@ export default function CognitiveForecasterPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
         <Brain size={64} className="text-cyan-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Decoding Cognitive Waveforms...</span>
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Decoding Cognitive Waveforms...</span>
      </div>
   );
 
@@ -126,12 +126,12 @@ export default function CognitiveForecasterPage() {
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={32} />
               </button>
               <div className="w-24 h-24 bg-cyan-500/5 border border-cyan-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-transparent opacity-100" />
-                <Cpu size={44} className="text-cyan-400 relative z-10 group-hover:scale-125 transition-transform duration-1000" />
+                <Cpu size={44} className="text-cyan-400 relative z-10 group-hover:scale-125 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -141,11 +141,11 @@ export default function CognitiveForecasterPage() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <ActivitySquare size={12} className="text-cyan-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">PREDICTION_SYNCED</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">PREDICTION_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Forecaster</h1>
-                 <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-layer receptor analysis and synthetic heuristic projections.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Forecaster</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-layer receptor analysis and synthetic heuristic projections.</p>
               </div>
            </div>
 
@@ -154,7 +154,7 @@ export default function CognitiveForecasterPage() {
                 {[7, 30, 90].map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
                     className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-700 ${
-                      period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-800 hover:text-white'
+                      period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {p}_CYCLES
@@ -164,7 +164,7 @@ export default function CognitiveForecasterPage() {
               <button onClick={handleSynchronizeCognitive} disabled={syncing}
                 className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] hover:bg-cyan-500 hover:text-white transition-all shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-6 group"
               >
-                <RefreshCw size={28} className={syncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000'} />
+                <RefreshCw size={28} className={syncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} />
                 {syncing ? 'DECRYPTING...' : 'SYNC_COG_INTEL'}
               </button>
            </div>
@@ -180,7 +180,7 @@ export default function CognitiveForecasterPage() {
                      <div className="w-16 h-16 bg-rose-500/20 rounded-3xl flex items-center justify-center border border-rose-500/30"><AlertCircle className="text-rose-400" size={32} /></div>
                      <p className="text-2xl font-black text-rose-400 uppercase tracking-tighter italic leading-none">{error}</p>
                   </div>
-                  <button onClick={() => setError(null)} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-800 hover:text-white transition-all"><X size={24} /></button>
+                  <button onClick={() => setError(null)} className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all"><X size={24} /></button>
                </div>
             </motion.div>
           )}
@@ -188,15 +188,15 @@ export default function CognitiveForecasterPage() {
 
         {/* Global Connection Status */}
         <div className={`${glassStyle} rounded-[6rem] p-16 relative z-10 group overflow-hidden border-cyan-500/10 hover:border-cyan-500/30 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)]`}>
-          <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-1000"><Boxes size={400} /></div>
+          <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300"><Boxes size={400} /></div>
           <div className="flex flex-col xl:flex-row items-center justify-between gap-12 relative z-10">
             <div className="flex items-center gap-12">
-              <div className="w-24 h-24 bg-cyan-600/5 border border-cyan-500/10 rounded-[3rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-1000">
+              <div className="w-24 h-24 bg-cyan-600/5 border border-cyan-500/10 rounded-[3rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300">
                 <Link2 className="w-12 h-12 text-cyan-400" />
               </div>
               <div>
                 <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Receptor Uplinks</h3>
-                <p className="text-[14px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">
+                <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">
                   {connectedCount > 0
                     ? `${connectedCount} ACTIVE_SUBSTRATE_UPLINKS_DETECTED`
                     : 'INITIATE_UPLINK_TO_ACTIVATE_COGNITIVE_SURVEILLANCE'}
@@ -233,7 +233,7 @@ export default function CognitiveForecasterPage() {
                 <div className="space-y-16">
                   {audienceInsights?.insights?.overview?.platformDistribution && (
                     <div className="space-y-12">
-                      <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none pl-6 border-l-2 border-indigo-500/40">Density Distribution Matrix</p>
+                      <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none pl-6 border-l-2 border-indigo-500/40">Density Distribution Matrix</p>
                       <div className="grid grid-cols-1 gap-6">
                         {Object.entries(audienceInsights.insights.overview.platformDistribution).map(([p, count], idx) => (
                           <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.1 }}
@@ -252,7 +252,7 @@ export default function CognitiveForecasterPage() {
                     </div>
                   )}
                   {platformAudience?.bestPostingTime && (
-                    <div className="flex items-center gap-12 p-12 bg-cyan-500/5 border border-cyan-500/10 rounded-[4.5rem] shadow-2xl group/opt transition-all duration-1000 hover:bg-cyan-500/10 relative overflow-hidden">
+                    <div className="flex items-center gap-12 p-12 bg-cyan-500/5 border border-cyan-500/10 rounded-[4.5rem] shadow-2xl group/opt transition-all duration-300 hover:bg-cyan-500/10 relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none group-hover/opt:opacity-[0.1] transition-opacity"><Monitor size={200} /></div>
                       <div className="w-24 h-24 bg-cyan-600/10 border border-cyan-500/20 text-cyan-400 rounded-[2.5rem] flex items-center justify-center shadow-2xl group-hover/opt:rotate-12 transition-transform duration-700"><Calendar size={48} /></div>
                       <div className="relative z-10">
@@ -263,7 +263,7 @@ export default function CognitiveForecasterPage() {
                   )}
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center opacity-[0.02] gap-16 group-hover:opacity-10 transition-opacity duration-1000">
+                <div className="flex-1 flex flex-col items-center justify-center text-center opacity-[0.02] gap-16 group-hover:opacity-10 transition-opacity duration-300">
                   <PieChart size={180} className="text-white animate-pulse" />
                   <p className="text-5xl font-black text-white uppercase tracking-tighter italic leading-none max-w-lg">NULL_RECEPTOR_SIGNAL</p>
                 </div>
@@ -298,11 +298,11 @@ export default function CognitiveForecasterPage() {
                   ))}
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center opacity-[0.02] gap-16 group-hover:opacity-10 transition-opacity duration-1000">
+                <div className="h-full flex flex-col items-center justify-center text-center opacity-[0.02] gap-16 group-hover:opacity-10 transition-opacity duration-300">
                   <Shield size={180} className="text-white animate-pulse" />
                   <div className="space-y-8">
                      <p className="text-5xl font-black text-white uppercase tracking-tighter italic leading-none">SYNTHESIS_BUFFERED</p>
-                     <p className="text-2xl font-black text-slate-800 uppercase tracking-widest italic leading-none max-w-md mx-auto">Initialize operational frequency to generate logic.</p>
+                     <p className="text-2xl font-black text-slate-400 uppercase tracking-widest italic leading-none max-w-md mx-auto">Initialize operational frequency to generate logic.</p>
                   </div>
                 </div>
               )}
@@ -321,12 +321,12 @@ export default function CognitiveForecasterPage() {
               onClick={() => router.push(a.href)}
               className={`${glassStyle} p-16 rounded-[6rem] text-center flex flex-col items-center gap-10 border-white/5 hover:border-white/20 shadow-2xl group`}
             >
-              <div className="w-24 h-24 bg-white/[0.02] border border-white/10 rounded-[3rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-all duration-1000">
+              <div className="w-24 h-24 bg-white/[0.02] border border-white/10 rounded-[3rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-all duration-300">
                 <a.icon size={44} className={a.color} />
               </div>
               <div>
                 <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">{a.label}</h4>
-                <p className="text-[14px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-relaxed px-12">{a.desc}</p>
+                <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed px-12">{a.desc}</p>
               </div>
               <div className="mt-8 flex items-center gap-6 text-[12px] font-black text-teal-400 uppercase tracking-[0.6em] italic group-hover:gap-12 transition-all duration-700 shadow-teal-500/20">
                  INITIATE_SESSION <ArrowRight size={28} />
@@ -354,13 +354,13 @@ function HeuristicStatCard({ icon: Icon, label, value, format, color }: { icon: 
     <motion.div whileHover={{ y: -15, backgroundColor: 'rgba(255,255,255,0.06)' }}
        className={`${glassStyle} rounded-[5.5rem] p-16 flex flex-col items-center text-center group border-white/5 relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)]`}
     >
-      <div className="absolute top-0 right-0 p-12 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 pointer-events-none"><Monitor size={150} /></div>
-      <div className={`w-24 h-24 rounded-[3.5rem] bg-white/[0.02] border border-white/10 flex items-center justify-center mb-12 shadow-2xl group-hover:rotate-12 group-hover:scale-110 transition-all duration-1000`}>
+      <div className="absolute top-0 right-0 p-12 opacity-0 group-hover:opacity-10 transition-opacity duration-300 pointer-events-none"><Monitor size={150} /></div>
+      <div className={`w-24 h-24 rounded-[3.5rem] bg-white/[0.02] border border-white/10 flex items-center justify-center mb-12 shadow-2xl group-hover:rotate-12 group-hover:scale-110 transition-all duration-300`}>
         <Icon size={44} className={color} />
       </div>
       <div className={`text-6xl font-black italic tabular-nums leading-none tracking-tighter mb-6 text-white group-hover:text-cyan-400 transition-colors duration-700 drop-shadow-2xl`}>{display.toUpperCase()}</div>
-      <div className="text-[14px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">{label}</div>
-      <div className="text-[10px] text-slate-950 font-black uppercase tracking-widest mt-8 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-cyan-400 transition-colors">HEURISTIC_SIGNAL</div>
+      <div className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{label}</div>
+      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-8 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-cyan-400 transition-colors">HEURISTIC_SIGNAL</div>
     </motion.div>
   )
 }

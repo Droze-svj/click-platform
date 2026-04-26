@@ -302,7 +302,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
             <Activity className="w-4 h-4 animate-pulse" />
             Semantic Synthesis
           </div>
-          <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">NEURAL<br />MASTER SCRIPT</h2>
+          <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">AI<br />MASTER SCRIPT</h2>
         </div>
         <div className="p-4 bg-white/[0.03] border border-white/10 rounded-[2rem] shadow-3xl">
           <Cpu className="w-10 h-10 text-blue-400" />

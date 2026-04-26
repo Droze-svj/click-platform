@@ -589,6 +589,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const { addRequestId } = require('./middleware/requestId');
 app.use(addRequestId);
 
+// Language detection — exposes req.language + req.languageLabel for AI prompts
+app.use(require('./middleware/language'));
+
 // Dev mode flag – available to all routes (auth also sets it for authenticated requests)
 const { allowDevMode } = require('./utils/devUser');
 app.use((req, res, next) => {
@@ -1572,13 +1575,19 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/analytics', require('./routes/analytics/advanced-features'));
 
 app.use('/api/niche', require('./routes/niche'));
+app.use('/api/intelligence', require('./routes/intelligence'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/upload/progress', require('./routes/upload/progress'));
+app.use('/api/ingest', require('./routes/ingest'));
+app.use('/api/marketing-knowledge', require('./routes/marketingKnowledge'));
+app.use('/api/style-profile', require('./routes/userStyleProfile'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/export', require('./routes/export'));
 app.use('/api/batch', require('./routes/batch'));
 app.use('/api/templates', require('./routes/templates'));
 app.use('/api/music', require('./routes/music'));
+app.use('/api/music', require('./routes/music-user-uploads'));
+app.use('/api/competitive', require('./routes/competitive-benchmark'));
 app.use('/api/video/effects', require('./routes/video/effects'));
 app.use('/api/video/enhance', require('./routes/video/enhance'));
 app.use('/api/admin', require('./routes/admin'));
@@ -1685,6 +1694,7 @@ app.use('/api/video/transcription', require('./routes/video/transcription'));
 app.use('/api/video/thumbnails', require('./routes/video/thumbnails'));
 app.use('/api/video/chapters', require('./routes/video/chapters'));
 app.use('/api/video/optimization', require('./routes/video/optimization'));
+app.use('/api/video/neural', require('./routes/video/neural'));
 app.use('/api/debug', require('./routes/debug'));
 app.use('/api/ai/multi-model', require('./routes/ai/multi-model'));
 app.use('/api/ai/recommendations', require('./routes/ai/recommendations'));

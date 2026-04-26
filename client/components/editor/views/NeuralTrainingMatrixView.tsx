@@ -193,7 +193,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
         <div className="mt-8 p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-4">
            <div className="flex items-center gap-2 text-indigo-400">
               <Zap className="w-4 h-4" />
-              <span className="text-[9px] font-black uppercase tracking-widest italic">Heuristic Engine Status</span>
+              <span className="text-[9px] font-black uppercase tracking-widest italic">AI Engine Status</span>
            </div>
            <div className="flex justify-between items-end">
               <div className="space-y-1">

@@ -51,12 +51,12 @@ function ResonanceProtocolAudit() {
 
   return (
     <div className={`${glassStyle} rounded-[6rem] p-20 relative overflow-hidden mt-32 group border-indigo-500/10 shadow-[0_60px_150px_rgba(0,0,0,0.8)] bg-black/40`}>
-      <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none group-hover:rotate-12 transition-transform duration-1000"><Shield size={400} className="text-white" /></div>
+      <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none group-hover:rotate-12 transition-transform duration-300"><Shield size={400} className="text-white" /></div>
       <div className="flex items-center gap-10 mb-16 relative z-10">
         <div className="w-24 h-24 bg-indigo-500/5 rounded-[3rem] flex items-center justify-center border border-indigo-500/20 shadow-2xl"><Fingerprint className="text-indigo-400" size={48} /></div>
         <div>
            <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Protocol Audit</h2>
-           <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">Autonomous node decryption and presence verification active.</p>
+           <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Autonomous node decryption and presence verification active.</p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10">
@@ -64,7 +64,7 @@ function ResonanceProtocolAudit() {
           <div key={key} className="flex items-center justify-between p-12 bg-black/60 border border-white/5 rounded-[4rem] group/node hover:bg-white/[0.04] transition-all hover:border-indigo-500/30 shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]">
             <div className="flex flex-col gap-3">
                <span className="text-2xl font-black text-white uppercase tracking-tighter italic group-hover/node:text-indigo-400 transition-colors leading-none">{label}</span>
-               <span className="text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none">{desc}</span>
+               <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{desc}</span>
             </div>
             <div className="flex items-center gap-6">
               {audit === null ? (
@@ -206,12 +206,12 @@ function ResonanceHubContent() {
       >
         <div className="flex items-center justify-between mb-16">
           <div className="flex items-center gap-10">
-            <div className={`w-24 h-24 rounded-[3rem] bg-gradient-to-br ${gradients} flex items-center justify-center text-white shadow-2xl group-hover:rotate-12 transition-all duration-1000 border border-white/20`}>
+            <div className={`w-24 h-24 rounded-[3rem] bg-gradient-to-br ${gradients} flex items-center justify-center text-white shadow-2xl group-hover:rotate-12 transition-all duration-300 border border-white/20`}>
               <Icon size={48} />
             </div>
             <div>
               <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{meta.label}</h3>
-              <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">{meta.desc}</p>
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">{meta.desc}</p>
             </div>
           </div>
           {account ? (
@@ -219,7 +219,7 @@ function ResonanceHubContent() {
                 <CheckCircle size={40} />
              </div>
           ) : (
-             <div className="w-20 h-20 rounded-[2.5rem] bg-black/60 border border-white/5 flex items-center justify-center text-slate-950 group-hover:text-indigo-500 transition-all duration-1000 shadow-inner">
+             <div className="w-20 h-20 rounded-[2.5rem] bg-black/60 border border-white/5 flex items-center justify-center text-slate-500 group-hover:text-indigo-500 transition-all duration-300 shadow-inner">
                 <Radio size={40} className="animate-pulse" />
              </div>
           )}
@@ -230,13 +230,13 @@ function ResonanceHubContent() {
              <div className="p-12 rounded-[4rem] bg-black/60 border border-white/5 flex items-center gap-10 group/item hover:bg-black/80 transition-all shadow-[inset_0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover/item:opacity-10 transition-opacity rotate-12"><CircuitBoard size={150} /></div>
                 {account.avatar ? (
-                  <img src={account.avatar} alt={account.display_name} className="w-24 h-24 rounded-[3rem] border-4 border-white/10 shadow-2xl grayscale group-hover/item:grayscale-0 transition-all duration-1000" />
+                  <img src={account.avatar} alt={account.display_name} className="w-24 h-24 rounded-[3rem] border-4 border-white/10 shadow-2xl grayscale group-hover/item:grayscale-0 transition-all duration-300" />
                 ) : (
-                  <div className="w-24 h-24 rounded-[3rem] bg-white/5 border border-white/10 flex items-center justify-center"><Users size={40} className="text-slate-900" /></div>
+                  <div className="w-24 h-24 rounded-[3rem] bg-white/5 border border-white/10 flex items-center justify-center"><Users size={40} className="text-slate-500" /></div>
                 )}
                 <div className="flex-1 min-w-0 relative z-10">
                    <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter leading-none mb-4">{account.display_name}</p>
-                   <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.4em] italic group-hover/item:text-indigo-400 transition-colors leading-none font-mono">ID: {account.username}</p>
+                   <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic group-hover/item:text-indigo-400 transition-colors leading-none font-mono">ID: {account.username}</p>
                 </div>
                 <div className="flex flex-col gap-4 relative z-10">
                    {meta.url && (
@@ -257,14 +257,14 @@ function ResonanceHubContent() {
             <button
               onClick={() => handleSyncInitiation(p)}
               disabled={syncing === p}
-              className="w-full py-12 bg-white text-black rounded-[4rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-1000 flex items-center justify-center gap-10 disabled:opacity-20 shadow-[0_60px_120px_rgba(255,255,255,0.1)] italic group relative overflow-hidden active:scale-95 border-none"
+              className="w-full py-12 bg-white text-black rounded-[4rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-10 disabled:opacity-20 shadow-[0_60px_120px_rgba(255,255,255,0.1)] italic group relative overflow-hidden active:scale-95 border-none"
             >
               <div className="absolute inset-x-0 h-1 bg-indigo-500 bottom-0 group-hover:h-full transition-all duration-700" />
               <div className="relative z-10 flex items-center gap-10">
                  {syncing === p ? (
                     <RefreshCw className="w-10 h-10 animate-spin" />
                  ) : (
-                    <Link2 size={32} className="group-hover:rotate-45 transition-transform duration-1000" />
+                    <Link2 size={32} className="group-hover:rotate-45 transition-transform duration-300" />
                  )}
                  {syncing === p ? 'INITIATING_LINK...' : `LINK_${p.toUpperCase()}_NODE`}
               </div>
@@ -285,12 +285,12 @@ function ResonanceHubContent() {
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -15, backgroundColor: 'rgba(255,255,255,0.06)' }} className={`${glassStyle} rounded-[6rem] p-12 flex flex-col group border-white/5 h-full shadow-[0_60px_120px_rgba(0,0,0,0.6)] bg-black/40`}>
         <div className="flex items-center justify-between mb-16">
           <div className="flex items-center gap-10">
-            <div className={`w-24 h-24 rounded-[3rem] bg-gradient-to-br ${gradients} flex items-center justify-center text-white shadow-2xl group-hover:rotate-12 transition-all duration-1000 border border-white/20`}>
+            <div className={`w-24 h-24 rounded-[3rem] bg-gradient-to-br ${gradients} flex items-center justify-center text-white shadow-2xl group-hover:rotate-12 transition-all duration-300 border border-white/20`}>
               <Icon size={48} />
             </div>
             <div>
               <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{meta.label}</h3>
-              <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] mt-3 italic leading-none">{meta.desc}</p>
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] mt-3 italic leading-none">{meta.desc}</p>
             </div>
           </div>
           {xNodes.length > 0 ? (
@@ -298,7 +298,7 @@ function ResonanceHubContent() {
                 <CheckCircle size={40} />
              </div>
           ) : (
-             <div className="w-20 h-20 rounded-[2.5rem] bg-black/60 border border-white/5 flex items-center justify-center text-slate-950 group-hover:text-indigo-500 transition-all duration-1000 shadow-inner">
+             <div className="w-20 h-20 rounded-[2.5rem] bg-black/60 border border-white/5 flex items-center justify-center text-slate-500 group-hover:text-indigo-500 transition-all duration-300 shadow-inner">
                 <Radio size={40} className="animate-pulse" />
              </div>
           )}
@@ -311,13 +311,13 @@ function ResonanceHubContent() {
                   <div key={account.platform_user_id} className="p-12 rounded-[4rem] bg-black/60 border border-white/5 flex items-center gap-10 hover:bg-black/80 transition-all shadow-[inset_0_0_40px_rgba(0,0,0,0.5)] group/node relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover/node:opacity-10 transition-opacity rotate-12"><Radio size={150} /></div>
                     {account.avatar ? (
-                      <img src={account.avatar} alt={account.display_name} className="w-24 h-24 rounded-[3rem] border-4 border-white/10 shadow-2xl grayscale group-hover/node:grayscale-0 transition-all duration-1000" />
+                      <img src={account.avatar} alt={account.display_name} className="w-24 h-24 rounded-[3rem] border-4 border-white/10 shadow-2xl grayscale group-hover/node:grayscale-0 transition-all duration-300" />
                     ) : (
-                      <div className="w-24 h-24 rounded-[3rem] bg-white/5 border border-white/10 flex items-center justify-center text-slate-950"><Users size={40} /></div>
+                      <div className="w-24 h-24 rounded-[3rem] bg-white/5 border border-white/10 flex items-center justify-center text-slate-500"><Users size={40} /></div>
                     )}
                     <div className="flex-1 min-w-0 relative z-10">
                        <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter leading-none mb-4">{account.display_name}</p>
-                       <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none font-mono">@{account.username}</p>
+                       <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none font-mono">@{account.username}</p>
                     </div>
                     <div className="flex flex-col gap-4 relative z-10">
                        <button onClick={() => window.open(`https://twitter.com/${account.username}`, '_blank')}
@@ -333,14 +333,14 @@ function ResonanceHubContent() {
           <button
             onClick={() => handleSyncInitiation('twitter')}
             disabled={syncing === 'twitter'}
-            className="w-full mt-auto py-12 bg-white text-black rounded-[4rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white shadow-[0_60px_120px_rgba(255,255,255,0.1)] transition-all duration-1000 disabled:opacity-20 italic group relative overflow-hidden active:scale-95 border-none"
+            className="w-full mt-auto py-12 bg-white text-black rounded-[4rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white shadow-[0_60px_120px_rgba(255,255,255,0.1)] transition-all duration-300 disabled:opacity-20 italic group relative overflow-hidden active:scale-95 border-none"
           >
             <div className="absolute inset-x-0 h-1 bg-indigo-500 bottom-0 group-hover:h-full transition-all duration-700" />
             <div className="relative z-10 flex items-center justify-center gap-10">
                {syncing === 'twitter' ? (
                   <RefreshCw className="w-10 h-10 animate-spin" />
                ) : (
-                  <Link2 size={32} className="group-hover:rotate-45 transition-transform duration-1000" />
+                  <Link2 size={32} className="group-hover:rotate-45 transition-transform duration-300" />
                )}
                {syncing === 'twitter' ? 'SYNCHRONIZING...' : xNodes.length > 0 ? 'LINK_ADDITIONAL_NODE' : 'LINK_X_NODE'}
             </div>
@@ -353,7 +353,7 @@ function ResonanceHubContent() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
       <Activity size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
-      <span className="text-[16px] font-black text-slate-800 uppercase tracking-[1em] animate-pulse italic">Synchronizing Mesh Topology...</span>
+      <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Synchronizing Mesh Topology...</span>
     </div>
   )
 
@@ -369,12 +369,12 @@ function ResonanceHubContent() {
         <header className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Network size={48} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform duration-1000 animate-pulse" />
+                <Network size={48} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -387,15 +387,15 @@ function ResonanceHubContent() {
                        <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">MESH_SYNC_OPTIMAL</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Resonance Hub</h1>
-                 <p className="text-slate-800 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Managing autonomous node identity matrices and global grid resonance topology.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Resonance Hub</h1>
+                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Managing autonomous node identity matrices and global grid resonance topology.</p>
               </div>
            </div>
 
            <button onClick={loadMatrix}
-             className="px-16 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(255,255,255,0.1)] transition-all duration-1000 flex items-center gap-8 italic active:scale-95 group border-none"
+             className="px-16 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(255,255,255,0.1)] transition-all duration-300 flex items-center gap-8 italic active:scale-95 group border-none"
            >
-             <RefreshCw size={28} className={`${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000'}`} />
+             <RefreshCw size={28} className={`${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
              REFRESH_MESH_GEOMETRY
            </button>
         </header>
@@ -449,16 +449,16 @@ function ResonanceHubContent() {
              { label: 'Neural Forge', desc: 'Synthetic logic crafting.', icon: Sparkles, color: 'text-purple-400', href: '/dashboard/content' },
              { label: 'Axiom Vault',  desc: 'Wisdom fractal repository.', icon: Quote, color: 'text-amber-400', href: '/dashboard/quotes' },
            ].map((a, i) => (
-             <motion.button whileHover={{ y: -20, backgroundColor: 'rgba(255,255,255,0.08)' }} key={a.label} onClick={() => router.push(a.href)} className={`${glassStyle} p-16 rounded-[6rem] group text-center flex flex-col items-center gap-12 border-white/5 hover:border-indigo-500/40 transition-all duration-1000 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black/40`}>
-                <div className="w-24 h-24 bg-white/[0.02] border border-white/10 rounded-[3rem] flex items-center justify-center group-hover:rotate-45 group-hover:scale-125 transition-all duration-1000 shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]">
+             <motion.button whileHover={{ y: -20, backgroundColor: 'rgba(255,255,255,0.08)' }} key={a.label} onClick={() => router.push(a.href)} className={`${glassStyle} p-16 rounded-[6rem] group text-center flex flex-col items-center gap-12 border-white/5 hover:border-indigo-500/40 transition-all duration-300 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black/40`}>
+                <div className="w-24 h-24 bg-white/[0.02] border border-white/10 rounded-[3rem] flex items-center justify-center group-hover:rotate-45 group-hover:scale-125 transition-all duration-300 shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]">
                    <a.icon size={48} className={a.color} />
                 </div>
                 <div className="space-y-4">
                    <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">{a.label}</h4>
-                   <p className="text-[13px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">{a.desc}</p>
+                   <p className="text-[13px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{a.desc}</p>
                 </div>
                 <div className="w-16 h-16 rounded-full border-2 border-slate-900 flex items-center justify-center group-hover:border-white transition-all duration-700">
-                   <ArrowRight size={32} className="text-slate-900 group-hover:text-white transition-all group-hover:translate-x-4" />
+                   <ArrowRight size={32} className="text-slate-500 group-hover:text-white transition-all group-hover:translate-x-4" />
                 </div>
              </motion.button>
            ))}
@@ -483,7 +483,7 @@ export default function ResonanceHubPage() {
     <Suspense fallback={
        <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
           <Globe size={100} className="text-indigo-500 animate-pulse mb-16 drop-shadow-[0_0_50px_rgba(99,102,241,0.5)]" />
-          <span className="text-5xl font-black text-slate-950 uppercase tracking-[1em] animate-pulse italic">CALIBRATING...</span>
+          <span className="text-5xl font-black text-slate-500 uppercase tracking-[1em] animate-pulse italic">CALIBRATING...</span>
        </div>
     }>
       <ResonanceHubContent />

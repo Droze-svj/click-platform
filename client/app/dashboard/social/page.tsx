@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '../../../hooks/useAuth'
 import LoadingSpinner from '../../../components/LoadingSpinner'
@@ -55,6 +55,20 @@ export default function SocialPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
+  const loadAccounts = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const connections = await getConnections()
+      setAccounts(connections as ConnectedAccounts)
+    } catch (err: any) {
+      console.error('Failed to load accounts:', err)
+      setError(err.message || 'Failed to load connected accounts')
+    } finally {
+      setLoading(false)
+    }
+  }, [getConnections])
+
   useEffect(() => {
     loadAccounts()
 
@@ -69,21 +83,7 @@ export default function SocialPage() {
     } else if (errorParam) {
       setError(`Failed to connect ${platformParam || 'account'}: ${descriptionParam || errorParam}`)
     }
-  }, [searchParams])
-
-  const loadAccounts = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const connections = await getConnections()
-      setAccounts(connections as ConnectedAccounts)
-    } catch (err: any) {
-      console.error('Failed to load accounts:', err)
-      setError(err.message || 'Failed to load connected accounts')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [searchParams, loadAccounts])
 
   const connectAccount = async (platform: string) => {
     try {

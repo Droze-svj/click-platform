@@ -217,6 +217,7 @@ function createApiClient(): AxiosInstance {
       }
 
       // Always ensure token is set in development (only in browser)
+      /* 
       if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && !authToken) {
         const devToken = 'dev-jwt-token-' + Date.now()
         localStorage.setItem('token', devToken)
@@ -224,19 +225,27 @@ function createApiClient(): AxiosInstance {
         if (process.env.NODE_ENV === 'development') {
           console.log('🔧 API: Auto-generated dev token for request:', config.url)
         }
-      } else if (authToken) {
+      } else */ if (authToken) {
         config.headers.Authorization = `Bearer ${authToken}`
         if (process.env.NODE_ENV === 'development') {
           console.log('🔍 API: Authorization header added')
         }
       } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('⚠️ API: No token available for request:', config.url)
-        }
-
-        // Debug logging disabled to prevent console spam
-        // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
+        /* no auth token */
       }
+
+      // Attach the user's chosen UI language so the server can localize AI
+      // output. Reads from the same localStorage slot usePreferences uses.
+      try {
+        if (typeof window !== 'undefined') {
+          const prefRaw = localStorage.getItem('click-user-preferences')
+          if (prefRaw) {
+            const lang = JSON.parse(prefRaw)?.language
+            if (lang && typeof lang === 'string') config.headers['X-Click-Language'] = lang
+          }
+        }
+      } catch { /* preferences corrupted — fall back to Accept-Language */ }
+
 
       // Debug logging (with SSR safety checks)
       if (typeof window !== 'undefined') {

@@ -43,13 +43,13 @@ export interface Category {
 export const CATEGORIES: Category[] = [
   {
     id: 'ai-edit',
-    label: 'Elite AI',
+    label: 'AI Auto-Edit',
     icon: Cpu,
     color: 'from-fuchsia-600 to-purple-600',
     bgColor: 'bg-fuchsia-100 dark:bg-fuchsia-900/10',
     textColor: 'text-fuchsia-600 dark:text-fuchsia-400',
-    description: 'Superior automated production',
-    features: ['Semantic Edit', 'Smart B-Roll', 'Variety Sync']
+    description: 'One-click AI editing',
+    features: ['Smart Cuts', 'B-Roll', 'Captions']
   },
   {
     id: 'settings',
@@ -71,54 +71,6 @@ export const CATEGORIES: Category[] = [
     features: ['Role Based', '3s Hooks', 'CTA Optimization']
   },
   {
-    id: 'scheduling',
-    label: 'Schedule',
-    icon: Calendar,
-    color: 'from-emerald-500 to-teal-500',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/10',
-    textColor: 'text-emerald-600 dark:text-emerald-400',
-    description: 'Post distribution hub',
-    features: ['Calendar View', 'Conflict Check', 'Blast Post']
-  },
-  {
-    id: 'intelligence',
-    label: 'Intelligence',
-    icon: Sparkles,
-    color: 'from-fuchsia-600 to-indigo-600',
-    bgColor: 'bg-fuchsia-100 dark:bg-fuchsia-900/10',
-    textColor: 'text-fuchsia-600 dark:text-fuchsia-400',
-    description: 'Clone creator pacing & styles'
-  },
-  {
-    id: 'accounts',
-    label: 'Accounts',
-    icon: Link2,
-    color: 'from-blue-600 to-emerald-600',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/10',
-    textColor: 'text-blue-600 dark:text-blue-400',
-    description: 'Link social platforms'
-  },
-  {
-    id: 'growth',
-    label: 'Growth',
-    icon: LineChart,
-    color: 'from-emerald-500 to-teal-500',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/10',
-    textColor: 'text-emerald-600 dark:text-emerald-400',
-    description: 'Viral probability & insights',
-    features: ['Viral Score', 'Hooks Analysis', 'Retention Tips']
-  },
-  {
-    id: 'remix',
-    label: 'Remix',
-    icon: Users,
-    color: 'from-orange-500 to-amber-500',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/10',
-    textColor: 'text-orange-600 dark:text-orange-400',
-    description: 'Community templates',
-    badge: 'BETA'
-  },
-  {
     id: 'edit',
     label: 'Edit',
     icon: EditToolIcon,
@@ -129,19 +81,8 @@ export const CATEGORIES: Category[] = [
     features: ['Trim', 'Crop', 'Rotate', 'Split']
   },
   {
-    id: 'short-clips',
-    label: 'Short Clips',
-    icon: Film,
-    color: 'from-rose-500 to-pink-600',
-    bgColor: 'bg-rose-100 dark:bg-rose-900/20',
-    textColor: 'text-rose-700 dark:text-rose-300',
-    description: 'Repurpose for Reels, Shorts, TikTok',
-    features: ['One-click 9:16', 'Clip from position', 'Multi-format export'],
-    badge: 'PRO'
-  },
-  {
     id: 'assets',
-    label: 'Music, Images & B-Roll',
+    label: 'My Assets',
     icon: UploadCloudIcon,
     color: 'from-indigo-500 to-purple-500',
     bgColor: 'bg-indigo-100 dark:bg-indigo-900/20',
@@ -180,26 +121,6 @@ export const CATEGORIES: Category[] = [
     features: ['Key Removal', 'Spill Suppression', 'Edge Refinement']
   },
   {
-    id: 'visual-fx',
-    label: 'Visual FX',
-    icon: VisualFXIcon,
-    color: 'from-cyan-500 to-blue-500',
-    bgColor: 'bg-cyan-100 dark:bg-cyan-900/20',
-    textColor: 'text-cyan-700 dark:text-cyan-300',
-    description: 'Particle systems & effects',
-    features: ['Particles', 'Lens Flares', 'Lights', 'Motion']
-  },
-  {
-    id: 'automate',
-    label: 'Automate',
-    icon: Wand2,
-    color: 'from-orange-500 to-red-500',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/10',
-    textColor: 'text-orange-600 dark:text-orange-400',
-    description: 'AI-powered production tools',
-    features: ['Voiceover', 'Auto-Jumpcut', 'Frame Refit']
-  },
-  {
     id: 'ai-analysis',
     label: 'AI Analysis',
     icon: NeuralNetworkIcon,
@@ -230,16 +151,6 @@ export const CATEGORIES: Category[] = [
     features: ['Multi-track', 'Keyframes', 'Precision', 'Layers']
   },
   {
-    id: 'ai',
-    label: 'AI Assistance',
-    icon: Sparkles,
-    color: 'from-emerald-500 to-teal-500',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/20',
-    textColor: 'text-emerald-700 dark:text-emerald-300',
-    description: 'AI-powered editing insights',
-    features: ['Smart Analysis', 'Edit Suggestions', 'Auto-Cuts']
-  },
-  {
     id: 'export',
     label: 'Export',
     icon: UploadCloudIcon,
@@ -249,25 +160,4 @@ export const CATEGORIES: Category[] = [
     description: 'Share & export',
     features: ['Social Media', 'Formats', 'Quality', 'Presets']
   },
-  {
-    id: 'style-vault',
-    label: 'Style Vault',
-    icon: Layers,
-    color: 'from-indigo-600 to-blue-700',
-    bgColor: 'bg-indigo-100 dark:bg-indigo-900/20',
-    textColor: 'text-indigo-700 dark:text-indigo-300',
-    description: 'Train your neural editing dna',
-    features: ['Neural Extraction', 'Pacing Matrix', 'Style Tuning'],
-    badge: 'NEW'
-  },
-  {
-    id: 'distribution',
-    label: 'Distribution Hub',
-    icon: Globe,
-    color: 'from-emerald-600 to-teal-600',
-    bgColor: 'bg-emerald-100 dark:bg-emerald-900/20',
-    textColor: 'text-emerald-700 dark:text-emerald-400',
-    description: 'Unified social dispatch',
-    features: ['Platform Sync', 'Metadata Injection', 'Scheduled Blast']
-  }
 ]

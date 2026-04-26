@@ -114,22 +114,43 @@ router.post('/register',
         });
       }
 
-      // Handle development mock registration
-      if (process.env.NODE_ENV === 'development' && !supabase) {
-        logger.info('Using mock registration for development', { email });
+      // Handle Mongoose registration fallback if Supabase is not available
+      const User = require('../models/User');
+      if (!supabase) {
+        logger.info('Using Mongoose registration fallback', { email });
+        
+        // Check if user already exists in Mongo
+        const existingMongoUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingMongoUser) {
+          return res.status(400).json({ success: false, error: 'User already exists in database' });
+        }
+
+        const newUser = new User({
+          email: email.toLowerCase(),
+          password, // Will be hashed by pre-save hook
+          name: `${finalFirstName} ${finalLastName}`,
+          emailVerified: true, // Auto-verify in dev/local mode
+        });
+
+        await newUser.save();
+        
+        const token = jwt.sign(
+          { userId: newUser._id },
+          process.env.JWT_SECRET || 'fallback-secret',
+          { expiresIn: '30d' }
+        );
+
         return res.status(201).json({
           success: true,
-          message: 'Development Mock: User registered successfully!',
+          message: 'User registered successfully (Mongoose)!',
           data: {
+            token,
             user: {
-              id: 'dev-user-' + Date.now(),
-              email: email.toLowerCase(),
-              name: `${finalFirstName} ${finalLastName}`,
-              first_name: finalFirstName,
-              last_name: finalLastName,
-              emailVerified: false
-            },
-            requiresVerification: true
+              id: newUser._id,
+              email: newUser.email,
+              name: newUser.name,
+              emailVerified: true
+            }
           }
         });
       }
@@ -473,6 +494,41 @@ router.post('/login',
 
       const { email, password } = req.body;
       
+      // Handle Mongoose login fallback if Supabase is not available
+      if (!supabase) {
+        logger.info('Using Mongoose login fallback', { email });
+        const User = require('../models/User');
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+          return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+          return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+          { userId: user._id },
+          process.env.JWT_SECRET || 'fallback-secret',
+          { expiresIn: '30d' }
+        );
+
+        return res.json({
+          success: true,
+          message: 'Login successful (Mongoose)',
+          data: {
+            token,
+            user: {
+              id: user._id,
+              email: user.email,
+              name: user.name,
+              emailVerified: true
+            }
+          }
+        });
+      }
 
       // Check for development users first (before Supabase)
       if (process.env.NODE_ENV === 'development' || !supabase) {

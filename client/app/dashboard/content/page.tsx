@@ -122,12 +122,12 @@ export default function NeuralForgePage() {
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Sparkles size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-1000 animate-pulse" />
+                <Sparkles size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -140,16 +140,16 @@ export default function NeuralForgePage() {
                        <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">FORGE_CORE_IGNITED</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Neural Forge</h1>
-                 <p className="text-slate-800 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Transforming logic seeds into high-resonance synthetic content payloads.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Neural Forge</h1>
+                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Transforming logic seeds into high-resonance synthetic content payloads.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <button onClick={() => router.push('/dashboard/scheduler')}
-                className="px-16 py-8 bg-white text-black hover:bg-emerald-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_120px_rgba(255,255,255,0.1)] transition-all duration-1000 flex items-center gap-8 italic active:scale-95 group border-none"
+                className="px-16 py-8 bg-white text-black hover:bg-emerald-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_120px_rgba(255,255,255,0.1)] transition-all duration-300 flex items-center gap-8 italic active:scale-95 group border-none"
               >
-                <Send size={28} className="group-hover:translate-x-6 group-hover:-translate-y-6 transition-transform duration-1000" />
+                <Send size={28} className="group-hover:translate-x-6 group-hover:-translate-y-6 transition-transform duration-300" />
                 DEPLOY_FORGE_PAYLOADS
               </button>
            </div>
@@ -195,19 +195,19 @@ export default function NeuralForgePage() {
 
              <div className="p-20 space-y-16 flex-1 flex flex-col">
                 <div className="space-y-8">
-                  <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic pl-6">Operational Designation</label>
+                  <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-6">Operational Designation</label>
                   <div className="relative group/input">
                     <input type="text" value={designation} onChange={e => setDesignation(e.target.value)}
                       placeholder="PAYLOAD_IDENTIFIER_BETA..."
-                      className="w-full bg-black/60 border-2 border-white/5 rounded-[3rem] px-16 py-10 text-3xl font-black text-white uppercase tracking-tighter italic focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-950 pr-32 shadow-[inset_0_0_80px_rgba(0,0,0,0.6)]" 
+                      className="w-full bg-black/60 border-2 border-white/5 rounded-[3rem] px-16 py-10 text-3xl font-black text-white uppercase tracking-tighter italic focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-600 pr-32 shadow-[inset_0_0_80px_rgba(0,0,0,0.6)]" 
                     />
-                    <Hash size={36} className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-950 group-focus-within/input:text-indigo-500 transition-colors duration-700" />
+                    <Hash size={36} className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-indigo-500 transition-colors duration-700" />
                   </div>
                 </div>
 
                 <div className="space-y-8 flex-1 flex flex-col">
                   <div className="flex items-center justify-between px-8 border-l-8 border-indigo-500/20 ml-2">
-                    <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">Logic Seed Matrix</label>
+                    <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Logic Seed Matrix</label>
                     <div className="flex gap-10">
                        <span className="text-[11px] font-black text-indigo-500 font-mono tracking-widest uppercase opacity-60"> {logicSeed.length} BITS_DATA</span>
                        <span className="text-[11px] font-black text-indigo-500 font-mono tracking-widest uppercase opacity-60"> {logicSeed.trim().split(/\s+/).filter(Boolean).length} PARTICLES</span>
@@ -216,23 +216,23 @@ export default function NeuralForgePage() {
                   <div className="relative flex-1 group/area">
                     <textarea value={logicSeed} onChange={e => setLogicSeed(e.target.value)}
                       placeholder="PASTE_LONG_FORM_LOGIC_SEED_MIN_50_CHARS..."
-                      className="w-full h-full bg-black/60 border-2 border-white/5 rounded-[4rem] px-16 py-16 text-3xl font-black text-slate-300 uppercase tracking-tighter italic focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-950 leading-relaxed resize-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] custom-scrollbar"
+                      className="w-full h-full bg-black/60 border-2 border-white/5 rounded-[4rem] px-16 py-16 text-3xl font-black text-slate-300 uppercase tracking-tighter italic focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-600 leading-relaxed resize-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] custom-scrollbar"
                     />
-                    <div className="absolute right-12 bottom-12 p-6 bg-black/80 border border-white/10 rounded-3xl opacity-0 group-hover/area:opacity-100 transition-all duration-700 translate-y-4 group-hover/area:translate-y-0 shadow-2xl"><Boxes size={40} className="text-slate-900" /></div>
+                    <div className="absolute right-12 bottom-12 p-6 bg-black/80 border border-white/10 rounded-3xl opacity-0 group-hover/area:opacity-100 transition-all duration-700 translate-y-4 group-hover/area:translate-y-0 shadow-2xl"><Boxes size={40} className="text-slate-500" /></div>
                   </div>
                 </div>
 
                 <div className="space-y-10">
-                  <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic pl-6">Target Resonance Nodes</label>
+                  <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-6">Target Resonance Nodes</label>
                   <div className="flex flex-wrap gap-6">
                     {RESONANCE_NODES.map(node => {
                       const active = activeNodes.includes(node.id)
                       return (
                         <button key={node.id} onClick={() => toggleNode(node.id)}
-                          className={`group flex items-center gap-8 px-12 py-6 rounded-[3.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-1000 border-2 italic relative overflow-hidden ${active ? `bg-white text-black border-transparent scale-110 shadow-[0_40px_80px_rgba(0,0,0,0.6)]` : 'bg-black/40 border-white/5 text-slate-800 hover:text-white hover:border-white/20'}`}>
-                          <span className={`text-4xl transition-all duration-1000 relative z-10 ${active ? 'grayscale-0 rotate-12 scale-125' : 'grayscale text-slate-950 opacity-40 group-hover:grayscale-0 group-hover:opacity-100'}`}>{node.icon}</span> 
+                          className={`group flex items-center gap-8 px-12 py-6 rounded-[3.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-300 border-2 italic relative overflow-hidden ${active ? `bg-white text-black border-transparent scale-110 shadow-[0_40px_80px_rgba(0,0,0,0.6)]` : 'bg-black/40 border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
+                          <span className={`text-4xl transition-all duration-300 relative z-10 ${active ? 'grayscale-0 rotate-12 scale-125' : 'grayscale text-slate-500 opacity-40 group-hover:grayscale-0 group-hover:opacity-100'}`}>{node.icon}</span> 
                           <span className="relative z-10">{node.label}</span>
-                          <div className={`absolute inset-0 bg-gradient-to-br ${node.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-1000`} />
+                          <div className={`absolute inset-0 bg-gradient-to-br ${node.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
                         </button>
                       )
                     })}
@@ -242,12 +242,12 @@ export default function NeuralForgePage() {
                 <button 
                    onClick={handleForgeInitiation} 
                    disabled={loading || !logicSeed.trim() || logicSeed.length < 50}
-                   className="w-full flex items-center justify-center gap-12 py-16 bg-indigo-600 hover:bg-emerald-500 disabled:opacity-10 text-white rounded-[5rem] text-[20px] font-black uppercase tracking-[1em] shadow-[0_60px_150px_rgba(79,70,229,0.2)] transition-all duration-1000 hover:-translate-y-4 active:translate-y-0 italic border-none group/forge-btn"
+                   className="w-full flex items-center justify-center gap-12 py-16 bg-indigo-600 hover:bg-emerald-500 disabled:opacity-10 text-white rounded-[5rem] text-[20px] font-black uppercase tracking-[1em] shadow-[0_60px_150px_rgba(79,70,229,0.2)] transition-all duration-300 hover:-translate-y-4 active:translate-y-0 italic border-none group/forge-btn"
                 >
                   {loading ? (
                     <><RefreshCw size={44} className="animate-spin" /> IGNITING_FORGE...</>
                   ) : (
-                    <><Flame size={44} className="group-hover/forge-btn:scale-125 transition-transform duration-1000 text-amber-400" /> FORGE_CONTENT</>
+                    <><Flame size={44} className="group-hover/forge-btn:scale-125 transition-transform duration-300 text-amber-400" /> FORGE_CONTENT</>
                   )}
                 </button>
              </div>
@@ -258,7 +258,7 @@ export default function NeuralForgePage() {
              <div className="px-16 py-12 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                 <div className="flex items-center gap-8">
                   <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-2xl relative overflow-hidden group/rep">
-                     <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500 group-hover/rep:h-full transition-all duration-1000 opacity-20" />
+                     <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500 group-hover/rep:h-full transition-all duration-300 opacity-20" />
                      <Cpu size={32} className="text-emerald-400 relative z-10" />
                   </div>
                   <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Neural Payloads</h2>
@@ -276,7 +276,7 @@ export default function NeuralForgePage() {
                   <div className="flex-1 flex flex-col items-center justify-center gap-16">
                      <div className="w-48 h-48 bg-indigo-950/20 border-4 border-indigo-500/10 rounded-[5rem] flex items-center justify-center shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative group/load">
                         <div className="absolute inset-0 border-8 border-indigo-500/20 border-t-indigo-400 rounded-[5rem] animate-spin" />
-                        <Sparkles size={80} className="text-indigo-400 group-hover/load:scale-125 transition-transform duration-1000 drop-shadow-[0_0_40px_rgba(99,102,241,0.6)]" />
+                        <Sparkles size={80} className="text-indigo-400 group-hover/load:scale-125 transition-transform duration-300 drop-shadow-[0_0_40px_rgba(99,102,241,0.6)]" />
                      </div>
                      <div className="text-center space-y-6">
                         <p className="text-5xl font-black text-white uppercase tracking-[0.2em] italic leading-none drop-shadow-2xl">Forging Synthetic Logic</p>
@@ -291,13 +291,13 @@ export default function NeuralForgePage() {
                 )}
 
                 {!loading && !manifest && (
-                  <div className="flex-1 flex flex-col items-center justify-center border-4 border-dashed border-white/5 rounded-[7rem] opacity-20 gap-16 hover:opacity-40 transition-all duration-1000 group/empty">
-                    <div className="w-32 h-32 bg-white/5 rounded-[3.5rem] border border-white/10 flex items-center justify-center shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] group-hover/empty:rotate-45 transition-transform duration-1000">
+                  <div className="flex-1 flex flex-col items-center justify-center border-4 border-dashed border-white/5 rounded-[7rem] opacity-20 gap-16 hover:opacity-40 transition-all duration-300 group/empty">
+                    <div className="w-32 h-32 bg-white/5 rounded-[3.5rem] border border-white/10 flex items-center justify-center shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] group-hover/empty:rotate-45 transition-transform duration-300">
                       <Sparkles size={64} className="text-white opacity-40" />
                     </div>
                     <div className="text-center space-y-6 px-16">
                        <p className="text-5xl font-black text-white uppercase tracking-[0.4em] italic leading-tight opacity-40">Forge Buffer Empty</p>
-                       <p className="text-[16px] font-black text-slate-800 uppercase tracking-[0.6em] italic opacity-40">Manifest logic seeds to observe synthetic manifestation.</p>
+                       <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.6em] italic opacity-40">Manifest logic seeds to observe synthetic manifestation.</p>
                     </div>
                   </div>
                 )}
@@ -308,7 +308,7 @@ export default function NeuralForgePage() {
                       {manifest.socialPosts?.length > 0 && (
                         <div className="space-y-12">
                           <div className="flex items-center gap-8 px-8">
-                             <h3 className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none">Resonance Array Matrix</h3>
+                             <h3 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none">Resonance Array Matrix</h3>
                              <div className="flex-1 h-1 bg-white/[0.03] rounded-full" />
                           </div>
                           <div className="grid grid-cols-1 gap-12">
@@ -323,7 +323,7 @@ export default function NeuralForgePage() {
                                   <div className={`p-1 flex flex-col`}>
                                      <div className={`flex items-center justify-between px-12 py-8 bg-gradient-to-br ${pCfg?.gradient || 'from-slate-800 to-black'} rounded-t-[4.8rem] border-b border-white/10 shadow-2xl`}>
                                        <div className="flex items-center gap-10 text-white">
-                                         <span className="text-5xl font-black drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] group-hover/payload:scale-125 transition-transform duration-1000">{pCfg?.icon || '?'}</span>
+                                         <span className="text-5xl font-black drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] group-hover/payload:scale-125 transition-transform duration-300">{pCfg?.icon || '?'}</span>
                                          <div className="space-y-2">
                                             <span className="text-2xl font-black uppercase italic tracking-tighter block leading-none">{pCfg?.label.toUpperCase()}</span>
                                             {pCfg && <span className="text-white/40 text-[10px] font-mono tracking-widest uppercase block leading-none">{post.content.length} / {pCfg.limit} BITS_RESONANCE</span>}
@@ -336,14 +336,14 @@ export default function NeuralForgePage() {
                                            <div className="absolute inset-0 bg-white translate-y-full group-hover/cap:translate-y-0 transition-transform duration-700" />
                                          </motion.button>
                                          <button onClick={() => router.push(`/dashboard/scheduler?text=${encodeURIComponent(post.content)}&platform=${post.platform}`)}
-                                           className="px-10 py-5 bg-white text-black hover:bg-emerald-500 hover:text-white rounded-[2rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic flex items-center gap-5 shadow-[0_20px_60px_rgba(255,255,255,0.1)] group/send overflow-hidden relative">
+                                           className="px-10 py-5 bg-white text-black hover:bg-emerald-500 hover:text-white rounded-[2rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic flex items-center gap-5 shadow-[0_20px_60px_rgba(255,255,255,0.1)] group/send overflow-hidden relative">
                                             <div className="absolute inset-x-0 h-1 bg-emerald-500 bottom-0 group-hover/send:h-full transition-all duration-700 opacity-20" />
                                             <Send size={20} className="relative z-10 group-hover/send:translate-x-2 transition-transform" /> <span className="relative z-10">DEPLOY</span>
                                          </button>
                                        </div>
                                      </div>
                                      <div className="p-16 space-y-12">
-                                       <p className="text-4xl font-black text-slate-200 italic leading-[1.15] uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-1000">{post.content}</p>
+                                       <p className="text-4xl font-black text-slate-200 italic leading-[1.15] uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">{post.content}</p>
                                        {post.hashtags?.length > 0 && (
                                          <div className="flex flex-wrap gap-5">
                                            {post.hashtags.map((tag, i) => (
@@ -354,7 +354,7 @@ export default function NeuralForgePage() {
                                          </div>
                                        )}
                                        <div className="pt-8 border-t border-white/5 flex items-center justify-between">
-                                          <div className="flex items-center gap-4 text-[10px] font-black text-slate-800 uppercase tracking-widest italic leading-none">
+                                          <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 uppercase tracking-widest italic leading-none">
                                              <Gauge size={14} className="text-indigo-500" /> RESONANCE_INDEX_0.98
                                           </div>
                                           <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
@@ -373,23 +373,23 @@ export default function NeuralForgePage() {
                       {manifest.blogSummary && (
                         <div className="space-y-12">
                           <div className="flex items-center gap-8 px-8">
-                             <h3 className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none">Strategic Core Narrative</h3>
+                             <h3 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none">Strategic Core Narrative</h3>
                              <div className="flex-1 h-1 bg-white/[0.03] rounded-full" />
                           </div>
                           <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className={`${glassStyle} rounded-[6rem] overflow-hidden group/blog bg-black/60 shadow-[0_60px_150px_rgba(0,0,0,0.6)] border-emerald-500/10 hover:border-emerald-500/40`}>
-                             <div className="flex items-center justify-between px-16 py-10 bg-slate-950 border-b border-white/5 shadow-inner">
+                             <div className="flex items-center justify-between px-16 py-10 bg-slate-700 border-b border-white/5 shadow-inner">
                                <div className="flex items-center gap-8">
                                   <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><FileText size={28} className="text-emerald-400" /></div>
                                   <span className="text-[12px] font-black text-white uppercase tracking-[0.6em] italic opacity-40">Synthetic Core Manifest v1.0</span>
                                </div>
                                <button onClick={() => handleCapture(manifest.blogSummary, 'manifest_summary')}
-                                 className="px-10 py-5 bg-white text-black hover:bg-emerald-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] shadow-2xl transition-all duration-1000 italic flex items-center gap-6 group/cap-man border-none">
+                                 className="px-10 py-5 bg-white text-black hover:bg-emerald-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] shadow-2xl transition-all duration-300 italic flex items-center gap-6 group/cap-man border-none">
                                  {copiedId === 'manifest_summary' ? <CheckCircle size={20} className="text-emerald-400 group-hover/cap-man:text-white" /> : <Copy size={20} />}
                                  {copiedId === 'manifest_summary' ? 'CAPTURED' : 'CAPTURE_MANIFEST'}
                                </button>
                              </div>
                              <div className="p-20">
-                               <p className="text-[28px] font-black text-slate-200 italic leading-relaxed uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-1000">{manifest.blogSummary}</p>
+                               <p className="text-[28px] font-black text-slate-200 italic leading-relaxed uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">{manifest.blogSummary}</p>
                              </div>
                           </motion.div>
                         </div>
@@ -398,30 +398,30 @@ export default function NeuralForgePage() {
                       {manifest.viralIdeas?.length > 0 && (
                         <div className="space-y-12">
                           <div className="flex items-center gap-8 px-8">
-                             <h3 className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none">Exponential Logic Phantoms</h3>
+                             <h3 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none">Exponential Logic Phantoms</h3>
                              <div className="flex-1 h-1 bg-white/[0.03] rounded-full" />
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                             {manifest.viralIdeas.map((idea, idx) => (
                               <motion.article 
                                  initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: idx * 0.1, duration: 1.2 }}
-                                 key={idx} className="p-12 bg-amber-500/[0.03] border-2 border-amber-500/10 rounded-[5rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] hover:border-amber-500/40 transition-all duration-1000 group/v-node relative overflow-hidden bg-black/40"
+                                 key={idx} className="p-12 bg-amber-500/[0.03] border-2 border-amber-500/10 rounded-[5rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] hover:border-amber-500/40 transition-all duration-300 group/v-node relative overflow-hidden bg-black/40"
                               >
-                                <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover/v-node:opacity-[0.1] transition-all duration-1000 rotate-12 scale-150"><Zap size={150} /></div>
+                                <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover/v-node:opacity-[0.1] transition-all duration-300 rotate-12 scale-150"><Zap size={150} /></div>
                                 <div className="flex items-start justify-between gap-10 mb-10 relative z-10">
                                   <div className="flex-1 min-w-0">
-                                    <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-[1.1] mb-6 group-hover:text-amber-400 transition-colors duration-1000 drop-shadow-2xl">{idea.title.toUpperCase()}</h4>
+                                    <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-[1.1] mb-6 group-hover:text-amber-400 transition-colors duration-300 drop-shadow-2xl">{idea.title.toUpperCase()}</h4>
                                     <div className="inline-flex items-center gap-5 px-6 py-3 rounded-[1.5rem] bg-amber-500/10 border border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,1)]" />
                                        <span className="text-[11px] font-black text-amber-500 uppercase tracking-[0.4em] italic leading-none">{idea.platform.toUpperCase()} NODE</span>
                                     </div>
                                   </div>
-                                  <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-[1.8rem] flex items-center justify-center text-amber-500 group-hover/v-node:rotate-[360deg] transition-all duration-1000 shadow-2xl relative overflow-hidden">
+                                  <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-[1.8rem] flex items-center justify-center text-amber-500 group-hover/v-node:rotate-[360deg] transition-all duration-300 shadow-2xl relative overflow-hidden">
                                      <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover/v-node:opacity-100 transition-opacity" />
                                      <Activity size={32} className="relative z-10" />
                                   </div>
                                 </div>
-                                <p className="text-[15px] font-black text-slate-800 italic uppercase tracking-[0.1em] leading-relaxed relative z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-1000">{idea.description}</p>
+                                <p className="text-[15px] font-black text-slate-400 italic uppercase tracking-[0.1em] leading-relaxed relative z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-300">{idea.description}</p>
                                 <div className="mt-10 pt-8 border-t border-white/5 flex items-center gap-5">
                                    <div className="text-[9px] font-black text-amber-500/40 uppercase tracking-widest italic leading-none">VIRAL_COEFFICIENT_MAX</div>
                                    <div className="flex-1 h-1 bg-white/[0.02] rounded-full overflow-hidden">
@@ -436,13 +436,13 @@ export default function NeuralForgePage() {
 
                       <div className="pt-20 flex gap-12 relative z-10">
                         <button onClick={() => router.push('/dashboard/scheduler')}
-                          className="flex-1 flex items-center justify-center gap-10 py-16 bg-emerald-600 text-white rounded-[5.5rem] text-[20px] font-black uppercase tracking-[0.8em] shadow-[0_60px_150px_rgba(16,185,129,0.3)] hover:bg-white hover:text-black transition-all duration-1000 italic hover:-translate-y-4 group/deploy-all border-none"
+                          className="flex-1 flex items-center justify-center gap-10 py-16 bg-emerald-600 text-white rounded-[5.5rem] text-[20px] font-black uppercase tracking-[0.8em] shadow-[0_60px_150px_rgba(16,185,129,0.3)] hover:bg-white hover:text-black transition-all duration-300 italic hover:-translate-y-4 group/deploy-all border-none"
                         >
-                          <Send size={44} className="group-hover/deploy-all:translate-x-6 group-hover/deploy-all:-translate-y-6 transition-transform duration-1000" /> DEPLOY_ALL_TRAJECTORIES
+                          <Send size={44} className="group-hover/deploy-all:translate-x-6 group-hover/deploy-all:-translate-y-6 transition-transform duration-300" /> DEPLOY_ALL_TRAJECTORIES
                         </button>
                         <button onClick={() => setManifest(null)}
-                          className="px-16 py-10 bg-white/5 border-2 border-white/10 rounded-[5.5rem] text-slate-800 hover:text-white hover:border-white/40 text-[14px] font-black uppercase tracking-[0.5em] shadow-2xl transition-all duration-1000 italic hover:scale-95 group/purge">
-                          <RefreshCw size={28} className="group-hover/purge:rotate-180 transition-transform duration-1000" />
+                          className="px-16 py-10 bg-white/5 border-2 border-white/10 rounded-[5.5rem] text-slate-400 hover:text-white hover:border-white/40 text-[14px] font-black uppercase tracking-[0.5em] shadow-2xl transition-all duration-300 italic hover:scale-95 group/purge">
+                          <RefreshCw size={28} className="group-hover/purge:rotate-180 transition-transform duration-300" />
                         </button>
                       </div>
                     </motion.div>
@@ -454,12 +454,12 @@ export default function NeuralForgePage() {
 
         {/* Intelligence HUD Channels */}
         <footer className="grid grid-cols-1 lg:grid-cols-2 gap-20 relative z-10">
-          <div className={`${glassStyle} rounded-[6rem] group hover:border-indigo-500/40 transition-all duration-1000 flex flex-col bg-black/40 shadow-[0_60px_120px_rgba(0,0,0,0.6)]`}>
+          <div className={`${glassStyle} rounded-[6rem] group hover:border-indigo-500/40 transition-all duration-300 flex flex-col bg-black/40 shadow-[0_60px_120px_rgba(0,0,0,0.6)]`}>
              <div className="px-16 py-12 border-b border-white/5 flex items-center gap-10 bg-white/[0.02]">
-                <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-1000"><Network size={40} className="text-indigo-400" /></div>
+                <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300"><Network size={40} className="text-indigo-400" /></div>
                 <div>
                    <h3 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none mb-3">Neural Heuristics</h3>
-                   <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">Cognitive logic refinement recommendations and sentiment sync.</p>
+                   <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">Cognitive logic refinement recommendations and sentiment sync.</p>
                 </div>
              </div>
              <div className="p-16 min-h-[600px] flex-1">
@@ -468,12 +468,12 @@ export default function NeuralForgePage() {
                </Suspense>
              </div>
           </div>
-          <div className={`${glassStyle} rounded-[6rem] group hover:border-purple-500/40 transition-all duration-1000 flex flex-col bg-black/40 shadow-[0_60px_120px_rgba(0,0,0,0.6)]`}>
+          <div className={`${glassStyle} rounded-[6rem] group hover:border-purple-500/40 transition-all duration-300 flex flex-col bg-black/40 shadow-[0_60px_120px_rgba(0,0,0,0.6)]`}>
              <div className="px-16 py-12 border-b border-white/5 flex items-center gap-10 bg-white/[0.02]">
-                <div className="w-20 h-20 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/20 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-1000"><Gauge size={40} className="text-purple-400" /></div>
+                <div className="w-20 h-20 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/20 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300"><Gauge size={40} className="text-purple-400" /></div>
                 <div>
                    <h3 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none mb-3">Predictive Telemetry</h3>
-                   <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">Spectral trajectory forecasting and global resonance mapping.</p>
+                   <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">Spectral trajectory forecasting and global resonance mapping.</p>
                 </div>
              </div>
              <div className="p-16 min-h-[600px] flex-1">

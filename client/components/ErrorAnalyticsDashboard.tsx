@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { AlertTriangle, TrendingUp, TrendingDown, Activity, BarChart3 } from 'lucide-react';
@@ -24,11 +24,7 @@ export default function ErrorAnalyticsDashboard() {
   const [stats, setStats] = useState<ErrorStatistics | null>(null);
   const [period, setPeriod] = useState(7); // days
 
-  useEffect(() => {
-    fetchStatistics();
-  }, [period]);
-
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/error-analytics/stats?days=${period}`, {
@@ -45,7 +41,11 @@ export default function ErrorAnalyticsDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    fetchStatistics();
+  }, [fetchStatistics]);
 
   if (loading) {
     return (

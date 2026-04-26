@@ -139,12 +139,12 @@ const ApprovalQueueView: React.FC = () => {
       <div className="flex-1 flex flex-col gap-8">
         <div className="flex items-center justify-between px-2">
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-emerald-400 flex items-center gap-4">
+            <h2 className="text-2xl font-black tracking-tight text-emerald-400 flex items-center gap-3">
               <ShieldCheck className="w-6 h-6" />
-              Sovereign Approval Feed
+              Approval Queue
             </h2>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2">
-              Systemized intake relay for multi-tier content verification
+            <p className="text-[12px] font-medium text-slate-400 mt-2">
+              Review and approve content before it goes live.
             </p>
           </div>
           <div className="flex items-center gap-4">

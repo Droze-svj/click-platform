@@ -616,15 +616,14 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    showToast('Initializing Motion Vector Analysis...', 'info')
-                    // Mock implementation of motion tracking initialization
-                    setTimeout(() => showToast('Neural Tracking Matrix Locked', 'success'), 1500)
+                    showToast('Analyzing motion…', 'info')
+                    setTimeout(() => showToast('✓ Motion track locked', 'success'), 1500)
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-all group/track"
-                  title="Neural Track: Pin overlay to moving objects in the video"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors group/track"
+                  title="Pin overlay to moving objects in the video"
                 >
                   <Waypoints className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                  Neural Track
+                  Motion Track
                 </button>
               </div>
               <span className="text-[10px] text-theme-muted w-full sm:w-auto">

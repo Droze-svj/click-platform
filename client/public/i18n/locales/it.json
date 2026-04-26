@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "create": "Crea",
+    "search": "Cerca",
+    "filter": "Filtro",
+    "loading": "Caricamento…",
+    "error": "Errore",
+    "success": "Successo",
+    "close": "Chiudi",
+    "back": "Indietro",
+    "next": "Avanti",
+    "retry": "Riprova",
+    "more": "Altro",
+    "menu": "Menu",
+    "logout": "Esci",
+    "yes": "Sì",
+    "no": "No",
+    "redirecting": "Reindirizzamento all'accesso…",
+    "dismiss": "Ignora"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "videos": "Video",
+    "content": "Contenuti",
+    "aiFeatures": "Funzioni IA",
+    "library": "Libreria",
+    "scripts": "Script",
+    "workflows": "Flussi",
+    "tasks": "Attività",
+    "projects": "Progetti",
+    "jobs": "Lavori",
+    "teams": "Team",
+    "approvals": "Approvazioni",
+    "quotes": "Citazioni",
+    "scheduler": "Pianificatore",
+    "calendar": "Calendario",
+    "social": "Social",
+    "analytics": "Analisi",
+    "achievements": "Traguardi",
+    "membership": "Abbonamento",
+    "notifications": "Notifiche",
+    "settings": "Impostazioni",
+    "templates": "Modelli",
+    "infrastructure": "Infrastruttura",
+    "clickTagline": "Contenuti con IA"
+  },
+  "workflow": {
+    "niche": "Nicchia",
+    "setNiche": "Scegli nicchia",
+    "next": "Avanti",
+    "stages": {
+      "ingest":   { "label": "Importa",     "description": "Porta il materiale — file, link o registrazione live." },
+      "script":   { "label": "Script",      "description": "L'IA scrive hook, corpo e CTA per la tua nicchia." },
+      "edit":     { "label": "Monta",       "description": "Taglia, sottotitola e personalizza il video." },
+      "schedule": { "label": "Pianifica",   "description": "Pubblica su ogni piattaforma all'ora ottimale." },
+      "analyze":  { "label": "Analizza",    "description": "Misura le performance e capisci cosa ripetere." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "Carica",
+      "link": "Incolla link",
+      "record": "Registra",
+      "cloud": "Cloud",
+      "remix": "Remix"
+    },
+    "paste": "Incolla",
+    "dropTitle": "Trascina un video qui",
+    "dropHint": "Oppure scegli un file. MP4, MOV, WebM fino a 500 MB.",
+    "chooseFile": "Scegli file",
+    "linkLabel": "URL del video",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 o https://cdn/clip.mp4",
+    "linkAction": "Importa",
+    "linkSupports": "Supporta {platforms}. I download dalle piattaforme richiedono {ytdlp} sul server.",
+    "recordStart": "Avvia registrazione",
+    "recordStop": "Ferma e carica",
+    "recordHint": "Camera + microfono — salvato in WebM e caricato nella tua libreria.",
+    "cloudHint": "Incolla un link Google Drive, Dropbox o S3. Lo scarichiamo lato server, quindi deve essere impostato su {visibility}.",
+    "cloudVisibility": "Chiunque con il link → può vedere",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "Recupera",
+    "remixHint": "Scegli un progetto precedente da clonare per un nuovo montaggio.",
+    "remixRefresh": "Aggiorna",
+    "remixEmpty": "Nessuna importazione ancora — carica il primo video per iniziare la libreria remix.",
+    "tip": "Suggerimento",
+    "tipPaste": "⌘V su questa pagina per incollare un URL dagli appunti.",
+    "tipReversible": "Tutto appare nella tua Libreria ed è reversibile.",
+    "uploading": "Caricamento {percent}%",
+    "processing": "Elaborazione…",
+    "errors": {
+      "noUrl": "Incolla prima un URL",
+      "notVideo": "Trascina un file video (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "Appunti vuoti",
+      "clipboardNotUrl": "Gli appunti non contengono un URL",
+      "clipboardDenied": "Accesso agli appunti negato — incolla manualmente",
+      "uploadFailed": "Caricamento fallito: {message}",
+      "ingestFailed": "Importazione fallita: {message}",
+      "remixFailed": "Remix fallito",
+      "noContentId": "Il server non ha restituito un contentId",
+      "cameraDenied": "Impossibile accedere a camera/microfono"
+    }
+  },
+  "language": {
+    "label": "Lingua",
+    "picker": "Seleziona lingua"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "subtitle": "Gestisci le preferenze del tuo account",
+    "language": "Lingua",
+    "saveSettings": "Salva"
+  },
+  "video": {
+    "title": "Video",
+    "upload": "Carica",
+    "edit": "Modifica",
+    "processing": "Elaborazione…"
+  }
+}

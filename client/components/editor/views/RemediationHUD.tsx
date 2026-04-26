@@ -67,7 +67,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Autonomous Remediation</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-amber-500/70">Recursive Self-Correction Loop</span>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-amber-500/70">Self-Correction Loop</span>
                     </div>
                 </div>
 

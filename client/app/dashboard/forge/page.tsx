@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import AutonomousCreator from '../../../components/AutonomousCreator'
+import IngestPanel from '../../../components/IngestPanel'
 import { motion } from 'framer-motion'
-import { Zap, Command, Shield, Sparkles, Orbit, Binary, Loader2 } from 'lucide-react'
+import { Zap, Shield, Orbit, Binary, Loader2 } from 'lucide-react'
 import { apiGet } from '../../../lib/api'
 
 interface ManifestHistory {
@@ -47,7 +48,7 @@ export default function OneClickForgePage() {
       {/* Dynamic Background */}
       <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[200px] rounded-full pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[70%] bg-purple-600/10 blur-[150px] rounded-full pointer-events-none" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
 
       <div className="max-w-[1400px] mx-auto relative z-10 space-y-20">
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 border-b-2 border-white/5 pb-16">
@@ -56,8 +57,8 @@ export default function OneClickForgePage() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-10"
           >
-            <div className="w-24 h-24 rounded-[2.5rem] bg-indigo-600/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] group hover:scale-110 transition-transform duration-1000">
-               <Zap size={48} className="text-indigo-400 animate-pulse group-hover:rotate-180 transition-transform duration-1000" />
+            <div className="w-24 h-24 rounded-[2.5rem] bg-indigo-600/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] group hover:scale-110 transition-transform duration-300">
+               <Zap size={48} className="text-indigo-400 animate-pulse group-hover:rotate-180 transition-transform duration-300" />
             </div>
             <div>
               <div className="flex items-center gap-4 mb-3">
@@ -70,7 +71,7 @@ export default function OneClickForgePage() {
                     <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Consensus_Refined</span>
                  </div>
               </div>
-              <h1 className="text-6xl md:text-8xl font-black text-white italic tracking-tighter uppercase leading-none mb-4 drop-shadow-2xl">
+              <h1 className="text-6xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none mb-4 drop-shadow-2xl">
                 One-Click Forge
               </h1>
               <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.6em] italic leading-none max-w-2xl border-l-2 border-white/10 pl-6 ml-1">
@@ -85,10 +86,10 @@ export default function OneClickForgePage() {
             className="hidden xl:flex items-center gap-12 text-right"
           >
              <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-1000 uppercase tracking-widest italic opacity-40">Operational Pulse</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">Operational Pulse</p>
                 <div className="flex items-center justify-end gap-3">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
-                   <span className="text-2xl font-black text-white italic tabular-nums">0.038<span className="text-xs text-slate-900 ml-1">ms</span></span>
+                   <span className="text-2xl font-black text-white italic tabular-nums">0.038<span className="text-xs text-slate-500 ml-1">ms</span></span>
                 </div>
              </div>
              <div className="w-px h-16 bg-white/5" />
@@ -98,6 +99,17 @@ export default function OneClickForgePage() {
              </div>
           </motion.div>
         </header>
+
+        {/* ── Multi-source Ingest ── */}
+        <section className="relative z-10">
+          <div className="flex items-baseline justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Ingest</h2>
+              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1">Drop a file, paste a link, record live, or remix a previous project.</p>
+            </div>
+          </div>
+          <IngestPanel />
+        </section>
 
         <section className="relative z-10 grid grid-cols-1 xl:grid-cols-12 gap-12">
            <div className="xl:col-span-9">
@@ -113,7 +125,7 @@ export default function OneClickForgePage() {
                     </div>
                     <div>
                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter leading-none">Neural Recall</h3>
-                       <p className="text-[9px] font-black text-slate-800 uppercase tracking-widest italic mt-1 leading-none">VIRTUAL_MANIFEST_ARCHIVE</p>
+                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic mt-1 leading-none">VIRTUAL_MANIFEST_ARCHIVE</p>
                     </div>
                  </div>
 
@@ -121,7 +133,7 @@ export default function OneClickForgePage() {
                     {loadingHistory ? (
                       <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 opacity-50">
                         <Loader2 size={32} className="text-indigo-400 animate-spin" />
-                        <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic">Decrypting_Vault...</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Decrypting_Vault...</p>
                       </div>
                     ) : history.length > 0 ? (
                       history.map((item) => (
@@ -138,13 +150,14 @@ export default function OneClickForgePage() {
                       ))
                     ) : (
                       <div className="p-12 flex flex-col items-center justify-center text-center space-y-4 opacity-20 border-2 border-dashed border-white/5 rounded-[3rem]">
-                         <Binary size={48} className="text-slate-800" />
-                         <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic">Vault_Empty</p>
+                         <Binary size={48} className="text-slate-400" />
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Vault_Empty</p>
                       </div>
                     )}
                  </div>
 
-                 <button 
+                 <button
+                  type="button"
                   onClick={fetchHistory}
                   className="w-full py-5 rounded-[2.5rem] bg-white/5 border-2 border-white/10 text-slate-500 text-[10px] font-black uppercase tracking-widest italic hover:bg-white/10 hover:text-white transition-all mt-8"
                  >

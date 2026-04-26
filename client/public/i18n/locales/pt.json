@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "loading": "Carregando…",
+    "error": "Erro",
+    "success": "Sucesso",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "retry": "Tentar de novo",
+    "more": "Mais",
+    "menu": "Menu",
+    "logout": "Sair",
+    "yes": "Sim",
+    "no": "Não",
+    "redirecting": "Redirecionando para entrada…",
+    "dismiss": "Dispensar"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "videos": "Vídeos",
+    "content": "Conteúdo",
+    "aiFeatures": "Funções IA",
+    "library": "Biblioteca",
+    "scripts": "Roteiros",
+    "workflows": "Fluxos",
+    "tasks": "Tarefas",
+    "projects": "Projetos",
+    "jobs": "Trabalhos",
+    "teams": "Equipes",
+    "approvals": "Aprovações",
+    "quotes": "Citações",
+    "scheduler": "Agendador",
+    "calendar": "Calendário",
+    "social": "Social",
+    "analytics": "Análise",
+    "achievements": "Conquistas",
+    "membership": "Assinatura",
+    "notifications": "Notificações",
+    "settings": "Configurações",
+    "templates": "Modelos",
+    "infrastructure": "Infraestrutura",
+    "clickTagline": "Conteúdo com IA"
+  },
+  "workflow": {
+    "niche": "Nicho",
+    "setNiche": "Escolher nicho",
+    "next": "Próximo",
+    "stages": {
+      "ingest":   { "label": "Importar",  "description": "Traga material — arquivo, link ou gravação ao vivo." },
+      "script":   { "label": "Roteiro",   "description": "A IA escreve gancho, corpo e CTA para o seu nicho." },
+      "edit":     { "label": "Editar",    "description": "Corte, legende e marque seu vídeo com inteligência de estilo." },
+      "schedule": { "label": "Agendar",   "description": "Publique em cada plataforma no melhor horário." },
+      "analyze":  { "label": "Analisar",  "description": "Meça resultados e descubra o que repetir." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "Enviar",
+      "link": "Colar link",
+      "record": "Gravar",
+      "cloud": "Nuvem",
+      "remix": "Remix"
+    },
+    "paste": "Colar",
+    "dropTitle": "Arraste um vídeo aqui",
+    "dropHint": "Ou escolha um arquivo. MP4, MOV, WebM até 500 MB.",
+    "chooseFile": "Escolher arquivo",
+    "linkLabel": "URL do vídeo",
+    "linkPlaceholder": "https://www.tiktok.com/@usuario/video/12345 ou https://cdn/clip.mp4",
+    "linkAction": "Importar",
+    "linkSupports": "Aceita {platforms}. Downloads de plataforma precisam de {ytdlp} no servidor.",
+    "recordStart": "Iniciar gravação",
+    "recordStop": "Parar e enviar",
+    "recordHint": "Câmera + microfone — salvo como WebM e enviado à sua biblioteca.",
+    "cloudHint": "Cole um link do Google Drive, Dropbox ou S3. Baixamos no servidor, então o link precisa estar como {visibility}.",
+    "cloudVisibility": "Qualquer pessoa com o link → pode ver",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "Puxar",
+    "remixHint": "Escolha um projeto anterior para clonar e editar de novo.",
+    "remixRefresh": "Atualizar",
+    "remixEmpty": "Sem importações ainda — envie seu primeiro vídeo para começar sua biblioteca remixável.",
+    "tip": "Dica",
+    "tipPaste": "⌘V nesta página para colar uma URL da área de transferência.",
+    "tipReversible": "Tudo aparece na sua Biblioteca e é reversível.",
+    "uploading": "Enviando {percent}%",
+    "processing": "Processando…",
+    "errors": {
+      "noUrl": "Cole uma URL primeiro",
+      "notVideo": "Solte um arquivo de vídeo (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "Área de transferência vazia",
+      "clipboardNotUrl": "A área de transferência não contém URL",
+      "clipboardDenied": "Acesso à área de transferência negado — cole manualmente",
+      "uploadFailed": "Falha no envio: {message}",
+      "ingestFailed": "Falha na importação: {message}",
+      "remixFailed": "Falha no remix",
+      "noContentId": "O servidor não retornou um contentId",
+      "cameraDenied": "Não foi possível acessar câmera/microfone"
+    }
+  },
+  "language": {
+    "label": "Idioma",
+    "picker": "Selecionar idioma"
+  },
+  "settings": {
+    "title": "Configurações",
+    "subtitle": "Gerencie suas preferências",
+    "language": "Idioma",
+    "saveSettings": "Salvar"
+  },
+  "video": {
+    "title": "Vídeos",
+    "upload": "Enviar",
+    "edit": "Editar",
+    "processing": "Processando…"
+  }
+}

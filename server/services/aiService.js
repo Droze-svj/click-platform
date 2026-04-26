@@ -1,5 +1,6 @@
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const { buildSystemPrompt, buildCompactGuidance } = require('./marketingKnowledge');
 let Sentry = null;
 try {
   Sentry = require('@sentry/node');
@@ -48,20 +49,26 @@ function safeJsonParse(rawString, fallback = {}) {
 }
 
 // Generate captions for video clips
-async function generateCaptions(text, niche) {
+async function generateCaptions(text, niche, platform = 'tiktok', language = 'en') {
   if (!geminiConfigured) {
     logger.warn('Google AI API key not configured, using fallback caption');
     return `Check this out! 🔥 #${niche} #viral #trending`;
   }
 
   try {
-    const prompt = `Create an engaging, viral-ready caption for a ${niche} social media post. The caption should be:
-- Attention-grabbing and hook-driven
-- Include relevant hashtags
-- Optimized for TikTok/Instagram Reels
-- Maximum 150 characters
+    const system = buildSystemPrompt({ persona: 'caption-writer', niche, platform, stage: 'script', language });
+    const prompt = `${system}
 
-Content context: ${text}`;
+── Task ──
+Write ONE caption for the post below. Constraints:
+- Hook-first; first 4 words must stop the scroll.
+- Maximum 150 characters total (including hashtags).
+- Include 3–5 hashtags chosen from the niche/platform playbook above.
+- Match the niche voice exactly. Do not flatten it.
+
+Content context: ${text}
+
+Return only the caption text — no preamble, no explanation.`;
 
     const content = await geminiGenerate(prompt, { maxTokens: 200 });
     return content || `Check this out! 🔥 #${niche} #viral #trending`;
@@ -89,11 +96,14 @@ async function detectHighlights(transcript, duration) {
   }
 
   try {
-    const prompt = `Analyze this transcript and identify the most engaging, shareable moments. Return a JSON object with a "highlights" array. Each highlight has:
+    const guidance = buildCompactGuidance({ niche: 'other', platform: 'tiktok', stage: 'edit' });
+    const prompt = `${guidance}
+
+Analyze this transcript and identify the most engaging, shareable moments per the retention rules above. Return a JSON object with a "highlights" array. Each highlight has:
 - startTime (number, seconds)
-- text (the quote or key phrase)
+- text (the quote or key phrase — verbatim from transcript)
 - platform (tiktok, instagram, or youtube)
-- reason (why this moment is engaging)
+- reason (which retention principle from above makes it work — be specific)
 
 Transcript: ${transcript}
 Total duration: ${duration} seconds

@@ -149,12 +149,12 @@ export default function TemporalOrchestratorPage() {
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={32} />
               </button>
               <div className="w-24 h-24 bg-amber-500/5 border border-amber-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent opacity-100" />
-                <Calendar size={44} className="text-amber-400 relative z-10 group-hover:rotate-12 transition-transform duration-1000" />
+                <Calendar size={44} className="text-amber-400 relative z-10 group-hover:rotate-12 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -164,18 +164,18 @@ export default function TemporalOrchestratorPage() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <ActivitySquare size={12} className="text-amber-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">CHRONOS_SYNC_STABLE</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">CHRONOS_SYNC_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Temporal Orchestrator</h1>
-                 <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous manifestation orchestrator for chronos-aligned delivery.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Temporal Orchestrator</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous manifestation orchestrator for chronos-aligned delivery.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <button onClick={() => loadManifests(true)} title="Synchronize"
                 className="w-20 h-20 rounded-[2.5rem] bg-white text-black flex items-center justify-center hover:bg-amber-500 hover:text-white transition-all shadow-2xl group active:scale-95">
-                <RefreshCw size={36} className={refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000'} />
+                <RefreshCw size={36} className={refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} />
               </button>
               <button 
                 onClick={() => router.push('/dashboard/calendar')}
@@ -194,9 +194,9 @@ export default function TemporalOrchestratorPage() {
              { id: 'queue', label: 'Manifest Queue Matrix', icon: Target }
            ].map(t => (
              <button key={t.id} onClick={() => setActiveTab(t.id as any)}
-               className={`px-16 py-6 rounded-[3rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-700 flex items-center gap-6 italic ${activeTab === t.id ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-800 hover:text-white hover:bg-white/[0.04]'}`}
+               className={`px-16 py-6 rounded-[3rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-700 flex items-center gap-6 italic ${activeTab === t.id ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}
              >
-               <t.icon size={24} className={activeTab === t.id ? 'text-black' : 'text-slate-800'} /> {t.label}
+               <t.icon size={24} className={activeTab === t.id ? 'text-black' : 'text-slate-400'} /> {t.label}
              </button>
            ))}
         </div>
@@ -208,7 +208,7 @@ export default function TemporalOrchestratorPage() {
             >
               <div className="xl:col-span-2 space-y-16">
                  <div className={`${glassStyle} rounded-[6rem] p-20 relative overflow-hidden border-indigo-500/10 group shadow-[0_60px_150px_rgba(0,0,0,0.6)] min-h-[1000px] flex flex-col justify-between bg-black/40`}>
-                    <div className="absolute top-0 right-0 p-24 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-1000">
+                    <div className="absolute top-0 right-0 p-24 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300">
                        <Sparkles size={500} className="text-white" />
                     </div>
                     
@@ -217,16 +217,16 @@ export default function TemporalOrchestratorPage() {
                        <div className="space-y-12">
                           <div className="flex items-center gap-6 mb-4 border-b border-white/5 pb-6">
                              <Cpu size={24} className="text-indigo-400" />
-                             <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">Target Operational Nodes</label>
+                             <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Target Operational Nodes</label>
                           </div>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8">
                              {PLATFORMS.map(p => {
                                const active = selectedPlatforms.includes(p.id)
                                return (
                                  <button key={p.id} onClick={() => setSelectedPlatforms(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
-                                   className={`p-10 rounded-[3.5rem] border-2 flex flex-col items-center gap-6 transition-all duration-1000 shadow-2xl group/node ${active ? `border-transparent bg-gradient-to-br ${p.gradient} scale-110 shadow-[0_40px_80px_rgba(0,0,0,0.6)]` : 'bg-black/20 border-white/5 grayscale group-hover:grayscale-0 opacity-40 hover:opacity-100 hover:border-white/20'}`}
+                                   className={`p-10 rounded-[3.5rem] border-2 flex flex-col items-center gap-6 transition-all duration-300 shadow-2xl group/node ${active ? `border-transparent bg-gradient-to-br ${p.gradient} scale-110 shadow-[0_40px_80px_rgba(0,0,0,0.6)]` : 'bg-black/20 border-white/5 grayscale group-hover:grayscale-0 opacity-40 hover:opacity-100 hover:border-white/20'}`}
                                  >
-                                   <span className={`text-5xl transition-transform duration-1000 ${active ? 'scale-125' : 'group-hover/node:scale-110'}`}>{p.icon}</span>
+                                   <span className={`text-5xl transition-transform duration-300 ${active ? 'scale-125' : 'group-hover/node:scale-110'}`}>{p.icon}</span>
                                    <span className="text-[11px] font-black text-white uppercase italic tracking-widest">{p.short}</span>
                                  </button>
                                )
@@ -239,7 +239,7 @@ export default function TemporalOrchestratorPage() {
                           <div className="flex items-center justify-between border-b border-white/5 pb-6">
                              <div className="flex items-center gap-6">
                                 <Terminal size={24} className="text-indigo-400" />
-                                <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">Manifest Payload Synthesis</label>
+                                <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Manifest Payload Synthesis</label>
                              </div>
                              <div className="scale-125 pr-6"><CharRing used={charCount} limit={currentLimit} /></div>
                           </div>
@@ -248,7 +248,7 @@ export default function TemporalOrchestratorPage() {
                             value={postText}
                             onChange={e => { setPostText(e.target.value); autoResize() }}
                             placeholder="Initialize manifest trajectory..."
-                            className={`w-full bg-black/60 border-2 rounded-[5rem] p-16 text-5xl font-black italic text-white placeholder:text-slate-950 focus:outline-none focus:border-indigo-500/50 transition-all duration-1000 resize-none overflow-hidden tracking-tighter leading-[1.1] uppercase shadow-[inset_0_0_100px_rgba(0,0,0,0.6)] ${charCount > currentLimit ? 'border-rose-500/50' : 'border-white/5'}`}
+                            className={`w-full bg-black/60 border-2 rounded-[5rem] p-16 text-5xl font-black italic text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all duration-300 resize-none overflow-hidden tracking-tighter leading-[1.1] uppercase shadow-[inset_0_0_100px_rgba(0,0,0,0.6)] ${charCount > currentLimit ? 'border-rose-500/50' : 'border-white/5'}`}
                           />
                        </div>
 
@@ -257,20 +257,20 @@ export default function TemporalOrchestratorPage() {
                           <div className="space-y-8">
                              <div className="flex items-center gap-6 mb-2 pl-4 border-l-4 border-indigo-500/40">
                                 <Hash size={24} className="text-indigo-400" />
-                                <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">Lattice Trajectory Tags</label>
+                                <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">Lattice Trajectory Tags</label>
                              </div>
                              <input type="text" value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="SOVEREIGN_GROWTH, NEURAL_SYNC"
-                               className="w-full bg-black/80 border border-white/5 rounded-[3rem] px-12 py-8 text-[16px] font-black text-indigo-400 uppercase tracking-[0.4em] focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-950 italic shadow-inner"
+                               className="w-full bg-black/80 border border-white/5 rounded-[3rem] px-12 py-8 text-[16px] font-black text-indigo-400 uppercase tracking-[0.4em] focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-600 italic shadow-inner"
                                title="Tags"
                              />
                           </div>
                           <div className="space-y-8">
                              <div className="flex items-center gap-6 mb-2 pl-4 border-l-4 border-indigo-500/40">
                                 <Hexagon size={24} className="text-indigo-400" />
-                                <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none">Node Origin Reference</label>
+                                <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">Node Origin Reference</label>
                              </div>
                              <input type="text" value={contentId} onChange={e => setContentId(e.target.value)} placeholder="NODE_UUID_XXXX_0000"
-                               className="w-full bg-black/80 border border-white/5 rounded-[3rem] px-12 py-8 text-[16px] font-black text-indigo-400 uppercase tracking-[0.4em] focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-950 italic shadow-inner"
+                               className="w-full bg-black/80 border border-white/5 rounded-[3rem] px-12 py-8 text-[16px] font-black text-indigo-400 uppercase tracking-[0.4em] focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-600 italic shadow-inner"
                                title="UUID"
                              />
                           </div>
@@ -278,21 +278,21 @@ export default function TemporalOrchestratorPage() {
 
                        {/* Temporal Orchestration */}
                        <div className="p-16 rounded-[5rem] bg-indigo-500/5 border border-indigo-500/20 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] mt-12 relative overflow-hidden group/opt">
-                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover/opt:opacity-100 transition-opacity duration-1000" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover/opt:opacity-100 transition-opacity duration-300" />
                           <div className="space-y-6 relative z-10">
                              <h3 className="text-4xl font-black text-white uppercase tracking-tighter italic flex items-center gap-8 leading-none">
                                <Zap size={44} className="text-amber-400 animate-pulse" /> Temporal Alignment
                              </h3>
-                             <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-relaxed">Autonomous chronos-sync for global resonance saturation.</p>
+                             <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-relaxed">Autonomous chronos-sync for global resonance saturation.</p>
                           </div>
                           <div className="flex bg-black/80 p-4 rounded-[3.5rem] border border-white/10 shadow-2xl relative z-10">
                              <button onClick={() => setUseOptimalTime(true)}
-                               className={`flex-1 py-8 rounded-[2.5rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic flex items-center justify-center gap-6 ${useOptimalTime ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105' : 'text-slate-800 hover:text-white'}`}
+                               className={`flex-1 py-8 rounded-[2.5rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic flex items-center justify-center gap-6 ${useOptimalTime ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105' : 'text-slate-400 hover:text-white'}`}
                              >
                                 {useOptimalTime && <Gauge size={24} className="animate-pulse" />} PREDICTIVE_SYNC
                              </button>
                              <button onClick={() => setUseOptimalTime(false)}
-                               className={`flex-1 py-8 rounded-[2.5rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic ${!useOptimalTime ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105' : 'text-slate-800 hover:text-white'}`}
+                               className={`flex-1 py-8 rounded-[2.5rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic ${!useOptimalTime ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105' : 'text-slate-400 hover:text-white'}`}
                              >
                                 VECTOR_SHIFT
                              </button>
@@ -305,7 +305,7 @@ export default function TemporalOrchestratorPage() {
                                <Clock size={32} className="text-indigo-400" />
                                <div>
                                   <label className="text-[16px] font-black text-white uppercase tracking-[0.5em] italic leading-none">Target Temporal Coordinate</label>
-                                  <p className="text-[10px] text-slate-800 font-black uppercase tracking-widest mt-2 italic leading-none">MANUAL_CHRONOS_CALIBRATION_REQUIRED</p>
+                                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2 italic leading-none">MANUAL_CHRONOS_CALIBRATION_REQUIRED</p>
                                </div>
                             </div>
                             <input type="datetime-local" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)}
@@ -318,9 +318,9 @@ export default function TemporalOrchestratorPage() {
 
                     <div className="pt-24 border-t border-white/5 mt-24 relative z-10">
                        <button onClick={handleManifestTrajector} disabled={submitting || charCount > currentLimit || selectedPlatforms.length === 0}
-                         className="w-full py-16 bg-white text-black rounded-[5.5rem] text-[20px] font-black uppercase tracking-[0.8em] hover:bg-emerald-500 hover:text-white transition-all duration-1000 flex items-center justify-center gap-12 disabled:opacity-10 shadow-[0_60px_150px_rgba(255,255,255,0.1)] italic group active:scale-95 border-none"
+                         className="w-full py-16 bg-white text-black rounded-[5.5rem] text-[20px] font-black uppercase tracking-[0.8em] hover:bg-emerald-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-12 disabled:opacity-10 shadow-[0_60px_150px_rgba(255,255,255,0.1)] italic group active:scale-95 border-none"
                        >
-                         {submitting ? <RefreshCw className="animate-spin" size={44} /> : <Send size={44} className="group-hover:translate-x-8 group-hover:-translate-y-8 transition-transform duration-1000" />}
+                         {submitting ? <RefreshCw className="animate-spin" size={44} /> : <Send size={44} className="group-hover:translate-x-8 group-hover:-translate-y-8 transition-transform duration-300" />}
                          {submitting ? 'SYNCHRONIZING_GRID_NODES...' : 'MANIFEST_CONTENT_TRAJECTORY'}
                        </button>
                     </div>
@@ -332,24 +332,24 @@ export default function TemporalOrchestratorPage() {
                  <div className="space-y-10 group/preview">
                     <div className="flex items-center gap-6 mb-4 border-b border-white/5 pb-6">
                        <Eye size={24} className="text-indigo-400" />
-                       <label className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">Temporal Manifest Preview</label>
+                       <label className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Temporal Manifest Preview</label>
                     </div>
                     <TemporalPreview platform={PLATFORMS.find(p => p.id === selectedPlatforms[0])} text={postText} hashtags={hashtags.split(/[\s,#]+/).filter(h => h.trim())} />
                  </div>
 
                  <div className={`${glassStyle} rounded-[6rem] p-16 border-teal-500/10 shadow-[0_60px_100px_rgba(0,0,0,0.6)] group/windows bg-black/40`}>
                     <div className="flex items-center gap-8 mb-16 border-b border-white/5 pb-10">
-                      <div className="w-16 h-16 rounded-[2rem] bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shadow-2xl group-hover/windows:rotate-12 transition-transform duration-1000"><Activity size={32} className="text-teal-400" /></div>
+                      <div className="w-16 h-16 rounded-[2rem] bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shadow-2xl group-hover/windows:rotate-12 transition-transform duration-300"><Activity size={32} className="text-teal-400" /></div>
                       <h3 className="text-3xl font-black text-white uppercase tracking-tighter italic leading-none">Resonance Windows</h3>
                     </div>
                     <div className="space-y-10">
                        {SATURATION_WINDOWS.map((bt, i) => (
                          <div key={i} onClick={() => {setUseOptimalTime(false); setScheduledTime(new Date().toISOString().split('T')[0] + 'T' + bt.time)}}
-                           className="flex items-center justify-between p-10 rounded-[3.5rem] bg-black/20 border border-white/5 hover:bg-teal-500/5 hover:border-teal-500/30 transition-all duration-1000 cursor-pointer group shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]" 
+                           className="flex items-center justify-between p-10 rounded-[3.5rem] bg-black/20 border border-white/5 hover:bg-teal-500/5 hover:border-teal-500/30 transition-all duration-300 cursor-pointer group shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]" 
                          >
                             <div className="space-y-3">
                                <p className="text-5xl font-black text-white uppercase italic leading-none group-hover:text-teal-400 transition-colors drop-shadow-2xl">{bt.time}</p>
-                               <p className="text-[12px] font-black text-slate-800 uppercase tracking-widest italic leading-none opacity-60 pl-1">{bt.days}</p>
+                               <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none opacity-60 pl-1">{bt.days}</p>
                             </div>
                             <div className="text-right flex flex-col items-end gap-5">
                                <p className="text-[12px] font-black text-teal-400 uppercase tracking-[0.3em] italic leading-none">{bt.label}</p>
@@ -361,7 +361,7 @@ export default function TemporalOrchestratorPage() {
                        ))}
                     </div>
                     <div className="mt-16 p-12 rounded-[4rem] bg-teal-500/5 border border-teal-500/10 shadow-[inset_0_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden group/intel">
-                       <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover/intel:opacity-[0.1] transition-opacity duration-1000"><Shield size={100} /></div>
+                       <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover/intel:opacity-[0.1] transition-opacity duration-300"><Shield size={100} /></div>
                        <p className="text-[13px] font-black text-teal-500/60 uppercase tracking-[0.3em] leading-relaxed italic text-center relative z-10 px-8">Spectral heuristics confirmed: these windows provide +45% neural resonance depth for current mission architecture.</p>
                     </div>
                  </div>
@@ -381,13 +381,13 @@ export default function TemporalOrchestratorPage() {
                      </div>
                      <div>
                         <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Manifest Queue Matrix</h2>
-                        <p className="text-slate-800 text-[16px] font-black uppercase tracking-[0.8em] italic leading-none">({filteredManifests.length}_ACTIVE_CHANNELS_SYNCHRONIZED)</p>
+                        <p className="text-slate-400 text-[16px] font-black uppercase tracking-[0.8em] italic leading-none">({filteredManifests.length}_ACTIVE_CHANNELS_SYNCHRONIZED)</p>
                      </div>
                   </div>
                   <div className="relative group p-4 bg-black/60 rounded-[3.5rem] border border-white/10 shadow-[inset_0_0_40px_rgba(0,0,0,0.6)] flex items-center min-w-[350px]">
-                     <Filter size={28} className="absolute left-10 text-slate-800 group-hover:text-indigo-400 transition-colors" />
+                     <Filter size={28} className="absolute left-10 text-slate-400 group-hover:text-indigo-400 transition-colors" />
                      <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} title="Filter"
-                       className="bg-transparent border-none rounded-full pl-24 pr-16 py-8 text-[14px] font-black text-slate-800 uppercase tracking-[0.5em] focus:outline-none appearance-none hover:bg-white/5 transition-all italic hover:text-white cursor-pointer w-full"
+                       className="bg-transparent border-none rounded-full pl-24 pr-16 py-8 text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] focus:outline-none appearance-none hover:bg-white/5 transition-all italic hover:text-white cursor-pointer w-full"
                      >
                        <option value="all" className="bg-[#020205]">ALL_NODES</option>
                        <option value="scheduled" className="bg-[#020205]">SYNC_LOCKED</option>
@@ -400,13 +400,13 @@ export default function TemporalOrchestratorPage() {
                {loading ? (
                  <div className="py-80 text-center">
                     <RefreshCw size={120} className="text-indigo-500 animate-spin mx-auto mb-16 drop-shadow-[0_0_50px_rgba(99,102,241,0.5)]" />
-                    <p className="text-3xl font-black text-slate-800 uppercase tracking-[1em] animate-pulse italic">CALIBRATING_GRID...</p>
+                    <p className="text-3xl font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">CALIBRATING_GRID...</p>
                  </div>
                ) : filteredManifests.length === 0 ? (
                  <div className="py-80 text-center bg-white/[0.01] border-2 border-dashed border-white/5 rounded-[6rem] shadow-inner group transition-all hover:border-indigo-500/20">
-                    <Radio size={200} className="text-slate-950 mx-auto mb-16 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-1000 opacity-20" />
+                    <Radio size={200} className="text-slate-500 mx-auto mb-16 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 opacity-20" />
                     <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-8 leading-none opacity-40">Horizon Quiescent</h3>
-                    <p className="text-[18px] text-slate-800 font-black uppercase tracking-[0.6em] max-w-2xl mx-auto leading-relaxed italic opacity-20 px-12">No active content trajectories detected across the neural mesh. Initialise a manifest via the synthesizer.</p>
+                    <p className="text-[18px] text-slate-400 font-black uppercase tracking-[0.6em] max-w-2xl mx-auto leading-relaxed italic opacity-20 px-12">No active content trajectories detected across the neural mesh. Initialise a manifest via the synthesizer.</p>
                  </div>
                ) : (
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 relative z-10">
@@ -418,17 +418,17 @@ export default function TemporalOrchestratorPage() {
                         return (
                           <motion.div initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
                             key={post._id}
-                            className={`${glassStyle} p-12 rounded-[5.5rem] bg-black/40 hover:bg-white/[0.03] border-white/5 hover:border-indigo-500/40 transition-all duration-1000 group flex flex-col justify-between min-h-[500px] shadow-[inset_0_0_60px_rgba(0,0,0,0.6)] relative overflow-hidden`}
+                            className={`${glassStyle} p-12 rounded-[5.5rem] bg-black/40 hover:bg-white/[0.03] border-white/5 hover:border-indigo-500/40 transition-all duration-300 group flex flex-col justify-between min-h-[500px] shadow-[inset_0_0_60px_rgba(0,0,0,0.6)] relative overflow-hidden`}
                           >
-                             <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-1000 rotate-45"><CircuitBoard size={200} /></div>
+                             <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-300 rotate-45"><CircuitBoard size={200} /></div>
                              
                              <div>
                                 <div className="flex justify-between items-start mb-12 relative z-10">
                                    <div className="flex items-center gap-8">
-                                      <div className={`w-20 h-20 rounded-[2rem] bg-gradient-to-br ${pl?.gradient || 'from-gray-600 to-black'} flex items-center justify-center text-white text-3xl font-black shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000 border border-white/20`}>{pl?.icon || '?'}</div>
+                                      <div className={`w-20 h-20 rounded-[2rem] bg-gradient-to-br ${pl?.gradient || 'from-gray-600 to-black'} flex items-center justify-center text-white text-3xl font-black shadow-2xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 border border-white/20`}>{pl?.icon || '?'}</div>
                                       <div>
                                          <p className="text-[16px] font-black text-white uppercase tracking-[0.4em] italic leading-none mb-3">{pl?.label || post.platform}</p>
-                                         <div className="flex items-center gap-4 text-[12px] font-black text-slate-800 uppercase tracking-widest italic leading-none opacity-60">
+                                         <div className="flex items-center gap-4 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none opacity-60">
                                             <Clock size={20} className="text-indigo-400" /> {new Date(post.scheduledTime).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
                                          </div>
                                       </div>
@@ -437,14 +437,14 @@ export default function TemporalOrchestratorPage() {
                                      {scc.label}
                                    </div>
                                 </div>
-                                <p className="text-4xl font-black text-slate-200 leading-[1.15] italic mb-12 line-clamp-4 uppercase tracking-tighter group-hover:text-white transition-colors duration-1000 relative z-10 drop-shadow-2xl">{post.content.text || post.contentId?.title || 'NULL_CONTENT_PAYLOAD'}</p>
+                                <p className="text-4xl font-black text-slate-200 leading-[1.15] italic mb-12 line-clamp-4 uppercase tracking-tighter group-hover:text-white transition-colors duration-300 relative z-10 drop-shadow-2xl">{post.content.text || post.contentId?.title || 'NULL_CONTENT_PAYLOAD'}</p>
                              </div>
 
                              <div className="flex items-center justify-between pt-10 border-t border-white/5 relative z-10">
-                                <div className="flex items-center gap-4 text-[11px] font-black text-slate-900 uppercase tracking-widest italic opacity-40">
+                                <div className="flex items-center gap-4 text-[11px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">
                                    <Database size={16} /> ID_{post._id.slice(-8).toUpperCase()}
                                 </div>
-                                <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-all translate-y-8 group-hover:translate-y-0 duration-1000">
+                                <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-all translate-y-8 group-hover:translate-y-0 duration-300">
                                    <button onClick={() => handleDeManifest(post._id)} className="p-6 rounded-[2rem] bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-2xl border border-rose-500/20 active:scale-90 group/purge" title="Purge Manifest">
                                       <Trash2 size={32} className="group-hover/purge:rotate-12 transition-transform duration-700" />
                                    </button>
@@ -487,7 +487,7 @@ function CharRing({ used, limit }: { used: number; limit: number }) {
         strokeDasharray={circ}
         strokeDashoffset={circ * (1 - pct)}
         strokeLinecap="round"
-        className={`transition-all duration-1000 ${over ? 'text-rose-500 animate-pulse' : pct > 0.8 ? 'text-amber-400' : 'text-indigo-500'}`} />
+        className={`transition-all duration-300 ${over ? 'text-rose-500 animate-pulse' : pct > 0.8 ? 'text-amber-400' : 'text-indigo-500'}`} />
     </svg>
   )
 }
@@ -495,8 +495,8 @@ function CharRing({ used, limit }: { used: number; limit: number }) {
 function TemporalPreview({ platform, text, hashtags }: { platform: any; text: string; hashtags: string[] }) {
   if (!platform || !text) return (
     <div className={`${glassStyle} rounded-[5rem] flex flex-col items-center justify-center h-80 border-dashed border-white/5 bg-black/40 shadow-inner group transition-all hover:border-indigo-500/20`}>
-      <Eye size={64} className="text-slate-950 mb-10 group-hover:scale-125 transition-transform duration-1000 opacity-20" />
-      <p className="text-[18px] font-black text-slate-900 uppercase tracking-[1em] italic leading-none opacity-20">Awaiting Signal</p>
+      <Eye size={64} className="text-slate-500 mb-10 group-hover:scale-125 transition-transform duration-300 opacity-20" />
+      <p className="text-[18px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none opacity-20">Awaiting Signal</p>
     </div>
   )
   const tags = hashtags.length > 0 ? hashtags : (SUGGESTED_HASHTAGS[platform.id] || []).slice(0, 3)
@@ -505,18 +505,18 @@ function TemporalPreview({ platform, text, hashtags }: { platform: any; text: st
     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
       className={`${glassStyle} rounded-[5.5rem] p-16 overflow-hidden relative group border-indigo-500/10 shadow-[0_60px_100px_rgba(0,0,0,0.6)] hover:border-indigo-500/40 bg-black/40 min-h-[400px] flex flex-col justify-between`}
     >
-      <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-1000">
+      <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-300">
          <Radio size={150} className="text-white" />
       </div>
       <div>
         <div className="flex items-center gap-10 mb-12 relative z-10">
-          <div className={`w-20 h-20 rounded-[2rem] bg-gradient-to-br ${platform.gradient} flex items-center justify-center text-white text-3xl font-black shadow-2xl shrink-0 border border-white/20 group-hover:scale-110 group-hover:rotate-12 transition-all duration-1000`}>{platform.icon}</div>
+          <div className={`w-20 h-20 rounded-[2rem] bg-gradient-to-br ${platform.gradient} flex items-center justify-center text-white text-3xl font-black shadow-2xl shrink-0 border border-white/20 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300`}>{platform.icon}</div>
           <div>
              <p className="text-2xl font-black text-white uppercase italic tracking-tighter leading-none mb-3">{platform.label}</p>
-             <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none">TEMPORAL_PREVIEW_v6.2</p>
+             <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">TEMPORAL_PREVIEW_v6.2</p>
           </div>
         </div>
-        <p className="text-4xl font-black text-slate-200 leading-[1.1] italic mb-12 line-clamp-6 uppercase tracking-tighter group-hover:text-white transition-colors duration-1000 relative z-10 drop-shadow-2xl">{text}</p>
+        <p className="text-4xl font-black text-slate-200 leading-[1.1] italic mb-12 line-clamp-6 uppercase tracking-tighter group-hover:text-white transition-colors duration-300 relative z-10 drop-shadow-2xl">{text}</p>
       </div>
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-5 relative z-10">

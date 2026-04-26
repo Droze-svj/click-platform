@@ -78,7 +78,7 @@ export default function SovereignAnalyticsMatrix() {
            <div className="flex items-center gap-12">
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-1000" />
+                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
@@ -88,11 +88,11 @@ export default function SovereignAnalyticsMatrix() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <ActivitySquare size={12} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">RESONANCE_MONITOR_ACTIVE</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">RESONANCE_MONITOR_ACTIVE</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Analytics Matrix</h1>
-                 <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and global substrate monitoring.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Analytics Matrix</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and global substrate monitoring.</p>
               </div>
            </div>
 
@@ -102,7 +102,7 @@ export default function SovereignAnalyticsMatrix() {
                 disabled={refreshing}
                 className="px-12 py-6 bg-white text-black hover:bg-indigo-500 hover:text-white font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-6 group"
               >
-                <RefreshCw size={24} className={refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-1000'} />
+                <RefreshCw size={24} className={refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'} />
                 {refreshing ? 'SYNCING_NODES...' : 'SYNC_MATRIX'}
               </button>
            </div>
@@ -119,14 +119,14 @@ export default function SovereignAnalyticsMatrix() {
             {/* Neural Potency Ring */}
             <div className="flex flex-col items-center gap-6 shrink-0 relative z-10">
               <div className={`w-52 h-52 rounded-full border-[10px] border-indigo-500/30 flex flex-col items-center justify-center bg-indigo-500/5 shadow-[inset_0_0_60px_rgba(0,0,0,0.8)] relative group`}>
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className={`text-7xl font-black italic tracking-tighter text-white tabular-nums leading-none`}>
                   {data?.avg_engagement_rate || 0}%
                 </span>
-                <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.5em] mt-2">AFFINITY</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mt-2">AFFINITY</span>
               </div>
               <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5">
-                 <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none">Neural Potency Index</span>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">Neural Potency Index</span>
               </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function SovereignAnalyticsMatrix() {
                  <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><Terminal size={32} className="text-indigo-400" /></div>
                  <div>
                     <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Spectral Node Repository</h3>
-                    <p className="text-[10px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">Real-time surveillance of manifested content nodes.</p>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Real-time surveillance of manifested content nodes.</p>
                  </div>
               </div>
            </div>
@@ -177,15 +177,15 @@ export default function SovereignAnalyticsMatrix() {
                <motion.div key={node.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                  className={`flex items-center gap-10 px-16 py-10 cursor-pointer group transition-all duration-700 relative hover:bg-white/[0.03] border-l-[12px] border-l-transparent hover:border-l-indigo-500`}
                >
-                 <div className="text-[16px] font-black text-slate-900 w-8 tabular-nums italic">{String(idx + 1).padStart(2, '0')}</div>
+                 <div className="text-[16px] font-black text-slate-500 w-8 tabular-nums italic">{String(idx + 1).padStart(2, '0')}</div>
 
-                 <div className={`w-16 h-16 rounded-[2rem] bg-black/60 border border-white/10 flex items-center justify-center text-white text-3xl shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform duration-1000 uppercase font-black italic`}>
+                 <div className={`w-16 h-16 rounded-[2rem] bg-black/60 border border-white/10 flex items-center justify-center text-white text-3xl shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.5)] group-hover:rotate-12 transition-transform duration-300 uppercase font-black italic`}>
                    {node.platform === 'tiktok' ? '♪' : node.platform === 'instagram' ? '◈' : '▶'}
                  </div>
 
                  <div className="flex-1 min-w-0">
                    <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-700">{node.title}</p>
-                   <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-800 uppercase tracking-widest italic leading-none">
+                   <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none">
                       <div className="flex items-center gap-2"><Cpu size={14} /> <span>{node.platform.toUpperCase()} PHANTOM NODE</span></div>
                       <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
                       <div className="flex items-center gap-2"><Clock size={14} /> <span>{new Date(node.publishedAt || Date.now()).toLocaleDateString()} CYCLE</span></div>
@@ -195,7 +195,7 @@ export default function SovereignAnalyticsMatrix() {
                  <div className="flex items-center gap-12 shrink-0">
                    <div className="text-right hidden sm:block">
                      <div className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{fmt(node.views)}</div>
-                     <div className="text-[10px] text-slate-900 font-black uppercase tracking-widest mt-1">SATURATION</div>
+                     <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">SATURATION</div>
                    </div>
                    <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl font-black border-2 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${(node.viralScore ?? 0) >= 80 ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-indigo-500/30 text-indigo-400 bg-indigo-500/10'}`}>
                      {node.viralScore ?? 0}
@@ -234,11 +234,11 @@ function ScoreCard({ label, value, icon: Icon, color, trend }: { label: string; 
       className={`${glass} p-10 rounded-[4rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden shadow-2xl`}
     >
        <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none"><Activity size={100} className="text-white" /></div>
-       <div className={`w-20 h-20 rounded-[2rem] bg-black/40 border border-white/10 flex items-center justify-center mb-6 shadow-2xl group-hover:rotate-12 transition-all duration-1000`}>
+       <div className={`w-20 h-20 rounded-[2rem] bg-black/40 border border-white/10 flex items-center justify-center mb-6 shadow-2xl group-hover:rotate-12 transition-all duration-300`}>
           <Icon size={32} className={color} />
        </div>
        <div className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-4">{value}</div>
-       <div className="text-[11px] text-slate-800 font-black uppercase tracking-[0.4em] italic mb-6 leading-none group-hover:text-white transition-colors">{label}</div>
+       <div className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em] italic mb-6 leading-none group-hover:text-white transition-colors">{label}</div>
        <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest italic bg-white/5 px-6 py-2 rounded-full border border-white/5">
           {trend}
        </div>

@@ -96,7 +96,7 @@ export default function FluxForecastingMatrixPage() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
               <button onClick={() => router.push('/dashboard/analytics')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
                 <ArrowLeft size={32} />
               </button>
               <div className="w-20 h-20 bg-emerald-500/5 border border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
@@ -111,11 +111,11 @@ export default function FluxForecastingMatrixPage() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Activity size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
-                 <p className="text-slate-800 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Tracking engagement kinetic and resonance growth across temporal segments.</p>
+                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Tracking engagement kinetic and resonance growth across temporal segments.</p>
               </div>
            </div>
 
@@ -124,7 +124,7 @@ export default function FluxForecastingMatrixPage() {
               <div className="flex flex-col items-end gap-2 mr-4">
                  <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${pulseMode ? 'bg-emerald-500 animate-ping' : 'bg-slate-800'}`} />
-                    <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic">Pulse_Mode</span>
+                    <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic">Pulse_Mode</span>
                     <button 
                       onClick={() => setPulseMode(!pulseMode)}
                       title={pulseMode ? "Disable Pulse Sync" : "Enable Pulse Sync"}
@@ -135,7 +135,7 @@ export default function FluxForecastingMatrixPage() {
                     </button>
                  </div>
                  {lastSynced && (
-                    <span className="text-[8px] font-black text-slate-900 uppercase tracking-widest italic opacity-50">
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic opacity-50">
                        Last_Sync: {lastSynced.toLocaleTimeString()}
                     </span>
                  )}
@@ -145,7 +145,7 @@ export default function FluxForecastingMatrixPage() {
                 {['7', '30', '90'].map(p => (
                   <button key={p} onClick={() => setPeriod(p)}
                     className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-700 ${
-                      period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-800 hover:text-white'
+                      period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {p}_CYCLES
@@ -178,7 +178,7 @@ export default function FluxForecastingMatrixPage() {
               <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
               <div>
                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
-                 <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
+                 <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
               </div>
            </div>
 
@@ -196,7 +196,7 @@ export default function FluxForecastingMatrixPage() {
                        <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
                          key={day.date} className="flex items-center gap-12 group"
                        >
-                          <div className="w-48 text-[12px] font-black text-slate-800 uppercase tracking-widest italic leading-none group-hover:text-emerald-400 transition-colors">
+                          <div className="w-48 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none group-hover:text-emerald-400 transition-colors">
                              {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
                           </div>
                           <div className="flex-1 space-y-3">
@@ -221,7 +221,7 @@ export default function FluxForecastingMatrixPage() {
                 <div className="py-48 flex flex-col items-center justify-center text-center space-y-8 opacity-10">
                    <Target size={120} className="text-white animate-pulse" />
                    <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">NULL_FLUX_SIGNATURE</h3>
-                   <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic">No resonance data manifested in this temporal segment.</p>
+                   <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic">No resonance data manifested in this temporal segment.</p>
                 </div>
               )}
            </div>
@@ -234,7 +234,7 @@ export default function FluxForecastingMatrixPage() {
                  <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><Monitor size={20} className="text-emerald-400" /></div>
                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
               </div>
-              <div className="text-[11px] font-black text-slate-900 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
+              <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
                  LITERAL_SIGNAL_LOGS_V9
               </div>
            </div>
@@ -244,7 +244,7 @@ export default function FluxForecastingMatrixPage() {
                  <thead className="bg-black/60 border-b border-white/5">
                     <tr>
                        {['Temporal_Coord', 'Saturation', 'Affinities', 'Signal_Resonance', 'Active_Nodes', 'Kinetic_Flux'].map(h => (
-                         <th key={h} className="px-12 py-8 text-[12px] font-black text-slate-800 uppercase tracking-widest italic">{h}</th>
+                         <th key={h} className="px-12 py-8 text-[12px] font-black text-slate-400 uppercase tracking-widest italic">{h}</th>
                        ))}
                     </tr>
                  </thead>
@@ -300,8 +300,8 @@ function KineticCard({ label, value, icon: Icon, color, trend }: { label: string
           <Icon size={44} className={color} />
        </div>
        <div className="text-7xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-6 drop-shadow-2xl">{value}</div>
-       <div className="text-[14px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">{label}</div>
-       <div className="text-[10px] text-slate-950 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-emerald-400 transition-colors">
+       <div className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{label}</div>
+       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-emerald-400 transition-colors">
           {trend}
        </div>
     </motion.div>

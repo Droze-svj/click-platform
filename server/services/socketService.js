@@ -5,9 +5,24 @@ let io = null;
 function initializeSocket(server) {
   const { Server } = require('socket.io');
 
+  // In dev, accept any localhost/127.0.0.1 origin so we don't have to keep the
+  // explicit list in lock-step with whatever port `next dev` picks.
+  // In prod, honor FRONTEND_URL or fall back to the known dev ports.
+  const isDev = process.env.NODE_ENV !== 'production';
+  const corsOrigin = isDev
+    ? (origin, cb) => {
+        if (!origin) return cb(null, true); // same-origin / curl / native ws clients
+        try {
+          const u = new URL(origin);
+          if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return cb(null, true);
+        } catch { /* fall through */ }
+        cb(null, false);
+      }
+    : (process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3010']);
+
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
       credentials: true
     }

@@ -221,21 +221,21 @@ router.get('/connections', auth, apiLimiter, asyncHandler(async (req, res) => {
 }));
 
 /**
- * GET /api/oauth/accounts (Alias for connections used by Resonance Hub)
+ * GET /api/oauth/accounts
+ * Standardized endpoint for fetching connected social accounts.
+ * Supports development mode mock accounts.
  */
-router.get('/accounts', auth, apiLimiter, asyncHandler(async (req, res) => {
-  return router.handle(req, res, (err) => {
-    if (err) return res.status(500).json({ success: false, error: err.message });
-    // This is a bit hacky, but effectively aliases the call to /connections
-    req.url = '/connections';
-    router.handle(req, res);
-  });
-}));
-
-// Re-implementing /accounts explicitly to avoid recursion or handling issues if above fails
 router.get('/accounts', auth, apiLimiter, asyncHandler(async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
+
+    // Handle Development/Dev-User bypass
+    if (isDevUser(req.user)) {
+      const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
+      const accounts = Object.fromEntries(platforms.map((p) => [p, null]));
+      return res.json({ success: true, accounts });
+    }
+
     const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
     const accounts = {};
 
@@ -246,13 +246,18 @@ router.get('/accounts', auth, apiLimiter, asyncHandler(async (req, res) => {
         try {
           const accs = await service.getConnectedAccounts(userId);
           if (accs && accs.length > 0) {
+            // Twitter usually returns multiple, others usually return one
             accounts[p] = p === 'twitter' ? accs : accs[0];
           }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+          logger.warn(`Failed to fetch ${p} accounts for user ${userId}`, { error: e.message });
+        }
       }
     }
+
     res.json({ success: true, accounts });
   } catch (error) {
+    logger.error('Critical failure in /oauth/accounts', { error: error.message });
     res.status(500).json({ success: false, error: 'Topology scan failed' });
   }
 }));

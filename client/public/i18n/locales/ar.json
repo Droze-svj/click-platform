@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "search": "بحث",
+    "filter": "تصفية",
+    "loading": "جارٍ التحميل…",
+    "error": "خطأ",
+    "success": "تم",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "retry": "إعادة المحاولة",
+    "more": "المزيد",
+    "menu": "القائمة",
+    "logout": "تسجيل الخروج",
+    "yes": "نعم",
+    "no": "لا",
+    "redirecting": "إعادة التوجيه إلى تسجيل الدخول…",
+    "dismiss": "تجاهل"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "videos": "الفيديوهات",
+    "content": "المحتوى",
+    "aiFeatures": "ميزات الذكاء الاصطناعي",
+    "library": "المكتبة",
+    "scripts": "السيناريوهات",
+    "workflows": "سير العمل",
+    "tasks": "المهام",
+    "projects": "المشاريع",
+    "jobs": "الأعمال",
+    "teams": "الفِرق",
+    "approvals": "الموافقات",
+    "quotes": "الاقتباسات",
+    "scheduler": "المُجدوِل",
+    "calendar": "التقويم",
+    "social": "التواصل",
+    "analytics": "التحليلات",
+    "achievements": "الإنجازات",
+    "membership": "العضوية",
+    "notifications": "الإشعارات",
+    "settings": "الإعدادات",
+    "templates": "القوالب",
+    "infrastructure": "البنية التحتية",
+    "clickTagline": "محتوى مدعوم بالذكاء الاصطناعي"
+  },
+  "workflow": {
+    "niche": "المجال",
+    "setNiche": "اختر المجال",
+    "next": "التالي",
+    "stages": {
+      "ingest":   { "label": "استيراد", "description": "أحضر اللقطات — ملف أو رابط أو تسجيل مباشر." },
+      "script":   { "label": "السيناريو", "description": "يكتب الذكاء الاصطناعي الجاذب والمحتوى وCTA حسب مجالك." },
+      "edit":     { "label": "تحرير", "description": "قص وترجم وأضف هويتك بذكاء أسلوبي." },
+      "schedule": { "label": "جدولة", "description": "انشر على كل منصة في وقتها الأمثل." },
+      "analyze":  { "label": "تحليل", "description": "قِس الأداء وتعلّم ما يستحق التكرار." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "رفع",
+      "link": "لصق رابط",
+      "record": "تسجيل",
+      "cloud": "السحابة",
+      "remix": "ريمكس"
+    },
+    "paste": "لصق",
+    "dropTitle": "اسحب فيديو هنا",
+    "dropHint": "أو اختر ملفًا. MP4 وMOV وWebM حتى 500 ميجابايت.",
+    "chooseFile": "اختيار ملف",
+    "linkLabel": "رابط الفيديو",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 أو https://cdn/clip.mp4",
+    "linkAction": "استيراد",
+    "linkSupports": "يدعم {platforms}. تنزيلات المنصات تحتاج {ytdlp} على الخادم.",
+    "recordStart": "بدء التسجيل",
+    "recordStop": "إيقاف ورفع",
+    "recordHint": "كاميرا + ميكروفون — يُحفَظ بصيغة WebM ويُرفَع إلى مكتبتك.",
+    "cloudHint": "الصق رابط Google Drive أو Dropbox أو S3. التنزيل من جهة الخادم، لذا يجب أن يكون الرابط على {visibility}.",
+    "cloudVisibility": "أي شخص يمتلك الرابط → يمكنه العرض",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "جلب",
+    "remixHint": "اختر مشروعًا سابقًا لاستنساخه وبدء تحرير جديد.",
+    "remixRefresh": "تحديث",
+    "remixEmpty": "لا توجد عمليات استيراد بعد — ارفع أول فيديو لبناء مكتبة قابلة للريمكس.",
+    "tip": "نصيحة",
+    "tipPaste": "اضغط ⌘V في هذه الصفحة للصق رابط من الحافظة.",
+    "tipReversible": "كل شيء يظهر في مكتبتك ويمكن التراجع عنه.",
+    "uploading": "جارٍ الرفع {percent}%",
+    "processing": "قيد المعالجة…",
+    "errors": {
+      "noUrl": "الصق رابطًا أولًا",
+      "notVideo": "أسقط ملف فيديو (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "الحافظة فارغة",
+      "clipboardNotUrl": "الحافظة لا تحتوي على رابط",
+      "clipboardDenied": "تم رفض الوصول إلى الحافظة — الصق يدويًا",
+      "uploadFailed": "فشل الرفع: {message}",
+      "ingestFailed": "فشل الاستيراد: {message}",
+      "remixFailed": "فشل الريمكس",
+      "noContentId": "لم يُرجع الخادم contentId",
+      "cameraDenied": "تعذّر الوصول إلى الكاميرا/الميكروفون"
+    }
+  },
+  "language": {
+    "label": "اللغة",
+    "picker": "اختر اللغة"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "subtitle": "إدارة تفضيلات حسابك",
+    "language": "اللغة",
+    "saveSettings": "حفظ"
+  },
+  "video": {
+    "title": "الفيديوهات",
+    "upload": "رفع",
+    "edit": "تحرير",
+    "processing": "قيد المعالجة…"
+  }
+}
