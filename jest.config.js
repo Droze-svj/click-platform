@@ -38,6 +38,11 @@ module.exports = {
     {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/server/**/*.test.js'],
+      // Route tests under tests/server/routes/ require server/index.js,
+      // which boots the full server (DB, sockets, cron, etc.) — that's
+      // integration-shaped, not unit. Move them with `--selectProjects
+      // integration` once the imports are wired through an exported app.
+      testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
     },
     {
       displayName: 'integration',

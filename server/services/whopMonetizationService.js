@@ -7,12 +7,9 @@ const logger = require('../utils/logger');
 const https = require('https');
 
 const WHOP_API_URL = process.env.WHOP_API_URL || 'https://api.whop.com/api/v2';
-const WHOP_API_KEY = process.env.WHOP_API_KEY;
 
-/**
- * Fetch products from Whop storefront
- */
 async function fetchWhopProducts() {
+  const WHOP_API_KEY = process.env.WHOP_API_KEY;
   if (!WHOP_API_KEY) {
     logger.warn('WHOP_API_KEY not found, using demo products');
     return [
