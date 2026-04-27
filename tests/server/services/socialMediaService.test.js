@@ -1,8 +1,8 @@
 const { postToSocial } = require('../../../server/services/socialMediaService');
-const OAuthService = require('../../../server/services/OAuthService');
+const OAuthService = require('../../../server/services/oauthService');
 const logger = require('../../../server/utils/logger');
 
-jest.mock('../../../server/services/OAuthService');
+jest.mock('../../../server/services/oauthService');
 jest.mock('../../../server/utils/logger');
 jest.mock('../../../server/services/TikTokSocialService', () => ({
   postToTikTok: jest.fn().mockResolvedValue({ id: 'tt123', url: 'https://tiktok.com/v1' })
