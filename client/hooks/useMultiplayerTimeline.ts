@@ -1,8 +1,17 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import * as Y from 'yjs'
-import { WebrtcProvider } from 'y-webrtc'
 import { IndexeddbPersistence } from 'y-indexeddb'
 import { TimelineSegment } from '../types/editor'
+
+// y-webrtc keeps a module-level `signalingConns` Map that caches every
+// SignalingConn instance for the page lifetime; the WebSockets inside
+// self-reconnect indefinitely. That's why disabling the public servers via
+// `signaling: []` on a NEW provider doesn't silence connections an OLDER
+// provider already opened in the same JS runtime — they leak across hot
+// reloads. The cleanest answer is to not load y-webrtc at all unless the
+// user explicitly opts into peer sync via NEXT_PUBLIC_WEBRTC_SIGNALING.
+// IndexedDB persistence below is enough for solo editing.
+type WebrtcProviderClass = typeof import('y-webrtc').WebrtcProvider
 
 export function useMultiplayerTimeline(roomId: string, initialSegments: TimelineSegment[]) {
   const [segments, setSegments] = useState<TimelineSegment[]>(initialSegments)
@@ -19,9 +28,19 @@ export function useMultiplayerTimeline(roomId: string, initialSegments: Timeline
     // 1. IndexedDB Offline Persistence (Local caching)
     const indexdbProvider = new IndexeddbPersistence(`click-v6-timeline-${roomId}`, ydoc)
 
-    // 2. WebRTC P2P Sync (Zero conflict multiplayer)
-    // In production, you'd specify signaling servers here
-    const webrtcProvider = new WebrtcProvider(`click-v6-room-${roomId}`, ydoc)
+    // 2. WebRTC P2P Sync — only enabled when signaling servers are configured.
+    //    See module comment above for why we lazy-load y-webrtc.
+    const signalingServers = (process.env.NEXT_PUBLIC_WEBRTC_SIGNALING || '')
+      .split(',').map(s => s.trim()).filter(Boolean)
+    let webrtcProvider: InstanceType<WebrtcProviderClass> | null = null
+    if (signalingServers.length > 0) {
+      // Lazy import so the y-webrtc module never loads in solo mode.
+      import('y-webrtc').then(({ WebrtcProvider }) => {
+        webrtcProvider = new WebrtcProvider(`click-v6-room-${roomId}`, ydoc, {
+          signaling: signalingServers,
+        })
+      }).catch(() => { /* peer sync unavailable — IndexedDB still works */ })
+    }
 
     const ySegments = ydoc.getArray<TimelineSegment>('timeline-segments')
     yarrayRef.current = ySegments
@@ -50,7 +69,7 @@ export function useMultiplayerTimeline(roomId: string, initialSegments: Timeline
     isSetupRef.current = true
 
     return () => {
-      webrtcProvider.destroy()
+      try { webrtcProvider?.destroy() } catch { /* not yet initialized */ }
       indexdbProvider.destroy()
       ydoc.destroy()
       isSetupRef.current = false

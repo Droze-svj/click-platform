@@ -24,13 +24,18 @@ import {
   Fingerprint,
   BrainCircuit,
   Database,
-  Send
+  Send,
+  Scissors,
+  Trash2,
+  Lock,
+  type LucideIcon,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Clinical Utilities
 import { getStatusColor, loadEditorContentPreferences, pushRecentSection } from '../utils/editorUtils'
 import { CATEGORIES } from '../utils/editorConstants'
+import { EDITOR_GROUPS, groupForCategory } from '../utils/editorGroups'
 
 // Contextual Components
 import { EditorSidebar } from './editor/EditorSidebar'
@@ -48,7 +53,6 @@ import EliteAIView from './editor/views/EliteAIView'
 import CreativeAIView from './editor/views/CreativeAIView'
 import GrowthInsightsView from './editor/views/GrowthInsightsView'
 import PredictionEngineView from './editor/views/PredictionEngineView'
-import SocialVaultView from './editor/views/SocialVaultView'
 import AutomateView from './editor/views/AutomateView'
 import ColorGradingView from './editor/views/ColorGradingView'
 const AdvancedTimelineView = dynamic(() => import('./editor/views/AdvancedTimelineView'), { ssr: false })
@@ -61,11 +65,11 @@ import ScriptGeneratorView from './editor/views/ScriptGeneratorView'
 import ThumbnailGeneratorView from './editor/views/ThumbnailGeneratorView'
 import SchedulingView from './editor/views/SchedulingView'
 import ShortClipsView from './editor/views/ShortClipsView'
-import SettingsView from './editor/views/SettingsView'
-import ChromakeyView, { ChromaKeySettings } from './editor/views/ChromakeyView'
-import VisualFXView from './editor/views/VisualFXView'
-import AIAnalysisView from './editor/views/AIAnalysisView'
+import { ChromaKeySettings } from './editor/views/ChromakeyView'
 import AIAssistView from './editor/views/AIAssistView'
+import Inspector, { deriveSelection } from './editor/Inspector'
+import PerformanceRail from './editor/PerformanceRail'
+import { useCreatorPipeline, type PipelineStage } from '../hooks/useCreatorPipeline'
 import DistributionHubView from './editor/views/DistributionHubView'
 import { StyleVaultDashboardView } from './editor/views/StyleVaultDashboardView'
 import { NeuralTrainingMatrixView } from './editor/views/NeuralTrainingMatrixView'
@@ -77,6 +81,8 @@ import CreativePacksView from './editor/views/CreativePacksView'
 import TextMotionStudioView from './editor/views/TextMotionStudioView'
 import { useStyleDNA } from '../hooks/useStyleDNA' // Added
 import { useStyleProfile } from '../hooks/useStyleProfile'
+import { useEditorShortcuts } from '../hooks/useEditorShortcuts'
+import { rippleDelete as rippleDeleteOp } from '../utils/timelineOps'
 import { PlatformInsights } from '../types/editor' // Added
 
 import AchievementSystem from './AchievementSystem'
@@ -312,6 +318,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   // Intelligence & Style DNA
   const styleDNA = useStyleDNA(timelineSegments, [...textOverlays, ...shapeOverlays, ...imageOverlays, ...svgOverlays, ...gradientOverlays]); // Initialized useStyleDNA
   const styleProfile = useStyleProfile()
+  const creatorPipeline = useCreatorPipeline()
   const [aiProposalSnapshot, setAiProposalSnapshot] = useState<any>(null); // Added
   const [telemetryHistory, setTelemetryHistory] = useState<any[]>([]); // Added
 
@@ -676,6 +683,28 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     }))
     showToast('L-cut toggled — audio continues 0.5s after cut', 'success')
   }, [selectedSegmentId, setTimelineSegments, showToast])
+
+  // ── Pro keyboard shortcuts (J/K/L, [, ], S, X, arrows, Cmd+/-/0) ──
+  // Wires the keyboard hook to the editor's existing actions. JKL transport
+  // scaffolding is included but only seeks (no playbackRate change yet — the
+  // <video> element lives inside RealTimeVideoPreview and isn't directly
+  // reachable here without a ref-passing refactor).
+  const handleRippleDeleteSelected = useCallback(() => {
+    if (selectedSegmentIds.length === 0) return
+    setTimelineSegments((prev: TimelineSegment[]) => rippleDeleteOp(prev, selectedSegmentIds))
+    setSelectedSegmentIds([])
+    showToast(`Ripple deleted ${selectedSegmentIds.length} clip(s)`, 'success')
+  }, [selectedSegmentIds, setTimelineSegments, showToast])
+
+  useEditorShortcuts({
+    getCurrentTime: () => videoState.currentTime,
+    getDuration:    () => videoState.duration,
+    seek:           (t) => setVideoState(prev => ({ ...prev, currentTime: t })),
+    togglePlay:     () => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying })),
+    setPlaybackRate: () => { /* preview owns the <video> ref — no-op for now */ },
+    splitAtPlayhead: handleSplitAtPlayhead,
+    rippleDeleteSelected: handleRippleDeleteSelected,
+  })
 
   // ── Consolidated UI Preference State ──
   const [layoutPrefs, setLayoutPrefs] = useState<EditorLayoutPreferences>(loadLayoutPreferences)
@@ -1452,7 +1481,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
         setTextOverlays={setTextOverlays}
         transcript={transcript}
       />
-      case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} />
+      case 'color': return <ColorGradingView videoFilters={videoFilters} setVideoFilters={setVideoFilters} colorGradeSettings={colorGradeSettings} setColorGradeSettings={setColorGradeSettings} showToast={showToast} onRecordPick={styleProfile.recordPick} />
       case 'timeline': return <AdvancedTimelineView useProfessionalTimeline={useProfessionalTimeline} setUseProfessionalTimeline={setUseProfessionalTimeline} videoState={videoState} setVideoState={setVideoState} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} selectedSegmentId={selectedSegmentId} onSegmentSelect={(id) => setSelectedSegmentIds(id ? [id] : [])} videoUrl={actualVideoUrl || ''} aiSuggestions={aiSuggestions} showAiPreviews={true} showToast={showToast} setActiveCategory={setActiveCategory} />
       case 'assets': return <AssetLibraryView currentTime={videoState.currentTime} videoDuration={videoState.duration} setTimelineSegments={setTimelineSegments} showToast={showToast} myBroll={userAssets.filter(a => a.type === 'broll')} myMusic={userAssets.filter(a => a.type === 'music')} />
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
@@ -1605,12 +1634,62 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       <CommandK
         isOpen={commandKOpen}
         onClose={() => setCommandKOpen(false)}
+        commands={(() => {
+          // Build a dynamic command list:
+          //   1) every CATEGORIES entry → "Open <label>" routed via setActiveCategory.
+          //   2) selection-aware actions (split / ripple delete / lock) only when something is picked.
+          //   3) Style-vault legacy entries kept for backward compat.
+          const items: { id: string; label: string; icon: LucideIcon; category: string; shortcut?: string }[] = []
+          // Categories grouped under their EDITOR_GROUPS label
+          for (const cat of CATEGORIES) {
+            const groupId = groupForCategory(cat.id)
+            const group = EDITOR_GROUPS.find(g => g.id === groupId)
+            items.push({
+              id: cat.id,
+              label: `Open ${cat.label}`,
+              icon: cat.icon as LucideIcon,
+              category: group?.label.toUpperCase() || 'EDITOR',
+            })
+          }
+          // Selection-aware actions
+          if (selectedSegmentId) {
+            items.unshift(
+              { id: '__split-at-playhead', label: 'Split clip at playhead', icon: Scissors, category: 'Action', shortcut: 'S' },
+              { id: '__ripple-delete', label: 'Ripple-delete selected clip(s)', icon: Trash2, category: 'Action', shortcut: 'X' },
+              { id: '__lock-segment', label: 'Toggle lock on selected clip', icon: Lock, category: 'Action' },
+            )
+          }
+          // Always-available editor actions
+          items.unshift(
+            { id: '__layout-balanced', label: 'Layout: balanced', icon: Layers, category: 'View' },
+            { id: '__layout-preview',  label: 'Layout: focus preview', icon: Film, category: 'View' },
+            { id: '__layout-timeline', label: 'Layout: focus timeline', icon: Layers, category: 'View' },
+            { id: 'style-vault',       label: 'Open Style DNA Vault', icon: LayersIcon, category: 'Vault' },
+            { id: 'apply-style',       label: 'Apply Neural Style Template', icon: Sparkles, category: 'Vault' },
+          )
+          return items
+        })()}
         onExecute={(id) => {
+          // Selection-aware first
+          if (id === '__split-at-playhead') { handleSplitAtPlayhead(); return }
+          if (id === '__ripple-delete')     { handleRippleDeleteSelected(); return }
+          if (id === '__lock-segment') {
+            if (selectedSegmentId) {
+              setTimelineSegments((prev: TimelineSegment[]) => prev.map((s: TimelineSegment) =>
+                s.id === selectedSegmentId ? { ...s, locked: !(s as any).locked } as TimelineSegment : s
+              ))
+            }
+            return
+          }
+          if (id === '__layout-balanced')  { updateLayout({ focusMode: 'balanced' });  return }
+          if (id === '__layout-preview')   { updateLayout({ focusMode: 'preview' });   return }
+          if (id === '__layout-timeline')  { updateLayout({ focusMode: 'timeline' });  return }
           if (id === 'style-vault') {
             setActiveCategory('style-vault')
             setStyleVaultView('dashboard')
-          } else if (id === 'apply-style') {
-            // Mock apply first profile
+            return
+          }
+          if (id === 'apply-style') {
             if (styleProfiles.length > 0) {
               setTuningProfile(styleProfiles[0])
               showToast('Applying Neural Template: ' + styleProfiles[0].name, 'success')
@@ -1619,10 +1698,9 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               setActiveCategory('style-vault')
               setStyleVaultView('train')
             }
-          } else {
-            setActiveCategory(id as EditorCategory)
+            return
           }
-          showToast(`Neural Command Executed: ${id}`, 'info')
+          setActiveCategory(id as EditorCategory)
         }}
       />
       <AiAssistant
@@ -1634,6 +1712,9 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
         showToast={showToast}
         styleDNA={styleDNA}
         onNormalizeStyle={handleStyleNormalize}
+        videoId={videoId ?? undefined}
+        onSplitAtPlayhead={handleSplitAtPlayhead}
+        onSeek={(t) => setVideoState(prev => ({ ...prev, currentTime: t }))}
       />
 
       {/* ── Horizontal chrome: sidebar + main ── */}
@@ -1720,6 +1801,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
                 {(['balanced', 'preview', 'timeline'] as const).map((mode) => (
                   <button
+                    type="button"
                     key={mode}
                     onClick={() => updateLayout({ focusMode: mode })}
                     title={`${mode} layout`}
@@ -1734,6 +1816,74 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   </button>
                 ))}
               </div>
+
+              {/* Timeline density quick-switch — persists via layoutPrefs.timelineDensity */}
+              <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
+                {(['compact', 'comfortable', 'expanded'] as const).map((d) => (
+                  <button
+                    type="button"
+                    key={d}
+                    onClick={() => updateLayout({ timelineDensity: d })}
+                    title={`${d} timeline density`}
+                    className={`px-2 h-5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${
+                      layoutPrefs.timelineDensity === d
+                        ? 'bg-white text-black'
+                        : 'text-slate-600 hover:text-white'
+                    }`}
+                  >
+                    {d === 'compact' ? '═' : d === 'comfortable' ? '≡' : '☰'}
+                    <span className="hidden xl:inline ml-1">{d.slice(0, 4)}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Make-It-Great pipeline — single autonomous run that chains
+                   analyze → suggestions → auto-edit → posting window. Each
+                   stage uses the workflow's niche/platform for personalisation. */}
+              <button
+                type="button"
+                disabled={creatorPipeline.running || !videoId}
+                onClick={() => {
+                  if (!videoId) return
+                  creatorPipeline.run({ videoId, withAutoEdit: false })
+                    .then(r => {
+                      if (r.suggestions?.suggestions?.length) {
+                        showToast?.(`Click composed ${r.suggestions.suggestions.length} next moves — see the AI panel.`, 'success')
+                        setAssistantOpen(true)
+                      }
+                    })
+                    .catch((e: any) => showToast?.(`Pipeline failed: ${e?.message || 'unknown'}`, 'error'))
+                }}
+                title="Run the niche-aware analysis → suggestions → posting-time pipeline"
+                className={`flex items-center gap-1.5 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
+                  creatorPipeline.running
+                    ? 'bg-violet-500/30 border-violet-500/50 text-violet-200 animate-pulse'
+                    : 'bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white border-white/20 hover:shadow-lg hover:shadow-fuchsia-500/30'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Sparkles className="w-3 h-3" />
+                <span className="hidden sm:block">{creatorPipeline.running ? 'Working…' : 'Make it great'}</span>
+              </button>
+
+              {/* Inline stage indicator while pipeline runs */}
+              {creatorPipeline.running && creatorPipeline.stages.length > 0 && (
+                <div className="hidden md:flex items-center gap-1 text-[8px] font-mono text-slate-500 ml-1">
+                  {creatorPipeline.stages.map((s: PipelineStage) => (
+                    <span
+                      key={s.id}
+                      title={`${s.label}: ${s.status}${s.error ? ` — ${s.error}` : ''}`}
+                      className={`px-1.5 py-0.5 rounded uppercase tracking-widest ${
+                        s.status === 'done' ? 'bg-emerald-500/15 text-emerald-300' :
+                        s.status === 'running' ? 'bg-violet-500/15 text-violet-300' :
+                        s.status === 'failed' ? 'bg-rose-500/15 text-rose-300' :
+                        'bg-white/[0.04] text-slate-600'
+                      }`}
+                    >
+                      {s.id.slice(0, 4)}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Center: Playback controls */}
@@ -1875,7 +2025,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               {/* Predictive Health HUD - Floating */}
               <HealthDeltaOverlay
                 score={engagementScore.overall || 88}
-                diversityDelta={12}
+                diversityDelta={Math.max(0, Math.min(50, Math.round((styleDNA?.visualDensity ?? 0.4) * 30)))}
                 engagementPotential={engagementScore.viralPotential || 94}
               />
 
@@ -2080,6 +2230,66 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             selectedSegmentId={selectedSegmentId}
             transcript={transcript}
           />
+
+          {/* Inspector — quick-edit panel for the active selection. Renders to the
+               left of PropertiesPanel only when a clip or text overlay is selected,
+               so when nothing's picked the layout is unchanged. */}
+          {(selectedSegmentId || selectedOverlayId) && (
+            <Inspector
+              selection={deriveSelection(selectedSegmentId, selectedOverlayId)}
+              segments={timelineSegments}
+              textOverlays={textOverlays}
+              onUpdateSegment={(id, updates) =>
+                setTimelineSegments((prev: TimelineSegment[]) =>
+                  prev.map((s: TimelineSegment) => (s.id === id ? { ...s, ...updates } : s))
+                )}
+              onUpdateText={(id, updates) =>
+                setTextOverlays(prev =>
+                  prev.map(t => (t.id === id ? { ...t, ...updates } : t))
+                )}
+              onDeleteSegment={(id) => {
+                setTimelineSegments((prev: TimelineSegment[]) => prev.filter((s: TimelineSegment) => s.id !== id))
+                setSelectedSegmentIds([])
+                showToast('Clip removed', 'info')
+              }}
+              onDeleteText={(id) => {
+                setTextOverlays(prev => prev.filter(t => t.id !== id))
+                setSelectedOverlayId(null)
+                showToast('Text removed', 'info')
+              }}
+              onClose={() => { setSelectedSegmentIds([]); setSelectedOverlayId(null) }}
+            />
+          )}
+
+          {/* Performance Rail — shows the creator's top-performing fonts /
+               captions / motions / hooks ordered by retention delta. Each chip
+               applies to the most-recent text overlay so the user can act on
+               "what's working" without leaving the editor. */}
+          <div className="w-72 flex-shrink-0 px-3 py-3 hidden xl:block">
+            <PerformanceRail
+              onApplyFont={(fontKey) => {
+                if (textOverlays.length === 0) return
+                setTextOverlays(prev => prev.map((t, i) =>
+                  i === prev.length - 1 ? { ...t, fontFamily: fontKey } : t
+                ))
+                showToast?.(`Applied top-performing font`, 'success')
+              }}
+              onApplyCaptionStyle={(styleKey) => {
+                if (textOverlays.length === 0) return
+                setTextOverlays(prev => prev.map((t, i) =>
+                  i === prev.length - 1 ? { ...t, style: styleKey as any } : t
+                ))
+                showToast?.(`Applied top-performing caption style`, 'success')
+              }}
+              onApplyMotion={(motionKey) => {
+                if (textOverlays.length === 0) return
+                setTextOverlays(prev => prev.map((t, i) =>
+                  i === prev.length - 1 ? { ...t, motionGraphic: motionKey as any } : t
+                ))
+                showToast?.(`Applied top-performing motion`, 'success')
+              }}
+            />
+          </div>
 
           {/* Insights Sidebar (New) */}
           <InsightsSidebar

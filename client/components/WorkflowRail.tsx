@@ -28,7 +28,7 @@ const STAGE_ICONS: Record<WorkflowStage, LucideIcon> = {
 export default function WorkflowRail() {
   const pathname = usePathname()
   const router = useRouter()
-  const { state, setStage } = useWorkflow()
+  const { state, setStage, setPlatform } = useWorkflow()
   const { t } = useTranslation()
 
   const stageLabel = (s: WorkflowStage) => {
@@ -50,6 +50,14 @@ export default function WorkflowRail() {
   const routeStage = stageFromPath(pathname)
   const activeStage = routeStage ?? state.stage
   const next = nextStageMeta(activeStage)
+  const PLATFORM_OPTIONS: { id: NonNullable<ReturnType<typeof useWorkflow>['state']['platform']>; label: string }[] = [
+    { id: 'tiktok',          label: 'TikTok' },
+    { id: 'instagram',       label: 'Instagram' },
+    { id: 'youtube-shorts',  label: 'YT Shorts' },
+    { id: 'youtube',         label: 'YouTube' },
+    { id: 'twitter',         label: 'X/Twitter' },
+    { id: 'linkedin',        label: 'LinkedIn' },
+  ]
 
   return (
     <div className="sticky top-0 z-30 backdrop-blur-2xl bg-[#020205]/80 border-b border-white/[0.05]">
@@ -66,6 +74,26 @@ export default function WorkflowRail() {
             {state.niche || (t('workflow.setNiche') || 'Set niche')}
           </span>
         </Link>
+
+        {/* Platform picker — drives every niche-aware AI call (analyze,
+             trends, posting windows, suggestions). Cycles through the 6
+             supported platforms; persists via WorkflowContext. */}
+        <button
+          type="button"
+          title="Cycle target platform"
+          onClick={() => {
+            const idx = PLATFORM_OPTIONS.findIndex(p => p.id === state.platform)
+            const next = PLATFORM_OPTIONS[(idx + 1) % PLATFORM_OPTIONS.length]
+            setPlatform(next.id)
+          }}
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 hover:border-violet-500/40 hover:bg-violet-500/[0.06] transition-all flex-shrink-0 group"
+        >
+          <Send size={11} className="text-violet-400 group-hover:scale-110 transition-transform" />
+          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">Platform</span>
+          <span className="text-[10px] font-bold text-white max-w-[100px] truncate">
+            {PLATFORM_OPTIONS.find(p => p.id === state.platform)?.label || 'Pick'}
+          </span>
+        </button>
 
         {/* Stages */}
         <ol className="flex items-center gap-1 flex-1 min-w-0">

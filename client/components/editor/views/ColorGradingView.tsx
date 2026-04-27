@@ -48,6 +48,9 @@ interface ColorGradingViewProps {
   colorGradeSettings: any
   setColorGradeSettings: (v: any) => void
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
+  /** Optional: when provided, applying a preset records to the user's
+   *  style profile so future suggestions can bias toward grades they pick. */
+  onRecordPick?: (facet: 'colorGrades', key: string) => void
 }
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
@@ -150,7 +153,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ label, desc, colorClass, value,
 }
 
 const ColorGradingView: React.FC<ColorGradingViewProps> = ({
-  videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast
+  videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast, onRecordPick
 }) => {
   const [isComparing, setIsComparing] = React.useState(false)
   const [preCompareFilters, setPreCompareFilters] = React.useState<VideoFilter | null>(null)
@@ -171,6 +174,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
 
   const applyPreset = (preset: typeof COLOR_PRESETS[0]) => {
     setVideoFilters((prev: any) => ({ ...prev, ...preset.f }))
+    onRecordPick?.('colorGrades', preset.id)
     showToast(`${preset.label} applied`, 'success')
   }
 
