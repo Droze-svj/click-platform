@@ -16,7 +16,7 @@
     "start:prod": "NODE_OPTIONS='--max-old-space-size=2048' node server/index.js",
     "start:server": "node --max-old-space-size=2048 server/index.js",
     "start:client": "cd client && pnpm start",
-    "postinstall": "pnpm run prisma:generate",
+    "postinstall": "npm run prisma:generate",
     "prisma:generate": "NODE_OPTIONS='--max-old-space-size=2048' prisma generate --schema=prisma/schema.prisma",
     "install:all": "pnpm install && cd client && pnpm install",
     "test": "jest",
@@ -157,6 +157,10 @@
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
+  },
+  "overrides": {
+    "@hono/node-server": "^1.19.14",
+    "fast-xml-parser": "^5.7.2"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10",
