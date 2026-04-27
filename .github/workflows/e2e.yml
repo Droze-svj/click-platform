@@ -77,8 +77,12 @@ jobs:
         NEXT_PUBLIC_API_URL: http://localhost:5001/api
 
     - name: Run E2E tests
+      # CI manages the server lifecycle itself (the two `npm start &` steps
+      # above), so use the no-webserver config — otherwise Playwright tries
+      # to spawn `npm run dev` (which uses pnpm, not present on the runner)
+      # and exits 1 before any test runs.
       run: |
-        npx playwright test
+        npx playwright test --config=playwright.config.no-webserver.js
       env:
         E2E_BASE_URL: http://localhost:3000
         E2E_API_URL: http://localhost:5001/api
