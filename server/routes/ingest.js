@@ -28,7 +28,7 @@ const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser
 const router = express.Router();
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'videos');
-try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch {}
+try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch { /* dir exists */ }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -60,7 +60,7 @@ function classifyUrl(rawUrl) {
 function streamDownload(url, destPath, { maxBytes = 500 * 1024 * 1024, redirects = 3 } = {}) {
   return new Promise((resolve, reject) => {
     let settled = false;
-    const cleanup = () => { try { fs.unlinkSync(destPath); } catch {} };
+    const cleanup = () => { try { fs.unlinkSync(destPath); } catch { /* file already gone */ } };
     const fail = (err) => {
       if (settled) return;
       settled = true;
