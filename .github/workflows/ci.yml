@@ -45,6 +45,9 @@ jobs:
         npm ci
         cd client && npm ci
 
+    - name: Generate Prisma Client
+      run: npm run prisma:generate
+
     - name: Run linter
       run: npm run lint
 
@@ -95,6 +98,9 @@ jobs:
         npm ci
         cd client && npm ci
 
+    - name: Generate Prisma Client
+      run: npm run prisma:generate
+
     - name: Build frontend
       run: npm run build
       env:
@@ -108,6 +114,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma Client
+      run: npm run prisma:generate
 
     # Scope audit to runtime deps + critical only. The repo currently
     # carries ~15 high-severity advisories in transitive runtime chains
