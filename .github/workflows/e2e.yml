@@ -69,18 +69,28 @@ jobs:
         REDIS_URL: redis://localhost:6379
         PORT: 5001
 
-    - name: Start frontend
-      run: |
-        cd client && npm run build && npm start &
-        sleep 15
+    - name: Build frontend
+      run: cd client && npm run build
       env:
         NEXT_PUBLIC_API_URL: http://localhost:5001/api
 
+    - name: Start frontend
+      run: cd client && npm start &
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:5001/api
+
+    - name: Wait for backend + frontend to be ready
+      # `npm start &` from the workflow returns immediately. Without waiting,
+      # Playwright fires before Next.js binds port 3000 and every test errors
+      # with ERR_CONNECTION_REFUSED.
+      run: |
+        npx --yes wait-on tcp:5001 tcp:3000 --timeout 120000
+
     - name: Run E2E tests
-      # CI manages the server lifecycle itself (the two `npm start &` steps
-      # above), so use the no-webserver config — otherwise Playwright tries
-      # to spawn `npm run dev` (which uses pnpm, not present on the runner)
-      # and exits 1 before any test runs.
+      # CI manages the server lifecycle itself (separate Start steps above),
+      # so use the no-webserver config — otherwise Playwright tries to spawn
+      # `npm run dev` (which uses pnpm, not present on the runner) and exits
+      # 1 before any test runs.
       run: |
         npx playwright test --config=playwright.config.no-webserver.js
       env:

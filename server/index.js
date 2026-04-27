@@ -2289,9 +2289,14 @@ try {
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
 
-        // Initialize Socket.io for real-time updates
-        initializeSocket(server);
-        logger.info(`🔌 Socket.io initialized for real-time updates`);
+        // Initialize Socket.io for real-time updates. Skip under jest —
+        // the listen callback fires asynchronously, and engine.io's
+        // lazy require('cors') inside its constructor races with jest's
+        // env teardown when supertest pulls in the app.
+        if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
+          initializeSocket(server);
+          logger.info(`🔌 Socket.io initialized for real-time updates`);
+        }
 
         logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
         console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);

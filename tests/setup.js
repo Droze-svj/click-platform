@@ -45,19 +45,26 @@ jest.mock('isomorphic-dompurify', () => {
 // Increase timeout for integration tests
 jest.setTimeout(60000);
 
-// Global setup for MongoDB (preferred in-memory, fallback to local)
+// Global setup for MongoDB. CI provides MONGODB_URI pointing at a real
+// service container — skip the in-memory path there. The
+// MongoMemoryServer download from fastdl.mongodb.org 404s for the
+// runner's ubuntu version and eats ~60s before failing, by which time
+// the test's first insert has already buffer-timed-out.
 beforeAll(async () => {
-  let uri;
-  try {
-    if (!MongoMemoryServer) throw new Error('mongodb-memory-server module not loaded');
-    mongoServer = await MongoMemoryServer.create();
-    uri = mongoServer.getUri();
-    process.env.MONGODB_URI = uri;
-  } catch (error) {
-    console.warn('Failed to start MongoMemoryServer, falling back to local MongoDB:', error.message);
-    uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/click-test';
+  let uri = process.env.MONGODB_URI;
+
+  if (!uri) {
+    try {
+      if (!MongoMemoryServer) throw new Error('mongodb-memory-server module not loaded');
+      mongoServer = await MongoMemoryServer.create();
+      uri = mongoServer.getUri();
+      process.env.MONGODB_URI = uri;
+    } catch (error) {
+      console.warn('Failed to start MongoMemoryServer, falling back to local MongoDB:', error.message);
+      uri = 'mongodb://localhost:27017/click-test';
+    }
   }
-  
+
   if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.close();
   }
