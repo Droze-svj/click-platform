@@ -1580,6 +1580,7 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/marketing-knowledge', require('./routes/marketingKnowledge'));
+app.use('/api/marketing-intelligence', require('./routes/marketingIntelligence'));
 app.use('/api/style-profile', require('./routes/userStyleProfile'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/export', require('./routes/export'));
@@ -1750,6 +1751,7 @@ app.use('/api/agency', require('./routes/agency'));
 
 // Advanced recycling routes
 app.use('/api/recycling-advanced', require('./routes/recycling-advanced'));
+app.use('/api/recycling', require('./routes/recycling'));
 
 // Content Ops API routes
 app.use('/api/content-ops', require('./routes/content-ops-api'));

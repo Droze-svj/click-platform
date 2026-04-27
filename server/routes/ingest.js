@@ -250,10 +250,12 @@ router.post('/clipboard', auth, ingestUrlHandler);
 router.post('/remix', auth, async (req, res) => {
   try {
     const { contentId } = req.body || {};
-    if (!contentId) return res.status(400).json({ success: false, error: 'Missing contentId' });
-
-    const original = devVideoStore.get(contentId);
-    if (!original) return res.status(404).json({ success: false, error: 'Source project not found' });
+    // Ownership gate — without this any authed user can clone any other
+    // user's content if they know its id (IDOR). guardOwnership handles 400
+    // / 404 / 403 itself and returns the resolved content on success.
+    const { guardOwnership } = require('../utils/ownership');
+    const original = await guardOwnership(req, res, contentId);
+    if (!original) return;
 
     const newId = `remix-${Date.now()}`;
     const remix = {
