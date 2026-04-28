@@ -43,7 +43,7 @@ LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET         # linkedin.com/developers
 INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET       # developers.facebook.com
 ```
 
-For each OAuth provider, the redirect URL pattern is `${APP_URL}/api/oauth/<platform>/callback`.
+For each OAuth provider, the redirect URL pattern is `${APP_URL}/api/oauth/<platform>/callback`. The exact URLs to paste into each dev console (TikTok / YouTube / Twitter / LinkedIn) — plus per-provider gotchas — are documented in [docs/oauth-redirect-urls.md](docs/oauth-redirect-urls.md).
 
 ### Whop checkout URLs (paid pricing tiers)
 
@@ -59,6 +59,27 @@ NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY=https://whop.com/checkout/...
 ```
 
 Empty values fall back to `/register?plan=<id>` — the user registers but never reaches checkout. Set these before the public launch.
+
+### Whop webhook (so payments actually update the user's plan)
+
+Once you've configured Whop checkout URLs above, wire the inbound webhook so payment events flip the user's `subscription.plan` server-side:
+
+1. In your Whop dashboard, **Settings → Webhooks → Add endpoint**.
+2. Endpoint URL: `${APP_URL}/api/webhooks/whop`
+3. Subscribe to (at minimum): `payment.succeeded`, `membership.went_valid`, `membership.went_invalid`, `subscription.cancelled`, `payment.failed`.
+4. Copy the signing secret Whop generates → paste into Render env as `WHOP_WEBHOOK_SECRET`.
+5. Paste each plan's product ID into Render env:
+
+```
+WHOP_PRODUCT_ID_CREATOR_MONTHLY=<product_id from Whop>
+WHOP_PRODUCT_ID_CREATOR_YEARLY=<product_id>
+WHOP_PRODUCT_ID_PRO_MONTHLY=<product_id>
+WHOP_PRODUCT_ID_PRO_YEARLY=<product_id>
+WHOP_PRODUCT_ID_AGENCY_MONTHLY=<product_id>
+WHOP_PRODUCT_ID_AGENCY_YEARLY=<product_id>
+```
+
+Without these IDs, the webhook still records a payment as "active" but can't pick the right plan tier. With them, the flow is end-to-end: checkout → webhook → user's plan updates → dashboard reflects the new tier on next refresh.
 
 ## 3. Verify env wiring
 

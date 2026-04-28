@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { PLANS } from '../lib/plans';
 import { Nav } from '../components/landing/Nav';
 import { ScrollProgress } from '../components/landing/ScrollProgress';
@@ -8,13 +9,39 @@ import { LiveDemo } from '../components/landing/LiveDemo';
 import { PlatformMarquee } from '../components/landing/PlatformMarquee';
 import { EnginePillars } from '../components/landing/EnginePillars';
 import { Workflow } from '../components/landing/Workflow';
-import { IntelligenceShowcase } from '../components/landing/IntelligenceShowcase';
-import { Testimonials } from '../components/landing/Testimonials';
-import { Pricing } from '../components/landing/Pricing';
-import { Stats } from '../components/landing/Stats';
-import { FAQ } from '../components/landing/FAQ';
-import { FinalCTA } from '../components/landing/FinalCTA';
-import { Footer } from '../components/landing/Footer';
+
+// Below-the-fold sections — keep server-render on (so SEO crawl is
+// unchanged) but defer client hydration so the initial JS bundle is
+// just the above-the-fold flow (Nav, Hero, LiveDemo, PlatformMarquee,
+// EnginePillars, Workflow).
+const IntelligenceShowcase = dynamic(
+  () => import('../components/landing/IntelligenceShowcase').then((m) => m.IntelligenceShowcase),
+  { ssr: true },
+);
+const Testimonials = dynamic(
+  () => import('../components/landing/Testimonials').then((m) => m.Testimonials),
+  { ssr: true },
+);
+const Pricing = dynamic(
+  () => import('../components/landing/Pricing').then((m) => m.Pricing),
+  { ssr: true },
+);
+const Stats = dynamic(
+  () => import('../components/landing/Stats').then((m) => m.Stats),
+  { ssr: true },
+);
+const FAQ = dynamic(
+  () => import('../components/landing/FAQ').then((m) => m.FAQ),
+  { ssr: true },
+);
+const FinalCTA = dynamic(
+  () => import('../components/landing/FinalCTA').then((m) => m.FinalCTA),
+  { ssr: true },
+);
+const Footer = dynamic(
+  () => import('../components/landing/Footer').then((m) => m.Footer),
+  { ssr: true },
+);
 
 // SoftwareApplication structured data — gives Google rich-snippet
 // eligibility on the SERP for the four pricing tiers.
