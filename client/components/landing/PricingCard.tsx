@@ -32,9 +32,15 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
       }`}
     >
       {featured && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-indigo-500/30">
-          Most Popular
-        </div>
+        <>
+          <div
+            aria-hidden="true"
+            className="absolute -inset-px rounded-3xl bg-[conic-gradient(from_0deg,transparent,rgba(99,102,241,0.4),transparent_30%,transparent_60%,rgba(217,70,239,0.4),transparent)] opacity-50 motion-safe:animate-[spin_8s_linear_infinite] pointer-events-none -z-10"
+          />
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-indigo-500/30 motion-safe:animate-pulse">
+            Most Popular
+          </div>
+        </>
       )}
 
       {/* Header */}

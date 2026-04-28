@@ -1,6 +1,7 @@
 'use client';
 
 import { Nav } from '../components/landing/Nav';
+import { ScrollProgress } from '../components/landing/ScrollProgress';
 import { Hero } from '../components/landing/Hero';
 import { LiveDemo } from '../components/landing/LiveDemo';
 import { PlatformMarquee } from '../components/landing/PlatformMarquee';
@@ -24,6 +25,7 @@ export default function LandingPage() {
         <div className="absolute bottom-[-20%] left-[20%] w-[50%] h-[50%] bg-blue-600/10 blur-[160px] rounded-full" />
       </div>
 
+      <ScrollProgress />
       <Nav />
 
       <main className="relative z-10 w-full">

@@ -10,8 +10,8 @@ export function Hero() {
     <section className="relative pt-40 md:pt-48 pb-20 md:pb-32 px-6 flex flex-col items-center">
       {/* Animated mesh-gradient background — purely decorative */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[55%] h-[55%] bg-indigo-600/25 blur-[140px] rounded-full animate-pulse" />
-        <div className="absolute top-[20%] right-[-10%] w-[45%] h-[55%] bg-fuchsia-600/20 blur-[160px] rounded-full animate-pulse [animation-delay:700ms]" />
+        <div className="absolute top-[-10%] left-[-5%] w-[55%] h-[55%] bg-indigo-600/25 blur-[140px] rounded-full motion-safe:animate-pulse" />
+        <div className="absolute top-[20%] right-[-10%] w-[45%] h-[55%] bg-fuchsia-600/20 blur-[160px] rounded-full motion-safe:animate-pulse motion-safe:[animation-delay:700ms]" />
         <div className="absolute bottom-[-15%] left-[25%] w-[55%] h-[45%] bg-blue-600/15 blur-[150px] rounded-full" />
       </div>
 
@@ -32,10 +32,7 @@ export function Hero() {
           className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] text-white"
         >
           CONTENT <br />
-          <span
-            style={{ fontFamily: 'var(--font-playfair, serif)' }}
-            className="bg-gradient-to-r from-indigo-400 via-white to-fuchsia-400 bg-clip-text text-transparent italic"
-          >
+          <span className="font-[var(--font-playfair)] bg-gradient-to-r from-indigo-400 via-white to-fuchsia-400 bg-clip-text text-transparent italic">
             INTELLIGENCE
           </span>
           .
