@@ -303,6 +303,13 @@ setImmediate(() => {
 
   // Job Queue Workers (optional)
   if (isProduction || process.env.ENABLE_BACKGROUND_JOBS === 'true') {
+    // CRITICAL: Skip initialization if REDIS_URL is missing in production to prevent crashes
+    const redisUrl = process.env.REDIS_URL?.trim();
+    if (isProduction && (!redisUrl || redisUrl === '' || redisUrl.includes('localhost') || redisUrl.includes('127.0.0.1'))) {
+      logger.warn('⚠️ Skipping worker initialization: REDIS_URL is missing or invalid for production.');
+      return;
+    }
+
     try {
       // Only require if needed
       const { initializeWorkers } = require('./queues');
