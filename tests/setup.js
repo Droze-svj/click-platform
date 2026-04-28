@@ -45,6 +45,12 @@ jest.mock('isomorphic-dompurify', () => {
 // Increase timeout for integration tests
 jest.setTimeout(60000);
 
+// Buffer 60s instead of the default 10s. Multi-file integration suites
+// close mongoose in their per-file afterAll and the next file's setup
+// beforeAll has to reconnect — under CI load the reconnect can take
+// longer than 10s, and queued operations buffer-timeout in the meantime.
+mongoose.set('bufferTimeoutMS', 60000);
+
 // Global setup for MongoDB. CI provides MONGODB_URI pointing at a real
 // service container — skip the in-memory path there. The
 // MongoMemoryServer download from fastdl.mongodb.org 404s for the
@@ -52,8 +58,6 @@ jest.setTimeout(60000);
 // the test's first insert has already buffer-timed-out.
 beforeAll(async () => {
   // readyState: 0 disconnected, 1 connected, 2 connecting, 3 disconnecting.
-  // If a previous test file ran afterAll(close) and we're being reused in
-  // the same worker, we need a fresh connect — don't return early.
   if (mongoose.connection.readyState === 1) return;
 
   let uri = process.env.MONGODB_URI;
@@ -77,6 +81,22 @@ beforeAll(async () => {
     serverSelectionTimeoutMS: 30000,
     socketTimeoutMS: 45000,
   });
+  // mongoose.connect resolves on initial handshake; readyState should be 1
+  // here, but if the connection emits 'disconnected' between connect and
+  // the test's first query, queries buffer. Wait for the 'connected' event
+  // explicitly to be safe.
+  if (mongoose.connection.readyState !== 1) {
+    await new Promise((resolve, reject) => {
+      const onConnected = () => { cleanup(); resolve(); };
+      const onError = (err) => { cleanup(); reject(err); };
+      const cleanup = () => {
+        mongoose.connection.off('connected', onConnected);
+        mongoose.connection.off('error', onError);
+      };
+      mongoose.connection.once('connected', onConnected);
+      mongoose.connection.once('error', onError);
+    });
+  }
 });
 
 // Mock external services in tests

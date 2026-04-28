@@ -38,10 +38,12 @@ module.exports = {
     {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/server/**/*.test.js'],
-      // Route tests under tests/server/routes/ require server/index.js,
-      // which boots the full server (DB, sockets, cron, etc.) — that's
-      // integration-shaped, not unit. Move them with `--selectProjects
-      // integration` once the imports are wired through an exported app.
+      // Route tests in tests/server/routes/ now have a working app
+      // (server/index.js exports it, jest-loaded require skips the boot
+      // block via JEST_WORKER_ID). They still fail because the test
+      // assertions don't match current auth behavior — /api/analytics/*
+      // returns 200 without a token, /api/auth/me ignores Bearer headers
+      // in test mode, etc. Re-enable per-file as those are fixed.
       testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
     },
     {
