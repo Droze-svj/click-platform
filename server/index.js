@@ -587,6 +587,15 @@ app.use(requestTimeoutRouteAware(parseInt(process.env.REQUEST_TIMEOUT, 10) || ge
 // Request logging (before other middleware)
 app.use(requestLogger);
 
+// Whop webhook MUST mount BEFORE the global express.json() so the HMAC
+// signature verifies against the unparsed body. Scoped to its own path
+// so no other route is affected.
+app.use(
+  '/api/webhooks/whop',
+  express.raw({ type: 'application/json', limit: '1mb' }),
+  require('./routes/webhooks/whop')
+);
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

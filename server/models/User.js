@@ -30,9 +30,13 @@ const userSchema = new mongoose.Schema({
       default: 'trial'
     },
     plan: {
+      // Mixed enum for backwards-compat:
+      //   - legacy billing-period values: 'monthly' | 'annual' | 'trial'
+      //   - canonical plan IDs (from client/lib/plans.ts): 'free' | 'creator' | 'pro' | 'agency'
+      // New code (Whop webhook, billing service) writes the canonical IDs.
       type: String,
-      enum: ['monthly', 'annual', 'free', 'pro', 'agency', 'trial'],
-      default: 'monthly'
+      enum: ['monthly', 'annual', 'free', 'creator', 'pro', 'agency', 'trial'],
+      default: 'free'
     },
     startDate: Date,
     endDate: Date,
