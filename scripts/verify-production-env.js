@@ -81,6 +81,63 @@ const RECOMMENDED_VARS = {
     validate: (val) => val.startsWith('sk-') && val.length > 20,
     message: 'Should be a valid OpenAI API key (starts with sk-)'
   },
+
+  // Google AI Studio (Gemini) — gates niche-aware AI generation, trend
+  // reports, captions, and auto-edit. Without it everything falls back
+  // to mock data. Variable name is GOOGLE_AI_API_KEY (not GEMINI_API_KEY)
+  // — see server/utils/googleAI.js.
+  GOOGLE_AI_API_KEY: {
+    validate: (val) => val.length > 20,
+    message: 'Required for AI-driven trend reports / auto-edit / captions. Get one at https://aistudio.google.com/apikey'
+  },
+
+  // Supabase — analytics endpoints (creator stats, performance global) read
+  // from Supabase. Without these they gracefully degrade to empty data
+  // (post PR #4) but you lose the analytics surface.
+  SUPABASE_URL: {
+    validate: (val) => val.startsWith('https://') && val.includes('.supabase.co'),
+    message: 'Should be your Supabase project URL (https://<project>.supabase.co)'
+  },
+  SUPABASE_SERVICE_ROLE_KEY: {
+    validate: (val) => val.length > 40,
+    message: 'Service role key from Supabase Settings → API'
+  },
+
+  // Platform OAuth — without these, social-posting routes fall back to
+  // dev-token mock and never actually publish. Var names match what the
+  // OAuth services in server/services/*OAuthService.js actually read.
+  TWITTER_CLIENT_ID: {
+    validate: (val) => val.length > 0,
+    message: 'Required to post to X/Twitter (Twitter Developer Portal → OAuth 2.0 settings)'
+  },
+  TWITTER_CLIENT_SECRET: {
+    validate: (val) => val.length > 0,
+    message: 'Required to post to X/Twitter'
+  },
+  YOUTUBE_CLIENT_ID: {
+    validate: (val) => val.length > 0,
+    message: 'Required to upload to YouTube (Google Cloud Console → APIs & Services → Credentials)'
+  },
+  YOUTUBE_CLIENT_SECRET: {
+    validate: (val) => val.length > 0,
+    message: 'Required to upload to YouTube'
+  },
+  LINKEDIN_CLIENT_ID: {
+    validate: (val) => val.length > 0,
+    message: 'Required to post to LinkedIn'
+  },
+  LINKEDIN_CLIENT_SECRET: {
+    validate: (val) => val.length > 0,
+    message: 'Required to post to LinkedIn'
+  },
+  TIKTOK_CLIENT_KEY: {
+    validate: (val) => val.length > 0,
+    message: 'Required to post to TikTok (TikTok for Developers)'
+  },
+  TIKTOK_CLIENT_SECRET: {
+    validate: (val) => val.length > 0,
+    message: 'Required to post to TikTok'
+  },
   
   // Sentry
   NEXT_PUBLIC_SENTRY_DSN: {
