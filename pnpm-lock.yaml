@@ -20,6 +20,9 @@ importers:
       '@google/generative-ai':
         specifier: ^0.24.1
         version: 0.24.1
+      '@img/sharp-libvips-linux-x64':
+        specifier: ^1.2.1
+        version: 1.2.4
       '@prisma/client':
         specifier: 6.4.1
         version: 6.4.1(prisma@6.4.1(typescript@5.9.3))(typescript@5.9.3)
@@ -195,10 +198,6 @@ importers:
       supertest:
         specifier: ^6.3.4
         version: 6.3.4
-    optionalDependencies:
-      '@img/sharp-libvips-linux-x64':
-        specifier: ^1.2.1
-        version: 1.2.4
 
   client:
     dependencies:
@@ -1068,7 +1067,6 @@ packages:
     resolution: {integrity: sha512-tJxiiLsmHc9Ax1bz3oaOYBURTXGIRDODBqhveVHonrHJ9/+k89qbLl0bcJns+e4t4rvaNBxaEZsFtSfAdquPrw==}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@img/sharp-libvips-linuxmusl-arm64@1.2.4':
     resolution: {integrity: sha512-FVQHuwx1IIuNow9QAbYUzJ+En8KcVm9Lk5+uGUQJHaZmMECZmOlix9HnH7n1TRkXMS0pGxIJokIVB9SuqZGGXw==}
@@ -8294,8 +8292,7 @@ snapshots:
   '@img/sharp-libvips-linux-s390x@1.2.4':
     optional: true
 
-  '@img/sharp-libvips-linux-x64@1.2.4':
-    optional: true
+  '@img/sharp-libvips-linux-x64@1.2.4': {}
 
   '@img/sharp-libvips-linuxmusl-arm64@1.2.4':
     optional: true
