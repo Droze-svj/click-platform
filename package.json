@@ -176,5 +176,20 @@
     "mongodb-memory-server": "^9.1.5",
     "nodemon": "^3.0.2",
     "supertest": "^6.3.4"
+  },
+  "optionalDependencies": {
+    "@img/sharp-libvips-linux-x64": "^1.2.1"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "linux",
+        "darwin"
+      ],
+      "cpu": [
+        "x64",
+        "arm64"
+      ]
+    }
   }
 }
