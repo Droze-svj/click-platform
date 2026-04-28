@@ -2152,8 +2152,10 @@ function __installShutdownHooks() {
 
 // Skip the boot block (shutdown hooks, listen, crons, redis init) when this
 // file is required under jest — tests want the express app, not a running
-// process. Honors NODE_ENV=test for non-jest test harnesses too.
-if (process.env.JEST_WORKER_ID || process.env.NODE_ENV === 'test') {
+// process. Gate ONLY on JEST_WORKER_ID (which jest itself sets per worker)
+// — NOT on NODE_ENV=test, because the e2e workflow's `npm start &` step
+// also sets NODE_ENV=test and DOES need the listen to fire.
+if (process.env.JEST_WORKER_ID) {
   // exported `app` above is enough for supertest
 } else {
 __installShutdownHooks();

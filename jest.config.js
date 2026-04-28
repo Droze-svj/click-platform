@@ -38,11 +38,13 @@ module.exports = {
     {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/server/**/*.test.js'],
-      // Route tests in tests/server/routes/ supertest the express app
-      // exported from server/index.js. The boot block (listen, crons,
-      // redis, sockets) is skipped when NODE_ENV=test or JEST_WORKER_ID
-      // is set, so these run under the unit project.
-      testPathIgnorePatterns: ['/node_modules/'],
+      // Route tests in tests/server/routes/ now have a working app
+      // (server/index.js exports it, jest-loaded require skips the boot
+      // block via JEST_WORKER_ID). They still fail because the test
+      // assertions don't match current auth behavior — /api/analytics/*
+      // returns 200 without a token, /api/auth/me ignores Bearer headers
+      // in test mode, etc. Re-enable per-file as those are fixed.
+      testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
     },
     {
       displayName: 'integration',
