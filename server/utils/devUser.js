@@ -49,8 +49,22 @@ function getDevUserObjectId(devUserId) {
 
 /**
  * Compute allowDevMode from request (reusable in routes).
+ *
+ * Hard rules:
+ *   - production: NEVER allow dev mode. The Host / Referer / X-Forwarded-For
+ *     headers are user-controlled, so any "production && isLocalhost" check
+ *     becomes a Host-spoof auth bypass. Returns false unconditionally.
+ *   - test: NEVER allow dev mode either — tests need to exercise the real
+ *     auth path, otherwise security tests can't catch regressions.
+ *   - development / staging / unset: allow when the request looks like it
+ *     came from localhost (host or referer or x-forwarded-for matches), so
+ *     contributors can curl the API without juggling tokens.
  */
 function allowDevMode(req) {
+  const nodeEnv = process.env.NODE_ENV;
+  if (nodeEnv === 'production') return false;
+  if (nodeEnv === 'test') return false;
+
   const host = req?.headers?.host || req?.headers?.['x-forwarded-host'] || '';
   const referer = req?.headers?.referer || req?.headers?.origin || '';
   const forwardedFor = req?.headers?.['x-forwarded-for'] || '';
@@ -60,8 +74,7 @@ function allowDevMode(req) {
     referer.includes('localhost') ||
     referer.includes('127.0.0.1') ||
     (typeof forwardedFor === 'string' && (forwardedFor.includes('127.0.0.1') || forwardedFor.includes('localhost')));
-  const nodeEnv = process.env.NODE_ENV;
-  return !nodeEnv || nodeEnv !== 'production' || isLocalhost;
+  return isLocalhost;
 }
 
 module.exports = {
