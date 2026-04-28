@@ -1,17 +1,29 @@
 # See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
+#
+# Manual-trigger only by default. Click's primary deploy target is Render;
+# Fly.io is a secondary target. To re-enable auto-deploy on push to main:
+#   1. Add FLY_API_TOKEN as a repo secret.
+#   2. Uncomment the `push:` trigger below.
 
 name: Fly Deploy
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
 jobs:
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
-    concurrency: deploy-group    # optional: ensure only one action runs at a time
+    concurrency: deploy-group
     steps:
       - uses: actions/checkout@v4
+      - name: Verify FLY_API_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
+            echo "::error::FLY_API_TOKEN secret not set. Add it under Settings → Secrets → Actions."
+            exit 1
+          fi
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:

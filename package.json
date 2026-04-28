@@ -16,7 +16,7 @@
     "start:prod": "NODE_OPTIONS='--max-old-space-size=2048' node server/index.js",
     "start:server": "node --max-old-space-size=2048 server/index.js",
     "start:client": "cd client && pnpm start",
-    "prisma:generate": "NODE_OPTIONS='--max-old-space-size=2048' pnpm exec prisma generate --schema=prisma/schema.prisma",
+    "prisma:generate": "NODE_OPTIONS='--max-old-space-size=2048' npx --no-install prisma generate --schema=prisma/schema.prisma",
     "install:all": "pnpm install && cd client && pnpm install",
     "test": "jest",
     "test:unit": "jest --selectProjects unit",
