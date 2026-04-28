@@ -106,20 +106,29 @@ function initializeAllWorkers() {
       return;
     }
 
-    // In production, connection can be IORedis instance or string URL
+    // In production, connection can be IORedis instance, options object, or string URL.
     if (isProduction) {
       const isIORedisByName = redisConnection && typeof redisConnection === 'object' && redisConnection.constructor?.name === 'Redis';
       const isIORedisLike = redisConnection && typeof redisConnection === 'object' && redisConnection.options && (typeof redisConnection.connect === 'function' || redisConnection.status !== undefined);
       const isIORedis = isIORedisByName || isIORedisLike;
+      // Plain options object: { host, port, password, ... } — what
+      // jobQueueService.getRedisConnection() now returns post-PR #15 so
+      // BullMQ can construct its own IORedis instances cleanly.
+      const isOptionsObject = redisConnection && typeof redisConnection === 'object' && !isIORedis && typeof redisConnection.host === 'string' && typeof redisConnection.port === 'number';
       const isString = typeof redisConnection === 'string';
 
-      if (!isIORedis && !isString) {
-        const errorMsg = '❌ FATAL: Redis connection is not IORedis instance or string in production. Cannot create workers.';
-        
-        
+      if (!isIORedis && !isString && !isOptionsObject) {
+        const errorMsg = '❌ FATAL: Redis connection is not IORedis instance, options object, or string in production. Cannot create workers.';
         logger.error(errorMsg);
         logger.error('❌ Connection type:', typeof redisConnection);
         logger.error('❌ Workers will NOT be initialized. REDIS_URL must be a valid Redis URL string.');
+        return;
+      }
+
+      // If it's an options object, validate the host
+      if (isOptionsObject && (redisConnection.host === '127.0.0.1' || redisConnection.host === 'localhost')) {
+        logger.error('❌ FATAL: Redis options object has localhost host. Cannot create workers in production.');
+        logger.error('❌ Workers will NOT be initialized. Fix REDIS_URL to a cloud Redis service.');
         return;
       }
 

@@ -581,16 +581,17 @@ function createWorker(queueName, processor, options = {}) {
     return null;
   }
 
-  // In production, connection can be IORedis instance or string URL
+  // In production, connection can be IORedis instance, options object, or string URL.
   if (isProduction) {
     const isIORedisByName = connection && typeof connection === 'object' && connection.constructor?.name === 'Redis';
     const isIORedisLike = connection && typeof connection === 'object' && connection.options && (typeof connection.connect === 'function' || connection.status !== undefined);
     const isIORedis = isIORedisByName || isIORedisLike;
+    const isOptionsObject = connection && typeof connection === 'object' && !isIORedis && typeof connection.host === 'string' && typeof connection.port === 'number';
     const isString = typeof connection === 'string';
 
-    if (!isIORedis && !isString) {
-      logger.error(`❌ Cannot create worker ${queueName}: connection is not IORedis instance or string in production`);
-      logger.error(`❌ Connection type: ${typeof connection}, isIORedis: ${isIORedis}`);
+    if (!isIORedis && !isString && !isOptionsObject) {
+      logger.error(`❌ Cannot create worker ${queueName}: connection is not IORedis instance, options object, or string in production`);
+      logger.error(`❌ Connection type: ${typeof connection}, isIORedis: ${isIORedis}, isOptionsObject: ${isOptionsObject}`);
       return null;
     }
   }
@@ -707,17 +708,25 @@ function createWorker(queueName, processor, options = {}) {
       throw error; // Throw instead of return - this will prevent Worker creation
     }
 
-    // In production, connection can be IORedis instance or string
+    // In production, connection can be IORedis instance, options object, or string.
     if (isProduction) {
       const isIORedisByName = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
       const isIORedisLike = connection && typeof connection === 'object' && connection.options && (typeof connection.connect === 'function' || typeof connection.status !== 'undefined');
       const isIORedis = isIORedisByName || isIORedisLike;
+      const isOptionsObject = connection && typeof connection === 'object' && !isIORedis && typeof connection.host === 'string' && typeof connection.port === 'number';
       const isString = typeof connection === 'string';
 
-      if (!isIORedis && !isString) {
-        const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is not IORedis instance or string in production. Type: ${typeof connection}`);
-        
-        logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
+      if (!isIORedis && !isString && !isOptionsObject) {
+        const error = new Error(`FATAL: Cannot create Worker ${queueName} - connection is not IORedis instance, options object, or string in production. Type: ${typeof connection}`);
+
+        logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis, isOptionsObject });
+        throw error;
+      }
+
+      // If it's an options object, validate the host
+      if (isOptionsObject && (connection.host === 'localhost' || connection.host === '127.0.0.1')) {
+        const error = new Error(`FATAL: Cannot create Worker ${queueName} - options object has localhost host`);
+        logger.error(error.message, { queueName });
         throw error;
       }
 
