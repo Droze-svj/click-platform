@@ -38,11 +38,11 @@ module.exports = {
     {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/server/**/*.test.js'],
-      // Route tests under tests/server/routes/ require server/index.js,
-      // which boots the full server (DB, sockets, cron, etc.) — that's
-      // integration-shaped, not unit. Move them with `--selectProjects
-      // integration` once the imports are wired through an exported app.
-      testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/server/routes/'],
+      // Route tests in tests/server/routes/ supertest the express app
+      // exported from server/index.js. The boot block (listen, crons,
+      // redis, sockets) is skipped when NODE_ENV=test or JEST_WORKER_ID
+      // is set, so these run under the unit project.
+      testPathIgnorePatterns: ['/node_modules/'],
     },
     {
       displayName: 'integration',

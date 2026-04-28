@@ -395,6 +395,12 @@ if (process.env.NODE_ENV === 'production') {
 
 const app = express();
 
+// Export the express app for tests (supertest, jest). The script-mode boot
+// at the bottom (listen, crons, sockets) still runs when this file is the
+// node entrypoint (`node server/index.js`). Putting the export here means
+// supertest can attach immediately without waiting on the boot block.
+module.exports = app;
+
 // Auth/API responses must not be served as 304 (ETag cache hits) because the client expects a JSON body.
 // Disabling ETag generation prevents Express from returning "Not Modified" for API JSON routes like /api/auth/me.
 app.set('etag', false);
@@ -2144,6 +2150,12 @@ function __installShutdownHooks() {
   // #endregion
 }
 
+// Skip the boot block (shutdown hooks, listen, crons, redis init) when this
+// file is required under jest — tests want the express app, not a running
+// process. Honors NODE_ENV=test for non-jest test harnesses too.
+if (process.env.JEST_WORKER_ID || process.env.NODE_ENV === 'test') {
+  // exported `app` above is enough for supertest
+} else {
 __installShutdownHooks();
 try {
   // Close health check server before starting main server
@@ -2408,4 +2420,5 @@ try {
     process.exit(1);
   }
 }
+} // end if (!jest && !test)
 
