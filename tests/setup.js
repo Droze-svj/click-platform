@@ -51,6 +51,11 @@ jest.setTimeout(60000);
 // runner's ubuntu version and eats ~60s before failing, by which time
 // the test's first insert has already buffer-timed-out.
 beforeAll(async () => {
+  // readyState: 0 disconnected, 1 connected, 2 connecting, 3 disconnecting.
+  // If a previous test file ran afterAll(close) and we're being reused in
+  // the same worker, we need a fresh connect — don't return early.
+  if (mongoose.connection.readyState === 1) return;
+
   let uri = process.env.MONGODB_URI;
 
   if (!uri) {
@@ -68,7 +73,10 @@ beforeAll(async () => {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.close();
   }
-  await mongoose.connect(uri);
+  await mongoose.connect(uri, {
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+  });
 });
 
 // Mock external services in tests
