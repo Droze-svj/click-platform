@@ -92,7 +92,7 @@ router.post('/sync-signals', auth, (_req, res) => {
 // (niche × platform × language) for 6 hours so we don't hammer the AI quota
 // for every editor mount. On cache miss + Gemini failure, the composer falls
 // back to a structured response so the UI never empty-states.
-router.get('/trend-report', auth, async (req, res) => {
+router.get('/trend-report', async (req, res) => {
   const niche = req.query.niche || null;
   const platform = req.query.platform || null;
   const language = req.query.language || req.language || 'en';
