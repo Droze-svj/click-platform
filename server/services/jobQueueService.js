@@ -121,8 +121,17 @@ function getRedisConnection() {
     // BullMQ might create its own connection internally, so we create one explicitly and reuse it
     // Use lazyConnect: true to prevent blocking during server startup
     if (!IORedis) {
-      logger.warn('⚠️ IORedis not available, using connection string instead');
-      return redisConnection;
+      // FAIL LOUD in production. Returning the URL string here causes BullMQ
+      // to silently default to 127.0.0.1:6379 (its own internal IORedis can't
+      // parse a bare string here), which produces a confusing ECONNREFUSED
+      // crash loop instead of a clear "ioredis missing" error. Throwing
+      // surfaces the real problem at boot — fix is to add ioredis to deps.
+      logger.error('❌ FATAL: ioredis package is not installed. BullMQ workers cannot run without it.');
+      logger.error('❌ Add `"ioredis": "^5.4.1"` to dependencies in package.json and rebuild.');
+      throw new Error(
+        'ioredis is not installed. BullMQ requires ioredis as a peer dependency. ' +
+        'Add "ioredis": "^5.4.1" to package.json and rebuild the deploy.'
+      );
     }
 
     try {
