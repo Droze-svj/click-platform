@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Minus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { glass } from './_styles';
 
 const FAQS = [
@@ -32,9 +30,12 @@ const FAQS = [
   },
 ];
 
+/**
+ * Uses native <details>/<summary> + CSS for the open/closed transition.
+ * Saves ~10kb of JS over framer-motion's AnimatePresence and is
+ * keyboard-accessible by default.
+ */
 export function FAQ() {
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
-
   return (
     <section id="faq" className="py-24 px-6 relative">
       <div className="max-w-3xl mx-auto">
@@ -46,36 +47,24 @@ export function FAQ() {
         </div>
 
         <div className="space-y-3">
-          {FAQS.map((f, i) => {
-            const open = openIdx === i;
-            return (
-              <div key={f.q} className={`${glass} rounded-2xl overflow-hidden transition-colors ${open ? 'border-indigo-500/30' : ''}`}>
-                <button
-                  type="button"
-                  aria-expanded={open}
-                  onClick={() => setOpenIdx(open ? null : i)}
-                  className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-white/[0.03] transition-colors"
+          {FAQS.map((f, i) => (
+            <details
+              key={f.q}
+              {...(i === 0 ? { open: true } : {})}
+              className={`${glass} rounded-2xl overflow-hidden transition-colors group [&[open]]:border-indigo-500/30`}
+            >
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-6 py-5 hover:bg-white/[0.03] transition-colors select-none">
+                <span className="font-bold text-base md:text-lg">{f.q}</span>
+                <span
+                  aria-hidden="true"
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 text-slate-400 group-[&[open]]:bg-indigo-500/20 group-[&[open]]:text-indigo-300 transition-colors"
                 >
-                  <span className="font-bold text-base md:text-lg">{f.q}</span>
-                  <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${open ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/5 text-slate-400'}`}>
-                    {open ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                  </span>
-                </button>
-                <AnimatePresence initial={false}>
-                  {open && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <p className="px-6 pb-5 text-slate-400 leading-relaxed font-medium text-[15px]">{f.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+                  <Plus className="w-4 h-4 motion-safe:transition-transform group-[&[open]]:rotate-45" />
+                </span>
+              </summary>
+              <p className="px-6 pb-5 text-slate-400 leading-relaxed font-medium text-[15px]">{f.a}</p>
+            </details>
+          ))}
         </div>
       </div>
     </section>
