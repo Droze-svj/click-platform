@@ -16,6 +16,39 @@ const { captureException } = require('../utils/sentry');
 // Redis connection configuration
 let redisConnection = null;
 let redisIORedisInstance = null; // Cached IORedis instance for BullMQ
+let redisOptionsCache = null;    // Parsed URL → ioredis options (for BullMQ Queue/Worker/QueueEvents)
+
+/**
+ * Parse a redis:// or rediss:// URL into a plain ioredis options object.
+ * Used to hand BullMQ a clean options bag — when BullMQ duplicates the
+ * connection internally for blocking commands, the duplicate inherits
+ * these explicit fields instead of falling back to localhost defaults.
+ */
+function parseRedisUrlToOptions(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const opts = {
+      host: u.hostname,
+      port: parseInt(u.port, 10) || 6379,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: true,
+      connectTimeout: 10000,
+      keepAlive: 15000,
+    };
+    if (u.username) opts.username = decodeURIComponent(u.username);
+    if (u.password) opts.password = decodeURIComponent(u.password);
+    if (u.pathname && u.pathname.length > 1) {
+      const db = parseInt(u.pathname.slice(1), 10);
+      if (!Number.isNaN(db)) opts.db = db;
+    }
+    if (u.protocol === 'rediss:') opts.tls = {};
+    return opts;
+  } catch (e) {
+    logger.error('Failed to parse REDIS_URL into options', { error: e.message });
+    return null;
+  }
+}
 
 function isIORedisUsable(client) {
   if (!client || typeof client !== 'object') return false;
@@ -103,15 +136,14 @@ function getRedisConnection() {
       return null;
     }
 
-    // Return cached IORedis instance if it is still usable
-    if (redisIORedisInstance) {
-      if (isIORedisUsable(redisIORedisInstance)) {
-        logger.info('Using cached IORedis instance (production)');
-        return redisIORedisInstance;
-      }
-      logger.warn('Cached IORedis instance is closed/unusable. Recreating connection...');
-      try { redisIORedisInstance.disconnect(false); } catch (_) { /* ignore */ }
-      redisIORedisInstance = null;
+    // Return cached options object if we already parsed it.
+    // We pass an OPTIONS OBJECT (not an IORedis instance) to BullMQ, so when
+    // BullMQ internally duplicates the connection for blocking commands, the
+    // duplicate gets the same explicit host/port — instead of inheriting
+    // default localhost from a lazy-connect IORedis instance.
+    if (redisOptionsCache) {
+      logger.info('Using cached Redis options (production)');
+      return redisOptionsCache;
     }
 
     // Cache the connection string
@@ -135,21 +167,37 @@ function getRedisConnection() {
     }
 
     try {
-      
-      redisIORedisInstance = new IORedis(redisUrl, {
-        maxRetriesPerRequest: null,
-        enableReadyCheck: true,
-        lazyConnect: true,
+      // Build the parsed options object that we'll hand to BullMQ.
+      // BullMQ accepts an options object as `connection` and creates its own
+      // IORedis instances from it, calling .duplicate() internally for
+      // blocking commands. When we hand it explicit host/port/password
+      // fields (instead of an IORedis instance with a parsed URL), the
+      // duplicate inherits the same explicit fields cleanly. This sidesteps
+      // the long-standing BullMQ + lazyConnect IORedis duplicate bug that
+      // produces the "❌ Worker trying to connect to localhost" pattern.
+      const parsedOptions = parseRedisUrlToOptions(redisUrl);
+      if (!parsedOptions) {
+        logger.error('❌ FATAL: Could not parse REDIS_URL. Workers cannot run.');
+        return null;
+      }
+      redisOptionsCache = {
+        ...parsedOptions,
         retryStrategy: (times) => {
-          if (times > 20) {
-            
-            return null;
-          }
-          return Math.min(times * 300, 3000); // Longer backoff, more retries for managed Redis (e.g. Redis Labs)
+          if (times > 20) return null;
+          return Math.min(times * 300, 3000);
         },
-        connectTimeout: 10000,
         enableOfflineQueue: true,
-        keepAlive: 15000, // Send TCP keepalive every 15s to avoid idle timeout (e.g. Redis Labs ~30min)
+      };
+
+      // We still create one IORedis instance for the rest of the app's
+      // direct Redis usage (caching layer, etc.). It uses the SAME parsed
+      // options so behavior is identical — BullMQ gets the options object,
+      // everyone else gets the instance.
+      redisIORedisInstance = new IORedis(redisUrl, {
+        ...redisOptionsCache,
+        // Eager connect (no lazyConnect) so by the time anything tries to
+        // use the cached instance the URL is fully resolved.
+        lazyConnect: false,
       });
 
       // Log connection events for debugging (but don't block on them)
@@ -168,19 +216,26 @@ function getRedisConnection() {
         logger.info('IORedis instance ready');
       });
 
-      logger.info('✅ Created IORedis instance for BullMQ (production)', {
-        url: redisUrl.replace(/:[^:@]+@/, ':****@')
+      logger.info('✅ Created Redis options for BullMQ (production)', {
+        host: redisOptionsCache.host,
+        port: redisOptionsCache.port,
+        hasPassword: !!redisOptionsCache.password,
+        tls: !!redisOptionsCache.tls,
       });
 
-      // Return IORedis instance instead of connection string
-      // This ensures BullMQ uses our explicit connection
-      return redisIORedisInstance;
+      // Return the OPTIONS OBJECT — not the IORedis instance. BullMQ will
+      // create its own IORedis instances from these options for both the
+      // main connection and the duplicated blocking-command connection.
+      return redisOptionsCache;
     } catch (err) {
-      
-      
-      logger.error('Error creating IORedis instance', { error: err.message, stack: err.stack });
-      // Fallback to connection string (shouldn't happen, but just in case)
-      logger.warn('⚠️ Falling back to connection string instead of IORedis instance');
+
+
+      logger.error('Error creating IORedis instance / parsing Redis options', { error: err.message, stack: err.stack });
+      // If we got the options object before the instance creation failed,
+      // still return the options so BullMQ can connect. Workers will retry
+      // the actual connection internally.
+      if (redisOptionsCache) return redisOptionsCache;
+      logger.warn('⚠️ Falling back to connection string');
       return redisConnection;
     }
   }
@@ -759,32 +814,36 @@ function createWorker(queueName, processor, options = {}) {
             const isIORedisByName = connection && typeof connection === 'object' && connection.constructor && connection.constructor.name === 'Redis';
             const isIORedisLike = connection && typeof connection === 'object' && connection.options && (typeof connection.connect === 'function' || typeof connection.status !== 'undefined');
             const isIORedis = isIORedisByName || isIORedisLike;
+            // Plain options object (host + port + maybe password). The new
+            // production code path returns this so BullMQ creates its own
+            // IORedis instances cleanly per Queue/Worker/QueueEvents.
+            const isOptionsObject = connection && typeof connection === 'object' && !isIORedis && typeof connection.host === 'string' && typeof connection.port === 'number';
             const isString = typeof connection === 'string';
 
-            // In production, connection can be IORedis instance or string
+            // In production, connection can be IORedis instance, options object, or URL string.
             if (isProduction) {
-              if (!isIORedis && !isString) {
-                const error = new Error(`FATAL: Connection is not IORedis instance or string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
-                
-                logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis });
+              if (!isIORedis && !isString && !isOptionsObject) {
+                const error = new Error(`FATAL: Connection is not IORedis instance, options object, or string in production when passing to BullMQ for ${queueName}. Type: ${typeof connection}`);
+
+                logger.error(error.message, { queueName, connectionType: typeof connection, isIORedis, isOptionsObject });
                 throw error;
               }
 
               // If it's a string, check for localhost
               if (isString && (connection.includes('127.0.0.1') || connection.includes('localhost'))) {
                 const error = new Error(`FATAL: Connection string contains localhost when passing to BullMQ for ${queueName}: ${connection.substring(0, 100)}`);
-                
+
                 logger.error(error.message, { queueName, connection: connection.substring(0, 100) });
                 throw error;
               }
 
-              // If it's an IORedis instance, check its options
-              if (isIORedis) {
-                const options = connection.options || {};
+              // If it's an IORedis instance OR an options object, check its host
+              if (isIORedis || isOptionsObject) {
+                const options = isIORedis ? (connection.options || {}) : connection;
                 const host = options.host || options.hostname;
                 if (host === 'localhost' || host === '127.0.0.1') {
-                  const error = new Error(`FATAL: IORedis instance has localhost host when passing to BullMQ for ${queueName}: ${host}`);
-                  
+                  const error = new Error(`FATAL: ${isIORedis ? 'IORedis instance' : 'options object'} has localhost host when passing to BullMQ for ${queueName}: ${host}`);
+
                   logger.error(error.message, { queueName, host });
                   throw error;
                 }
