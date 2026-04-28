@@ -17,14 +17,11 @@ These are patched via `package.json` `overrides` or direct dependency bumps:
 | socket.io-parser | override `^4.2.6` | Patches unbounded binary attachments. |
 | tar | override `^7.5.13` | Patches arbitrary file create/overwrite via hardlink path traversal. Knocks out the transitive `@mapbox/node-pre-gyp` advisory too. |
 | undici | override `^7.25.0` | Patches unbounded decompression chain in fetch responses. |
+| minimatch | override `^10.2.5` | Patches ReDoS via repeated wildcards. Forces all minimatch consumers to 10.x. Watch for regressions from consumers that were on 3.x, 5.x, or 9.x. |
 
 ## Outstanding
 
-### `minimatch` ≤3.1.3 || 5.0.0–5.1.7 || 9.0.0–9.0.6
-
-ReDoS via repeated wildcards. Patched in 3.1.4+ / 5.1.8+ / 9.0.7+ / 10.x.
-
-Multiple consumers in the tree depend on different majors (3.x, 5.x, 9.x). A single `overrides` entry has to pick one — forcing all consumers to 10.x has a real risk of breaking older callers that depend on pre-10 semantics. Needs per-consumer investigation before pinning. Until then this is the only remaining `high` advisory in the runtime tree; CI's `critical` gate covers the bar.
+None at `high` or `critical` for runtime deps. `npm audit --omit=dev --audit-level=high` returns clean.
 
 ## How to refresh this list
 
