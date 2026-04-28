@@ -1,8 +1,21 @@
-import React, { useState } from 'react'
-import { Sparkles, MessageSquare, Zap, Cpu, History, ChevronRight, X, Send, GitBranch, GitPullRequest, GitMerge, TrendingUp } from 'lucide-react'
+import React, { useState, useCallback } from 'react'
+import { Sparkles, X, Send, GitBranch, GitMerge, TrendingUp, Zap, Wand2, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { apiGet } from '../../lib/api'
 
 import { StyleDNA } from '../../types/editor'
+
+interface SuggestionItem {
+    id: string
+    kind: 'cut' | 'caption' | 'hook' | 'cta'
+    type: string
+    timeRange?: { start: number; end: number }
+    description: string
+    rationale: string
+    frameworkId: string
+    expectedRetentionDelta: number
+    confidence: number
+}
 
 interface AiAssistantProps {
     isOpen: boolean
@@ -16,6 +29,10 @@ interface AiAssistantProps {
     gpuBackend?: string | null
     gpuVendor?: string
     agentRunning?: boolean
+    /** Editor passes these so the assistant can fetch + apply niche-aware suggestions. */
+    videoId?: string
+    onSplitAtPlayhead?: () => void
+    onSeek?: (time: number) => void
 }
 
 const AiAssistant: React.FC<AiAssistantProps> = ({
@@ -27,14 +44,65 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
     showToast,
     styleDNA,
     onNormalizeStyle,
-    gpuBackend = null,
-    gpuVendor,
-    agentRunning = false
+    videoId,
+    onSplitAtPlayhead,
+    onSeek,
 }) => {
     const [messages, setMessages] = useState([
         { role: 'assistant', text: 'Ready to optimize your production. How should we proceed?' }
     ])
     const [inputValue, setInputValue] = useState('')
+    const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+
+    const fetchSuggestions = useCallback(async () => {
+        if (!videoId) {
+            showToast?.('Open a video first to get suggestions', 'info')
+            return
+        }
+        setLoadingSuggestions(true)
+        try {
+            const res: any = await apiGet(`/video/ai-editing/suggestions?videoId=${encodeURIComponent(videoId)}`)
+            const items: SuggestionItem[] = res?.data?.suggestions || res?.suggestions || []
+            setSuggestions(items)
+            if (items.length === 0) showToast?.('No suggestions yet for this clip', 'info')
+        } catch (e: any) {
+            showToast?.(e?.message || 'Failed to fetch suggestions', 'error')
+        } finally {
+            setLoadingSuggestions(false)
+        }
+    }, [videoId, showToast])
+
+    const applySuggestion = useCallback((s: SuggestionItem) => {
+        // Each suggestion type maps to an existing editor action.
+        if (s.timeRange?.start != null) onSeek?.(s.timeRange.start)
+        if (s.kind === 'cut') {
+            onSplitAtPlayhead?.()
+            showToast?.(`Split applied near ${s.timeRange?.start.toFixed(1)}s`, 'success')
+            return
+        }
+        if (s.kind === 'caption') {
+            setTextOverlays?.((prev: any) => [...prev, {
+                id: `sg-${Date.now()}`,
+                text: s.description.replace(/\..*$/, '').toUpperCase().slice(0, 40),
+                startTime: s.timeRange?.start ?? 0,
+                endTime: (s.timeRange?.end ?? (s.timeRange?.start || 0) + 3),
+                fontSize: 32,
+                color: '#ffffff',
+                x: 50, y: 80,
+                fontFamily: 'var(--font-inter), Inter, system-ui, sans-serif',
+                style: 'bold-kinetic',
+                animationIn: 'pop',
+            }])
+            showToast?.(`Caption added (${s.frameworkId})`, 'success')
+            return
+        }
+        if (s.kind === 'hook' || s.kind === 'cta') {
+            // Surface the rewrite in the chat so the user can copy/refine.
+            setMessages(prev => [...prev, { role: 'assistant', text: `${s.kind === 'hook' ? 'Hook' : 'CTA'} suggestion (${s.frameworkId}): ${s.description}` }])
+            return
+        }
+    }, [onSplitAtPlayhead, onSeek, setTextOverlays, showToast])
     const [branches, setBranches] = useState([
         { id: 'b1', name: 'v1-original', active: true },
         { id: 'b2', name: 'client-revision-1', active: false, diff: true }
@@ -196,6 +264,66 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Niche-aware suggestions — pulled from /video/ai-editing/suggestions
+                         which is grounded in the marketing playbooks for the creator's
+                         niche/platform. Each item maps to a concrete editor action. */}
+                    <div className="p-4 border-b border-subtle space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Next moves</p>
+                            <button
+                                type="button"
+                                onClick={fetchSuggestions}
+                                disabled={loadingSuggestions}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/30 text-[9px] font-black uppercase tracking-[0.18em] text-violet-300 hover:bg-violet-500/20 disabled:opacity-50"
+                            >
+                                <Wand2 className="w-3 h-3" />
+                                {loadingSuggestions ? 'Loading…' : 'Suggest'}
+                            </button>
+                        </div>
+                        {suggestions.length === 0 ? (
+                            <div className="space-y-2">
+                                <p className="text-[10px] text-theme-muted leading-relaxed">
+                                    Tap <span className="text-violet-300 font-bold">Suggest</span> for niche-aware edits — hooks, cuts, and CTAs grounded in your platform's retention curve.
+                                </p>
+                                <a
+                                    href="/dashboard/marketing-ai"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.18em] text-fuchsia-300 hover:text-fuchsia-200"
+                                >
+                                    View Marketing Oracle <ChevronRight className="w-3 h-3" />
+                                </a>
+                            </div>
+                        ) : (
+                            <ul className="space-y-1.5">
+                                {suggestions.map(s => (
+                                    <li key={s.id}>
+                                        <button
+                                            type="button"
+                                            onClick={() => applySuggestion(s)}
+                                            className="w-full text-left p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-violet-500/30 hover:bg-violet-500/[0.06] transition-all group"
+                                        >
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`text-[8px] font-black uppercase tracking-[0.18em] px-1.5 py-0.5 rounded ${
+                                                    s.kind === 'hook' ? 'bg-rose-500/15 text-rose-300' :
+                                                    s.kind === 'cta' ? 'bg-emerald-500/15 text-emerald-300' :
+                                                    s.kind === 'caption' ? 'bg-amber-500/15 text-amber-300' :
+                                                    'bg-sky-500/15 text-sky-300'
+                                                }`}>{s.kind}</span>
+                                                <span className="text-[9px] font-mono text-theme-muted tabular-nums">
+                                                    {s.timeRange ? `${s.timeRange.start.toFixed(1)}s` : ''}
+                                                </span>
+                                                <span className="ml-auto text-[8px] text-emerald-400 font-bold">+{Math.round(s.expectedRetentionDelta * 100)}%</span>
+                                                <ChevronRight className="w-3 h-3 text-theme-muted group-hover:text-violet-300 transition-colors" />
+                                            </div>
+                                            <p className="text-[10px] text-theme-secondary leading-snug line-clamp-2">{s.description}</p>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">

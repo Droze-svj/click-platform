@@ -1,15 +1,30 @@
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Command, Zap, Video, Cpu, Palette, Sliders, Type, Download, X, Film, Layers as LayersIcon, Sparkles } from 'lucide-react'
+import { Search, Command, Zap, Cpu, Palette, Sliders, Type, Download, Film, Layers as LayersIcon, Sparkles, type LucideIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+export interface CommandKItem {
+  id: string
+  label: string
+  icon: LucideIcon
+  category: string
+  shortcut?: string
+}
 
 interface CommandKProps {
   isOpen: boolean
   onClose: () => void
   onExecute: (actionId: string) => void
+  /**
+   * Optional command list. When omitted, the legacy DEFAULT_COMMANDS render —
+   * preserving the previous behaviour for any caller that hasn't migrated.
+   * The editor passes a richer, selection-aware list assembled from the
+   * EDITOR_GROUPS taxonomy plus contextual actions.
+   */
+  commands?: CommandKItem[]
 }
 
-const COMMANDS = [
+const DEFAULT_COMMANDS: CommandKItem[] = [
   { id: 'ai-edit', label: 'Start AI Semantic Edit', icon: Cpu, category: 'AI', shortcut: 'A' },
   { id: 'short-clips', label: 'Short Clips (Reels, Shorts, TikTok)', icon: Film, category: 'Production', shortcut: 'S' },
   { id: 'transcribe', label: 'Analyze Audio & transcribe', icon: Zap, category: 'AI', shortcut: 'T' },
@@ -20,7 +35,7 @@ const COMMANDS = [
   { id: 'export', label: 'Initialize 4K Render', icon: Download, category: 'Production', shortcut: 'E' },
 ]
 
-const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute }) => {
+const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute, commands }) => {
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -33,7 +48,8 @@ const CommandK: React.FC<CommandKProps> = ({ isOpen, onClose, onExecute }) => {
     }
   }, [isOpen])
 
-  const filteredCommands = COMMANDS.filter(cmd =>
+  const allCommands = commands && commands.length > 0 ? commands : DEFAULT_COMMANDS
+  const filteredCommands = allCommands.filter(cmd =>
     cmd.label.toLowerCase().includes(query.toLowerCase()) ||
     cmd.category.toLowerCase().includes(query.toLowerCase())
   )

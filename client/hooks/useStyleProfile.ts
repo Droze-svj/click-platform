@@ -127,13 +127,26 @@ export function useStyleProfile() {
 
   /**
    * Returns a comparator that biases items the user has picked before to the
-   * top of a list, while preserving the original relative order for unseen
-   * items. Pass it to Array.sort on tile arrays.
+   * top of a list. When `topPerformers` data is available it adds a
+   * performance-score weight on top of frequency so picks that *also*
+   * performed well are preferred. Falls back to pure-frequency ranking when
+   * no analytics ingestion has happened yet.
    */
-  const biasComparator = useCallback(<T extends { id?: string; name?: string; key?: string }>(facet: StyleFacet) => {
+  const biasComparator = useCallback(<T extends { id?: string; name?: string; key?: string }>(
+    facet: StyleFacet,
+    performers?: { key: string; performanceScore: number; sampleSize: number }[],
+  ) => {
     const arr = profile[facet] || []
     const ranks = new Map<string, number>()
     arr.forEach((c, i) => ranks.set(c.key.toLowerCase(), arr.length - i + c.count))
+    if (performers && performers.length) {
+      for (const p of performers) {
+        const k = p.key.toLowerCase()
+        // log-scaled sample weight, retention delta scaled by 30 to match the count axis
+        const perfBoost = (p.performanceScore || 0) * Math.log((p.sampleSize || 0) + 1) * 30
+        ranks.set(k, (ranks.get(k) || 0) + perfBoost)
+      }
+    }
     return (a: T, b: T) => {
       const ka = ((a.id || a.key || a.name || '') + '').toLowerCase()
       const kb = ((b.id || b.key || b.name || '') + '').toLowerCase()

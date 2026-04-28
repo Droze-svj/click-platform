@@ -32,6 +32,7 @@ import {
 import { apiGet, apiPost, apiPatch } from '../../../lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { loadEditorContentPreferences, saveEditorContentPreferences } from '../../../utils/editorUtils'
+import OptimalPostingWindow from '../OptimalPostingWindow'
 
 const EXPORT_PRESETS = [
   { id: 'shorts', label: 'YT Shorts', icon: Youtube, color: 'from-red-500 to-red-700', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 4, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Clear value, Subscribe CTA', glow: 'rgba(220,38,38,0.3)' },
@@ -696,6 +697,20 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
           </motion.div>
         </div>
       </div>
+
+      {/* Schedule when it'll land — niche × platform optimal posting windows.
+           Renders only when the user has at least one rendered export, since
+           the suggestion only matters once there's something to schedule. */}
+      {(savedExports.length > 0 || lastRenderExportPath) && (
+        <div className="max-w-2xl">
+          <OptimalPostingWindow
+            onSchedule={(hour, rationale) => {
+              showToast?.(`Scheduled for ${hour}:00 — ${rationale[0] || ''}`, 'success')
+              setActiveCategory?.('scheduling')
+            }}
+          />
+        </div>
+      )}
 
       {/* Repository Command Center */}
       {(savedExports.length > 0) && (

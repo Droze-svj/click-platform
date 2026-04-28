@@ -30,20 +30,36 @@ const nextConfig = {
   transpilePackages: ['lucide-react'],
   webpack: (config, { isServer }) => {
     // The video editor pulls in konva → canvas (a native binding) via a
-    // dynamic({ ssr: false }) import, but Next.js still bundles those modules
-    // for the server build. The `canvas: false` fallback used to be gated to
-    // the client bundle only, which made the server build fail on Vercel with
-    // "Can't resolve '../build/Release/canvas.node'". Applying the fallback to
-    // both bundles is safe — server code never actually executes konva because
-    // the consuming components are client-only.
+    // dynamic({ ssr: false }) import. konva's package.json `main` points at
+    // `lib/index-node.js` which `require()`s the `canvas` package — that in
+    // turn requires `../build/Release/canvas.node`, a native binary.
+    //
+    // Two fixes layered together:
+    //   1. `canvas: false` fallback — webpack treats `canvas` as a missing
+    //      module and emits an empty stub instead of trying to bundle it.
+    //   2. Alias `konva` → `konva/lib/index.js` (the browser entry) on the
+    //      client bundle. The browser entry never imports canvas, so the
+    //      whole chain is short-circuited at resolution time. Without this,
+    //      webpack picks `main` (the Node entry) and we hit the chain even
+    //      with the fallback in place, because dev mode logs the error
+    //      anyway.
+    //   3. Mark konva/canvas/react-konva as externals on the server bundle.
+    config.resolve = config.resolve || {};
     config.resolve.fallback = {
       ...config.resolve.fallback,
       canvas: false,
     };
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      // `false` tells webpack to emit an empty stub for every import of
+      // `canvas` — short-circuits the native-binding chain in dev and prod.
+      canvas: false,
+      // Force konva's browser entry. Webpack accepts a bare module subpath
+      // here; it resolves through the same pnpm-aware module graph as the
+      // app, so we don't need to know the absolute path.
+      konva$: 'konva/lib/index.js',
+    };
 
-    // Mark konva itself as external on the server so webpack doesn't even try
-    // to walk into it. This pairs with ssr:false on the consuming dynamic
-    // imports.
     if (isServer) {
       config.externals = [
         ...(Array.isArray(config.externals) ? config.externals : []),
@@ -54,10 +70,12 @@ const nextConfig = {
     }
 
     if (config.module && config.module.rules) {
-      config.module.rules.push({
-        test: /\.node$/,
-        use: 'null-loader',
-      });
+      // Catch any stray `.node` requires (native bindings) and ignore them.
+      // `IgnorePlugin`-style behaviour without needing an extra loader pkg.
+      const webpack = require('webpack');
+      (config.plugins = config.plugins || []).push(
+        new webpack.IgnorePlugin({ resourceRegExp: /\.node$/ })
+      );
     }
 
     return config;

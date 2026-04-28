@@ -22,6 +22,48 @@ const saliencyService = require('./saliencyService');
 const { devVideoStore, resolveContent } = require('../utils/devStore');
 const { getActiveBlueprint } = require('./continuousLearningService');
 const videoRenderService = require('./videoRenderService');
+const {
+  buildSystemPrompt,
+  buildCompactGuidance,
+  getKnowledgeSlice,
+  HOOK_FRAMEWORKS,
+} = require('./marketingKnowledge');
+
+/**
+ * Compose an additional context block that biases AI prompts toward the
+ * creator's niche, target platform, language, and recent style picks. Returns
+ * an empty string when no usable context is provided so callers can safely
+ * concatenate without conditionals.
+ */
+function nicheStyleContext({ niche, platform, language, styleProfile } = {}) {
+  if (!niche && !platform && !styleProfile) return '';
+  const slice = getKnowledgeSlice({ niche, platform, language, stage: 'edit' });
+  const np = slice.nichePlaybook;
+  const pp = slice.platformPlaybook;
+  const lines = [
+    '── Creator context ──',
+    `Niche: ${slice.niche.toUpperCase()}. Platform: ${slice.platform.toUpperCase()}. Language: ${slice.languageProfile?.name || 'English'}.`,
+    `Voice: ${np.voice}`,
+    `Top angles for this niche: ${np.angles.slice(0, 3).join(' · ')}`,
+    `Triggers that lift retention: ${np.triggers.slice(0, 3).join(' · ')}`,
+    `Avoid: ${np.avoid.slice(0, 2).join(' · ')}`,
+    `Platform brief: ${pp.idealLength} · hook window ${pp.hookWindow} · captions ${pp.captionStyle}`,
+  ];
+  if (styleProfile) {
+    const top = (arr, k) =>
+      Array.isArray(arr) && arr.length
+        ? arr.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 3).map(c => c.key).join(', ')
+        : '';
+    const fonts   = top(styleProfile.fonts);
+    const styles  = top(styleProfile.captionStyles);
+    const motions = top(styleProfile.motions);
+    if (fonts || styles || motions) lines.push('Creator picks (bias toward these):');
+    if (fonts)   lines.push(`  · Top fonts: ${fonts}`);
+    if (styles)  lines.push(`  · Top caption styles: ${styles}`);
+    if (motions) lines.push(`  · Top motions: ${motions}`);
+  }
+  return lines.join('\n') + '\n';
+}
 
 /**
  * Unified save helper for both Mongoose models and DevStore objects
@@ -2497,7 +2539,13 @@ function validateAndClampAnalysis(analysis, duration) {
  */
 async function analyzeVideoForEditing(videoMetadata) {
   try {
-    const { videoId, scenes: scenesInput = [], audioLevels = [] } = videoMetadata;
+    const {
+      videoId, scenes: scenesInput = [], audioLevels = [],
+      // Niche-aware context — supplied by the route from User + UserStyleProfile.
+      // All optional; falling back to defaults when absent keeps behaviour
+      // unchanged for callers that haven't migrated.
+      niche, platform, language, styleProfile,
+    } = videoMetadata;
 
     // Gather accurate context (duration, silence, scenes, transcript) when videoId present
     const ctx = await getAccurateAnalysisContext(videoId, videoMetadata);
@@ -2541,10 +2589,11 @@ async function analyzeVideoForEditing(videoMetadata) {
       ? `\nTranscript excerpt (use for suggestedEdits and hook/highlights):\n---\n${ctx.transcriptExcerpt}\n---\nRepetitive/filler phrases: ${ctx.repetitionSummary}`
       : '\nTranscript: Not available.';
 
+    const creatorContext = nicheStyleContext({ niche, platform, language, styleProfile });
     const prompt = `You are Click's AI Video Intelligence Engine — the world's most advanced viral content strategist and video editor.
 Analyze this video and return JSON only.
 
-VIDEO FACTS (use these exact bounds):
+${creatorContext}VIDEO FACTS (use these exact bounds):
 - Duration: ${duration.toFixed(1)} seconds (all timestamps must be in [0, ${duration.toFixed(1)}])
 - Resolution: ${ctx.resolution || 'Unknown'}
 ${silenceBlock}${sceneBlock}${transcriptBlock}
@@ -2789,19 +2838,81 @@ async function processChromaKey(videoId, settings = {}) {
   }
 }
 
-async function getInteractiveSuggestions(videoId) {
+/**
+ * Returns concrete edit suggestions grounded in the marketing playbooks for
+ * the creator's niche + platform. Each item is shaped for the AiAssistant's
+ * one-tap apply chips: { id, kind, timeRange, rationale, frameworkId,
+ * expectedRetentionDelta, confidence }.
+ *
+ * The retention curve drives where each suggestion lands on the timeline
+ * (0–2s hook, 2–5s proof, 15–25s mid-roll re-hook, 25–end CTA), the niche
+ * playbook drives copy, and the hook framework library backs the headline
+ * rewrites. Falls back to a sensible default for unknown niches.
+ */
+async function getInteractiveSuggestions(videoId, opts = {}) {
   try {
     const content = await resolveContent(videoId);
     if (!content) throw new Error('Content not found');
 
-    const duration = content.originalFile.duration || 60;
-    const suggestions = [
-      { id: 'cut-1', time: duration * 0.15, type: 'cut', description: 'Repetitive phrase detected. Cut for better flow.', confidence: 0.95 },
-      { id: 'fx-1', time: duration * 0.4, type: 'effect', description: 'Perfect spot for a "Zoom-in" face effect.', confidence: 0.82 },
-      { id: 'audio-1', time: duration * 0.75, type: 'audio', description: 'Background noise spike here. Apply noise reduction.', confidence: 0.88 }
-    ];
+    const duration = content.originalFile?.duration || content.duration || 60;
+    const niche    = opts.niche    || content.niche    || 'other';
+    const platform = opts.platform || content.platform || 'tiktok';
+    const language = opts.language || 'en';
+    const slice = getKnowledgeSlice({ niche, platform, language, stage: 'edit' });
+    const np = slice.nichePlaybook;
+    const pp = slice.platformPlaybook;
+    const retention = slice.retention;
 
-    return { success: true, suggestions };
+    // Map retention-curve marks to absolute seconds within this video.
+    const markToRange = (mark) => {
+      // marks like '0–2s', '2–5s', '15–25s', '25–end'
+      const m = String(mark).match(/(\d+(?:\.\d+)?)\s*[–—-]\s*(\d+(?:\.\d+)?|end)/);
+      if (!m) return null;
+      const start = Math.min(parseFloat(m[1]), duration);
+      const end = m[2] === 'end' ? duration : Math.min(parseFloat(m[2]), duration);
+      return start < end ? { start, end } : null;
+    };
+
+    const hookFw = HOOK_FRAMEWORKS[0]; // strongest framework first
+    const angle = (np.angles || [])[0] || 'a clear, specific outcome';
+    const trigger = (np.triggers || [])[0] || 'specific numbers';
+
+    const suggestions = retention.map((r, i) => {
+      const range = markToRange(r.mark) || { start: i * 5, end: Math.min((i + 1) * 5, duration) };
+      const fw = HOOK_FRAMEWORKS[i % HOOK_FRAMEWORKS.length];
+      const kind =
+        i === 0 ? 'hook' :
+        i === 1 ? 'caption' :
+        i === retention.length - 1 ? 'cta' :
+        'cut';
+      const description =
+        kind === 'hook'    ? `Tighten ${range.start.toFixed(1)}–${range.end.toFixed(1)}s to a ${fw.id} hook anchored to "${angle}". ${r.rule}` :
+        kind === 'caption' ? `Burn a ${pp.captionStyle.toLowerCase()} caption with a ${trigger} between ${range.start.toFixed(1)}s and ${range.end.toFixed(1)}s.` :
+        kind === 'cta'     ? `Land the CTA at ${range.start.toFixed(1)}s. ${pp.cta}` :
+        `Insert a re-hook around ${range.start.toFixed(1)}s using the ${fw.id} framework: ${r.rule}`;
+      return {
+        id: `sg-${i}`,
+        kind,
+        time: range.start,                    // legacy field for older consumers
+        timeRange: range,
+        type: kind === 'cut' ? 'cut' : kind === 'caption' ? 'caption' : kind === 'hook' ? 'hook' : 'effect',
+        description,
+        rationale: r.rule,
+        frameworkId: fw.id,
+        expectedRetentionDelta: kind === 'hook' ? 0.18 : kind === 'cta' ? 0.05 : 0.09,
+        confidence: kind === 'hook' || kind === 'cta' ? 0.86 : 0.78,
+      };
+    });
+
+    return {
+      success: true,
+      niche: slice.niche,
+      platform: slice.platform,
+      duration,
+      suggestions,
+      angles: np.angles.slice(0, 5),
+      avoid: np.avoid.slice(0, 3),
+    };
   } catch (error) {
     logger.error('Interactive suggestions error', { error: error.message });
     throw error;

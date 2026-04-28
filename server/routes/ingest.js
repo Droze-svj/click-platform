@@ -28,7 +28,7 @@ const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser
 const router = express.Router();
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'videos');
-try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch {}
+try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch { /* dir exists */ }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -60,7 +60,7 @@ function classifyUrl(rawUrl) {
 function streamDownload(url, destPath, { maxBytes = 500 * 1024 * 1024, redirects = 3 } = {}) {
   return new Promise((resolve, reject) => {
     let settled = false;
-    const cleanup = () => { try { fs.unlinkSync(destPath); } catch {} };
+    const cleanup = () => { try { fs.unlinkSync(destPath); } catch { /* file already gone */ } };
     const fail = (err) => {
       if (settled) return;
       settled = true;
@@ -250,10 +250,12 @@ router.post('/clipboard', auth, ingestUrlHandler);
 router.post('/remix', auth, async (req, res) => {
   try {
     const { contentId } = req.body || {};
-    if (!contentId) return res.status(400).json({ success: false, error: 'Missing contentId' });
-
-    const original = devVideoStore.get(contentId);
-    if (!original) return res.status(404).json({ success: false, error: 'Source project not found' });
+    // Ownership gate — without this any authed user can clone any other
+    // user's content if they know its id (IDOR). guardOwnership handles 400
+    // / 404 / 403 itself and returns the resolved content on success.
+    const { guardOwnership } = require('../utils/ownership');
+    const original = await guardOwnership(req, res, contentId);
+    if (!original) return;
 
     const newId = `remix-${Date.now()}`;
     const remix = {

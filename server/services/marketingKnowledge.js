@@ -166,6 +166,22 @@ const NICHE_PLAYBOOKS = {
   },
 };
 
+// ── Niche posting windows ──────────────────────────────────────────────────
+// Empirical "best windows" by niche, expressed as 24h hour ranges in the
+// creator's local timezone. Used by /scheduling/optimal-windows alongside
+// platform peak hours and the creator's historical engagement-by-hour to
+// produce the top-3 recommended slots.
+const NICHE_POSTING_WINDOWS = {
+  health:        [{ start: 6,  end: 9,  label: 'Morning routine window' }, { start: 17, end: 20, label: 'Post-workout evening'  }],
+  finance:       [{ start: 7,  end: 10, label: 'Pre-market commute'    }, { start: 19, end: 22, label: 'Post-dinner planning'   }],
+  education:     [{ start: 8,  end: 11, label: 'Study-mode mornings'   }, { start: 16, end: 19, label: 'After-school review'    }],
+  technology:    [{ start: 9,  end: 12, label: 'Workday peak'          }, { start: 20, end: 23, label: 'Evening tinkering'      }],
+  lifestyle:     [{ start: 7,  end: 9,  label: 'Routine reveals'       }, { start: 19, end: 22, label: 'Wind-down hours'        }],
+  business:      [{ start: 7,  end: 10, label: 'Pre-meeting scroll'    }, { start: 12, end: 14, label: 'Lunch break'             }],
+  entertainment: [{ start: 18, end: 22, label: 'Prime-time'            }, { start: 22, end: 24, label: 'Late-night doomscroll' }],
+  other:         [{ start: 7,  end: 9,  label: 'Morning commute'       }, { start: 19, end: 22, label: 'Evening prime'           }],
+};
+
 // ── CTA library ──────────────────────────────────────────────────────────
 const CTA_LIBRARY = {
   save:     ['Save this for the next time it happens.', 'You will want this when…'],
@@ -323,6 +339,7 @@ module.exports = {
   PLATFORM_PLAYBOOKS,
   NICHE_PLAYBOOKS,
   CTA_LIBRARY,
+  NICHE_POSTING_WINDOWS,
   LANGUAGE_PROFILES,
   getKnowledgeSlice,
   buildSystemPrompt,

@@ -53,7 +53,7 @@ const scoreColor = (s: number) => s >= 85 ? 'text-emerald-400' : s >= 65 ? 'text
 const scoreBorder = (s: number) => s >= 85 ? 'border-emerald-500/30' : s >= 65 ? 'border-amber-500/30' : 'border-rose-500/30'
 const scoreBg = (s: number) => s >= 85 ? 'bg-emerald-500/10' : s >= 65 ? 'bg-amber-500/10' : 'bg-rose-500/10'
 
-import { apiGet } from '../../../../lib/api'
+import { apiGet, apiPost } from '../../../../lib/api'
 import SpectralLoader from '../../../../components/SpectralLoader'
 
 export default function HeuristicMatrixPage() {
@@ -69,7 +69,34 @@ export default function HeuristicMatrixPage() {
     setRefreshing(true)
     try {
       const res = await apiGet('/analytics/creator/stats')
-      setVideos(res.stats || [])
+      const list: VideoStat[] = res.stats || []
+      setVideos(list)
+      // Auto-ingest each unique post into the editor's learning brain. We
+      // mark seen ids in localStorage so we don't double-count when the
+      // analytics page re-renders. The endpoint itself is idempotent on
+      // dev users; in prod it weighted-averages so re-ingestion would
+      // gradually re-weight rather than corrupt.
+      try {
+        const seenKey = 'click.style-profile.ingested'
+        const seen = new Set<string>(JSON.parse(localStorage.getItem(seenKey) || '[]'))
+        const fresh = list.filter(v => v?.id && !seen.has(v.id))
+        if (fresh.length) {
+          await Promise.allSettled(fresh.map(v => apiPost('/style-profile/ingest-post', {
+            contentId: v.id,
+            metrics: {
+              completionRate: (v.completionRate ?? 55) / 100,
+              retentionRate:  (v.completionRate ?? 55) / 100,
+              viewCount: v.views,
+              likes: v.likes,
+              shares: v.shares,
+              comments: v.comments,
+              benchmarkRetention: 0.55,
+            },
+          })))
+          fresh.forEach(v => seen.add(v.id))
+          localStorage.setItem(seenKey, JSON.stringify(Array.from(seen).slice(-200)))
+        }
+      } catch { /* ingestion is best-effort — analytics view still renders */ }
     } catch (err) {
       console.error('Failed to fetch creator stats', err)
     } finally {
@@ -87,15 +114,22 @@ export default function HeuristicMatrixPage() {
     [videos, selectedPlatform, sortBy]
   )
 
-  const totals = useMemo(() => ({
-    views: videos.reduce((s, v) => s + v.views, 0),
-    likes: videos.reduce((s, v) => s + v.likes, 0),
-    shares: videos.reduce((s, v) => s + v.shares, 0),
-    comments: videos.reduce((s, v) => s + v.comments, 0),
-    avgCompletion: Math.round(videos.reduce((s, v) => s + v.completionRate, 0) / videos.length),
-    avgViralScore: Math.round(videos.reduce((s, v) => s + v.viralScore, 0) / videos.length),
-    avgEngagement: parseFloat((videos.reduce((s, v) => s + v.engagementRate, 0) / videos.length).toFixed(1)),
-  }), [videos])
+  const totals = useMemo(() => {
+    // Guard against empty arrays — divisions would otherwise produce NaN and
+    // React's "Received NaN for the children attribute" warning fires for
+    // every renderer that displays these values.
+    const n = videos.length || 1
+    const empty = videos.length === 0
+    return {
+      views: videos.reduce((s, v) => s + v.views, 0),
+      likes: videos.reduce((s, v) => s + v.likes, 0),
+      shares: videos.reduce((s, v) => s + v.shares, 0),
+      comments: videos.reduce((s, v) => s + v.comments, 0),
+      avgCompletion: empty ? 0 : Math.round(videos.reduce((s, v) => s + v.completionRate, 0) / n),
+      avgViralScore: empty ? 0 : Math.round(videos.reduce((s, v) => s + v.viralScore, 0) / n),
+      avgEngagement: empty ? 0 : parseFloat((videos.reduce((s, v) => s + v.engagementRate, 0) / n).toFixed(1)),
+    }
+  }, [videos])
 
   const styleAttribution = useMemo(() => {
     const map: Record<string, { total: number; count: number }> = {}

@@ -6,6 +6,9 @@ const { defineConfig, devices } = require('@playwright/test');
 module.exports = defineConfig({
   testDir: './tests/e2e',
   testMatch: /.*\.spec\.(js|ts)$/, // Allow .spec.js and .spec.ts (debug tests live in TS)
+  // Exclude `debug-*` specs from CI — they hardcode localhost:3010
+  // (the local dev port) and never agree with the workflow's port 3000.
+  testIgnore: /debug-.*\.spec\.(js|ts)$/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

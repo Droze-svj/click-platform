@@ -1,12 +1,14 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sparkles, Zap, Music, Hash, Eye, Target, Activity, Globe,
   Mic, Volume2, Wand2, Clock, Flame, TrendingUp, Layers,
   CheckCircle2, ArrowRight, Loader2, Info, Lock, ChevronRight
 } from 'lucide-react'
+import { apiGet } from '../../../lib/api'
+import { useWorkflow } from '../../../contexts/WorkflowContext'
 
 interface Trends2026ViewProps {
   videoId?: string
@@ -93,6 +95,24 @@ export default function Trends2026View({
   const [predicting, setPredicting] = useState(false)
   const [predictedScore, setPredictedScore] = useState<number | null>(null)
 
+  // Live trend report from /marketing-intelligence/trend-report — composer
+  // backs this with niche-specific hooks/sounds/overlays/hashtags. The local
+  // NICHE_TEMPLATES below stays as a deterministic fallback layer.
+  const { state: workflow } = useWorkflow()
+  const [liveTrends, setLiveTrends] = useState<any | null>(null)
+  const [liveLoading, setLiveLoading] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    const wfNiche = workflow.niche || niche.toLowerCase()
+    const platform = workflow.platform || 'tiktok'
+    setLiveLoading(true)
+    apiGet<{ data: any }>(`/marketing-intelligence/trend-report?niche=${encodeURIComponent(wfNiche)}&platform=${encodeURIComponent(platform)}`)
+      .then((res: any) => { if (!cancelled) setLiveTrends(res?.data || null) })
+      .catch(() => { /* keep silent — fallback templates render below */ })
+      .finally(() => { if (!cancelled) setLiveLoading(false) })
+    return () => { cancelled = true }
+  }, [workflow.niche, workflow.platform, niche])
+
   const templates = useMemo(() => NICHE_TEMPLATES[niche] || [], [niche])
 
   const handleApplyHook = (h: HookCandidate) => {
@@ -154,6 +174,53 @@ export default function Trends2026View({
         </div>
         {videoId && <span className="text-[10px] font-mono text-slate-500 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">video · {videoId.slice(0, 8)}…</span>}
       </div>
+
+      {/* Live trend report — composed from the marketing-knowledge playbooks
+           via Gemini. Refreshes when the workflow niche/platform changes. */}
+      {liveTrends && (liveTrends.hooks?.length || liveTrends.formats?.length) ? (
+        <div className="rounded-2xl p-5 border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-fuchsia-400" />
+              <span className="text-[11px] font-black uppercase tracking-[0.3em] text-fuchsia-300">Live niche signals</span>
+              <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                {liveTrends.source === 'ai' ? 'AI' : 'Playbook'}
+              </span>
+            </div>
+            <span className="text-[9px] text-slate-500 font-mono">
+              {liveTrends.niche?.toUpperCase()} · {liveTrends.platform?.toUpperCase()}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {liveTrends.hooks?.slice(0, 4).map((h: any) => (
+              <div key={h.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/10">
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-fuchsia-300 mb-1">Hook · {h.framework}</p>
+                <p className="text-[11px] text-white font-bold mb-1 leading-snug">{h.label}</p>
+                <p className="text-[9px] text-slate-500 leading-relaxed">{h.example}</p>
+              </div>
+            ))}
+            {liveTrends.formats?.slice(0, 2).map((f: any) => (
+              <div key={f.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/10">
+                <p className="text-[8px] font-black uppercase tracking-[0.2em] text-amber-300 mb-1">Format</p>
+                <p className="text-[11px] text-white font-bold mb-1">{f.label}</p>
+                <p className="text-[9px] text-slate-500">{f.length} · {f.structure}</p>
+              </div>
+            ))}
+          </div>
+          {liveTrends.hashtags?.primary?.length ? (
+            <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap gap-1.5">
+              {[...liveTrends.hashtags.primary, ...(liveTrends.hashtags.niche || [])].slice(0, 8).map((h: string, i: number) => (
+                <span key={i} className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300">{h}</span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : liveLoading ? (
+        <div className="rounded-2xl p-5 border border-white/[0.06] bg-white/[0.02] flex items-center gap-3">
+          <Loader2 className="w-4 h-4 text-fuchsia-400 animate-spin" />
+          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">Pulling live niche signals…</span>
+        </div>
+      ) : null}
 
       {/* Niche selector */}
       <div className={`${glassStyle} rounded-2xl p-5`}>

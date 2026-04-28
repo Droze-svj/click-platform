@@ -4,7 +4,7 @@
  */
 
 const logger = require('../utils/logger');
-const OAuthService = require('./OAuthService');
+const OAuthService = require('./oauthService');
 
 /**
  * Main posting function to dispatch to platform-specific handlers

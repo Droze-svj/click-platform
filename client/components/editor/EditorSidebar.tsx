@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { EditorCategory } from '../../types/editor'
 import { CATEGORIES } from '../../utils/editorConstants'
+import { EDITOR_GROUPS, groupForCategory, type EditorGroupId } from '../../utils/editorGroups'
 import { formatTime, loadEditorContentPreferences } from '../../utils/editorUtils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -138,7 +139,18 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   const [pinnedCategories, setPinnedCategories] = useState<EditorCategory[]>([])
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [hoveredCategory, setHoveredCategory] = useState<EditorCategory | null>(null)
+  const [activeGroup, setActiveGroup] = useState<EditorGroupId | 'all'>(() => {
+    if (typeof window === 'undefined') return 'all'
+    const saved = localStorage.getItem('click_editor_active_group')
+    return (saved as EditorGroupId | 'all') || 'all'
+  })
   const searchRef = useRef<HTMLInputElement>(null)
+
+  // Persist group selection so the user's filter choice survives reloads.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem('click_editor_active_group', activeGroup)
+  }, [activeGroup])
 
   // Load pinned + recent from localStorage
   useEffect(() => {
@@ -187,11 +199,18 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
     })
   }
 
-  // Filter categories
-  const filteredCategories = ALL_CATEGORIES.filter(c =>
-    c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Filter categories: text search + active group filter.
+  // Group filter is bypassed during a search so users always find what they
+  // typed regardless of which group it lives in.
+  const filteredCategories = ALL_CATEGORIES.filter(c => {
+    const matchesText =
+      c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!matchesText) return false
+    if (searchQuery) return true
+    if (activeGroup === 'all') return true
+    return groupForCategory(c.id as EditorCategory) === activeGroup
+  })
 
   // Sort: pinned first, then rest
   const sortedCategories = [
@@ -270,6 +289,44 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ── Group filter rail ─────────────────────────────────────────────
+             Six top-level groups + an "All" pill. Hidden when collapsed or
+             when the user is searching (search spans all groups). Persists
+             to localStorage so the user's pick survives reloads. */}
+        {!isCollapsed && !searchQuery && (
+          <div className="mt-3 -mx-1 flex flex-wrap gap-1">
+            <button
+              type="button"
+              onClick={() => setActiveGroup('all')}
+              className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border transition-all ${
+                activeGroup === 'all'
+                  ? 'bg-white text-black border-white shadow'
+                  : 'bg-white/[0.03] text-slate-400 border-white/10 hover:text-white hover:border-white/20'
+              }`}
+            >
+              All
+            </button>
+            {EDITOR_GROUPS.map(g => {
+              const isOn = activeGroup === g.id
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  title={g.description}
+                  onClick={() => setActiveGroup(g.id)}
+                  className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border transition-all ${
+                    isOn
+                      ? `bg-gradient-to-r ${g.gradient} text-white border-white/30 shadow-md`
+                      : 'bg-white/[0.03] text-slate-400 border-white/10 hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Recent History ─────────────────────────────────────────────────── */}

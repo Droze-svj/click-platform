@@ -51,7 +51,7 @@ describe('AIService', () => {
       
       expect(result).toBe('Cinematic Masterpiece! #vibes');
       expect(googleAI.generateContent).toHaveBeenCalledWith(
-        expect.stringContaining('lifestyle'),
+        expect.stringMatching(/lifestyle/i),
         expect.any(Object)
       );
     });

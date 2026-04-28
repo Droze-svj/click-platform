@@ -111,23 +111,28 @@ Total duration: ${duration} seconds
 Return only valid JSON with a "highlights" array.`;
 
     const rawContent = await geminiGenerate(prompt, { maxTokens: 1500 });
-    
+
     const result = safeJsonParse(rawContent, { highlights: [] });
-    return result.highlights || [];
+    if (result.highlights && result.highlights.length > 0) return result.highlights;
+    return buildFallbackHighlights(transcript, duration);
   } catch (error) {
     logger.error('Highlight detection error', { error: error.message, duration });
-    const highlights = [];
-    const interval = duration / 5;
-    for (let i = 0; i < 5; i++) {
-      highlights.push({
-        startTime: i * interval,
-        text: transcript.substring(i * 100, (i + 1) * 100) || 'Engaging moment',
-        platform: 'tiktok',
-        reason: 'Auto-detected highlight'
-      });
-    }
-    return highlights;
+    return buildFallbackHighlights(transcript, duration);
   }
+}
+
+function buildFallbackHighlights(transcript, duration) {
+  const highlights = [];
+  const interval = duration / 5;
+  for (let i = 0; i < 5; i++) {
+    highlights.push({
+      startTime: i * interval,
+      text: transcript.substring(i * 100, (i + 1) * 100) || 'Engaging moment',
+      platform: 'tiktok',
+      reason: 'Auto-detected highlight'
+    });
+  }
+  return highlights;
 }
 
 // Generate social media content from text

@@ -146,4 +146,92 @@ router.post('/batch', auth, async (req, res) => {
   }
 });
 
+// ── POST /api/style-profile/ingest-post ──────────────────────────────────
+// Closes the continuous-learning loop. Body: { contentId, metrics }.
+// metrics may include retentionRate, completionRate, viewCount, likes,
+// shares, comments, benchmarkRetention. Updates the user's weighted style
+// profile via creatorPerformanceService so subsequent /insights calls
+// reflect the new retention deltas.
+router.post('/ingest-post', auth, async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
+    const { contentId, metrics } = req.body || {};
+    if (!contentId) return res.status(400).json({ success: false, error: 'contentId required' });
+
+    // Ownership gate — prevents a user from polluting another user's style
+    // profile by submitting fake metrics against arbitrary contentIds.
+    const { guardOwnership } = require('../utils/ownership');
+    const owned = await guardOwnership(req, res, contentId);
+    if (!owned) return;
+
+    if (isDevUser(req.user)) {
+      // Dev-mode mock — confirm the call shape without touching Mongo.
+      const delta = (metrics?.retentionRate ?? metrics?.completionRate ?? 0.55) - (metrics?.benchmarkRetention ?? 0.55);
+      return res.json({
+        success: true,
+        data: { devMock: true, contentId, delta, updated: 4, picks: 4 },
+      });
+    }
+
+    const { ingestPostPerformance } = require('../services/creatorPerformanceService');
+    const result = await ingestPostPerformance({ userId, contentId, metrics });
+    res.json({ success: true, data: { contentId, ...result } });
+  } catch (err) {
+    logger.error('[style-profile] ingest-post failed', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GET /api/style-profile/insights ──────────────────────────────────────
+// Returns the user's top-performing style picks across each weighted facet,
+// plus the timestamp of the last analytics ingestion. The editor's
+// PerformanceRail uses this to show "what's working for you" and to bias
+// suggestion-tile order toward picks with high retention deltas.
+router.get('/insights', auth, async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
+
+    if (isDevUser(req.user)) {
+      // Dev mode — return a deterministic mock so the UI renders without Mongo.
+      return res.json({
+        success: true,
+        data: {
+          topPerformers: {
+            fonts:         [{ key: 'var(--font-inter), Inter, system-ui, sans-serif', performanceScore: 0.18, sampleSize: 4 }],
+            captionStyles: [{ key: 'bold-kinetic', performanceScore: 0.22, sampleSize: 5 }],
+            animations:    [{ key: 'pop', performanceScore: 0.14, sampleSize: 3 }],
+            motions:       [{ key: 'shake', performanceScore: 0.09, sampleSize: 2 }],
+            hooks:         [{ key: 'curiosity-gap', performanceScore: 0.27, sampleSize: 4 }],
+          },
+          lastIngestedAt: new Date().toISOString(),
+          devMock: true,
+        },
+      });
+    }
+
+    let profile = await UserStyleProfile.findOne({ userId });
+    if (!profile) profile = await UserStyleProfile.create({ userId });
+    res.json({
+      success: true,
+      data: {
+        topPerformers: {
+          fonts:         profile.topPerformers('weightedFonts', 5),
+          captionStyles: profile.topPerformers('weightedCaptionStyles', 5),
+          animations:    profile.topPerformers('weightedAnimations', 5),
+          motions:       profile.topPerformers('weightedMotions', 5),
+          colorGrades:   profile.topPerformers('weightedColorGrades', 5),
+          transitions:   profile.topPerformers('weightedTransitions', 5),
+          hooks:         profile.topPerformers('weightedHooks', 5),
+        },
+        lastIngestedAt: profile.lastIngestedAt || null,
+      },
+    });
+  } catch (err) {
+    logger.error('[style-profile] insights failed', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

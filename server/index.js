@@ -1580,6 +1580,7 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/upload/progress', require('./routes/upload/progress'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/marketing-knowledge', require('./routes/marketingKnowledge'));
+app.use('/api/marketing-intelligence', require('./routes/marketingIntelligence'));
 app.use('/api/style-profile', require('./routes/userStyleProfile'));
 app.use('/api/search', require('./routes/search'));
 app.use('/api/export', require('./routes/export'));
@@ -1750,6 +1751,7 @@ app.use('/api/agency', require('./routes/agency'));
 
 // Advanced recycling routes
 app.use('/api/recycling-advanced', require('./routes/recycling-advanced'));
+app.use('/api/recycling', require('./routes/recycling'));
 
 // Content Ops API routes
 app.use('/api/content-ops', require('./routes/content-ops-api'));
@@ -2287,9 +2289,14 @@ try {
         logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
 
-        // Initialize Socket.io for real-time updates
-        initializeSocket(server);
-        logger.info(`🔌 Socket.io initialized for real-time updates`);
+        // Initialize Socket.io for real-time updates. Skip under jest —
+        // the listen callback fires asynchronously, and engine.io's
+        // lazy require('cors') inside its constructor races with jest's
+        // env teardown when supertest pulls in the app.
+        if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
+          initializeSocket(server);
+          logger.info(`🔌 Socket.io initialized for real-time updates`);
+        }
 
         logger.info(`✅ Server bound to port ${PORT} on ${HOST}`);
         console.log(`✅ Server successfully bound to port ${PORT} on ${HOST}`);
