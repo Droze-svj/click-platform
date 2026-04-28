@@ -12,7 +12,7 @@
 FROM node:20-bookworm-slim AS frontend-builder
 WORKDIR /app/client
 COPY client/package*.json ./
-COPY pnpm-lock.yaml ../pnpm-lock.yaml 2>/dev/null || true
+COPY pnpm-lock.yaml ../pnpm-lock.yaml
 RUN npm install -g pnpm@9 && pnpm install --frozen-lockfile=false --prefer-frozen-lockfile
 COPY client/ ./
 RUN pnpm run build
