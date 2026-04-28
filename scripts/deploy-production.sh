@@ -36,7 +36,7 @@ echo -e "${GREEN}✅ Environment variables validated${NC}"
 
 # Run tests
 echo "🧪 Running tests..."
-npm test
+pnpm test
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Tests failed! Fix tests before deploying.${NC}"
@@ -48,8 +48,8 @@ echo -e "${GREEN}✅ All tests passed${NC}"
 # Build frontend
 echo "🏗️  Building frontend..."
 cd client
-npm ci
-npm run build
+pnpm install --frozen-lockfile=false
+pnpm run build
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Frontend build failed!${NC}"
@@ -61,7 +61,7 @@ echo -e "${GREEN}✅ Frontend built successfully${NC}"
 
 # Run linting
 echo "🔍 Running linter..."
-npm run lint
+pnpm run lint
 
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠️  Linter found issues. Continuing anyway...${NC}"
@@ -73,7 +73,7 @@ mkdir -p dist
 cp -r server dist/
 cp -r client/.next dist/client-next 2>/dev/null || true
 cp package.json dist/
-cp package-lock.json dist/
+cp pnpm-lock.yaml dist/
 cp .env.production dist/.env
 
 echo -e "${GREEN}✅ Production build created${NC}"
@@ -88,7 +88,7 @@ cp -r server "$DEPLOY_DIR/"
 cp -r client/.next "$DEPLOY_DIR/client-next" 2>/dev/null || true
 cp -r client/public "$DEPLOY_DIR/client-public" 2>/dev/null || true
 cp package.json "$DEPLOY_DIR/"
-cp package-lock.json "$DEPLOY_DIR/"
+cp pnpm-lock.yaml "$DEPLOY_DIR/"
 cp ecosystem.config.js "$DEPLOY_DIR/"
 cp .env.production "$DEPLOY_DIR/.env" 2>/dev/null || echo -e "${YELLOW}⚠️  .env.production not found, create it manually${NC}"
 
@@ -97,8 +97,8 @@ cat > "$DEPLOY_DIR/deploy.sh" << 'DEPLOYSCRIPT'
 #!/bin/bash
 set -e
 echo "🚀 Deploying application..."
-npm ci --production
-cd client && npm ci && npm run build && cd ..
+pnpm install --prod --frozen-lockfile=false
+cd client && pnpm install --frozen-lockfile=false && pnpm run build && cd ..
 pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
 echo "✅ Deployment complete!"
 DEPLOYSCRIPT
