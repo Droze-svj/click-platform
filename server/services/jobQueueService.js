@@ -557,6 +557,23 @@ function createWorker(queueName, processor, options = {}) {
         logger.error(`⚠️ Connection contains localhost/127.0.0.1`);
         return null;
       }
+    } else if (
+      connection &&
+      typeof connection === 'object' &&
+      typeof connection.host === 'string' &&
+      typeof connection.port === 'number'
+    ) {
+      // Plain options object — what jobQueueService.getRedisConnection() returns
+      // post-PR #15 so BullMQ can construct its own IORedis instances cleanly.
+      if (connection.host === 'localhost' || connection.host === '127.0.0.1') {
+        logger.error(`⚠️ Rejecting options object with localhost host for ${queueName} in production`);
+        logger.error(`⚠️ Host: ${connection.host}`);
+        return null;
+      }
+      logger.info(`✅ Using Redis options object for ${queueName} (production)`, {
+        host: connection.host,
+        port: connection.port,
+      });
     } else {
       logger.error(`⚠️ Rejecting invalid connection type for ${queueName} in production`);
       logger.error(`⚠️ Connection type: ${typeof connection}, constructor: ${connection?.constructor?.name}`);
