@@ -663,6 +663,8 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+app.get('/api/test-mi', (req, res) => res.json({ success: true, message: 'MI test route works' }));
+
 // Serve a simple landing page for testing - MUST BE BEFORE OTHER ROUTES
 app.get('/', (req, res) => {
   res.send(`
