@@ -54,6 +54,33 @@ export default function RootLayout({
   const fontVars = `${inter.variable} ${playfair.variable} ${caveat.variable} ${jetbrains.variable} ${vt323.variable}`;
   return (
     <html lang="en" className={fontVars}>
+      <head>
+        <title>Click — Content Intelligence for High-Velocity Creators</title>
+        <meta
+          name="description"
+          content="Click is the premium command center for high-velocity creators. Niche-aware AI auto-edits, predicts retention, and lands every clip on every platform — automatically."
+        />
+        <meta name="theme-color" content="#050505" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+        <meta property="og:title" content="Click — Content Intelligence" />
+        <meta
+          property="og:description"
+          content="Niche-aware AI auto-edits, retention forecasts, and omni-channel publishing for high-velocity creators."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="/opengraph-image" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Click — Content Intelligence" />
+        <meta
+          name="twitter:description"
+          content="Niche-aware AI auto-edits, retention forecasts, and omni-channel publishing for high-velocity creators."
+        />
+        <meta name="twitter:image" content="/opengraph-image" />
+
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body className={inter.className}>
         <PreferencesProvider>
           <TranslationProvider>

@@ -45,6 +45,21 @@ INSTAGRAM_CLIENT_ID, INSTAGRAM_CLIENT_SECRET       # developers.facebook.com
 
 For each OAuth provider, the redirect URL pattern is `${APP_URL}/api/oauth/<platform>/callback`.
 
+### Whop checkout URLs (paid pricing tiers)
+
+The pricing cards on the public landing read each plan's hosted checkout URL from `NEXT_PUBLIC_WHOP_URL_*` env vars. Paste the URLs from your Whop dashboard (Products → click the product → "Get checkout link"):
+
+```
+NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY=https://whop.com/checkout/...
+NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY=https://whop.com/checkout/...
+NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY=https://whop.com/checkout/...
+NEXT_PUBLIC_WHOP_URL_PRO_YEARLY=https://whop.com/checkout/...
+NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY=https://whop.com/checkout/...
+NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY=https://whop.com/checkout/...
+```
+
+Empty values fall back to `/register?plan=<id>` — the user registers but never reaches checkout. Set these before the public launch.
+
 ## 3. Verify env wiring
 
 Once Render has rebuilt with the new env vars, run the verification script:
