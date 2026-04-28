@@ -9,7 +9,7 @@
 #   libfontconfig + libass already linked.
 
 # Stage 1: Build frontend
-FROM node:20-bookworm-slim AS frontend-builder
+FROM node:20.19.0-bookworm-slim AS frontend-builder
 WORKDIR /app/client
 COPY client/package*.json ./
 COPY pnpm-lock.yaml ../pnpm-lock.yaml
@@ -18,7 +18,7 @@ COPY client/ ./
 RUN pnpm run build
 
 # Stage 2: Production runtime
-FROM node:20-bookworm-slim
+FROM node:20.19.0-bookworm-slim
 WORKDIR /app
 
 # System deps for video processing + native canvas/sharp build.
