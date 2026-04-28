@@ -63,6 +63,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#050505" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
+        {/* Preconnect to Google Fonts CDN — next/font already preloads
+            individual files, but the early TLS handshake helps first paint. */}
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+
         <meta property="og:title" content="Click — Content Intelligence" />
         <meta
           property="og:description"
