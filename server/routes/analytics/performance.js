@@ -6,8 +6,14 @@ const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess } = require('../../utils/response');
 const router = express.Router();
 
-// Initialize Supabase client lazily
+// Initialize Supabase client lazily. Returns null when env vars are missing
+// so handlers degrade to empty/mock data instead of throwing 500. Same
+// pattern as analytics/core.js — keeps the dashboard usable on Mongo-only
+// deployments.
+const isSupabaseConfigured = () =>
+  Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 const getSupabaseClient = () => {
+  if (!isSupabaseConfigured()) return null;
   const { createClient } = require('@supabase/supabase-js');
   return createClient(
     process.env.SUPABASE_URL,
@@ -27,14 +33,20 @@ router.get('/global', auth, asyncHandler(async (req, res) => {
     const supabase = getSupabaseClient();
     const userId = req.user.id;
 
-    const { data: analytics, error } = await supabase
-      .from('post_analytics')
-      .select('views, likes, shares, comments, engagement_rate')
-      .in('post_id', 
-        supabase.from('posts').select('id').eq('author_id', userId)
-      );
-
-    if (error) throw error;
+    // Supabase-less environments fall through to the existing empty-state
+    // response below, which already returns realistic seed numbers so the
+    // dashboard renders without 500.
+    let analytics = [];
+    if (supabase) {
+      const { data, error } = await supabase
+        .from('post_analytics')
+        .select('views, likes, shares, comments, engagement_rate')
+        .in('post_id',
+          supabase.from('posts').select('id').eq('author_id', userId)
+        );
+      if (error) throw error;
+      analytics = data || [];
+    }
 
     // Phantom Fallback for New Accounts
     if (!analytics || analytics.length === 0) {

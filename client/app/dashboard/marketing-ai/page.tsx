@@ -33,7 +33,10 @@ export default function MarketingOraclePage() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
   const apiFetch = useCallback(async (endpoint: string, options: RequestInit = {}) => {
-    const res = await fetch(`${API_BASE}/api/marketing-intelligence${endpoint}`, {
+    // API_BASE already includes the `/api` prefix (NEXT_PUBLIC_API_URL=/api).
+    // Earlier this concatenated `${API_BASE}/api/marketing-intelligence` and
+    // produced `/api/api/marketing-intelligence/...` — a 404 every time.
+    const res = await fetch(`${API_BASE}/marketing-intelligence${endpoint}`, {
       ...options,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...options.headers },
     })
@@ -95,9 +98,17 @@ export default function MarketingOraclePage() {
       {/* ── Header ── */}
       <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div>
-          <Link href="/dashboard" className="flex items-center gap-3 text-slate-600 hover:text-white text-sm font-bold uppercase tracking-widest mb-6 transition-colors">
-            <ChevronRight size={14} className="rotate-180" /> Back to Command
-          </Link>
+          <div className="flex items-center gap-4 mb-6">
+            <Link href="/dashboard" className="flex items-center gap-3 text-slate-600 hover:text-white text-sm font-bold uppercase tracking-widest transition-colors">
+              <ChevronRight size={14} className="rotate-180" /> Back to Command
+            </Link>
+            <Link
+              href="/dashboard/forge"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 hover:bg-fuchsia-500/20 hover:border-fuchsia-500/50 transition-all text-[10px] font-black uppercase tracking-[0.18em]"
+            >
+              <Sparkles size={11} /> Apply in editor →
+            </Link>
+          </div>
           <div className="flex items-center gap-6 mb-4">
             <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-[0_0_80px_rgba(99,102,241,0.5)]">
               <Brain size={36} className="text-white" />

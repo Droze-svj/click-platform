@@ -81,17 +81,39 @@ async function generateContent(prompt, options = {}) {
 
   const reqMessages = [{ role: 'user', content: prompt }];
   const runRequest = async () => {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        maxOutputTokens: options.maxTokens || 1024,
-        temperature: options.temperature ?? 0.7,
-      },
-    });
-
-    const response = result.response;
-    if (!response || !response.text) return null;
-    return response.text().trim();
+    // Wrap the upstream call so quota / rate-limit / network errors degrade
+    // to `null` instead of bubbling up. Every caller in the codebase already
+    // checks for null + falls through to a structured fallback (e.g.
+    // `content || defaultCaption`). Bubbling 429s breaks the editor for the
+    // entire day until quota resets, even when graceful copy is fine.
+    try {
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          maxOutputTokens: options.maxTokens || 1024,
+          temperature: options.temperature ?? 0.7,
+        },
+      });
+      const response = result.response;
+      if (!response || !response.text) return null;
+      return response.text().trim();
+    } catch (err) {
+      const msg = err?.message || '';
+      const isQuota = /429|RESOURCE_EXHAUSTED|quota|rate ?limit/i.test(msg);
+      try {
+        const logger = require('./logger');
+        logger[isQuota ? 'warn' : 'error']('[GoogleAI] generateContent failed', {
+          error: msg.slice(0, 240),
+          isQuota,
+        });
+      } catch { /* logger optional */ }
+      // Sentry tag if available so quota exhaustion surfaces in alerting
+      // without crashing handlers.
+      if (Sentry && typeof Sentry.captureMessage === 'function') {
+        try { Sentry.captureMessage(`Gemini ${isQuota ? 'quota' : 'error'}: ${msg.slice(0, 100)}`, 'warning'); } catch {}
+      }
+      return null;
+    }
   };
 
   // Manual AI Request span so Gemini usage appears in Sentry AI Agents Insights
@@ -109,25 +131,33 @@ async function generateContent(prompt, options = {}) {
         },
       },
       async (span) => {
-        const result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            maxOutputTokens: options.maxTokens || 1024,
-            temperature: options.temperature ?? 0.7,
-          },
-        });
+        try {
+          const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+              maxOutputTokens: options.maxTokens || 1024,
+              temperature: options.temperature ?? 0.7,
+            },
+          });
 
-        const response = result.response;
-        if (!response || !response.text) return null;
-        const text = response.text().trim();
-        span.setAttribute('gen_ai.response.text', JSON.stringify([text]));
+          const response = result.response;
+          if (!response || !response.text) return null;
+          const text = response.text().trim();
+          span.setAttribute('gen_ai.response.text', JSON.stringify([text]));
 
-        const usage = response.usageMetadata || {};
-        if (typeof usage.promptTokenCount === 'number') span.setAttribute('gen_ai.usage.input_tokens', usage.promptTokenCount);
-        if (typeof usage.candidatesTokenCount === 'number') span.setAttribute('gen_ai.usage.output_tokens', usage.candidatesTokenCount);
-        if (typeof usage.totalTokenCount === 'number') span.setAttribute('gen_ai.usage.total_tokens', usage.totalTokenCount);
+          const usage = response.usageMetadata || {};
+          if (typeof usage.promptTokenCount === 'number') span.setAttribute('gen_ai.usage.input_tokens', usage.promptTokenCount);
+          if (typeof usage.candidatesTokenCount === 'number') span.setAttribute('gen_ai.usage.output_tokens', usage.candidatesTokenCount);
+          if (typeof usage.totalTokenCount === 'number') span.setAttribute('gen_ai.usage.total_tokens', usage.totalTokenCount);
 
-        return text;
+          return text;
+        } catch (err) {
+          // Mirror the no-Sentry path: degrade to null on any upstream
+          // failure (quota, rate-limit, network) so callers fall through to
+          // their structured fallbacks rather than 500-ing the request.
+          span.setStatus?.({ code: 'error', message: (err?.message || '').slice(0, 100) })
+          return null;
+        }
       }
     );
   }

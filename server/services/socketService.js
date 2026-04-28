@@ -1,10 +1,10 @@
 // Socket.io service for real-time updates
 
+const { Server } = require('socket.io');
+
 let io = null;
 
 function initializeSocket(server) {
-  const { Server } = require('socket.io');
-
   // In dev, accept any localhost/127.0.0.1 origin so we don't have to keep the
   // explicit list in lock-step with whatever port `next dev` picks.
   // In prod, honor FRONTEND_URL or fall back to the known dev ports.

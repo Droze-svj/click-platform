@@ -18,6 +18,7 @@ const {
   batchAutoEdit,
   getEditPerformanceAnalytics,
   exportMultipleFormats,
+  getInteractiveSuggestions,
 } = require('../../services/aiVideoEditingService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
@@ -26,7 +27,86 @@ const User = require('../../models/User');
 const Content = require('../../models/Content');
 const ClientGuidelines = require('../../models/ClientGuidelines');
 const { resolveContent } = require('../../utils/devStore');
+const { isDevUser } = require('../../utils/devUser');
+const { guardOwnership } = require('../../utils/ownership');
 const router = express.Router();
+
+/**
+ * Dev-mode short-circuit for AI editing routes.
+ *
+ * Two reasons this exists:
+ *   1. The Gemini free tier is at 0 quota in development — `/analyze` would
+ *      return a 503 every time and block the editor's onboarding flow.
+ *   2. The ffmpeg build on dev machines often lacks the advanced filters
+ *      (`boxblur`, `setpts`, custom complex chains) that `autoEditVideo`
+ *      composes — the route would return 500 "Filter not found".
+ *
+ * For dev users we return realistic mock results so the editor UI flows
+ * end-to-end without burning AI quota or hitting ffmpeg edge cases.
+ */
+async function devEditingMock(kind, videoId, req) {
+  const base = {
+    videoId: videoId || 'dev-video',
+    generatedAt: new Date().toISOString(),
+    devMock: true,
+  };
+  // Convert any /uploads/... path to an absolute URL pointing at THIS server.
+  // Without this, the response's editedVideoUrl is relative and the browser
+  // resolves it against the Next.js dev origin (:3010), where uploads aren't
+  // served → 404. Using the request's host keeps it correct in any env.
+  const toAbsolute = (relOrAbs) => {
+    if (!relOrAbs) return null;
+    if (/^https?:\/\//i.test(relOrAbs)) return relOrAbs;
+    if (!req) return relOrAbs;
+    const host = req.get('host');
+    return `${req.protocol}://${host}${relOrAbs.startsWith('/') ? '' : '/'}${relOrAbs}`;
+  };
+  if (kind === 'analyze') {
+    return {
+      ...base,
+      score: 78,
+      insights: [
+        { type: 'pacing', severity: 'medium', note: 'Cuts every ~2.4s — good for short-form.' },
+        { type: 'hook', severity: 'high', note: 'First 1.2s lacks a strong hook frame.' },
+        { type: 'audio', severity: 'low', note: 'Loudness consistent across clips.' },
+      ],
+      suggestedCuts: [
+        { startTime: 0.0, endTime: 1.2, reason: 'Replace with a tighter hook.' },
+        { startTime: 8.5, endTime: 9.1, reason: 'Trim mid-sentence pause.' },
+      ],
+      hookSuggestions: [
+        'Open on the result, then rewind to the setup.',
+        'Lead with a specific number from the script.',
+      ],
+      retentionEstimate: 0.62,
+    };
+  }
+  if (kind === 'auto-edit') {
+    // Echo the original video URL so the client's editedVideoUrl check
+    // succeeds — dev mode doesn't actually re-encode, but the UI flow
+    // expects a playable URL on the success path.
+    let originalUrl = null;
+    try {
+      const content = await resolveContent(videoId);
+      originalUrl = content?.originalFile?.url || content?.url || null;
+    } catch { /* fall through to null */ }
+    // editsApplied is rendered as strings by the client (page.tsx:1602
+    // does `<span>{edit}</span>` directly) — returning objects crashes React
+    // with "Objects are not valid as a React child". Keep as plain strings.
+    return {
+      ...base,
+      success: true,
+      editedVideoUrl: toAbsolute(originalUrl),
+      editsApplied: [
+        'Removed 0.6s of dead air at the start',
+        'Generated 12 burned-in captions',
+        'Applied warm-cinematic colour grade',
+      ],
+      message: 'Auto-edit simulated (dev mode — no ffmpeg processing).',
+    };
+  }
+  return { ...base, kind };
+}
 
 /**
  * Resolve editing options with user style (brand/preferences), optional preset, and client guidelines
@@ -99,6 +179,48 @@ router.post('/analyze', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video metadata or videoId is required', 400);
   }
 
+  // Ownership gate when a videoId is supplied — refuses analysis of content
+  // the requester doesn't own. videoMetadata-only payloads (no id) skip the
+  // gate because nothing user-scoped is being touched.
+  if (videoId) {
+    const owned = await guardOwnership(req, res, videoId);
+    if (!owned) return;
+  }
+
+  // Hydrate niche/platform/language/styleProfile from the user record + the
+  // request so the AI service can build a niche-aware prompt. Body wins over
+  // user defaults so the editor can override per-request.
+  try {
+    const userId = req.user?._id || req.user?.id;
+    let niche = req.body.niche || payload.niche || null;
+    let platform = req.body.platform || payload.platform || null;
+    if (userId && (!niche || !platform)) {
+      const u = await User.findById(userId).select('niche brandSettings').lean().catch(() => null);
+      if (u) {
+        niche = niche || u.niche || null;
+        platform = platform || u.brandSettings?.defaultPlatform || null;
+      }
+    }
+    let styleProfile = null;
+    if (userId) {
+      try {
+        const UserStyleProfile = require('../../models/UserStyleProfile');
+        styleProfile = await UserStyleProfile.findOne({ userId }).lean();
+      } catch { /* model unavailable in dev — fine */ }
+    }
+    payload.niche = niche;
+    payload.platform = platform;
+    payload.language = payload.language || req.language || 'en';
+    payload.styleProfile = styleProfile;
+  } catch (e) {
+    logger.warn('Niche/style hydration failed for /analyze', { error: e.message });
+  }
+
+  // Dev users short-circuit — see devEditingMock() comment above.
+  if (isDevUser(req.user)) {
+    return sendSuccess(res, 'Video analyzed (dev mode)', 200, await devEditingMock('analyze', videoId, req));
+  }
+
   try {
     const analysis = await analyzeVideoForEditing(payload);
     sendSuccess(res, 'Video analyzed for editing', 200, analysis);
@@ -155,6 +277,38 @@ router.post('/score', auth, asyncHandler(async (req, res) => {
  *     security:
  *       - bearerAuth: []
  */
+// ── GET /api/video/ai-editing/suggestions ─────────────────────────────────
+// Niche/platform-aware playbook suggestions for the AiAssistant. Hydrates the
+// creator's niche/platform from User if not in the query so the editor can
+// call this with just `?videoId=...` and still get personalised output.
+router.get('/suggestions', auth, asyncHandler(async (req, res) => {
+  const videoId = req.query.videoId;
+  if (!videoId) return sendError(res, 'videoId is required', 400);
+  // Ownership gate — suggestions reveal the project's structure, niche, and
+  // hook framework calls; refuse for content the requester doesn't own.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+  try {
+    const userId = req.user?._id || req.user?.id;
+    let niche = req.query.niche || null;
+    let platform = req.query.platform || null;
+    if (userId && (!niche || !platform)) {
+      const u = await User.findById(userId).select('niche brandSettings').lean().catch(() => null);
+      if (u) {
+        niche = niche || u.niche || null;
+        platform = platform || u.brandSettings?.defaultPlatform || null;
+      }
+    }
+    const result = await getInteractiveSuggestions(videoId, {
+      niche, platform, language: req.language || 'en',
+    });
+    return sendSuccess(res, 'Suggestions ready', 200, result);
+  } catch (e) {
+    logger.error('/suggestions failed', { error: e.message });
+    return sendError(res, e.message || 'Failed to compute suggestions', 500);
+  }
+}));
+
 router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
   const { videoId, editingOptions } = req.body;
   const userId = req.user?.id || req.user?._id;
@@ -163,8 +317,46 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Video ID is required', 400);
   }
 
+  // Ownership gate — auto-edit mutates the source content (replaces the
+  // edited video URL on the record); refuse for content the requester
+  // doesn't own.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
+
+  // Dev users skip ffmpeg + AI calls entirely (advanced filters often aren't
+  // compiled in the local ffmpeg build → "Filter not found"). Real users
+  // continue to the full pipeline below.
+  if (isDevUser(req.user)) {
+    return sendSuccess(res, 'Auto-edit simulated (dev mode)', 200, await devEditingMock('auto-edit', videoId, req));
+  }
+
   try {
     const resolvedOptions = await resolveEditingOptions(editingOptions || {}, userId, videoId);
+    // Niche/platform/language + style profile context — same hydration path
+    // as /analyze so the auto-edit pipeline's downstream AI calls (caption
+    // generation, hook rewriting, etc.) get the same playbook injection.
+    try {
+      let niche = req.body.niche || null;
+      let platform = req.body.platform || null;
+      if (!niche || !platform) {
+        const u = await User.findById(userId).select('niche brandSettings').lean().catch(() => null);
+        if (u) {
+          niche = niche || u.niche || null;
+          platform = platform || u.brandSettings?.defaultPlatform || null;
+        }
+      }
+      let styleProfile = null;
+      try {
+        const UserStyleProfile = require('../../models/UserStyleProfile');
+        styleProfile = await UserStyleProfile.findOne({ userId }).lean();
+      } catch { /* fine */ }
+      resolvedOptions.niche = niche;
+      resolvedOptions.platform = platform;
+      resolvedOptions.language = req.language || 'en';
+      resolvedOptions.styleProfile = styleProfile;
+    } catch (e) {
+      logger.warn('Niche/style hydration failed for /auto-edit', { error: e.message });
+    }
     logger.info('Starting auto-edit video processing', { videoId, userId });
 
     // This function AUTOMATICALLY applies all edits and saves the edited video

@@ -44,15 +44,32 @@ async function scheduleWithTimezone(userId, contentId, platform, scheduledTime, 
   }
 }
 
-/**
- * Convert time to UTC
- */
 function convertToUTC(time, timezone) {
-  // Simple conversion - in production, use a library like moment-timezone or date-fns-tz
   const date = new Date(time);
-  // For now, assume timezone is a valid IANA timezone
-  // In production, use proper timezone conversion
-  return date;
+  if (Number.isNaN(date.getTime())) return new Date(time);
+  if (!timezone || timezone === 'UTC') return date;
+
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+    const parts = Object.fromEntries(fmt.formatToParts(date).map(p => [p.type, p.value]));
+    const tzDate = Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      Number(parts.hour) % 24,
+      Number(parts.minute),
+      Number(parts.second),
+    );
+    const offsetMs = tzDate - date.getTime();
+    return new Date(date.getTime() - offsetMs);
+  } catch {
+    return date;
+  }
 }
 
 /**
@@ -614,7 +631,18 @@ async function getScheduleAnalytics(userId, period = 30) {
   }
 }
 
+async function bulkReschedule(userId, postIds, deltaMs) {
+  const posts = await ScheduledPost.find({ _id: { $in: postIds }, userId });
+  for (const post of posts) {
+    post.scheduledTime = new Date(post.scheduledTime.getTime() + deltaMs);
+    await post.save();
+  }
+  return { updated: posts.length };
+}
+
 module.exports = {
+  convertToUTC,
+  bulkReschedule,
   scheduleWithTimezone,
   createRecurringSchedule,
   processRecurringSchedules,

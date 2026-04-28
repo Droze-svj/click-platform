@@ -5,8 +5,12 @@ const logger = require('../../utils/logger');
 const { generateContent: geminiGenerate } = require('../../utils/googleAI');
 const router = express.Router();
 
-// Initialize Supabase client lazily
+// Initialize Supabase client lazily. Returns null when env vars are missing
+// so handlers can degrade to mock/empty data instead of throwing 500.
+const isSupabaseConfigured = () =>
+  Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 const getSupabaseClient = () => {
+  if (!isSupabaseConfigured()) return null;
   const { createClient } = require('@supabase/supabase-js');
   return createClient(
     process.env.SUPABASE_URL,
@@ -841,19 +845,25 @@ function generateBestPostingTime() {
 router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
-    const { analyzePost, ANOMALY_TYPES } = require('../../services/engagementAnomalyService');
+    const { analyzePost } = require('../../services/engagementAnomalyService');
 
-    // Fetch real latest posts with analytics
-    const { data: realPosts } = await supabase
-      .from('posts')
-      .select(`
-        id, title, platform,
-        post_analytics ( views, likes, shares, comments, platform )
-      `)
-      .eq('author_id', req.user.id)
-      .eq('status', 'published')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // Fetch real latest posts with analytics. If Supabase isn't configured
+    // (Mongo-only stack, dev mode), skip the query and fall through to the
+    // simulated-post fallback below — same UI shape, no 500.
+    let realPosts = [];
+    if (supabase) {
+      const { data } = await supabase
+        .from('posts')
+        .select(`
+          id, title, platform,
+          post_analytics ( views, likes, shares, comments, platform )
+        `)
+        .eq('author_id', req.user.id)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      realPosts = data || [];
+    }
 
     const formattedPosts = (realPosts || []).map(p => {
       const stats = p.post_analytics?.[0] || {};
@@ -911,17 +921,23 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
 router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
-    const { data: posts } = await supabase
-      .from('posts')
-      .select(`
-        id, title, platform, created_at,
-        post_analytics (
-          views, likes, shares, comments, engagement_rate, metadata
-        )
-      `)
-      .eq('author_id', req.user.id)
-      .eq('status', 'published')
-      .order('created_at', { ascending: false });
+    // Supabase-less environments (Mongo-only / dev) fall through to the empty-
+    // state branch below, which already returns realistic seed data.
+    let posts = [];
+    if (supabase) {
+      const { data } = await supabase
+        .from('posts')
+        .select(`
+          id, title, platform, created_at,
+          post_analytics (
+            views, likes, shares, comments, engagement_rate, metadata
+          )
+        `)
+        .eq('author_id', req.user.id)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+      posts = data || [];
+    }
 
     const stats = (posts || []).map(p => {
       const a = p.post_analytics[0] || {};
