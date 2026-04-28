@@ -1,7 +1,14 @@
 // Enhanced thumbnail generation
 
 const ffmpeg = require('fluent-ffmpeg');
-const sharp = require('sharp');
+// sharp is lazy-loaded to prevent startup crashes on some Linux environments
+let sharp;
+try {
+  sharp = require('sharp');
+} catch (err) {
+  // sharp will be undefined, handled in methods
+}
+
 const path = require('path');
 const fs = require('fs');
 const logger = require('../utils/logger');
