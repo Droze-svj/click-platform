@@ -164,6 +164,64 @@ const RECOMMENDED_VARS = {
     validate: (val) => val.startsWith('SG.') && val.length > 20,
     message: 'Should be a valid SendGrid API key (starts with SG.)'
   },
+
+  // Whop Subscription Integration (14 critical values)
+  WHOP_API_KEY: {
+    validate: (val) => val.startsWith('apik_') && val.length > 20,
+    message: 'Required for Whop API calls. Get from Whop Dashboard -> Developer Settings.'
+  },
+  WHOP_WEBHOOK_SECRET: {
+    validate: (val) => val.length > 10,
+    message: 'Required to verify Whop webhooks. Get from Whop Dashboard -> Webhooks.'
+  },
+  WHOP_PRODUCT_ID_CREATOR_MONTHLY: {
+    validate: (val) => val.startsWith('prod_'),
+    message: 'Required for Creator Monthly plan routing.'
+  },
+  WHOP_PRODUCT_ID_CREATOR_YEARLY: {
+    validate: (val) => val.startsWith('prod_'),
+    message: 'Required for Creator Yearly plan routing.'
+  },
+  WHOP_PRODUCT_ID_PRO_MONTHLY: {
+    validate: (val) => val.startsWith('prod_'),
+    message: 'Required for Pro Monthly plan routing.'
+  },
+  WHOP_PRODUCT_ID_PRO_YEARLY: {
+    validate: (val) => val.startsWith('prod_'),
+    message: 'Required for Pro Yearly plan routing.'
+  },
+  WHOP_PRODUCT_ID_AGENCY_MONTHLY: {
+    validate: (val) => val.startsWith('prod_'),
+    message: 'Required for Agency Monthly plan routing.'
+  },
+  WHOP_PRODUCT_ID_AGENCY_YEARLY: {
+    validate: (val) => val.startsWith('prod_'),
+    message: 'Required for Agency Yearly plan routing.'
+  },
+  NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY: {
+    validate: (val) => val.startsWith('https://'),
+    message: 'Hosted checkout URL for Creator Monthly.'
+  },
+  NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY: {
+    validate: (val) => val.startsWith('https://'),
+    message: 'Hosted checkout URL for Creator Yearly.'
+  },
+  NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY: {
+    validate: (val) => val.startsWith('https://'),
+    message: 'Hosted checkout URL for Pro Monthly.'
+  },
+  NEXT_PUBLIC_WHOP_URL_PRO_YEARLY: {
+    validate: (val) => val.startsWith('https://'),
+    message: 'Hosted checkout URL for Pro Yearly.'
+  },
+  NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY: {
+    validate: (val) => val.startsWith('https://'),
+    message: 'Hosted checkout URL for Agency Monthly.'
+  },
+  NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY: {
+    validate: (val) => val.startsWith('https://'),
+    message: 'Hosted checkout URL for Agency Yearly.'
+  },
 };
 
 // Security checks
