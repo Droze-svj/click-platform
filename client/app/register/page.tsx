@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { apiPost, handleApiError, setAuthToken } from '@/lib/api'
+import { getPlan, buildCheckoutTarget, type BillingPeriod, type PlanId } from '@/lib/plans'
 import { useTranslation } from '../../hooks/useTranslation'
 import LanguageSwitcher from '../../components/LanguageSwitcher'
 import FormField from '../../components/FormField'
@@ -19,6 +20,7 @@ interface PasswordValidation {
 
 export default function Register() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -29,6 +31,23 @@ export default function Register() {
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Plan pre-selection from ?plan=<id>&period=<m|y>. Persist to sessionStorage
+  // so the choice survives Whop's hosted-checkout round-trip.
+  const planFromUrl = (searchParams?.get('plan') || '') as PlanId | ''
+  const periodFromUrl = (searchParams?.get('period') === 'yearly' ? 'yearly' : 'monthly') as BillingPeriod
+  const selectedPlan = planFromUrl ? getPlan(planFromUrl) : null
+
+  useEffect(() => {
+    if (planFromUrl) {
+      try {
+        sessionStorage.setItem(
+          'click.pending_plan',
+          JSON.stringify({ id: planFromUrl, period: periodFromUrl, ts: Date.now() }),
+        )
+      } catch { /* sessionStorage may be blocked */ }
+    }
+  }, [planFromUrl, periodFromUrl])
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidation | null>(null)
   const [touched, setTouched] = useState({
     name: false,
@@ -266,8 +285,23 @@ export default function Register() {
       setLoading(false)
 
       if (token) {
-        // Token provided - store and redirect
+        // Token provided - store and decide where to send them next.
         setAuthToken(token)
+
+        // If they came from a paid pricing card, jump straight to Whop
+        // checkout instead of /registration-success. The auth token is
+        // already stored, so when they return from Whop they're logged in.
+        const userForCheckout = response.data?.user || { email }
+        const planForCheckout = selectedPlan
+        if (planForCheckout && planForCheckout.id !== 'free') {
+          const target = buildCheckoutTarget(planForCheckout, periodFromUrl, userForCheckout)
+          if (target.kind === 'whop') {
+            try { sessionStorage.removeItem('click.pending_plan') } catch { /* noop */ }
+            window.location.href = target.href
+            return
+          }
+        }
+
         router.push('/registration-success')
       } else if (requiresVerification || response.success) {
         // Email verification required - redirect to verification message page
@@ -406,6 +440,30 @@ export default function Register() {
               </div>
               <button onClick={() => setError('')} className="text-red-400 hover:text-red-300">×</button>
             </motion.div>
+          )}
+
+          {selectedPlan && (
+            <div className="mb-5 px-5 py-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 mb-1">
+                  Signing up for
+                </p>
+                <p className="text-base font-black tracking-tight text-white">
+                  {selectedPlan.name}
+                  {selectedPlan.priceMonthly > 0 && (
+                    <span className="text-slate-400 font-medium ml-2">
+                      · ${selectedPlan.priceMonthly}/mo{periodFromUrl === 'yearly' ? ', billed yearly' : ''}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <Link
+                href="/#pricing"
+                className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
+              >
+                Change
+              </Link>
+            </div>
           )}
 
           <form onSubmit={handleSubmit} noValidate aria-label="Registration form" className="space-y-5">
