@@ -95,6 +95,9 @@ importers:
       helmet:
         specifier: ^7.2.0
         version: 7.2.0
+      ioredis:
+        specifier: ^5.4.1
+        version: 5.10.1
       isomorphic-dompurify:
         specifier: ^2.9.0
         version: 2.36.0(@noble/hashes@1.8.0)(canvas@2.11.2)
