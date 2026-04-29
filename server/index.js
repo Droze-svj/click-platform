@@ -278,22 +278,37 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
 
 // Connect to MongoDB
 console.log('CONNECTING TO MONGODB');
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log('✅ MongoDB connected successfully');
-    logger.info('✅ MongoDB connected successfully');
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err.message);
-    logger.error('❌ MongoDB connection error:', { error: err.message });
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1);
-    }
-  });
+// Connect with retry-and-backoff. Crashing the whole process on a Mongo
+// auth/network error puts Render into a fast restart loop — every ~45s
+// — and the edge serves 503 to all traffic during the recycle. With
+// retry, the HTTP server stays up and /api/health degrades gracefully
+// (database.connected: false) until the credential or network issue is
+// resolved.
+const MONGO_MAX_RETRY_DELAY_MS = 30_000;
+let mongoRetryDelayMs = 2_000;
+
+function connectMongo() {
+  return mongoose
+    .connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+    .then(() => {
+      console.log('✅ MongoDB connected successfully');
+      logger.info('✅ MongoDB connected successfully');
+      mongoRetryDelayMs = 2_000;
+    })
+    .catch((err) => {
+      console.error('❌ MongoDB connection error:', err.message);
+      logger.error('❌ MongoDB connection error', {
+        error: err.message,
+        retryInMs: mongoRetryDelayMs,
+      });
+      setTimeout(connectMongo, mongoRetryDelayMs);
+      mongoRetryDelayMs = Math.min(mongoRetryDelayMs * 2, MONGO_MAX_RETRY_DELAY_MS);
+    });
+}
+connectMongo();
 
 // Non-blocking initialization for remaining services
 setImmediate(() => {
