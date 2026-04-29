@@ -74,21 +74,17 @@ async function checkRedis() {
  */
 async function checkQueues() {
   try {
-    const { getRedisConnection, getQueue } = require('../services/jobQueueService');
-    const connection = getRedisConnection();
-    if (!connection) return { status: 'disabled', reason: 'No Redis connection' };
+    const { getRedisConnection } = require('../services/jobQueueService');
+    const redis = await getRedisConnection();
+    if (!redis) return { status: 'disabled', reason: 'No Redis connection' };
 
-    // Note: getRedisConnection() returns a parsed options object (not a
-    // live IORedis client), so we can't call redis.llen here. Use the
-    // BullMQ Queue API instead — it manages its own connection and
-    // exposes typed counters.
     const queues = ['video-processing', 'content-generation', 'email-delivery', 'transcript-generation'];
     const status = {};
 
     for (const q of queues) {
+      // Basic check if queue is responsive
       try {
-        const queue = getQueue(q);
-        const count = await queue.getWaitingCount();
+        const count = await redis.llen(`bull:${q}:wait`);
         status[q] = { active: true, waitingJobs: count };
       } catch (e) {
         status[q] = { active: false, error: e.message };
