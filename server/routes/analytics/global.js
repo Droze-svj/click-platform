@@ -40,29 +40,41 @@ router.get('/', async (req, res) => {
   }
 
   // Fresh compute. Each model is wrapped in a try/catch so a single
-  // failed query doesn't blank the whole endpoint.
+  // failed query doesn't blank the whole endpoint. Track which queries
+  // actually succeeded so an empty DB (real count = 0) reports live,
+  // while a thrown query falls back without lying about the source.
   let creators = FALLBACK.creators;
   let clipsGenerated = FALLBACK.clipsGenerated;
+  let creatorsLive = false;
+  let clipsLive = false;
 
   try {
     const User = require('../../models/User');
     creators = await User.countDocuments({
       'subscription.status': { $ne: 'expired' },
-    });
+    }).maxTimeMS(5000);
+    creatorsLive = true;
   } catch (err) {
-    logger.warn('[analytics/global] User count failed', { error: err.message });
+    logger.error('[analytics/global] User count failed', {
+      error: err.message,
+      name: err.name,
+      code: err.code,
+    });
   }
 
   try {
     const Content = require('../../models/Content');
-    clipsGenerated = await Content.countDocuments({ type: 'video' });
+    clipsGenerated = await Content.countDocuments({ type: 'video' }).maxTimeMS(5000);
+    clipsLive = true;
   } catch (err) {
-    logger.warn('[analytics/global] Content count failed', { error: err.message });
+    logger.error('[analytics/global] Content count failed', {
+      error: err.message,
+      name: err.name,
+      code: err.code,
+    });
   }
 
-  // If both queries failed AND we got the fallback numbers literally, mark
-  // the response as fallback so the client can hide the "live" pill.
-  const isLive = creators !== FALLBACK.creators || clipsGenerated !== FALLBACK.clipsGenerated;
+  const isLive = creatorsLive || clipsLive;
 
   const payload = {
     creators,
