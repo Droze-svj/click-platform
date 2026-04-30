@@ -66,7 +66,18 @@ Create a ${duration}-minute YouTube video script about "${topic}".
     }`;
 
     const content = await geminiGenerate(prompt, { temperature: 0.8, maxTokens: 3000 });
+    if (!content) {
+      // Gemini hit quota / parse / network error and degraded to null. Bail
+      // early to the structured fallback so the route still returns a valid,
+      // saveable script document instead of crashing on `null.segments`.
+      logger.warn('YouTube script: Gemini returned null, using fallback', { topic });
+      return generateFallbackScript('youtube', topic, options);
+    }
     const script = JSON.parse(content);
+    if (!script || !Array.isArray(script.segments) || script.segments.length === 0) {
+      logger.warn('YouTube script: AI returned no segments, using fallback', { topic });
+      return generateFallbackScript('youtube', topic, options);
+    }
 
     // Calculate Pacing Heatmap
     const pacingHeatmap = script.segments.map(s => {
@@ -132,9 +143,17 @@ Format as JSON with structure similar to YouTube script but adapted for podcast 
 
     const fullPrompt = `You are an expert podcast scriptwriter.\n\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 3000 });
+    if (!content) {
+      logger.warn('Podcast script: Gemini returned null, using fallback', { topic });
+      return generateFallbackScript('podcast', topic, options);
+    }
     const script = JSON.parse(content);
+    if (!script || !Array.isArray(script.mainPoints)) {
+      logger.warn('Podcast script: AI returned no mainPoints, using fallback', { topic });
+      return generateFallbackScript('podcast', topic, options);
+    }
 
-    let fullScript = script.introduction + '\n\n';
+    let fullScript = (script.introduction || '') + '\n\n';
     script.mainPoints.forEach((point) => {
       fullScript += `${point.title}\n${point.content}\n\n`;
     });
@@ -199,7 +218,14 @@ Requirements:
     });
     const fullPrompt = `${system}\n\n── Task ──\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 500 });
+    if (!content) {
+      logger.warn('Social media script: Gemini returned null, using fallback', { topic });
+      return generateFallbackScript('social-media', topic, options);
+    }
     const script = JSON.parse(content);
+    if (!script) {
+      return generateFallbackScript('social-media', topic, options);
+    }
 
     let fullScript = script.content || '';
     if (script.callToAction) {
@@ -247,9 +273,17 @@ Requirements:
 
     const fullPrompt = `You are an expert blog writer and SEO specialist.\n\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
+    if (!content) {
+      logger.warn('Blog script: Gemini returned null, using fallback', { topic });
+      return generateFallbackScript('blog', topic, options);
+    }
     const script = JSON.parse(content);
+    if (!script || !Array.isArray(script.sections)) {
+      logger.warn('Blog script: AI returned no sections, using fallback', { topic });
+      return generateFallbackScript('blog', topic, options);
+    }
 
-    let fullScript = script.introduction + '\n\n';
+    let fullScript = (script.introduction || '') + '\n\n';
     script.sections.forEach((section) => {
       fullScript += `## ${section.title}\n\n${section.content}\n\n`;
     });
@@ -301,7 +335,14 @@ Requirements:
 
     const fullPrompt = `You are an expert email copywriter.\n\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 800 });
+    if (!content) {
+      logger.warn('Email script: Gemini returned null, using fallback', { topic });
+      return generateFallbackScript('email', topic, options);
+    }
     const script = JSON.parse(content);
+    if (!script) {
+      return generateFallbackScript('email', topic, options);
+    }
 
     const fullScript = `${script.subject}\n\n${script.opening}\n\n${script.body}\n\n${script.callToAction}`;
 
@@ -364,12 +405,39 @@ function generateFallbackScript(type, topic, options = {}) {
   };
 
   const template = templates[type] || templates.youtube;
+
+  // Stitch a flat `script` text from whatever the template gave us so the
+  // Script Mongoose model's `script: required` field is always populated —
+  // otherwise save() throws "Path script is required" and 500s the route.
+  const parts = [];
+  if (template.subject) parts.push(template.subject);
+  if (template.opening) parts.push(template.opening);
+  if (template.introduction) parts.push(template.introduction);
+  if (template.body) parts.push(template.body);
+  if (template.content) parts.push(template.content);
+  if (Array.isArray(template.mainPoints)) {
+    template.mainPoints.forEach(p => parts.push(`${p.title}\n${p.content}`));
+  }
+  if (Array.isArray(template.sections)) {
+    template.sections.forEach(s => parts.push(`${s.title}\n${s.content}`));
+  }
+  if (template.conclusion) parts.push(template.conclusion);
+  if (template.callToAction) parts.push(template.callToAction);
+  const scriptText = parts.join('\n\n');
+
+  // Default duration in minutes per type so the route's scriptData.duration
+  // is always a number (the Script model's `duration` is optional but the
+  // route reads it without guarding).
+  const defaultDurations = { youtube: 10, video: 10, podcast: 30, blog: 0, email: 0, 'social-media': 0, presentation: 15, sales: 10 };
+
   return {
     ...template,
     title: `${topic} - ${type} Script`,
     keywords: [topic],
     hashtags: template.hashtags || [],
-    wordCount: 500
+    script: scriptText,
+    duration: options.duration ?? defaultDurations[type] ?? 0,
+    wordCount: scriptText.split(/\s+/).filter(Boolean).length || 500,
   };
 }
 
