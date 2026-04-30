@@ -15,7 +15,10 @@ const router = express.Router();
 let supabase = null;
 const isDummySupabase = process.env.SUPABASE_URL && process.env.SUPABASE_URL.includes('dummy');
 
-if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && !isDummySupabase) {
+// By default, we use Mongoose for auth. Supabase must be explicitly enabled.
+const enableSupabaseAuth = process.env.ENABLE_SUPABASE_AUTH === 'true';
+
+if (enableSupabaseAuth && process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && !isDummySupabase) {
   try {
     supabase = createClient(
       process.env.SUPABASE_URL,
@@ -30,7 +33,8 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && !isDumm
   logger.warn('⚠️  Supabase is using DUMMY credentials. Registration and authentication will use mock responses or local fallbacks.');
   supabase = null; // Set to null so middlewares catch it as "not configured"
 } else {
-  logger.warn('Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.');
+  logger.info('Supabase auth disabled. Using Mongoose fallback. To enable, set ENABLE_SUPABASE_AUTH=true.');
+  supabase = null;
 }
 logger.debug('DEBUG: Auth route Supabase check complete');
 
@@ -807,11 +811,26 @@ router.post('/forgot-password',
       }
 
       // Check if user exists
-      const { data: user, error: findError } = await supabase
-        .from('users')
-        .select('id, email, first_name, last_name')
-        .eq('email', email.toLowerCase())
-        .single();
+      let user;
+      let findError;
+      
+      if (!supabase) {
+        const User = require('../models/User');
+        const mongoUser = await User.findOne({ email: email.toLowerCase() });
+        if (mongoUser) {
+          user = { id: mongoUser._id, email: mongoUser.email, name: mongoUser.name };
+        } else {
+          findError = new Error('Not found');
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('users')
+          .select('id, email, first_name, last_name')
+          .eq('email', email.toLowerCase())
+          .single();
+        user = data;
+        findError = error;
+      }
 
       if (user) {
         user.name = `${user.first_name} ${user.last_name}`;
@@ -851,25 +870,41 @@ router.get('/validate-reset-token/:token', async (req, res) => {
   try {
     const { token } = req.params;
 
-    const { data: resetToken, error } = await supabase
-      .from('password_reset_tokens')
-      .select('id, user_id, expires_at, used')
-      .eq('token', token)
-      .single();
+    let isValid = false;
+    let message = 'Invalid or expired token';
 
-    if (error || !resetToken) {
-      return res.json({ valid: false, message: 'Invalid or expired token' });
+    if (!supabase) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        if (decoded.type === 'password_reset') {
+          isValid = true;
+          message = 'Token is valid';
+        }
+      } catch (error) {
+        // JWT verification failed
+      }
+      return res.json({ valid: isValid, message });
+    } else {
+      const { data: resetToken, error } = await supabase
+        .from('password_reset_tokens')
+        .select('id, user_id, expires_at, used')
+        .eq('token', token)
+        .single();
+
+      if (error || !resetToken) {
+        return res.json({ valid: false, message: 'Invalid or expired token' });
+      }
+
+      if (resetToken.used) {
+        return res.json({ valid: false, message: 'Token has already been used' });
+      }
+
+      if (new Date(resetToken.expires_at) < new Date()) {
+        return res.json({ valid: false, message: 'Token has expired' });
+      }
+
+      return res.json({ valid: true, message: 'Token is valid' });
     }
-
-    if (resetToken.used) {
-      return res.json({ valid: false, message: 'Token has already been used' });
-    }
-
-    if (new Date(resetToken.expires_at) < new Date()) {
-      return res.json({ valid: false, message: 'Token has expired' });
-    }
-
-    res.json({ valid: true, message: 'Token is valid' });
 
   } catch (error) {
     
@@ -903,19 +938,28 @@ router.post('/reset-password',
         return res.status(400).json({ success: false, error: 'Invalid or expired token' });
       }
 
-      // Hash new password
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      if (!supabase) {
+        const User = require('../models/User');
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+          return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        user.password = newPassword; // Will be hashed by pre-save hook
+        await user.save();
+      } else {
+        // Hash new password
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-      // Update user password
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ password: hashedPassword })
-        .eq('id', decoded.userId);
+        // Update user password
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ password: hashedPassword })
+          .eq('id', decoded.userId);
 
-      if (updateError) {
-        
-        return res.status(500).json({ success: false, error: 'Failed to update password' });
+        if (updateError) {
+          return res.status(500).json({ success: false, error: 'Failed to update password' });
+        }
       }
 
       res.json({ success: true, message: 'Password has been reset successfully' });
