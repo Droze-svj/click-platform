@@ -250,7 +250,7 @@ export default function NeuralDashboard() {
               <div className="flex items-center gap-3 sm:gap-4 mb-2 flex-wrap">
                 <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)] italic">Click Ecosystem v4.0</span>
                 <div className={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[9px] font-bold border flex items-center gap-2 ${apiStatus === 'online' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' : 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)]'}`}>
-                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+                  <div data-keep-motion className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
                   {apiStatus.toUpperCase()}
                 </div>
               </div>
@@ -413,8 +413,8 @@ export default function NeuralDashboard() {
               </div>
             </div>
 
-            {/* Platform Status */}
-            <div className={`${glassStyle} rounded-[3rem] p-8 bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] shadow-inner group`}>
+            {/* Platform Status — secondary; hidden when Focus Mode is on. */}
+            <div data-focus-secondary className={`${glassStyle} rounded-[3rem] p-8 bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] shadow-inner group`}>
               <h3 className="text-lg font-black text-[var(--text-main)] uppercase tracking-widest mb-6 italic">Platform Status</h3>
               <div className="space-y-6">
                 {['tiktok', 'instagram', 'youtube', 'twitter'].map((p, i) => (
@@ -439,8 +439,8 @@ export default function NeuralDashboard() {
           </div>
         </div>
 
-        {/* Global Footer Overlay */}
-        <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[150] hidden sm:block">
+        {/* Global Footer Overlay — secondary FAB; hidden when Focus Mode is on. */}
+        <div data-focus-secondary className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[150] hidden sm:block">
           <Link 
             href="/dashboard/forge" 
             className="flex items-center gap-4 px-8 py-5 bg-[var(--text-main)] text-[var(--page-bg)] rounded-full font-black text-sm uppercase tracking-widest shadow-[var(--glass-glow)] hover:scale-105 active:scale-95 transition-all group"

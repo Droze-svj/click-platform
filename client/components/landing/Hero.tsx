@@ -11,10 +11,12 @@ export function Hero() {
     <section className="relative pt-40 md:pt-56 pb-20 md:pb-40 px-6 flex flex-col items-center overflow-hidden">
       
       {/* Animated Atmosphere */}
+      {/* Static ambient gradients — calmer than the pulsing version while
+          preserving the same visual presence. */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-indigo-600/20 blur-[140px] rounded-full animate-pulse" />
-        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[60%] bg-fuchsia-600/15 blur-[160px] rounded-full animate-pulse [animation-delay:1000ms]" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] bg-blue-600/10 blur-[150px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-indigo-600/25 blur-[140px] rounded-full" />
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[60%] bg-fuchsia-600/20 blur-[160px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] bg-blue-600/15 blur-[150px] rounded-full" />
       </div>
 
       <div className="max-w-[1400px] mx-auto text-center space-y-12">

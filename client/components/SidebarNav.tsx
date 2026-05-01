@@ -16,9 +16,10 @@ import {
   // Manage
   FolderKanban, Users, Gem, Boxes, Plug, Compass,
   // Settings
-  Settings, LogOut, Sun, Moon,
+  Settings, LogOut, Sun, Moon, Eye, EyeOff,
 } from 'lucide-react'
 import { useTheme } from './ThemeProvider'
+import { useLayoutPreferences } from '../contexts/LayoutPreferencesContext'
 import ClickLogo from './ClickLogo'
 
 // ── Zone definitions ───────────────────────────────────────────────────────
@@ -88,6 +89,7 @@ export default function SidebarNav() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const { isDark, toggle } = useTheme()
+  const { focusMode, toggleFocusMode } = useLayoutPreferences()
   const [collapsed, setCollapsed] = useState(false)
   const [expandedZone, setExpandedZone] = useState<string | null>(() => {
     return ZONES.find(z => z.items.some(i => pathname?.startsWith(i.path) && i.path !== '/dashboard')) ?.id ?? 'studio'
@@ -124,14 +126,14 @@ export default function SidebarNav() {
         </AnimatePresence>
         {collapsed && <div className="mx-auto"><ClickLogo size={32} /></div>}
         {!collapsed && (
-          <button onClick={() => setCollapsed(true)} className="w-8 h-8 rounded-xl bg-[var(--glass-surface)] hover:bg-[var(--glass-surface-heavy)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all ml-auto">
+          <button type="button" onClick={() => setCollapsed(true)} aria-label="Collapse sidebar" className="w-8 h-8 rounded-xl bg-[var(--glass-surface)] hover:bg-[var(--glass-surface-heavy)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all ml-auto">
             <ChevronLeft size={16} />
           </button>
         )}
       </div>
 
       {collapsed && (
-        <button onClick={() => setCollapsed(false)} className="absolute -right-3 top-20 z-10 w-8 h-8 rounded-full bg-[var(--page-bg)] border border-[var(--glass-border-strong)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] shadow-xl transition-all">
+        <button type="button" onClick={() => setCollapsed(false)} aria-label="Expand sidebar" className="absolute -right-3 top-20 z-10 w-8 h-8 rounded-full bg-[var(--page-bg)] border border-[var(--glass-border-strong)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] shadow-xl transition-all">
           <ChevronRight size={14} />
         </button>
       )}
@@ -182,11 +184,23 @@ export default function SidebarNav() {
         })}
       </nav>
 
-      {/* ── Theme Toggle & User ── */}
+      {/* ── Theme Toggle, Focus Mode & User ── */}
       <div className="p-4 space-y-3 border-t border-[var(--glass-border)]">
-        <button onClick={toggle} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all ${collapsed ? 'justify-center' : ''}`}>
+        <button onClick={toggle} aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all ${collapsed ? 'justify-center' : ''}`}>
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
           {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Theme</span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleFocusMode}
+          aria-pressed={focusMode ? 'true' : 'false'}
+          aria-label={focusMode ? 'Disable focus mode' : 'Enable focus mode'}
+          title={focusMode ? 'Focus mode on — calmer animations, secondary panels hidden' : 'Focus mode off — full animation density'}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${collapsed ? 'justify-center' : ''} ${focusMode ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)]'}`}
+        >
+          {focusMode ? <Eye size={16} /> : <EyeOff size={16} />}
+          {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Focus{focusMode ? ' · On' : ''}</span>}
         </button>
 
         <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--glass-surface-heavy)] border border-[var(--glass-border)] ${collapsed ? 'justify-center' : ''}`}>
