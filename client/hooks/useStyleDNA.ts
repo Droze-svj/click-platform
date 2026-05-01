@@ -32,9 +32,11 @@ function tally(arr: { key: string; count: number }[] | undefined): Map<string, n
 
 function bucketSum(counts: Map<string, number>, matcher: Set<string> | RegExp): number {
   let total = 0
-  for (const [key, count] of counts) {
+  // Map iteration via forEach avoids needing the downlevelIteration tsconfig flag
+  // (this client targets ES5 lib for IE-equivalent bundle compatibility).
+  counts.forEach((count, key) => {
     if (matcher instanceof RegExp ? matcher.test(key) : matcher.has(key)) total += count
-  }
+  })
   return total
 }
 
