@@ -180,7 +180,7 @@ export default function IntegrationsPage() {
         </div>
 
         {/* Stat strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 relative z-10">
           {[
             { label: 'Total Connected', value: installed.length, icon: Link2, color: 'text-white' },
             { label: 'Active Uplinks',  value: installed.filter(i => i.status === 'active').length, icon: Zap, color: 'text-emerald-400' },

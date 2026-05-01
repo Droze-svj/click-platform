@@ -65,7 +65,11 @@ export default function HeuristicMatrixPage() {
   const [selectedVideo, setSelectedVideo] = useState<VideoStat | null>(null)
   const [insightTab, setInsightTab] = useState<'ai' | 'hooks' | 'forecast'>('ai')
 
-  const fetchStats = async () => {
+  // useCallback so the reference is stable across renders + the
+  // useEffect below can declare the dep without re-firing on every
+  // render. Without it, the manual reload button captured a stale
+  // closure when the auth token refreshed mid-session.
+  const fetchStats = useCallback(async () => {
     setRefreshing(true)
     try {
       const res = await apiGet('/analytics/creator/stats')
@@ -103,9 +107,9 @@ export default function HeuristicMatrixPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { fetchStats() }, [])
+  useEffect(() => { fetchStats() }, [fetchStats])
 
   const filtered = useMemo(() =>
     videos

@@ -138,8 +138,8 @@ export default function FiscalProposalMatrixPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">MARKET_SYMPATHY_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Fiscal Matrix</h1>
-                 <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Synthesis terminal for high-leverage fiscal proposals and strategic axiomatic manifests.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Quotes</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Generate and send client quotes — line items, deliverables, totals — all niche-templated. Edit, re-send, or accept right from this page.</p>
               </div>
            </div>
         </header>

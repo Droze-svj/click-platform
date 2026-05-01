@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   TrendingUp, Eye, Heart, Share2, Zap, Brain, Sparkles, 
@@ -42,29 +42,33 @@ export default function SovereignAnalyticsMatrix() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
-  const fetchMatrix = async () => {
+  // useCallback so the reference is stable across renders. Without this,
+  // the empty-deps useEffect below would lint-warn (and the reload
+  // button captured a stale closure of the fetcher when the auth token
+  // refreshed mid-session).
+  const fetchMatrix = useCallback(async () => {
     setRefreshing(true)
     try {
       const res = await apiGet('/analytics/dashboard')
       setData(res.overview)
-      
+
       const nodeRes = await apiGet('/analytics/creator/stats')
       setNodes(nodeRes.stats || [])
     } catch (err) {
-      console.error('Matrix uplink failed', err)
+      console.error('Analytics fetch failed', err)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { fetchMatrix() }, [])
+  useEffect(() => { fetchMatrix() }, [fetchMatrix])
 
   if (loading) return <SpectralLoader />
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#020205] text-white relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 overflow-x-hidden">
+      <div className="min-h-screen bg-[#020205] text-white relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1750px] mx-auto space-y-12 md:space-y-24 overflow-x-hidden">
         <ToastContainer />
         
         {/* Background Ambience */}

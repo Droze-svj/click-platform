@@ -175,8 +175,8 @@ export default function SignalDiffusionLedgerPage() {
                       </div>
                    )}
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Signal Diffusion</h1>
-                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">High-priority telemetry intercepts and mission-critical resonance triggers.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Notifications</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Posts that went live, approvals waiting on you, jobs that need attention. Click rolls them up so nothing slips.</p>
               </div>
            </div>
 
