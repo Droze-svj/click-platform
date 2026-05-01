@@ -11,7 +11,7 @@ import {
   Wifi, Globe, Settings,
   Shield, Cpu, Radio, Terminal, Monitor,
   Box, ActivitySquare, ActivityIcon, Fingerprint, Gauge, Signal, ShieldCheck,
-  Sparkle, Command, Hammer, Plug, LayoutGrid, BarChart3, Users, Clock
+  Sparkle, Command, Hammer, Plug, LayoutGrid, BarChart3, Users, Clock, Moon, Sun
 } from 'lucide-react'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import ToastContainer from '../../components/ToastContainer'
@@ -19,7 +19,7 @@ import SubscriptionBanner from '../../components/SubscriptionBanner'
 import { validateFile } from '../../utils/fileValidator'
 import { useTheme } from '../../components/ThemeProvider'
 
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] transition-all duration-500'
+const glassStyle = 'backdrop-blur-[var(--glass-blur)] bg-[var(--glass-surface)] border border-[var(--glass-border)] shadow-[var(--glass-glow)] transition-all duration-500'
 
 const DASHBOARD_NAV = [
   { 
@@ -147,6 +147,7 @@ function fmt(n: number | null | undefined): string {
 
 export default function NeuralDashboard() {
   const { user } = useAuth() as any
+  const { resolvedTheme, toggle } = useTheme()
   const [stats, setStats] = useState<DashboardStat[]>([])
   const [apiStatus, setApiStatus] = useState<'online' | 'offline' | 'checking'>('checking')
   const [loading, setLoading] = useState(true)
@@ -225,45 +226,43 @@ export default function NeuralDashboard() {
       <SubscriptionBanner />
       <ToastContainer />
 
-      <div className="min-h-screen relative z-10 pb-32 px-6 lg:px-12 pt-12 max-w-[1900px] mx-auto space-y-12 overflow-x-hidden font-inter">
+      <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-6 lg:px-12 pt-12 max-w-[1900px] mx-auto space-y-12 overflow-x-hidden font-inter bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500">
         
         {/* Background Atmosphere */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.04]">
           <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500 rounded-full blur-[160px]" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-500 rounded-full blur-[160px]" />
-          <LayoutGrid className="absolute top-20 left-20 w-full h-full opacity-10" size={1200} />
         </div>
 
         {/* Header HUD */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-50">
-          <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <ShieldCheck size={40} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform" />
+          <div className="flex items-center gap-4 sm:gap-8 w-full md:w-auto">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden group">
+              <ShieldCheck size={32} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform" />
             </div>
-            <div>
-              <div className="flex items-center gap-4 mb-2">
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Click Ecosystem v4.0</span>
-                <div className={`px-3 py-1 rounded-full text-[9px] font-bold border flex items-center gap-2 ${apiStatus === 'online' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
-                  <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-rose-400 animate-pulse'}`} />
+            <div className="flex-1">
+              <div className="flex items-center gap-3 sm:gap-4 mb-2 flex-wrap">
+                <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Click Ecosystem v4.0</span>
+                <div className={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[9px] font-bold border flex items-center gap-2 ${apiStatus === 'online' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-400' : 'bg-rose-400 animate-pulse'}`} />
                   {apiStatus.toUpperCase()}
                 </div>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-black text-white tracking-tight leading-none mb-3">
-                {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/40">{firstName}</span>
+              <h1 className="text-[clamp(1.5rem,5vw,3.5rem)] font-black text-[var(--text-main)] tracking-tight leading-tight mb-2">
+                {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--text-main)] via-[var(--text-main)]/80 to-[var(--text-main)]/40">{firstName}</span>
               </h1>
-              <p className="text-slate-400 text-sm lg:text-base font-medium max-w-xl opacity-80 leading-relaxed">
-                Welcome to your neural command center. Track your growth, refine your strategy, and launch viral content across the social mesh.
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard/settings" className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/20 transition-all hover:scale-105">
+          <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto justify-end">
+            <button onClick={toggle} className="w-12 h-12 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-main)] hover:scale-105 transition-all shadow-xl">
+              {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <Link href="/dashboard/settings" className="w-12 h-12 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] hover:border-[var(--glass-border-strong)] transition-all hover:scale-105">
               <Settings size={22} />
             </Link>
-            <button onClick={fetchData} className="px-6 py-3 bg-white text-black rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl active:scale-95 flex items-center gap-3">
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> SYNC DATA
+            <button onClick={fetchData} className="px-5 sm:px-6 py-3 bg-[var(--text-main)] text-[var(--page-bg)] rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl active:scale-95 flex items-center gap-3">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> <span className="hidden sm:inline">SYNC DATA</span>
             </button>
           </div>
         </header>
@@ -275,7 +274,7 @@ export default function NeuralDashboard() {
           <div className="lg:col-span-8 space-y-8">
             
             {/* Metric Tiles */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {stats.map((s, i) => (
                 <motion.div 
                   key={i} 
@@ -283,88 +282,88 @@ export default function NeuralDashboard() {
                   animate={{ opacity: 1, y: 0 }} 
                   transition={{ delay: i * 0.1 }}
                   whileHover={{ y: -8, scale: 1.02 }}
-                  className={`${glassStyle} p-6 rounded-[2.5rem] relative overflow-hidden group hover:bg-white/[0.04]`}
+                  className={`${glassStyle} p-6 rounded-[2.5rem] relative overflow-hidden group`}
                 >
                   <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity pointer-events-none group-hover:rotate-12">
                     <s.icon size={120} />
                   </div>
-                  <div className={`w-12 h-12 rounded-2xl ${s.bg} flex items-center justify-center mb-4 border border-white/5`}>
+                  <div className={`w-12 h-12 rounded-2xl ${s.bg} flex items-center justify-center mb-4 border border-[var(--glass-border)]`}>
                     <s.icon className={`${s.color}`} size={24} />
                   </div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic opacity-60">{s.label}</p>
-                  <h4 className="text-3xl font-black text-white tracking-tighter mb-2 italic tabular-nums">{s.value}</h4>
+                  <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1 italic opacity-60">{s.label}</p>
+                  <h4 className="text-3xl font-black text-[var(--text-main)] tracking-tighter mb-2 italic tabular-nums">{s.value}</h4>
                   <div className="flex items-center gap-2">
                     <ActivitySquare size={12} className="text-indigo-400/60" />
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{s.trend}</span>
+                    <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider">{s.trend}</span>
                   </div>
                 </motion.div>
               ))}
             </div>
 
             {/* Performance Nerve Center */}
-            <div className={`${glassStyle} rounded-[3rem] p-8 lg:p-10 relative overflow-hidden bg-black/40 min-h-[400px] flex flex-col justify-between group`}>
+            <div className={`${glassStyle} rounded-[3rem] p-6 sm:p-10 relative overflow-hidden min-h-[400px] flex flex-col justify-between group`}>
               <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none scale-150 rotate-45">
                 <BarChart3 size={400} />
               </div>
               
               <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-12">
                   <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center">
                     <Gauge size={30} className="text-indigo-400 animate-pulse" />
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black text-white tracking-tight">Performance Nerve Center</h2>
-                    <p className="text-xs font-medium text-slate-400 tracking-wide mt-1">Real-time health and growth trajectory analysis.</p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] tracking-tight">Performance Nerve Center</h2>
+                    <p className="text-xs font-medium text-[var(--text-dim)] tracking-wide mt-1">Real-time health and growth trajectory analysis.</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4 hover:bg-white/[0.04] transition-colors group/card">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                  <div className="p-6 rounded-3xl bg-[var(--glass-surface)] border border-[var(--glass-border)] space-y-4 hover:bg-[var(--glass-surface-heavy)] transition-colors group/card">
                     <div className="flex items-center gap-3">
                       <Brain size={20} className="text-indigo-400" />
-                      <span className="text-sm font-bold text-white">AI Strategy Insight</span>
+                      <span className="text-sm font-bold text-[var(--text-main)]">AI Strategy Insight</span>
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed opacity-80">
-                      Our neural model predicts a 14% increase in retention if you utilize <span className="text-white">Pattern-Interrupt</span> hooks in your next 3 videos.
+                    <p className="text-sm text-[var(--text-dim)] leading-relaxed opacity-80">
+                      Our neural model predicts a 14% increase in retention if you utilize <span className="text-[var(--text-main)]">Pattern-Interrupt</span> hooks in your next 3 videos.
                     </p>
-                    <Link href="/dashboard/scripts" className="inline-flex items-center gap-2 text-[11px] font-bold text-indigo-400 uppercase tracking-widest hover:text-white transition-colors">
+                    <Link href="/dashboard/scripts" className="inline-flex items-center gap-2 text-[11px] font-bold text-indigo-400 uppercase tracking-widest hover:text-[var(--text-main)] transition-colors">
                       Optimize Scripts <ArrowRight size={14} />
                     </Link>
                   </div>
 
-                  <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4 hover:bg-white/[0.04] transition-colors group/card">
+                  <div className="p-6 rounded-3xl bg-[var(--glass-surface)] border border-[var(--glass-border)] space-y-4 hover:bg-[var(--glass-surface-heavy)] transition-colors group/card">
                     <div className="flex items-center gap-3">
                       <Users size={20} className="text-emerald-400" />
-                      <span className="text-sm font-bold text-white">Audience Sync</span>
+                      <span className="text-sm font-bold text-[var(--text-main)]">Audience Sync</span>
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed opacity-80">
-                      Your synchronized platforms are currently reaching <span className="text-white">Global Phase 2</span> saturation. Engagement is peak at 19:00 UTC.
+                    <p className="text-sm text-[var(--text-dim)] leading-relaxed opacity-80">
+                      Your synchronized platforms are currently reaching <span className="text-[var(--text-main)]">Global Phase 2</span> saturation. Engagement is peak at 19:00 UTC.
                     </p>
-                    <Link href="/dashboard/scheduler" className="inline-flex items-center gap-2 text-[11px] font-bold text-emerald-400 uppercase tracking-widest hover:text-white transition-colors">
+                    <Link href="/dashboard/scheduler" className="inline-flex items-center gap-2 text-[11px] font-bold text-emerald-400 uppercase tracking-widest hover:text-[var(--text-main)] transition-colors">
                       Open Scheduler <ArrowRight size={14} />
                     </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-6">
+              <div className="mt-8 pt-8 border-t border-[var(--glass-border)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 sm:gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Core Engine Stable</span>
+                    <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">Core Engine Stable</span>
                   </div>
-                  <div className="flex items-center gap-3 border-l border-white/10 pl-6">
-                    <Clock size={12} className="text-slate-500" />
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Sync: 2ms ago</span>
+                  <div className="flex items-center gap-3 sm:border-l sm:border-[var(--glass-border)] sm:pl-6">
+                    <Clock size={12} className="text-[var(--text-dim)]" />
+                    <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">Sync: 2ms ago</span>
                   </div>
                 </div>
-                <div className="flex -space-x-3">
+                <div className="flex -space-x-3 w-full sm:w-auto justify-end">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-black bg-slate-800 flex items-center justify-center overflow-hidden">
+                    <div key={i} className="w-8 h-8 rounded-full border-2 border-[var(--page-bg)] bg-slate-800 flex items-center justify-center overflow-hidden">
                       <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-indigo-900/40" />
                     </div>
                   ))}
-                  <div className="w-8 h-8 rounded-full border-2 border-black bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+                  <div className="w-8 h-8 rounded-full border-2 border-[var(--page-bg)] bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
                     +12
                   </div>
                 </div>
@@ -376,12 +375,12 @@ export default function NeuralDashboard() {
           <div className="lg:col-span-4 space-y-8">
             
             {/* Quick Launch Hub */}
-            <div className={`${glassStyle} rounded-[3rem] p-8 lg:p-10 relative overflow-hidden bg-black/60 group`}>
-              <div className="flex items-center gap-4 mb-8">
+            <div className={`${glassStyle} rounded-[3rem] p-6 sm:p-10 relative overflow-hidden group`}>
+              <div className="flex items-center gap-4 mb-8 sm:mb-12">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center">
                   <Zap size={26} className="text-amber-400" />
                 </div>
-                <h3 className="text-2xl font-black text-white tracking-tight">Quick Launch Hub</h3>
+                <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Quick Launch Hub</h3>
               </div>
 
               <div className="space-y-4">
@@ -389,18 +388,18 @@ export default function NeuralDashboard() {
                   <Link 
                     key={i} 
                     href={act.href} 
-                    className={`${glassStyle} block p-5 rounded-3xl hover:bg-white/[0.04] group/nav border-white/5 hover:border-white/20`}
+                    className={`${glassStyle} block p-5 rounded-3xl hover:bg-[var(--glass-surface-heavy)] group/nav border-[var(--glass-border)] hover:border-[var(--glass-border-strong)]`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className={`w-10 h-10 rounded-xl ${act.bg} flex items-center justify-center group-hover/nav:scale-110 transition-transform`}>
                         <act.icon className={`${act.color}`} size={18} />
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded-full bg-white/5 text-slate-400 border border-white/5">
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded-full bg-white/5 text-[var(--text-dim)] border border-[var(--glass-border)]">
                         {act.badge}
                       </span>
                     </div>
-                    <h4 className="text-base font-black text-white tracking-tight mb-1 group-hover/nav:translate-x-1 transition-transform">{act.label}</h4>
-                    <p className="text-xs text-slate-400 font-medium leading-relaxed opacity-70 group-hover/nav:opacity-100 transition-opacity">
+                    <h4 className="text-base font-black text-[var(--text-main)] tracking-tight mb-1 group-hover/nav:translate-x-1 transition-transform">{act.label}</h4>
+                    <p className="text-xs text-[var(--text-dim)] font-medium leading-relaxed opacity-70 group-hover/nav:opacity-100 transition-opacity">
                       {act.desc}
                     </p>
                   </Link>
@@ -410,24 +409,24 @@ export default function NeuralDashboard() {
 
             {/* Platform Status */}
             <div className={`${glassStyle} rounded-[3rem] p-8 bg-indigo-500/5 border-indigo-500/20 shadow-inner group`}>
-              <h3 className="text-lg font-black text-white uppercase tracking-widest mb-6 italic opacity-80">Platform Status</h3>
+              <h3 className="text-lg font-black text-[var(--text-main)] uppercase tracking-widest mb-6 italic opacity-80">Platform Status</h3>
               <div className="space-y-6">
                 {['tiktok', 'instagram', 'youtube', 'twitter'].map((p, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 border border-white/5">
+                      <div className="w-10 h-10 rounded-full bg-[var(--glass-surface)] flex items-center justify-center text-[var(--text-dim)] border border-[var(--glass-border)]">
                         {p === 'tiktok' ? '♪' : p === 'instagram' ? '◎' : p === 'youtube' ? '▶' : '𝕏'}
                       </div>
-                      <span className="text-sm font-bold text-white capitalize">{p}</span>
+                      <span className="text-sm font-bold text-[var(--text-main)] capitalize">{p}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Stable</span>
+                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">Stable</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <Link href="/dashboard/integrations" className="mt-8 block text-center py-4 rounded-2xl bg-white/[0.03] border border-white/5 text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] hover:bg-white/[0.06] transition-all">
+              <Link href="/dashboard/integrations" className="mt-8 block text-center py-4 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] hover:bg-[var(--glass-surface-heavy)] transition-all">
                 MANAGE CONNECTIONS
               </Link>
             </div>
@@ -435,35 +434,16 @@ export default function NeuralDashboard() {
         </div>
 
         {/* Global Footer Overlay */}
-        <div className="fixed bottom-8 right-8 z-[150]">
+        <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[150] hidden sm:block">
           <Link 
             href="/dashboard/forge" 
-            className="flex items-center gap-4 px-8 py-5 bg-white text-black rounded-full font-black text-sm uppercase tracking-widest shadow-[0_32px_64px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 transition-all group"
+            className="flex items-center gap-4 px-8 py-5 bg-[var(--text-main)] text-[var(--page-bg)] rounded-full font-black text-sm uppercase tracking-widest shadow-[var(--glass-glow)] hover:scale-105 active:scale-95 transition-all group"
           >
             <Hammer size={20} className="group-hover:rotate-12 transition-transform" /> 
             Open One-Click Forge
           </Link>
         </div>
 
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { 
-            font-family: 'Inter', sans-serif; 
-            background: #020205; 
-            color: white; 
-            overflow-x: hidden; 
-          }
-          ::selection {
-            background: rgba(99, 102, 241, 0.4);
-            color: white;
-          }
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { 
-            background: rgba(255, 255, 255, 0.1); 
-            border-radius: 10px; 
-          }
-        `}</style>
       </div>
     </ErrorBoundary>
   )

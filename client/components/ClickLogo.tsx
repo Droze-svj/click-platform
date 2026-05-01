@@ -69,7 +69,7 @@ export default function ClickLogo({
         />
       </svg>
       {showWordmark && (
-        <span className={`text-lg font-black tracking-tight leading-none text-[#1e293b] dark:text-white ${wordmarkClassName}`}>
+        <span className={`text-lg font-black tracking-tight leading-none text-[var(--text-main)] ${wordmarkClassName}`}>
           Click
         </span>
       )}

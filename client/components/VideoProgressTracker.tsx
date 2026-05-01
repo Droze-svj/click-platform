@@ -17,9 +17,10 @@ interface VideoProgressTrackerProps {
   operation?: string
   jobId?: string // For export operations
   onComplete?: (result: any) => void
+  onError?: (error?: any) => void
 }
 
-export default function VideoProgressTracker({ videoId, operation, jobId, onComplete }: VideoProgressTrackerProps) {
+export default function VideoProgressTracker({ videoId, operation, jobId, onComplete, onError }: VideoProgressTrackerProps) {
   const [progress, setProgress] = useState<Progress | null>(null)
   const [isPolling, setIsPolling] = useState(true)
   const [failures, setFailures] = useState(0)
@@ -59,7 +60,9 @@ export default function VideoProgressTracker({ videoId, operation, jobId, onComp
 
           if (data.data.status === 'completed' || data.data.status === 'failed') {
             setIsPolling(false)
-            if (onComplete) {
+            if (data.data.status === 'failed' && onError) {
+              onError(data.data)
+            } else if (onComplete) {
               onComplete(data.data)
             }
           }
@@ -80,14 +83,18 @@ export default function VideoProgressTracker({ videoId, operation, jobId, onComp
     // Stop polling after repeated failures (backend down, auth expired, etc.)
     if (failures >= 5) {
       setIsPolling(false)
-      setProgress({
+      const errorData = {
         videoId,
         operation: operation || 'processing',
         progress: 0,
         status: 'failed',
-      })
+      };
+      setProgress(errorData as Progress)
+      if (onError) {
+        onError(errorData)
+      }
     }
-  }, [failures, videoId, operation])
+  }, [failures, videoId, operation, onError])
 
   if (!progress) {
     return (

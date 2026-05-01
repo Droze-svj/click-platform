@@ -294,9 +294,9 @@ function getRedisConnection() {
       redisIORedisInstance = new IORedis(redisUrl, {
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
-        lazyConnect: true, // Don't connect immediately
+        lazyConnect: false, // Connect immediately to prevent "Stream isn't writeable"
         connectTimeout: 10000,
-        enableOfflineQueue: false,
+        enableOfflineQueue: true,
       });
       logger.info('✅ Created IORedis instance for BullMQ (development)', {
         url: redisUrl.replace(/:[^:@]+@/, ':****@')

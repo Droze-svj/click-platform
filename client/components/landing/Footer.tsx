@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Zap } from 'lucide-react';
+import ClickLogo from '../ClickLogo';
 
 export function Footer() {
   return (
@@ -11,10 +11,7 @@ export function Footer() {
           href="/"
           className="flex items-center gap-3 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all"
         >
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-lg font-black tracking-tighter uppercase text-white">CLICK</span>
+          <ClickLogo size={24} showWordmark wordmarkClassName="text-lg tracking-tighter uppercase" />
         </Link>
 
         <div className="flex items-center gap-8 text-xs font-bold uppercase tracking-widest text-slate-600">

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Zap, Menu, X } from 'lucide-react';
+import ClickLogo from '../ClickLogo';
+import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,10 +24,7 @@ export function Nav() {
     >
       <div className="max-w-[1400px] mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-4 group cursor-pointer">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-2xl shadow-indigo-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-            <Zap className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-3xl font-black tracking-tighter text-white italic">CLICK</span>
+          <ClickLogo size={40} showWordmark wordmarkClassName="text-3xl tracking-tighter italic" />
         </Link>
 
         {/* Desktop Nav */}
