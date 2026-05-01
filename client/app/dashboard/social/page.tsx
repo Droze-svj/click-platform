@@ -223,7 +223,7 @@ export default function SocialPage() {
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500`}>
                     <cfg.icon size={32} className="text-white" />
                   </div>
-                  <div className={`px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-[0.2em] italic flex items-center gap-2 ${isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-slate-500 border-white/5'}`}>
+                  <div className={`px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-[0.2em] italic flex items-center gap-2 ${isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-slate-300 border-white/5'}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`} />
                     {isActive ? 'UPLINKED' : 'OFFLINE'}
                   </div>
@@ -242,7 +242,7 @@ export default function SocialPage() {
                           <img src={account.avatar} alt={account.username} className="w-12 h-12 rounded-2xl object-cover grayscale group-hover/node:grayscale-0 transition-all border border-white/10" />
                         ) : (
                           <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                            <cfg.icon size={20} className="text-slate-500" />
+                            <cfg.icon size={20} className="text-slate-300" />
                           </div>
                         )}
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-emerald-500 border-2 border-[#020205] flex items-center justify-center shadow-lg">
@@ -251,7 +251,7 @@ export default function SocialPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-black text-white truncate uppercase italic">{account.display_name || account.username}</p>
-                        <p className="text-[10px] font-bold text-slate-500 truncate uppercase tracking-widest italic">NODE_ID: {account.platform_user_id.slice(0, 12)}...</p>
+                        <p className="text-[10px] font-bold text-slate-300 truncate uppercase tracking-widest italic">NODE_ID: {account.platform_user_id.slice(0, 12)}...</p>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => window.open(account.metadata?.profile_url || '#', '_blank')} className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90">
@@ -299,7 +299,7 @@ export default function SocialPage() {
                 <s.icon size={22} className={s.col} />
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic mb-1 opacity-60 leading-none">{s.label}</p>
+                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest italic mb-1 opacity-60 leading-none">{s.label}</p>
                 <p className={`text-sm font-black italic uppercase tracking-tight text-white`}>{s.val}</p>
               </div>
             </div>
@@ -308,11 +308,11 @@ export default function SocialPage() {
 
         {/* Technical Footer HUD */}
         <footer className="pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-40 hover:opacity-100 transition-opacity">
-          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] italic">
+          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em] italic">
             <Terminal size={14} />
             VAULT_VERSION: 2.0.4 // SYSTEM_STABLE
           </div>
-          <div className="flex items-center gap-8 text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em] italic">
+          <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em] italic">
             <span>Uptime: 99.9%</span>
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span>Region: EU-WEST-1</span>

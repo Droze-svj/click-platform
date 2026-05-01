@@ -236,45 +236,144 @@
   --click-body-bg: #07070f;
 
   /* 2026 Advanced Glassmorphism Tokens */
-  --glass-surface: rgba(255, 255, 255, 0.03);
-  --glass-surface-heavy: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-strong: rgba(255, 255, 255, 0.15);
+  --glass-surface: rgba(255, 255, 255, 0.045);
+  --glass-surface-heavy: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
   --glass-blur: blur(40px) saturate(180%);
   --glass-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --page-bg: #020205;
   --text-main: #ffffff;
-  --text-dim: rgba(255, 255, 255, 0.5);
+  --text-dim: rgba(255, 255, 255, 0.62);
   --accent-glow: rgba(99, 102, 241, 0.15);
+
+  /* WCAG-tested tint tokens — readable foreground on glass surface */
+  --tint-indigo-bg:    rgba(99, 102, 241, 0.20);
+  --tint-indigo-fg:    #c7d2fe;
+  --tint-indigo-edge:  rgba(99, 102, 241, 0.42);
+  --tint-violet-bg:    rgba(139, 92, 246, 0.20);
+  --tint-violet-fg:    #ddd6fe;
+  --tint-violet-edge:  rgba(139, 92, 246, 0.42);
+  --tint-amber-bg:     rgba(245, 158, 11, 0.20);
+  --tint-amber-fg:     #fcd34d;
+  --tint-amber-edge:   rgba(245, 158, 11, 0.42);
+  --tint-emerald-bg:   rgba(16, 185, 129, 0.20);
+  --tint-emerald-fg:   #6ee7b7;
+  --tint-emerald-edge: rgba(16, 185, 129, 0.42);
+  --tint-rose-bg:      rgba(244, 63, 94, 0.20);
+  --tint-rose-fg:      #fda4af;
+  --tint-rose-edge:    rgba(244, 63, 94, 0.42);
+  --tint-sky-bg:       rgba(14, 165, 233, 0.20);
+  --tint-sky-fg:       #7dd3fc;
+  --tint-sky-edge:     rgba(14, 165, 233, 0.42);
+  --tint-cyan-bg:      rgba(6, 182, 212, 0.20);
+  --tint-cyan-fg:      #67e8f9;
+  --tint-cyan-edge:    rgba(6, 182, 212, 0.42);
+  --tint-orange-bg:    rgba(249, 115, 22, 0.22);
+  --tint-orange-fg:    #fdba74;
+  --tint-orange-edge:  rgba(249, 115, 22, 0.42);
+  --tint-fuchsia-bg:   rgba(217, 70, 239, 0.22);
+  --tint-fuchsia-fg:   #f0abfc;
+  --tint-fuchsia-edge: rgba(217, 70, 239, 0.42);
+
+  --focus-ring: 0 0 0 3px rgba(165, 180, 252, 0.55);
 }
 
 /* ── Light-mode overrides (Click-specific semantic tokens) ────────────────── */
 :root:not(.dark),
 [data-theme="light"] {
-  --glass-surface: rgba(255, 255, 255, 0.7);
-  --glass-surface-heavy: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-border-strong: rgba(0, 0, 0, 0.12);
+  --glass-surface: rgba(255, 255, 255, 0.82);
+  --glass-surface-heavy: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(15, 23, 42, 0.10);
+  --glass-border-strong: rgba(15, 23, 42, 0.18);
   --glass-blur: blur(25px) saturate(150%);
   --glass-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   --page-bg: #f8fafc;
   --text-main: #0f172a;
-  --text-dim: #64748b;
+  --text-dim: #475569;
   --accent-glow: rgba(99, 102, 241, 0.08);
 
   --click-sidebar-bg: #f0f2f7;
-  --click-sidebar-border: rgba(0, 0, 0, 0.08);
+  --click-sidebar-border: rgba(15, 23, 42, 0.10);
   --click-panel-bg: rgba(245, 247, 252, 0.98);
-  --click-card-bg: rgba(255, 255, 255, 0.9);
-  --click-card-border: rgba(0, 0, 0, 0.08);
-  --click-input-bg: rgba(0, 0, 0, 0.03);
-  --click-input-border: rgba(0, 0, 0, 0.1);
-  --click-glow-indigo: rgba(99, 102, 241, 0.1);
-  --click-glow-violet: rgba(139, 92, 246, 0.1);
-  --click-glow-rose: rgba(244, 63, 94, 0.1);
-  --click-text-dim: rgba(0, 0, 0, 0.4);
-  --click-text-subtle: rgba(0, 0, 0, 0.2);
+  --click-card-bg: rgba(255, 255, 255, 0.94);
+  --click-card-border: rgba(15, 23, 42, 0.10);
+  --click-input-bg: rgba(15, 23, 42, 0.04);
+  --click-input-border: rgba(15, 23, 42, 0.14);
+  --click-glow-indigo: rgba(99, 102, 241, 0.12);
+  --click-glow-violet: rgba(139, 92, 246, 0.12);
+  --click-glow-rose: rgba(244, 63, 94, 0.12);
+  --click-text-dim: rgba(15, 23, 42, 0.62);
+  --click-text-subtle: rgba(15, 23, 42, 0.32);
   --click-body-bg: #f4f6fb;
+
+  /* WCAG-AA tint tokens — readable foreground on white glass */
+  --tint-indigo-bg:    rgba(99, 102, 241, 0.14);
+  --tint-indigo-fg:    #4338ca;
+  --tint-indigo-edge:  rgba(99, 102, 241, 0.32);
+  --tint-violet-bg:    rgba(139, 92, 246, 0.14);
+  --tint-violet-fg:    #6d28d9;
+  --tint-violet-edge:  rgba(139, 92, 246, 0.32);
+  --tint-amber-bg:     rgba(245, 158, 11, 0.18);
+  --tint-amber-fg:     #b45309;
+  --tint-amber-edge:   rgba(245, 158, 11, 0.34);
+  --tint-emerald-bg:   rgba(16, 185, 129, 0.16);
+  --tint-emerald-fg:   #047857;
+  --tint-emerald-edge: rgba(16, 185, 129, 0.34);
+  --tint-rose-bg:      rgba(244, 63, 94, 0.14);
+  --tint-rose-fg:      #be123c;
+  --tint-rose-edge:    rgba(244, 63, 94, 0.32);
+  --tint-sky-bg:       rgba(14, 165, 233, 0.14);
+  --tint-sky-fg:       #0369a1;
+  --tint-sky-edge:     rgba(14, 165, 233, 0.32);
+  --tint-cyan-bg:      rgba(6, 182, 212, 0.16);
+  --tint-cyan-fg:      #0e7490;
+  --tint-cyan-edge:    rgba(6, 182, 212, 0.34);
+  --tint-orange-bg:    rgba(249, 115, 22, 0.16);
+  --tint-orange-fg:    #c2410c;
+  --tint-orange-edge:  rgba(249, 115, 22, 0.34);
+  --tint-fuchsia-bg:   rgba(217, 70, 239, 0.14);
+  --tint-fuchsia-fg:   #a21caf;
+  --tint-fuchsia-edge: rgba(217, 70, 239, 0.32);
+
+  --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.42);
+}
+
+/* ── Reusable tint utility classes ────────────────────────────────────────── */
+.click-tint-indigo  { background: var(--tint-indigo-bg);  color: var(--tint-indigo-fg);  border-color: var(--tint-indigo-edge); }
+.click-tint-violet  { background: var(--tint-violet-bg);  color: var(--tint-violet-fg);  border-color: var(--tint-violet-edge); }
+.click-tint-amber   { background: var(--tint-amber-bg);   color: var(--tint-amber-fg);   border-color: var(--tint-amber-edge); }
+.click-tint-emerald { background: var(--tint-emerald-bg); color: var(--tint-emerald-fg); border-color: var(--tint-emerald-edge); }
+.click-tint-rose    { background: var(--tint-rose-bg);    color: var(--tint-rose-fg);    border-color: var(--tint-rose-edge); }
+.click-tint-sky     { background: var(--tint-sky-bg);     color: var(--tint-sky-fg);     border-color: var(--tint-sky-edge); }
+.click-tint-cyan    { background: var(--tint-cyan-bg);    color: var(--tint-cyan-fg);    border-color: var(--tint-cyan-edge); }
+.click-tint-orange  { background: var(--tint-orange-bg);  color: var(--tint-orange-fg);  border-color: var(--tint-orange-edge); }
+.click-tint-fuchsia { background: var(--tint-fuchsia-bg); color: var(--tint-fuchsia-fg); border-color: var(--tint-fuchsia-edge); }
+
+/* ── Global focus ring — keyboard users get a clear visible target ────────── */
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ── Respect prefers-reduced-motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Smooth theme transitions — applied to all elements on theme change ───── */

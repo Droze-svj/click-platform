@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Play, Zap, ShieldCheck, Globe } from 'lucide-react';
 
-const glass = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl';
+const glass = 'backdrop-blur-3xl bg-white/[0.06] border border-white/15 shadow-2xl';
 
 export function Hero() {
   return (
@@ -23,9 +23,9 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-default group"
+          className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-indigo-500/15 hover:bg-indigo-500/25 transition-all cursor-default group"
         >
-          <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse" />
+          <Sparkles className="w-3 h-3 text-indigo-300 animate-pulse" />
           <span>Click AI v4.0 — Neural Forge is Live</span>
         </motion.div>
 
@@ -50,13 +50,13 @@ export function Hero() {
             className="flex items-center justify-center gap-8 pt-4"
           >
             <div className="flex items-center gap-3">
-              <ShieldCheck size={14} className="text-emerald-500/60" />
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">Consensus Refined</span>
+              <ShieldCheck size={14} className="text-emerald-300" />
+              <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Consensus Refined</span>
             </div>
-            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+            <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
             <div className="flex items-center gap-3">
-              <Globe size={14} className="text-indigo-500/60" />
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">Omni-Channel Mesh</span>
+              <Globe size={14} className="text-indigo-300" />
+              <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Omni-Channel Mesh</span>
             </div>
           </motion.div>
         </div>
@@ -65,7 +65,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-slate-400 text-lg md:text-2xl font-medium max-w-3xl mx-auto leading-relaxed opacity-80"
+          className="text-slate-300 text-lg md:text-2xl font-medium max-w-3xl mx-auto leading-relaxed"
         >
           The premium command center for high-velocity creators. Our niche-aware neural model auto-edits, predicts retention, and lands every clip on every platform — automatically.
         </motion.p>

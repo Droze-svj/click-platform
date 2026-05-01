@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 z-[100] bg-[#050505] flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-[100] bg-[var(--page-bg)] flex flex-col items-center justify-center" role="status" aria-live="polite" aria-label="Loading Click">
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30vh] h-[30vh] bg-indigo-600/20 blur-[100px] rounded-full animate-pulse" />
 
@@ -19,7 +19,7 @@ export default function Loading() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.2)] backdrop-blur-xl"
+          className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-500/25 to-purple-500/25 border border-[var(--glass-border-strong)] flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.25)] backdrop-blur-xl"
         >
           {/* Inner pulsing element */}
           <motion.div
@@ -33,9 +33,9 @@ export default function Loading() {
         {/* Loading Text */}
         <div className="flex flex-col items-center gap-2">
            <motion.div
-             animate={{ opacity: [0.5, 1, 0.5] }}
+             animate={{ opacity: [0.6, 1, 0.6] }}
              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-             className="text-white text-xl font-black uppercase tracking-widest"
+             className="text-[var(--text-main)] text-xl font-black uppercase tracking-widest"
            >
              INITIALIZING
            </motion.div>

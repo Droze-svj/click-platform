@@ -193,7 +193,7 @@ export default function Login() {
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">
                 {t('auth.loginTitle')}
               </h1>
-              <p className="text-slate-500 text-sm font-medium tracking-wide">
+              <p className="text-slate-300 text-sm font-medium tracking-wide">
                 {t('auth.loginSubtitle')}
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2 group/field">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-focus-within/field:text-indigo-400 transition-colors block ml-2">Secure Link / Email</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-focus-within/field:text-indigo-400 transition-colors block ml-2">Secure Link / Email</label>
               <div className="relative">
                 <FormField
                   label=""
@@ -230,7 +230,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-2 group/field">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-focus-within/field:text-indigo-400 transition-colors block ml-2">Access Key / Password</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-focus-within/field:text-indigo-400 transition-colors block ml-2">Access Key / Password</label>
               <div className="relative">
                 <FormField
                   label=""
@@ -275,7 +275,7 @@ export default function Login() {
           <div className="mt-10 pt-8 border-t border-white/5 relative z-10">
             <div className="flex items-center justify-center gap-4 mb-6">
               <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Secondary Nodes</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">Secondary Nodes</span>
               <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -289,7 +289,7 @@ export default function Login() {
           </div>
 
           <div className="mt-10 text-center relative z-10 border-t border-white/5 pt-8">
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+            <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">
               {t('auth.noAccount')}{' '}
               <a
                 href="/register"
