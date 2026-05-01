@@ -66,6 +66,12 @@ const contentSchema = new mongoose.Schema({
   title: String,
   description: String,
   transcript: String,
+  // ISO language code the video was transcribed in (set from req.language
+  // at upload). Downstream AI services read this so a Spanish video gets
+  // Spanish captions / hooks / repurpose copy automatically — instead of
+  // every AI call defaulting to English. Free-form to keep new languages
+  // (we add them in waves) from breaking saves.
+  language: { type: String, default: 'en' },
   status: {
     type: String,
     enum: ['uploading', 'processing', 'completed', 'failed'],
