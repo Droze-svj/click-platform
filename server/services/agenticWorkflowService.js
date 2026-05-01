@@ -74,15 +74,23 @@ function getJobStatus(jobId) {
 // ── Private pipeline runner ───────────────────────────────────────────────────
 
 async function runPipeline(job) {
+  // Adding `publish` as the final stage gives Click a true autonomous
+  // pipeline: ingest → finished post in the queue, no human in the
+  // middle. The publish stage doesn't actually push to the social API
+  // here — it queues the draft into the Schedule Queue at the niche-
+  // optimal posting window so the existing scheduler/cron infrastructure
+  // takes it from there. That keeps publish gated behind whatever
+  // approval policy the workspace already has, instead of bypassing it.
   const stepDefs = [
-    { id: 'transcribe',   label: 'Transcribe Audio',    weight: 10 },
-    { id: 'score',        label: 'Score Viral Moments', weight: 20 },
-    { id: 'cut',          label: 'Auto-Cut Clips',      weight: 30 },
-    { id: 'brand',        label: 'Apply Brand Template', weight: 40 },
-    { id: 'broll',        label: 'Source AI B-roll',     weight: 50 },
-    { id: 'thumbnails',   label: 'Generate Thumbnails', weight: 60 },
-    { id: 'metadata',     label: 'Write Metadata',      weight: 80 },
-    { id: 'draft',        label: 'Draft to Calendar',   weight: 100 },
+    { id: 'transcribe',   label: 'Transcribe Audio',     weight: 8 },
+    { id: 'score',        label: 'Score Viral Moments',  weight: 18 },
+    { id: 'cut',          label: 'Auto-Cut Clips',       weight: 28 },
+    { id: 'brand',        label: 'Apply Brand Template', weight: 38 },
+    { id: 'broll',        label: 'Source AI B-roll',     weight: 48 },
+    { id: 'thumbnails',   label: 'Generate Thumbnails',  weight: 58 },
+    { id: 'metadata',     label: 'Write Metadata',       weight: 75 },
+    { id: 'draft',        label: 'Draft to Calendar',    weight: 88 },
+    { id: 'publish',      label: 'Schedule Publish',     weight: 100 },
   ]
 
   for (const step of stepDefs) {
@@ -159,6 +167,41 @@ async function runPipeline(job) {
 const { transcribeVideo: transcribeVideoService } = require('./aiTranscriptionService');
 const logger = require('../utils/logger');
 
+/**
+ * Pick the next "HH:MM" window from a niche posting playbook that lands
+ * within the next 72 hours. Returns null if the playbook is empty or
+ * malformed so the caller can fall back to a sensible default.
+ */
+function pickNextWindow(now, windows) {
+  if (!Array.isArray(windows) || windows.length === 0) return null;
+  const horizon = new Date(now.getTime() + 72 * 3600 * 1000);
+  // Each window is "HH:MM" 24h. Try today, tomorrow, day-after.
+  for (let dayOffset = 0; dayOffset < 3; dayOffset++) {
+    for (const w of windows) {
+      const m = /^(\d{1,2}):(\d{2})$/.exec(String(w).trim());
+      if (!m) continue;
+      const hh = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      const candidate = new Date(now);
+      candidate.setDate(candidate.getDate() + dayOffset);
+      candidate.setHours(hh, mm, 0, 0);
+      if (candidate > now && candidate <= horizon) return candidate;
+    }
+  }
+  return null;
+}
+
+/**
+ * Fallback slot when the niche playbook has no posting windows for this
+ * platform. Picks the next 9:00 AM in the user's local time horizon.
+ */
+function pickNextDefaultSlot(now) {
+  const slot = new Date(now);
+  slot.setHours(9, 0, 0, 0);
+  if (slot <= now) slot.setDate(slot.getDate() + 1);
+  return slot;
+}
+
 async function executeStep(stepId, job, isRetry = false) {
   const { videoId, userId } = job;
   const content = await require('../models/Content').findById(videoId);
@@ -233,6 +276,51 @@ async function executeStep(stepId, job, isRetry = false) {
 
     case 'draft':
       return { calendarSlotsFilled: 1 };
+
+    case 'publish': {
+      // Stage 9 — schedule the drafted post at the niche-optimal posting
+      // window. Doesn't bypass approvals: queues into the existing
+      // ScheduledPost collection (cron picks it up at fire time). If
+      // the workspace requires manual approval, the post sits in the
+      // approvals queue until reviewed; otherwise it goes live at the
+      // computed slot. The agent reports back the slot it picked so
+      // the UI can show "scheduled for Tuesday 9:14 AM" instead of a
+      // vague "queued".
+      try {
+        const niche = content?.niche || content?.metadata?.niche || 'business';
+        const platform = job.goals?.targetPlatform || (Array.isArray(content?.targetPlatforms) ? content.targetPlatforms[0] : null) || 'tiktok';
+        const { NICHE_POSTING_WINDOWS } = require('./marketingKnowledge');
+        // Pick the next-soonest optimal window from the niche playbook,
+        // capped to within the next 72h so the creator sees the post go
+        // out without a long wait — and so we don't queue at a stale day.
+        const windowsForPlatform = NICHE_POSTING_WINDOWS?.[niche]?.[platform];
+        const now = new Date();
+        const slot = pickNextWindow(now, windowsForPlatform) || pickNextDefaultSlot(now);
+        // Best-effort persist into ScheduledPost if the model exists.
+        let scheduledPostId = null;
+        try {
+          const ScheduledPost = require('../models/ScheduledPost');
+          const doc = await ScheduledPost.create({
+            userId,
+            contentId: videoId,
+            platform,
+            scheduledFor: slot,
+            status: 'pending',
+            source: 'agent',
+          }).catch(() => null);
+          scheduledPostId = doc?._id?.toString?.() || null;
+        } catch { /* model not present in some envs — pipeline still completes */ }
+        return {
+          scheduledFor: slot.toISOString(),
+          platform,
+          niche,
+          scheduledPostId,
+          via: scheduledPostId ? 'scheduled-post-collection' : 'plan-only',
+        };
+      } catch (err) {
+        return { error: err.message, status: 'publish-stage-skipped' };
+      }
+    }
 
     default:
       return {};

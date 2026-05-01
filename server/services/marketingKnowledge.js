@@ -270,21 +270,79 @@ function getKnowledgeSlice({ niche, platform, stage = 'script', language = 'en' 
 }
 
 /**
+ * Format a UserStyleProfile snapshot for prompt injection. Reads the top
+ * 3 picks across the facets the creator has demonstrated taste in (font,
+ * caption style, transitions, pacing averages, etc.) and emits a
+ * compact "match this creator's taste" block. If the profile is empty
+ * (new user), returns an empty array — the prompt skips the section.
+ */
+function buildStyleProfileBlock(profile) {
+  if (!profile || typeof profile !== 'object') return [];
+  const sections = [];
+  const picks = (facet) => {
+    const counts = profile[facet];
+    if (!counts || typeof counts !== 'object') return null;
+    const entries = Object.entries(counts).sort((a, b) => Number(b[1] || 0) - Number(a[1] || 0)).slice(0, 3);
+    if (entries.length === 0) return null;
+    return entries.map(([k]) => k).join(' · ');
+  };
+  const fonts = picks('fonts');
+  const captionStyles = picks('captionStyles');
+  const transitions = picks('transitions');
+  const motions = picks('motions');
+  const colorGrades = picks('colorGrades');
+  const niches = picks('niches');
+  const platforms = picks('platforms');
+
+  const lines = [];
+  if (fonts)         lines.push(`Preferred fonts: ${fonts}`);
+  if (captionStyles) lines.push(`Preferred caption styles: ${captionStyles}`);
+  if (transitions)   lines.push(`Preferred transitions: ${transitions}`);
+  if (motions)       lines.push(`Preferred motion graphics: ${motions}`);
+  if (colorGrades)   lines.push(`Preferred color grades: ${colorGrades}`);
+  if (niches)        lines.push(`Default niches: ${niches}`);
+  if (platforms)     lines.push(`Default platforms: ${platforms}`);
+
+  // Pacing averages — these come from the creator's actual edit history.
+  if (typeof profile.avgCutDuration === 'number')   lines.push(`Average cut length: ${profile.avgCutDuration.toFixed(1)}s (match this pacing)`);
+  if (typeof profile.avgFontSize === 'number')      lines.push(`Average font size: ${Math.round(profile.avgFontSize)}px`);
+  if (typeof profile.avgCaptionLength === 'number') lines.push(`Average caption length: ${Math.round(profile.avgCaptionLength)} chars`);
+
+  if (lines.length === 0) return [];
+  sections.push('── Creator style profile (bias output toward these) ──');
+  sections.push(...lines);
+  sections.push('');
+  return sections;
+}
+
+/**
  * Builds a ready-to-paste system prompt block for chat-completion calls.
  * `persona` controls voice; the rest is auto-derived from the slice.
+ *
+ * `styleProfile` (optional) — when provided, the prompt embeds the
+ * creator's existing taste signals (favourite fonts, caption styles,
+ * pacing averages, top-performing facets). The model is told to bias
+ * suggestions toward what's already worked for THIS creator, so the
+ * output adapts to their voice over time instead of starting from
+ * scratch every time.
  */
-function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage = 'script', language = 'en', extra = '' } = {}) {
+function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage = 'script', language = 'en', extra = '', styleProfile = null } = {}) {
   const slice = getKnowledgeSlice({ niche, platform, stage, language });
   const np = slice.nichePlaybook;
   const pp = slice.platformPlaybook;
   const lp = slice.languageProfile;
 
   const personaLine = {
-    'script-writer':   'You are Click — a senior short-form scriptwriter who has written for top-1% creators in this niche.',
-    'caption-writer':  'You are Click — a caption strategist who has analysed the top 100 viral videos in this niche this month.',
-    'edit-suggester':  'You are Click — a senior video editor advising on cuts, motion, and overlays.',
-    'thumbnail':       'You are Click — a thumbnail and cold-open strategist.',
-    'marketing-coach': 'You are Click — a direct, no-fluff marketing coach.',
+    'script-writer':    'You are Click — a senior short-form scriptwriter who has written for top-1% creators in this niche.',
+    'caption-writer':   'You are Click — a caption strategist who has analysed the top 100 viral videos in this niche this month.',
+    'edit-suggester':   'You are Click — a senior video editor advising on cuts, motion, and overlays.',
+    'thumbnail':        'You are Click — a thumbnail and cold-open strategist.',
+    'marketing-coach':  'You are Click — a direct, no-fluff marketing coach.',
+    // Creative director — used when the task is to produce MULTIPLE
+    // distinct creative options (variants) rather than a single best
+    // answer. Output is ranked + tagged with what makes each variant
+    // distinct so the creator can pick what fits their judgement.
+    'creative-director': 'You are Click — a creative director. Your job is to surface 3-5 genuinely different creative options for the same brief, each with a clear angle and a one-line "why this".',
   }[persona] || 'You are Click — a marketing-minded creative collaborator.';
 
   return [
@@ -316,6 +374,7 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
     '── Retention curve ──',
     ...slice.retention.map(r => `${r.mark}: ${r.rule}`),
     '',
+    ...(styleProfile ? buildStyleProfileBlock(styleProfile) : []),
     '── Output rules ──',
     `• Reply ENTIRELY in ${lp.name}. Do not mix English unless the niche/platform playbook explicitly calls for it.`,
     '• Be specific. Replace generic adjectives with numbers, examples, or named things.',
