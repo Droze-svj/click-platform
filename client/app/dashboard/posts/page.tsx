@@ -147,8 +147,8 @@ export default function SignalDiffusionArchivePage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">STRATUM_UPLINK_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Diffusion</h1>
-                 <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">High-fidelity archival node for persistent mission artifacts and content trajectories.</p>
+                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Posts</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium mt-4 max-w-2xl leading-relaxed">Every clip, draft and scheduled post in one place. Filter by platform, search by topic, and re-edit or republish in two clicks.</p>
               </div>
            </div>
 

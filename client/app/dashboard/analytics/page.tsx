@@ -91,8 +91,8 @@ export default function SovereignAnalyticsMatrix() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">RESONANCE_MONITOR_ACTIVE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Analytics Matrix</h1>
-                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and global substrate monitoring.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Analytics</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">See how every post performed across platforms — retention curves, viral lift, top-performing hooks. Click learns what works for your audience and bakes it into the next edit automatically.</p>
               </div>
            </div>
 
