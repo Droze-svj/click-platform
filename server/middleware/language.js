@@ -16,6 +16,11 @@
 const SUPPORTED = [
   'en', 'es', 'fr', 'de', 'pt', 'it',
   'ja', 'ko', 'zh-Hans', 'ar', 'hi', 'ru',
+  // 2026 expansion — keep in sync with client/i18n/config.ts.
+  // Adding a language here without a matching entry in AI_LABELS is a
+  // quiet bug: the route falls through to English even when the dropdown
+  // says Turkish.
+  'tr', 'id', 'vi', 'pl', 'nl', 'th',
 ];
 const DEFAULT = 'en';
 
@@ -32,6 +37,12 @@ const AI_LABELS = {
   'ar':      'Modern Standard Arabic',
   'hi':      'Hindi (use Latin transliteration for hashtags only)',
   'ru':      'Russian',
+  'tr':      'Turkish (Istanbul register, casual creator voice)',
+  'id':      'Bahasa Indonesia (everyday spoken register, English loanwords for tech)',
+  'vi':      'Vietnamese (Northern register, preserve diacritics, English loanwords for tech)',
+  'pl':      'Polish (informal "ty" register, respect grammatical case)',
+  'nl':      'Dutch (Netherlands register, "je" form for casual creator voice)',
+  'th':      'Thai (informal register, preserve tonal accuracy in word choice)',
 };
 
 function normalize(raw) {

@@ -493,9 +493,18 @@ async function processVideo(contentId, videoPath, user) {
     );
     content.originalFile.duration = duration;
 
-    // Generate transcript (if available) or use AI to extract key moments
-    const transcript = await generateTranscript(videoPath);
+    // Generate transcript (if available) or use AI to extract key moments.
+    // Pass req.language (set by language middleware from X-Click-Language /
+    // ?lang= / Accept-Language) so Whisper transcribes Spanish videos as
+    // Spanish, not auto-detected English. 'auto' lets Whisper detect when
+    // the user hasn't picked a language explicitly.
+    const transcriptLanguage = req.language || 'auto';
+    const transcript = await generateTranscript(videoPath, transcriptLanguage);
     content.transcript = transcript;
+    // Persist the language we transcribed in so downstream AI services
+    // (captions, hooks, repurpose, reformat) generate matching-language
+    // output via marketingKnowledge.buildSystemPrompt({language}).
+    content.language = transcriptLanguage === 'auto' ? 'en' : transcriptLanguage;
 
     // Detect highlights
     const highlights = await detectHighlights(transcript, duration);
@@ -719,20 +728,24 @@ function getVideoDuration(videoPath) {
   });
 }
 
-async function generateTranscript(videoPath) {
+async function generateTranscript(videoPath, language = 'auto') {
   try {
-    // Try OpenAI Whisper first
-    const transcript = await generateTranscriptFromVideo(videoPath);
+    // Try OpenAI Whisper first. whisperService respects 'auto' (lets Whisper
+    // detect) vs an explicit ISO code (en/es/fr/de/...) which constrains
+    // transcription to that language. Without this, Spanish videos got
+    // transcribed via auto-detect — usually fine but inconsistent vs the
+    // creator's chosen UI language.
+    const transcript = await generateTranscriptFromVideo(videoPath, { language });
     if (transcript) {
       return transcript;
     }
 
     // Fallback if Whisper fails or not configured
     logger.warn('Using fallback transcript generation');
-    return "Transcript generation requires OpenAI API key. Please configure OPENAI_API_KEY to enable automatic transcription.";
+    return 'Transcript generation requires OpenAI API key. Please configure OPENAI_API_KEY to enable automatic transcription.';
   } catch (error) {
-    logger.error('Transcript generation error', { error: error.message, videoPath });
-    return "Transcript generation failed. Please try again or upload a video with clear audio.";
+    logger.error('Transcript generation error', { error: error.message, videoPath, language });
+    return 'Transcript generation failed. Please try again or upload a video with clear audio.';
   }
 }
 

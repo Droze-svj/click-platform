@@ -14,6 +14,12 @@ export const supportedLanguages = [
   'ar',     // العربية (RTL)
   'hi',     // हिन्दी
   'ru',     // Русский
+  'tr',     // Türkçe — high creator density, growing TikTok market
+  'id',     // Bahasa Indonesia — top 5 social-video market by volume
+  'vi',     // Tiếng Việt — fast-growing creator economy
+  'pl',     // Polski — strong YouTube + TikTok adoption in CEE
+  'nl',     // Nederlands — high revenue-per-creator
+  'th',     // ไทย — top short-form market in SEA
 ] as const;
 
 export type SupportedLanguage = typeof supportedLanguages[number];
@@ -33,6 +39,12 @@ export const languageNames: Record<SupportedLanguage, string> = {
   'ar':      'العربية',
   'hi':      'हिन्दी',
   'ru':      'Русский',
+  'tr':      'Türkçe',
+  'id':      'Bahasa Indonesia',
+  'vi':      'Tiếng Việt',
+  'pl':      'Polski',
+  'nl':      'Nederlands',
+  'th':      'ไทย',
 };
 
 export const languageFlags: Record<SupportedLanguage, string> = {
@@ -48,6 +60,12 @@ export const languageFlags: Record<SupportedLanguage, string> = {
   'ar':      '🇸🇦',
   'hi':      '🇮🇳',
   'ru':      '🇷🇺',
+  'tr':      '🇹🇷',
+  'id':      '🇮🇩',
+  'vi':      '🇻🇳',
+  'pl':      '🇵🇱',
+  'nl':      '🇳🇱',
+  'th':      '🇹🇭',
 };
 
 /** Locales rendered right-to-left. Used by the layout to set `dir="rtl"`. */
@@ -67,6 +85,12 @@ export const aiLanguageLabel: Record<SupportedLanguage, string> = {
   'ar':      'Modern Standard Arabic',
   'hi':      'Hindi (use Latin transliteration for hashtags)',
   'ru':      'Russian',
+  'tr':      'Turkish (Istanbul register, casual creator voice)',
+  'id':      'Bahasa Indonesia (use everyday spoken register, mix in English loanwords for tech terms)',
+  'vi':      'Vietnamese (Northern register; preserve diacritics; English loanwords OK for tech)',
+  'pl':      'Polish (informal "ty" register for creator voice; respect grammatical case)',
+  'nl':      'Dutch (Netherlands register; "je" form for casual creator voice)',
+  'th':      'Thai (informal register; preserve tonal accuracy in word choice)',
 };
 
 /** Map a browser Accept-Language tag to one of our supported codes. */

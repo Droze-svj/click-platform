@@ -37,7 +37,12 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
 
     // 1. Transcription (High Accuracy)
     updateProgress(userId, contentId, 'transcribing', 10, 'Extracting transcript with AI...');
-    const transcriptData = await generateCaptionsForContent(contentId, videoPath, { language: 'en' });
+    // Use the language we transcribed in (set on Content at upload from
+    // req.language). Falls back to 'en' for old content predating the
+    // language field. Without this, every caption batch ran in English
+    // even when the video was Spanish/French/etc.
+    const contentLanguage = content.language || content.metadata?.language || 'en';
+    const transcriptData = await generateCaptionsForContent(contentId, videoPath, { language: contentLanguage });
     const transcript = transcriptData.transcript;
     
     // 2. Viral Hook Analysis (niche-aware, multi-LLM via aiRouter)
@@ -48,7 +53,7 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
       {
         niche: user.niche || content.metadata?.niche || 'business',
         platform: targetPlatforms[0] || 'tiktok',
-        language: content.metadata?.language || 'en',
+        language: content.language || content.metadata?.language || 'en',
       },
     );
     
