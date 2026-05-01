@@ -19,7 +19,7 @@ export interface WorkflowProject {
 
 export interface WorkflowState {
   niche: string | null
-  platform: 'tiktok' | 'instagram' | 'youtube-shorts' | 'youtube' | 'twitter' | 'linkedin' | null
+  platform: 'tiktok' | 'instagram' | 'youtube-shorts' | 'youtube' | 'twitter' | 'linkedin' | 'facebook' | null
   stage: WorkflowStage
   project: WorkflowProject | null
   /** Per-stage completion. Allows the rail to show check marks. */

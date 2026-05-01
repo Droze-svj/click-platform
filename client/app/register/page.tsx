@@ -10,6 +10,7 @@ import LanguageSwitcher from '../../components/LanguageSwitcher'
 import FormField from '../../components/FormField'
 import { Zap, Fingerprint, UserPlus, ChevronRight, Github, Chrome } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ClickLogo from '../../components/ClickLogo'
 
 interface PasswordValidation {
   isValid: boolean
@@ -398,11 +399,11 @@ export default function Register() {
               className="mx-auto w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/10 border border-white/10 flex items-center justify-center shadow-2xl relative"
             >
               <div className="absolute inset-0 bg-fuchsia-500/20 blur-xl rounded-full" />
-              <UserPlus className="w-8 h-8 text-fuchsia-400 relative z-10" />
+              <ClickLogo size={44} className="relative z-10" />
             </motion.div>
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-[9px] font-black uppercase tracking-[0.3em] italic text-fuchsia-400">
-                <Zap className="w-3 h-3 animate-pulse" />
+                <ClickLogo size={12} />
                 Initialize Profile
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">

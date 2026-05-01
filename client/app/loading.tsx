@@ -1,7 +1,7 @@
 'use client'
 
+import ClickLogo from '../components/ClickLogo'
 import { motion } from 'framer-motion'
-import { Zap } from 'lucide-react'
 
 export default function Loading() {
   return (
@@ -27,7 +27,7 @@ export default function Loading() {
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className="absolute inset-0 rounded-3xl bg-indigo-500/10 blur-xl"
           />
-          <Zap className="w-10 h-10 text-white z-10" />
+          <ClickLogo size={40} className="z-10" />
         </motion.div>
 
         {/* Loading Text */}

@@ -291,6 +291,10 @@ async function getVideoAnalyticsInsights(userId) {
   }
 }
 
+module.exports = {
+  getEngagementHeatmap,
+  getWatchTimeAnalytics,
+  getAudienceInsights,
   compareVideoPerformance,
   getVideoAnalyticsInsights,
 };

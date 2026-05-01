@@ -9,6 +9,7 @@ import LanguageSwitcher from '../../components/LanguageSwitcher'
 import { useTranslation } from '../../hooks/useTranslation'
 import { Zap, Fingerprint, Lock, ChevronRight, Github, Chrome } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ClickLogo from '../../components/ClickLogo'
 
 export default function Login() {
   const { t } = useTranslation()
@@ -182,11 +183,11 @@ export default function Login() {
               className="mx-auto w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/10 border border-white/10 flex items-center justify-center shadow-2xl relative"
             >
               <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full" />
-              <Lock className="w-8 h-8 text-indigo-400 relative z-10" />
+              <ClickLogo size={44} className="relative z-10" />
             </motion.div>
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-[0.3em] italic text-indigo-400">
-                <Zap className="w-3 h-3 animate-pulse" />
+                <ClickLogo size={12} />
                 Authentication Required
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">
