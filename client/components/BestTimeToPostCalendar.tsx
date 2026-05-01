@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Clock, Calendar as CalendarIcon, TrendingUp } from 'lucide-react'
 import axios from 'axios'
 
@@ -19,15 +19,11 @@ export default function BestTimeToPostCalendar() {
   const [loading, setLoading] = useState(true)
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
 
-  useEffect(() => {
-    loadBestTimes()
-  }, [selectedPlatform])
-
-  const loadBestTimes = async () => {
+  const loadBestTimes = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await axios.get(
         `${API_URL}/analytics/best-times?platform=${selectedPlatform}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -41,7 +37,11 @@ export default function BestTimeToPostCalendar() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedPlatform])
+
+  useEffect(() => {
+    loadBestTimes()
+  }, [loadBestTimes])
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const hours = Array.from({ length: 24 }, (_, i) => i)

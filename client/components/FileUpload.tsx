@@ -132,7 +132,7 @@ export default function FileUpload({
       }
       xhr.send(formData)
     })
-  }, [onProgress, user?.id])
+  }, [onProgress, user])
 
   // Cancel upload function
   const cancelUpload = useCallback(() => {

@@ -503,7 +503,7 @@ export default function AssetLibrary({
                     </div>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-800 relative overflow-hidden group/video">
-                      <img src={asset.thumbnail} className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity group-hover/video:opacity-40" />
+                      <img src={asset.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity group-hover/video:opacity-40" />
                       <div className="absolute inset-0 bg-black/20" />
                       <Video className="w-16 h-16 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] relative z-10" />
                       {asset.duration && (
@@ -678,7 +678,7 @@ export default function AssetLibrary({
                 <div className="aspect-video bg-black/50 rounded-[3rem] border border-white/5 flex items-center justify-center relative overflow-hidden shadow-inner">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_70%)]" />
                   {previewAsset.type === 'image' ? (
-                    <img src={previewAsset.url} className="max-h-full object-contain relative z-10" />
+                    <img src={previewAsset.url} alt={previewAsset.title || 'Asset preview'} className="max-h-full object-contain relative z-10" />
                   ) : (
                     <div className="text-white relative z-10 flex flex-col items-center gap-6">
                       <Play className="w-20 h-20 opacity-20" />

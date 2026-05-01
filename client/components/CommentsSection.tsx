@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
@@ -37,11 +37,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadComments()
-  }, [entityId, entityType])
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const params = new URLSearchParams({
@@ -61,7 +57,11 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
     } finally {
       setLoading(false)
     }
-  }
+  }, [entityId, entityType, teamId, showToast])
+
+  useEffect(() => {
+    loadComments()
+  }, [loadComments])
 
   const handleAddComment = async () => {
     if (!newComment.trim()) {

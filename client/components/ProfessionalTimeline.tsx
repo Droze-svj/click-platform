@@ -425,7 +425,7 @@ export default function ProfessionalTimeline({
         }
       }
     })
-  }, [activeTool, dragStartX, dragStartTime, pixelsToTime, snapTime, duration, selectedClips, clips, lockedTracks, onClipUpdate, onTimeUpdate])
+  }, [activeTool, dragStartX, dragStartTime, pixelsToTime, snapTime, duration, selectedClips, clips, lockedTracks, onClipUpdate, onTimeUpdate, editMode])
 
   // Handle mouse up
   const handleMouseUp = useCallback(() => {

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   Dna, 
   Sparkles, 
@@ -42,11 +42,7 @@ export const ExpertDNAView: React.FC = () => {
     const [randomness, setRandomness] = useState(0.2)
     const [isMining, setIsMining] = useState(false)
 
-    useEffect(() => {
-        fetchDNA()
-    }, [])
-
-    const fetchDNA = async () => {
+    const fetchDNA = useCallback(async () => {
         setLoading(true)
         try {
             const data = await apiGet(`/phase16_18/dna/mine?randomness=${randomness}`)
@@ -56,7 +52,11 @@ export const ExpertDNAView: React.FC = () => {
         } finally {
             setLoading(false)
         }
-    }
+    }, [randomness])
+
+    useEffect(() => {
+        fetchDNA()
+    }, [fetchDNA])
 
     const mineDNA = async () => {
         setIsMining(true)

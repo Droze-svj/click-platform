@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar, TrendingUp } from 'lucide-react'
 import axios from 'axios'
 
@@ -18,15 +18,11 @@ export default function ContentPerformanceHeatmap() {
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('30d')
 
-  useEffect(() => {
-    loadHeatmapData()
-  }, [selectedPeriod])
-
-  const loadHeatmapData = async () => {
+  const loadHeatmapData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await axios.get(
         `${API_URL}/analytics/heatmap?period=${selectedPeriod}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -40,7 +36,11 @@ export default function ContentPerformanceHeatmap() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedPeriod])
+
+  useEffect(() => {
+    loadHeatmapData()
+  }, [loadHeatmapData])
 
   // Group data by day and hour
   const groupedData = heatmapData.reduce((acc, item) => {

@@ -117,6 +117,9 @@ export function useAuth() {
     return () => {
       mountedRef.current = false
     }
+    // checkAuth is a stable function (closures over module-level globals) and
+    // is intentionally invoked once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const checkAuth = async (retryCount = 0) => {

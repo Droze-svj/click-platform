@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, X, GripVertical, Image, Video, FileText, Music } from 'lucide-react'
+import { Plus, X, GripVertical, Image as ImageIcon, Video, FileText, Music } from 'lucide-react'
 
 interface ContentBlock {
   id: string
@@ -81,7 +81,7 @@ export default function DragDropContentBuilder({
       case 'text':
         return <FileText className="w-4 h-4" />
       case 'image':
-        return <Image className="w-4 h-4" />
+        return <ImageIcon className="w-4 h-4" />
       case 'video':
         return <Video className="w-4 h-4" />
       case 'quote':
@@ -193,7 +193,7 @@ export default function DragDropContentBuilder({
                       className="cursor-pointer flex flex-col items-center gap-2"
                     >
                       {block.type === 'image' ? (
-                        <Image className="w-8 h-8 text-gray-400" />
+                        <ImageIcon className="w-8 h-8 text-gray-400" />
                       ) : (
                         <Video className="w-8 h-8 text-gray-400" />
                       )}

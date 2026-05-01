@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
@@ -61,14 +61,7 @@ export default function ContentPerformanceAnalytics({ contentId }: ContentPerfor
   const [prediction, setPrediction] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (contentId) {
-      loadPerformance()
-      loadPrediction()
-    }
-  }, [contentId])
-
-  const loadPerformance = async () => {
+  const loadPerformance = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(
@@ -85,9 +78,9 @@ export default function ContentPerformanceAnalytics({ contentId }: ContentPerfor
     } finally {
       setLoading(false)
     }
-  }
+  }, [contentId, showToast])
 
-  const loadPrediction = async () => {
+  const loadPrediction = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(
@@ -102,7 +95,14 @@ export default function ContentPerformanceAnalytics({ contentId }: ContentPerfor
     } catch (error) {
       // Silent fail for prediction
     }
-  }
+  }, [contentId])
+
+  useEffect(() => {
+    if (contentId) {
+      loadPerformance()
+      loadPrediction()
+    }
+  }, [contentId, loadPerformance, loadPrediction])
 
   if (loading) {
     return <LoadingSpinner size="sm" text="Loading performance..." />

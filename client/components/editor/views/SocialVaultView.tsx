@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Sparkles,
   Zap,
@@ -47,7 +47,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
   const [loading, setLoading] = useState(true)
   const [activePreviewId, setActivePreviewId] = useState<string | null>(null)
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true)
       const data = await apiGet<{ success?: boolean; accounts?: any }>('/oauth/accounts')
@@ -60,7 +60,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
 
   useEffect(() => {
     fetchAccounts()

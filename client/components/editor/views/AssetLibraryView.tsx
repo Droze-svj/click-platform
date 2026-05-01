@@ -253,7 +253,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
   useEffect(() => {
     if (tab === 'click') loadClickStock(1, false)
     else fetchMyAssets()
-  }, [tab, filter, fetchMyAssets])
+  }, [tab, filter, fetchMyAssets, loadClickStock])
 
   const handleFileUpload = async (file: File, type: 'music' | 'image' | 'broll' | 'sfx') => {
     setUploading(true)

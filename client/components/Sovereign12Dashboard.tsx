@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Globe, Zap, Brain, Activity, 
@@ -50,14 +50,14 @@ const ArbitragePanel = () => {
     const [offers, setOffers] = useState<any[]>([])
     const { showToast } = useToast()
 
-    const loadOffers = async () => {
+    const loadOffers = useCallback(async () => {
         try {
             const res = await apiGet('/phase11/arbitrage/offers')
             if (res.offers) setOffers(res.offers)
         } catch {
             showToast('Failed to load active offers', 'error')
         }
-    }
+    }, [showToast])
 
     const steerFunnel = async (offerId: string) => {
         try {
@@ -68,7 +68,7 @@ const ArbitragePanel = () => {
         }
     }
 
-    useEffect(() => { loadOffers() }, [])
+    useEffect(() => { loadOffers() }, [loadOffers])
 
     return (
         <div className="space-y-12">
@@ -124,16 +124,16 @@ const EncirclementPanel = () => {
     const [network, setNetwork] = useState<any>(null)
     const { showToast } = useToast()
 
-    const loadNetwork = async () => {
+    const loadNetwork = useCallback(async () => {
         try {
             const res = await apiGet('/phase12/s2s/network-health')
             if (res.health !== undefined) setNetwork(res)
         } catch {
             showToast('S2S Network down', 'error')
         }
-    }
+    }, [showToast])
 
-    useEffect(() => { loadNetwork() }, [])
+    useEffect(() => { loadNetwork() }, [loadNetwork])
 
     const stats = [
         { label: 'Lattice Health', value: network ? (network.health * 100).toFixed(1) : '---', unit: '%', color: 'text-purple-400', icon: ShieldCheck },

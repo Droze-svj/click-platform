@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Minus, BarChart3, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react'
 import axios from 'axios'
 
@@ -48,11 +48,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
   const [analytics, setAnalytics] = useState<AdvancedAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [period])
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -69,7 +65,11 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
     } finally {
       setLoading(false)
     }
-  }
+  }, [period])
+
+  useEffect(() => {
+    loadAnalytics()
+  }, [loadAnalytics])
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`

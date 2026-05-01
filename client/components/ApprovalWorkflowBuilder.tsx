@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, Trash2, Save, Settings, Users, Clock, CheckCircle, X } from 'lucide-react'
 import axios from 'axios'
 
@@ -64,14 +64,7 @@ export default function ApprovalWorkflowBuilder({
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState<Array<{ _id: string; name: string; email: string }>>([])
 
-  useEffect(() => {
-    loadUsers()
-    if (workflowId) {
-      loadWorkflow()
-    }
-  }, [workflowId])
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/teams/members`, {
@@ -82,9 +75,9 @@ export default function ApprovalWorkflowBuilder({
     } catch (error) {
       console.error('Error loading users:', error)
     }
-  }
+  }, [])
 
-  const loadWorkflow = async () => {
+  const loadWorkflow = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/approvals/workflows`, {
@@ -98,7 +91,14 @@ export default function ApprovalWorkflowBuilder({
     } catch (error) {
       console.error('Error loading workflow:', error)
     }
-  }
+  }, [workflowId])
+
+  useEffect(() => {
+    loadUsers()
+    if (workflowId) {
+      loadWorkflow()
+    }
+  }, [workflowId, loadUsers, loadWorkflow])
 
   const addStage = () => {
     const newStage: Stage = {

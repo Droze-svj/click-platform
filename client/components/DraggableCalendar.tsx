@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 
@@ -30,11 +30,7 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
   const [draggedPost, setDraggedPost] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
 
-  useEffect(() => {
-    loadPosts()
-  }, [currentDate])
-
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const startDate = new Date(currentDate)
@@ -56,7 +52,11 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentDate, showToast])
+
+  useEffect(() => {
+    loadPosts()
+  }, [loadPosts])
 
   const handleDragStart = (postId: string) => {
     setDraggedPost(postId)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
@@ -50,13 +50,7 @@ export default function TemplateMarketplace() {
   const [rating, setRating] = useState(5)
   const [review, setReview] = useState('')
 
-  useEffect(() => {
-    if (user && token) {
-      loadTemplates()
-    }
-  }, [user, token, filters])
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -76,7 +70,13 @@ export default function TemplateMarketplace() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, showToast])
+
+  useEffect(() => {
+    if (user && token) {
+      loadTemplates()
+    }
+  }, [user, token, filters, loadTemplates])
 
   const handleUseTemplate = async (template: Template) => {
     try {

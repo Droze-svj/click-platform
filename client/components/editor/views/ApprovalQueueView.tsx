@@ -51,7 +51,7 @@ const ApprovalQueueView: React.FC = () => {
   const [showDiff, setShowDiff] = React.useState(false)
   const [detailedApproval, setDetailedApproval] = React.useState<any>(null)
 
-  const fetchApprovals = async () => {
+  const fetchApprovals = React.useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`/api/approvals/my-approvals?status=${filter === 'pending' ? 'pending' : ''}`, {
@@ -68,11 +68,11 @@ const ApprovalQueueView: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
 
   React.useEffect(() => {
     fetchApprovals()
-  }, [filter])
+  }, [fetchApprovals])
 
   const fetchDetailedApproval = async (id: string) => {
     try {
@@ -193,7 +193,7 @@ const ApprovalQueueView: React.FC = () => {
                   >
                     <div className="flex items-center gap-6">
                        <div className="w-16 h-16 rounded-2xl bg-white/5 overflow-hidden relative border border-white/10">
-                          {approval.contentId.thumbnail && <img src={approval.contentId.thumbnail} className="w-full h-full object-cover" />}
+                          {approval.contentId.thumbnail && <img src={approval.contentId.thumbnail} alt="" className="w-full h-full object-cover" />}
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                              <Eye className="w-5 h-5 text-white" />
                           </div>
@@ -254,7 +254,7 @@ const ApprovalQueueView: React.FC = () => {
                   <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10">
                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-4 block">Selected Payload</span>
                      <div className="aspect-video rounded-2xl bg-black border border-white/10 overflow-hidden relative mb-4">
-                        {selectedApproval.contentId.thumbnail && <img src={selectedApproval.contentId.thumbnail} className="w-full h-full object-cover" />}
+                        {selectedApproval.contentId.thumbnail && <img src={selectedApproval.contentId.thumbnail} alt={selectedApproval.contentId.title || ''} className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
                            <span className="text-[10px] font-black text-white tracking-widest uppercase italic">{selectedApproval.contentId.title}</span>
                         </div>

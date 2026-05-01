@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, Globe, Zap, Activity, Cpu, 
@@ -138,7 +138,7 @@ export default function OverlordDashboard() {
   const [verifying, setVerifying] = useState(false)
   const { showToast } = useToast()
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const [fleetRes, manifestRes, ledgerRes, healthRes, clickPulse, clickForecast, clickLedger, clickArbitrage] = await Promise.all([
@@ -155,7 +155,7 @@ export default function OverlordDashboard() {
       if (manifestRes) setManifest(manifestRes)
       if (ledgerRes) setLedger(ledgerRes)
       if (healthRes) setHealthStatus(healthRes)
-      
+
       if (clickPulse && clickForecast && fleetRes) {
         setActiveMetrics({
           convergence: clickPulse?.telemetry?.potency || 0,
@@ -164,7 +164,7 @@ export default function OverlordDashboard() {
           vibePotency: clickPulse?.telemetry?.avgSentiment || 'STABLE'
         })
       }
-      
+
       if (clickLedger) setAuditLog(clickLedger)
       setComplianceStatus({ status: 'SECURE', regionsBlocked: 1 })
       setFleetExpansion({ activeNodes: fleetRes?.nodes?.length || 0, pendingNodes: 1, revenueThreshold: 5000, timeRemaining: '31h' })
@@ -174,13 +174,13 @@ export default function OverlordDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
 
   useEffect(() => {
     fetchData()
     const interval = setInterval(fetchData, 15000)
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchData])
 
   const triggerPulse = async () => {
     try {

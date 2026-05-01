@@ -49,6 +49,10 @@ export default function OnboardingTooltips() {
         setActiveTooltip(uncompleted.id)
       }, 1000)
     }
+    // Run-once on mount: completedTooltips is initialized from localStorage
+    // and only updated by user interaction; we don't want to reshow tooltips
+    // every time it changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const completeTooltip = (tooltipId: string) => {

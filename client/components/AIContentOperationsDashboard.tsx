@@ -150,6 +150,10 @@ export default function AIContentOperationsDashboard() {
       setActiveThought(aiThoughts[Math.floor(Math.random() * aiThoughts.length)])
     }, 8000)
     return () => clearInterval(thoughtInterval)
+    // aiThoughts is a stable list of strings declared in the component body.
+    // Including it would re-run this effect on every render and reset the
+    // rotating thought interval.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const claimDirective = async (directiveId: string) => {
@@ -226,6 +230,7 @@ export default function AIContentOperationsDashboard() {
 
   useEffect(() => {
     loadDashboard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlatform])
 
   const loadDashboard = async () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -70,7 +70,7 @@ export default function AIRecommendations() {
     };
   };
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -116,7 +116,7 @@ export default function AIRecommendations() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [type, platform]);
 
   // Side-effect: show toast/log via centralized error handler.
   // Keeping this out of the request catch avoids any render-phase updates during Fast Refresh / dev overlay.
@@ -127,7 +127,7 @@ export default function AIRecommendations() {
 
   useEffect(() => {
     fetchRecommendations();
-  }, []);
+  }, [fetchRecommendations]);
 
   return (
     // <ErrorBoundary> // Temporarily disabled for build

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
@@ -42,13 +42,7 @@ export default function EnhancedContentSuggestions() {
   const [activeTab, setActiveTab] = useState<'suggestions' | 'gaps' | 'trending' | 'viral'>('suggestions')
   const [predictionContent, setPredictionContent] = useState('')
 
-  useEffect(() => {
-    loadSuggestions()
-    loadGaps()
-    loadTrending()
-  }, [])
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     if (process.env.NODE_ENV === 'development') {
       console.log('🔧 [EnhancedContentSuggestions] Skipping suggestions API call in development mode')
       setLoading(false)
@@ -65,7 +59,14 @@ export default function EnhancedContentSuggestions() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
+
+  useEffect(() => {
+    loadSuggestions()
+    loadGaps()
+    loadTrending()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadSuggestions])
 
   const loadGaps = async () => {
     if (process.env.NODE_ENV === 'development') {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '../contexts/ToastContext'
@@ -117,6 +117,10 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
       clearInterval(thoughtInterval)
       window.removeEventListener('mousemove', handleMouseMove)
     }
+    // aiThoughts is a stable list of strings declared in the component body.
+    // Including it would re-run this effect on every render and reset the
+    // rotating thought interval.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const platforms = [
@@ -200,7 +204,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
     }
   }
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(
@@ -215,13 +219,13 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
     } catch (error) {
       // Not started
     }
-  }
+  }, [contentId])
 
   useEffect(() => {
     if (contentId) {
       loadStatus()
     }
-  }, [contentId])
+  }, [contentId, loadStatus])
 
   const cosmicBg = "relative overflow-hidden selection:bg-indigo-500/30"
 

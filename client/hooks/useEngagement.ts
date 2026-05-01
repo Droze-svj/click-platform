@@ -41,6 +41,10 @@ export function useEngagement() {
     checkForNewAchievements() // Initial check
 
     return () => clearInterval(interval)
+    // achievements is updated inside this effect via setAchievements; the
+    // length read is only used to detect when a new one arrives. Adding the
+    // full array as a dep would re-create the polling interval each tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [achievements.length])
 
   const dismissAchievement = () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
 
@@ -36,11 +36,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
   const [confidence, setConfidence] = useState<AIConfidenceScore | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadConfidence()
-  }, [contentId])
-
-  const loadConfidence = async () => {
+  const loadConfidence = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const res = await axios.get(
@@ -55,7 +51,11 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
     } finally {
       setLoading(false)
     }
-  }
+  }, [contentId])
+
+  useEffect(() => {
+    loadConfidence()
+  }, [loadConfidence])
 
   const getConfidenceColor = (score: number) => {
     if (score >= 80) return 'text-green-600'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Award, Target, BarChart3, Sparkles, AlertCircle, CheckCircle } from 'lucide-react'
 import { apiGet } from '../lib/api'
 
@@ -66,11 +66,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'benchmark' | 'comparison' | 'prediction'>('benchmark')
 
-  useEffect(() => {
-    loadData()
-  }, [contentId, activeTab])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       if (activeTab === 'benchmark') {
@@ -100,7 +96,11 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
     } finally {
       setLoading(false)
     }
-  }
+  }, [contentId, activeTab])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`

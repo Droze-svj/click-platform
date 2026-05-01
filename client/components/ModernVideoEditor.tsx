@@ -408,7 +408,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     } finally {
       setIsMakingViral(false)
     }
-  }, [videoId, isMakingViral, contentNiche, showToast])
+  }, [videoId, isMakingViral, contentNiche, showToast, setActiveCategory, targetLanguage])
 
   // Wired ahead of declaration so the dispatcher passes the freshest
   // segments/overlays into applySuggestion. Defined right after

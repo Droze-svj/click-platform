@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, Users, Heart, Eye, Share2, ArrowUp, ArrowDown, Target } from 'lucide-react'
 import axios from 'axios'
 
@@ -47,15 +47,11 @@ export default function EngagementGrowthDashboard() {
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d')
 
-  useEffect(() => {
-    loadGrowthData()
-  }, [period])
-
-  const loadGrowthData = async () => {
+  const loadGrowthData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await axios.get(
         `${API_URL}/analytics/growth?period=${period}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -70,7 +66,11 @@ export default function EngagementGrowthDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [period])
+
+  useEffect(() => {
+    loadGrowthData()
+  }, [loadGrowthData])
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`

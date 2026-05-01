@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useDebounce } from '../hooks/useDebounce'
 import axios from 'axios'
 
@@ -19,26 +19,7 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
   const debouncedQuery = useDebounce(query, 300)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (debouncedQuery.length >= 2) {
-      loadSuggestions(debouncedQuery)
-    } else {
-      setSuggestions([])
-    }
-  }, [debouncedQuery, type])
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const loadSuggestions = async (searchTerm: string) => {
+  const loadSuggestions = useCallback(async (searchTerm: string) => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/search/suggestions?q=${encodeURIComponent(searchTerm)}&type=${type}`, {
@@ -50,7 +31,26 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
     } catch (error) {
       console.error('Failed to load suggestions', error)
     }
-  }
+  }, [type])
+
+  useEffect(() => {
+    if (debouncedQuery.length >= 2) {
+      loadSuggestions(debouncedQuery)
+    } else {
+      setSuggestions([])
+    }
+  }, [debouncedQuery, type, loadSuggestions])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSearch = (searchQuery: string = query) => {
     onSearch(searchQuery)

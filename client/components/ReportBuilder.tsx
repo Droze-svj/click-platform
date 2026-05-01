@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
 
@@ -52,6 +52,21 @@ export default function ReportBuilder({
     { type: 'audience_growth', label: 'Audience Growth', format: 'percentage' }
   ]
 
+  const loadTemplate = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await axios.get(
+        `${API_URL}/reports/templates/${templateId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (res.data.success) {
+        setTemplate(res.data.data)
+      }
+    } catch (error) {
+      console.error('Error loading template', error)
+    }
+  }, [templateId])
+
   useEffect(() => {
     if (templateId) {
       loadTemplate()
@@ -65,22 +80,7 @@ export default function ReportBuilder({
         layout: {}
       })
     }
-  }, [templateId])
-
-  const loadTemplate = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(
-        `${API_URL}/reports/templates/${templateId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (res.data.success) {
-        setTemplate(res.data.data)
-      }
-    } catch (error) {
-      console.error('Error loading template', error)
-    }
-  }
+  }, [templateId, loadTemplate])
 
   const handleDragStart = (metricType: string) => {
     setDraggedMetric(metricType)

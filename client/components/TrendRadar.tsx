@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Radio, Zap, Activity, Target, ChevronDown, ChevronUp, Sparkles, TrendingUp, Layers } from 'lucide-react'
 
@@ -53,7 +53,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
   const [loading, setLoading] = useState(true)
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null)
 
-  const loadTrendData = async () => {
+  const loadTrendData = useCallback(async () => {
     setLoading(true)
     try {
       const [alertRes, formatRes] = await Promise.all([
@@ -68,11 +68,11 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
     } finally {
       setLoading(false)
     }
-  }
+  }, [niche, platforms, activePlatform])
 
   useEffect(() => {
     loadTrendData()
-  }, [niche, activePlatform])
+  }, [loadTrendData])
 
   return (
     <motion.div 

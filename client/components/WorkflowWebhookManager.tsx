@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Webhook, Plus, Trash2, TestTube, CheckCircle2, XCircle } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 
@@ -29,11 +29,7 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
   })
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadWebhooks()
-  }, [workflowId])
-
-  const loadWebhooks = async () => {
+  const loadWebhooks = useCallback(async () => {
     setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -50,7 +46,11 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [workflowId])
+
+  useEffect(() => {
+    loadWebhooks()
+  }, [loadWebhooks])
 
   const createWebhook = async () => {
     if (!newWebhook.url) {

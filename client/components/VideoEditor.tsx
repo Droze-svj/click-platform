@@ -73,6 +73,9 @@ export default function VideoEditor({ videoId, videoUrl, videoPath, onExport }: 
       video.removeEventListener('play', updatePlaying)
       video.removeEventListener('pause', updatePlaying)
     }
+    // trimEnd is initialized once from video duration; depending on it would
+    // re-attach listeners on every change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Timeline interactions

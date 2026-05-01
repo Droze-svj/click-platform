@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Eye, Heart, MessageCircle, Share2, BarChart3 } from 'lucide-react'
 
 interface ContentInsightsProps {
@@ -25,11 +25,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
   const [insights, setInsights] = useState<Insights | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    loadInsights()
-  }, [contentId])
-
-  const loadInsights = async () => {
+  const loadInsights = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/analytics/content-performance/${contentId}`, {
@@ -45,7 +41,11 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [contentId])
+
+  useEffect(() => {
+    loadInsights()
+  }, [loadInsights])
 
   if (isLoading) {
     return (

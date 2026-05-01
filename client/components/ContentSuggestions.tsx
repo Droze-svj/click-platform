@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { apiGet } from '../lib/api'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../contexts/ToastContext'
@@ -22,11 +22,7 @@ export default function ContentSuggestions() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'ideas' | 'gaps' | 'trending'>('ideas')
 
-  useEffect(() => {
-    loadSuggestions()
-  }, [])
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     setLoading(true)
     try {
       const [ideasRes, gapsRes, trendingRes] = await Promise.all([
@@ -55,7 +51,11 @@ export default function ContentSuggestions() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
+
+  useEffect(() => {
+    loadSuggestions()
+  }, [loadSuggestions])
 
   const handleUseIdea = (idea: ContentIdea) => {
     // Navigate to content generator with pre-filled data

@@ -529,6 +529,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       },
     ])
     showToast(`${kind === 'rect' ? 'Rectangle' : kind === 'circle' ? 'Circle' : 'Line'} added`, 'success')
+    // Snapshots are intentional point-in-time captures; including overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTime, duration, setShapeOverlays, showToast])
 
   const addShapePreset = useCallback((preset: typeof SHAPE_PRESETS[0]) => {
@@ -618,6 +620,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       setRecentMotionTemplateIds(next)
     } catch { /* ignore */ }
     showToast(`Added "${template.name}" at ${baseStart.toFixed(1)}s`, 'success')
+    // Snapshots are intentional point-in-time captures; including overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTime, templateLayout, motionGraphicDuration, setTextOverlays, setShapeOverlays, setOpenSections, showToast])
 
   const [imageUrlInput, setImageUrlInput] = useState('')
@@ -644,6 +648,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     ])
     setImageUrlInput('')
     showToast('Image overlay added', 'success')
+    // Snapshots are intentional point-in-time captures; including overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageUrlInput, currentTime, duration, setImageOverlays, showToast])
 
   const updateTextOverlay = useCallback((id: string, updates: Partial<TextOverlay>) => {
@@ -932,6 +938,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       try { localStorage.setItem(MANUAL_EDIT_STORAGE_KEYS.lastCustomText, text) } catch { /* ignore */ }
       setLastCustomText(text)
     }
+    // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getTextStartEnd, setTextOverlays, showToast, templateLayout, videoFilters, textOverlays, pushSnapshot])
 
   /** One-click creativity packs: combine text + motion + gradient for common workflows */
@@ -967,6 +975,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
       showToast('Trending + Save pack applied', 'success')
     }
     setOpenSections((prev) => ({ ...prev, currentOverlays: true }))
+    // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateLayout, videoFilters, textOverlays, pushSnapshot, handleAddOverlay, applyMotionGraphicTemplate, addGradientOverlay, setGradientOverlays, showToast])
 
   const saveMyStyle = useCallback(() => {
@@ -1040,12 +1050,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     setTemplateLayout?.(bundle.layout)
     setVideoFilters((prev: VideoFilter) => ({ ...prev, ...bundle.filter }))
     showToast(`${bundle.label} — ${bundle.desc}`, 'success')
+    // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateLayout, videoFilters, textOverlays, pushSnapshot, setTemplateLayout, setVideoFilters, showToast])
 
   const resetFilters = useCallback(() => {
     pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
     setVideoFilters({ ...RESET_FILTER })
     showToast('Filters reset to default', 'info')
+    // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateLayout, videoFilters, textOverlays, pushSnapshot, setVideoFilters, showToast])
 
   const saveStyleInputRef = useRef<HTMLInputElement>(null)
@@ -1083,6 +1097,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     setVideoFilters((prev: VideoFilter) => ({ ...prev, ...(bundle.filter as Partial<VideoFilter>) }))
     pushRecentStyle(bundle.id)
     showToast(`${bundle.label} — ${bundle.desc}`, 'success')
+    // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateLayout, videoFilters, textOverlays, pushSnapshot, setTemplateLayout, pushRecentStyle, showToast])
 
   const layoutLabel = TEMPLATE_LAYOUTS.find((t) => t.id === templateLayout)?.label ?? 'Auto'
@@ -1194,6 +1210,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
+    // EDIT_TABS is a static module-level constant; including it is unnecessary
+    // and the linter still flags via React.useEffect alias.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Global search: routes to the right tab
@@ -1218,6 +1237,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         hits.push({ label: `Text: ${p.label}`, tab: 'text', action: () => { handleAddOverlay(p); setGlobalSearch('') } })
     })
     return hits.slice(0, 8)
+    // The action callbacks (applyFilter, applyStyleBundleOneClick, etc.) are
+    // declared in the same component body and recompute every render; adding
+    // them would re-run this memo every render, defeating its purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalSearch])
 
   const applyFilter = (p: typeof FILTER_PRESETS[number]) => {

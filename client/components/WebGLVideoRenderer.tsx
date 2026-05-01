@@ -363,6 +363,11 @@ export default function WebGLVideoRenderer({
 
     setIsInitialized(true)
     return true
+    // Shader sources are static template strings declared in the component
+    // body. They never change between renders, so adding them to deps would
+    // be a no-op except for noise; keeping deps empty preserves init-once
+    // semantics.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Create shader helper

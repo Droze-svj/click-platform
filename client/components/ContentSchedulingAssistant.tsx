@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Clock, TrendingUp, Sparkles, CheckCircle2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -26,18 +26,12 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    if (contentId || content) {
-      loadOptimalTimes()
-    }
-  }, [contentId, content])
-
-  const loadOptimalTimes = async () => {
+  const loadOptimalTimes = useCallback(async () => {
     setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
       const platform = content?.platform || 'all'
-      
+
       const response = await fetch(`/api/social/optimal-times?platform=${platform}`, {
         credentials: 'include',
       })
@@ -51,7 +45,13 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [content?.platform])
+
+  useEffect(() => {
+    if (contentId || content) {
+      loadOptimalTimes()
+    }
+  }, [contentId, content, loadOptimalTimes])
 
   const handleSchedule = (time: OptimalTime) => {
     if (contentId) {

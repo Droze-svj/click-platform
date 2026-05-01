@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TrendingUp, TrendingDown, Award, Target, BarChart3, CheckCircle, AlertCircle } from 'lucide-react'
 import axios from 'axios'
 
@@ -28,11 +28,7 @@ export default function UserPerformanceBenchmark({ period = 30 }: { period?: num
   const [benchmark, setBenchmark] = useState<UserBenchmark | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadBenchmark()
-  }, [period])
-
-  const loadBenchmark = async () => {
+  const loadBenchmark = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -49,7 +45,11 @@ export default function UserPerformanceBenchmark({ period = 30 }: { period?: num
     } finally {
       setLoading(false)
     }
-  }
+  }, [period])
+
+  useEffect(() => {
+    loadBenchmark()
+  }, [loadBenchmark])
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
