@@ -1,5 +1,6 @@
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
+const { retimeTranslatedCues } = require('../utils/subtitleUtils');
 
 class GlobalTranslationService {
   constructor() {
@@ -48,11 +49,22 @@ class GlobalTranslationService {
   }
 
   /**
-   * Translate segments (captions) while preserving timestamps
+   * Translate segments (captions) and re-time them so caption timing
+   * matches the new text length.
+   *
+   * The previous version preserved original `start`/`end` exactly,
+   * which produced over- or under-flowing captions when the target
+   * language was significantly longer or shorter than the source
+   * (Spanish runs +25%, German +30%, Japanese -50% by character count).
+   * Now we run the translated cues through `retimeTranslatedCues`,
+   * which redistributes the original total span proportionally to the
+   * NEW character count of each cue. The caption block as a whole stays
+   * anchored to the same start and end so it doesn't drift relative to
+   * the audio — only the within-block boundaries shift.
    */
   async translateSegments(segments, lang) {
     if (!segments || segments.length === 0) return [];
-    
+
     // To minimize API calls, we batch segments
     const batchSize = 10;
     const translatedSegments = [];
@@ -60,22 +72,22 @@ class GlobalTranslationService {
     for (let i = 0; i < segments.length; i += batchSize) {
       const batch = segments.slice(i, i + batchSize);
       const textToTranslate = batch.map((s, idx) => `[[${idx}]] ${s.text}`).join('\n');
-      
-      const prompt = `Translate these caption segments into ${this.getLanguageName(lang)}. 
+
+      const prompt = `Translate these caption segments into ${this.getLanguageName(lang)}.
       Keep the format [[number]] and only translate the text after it.
-      
+
       Segments:
       ${textToTranslate}`;
 
       try {
         const rawRes = await geminiGenerate(prompt, { temperature: 0.2 });
         const translations = this.parseBatchResponse(rawRes, batch.length);
-        
+
         batch.forEach((seg, idx) => {
           translatedSegments.push({
             ...seg,
             text: translations[idx] || seg.text,
-            language: lang
+            language: lang,
           });
         });
       } catch (err) {
@@ -84,7 +96,26 @@ class GlobalTranslationService {
       }
     }
 
-    return translatedSegments;
+    // Re-time across the full set so over-runs / under-runs caused by
+    // language length differences don't drift past the original audio.
+    // The retimer treats the first cue's start + last cue's end as the
+    // anchor — only the within-block boundaries get redistributed.
+    const cuesForRetime = translatedSegments.map(s => ({
+      start: typeof s.start === 'number' ? s.start : (s.startTime ?? 0),
+      end: typeof s.end === 'number' ? s.end : (s.endTime ?? 0),
+      text: s.text,
+    }));
+    const retimed = retimeTranslatedCues(cuesForRetime);
+    return translatedSegments.map((seg, idx) => {
+      const r = retimed[idx];
+      if (!r) return seg;
+      // Write to whichever timing field shape the original cue used so
+      // we don't accidentally invalidate a downstream consumer.
+      const out = { ...seg, text: r.text };
+      if ('startTime' in seg) { out.startTime = r.start; out.endTime = r.end; }
+      if ('start' in seg) { out.start = r.start; out.end = r.end; }
+      return out;
+    });
   }
 
   parseBatchResponse(raw, expectedSize) {

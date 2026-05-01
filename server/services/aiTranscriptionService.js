@@ -22,9 +22,22 @@ function isTranscriptionConfigured() {
 }
 
 /**
- * Generate Transcription for a video file
+ * Generate Transcription for a video file.
+ *
+ * @param {string} userId
+ * @param {string} videoId
+ * @param {string} videoPath
+ * @param {object} [opts]
+ * @param {string} [opts.language='auto']  — ISO 639-1 code or 'auto'
+ *   to let Whisper detect. 'auto' is the historical behavior; passing
+ *   'es' / 'fr' etc. constrains transcription to that language so a
+ *   Spanish video doesn't come back partially in English when the
+ *   audio is unclear or has English loanwords.
+ * @param {string} [opts.prompt]  — Whisper vocab-priming hint; useful
+ *   for niche jargon ("Bitcoin, halving, mempool") so Whisper biases
+ *   uncertain words toward the creator's domain.
  */
-async function transcribeVideo(userId, videoId, videoPath) {
+async function transcribeVideo(userId, videoId, videoPath, opts = {}) {
   try {
     const client = getOpenAIClient();
     if (!client) {
@@ -37,14 +50,21 @@ async function transcribeVideo(userId, videoId, videoPath) {
 
     if (!fs.existsSync(fullPath)) throw new Error('Video file not found for transcription: ' + fullPath);
 
-    logger.info('Starting transcription', { videoId, userId });
+    const language = opts.language || 'auto';
+    logger.info('Starting transcription', { videoId, userId, language, hasPrompt: !!opts.prompt });
 
-    const transcription = await client.audio.transcriptions.create({
+    const params = {
       file: fs.createReadStream(fullPath),
       model: 'whisper-1',
       response_format: 'verbose_json',
-      timestamp_granularities: ['word']
-    });
+      timestamp_granularities: ['word'],
+    };
+    // Whisper auto-detects when `language` is omitted; only attach an
+    // explicit code when the caller picked one.
+    if (language && language !== 'auto') params.language = language;
+    if (opts.prompt) params.prompt = opts.prompt;
+
+    const transcription = await client.audio.transcriptions.create(params);
 
     // Task 3.3 Semantic analysis mock
     // In a true environment, we'd pass `transcription.text` to an LLM or use audio loudness metrics
@@ -76,7 +96,11 @@ async function transcribeVideo(userId, videoId, videoPath) {
     return {
       success: true,
       text: transcription.text,
-      words: enrichedWords
+      words: enrichedWords,
+      // Whisper returns `language` in verbose_json — surface it so the
+      // caller can persist `content.language` even when the user didn't
+      // pre-select one (e.g. uploads where opts.language was 'auto').
+      language: transcription.language || language || 'en',
     };
   } catch (error) {
     logger.error('Transcription error', { error: error.message, userId });

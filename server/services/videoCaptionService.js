@@ -4,6 +4,12 @@ const OpenAI = require('openai');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
+const {
+  smartSentenceSplit,
+  distributeSentencesByCharCount,
+  stripFillers,
+  dedupeAdjacentCues,
+} = require('../utils/subtitleUtils');
 
 // Initialize OpenAI client
 let openai = null;
@@ -283,7 +289,7 @@ async function translateCaptions(text, targetLanguage) {
  * Includes: Object-Aware Positioning, Emotion-Sync, and Auto-Highlighting.
  */
 async function generateAutoCaptions(videoId, options = {}) {
-  const { transcript, videoPath } = options;
+  const { transcript, videoPath, stripFillerWords = true, aggressiveFillers = false } = options;
   if (!transcript || typeof transcript !== 'string') {
     return { captions: [] };
   }
@@ -296,8 +302,19 @@ async function generateAutoCaptions(videoId, options = {}) {
     const content = await Content.findById(videoId);
     let segments = [];
     const duration = content?.originalFile?.duration || content?.metadata?.duration || 60;
+    const language = content?.language || 'en';
 
-    const words = content?.captions?.words;
+    let words = content?.captions?.words;
+    if (Array.isArray(words) && words.length > 0 && stripFillerWords) {
+      // Drop "um/uh/eh/etc." while preserving every other word's
+      // original timing — caption density goes up without changing the
+      // visual rhythm of the speech.
+      const before = words.length;
+      words = stripFillers(words, { language, aggressive: aggressiveFillers });
+      if (before !== words.length) {
+        logger.info('captions: stripped filler words', { videoId, removed: before - words.length, language });
+      }
+    }
     if (words && Array.isArray(words) && words.length > 0) {
       const maxWordsPerLine = 6;
       const maxDuration = 3.5;
@@ -306,7 +323,11 @@ async function generateAutoCaptions(videoId, options = {}) {
       for (let i = 0; i < words.length; i++) {
         const w = words[i];
         const wordStart = w.start ?? 0;
-        const wordEnd = w.end ?? wordStart + 0.3;
+        // Use the next word's start as our end-of-line time when the
+        // current word is missing .end — that's tighter than the prior
+        // 0.3s assumption which fudged trailing captions to overflow.
+        const next = words[i + 1];
+        const wordEnd = w.end ?? next?.start ?? wordStart + 0.3;
         lineWords.push(typeof w.word === 'string' ? w.word : w.text || '');
         const lineEnd = wordEnd;
         const lineDuration = lineEnd - lineStart;
@@ -326,21 +347,31 @@ async function generateAutoCaptions(videoId, options = {}) {
         }
       }
     } else {
-      // Fallback splitting...
-      const sentences = transcript.split(/(?<=[.!?])\s+/).filter(Boolean);
-      const chunkDuration = duration / Math.max(1, sentences.length);
-      segments = sentences.map((text, i) => ({
-        text: text.trim(),
-        startTime: i * chunkDuration,
-        endTime: (i + 1) * chunkDuration,
-        ...analyzeSentimentAndHighlight(text.trim())
+      // Fallback path: no word-level data available. Use the smart
+      // splitter (abbreviation-safe) + proportional timer (long
+      // sentence → long span) instead of the prior naive sentence-split
+      // + uniform-chunk-duration approach.
+      const sentences = smartSentenceSplit(transcript);
+      const cues = distributeSentencesByCharCount(sentences, duration);
+      segments = cues.map((c) => ({
+        text: c.text,
+        startTime: c.start,
+        endTime: c.end,
+        ...analyzeSentimentAndHighlight(c.text),
       }));
     }
+
+    // Final pass: drop adjacent identical lines (Whisper emits these
+    // occasionally during silence-bridge regions). Convert/re-export
+    // the canonical caption shape after dedupe.
+    const cuesShape = segments.map(s => ({ start: s.startTime, end: s.endTime, text: s.text, _full: s }));
+    const deduped = dedupeAdjacentCues(cuesShape);
+    segments = deduped.map(c => c._full ? { ...c._full, startTime: c.start, endTime: c.end } : { text: c.text, startTime: c.start, endTime: c.end });
 
     return {
       captions: segments,
       suggestedPosition: safePosition,
-      isObjectAware: avoidanceZones.length > 0
+      isObjectAware: avoidanceZones.length > 0,
     };
   } catch (error) {
     logger.error('generateAutoCaptions failed', { videoId, error: error.message });
