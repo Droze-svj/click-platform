@@ -149,7 +149,7 @@ export default function SovereignOversightTerminalPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1700px] mx-auto space-y-24 font-inter">
+      <div className="min-h-screen relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1700px] mx-auto space-y-12 md:space-y-24 font-inter">
         <ToastContainer />
         
         {/* Persistent Watermark */}
@@ -175,8 +175,8 @@ export default function SovereignOversightTerminalPage() {
                        <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">AUTHORIZED_ROOT</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Oversight</h1>
-                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Monitoring global node operatives, hive cluster health and lattice vitality.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Admin</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Operator console — global users, cluster health, system vitals. Visible only to staff with the admin role.</p>
               </div>
            </div>
 

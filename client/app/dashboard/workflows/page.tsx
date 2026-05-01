@@ -191,7 +191,7 @@ export default function OperationalSequenceHubPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1700px] mx-auto space-y-24">
+      <div className="min-h-screen relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1700px] mx-auto space-y-12 md:space-y-24">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Layers size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -221,8 +221,8 @@ export default function OperationalSequenceHubPage() {
                        <span className="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase italic leading-none">SEQUENCE_READY</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">OPERATIONAL_SEQUENCE_HUB</h1>
-                 <p className="text-slate-500 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous cascading operations for sovereign content clusters and kinetic execution lanes.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-4">Workflows</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Chain ingest → edit → schedule → analyze into one automation. Click runs the steps; you review the output.</p>
               </div>
            </div>
 

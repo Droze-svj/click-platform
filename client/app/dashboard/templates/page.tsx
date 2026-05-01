@@ -143,8 +143,8 @@ export default function HeuristicBlueprintNodePage() {
               <Compass className="text-indigo-400 animate-pulse" size={16} />
               <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Heuristic Scaffolding HUD v14.2</span>
             </div>
-            <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">BLUEPRINTS</h1>
-            <p className="text-slate-500 text-[14px] uppercase font-black tracking-[0.4em] mt-6 italic leading-none">Architectural pattern orchestration and structural scaffold surveillance.</p>
+            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-4">Templates</h1>
+            <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Reusable post structures — captions, edit recipes, schedule patterns. Save what works once and apply it to every new project.</p>
           </div>
         </div>
         <div className="flex items-center gap-8">

@@ -135,8 +135,8 @@ export default function SectorResonanceMatrixPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">SECTOR_LOCK_OPTIMAL</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Resonance</h1>
-                 <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Deep-scanning heuristic architectures and neural market mapping architectures.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Niche</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Pick or refine the niche Click optimizes for. Every AI output — captions, hooks, schedule, scripts — adapts to the niche playbook you set here.</p>
               </div>
            </div>
 

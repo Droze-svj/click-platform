@@ -174,7 +174,7 @@ export default function AxiomRepositoryPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24">
+      <div className="min-h-screen relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1750px] mx-auto space-y-12 md:space-y-24">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -202,8 +202,8 @@ export default function AxiomRepositoryPage() {
                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">REPOSITORY_SYNC_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Axiom Repository</h1>
-                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">High-fidelity archival matrix for persistent cognitive nodes and lattice-wide logic storage.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Library</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Every clip, B-roll asset, font, and template Click has saved for you. Search, filter, drag any item straight into the editor.</p>
               </div>
            </div>
 

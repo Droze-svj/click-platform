@@ -137,8 +137,8 @@ export default function IdentityMatrixInterfacePage() {
                        <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SIGNATURE_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Identity</h1>
-                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Calibrating neural bio-synthesis, visual signature, and global node coordinates.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Profile</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your name, photo, bio, and the public details that show up on every post you publish through Click.</p>
               </div>
            </div>
 
