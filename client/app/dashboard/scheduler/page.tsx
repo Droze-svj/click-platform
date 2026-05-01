@@ -167,8 +167,8 @@ export default function TemporalOrchestratorPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">CHRONOS_SYNC_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Temporal Orchestrator</h1>
-                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous manifestation orchestrator for chronos-aligned delivery.</p>
+                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Scheduler</h1>
+                 <p className="text-slate-400 text-[14px] font-medium leading-relaxed max-w-2xl">Plan and queue every post across your channels. Click learns each platform's best time to publish for your niche and posts at exactly that moment, hands-free.</p>
               </div>
            </div>
 
