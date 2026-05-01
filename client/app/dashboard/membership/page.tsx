@@ -144,8 +144,8 @@ export default function IdentityDNARegistryPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">STRATUM_LOCK_SECURED</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Stratum</h1>
-                 <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Neural tier orchestration, operational saturation thresholds, and substrate access protocols.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Membership</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Manage your subscription, see what each plan unlocks, and upgrade when you outgrow your current tier. Cancel any time — no penalties, no rituals.</p>
               </div>
            </div>
 

@@ -233,8 +233,8 @@ export default function KineticWorkspaceHubPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{projects.length} ACTIVE_CLUSTERS</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Clusters</h1>
-                 <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Stratified mission nexus for coordinate cluster management and temporal trajectory mapping.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Projects</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Group videos, scripts, and posts under a single brief — campaigns, client work, content series. Click learns the brief once and applies it across every asset inside.</p>
               </div>
            </div>
 
