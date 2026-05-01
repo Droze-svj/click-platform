@@ -125,6 +125,9 @@ export default function KineticSynthesisHubPage() {
     setTimeout(() => { active = false; clearInterval(iv); loadSpectralInventory() }, 300000)
   }, [loadSpectralInventory])
 
+  const [pageDragOver, setPageDragOver] = useState(false)
+  const [pageDropProgress, setPageDropProgress] = useState<number | null>(null)
+
   const handleForgePayload = useCallback(async (_file: File, uploadResponse?: any) => {
     setError(''); setSuccess('')
     if (!uploadResponse) { setError('Upload failed — empty response'); return }
@@ -143,6 +146,76 @@ export default function KineticSynthesisHubPage() {
       setTimeout(() => off('video-processed', handler), 300000)
     }
   }, [socket, connected, on, off, loadSpectralInventory, pollSpectralStatus, router])
+
+  // Page-level drag-and-drop. Drop a video file ANYWHERE on this page and
+  // it uploads via the same /api/video/upload endpoint FileUpload uses,
+  // then routes through handleForgePayload exactly as a normal upload.
+  // Reduces friction for users who drag from Finder without scrolling to
+  // the upload card.
+  const uploadFromPageDrop = useCallback(async (file: File) => {
+    if (!/^video\//.test(file.type)) { setError('Drop a video file (.mp4 / .mov / .webm)'); return }
+    setError('')
+    setPageDropProgress(0)
+    try {
+      const fd = new FormData()
+      fd.append('video', file)
+      fd.append('title', file.name.replace(/\.[^.]+$/, ''))
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      const xhr = new XMLHttpRequest()
+      const result: any = await new Promise((resolve, reject) => {
+        xhr.open('POST', '/api/video/upload')
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setPageDropProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => {
+          try {
+            const json = JSON.parse(xhr.responseText)
+            if (xhr.status >= 200 && xhr.status < 300 && json.success !== false) resolve(json)
+            else reject(new Error(json.error || json.message || `HTTP ${xhr.status}`))
+          } catch (e) { reject(e) }
+        }
+        xhr.onerror = () => reject(new Error('Network error during upload'))
+        xhr.send(fd)
+      })
+      await handleForgePayload(file, result)
+    } catch (e: any) {
+      setError(e?.message || 'Upload failed')
+    } finally {
+      setPageDropProgress(null)
+    }
+  }, [handleForgePayload])
+
+  useEffect(() => {
+    let dragDepth = 0
+    const onDragEnter = (e: DragEvent) => {
+      if (!e.dataTransfer?.types?.includes('Files')) return
+      dragDepth++
+      setPageDragOver(true)
+    }
+    const onDragLeave = () => {
+      dragDepth = Math.max(0, dragDepth - 1)
+      if (dragDepth === 0) setPageDragOver(false)
+    }
+    const onDragOver = (e: DragEvent) => { e.preventDefault() }
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault()
+      dragDepth = 0
+      setPageDragOver(false)
+      const f = e.dataTransfer?.files?.[0]
+      if (f) void uploadFromPageDrop(f)
+    }
+    document.addEventListener('dragenter', onDragEnter)
+    document.addEventListener('dragleave', onDragLeave)
+    document.addEventListener('dragover', onDragOver)
+    document.addEventListener('drop', onDrop)
+    return () => {
+      document.removeEventListener('dragenter', onDragEnter)
+      document.removeEventListener('dragleave', onDragLeave)
+      document.removeEventListener('dragover', onDragOver)
+      document.removeEventListener('drop', onDrop)
+    }
+  }, [uploadFromPageDrop])
 
   const getStatusCfg = (status: string) => STATUS_CFG[status as keyof typeof STATUS_CFG] || STATUS_CFG.pending
 
@@ -178,6 +251,44 @@ export default function KineticSynthesisHubPage() {
     <ErrorBoundary>
       <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-20">
         <ToastContainer />
+
+        {/* Page-level drag-drop overlay — appears whenever the user drags any file onto the page */}
+        <AnimatePresence>
+          {(pageDragOver || pageDropProgress !== null) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center"
+            >
+              <div className="absolute inset-0 bg-indigo-950/85 backdrop-blur-sm" />
+              <motion.div
+                initial={{ scale: 0.92 }}
+                animate={{ scale: 1 }}
+                className="relative z-10 px-12 py-16 rounded-[3rem] border-2 border-dashed border-indigo-400/60 bg-indigo-500/10 max-w-xl mx-auto text-center"
+              >
+                <Upload className="w-16 h-16 text-indigo-300 mx-auto mb-6" />
+                <h2 className="text-3xl font-black text-white tracking-tight mb-3">
+                  {pageDropProgress !== null ? 'Uploading…' : 'Drop your video to start'}
+                </h2>
+                <p className="text-slate-300 text-sm">
+                  {pageDropProgress !== null
+                    ? `${pageDropProgress}% — we'll route you straight to the editor when it's ready.`
+                    : 'Anywhere on the page works. .mp4 · .mov · .webm up to 1 GB.'}
+                </p>
+                {pageDropProgress !== null && (
+                  <div className="mt-6 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-400 to-fuchsia-400 transition-all duration-200"
+                      style={{ width: `${pageDropProgress}%` }}
+                    />
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Video size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
         </div>

@@ -29,6 +29,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       python3 \
+      python3-pip \
       make \
       g++ \
       pkg-config \
@@ -44,6 +45,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
       curl \
    && rm -rf /var/lib/apt/lists/*
+
+# yt-dlp is what server/routes/ingest.js shells out to for YouTube /
+# TikTok / IG / Vimeo URL imports. Install via pip (not apt) because the
+# Debian-bookworm yt-dlp is months old and quickly stops working on
+# TikTok/IG which rotate anti-bot fingerprints. --break-system-packages
+# is required on bookworm for system-wide pip installs.
+RUN pip3 install --break-system-packages --no-cache-dir yt-dlp \
+   && yt-dlp --version
 
 # Verify ffmpeg has the filters Click depends on. Fail the image build if a
 # filter is missing — this turns a runtime 500 into a clear deploy-time error.
