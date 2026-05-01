@@ -376,6 +376,28 @@ a:focus-visible,
   }
 }
 
+/* ── Focus Mode (toggled via SidebarNav) ──────────────────────────────────────
+ * When users want a calmer surface they enable Focus Mode in the sidebar.
+ * The provider sets `data-focus-mode="true"` on <html> and these rules:
+ *   1. Strip the long-running decorative pulses/pings/spins/bounces that
+ *      pile up across dashboards. State indicators that genuinely need to
+ *      pulse (e.g. the API offline dot) opt out via `data-keep-motion`.
+ *   2. Hide secondary content tagged with `data-focus-secondary` so the
+ *      dashboard's Performance Nerve Center extra cards, Platform Status
+ *      panel, and floating CTAs collapse out of the way.
+ */
+html[data-focus-mode="true"] .animate-pulse:not([data-keep-motion]),
+html[data-focus-mode="true"] .animate-ping:not([data-keep-motion]),
+html[data-focus-mode="true"] .animate-bounce:not([data-keep-motion]) {
+  animation: none !important;
+}
+html[data-focus-mode="true"] .animate-spin:not([data-keep-motion]) {
+  animation-duration: 4s !important;  /* slow infinite spinners to a calm rotation */
+}
+html[data-focus-mode="true"] [data-focus-secondary] {
+  display: none !important;
+}
+
 /* ── Smooth theme transitions — applied to all elements on theme change ───── */
 *,
 *::before,

@@ -23,14 +23,6 @@ export const DynamicModernVideoEditor = dynamic(
   }
 )
 
-export const DynamicEnhancedVideoEditor = dynamic(
-  () => import('./EnhancedVideoEditor'),
-  {
-    loading: LoadingFallback,
-    ssr: false
-  }
-)
-
 export const DynamicWebGLVideoRenderer = dynamic(
   () => import('./WebGLVideoRenderer'),
   {
