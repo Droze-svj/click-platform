@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { supportedLanguages, defaultLanguage, type SupportedLanguage } from '../i18n/config'
+import { supportedLanguages, defaultLanguage, rtlLanguages, type SupportedLanguage } from '../i18n/config'
 import { usePreferences } from './usePreferences'
 
 interface TranslationContextType {
@@ -79,6 +79,18 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     loadTranslations(lang).finally(() => { if (!cancelled) setIsLoading(false) })
     return () => { cancelled = true }
   }, [lang, loadTranslations])
+
+  // Sync <html lang> and <html dir> whenever the active language changes.
+  // The root layout hardcodes `lang="en"`; without this effect, Arabic
+  // users get a left-to-right page, screen readers announce English, and
+  // the browser's auto-translate prompt fires on every page. Setting both
+  // here means the dropdown actually flips direction + announces the
+  // right locale to assistive tech.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.lang = lang
+    document.documentElement.dir = rtlLanguages.has(lang) ? 'rtl' : 'ltr'
+  }, [lang])
 
   const setLanguage = useCallback(
     (language: SupportedLanguage) => {

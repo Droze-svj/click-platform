@@ -1,0 +1,123 @@
+{
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "create": "생성",
+    "search": "검색",
+    "filter": "필터",
+    "loading": "불러오는 중…",
+    "error": "오류",
+    "success": "성공",
+    "close": "닫기",
+    "back": "뒤로",
+    "next": "다음",
+    "retry": "다시 시도",
+    "more": "더 보기",
+    "menu": "메뉴",
+    "logout": "로그아웃",
+    "yes": "예",
+    "no": "아니요",
+    "redirecting": "로그인 화면으로 이동 중…",
+    "dismiss": "닫기"
+  },
+  "nav": {
+    "dashboard": "대시보드",
+    "videos": "영상",
+    "content": "콘텐츠",
+    "aiFeatures": "AI 기능",
+    "library": "라이브러리",
+    "scripts": "스크립트",
+    "workflows": "워크플로우",
+    "tasks": "작업",
+    "projects": "프로젝트",
+    "jobs": "작업 항목",
+    "teams": "팀",
+    "approvals": "승인",
+    "quotes": "인용",
+    "scheduler": "스케줄러",
+    "calendar": "캘린더",
+    "social": "소셜",
+    "analytics": "분석",
+    "achievements": "업적",
+    "membership": "멤버십",
+    "notifications": "알림",
+    "settings": "설정",
+    "templates": "템플릿",
+    "infrastructure": "인프라",
+    "clickTagline": "AI 기반 콘텐츠"
+  },
+  "workflow": {
+    "niche": "니치",
+    "setNiche": "니치 선택",
+    "next": "다음",
+    "stages": {
+      "ingest":   { "label": "가져오기", "description": "소스 가져오기 — 파일, 링크, 라이브 녹화." },
+      "script":   { "label": "스크립트", "description": "AI가 니치에 맞춰 후크, 본문, CTA를 작성합니다." },
+      "edit":     { "label": "편집",     "description": "스타일 인텔리전스로 컷, 자막, 브랜딩." },
+      "schedule": { "label": "예약",     "description": "각 플랫폼의 최적 시간에 게시합니다." },
+      "analyze":  { "label": "분석",     "description": "성과를 측정하고 반복할 요소를 학습합니다." }
+    }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "업로드",
+      "link": "링크 붙여넣기",
+      "record": "녹화",
+      "cloud": "클라우드",
+      "remix": "리믹스"
+    },
+    "paste": "붙여넣기",
+    "dropTitle": "여기에 영상을 놓으세요",
+    "dropHint": "또는 파일을 선택하세요. MP4, MOV, WebM, 최대 500MB.",
+    "chooseFile": "파일 선택",
+    "linkLabel": "영상 URL",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 또는 https://cdn/clip.mp4",
+    "linkAction": "가져오기",
+    "linkSupports": "지원: {platforms}. 플랫폼 다운로드는 서버에 {ytdlp}가 필요합니다.",
+    "recordStart": "녹화 시작",
+    "recordStop": "정지 및 업로드",
+    "recordHint": "카메라 + 마이크 — WebM으로 저장 후 라이브러리에 업로드.",
+    "cloudHint": "Google Drive, Dropbox, S3 공유 링크를 붙여넣으세요. 서버 측에서 다운로드하므로 {visibility}로 설정해야 합니다.",
+    "cloudVisibility": "링크가 있는 모든 사용자 → 보기 가능",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "가져오기",
+    "remixHint": "이전 프로젝트를 선택해 복제하여 새 편집을 시작합니다.",
+    "remixRefresh": "새로고침",
+    "remixEmpty": "아직 가져온 항목이 없습니다 — 첫 영상을 업로드해 리믹스 가능한 라이브러리를 시작하세요.",
+    "tip": "팁",
+    "tipPaste": "이 페이지에서 ⌘V로 클립보드 URL을 붙여넣을 수 있습니다.",
+    "tipReversible": "모든 항목은 라이브러리에 표시되며 되돌릴 수 있습니다.",
+    "uploading": "업로드 중 {percent}%",
+    "processing": "처리 중…",
+    "errors": {
+      "noUrl": "먼저 URL을 붙여넣으세요",
+      "notVideo": "영상 파일(.mp4 / .mov / .webm)을 놓으세요",
+      "clipboardEmpty": "클립보드가 비어 있습니다",
+      "clipboardNotUrl": "클립보드에 URL이 없습니다",
+      "clipboardDenied": "클립보드 접근이 거부되었습니다 — 직접 붙여넣으세요",
+      "uploadFailed": "업로드 실패: {message}",
+      "ingestFailed": "가져오기 실패: {message}",
+      "remixFailed": "리믹스 실패",
+      "noContentId": "서버에서 contentId가 반환되지 않았습니다",
+      "cameraDenied": "카메라/마이크에 접근할 수 없습니다"
+    }
+  },
+  "language": {
+    "label": "언어",
+    "picker": "언어 선택"
+  },
+  "settings": {
+    "title": "설정",
+    "subtitle": "계정 환경설정을 관리하세요",
+    "language": "언어",
+    "saveSettings": "저장"
+  },
+  "video": {
+    "title": "영상",
+    "upload": "업로드",
+    "edit": "편집",
+    "processing": "처리 중…"
+  }
+}
