@@ -1,18 +1,11 @@
-// Predictive Content Service — AI-Upgraded
-// Uses Gemini for deep prediction when configured; falls back to heuristics.
+// Predictive Content Service — AI-Upgraded via aiRouter (Gemini → OpenAI →
+// Anthropic → heuristic). Uses the niche-aware playbook from
+// marketingKnowledge so predictions reflect platform retention curves and
+// niche voice instead of generic text-length heuristics.
 
 const logger = require('../utils/logger');
-
-let geminiGenerate = null;
-let geminiConfigured = false;
-
-try {
-  const googleAI = require('../utils/googleAI');
-  geminiGenerate = googleAI.generateContent;
-  geminiConfigured = googleAI.isConfigured !== undefined ? googleAI.isConfigured : true;
-} catch (e) {
-  // Google AI not configured — service uses heuristic fallback
-}
+const { aiCallJson } = require('../utils/aiRouter');
+const { buildSystemPrompt } = require('./marketingKnowledge');
 
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
@@ -83,37 +76,48 @@ async function predictContentPerformance(contentData, userId) {
 
     const heuristic = estimateFromText(text, platform);
 
-    if (!geminiConfigured || !geminiGenerate) return heuristic;
+    const systemPrompt = buildSystemPrompt({
+      persona: 'marketing-coach',
+      niche,
+      platform,
+      stage: 'analyze',
+      language: contentData?.language || 'en',
+      extra: 'Predict performance using the niche playbook + platform retention curve. Return strict JSON only.',
+    });
+    const userPrompt = [
+      `── Task ──`,
+      `Predict the performance of this post and surface the single highest-leverage fix.`,
+      ``,
+      `Content (truncated to 400 chars):`,
+      `"${text.substring(0, 400)}"`,
+      ``,
+      `Return JSON with keys exactly:`,
+      `  performanceScore        (0-100)`,
+      `  expectedEngagementRate  (decimal % e.g. 4.2)`,
+      `  forecastedViews         { min: number, max: number }`,
+      `  topStrength             (short phrase)`,
+      `  criticalFix             (single most impactful change)`,
+    ].join('\n');
 
-    try {
-      const prompt = `Analyze this social media content for "${niche}" niche on ${platform}.
-
-"${text.substring(0, 400)}"
-
-Predict performance and give specific improvement.
-Respond in JSON:
-{
-  "performanceScore": 78,
-  "expectedEngagementRate": 4.2,
-  "forecastedViews": { "min": 5000, "max": 25000 },
-  "topStrength": "Strong curiosity gap hook",
-  "criticalFix": "The CTA is buried — move it to second sentence"
-}`;
-      const aiResponse = await geminiGenerate(prompt, { temperature: 0.3 });
-      const aiData = JSON.parse(aiResponse);
-
-      return {
-        ...heuristic,
-        performanceScore: aiData.performanceScore || heuristic.performanceScore,
-        expectedEngagementRate: aiData.expectedEngagementRate || heuristic.expectedEngagementRate,
-        forecastedViews: aiData.forecastedViews,
-        aiInsight: { topStrength: aiData.topStrength, criticalFix: aiData.criticalFix },
-        source: 'ai-enhanced',
-      };
-    } catch (aiErr) {
-      logger.warn('AI content prediction failed, using heuristic', { aiErr: aiErr.message });
+    const aiData = await aiCallJson(userPrompt, null, {
+      systemPrompt,
+      taskType: 'content-performance-prediction',
+      maxTokens: 600,
+      temperature: 0.3,
+    });
+    if (!aiData) {
+      logger.info('predictiveContent: aiCallJson returned null, using heuristic');
       return heuristic;
     }
+
+    return {
+      ...heuristic,
+      performanceScore: aiData.performanceScore || heuristic.performanceScore,
+      expectedEngagementRate: aiData.expectedEngagementRate || heuristic.expectedEngagementRate,
+      forecastedViews: aiData.forecastedViews,
+      aiInsight: { topStrength: aiData.topStrength, criticalFix: aiData.criticalFix },
+      source: 'ai-enhanced',
+    };
   } catch (error) {
     logger.error('predictContentPerformance failed', { error: error.message, userId });
     throw error;
@@ -132,29 +136,36 @@ async function generateContentOptimizationSuggestions(text, platform = 'instagra
     source: 'heuristic',
   };
 
-  if (!geminiConfigured || !geminiGenerate) return fallback;
+  const systemPrompt = buildSystemPrompt({
+    persona: 'caption-writer',
+    platform,
+    niche: 'business',
+    stage: 'optimize',
+    extra: `Optimize for goal="${goal}". Use the niche + platform playbook above. Return strict JSON only.`,
+  });
+  const userPrompt = [
+    `── Task ──`,
+    `Give 3 hyper-specific micro-improvements (hook, cta, hashtags) using the playbook.`,
+    ``,
+    `Original (truncated to 500 chars):`,
+    `"${text.substring(0, 500)}"`,
+    ``,
+    `Return JSON:`,
+    `{ "suggestions": [`,
+    `  { "type": "hook",      "before": "...", "after": "...", "reason": "..." },`,
+    `  { "type": "cta",       "before": "...", "after": "...", "reason": "..." },`,
+    `  { "type": "hashtags",  "before": "...", "after": "...", "reason": "..." }`,
+    `] }`,
+  ].join('\n');
 
-  try {
-    const prompt = `You are an expert ${platform} copywriter. Optimize this for maximum "${goal}".
-
-"${text.substring(0, 500)}"
-
-Give 3 micro-improvements (hook, cta, hashtags). Be hyper-specific.
-Respond in JSON:
-{
-  "suggestions": [
-    { "type": "hook", "before": "...", "after": "...", "reason": "..." },
-    { "type": "cta", "before": "...", "after": "...", "reason": "..." },
-    { "type": "hashtags", "before": "...", "after": "...", "reason": "..." }
-  ]
-}`;
-
-    const response = await geminiGenerate(prompt, { temperature: 0.5 });
-    return { ...JSON.parse(response), source: 'ai' };
-  } catch (err) {
-    logger.warn('Content optimization AI failed', { err: err.message });
-    return fallback;
-  }
+  const aiData = await aiCallJson(userPrompt, null, {
+    systemPrompt,
+    taskType: 'content-optimization-suggestions',
+    maxTokens: 800,
+    temperature: 0.5,
+  });
+  if (!aiData) return fallback;
+  return { ...aiData, source: 'ai' };
 }
 
 /**
