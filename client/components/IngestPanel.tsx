@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Upload, Link as LinkIcon, Video as VideoIcon, Camera, Clipboard,
-  HardDrive, RefreshCw, Loader2, Check, X, AlertCircle,
+  HardDrive, RefreshCw, Loader2, Check, X, AlertCircle, Monitor,
   type LucideIcon,
 } from 'lucide-react'
 import { apiGet, apiPost, API_URL } from '../lib/api'
@@ -12,7 +12,7 @@ import { useToast } from '../contexts/ToastContext'
 import { useWorkflow } from '../contexts/WorkflowContext'
 import { useTranslation } from '../hooks/useTranslation'
 
-type Tab = 'file' | 'link' | 'record' | 'cloud' | 'remix'
+type Tab = 'file' | 'link' | 'record' | 'screen' | 'cloud' | 'remix'
 
 interface RecentItem { id: string; title: string; fileUrl?: string; createdAt?: string }
 
@@ -20,6 +20,7 @@ const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'file',   label: 'Upload',     icon: Upload },
   { id: 'link',   label: 'Paste link', icon: LinkIcon },
   { id: 'record', label: 'Record',     icon: Camera },
+  { id: 'screen', label: 'Screen',     icon: Monitor },
   { id: 'cloud',  label: 'Cloud',      icon: HardDrive },
   { id: 'remix',  label: 'Remix',      icon: RefreshCw },
 ]
@@ -55,6 +56,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
     file: tr('ingest.tabs.file', 'Upload'),
     link: tr('ingest.tabs.link', 'Paste link'),
     record: tr('ingest.tabs.record', 'Record'),
+    screen: tr('ingest.tabs.screen', 'Screen'),
     cloud: tr('ingest.tabs.cloud', 'Cloud'),
     remix: tr('ingest.tabs.remix', 'Remix'),
   }
@@ -190,6 +192,58 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
     mediaRecorderRef.current?.stop()
     setRecording(false)
   }, [])
+
+  // ── Screen share record ──────────────────────────────────────────────────
+  // Mirrors the webcam flow but uses getDisplayMedia for the video track.
+  // We layer in a microphone audio track from getUserMedia when the user
+  // grants it — most creators want their voice over the screen, so default
+  // to capturing both. If mic permission fails, screen audio (when the
+  // browser provides it via the Share Audio checkbox) carries through.
+  const startScreenRecording = useCallback(async () => {
+    setError(null)
+    try {
+      const display = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30 } as any,
+        audio: true,
+      })
+      let micStream: MediaStream | null = null
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      } catch {
+        // Mic denied is fine — fall back to system audio if available.
+      }
+      const tracks: MediaStreamTrack[] = [...display.getVideoTracks()]
+      const audioTracks = [...display.getAudioTracks(), ...(micStream?.getAudioTracks() || [])]
+      tracks.push(...audioTracks)
+      const composite = new MediaStream(tracks)
+      if (recordVideoRef.current) {
+        recordVideoRef.current.srcObject = composite
+        await recordVideoRef.current.play().catch(() => { /* autoplay blocked is fine */ })
+      }
+      const mr = new MediaRecorder(composite, { mimeType: 'video/webm;codecs=vp9,opus' })
+      recordChunksRef.current = []
+      mr.ondataavailable = (e) => { if (e.data.size > 0) recordChunksRef.current.push(e.data) }
+      mr.onstop = async () => {
+        composite.getTracks().forEach(t => t.stop())
+        micStream?.getTracks().forEach(t => t.stop())
+        const blob = new Blob(recordChunksRef.current, { type: 'video/webm' })
+        const file = new File([blob], `screen-${Date.now()}.webm`, { type: 'video/webm' })
+        await uploadFile(file)
+      }
+      // The browser also fires 'inactive' on the display stream when the
+      // user clicks "Stop sharing" in the screen-share toolbar — wire it
+      // so the recording finalises automatically.
+      display.getVideoTracks()[0]?.addEventListener('ended', () => {
+        if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop()
+        setRecording(false)
+      })
+      mr.start()
+      mediaRecorderRef.current = mr
+      setRecording(true)
+    } catch (e: any) {
+      setError(e?.message || tr('ingest.errors.screenDenied', 'Could not start screen share'))
+    }
+  }, [uploadFile, tr])
 
   // ── Remix recents ────────────────────────────────────────────────────────
   const loadRecents = useCallback(async () => {
@@ -353,6 +407,26 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                 </button>
               )}
               <p className="text-[10px] text-slate-500">{tr('ingest.recordHint', 'Camera + mic — saved as WebM, then uploaded to your library.')}</p>
+            </div>
+          </div>
+        )}
+
+        {tab === 'screen' && (
+          <div className="space-y-4">
+            <video ref={recordVideoRef} className="w-full rounded-2xl border border-white/10 bg-black aspect-video" muted playsInline />
+            <div className="flex items-center gap-3 flex-wrap">
+              {!recording ? (
+                <button type="button" onClick={startScreenRecording}
+                  className="px-5 py-2.5 rounded-full bg-indigo-500 text-white text-[11px] font-black uppercase tracking-[0.18em] hover:bg-indigo-600 flex items-center gap-2">
+                  <Monitor size={13} /> {tr('ingest.screenStart', 'Share screen')}
+                </button>
+              ) : (
+                <button type="button" onClick={stopRecording}
+                  className="px-5 py-2.5 rounded-full bg-white text-black text-[11px] font-black uppercase tracking-[0.18em] hover:bg-indigo-50 flex items-center gap-2">
+                  <Check size={13} /> {tr('ingest.screenStop', 'Stop & upload')}
+                </button>
+              )}
+              <p className="text-[10px] text-slate-500">{tr('ingest.screenHint', 'Capture a tab, window, or full screen. Microphone is added if you grant permission. Stops automatically when you click "Stop sharing" in the browser bar.')}</p>
             </div>
           </div>
         )}

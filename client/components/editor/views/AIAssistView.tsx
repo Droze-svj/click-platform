@@ -14,10 +14,16 @@ import {
   Activity,
   ArrowUpRight,
   Layers,
-  Radio
+  Radio,
+  Scissors,
+  Wand2,
+  ArrowDownToLine,
+  Volume2,
+  Undo2,
+  CheckCheck,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { EditorCategory } from '../../../types/editor'
+import { EditorCategory, AIDirectorSuggestion } from '../../../types/editor'
 
 import { useState } from 'react'
 import { apiPost } from '../../../lib/api'
@@ -34,19 +40,51 @@ interface AIAssistViewProps {
   transcript?: any
   aiSuggestions?: any[]
   setAiSuggestions?: (suggestions: any[]) => void
+  /** Typed suggestion list — owns the new Apply path. */
+  directorSuggestions?: AIDirectorSuggestion[]
+  /** Set of suggestion ids already applied — used to grey out applied cards. */
+  appliedIds?: Set<string>
+  /** Apply a single suggestion to the timeline. Wired from useTimelineActions. */
+  onApplyOne?: (s: AIDirectorSuggestion) => boolean
+  /** Apply all unapplied suggestions in one history-restorable batch. */
+  onApplyAll?: (list: AIDirectorSuggestion[]) => { applied: number; skipped: number }
+  /** Undo the last apply (single suggestion or whole batch). */
+  onUndoLast?: () => boolean
+  canUndo?: boolean
   setActiveCategory: (c: EditorCategory) => void
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
 }
 
+const SUGGESTION_ICON: Record<AIDirectorSuggestion['type'], React.ComponentType<{ className?: string }>> = {
+  cut: Scissors,
+  broll: Film,
+  hook: Target,
+  transition: ArrowDownToLine,
+  audio: Volume2,
+  effect: Wand2,
+}
+
+const IMPACT_TONE: Record<AIDirectorSuggestion['impact'], { bar: string; text: string; bg: string }> = {
+  high: { bar: 'bg-rose-500', text: 'text-rose-300', bg: 'bg-rose-500/10' },
+  medium: { bar: 'bg-amber-500', text: 'text-amber-300', bg: 'bg-amber-500/10' },
+  low: { bar: 'bg-slate-500', text: 'text-slate-400', bg: 'bg-slate-500/10' },
+}
+
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
-const AIAssistView: React.FC<AIAssistViewProps> = ({ 
+const AIAssistView: React.FC<AIAssistViewProps> = ({
   videoId,
   transcript,
   aiSuggestions,
   setAiSuggestions,
-  setActiveCategory, 
-  showToast 
+  directorSuggestions = [],
+  appliedIds,
+  onApplyOne,
+  onApplyAll,
+  onUndoLast,
+  canUndo = false,
+  setActiveCategory,
+  showToast,
 }) => {
   const [isFindingCuts, setIsFindingCuts] = useState(false)
 
@@ -90,6 +128,13 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
     visible: { opacity: 1, y: 0 }
   }
 
+  // Director Suggestions panel — applies AIDirectorSuggestion records to
+  // the manual timeline through useTimelineActions in ModernVideoEditor.
+  // Surfaced as the first card so the most-actionable AI output is at the
+  // top of the AI tab instead of buried below the tips card.
+  const pendingSuggestions = directorSuggestions.filter(s => !appliedIds?.has(s.id))
+  const appliedCount = directorSuggestions.length - pendingSuggestions.length
+
   return (
     <motion.div
       variants={containerVariants}
@@ -97,6 +142,106 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
       animate="visible"
       className="space-y-10 max-w-[1200px] mx-auto py-4"
     >
+      {/* Director Suggestions — apply AI decisions to the timeline in one click */}
+      {directorSuggestions.length > 0 && (
+        <motion.div
+          variants={itemVariants}
+          className={`${glassStyle} rounded-3xl p-6 md:p-8 relative overflow-hidden`}
+        >
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-[10px] font-bold uppercase tracking-widest text-fuchsia-300">
+                <Sparkles className="w-3 h-3" />
+                Director Suggestions
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                {pendingSuggestions.length > 0
+                  ? `${pendingSuggestions.length} suggestion${pendingSuggestions.length === 1 ? '' : 's'} ready to apply`
+                  : appliedCount > 0
+                    ? `All ${appliedCount} suggestion${appliedCount === 1 ? '' : 's'} applied`
+                    : 'No suggestions yet'}
+              </h2>
+              <p className="text-slate-400 text-sm">
+                One click pipes the AI's call directly into your timeline. Undo any time.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {canUndo && (
+                <button
+                  type="button"
+                  onClick={() => onUndoLast?.()}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors"
+                >
+                  <Undo2 className="w-3.5 h-3.5" />
+                  Undo last
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={pendingSuggestions.length === 0}
+                onClick={() => onApplyAll?.(pendingSuggestions)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-lg shadow-fuchsia-500/30"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                Apply all
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {directorSuggestions.map((s) => {
+              const Icon = SUGGESTION_ICON[s.type] || Sparkles
+              const tone = IMPACT_TONE[s.impact] || IMPACT_TONE.low
+              const applied = !!appliedIds?.has(s.id)
+              return (
+                <div
+                  key={s.id}
+                  className={`flex items-center gap-4 p-4 rounded-2xl border transition-colors ${applied
+                    ? 'bg-emerald-500/5 border-emerald-500/20 opacity-60'
+                    : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.04] hover:border-white/15'}`}
+                >
+                  <div className={`w-10 h-10 rounded-xl ${tone.bg} border border-white/5 flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4.5 h-4.5 ${tone.text}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold uppercase tracking-widest text-white">{s.label}</span>
+                      <span className="text-[10px] tabular-nums text-slate-500">@ {s.time.toFixed(1)}s</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-widest ${tone.text}`}>{s.impact}</span>
+                      {applied && <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Applied</span>}
+                    </div>
+                    <p className="text-sm text-slate-400 truncate">{s.description}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[10px] font-bold tabular-nums text-slate-500">{Math.round(s.confidence * 100)}%</span>
+                    <button
+                      type="button"
+                      disabled={applied}
+                      onClick={() => onApplyOne?.(s)}
+                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${applied
+                        ? 'bg-emerald-500/10 text-emerald-400 cursor-default'
+                        : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}
+                    >
+                      {applied ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Applied
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          Apply
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </motion.div>
+      )}
+
       {/* Primary Intelligence Section */}
       <motion.div
         variants={itemVariants}
