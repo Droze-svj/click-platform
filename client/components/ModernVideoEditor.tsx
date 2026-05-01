@@ -80,6 +80,7 @@ import StockLibraryView from './editor/views/StockLibraryView'
 import CreativePacksView from './editor/views/CreativePacksView'
 import TextMotionStudioView from './editor/views/TextMotionStudioView'
 import { useStyleDNA } from '../hooks/useStyleDNA' // Added
+import { useTimelineActions } from '../hooks/useTimelineActions'
 import { useStyleProfile } from '../hooks/useStyleProfile'
 import { useEditorShortcuts } from '../hooks/useEditorShortcuts'
 import { rippleDelete as rippleDeleteOp } from '../utils/timelineOps'
@@ -334,6 +335,25 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     { id: 'suggest-2', time: 8.5, type: 'broll', label: 'B-Roll Suggestion', description: 'Context: "creative flow". Overlay whiteboard animation?', confidence: 0.88, impact: 'medium' },
     { id: 'suggest-3', time: 4.2, type: 'cut', label: 'Silence Detected', description: '0.7s gap. Auto-cut to improve pacing?', confidence: 0.92, impact: 'medium' }
   ])
+
+  // Wired ahead of declaration so the dispatcher passes the freshest
+  // segments/overlays into applySuggestion. Defined right after
+  // aiDirectorSuggestions so the AI tab's Apply / Apply-All buttons can
+  // call apply()/applyAll() directly without prop-drilling state.
+  const timelineActions = useTimelineActions({
+    segments: timelineSegments,
+    setSegments: (next) => {
+      if (typeof next === 'function') setTimelineSegments(next as any)
+      else setTimelineSegments(next)
+    },
+    textOverlays,
+    setTextOverlays: (next) => {
+      if (typeof next === 'function') setTextOverlays(next as any)
+      else setTextOverlays(next)
+    },
+    duration: videoState.duration,
+    showToast,
+  })
 
   // ── Consolidated Automation & History State ──
   const [voiceoverText, setVoiceoverText] = useState('')
@@ -1487,7 +1507,20 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       case 'collaborate': return <CollaborateView videoId={videoId || ''} showToast={showToast} />
       case 'effects': return <EffectsView videoState={videoState} setVideoFilters={setVideoFilters} setTextOverlays={setTextOverlays} setActiveCategory={setActiveCategory} showToast={showToast} timelineEffects={timelineEffects} setTimelineEffects={setTimelineEffects} selectedEffectId={selectedEffectId} setSelectedEffectId={setSelectedEffectId} selectedSegmentId={selectedSegmentId} timelineSegments={timelineSegments} setTimelineSegments={setTimelineSegments} onSeek={(t) => setVideoState(prev => ({ ...prev, currentTime: t }))} />
       case 'export': return <ExportView videoId={videoId || ''} videoUrl={actualVideoUrl || ''} textOverlays={textOverlays} shapeOverlays={shapeOverlays} imageOverlays={imageOverlays} gradientOverlays={gradientOverlays} timelineSegments={timelineSegments} videoFilters={videoFilters} videoDuration={videoState.duration} showToast={showToast} setActiveCategory={setActiveCategory} projectName={projectName} />
-      case 'ai-analysis': return <AIAssistView videoId={videoId || ''} transcript={transcript} aiSuggestions={aiSuggestions} setAiSuggestions={setAiSuggestions} setActiveCategory={setActiveCategory} showToast={showToast} />
+      case 'ai-analysis': return <AIAssistView
+        videoId={videoId || ''}
+        transcript={transcript}
+        aiSuggestions={aiSuggestions}
+        setAiSuggestions={setAiSuggestions}
+        directorSuggestions={aiDirectorSuggestions}
+        appliedIds={timelineActions.appliedIds}
+        onApplyOne={timelineActions.apply}
+        onApplyAll={timelineActions.applyAll}
+        onUndoLast={timelineActions.undoLastApply}
+        canUndo={timelineActions.canUndo}
+        setActiveCategory={setActiveCategory}
+        showToast={showToast}
+      />
       case 'scripts': return <ScriptGeneratorView
         showToast={showToast}
         onInsertToTimeline={(hookText) => {
