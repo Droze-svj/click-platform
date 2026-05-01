@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import {
@@ -30,17 +30,7 @@ export default function EnterpriseWorkspaceDashboard() {
   const [loading, setLoading] = useState(false)
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadWorkspaces()
-  }, [])
-
-  useEffect(() => {
-    if (selectedWorkspace) {
-      loadWorkspaceData(selectedWorkspace._id)
-    }
-  }, [selectedWorkspace])
-
-  const loadWorkspaces = async () => {
+  const loadWorkspaces = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/enterprise/workspaces`, {
@@ -55,9 +45,9 @@ export default function EnterpriseWorkspaceDashboard() {
     } catch (error: any) {
       showToast(error.response?.data?.message || 'Failed to load workspaces', 'error')
     }
-  }
+  }, [showToast])
 
-  const loadWorkspaceData = async (workspaceId: string) => {
+  const loadWorkspaceData = useCallback(async (workspaceId: string) => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -79,7 +69,17 @@ export default function EnterpriseWorkspaceDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
+
+  useEffect(() => {
+    loadWorkspaces()
+  }, [loadWorkspaces])
+
+  useEffect(() => {
+    if (selectedWorkspace) {
+      loadWorkspaceData(selectedWorkspace._id)
+    }
+  }, [selectedWorkspace, loadWorkspaceData])
 
   return (
     <div className="space-y-6">

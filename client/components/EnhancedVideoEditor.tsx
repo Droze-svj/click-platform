@@ -196,6 +196,9 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
       video.removeEventListener('play', updatePlaying)
       video.removeEventListener('pause', updatePlaying)
     }
+    // trimEnd is initialized once from video duration; depending on it would
+    // re-attach listeners on every change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Timeline interactions
@@ -329,6 +332,11 @@ export default function EnhancedVideoEditor({ videoId, videoUrl, videoPath, onEx
     if (video && videoState.isPlaying) {
       applyFilters()
     }
+    // applyFilters is a stable function defined in this component that reads
+    // the same overlay/filter state — including it (and videoState.isPlaying)
+    // here would re-run the filter pass on every play/pause, defeating the
+    // intent of running it on visual-state changes only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoState.currentTime, videoFilters, textOverlays])
 
   if (!videoUrl && !videoPath) {

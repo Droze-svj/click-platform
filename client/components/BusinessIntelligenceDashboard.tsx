@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BarChart3, TrendingUp, Users, Calendar, Download } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 
@@ -30,12 +30,7 @@ export default function BusinessIntelligenceDashboard() {
   const [period, setPeriod] = useState(30)
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadMetrics()
-    loadTrends()
-  }, [period])
-
-  const loadMetrics = async () => {
+  const loadMetrics = useCallback(async () => {
     setIsLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -53,9 +48,9 @@ export default function BusinessIntelligenceDashboard() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [period, showToast])
 
-  const loadTrends = async () => {
+  const loadTrends = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch(`/api/analytics/bi/trends?period=${period}`, {
@@ -69,7 +64,12 @@ export default function BusinessIntelligenceDashboard() {
     } catch (error) {
       console.error('Failed to load trends:', error)
     }
-  }
+  }, [period])
+
+  useEffect(() => {
+    loadMetrics()
+    loadTrends()
+  }, [loadMetrics, loadTrends])
 
   const exportData = async (format: 'json' | 'csv') => {
     try {

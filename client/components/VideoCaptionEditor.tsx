@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Type as Captions,
   Download,
@@ -53,12 +53,7 @@ export default function VideoCaptionEditor({
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load existing captions
-  useEffect(() => {
-    loadCaptions()
-  }, [contentId])
-
-  const loadCaptions = async () => {
+  const loadCaptions = useCallback(async () => {
     try {
       const response = await fetch(`/api/video/captions/${contentId}?format=${selectedFormat}`, {
         credentials: 'include',
@@ -78,7 +73,12 @@ export default function VideoCaptionEditor({
     } catch (err) {
       console.error('Failed to load captions:', err)
     }
-  }
+  }, [contentId, selectedFormat])
+
+  // Load existing captions
+  useEffect(() => {
+    loadCaptions()
+  }, [loadCaptions])
 
   const handleGenerateCaptions = async (language?: string) => {
     setIsGenerating(true)

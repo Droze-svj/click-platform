@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../hooks/useAuth'
@@ -43,14 +43,7 @@ export default function EnhancedWorkflowBuilder() {
     enabled: true
   })
 
-  useEffect(() => {
-    if (user) {
-      loadWorkflows()
-      loadSuggestions()
-    }
-  }, [user])
-
-  const loadWorkflows = async () => {
+  const loadWorkflows = useCallback(async () => {
     try {
       const response = await apiGet<{ success: boolean; data: Workflow[] }>('/workflows')
       if (response.success) {
@@ -61,9 +54,9 @@ export default function EnhancedWorkflowBuilder() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showToast])
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     try {
       const response = await apiGet<{ success: boolean; data: WorkflowSuggestion[] }>('/workflows/enhanced/suggestions')
       if (response.success) {
@@ -73,7 +66,14 @@ export default function EnhancedWorkflowBuilder() {
       // Silent fail - suggestions are optional
       console.debug('Failed to load workflow suggestions:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadWorkflows()
+      loadSuggestions()
+    }
+  }, [user, loadWorkflows, loadSuggestions])
 
   const handleCreateWorkflow = async () => {
     if (!newWorkflow.name) {

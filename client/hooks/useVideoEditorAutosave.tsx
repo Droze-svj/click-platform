@@ -159,7 +159,7 @@ export function useVideoEditorAutosave({
         }, ERROR_DISPLAY_MS)
       }
     },
-    [videoId, name, folderId, saveToLocalStorage]
+    [videoId, name, folderId, saveToLocalStorage, saveKey]
   )
 
   useEffect(() => {

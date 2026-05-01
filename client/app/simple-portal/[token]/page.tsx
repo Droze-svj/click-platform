@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
@@ -45,11 +45,7 @@ export default function SimplePortalPage() {
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  useEffect(() => {
-    loadApproval()
-  }, [token])
-
-  const loadApproval = async () => {
+  const loadApproval = useCallback(async () => {
     try {
       const res = await axios.get(`${API_URL}/simple-portal/${token}`)
       if (res.data.success) {
@@ -60,7 +56,11 @@ export default function SimplePortalPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    loadApproval()
+  }, [loadApproval])
 
   const handleAction = async (action: 'approve' | 'decline') => {
     setActionLoading(true)

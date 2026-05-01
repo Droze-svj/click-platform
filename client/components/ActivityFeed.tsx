@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { apiGet } from '../lib/api'
@@ -23,11 +23,7 @@ export default function ActivityFeed({ limit = 10 }: { limit?: number }) {
   const dbg = (message: string, data: Record<string, any>) => {
   }
 
-  useEffect(() => {
-    loadActivities()
-  }, [])
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     try {
       const response = await apiGet<any>(`/engagement/activities?limit=${limit}`)
       if (response?.success) {
@@ -38,7 +34,11 @@ export default function ActivityFeed({ limit = 10 }: { limit?: number }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [limit])
+
+  useEffect(() => {
+    loadActivities()
+  }, [loadActivities])
 
   const getActivityIcon = (type: string) => {
     const icons: Record<string, string> = {

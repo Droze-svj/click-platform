@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
 
@@ -23,11 +23,7 @@ export default function VersionComparison({
   const [loading, setLoading] = useState(true)
   const [exportFormat, setExportFormat] = useState<'json' | 'html' | 'pdf'>('json')
 
-  useEffect(() => {
-    loadComparison()
-  }, [entityId, version1, version2])
-
-  const loadComparison = async () => {
+  const loadComparison = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const res = await axios.get(
@@ -42,7 +38,11 @@ export default function VersionComparison({
     } finally {
       setLoading(false)
     }
-  }
+  }, [entityId, version1, version2, entityType])
+
+  useEffect(() => {
+    loadComparison()
+  }, [loadComparison])
 
   const handleExport = async () => {
     try {

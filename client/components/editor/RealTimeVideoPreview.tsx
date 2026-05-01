@@ -507,6 +507,10 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     }
     rafId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafId)
+    // previewQuality is read from a ref-like value within the render loop;
+    // including it would tear down and re-create the rAF loop on quality
+    // changes, which we want to avoid mid-playback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, isSplit, playbackSpeed])
 
   const handleBeforeAfterToggle = () => {

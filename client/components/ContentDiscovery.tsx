@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Sparkles, TrendingUp, Clock, RefreshCw, Eye } from 'lucide-react'
 import axios from 'axios'
 
@@ -17,11 +17,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
   const [loading, setLoading] = useState(true)
   const [basedOn, setBasedOn] = useState<'performance' | 'similarity' | 'trending' | 'recent'>('performance')
 
-  useEffect(() => {
-    loadRecommendations()
-  }, [basedOn])
-
-  const loadRecommendations = async () => {
+  const loadRecommendations = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -38,7 +34,11 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
     } finally {
       setLoading(false)
     }
-  }
+  }, [basedOn])
+
+  useEffect(() => {
+    loadRecommendations()
+  }, [loadRecommendations])
 
   const getReasonIcon = (reason: string) => {
     if (reason.includes('performance') || reason.includes('High')) {

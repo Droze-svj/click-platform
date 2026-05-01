@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 // Note: Install react-beautiful-dnd or @dnd-kit/core for drag-and-drop
 // For now, using click-based movement
 // import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
@@ -57,14 +57,7 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
   const [loading, setLoading] = useState(true)
   const [selectedCard, setSelectedCard] = useState<KanbanCard | null>(null)
 
-  useEffect(() => {
-    loadBoard()
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadBoard, 30000)
-    return () => clearInterval(interval)
-  }, [clientWorkspaceId, agencyWorkspaceId])
-
-  const loadBoard = async () => {
+  const loadBoard = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const res = await axios.get(
@@ -79,7 +72,14 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
     } finally {
       setLoading(false)
     }
-  }
+  }, [clientWorkspaceId, agencyWorkspaceId])
+
+  useEffect(() => {
+    loadBoard()
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadBoard, 30000)
+    return () => clearInterval(interval)
+  }, [loadBoard])
 
   const handleMoveCard = async (cardId: string, fromColumnId: string, toColumnId: string) => {
     if (fromColumnId === toColumnId || !board) return

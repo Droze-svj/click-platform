@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { X, RefreshCw, Trash2, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
@@ -19,15 +19,7 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
   const [loading, setLoading] = useState(true)
   const [retrying, setRetrying] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && jobId) {
-      loadJobDetails()
-      const interval = setInterval(loadJobDetails, 2000) // Poll every 2 seconds
-      return () => clearInterval(interval)
-    }
-  }, [isOpen, jobId, queueName])
-
-  const loadJobDetails = async () => {
+  const loadJobDetails = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) return
@@ -42,7 +34,15 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
     } finally {
       setLoading(false)
     }
-  }
+  }, [queueName, jobId])
+
+  useEffect(() => {
+    if (isOpen && jobId) {
+      loadJobDetails()
+      const interval = setInterval(loadJobDetails, 2000) // Poll every 2 seconds
+      return () => clearInterval(interval)
+    }
+  }, [isOpen, jobId, queueName, loadJobDetails])
 
   const retryJob = async () => {
     setRetrying(true)

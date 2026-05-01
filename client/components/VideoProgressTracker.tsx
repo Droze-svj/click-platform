@@ -77,7 +77,7 @@ export default function VideoProgressTracker({ videoId, operation, jobId, onComp
     const interval = setInterval(pollProgress, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
-  }, [videoId, operation, jobId, isPolling, onComplete])
+  }, [videoId, operation, jobId, isPolling, onComplete, onError])
 
   useEffect(() => {
     // Stop polling after repeated failures (backend down, auth expired, etc.)

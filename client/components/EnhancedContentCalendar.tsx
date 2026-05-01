@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
@@ -40,14 +40,7 @@ export default function EnhancedContentCalendar() {
   const [view, setView] = useState<'month' | 'week' | 'day'>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
 
-  useEffect(() => {
-    if (user && token) {
-      loadCalendar()
-      loadGaps()
-    }
-  }, [user, token, currentDate])
-
-  const loadCalendar = async () => {
+  const loadCalendar = useCallback(async () => {
     setLoading(true)
     try {
       const startDate = getStartDate()
@@ -67,9 +60,10 @@ export default function EnhancedContentCalendar() {
     } finally {
       setLoading(false)
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, view, showToast])
 
-  const loadGaps = async () => {
+  const loadGaps = useCallback(async () => {
 
     try {
       const startDate = getStartDate()
@@ -93,7 +87,15 @@ export default function EnhancedContentCalendar() {
     } catch (error) {
       // Silent fail for gaps
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate, view])
+
+  useEffect(() => {
+    if (user && token) {
+      loadCalendar()
+      loadGaps()
+    }
+  }, [user, token, currentDate, loadCalendar, loadGaps])
 
   const getStartDate = () => {
     const date = new Date(currentDate)

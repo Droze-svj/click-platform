@@ -214,7 +214,7 @@ export default function NeuralDashboard() {
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [])
 
   useEffect(() => {
     fetchData()

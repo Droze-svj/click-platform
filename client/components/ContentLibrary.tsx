@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BookOpen, Search, Filter, Plus, Copy, Edit, Trash2 } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 
@@ -25,9 +25,28 @@ export default function ContentLibrary() {
     loadLibrary()
   }, [])
 
+  const filterItems = useCallback(() => {
+    let filtered = [...items]
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.text.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Type filter
+    if (filterType !== 'all') {
+      filtered = filtered.filter(item => item.type === filterType)
+    }
+
+    setFilteredItems(filtered)
+  }, [items, searchQuery, filterType])
+
   useEffect(() => {
     filterItems()
-  }, [searchQuery, filterType, items])
+  }, [filterItems])
 
   const loadLibrary = async () => {
     setLoading(true)
@@ -46,25 +65,6 @@ export default function ContentLibrary() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const filterItems = () => {
-    let filtered = [...items]
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.text.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    }
-
-    // Type filter
-    if (filterType !== 'all') {
-      filtered = filtered.filter(item => item.type === filterType)
-    }
-
-    setFilteredItems(filtered)
   }
 
   const handleUseItem = async (item: LibraryItem) => {

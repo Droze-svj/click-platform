@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
@@ -26,11 +26,7 @@ export default function PrivacySettings() {
   const [error, setError] = useState<Error | null>(null);
   const { handleError } = useErrorHandler();
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/privacy/settings', {
@@ -50,7 +46,11 @@ export default function PrivacySettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleError]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const updateSettings = async (newSettings: Partial<PrivacySettings>) => {
     setLoading(true);

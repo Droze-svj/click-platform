@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   Globe, 
   Zap, 
@@ -46,35 +46,35 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
   const [isBroadcasting, setIsBroadcasting] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchData()
-    const interval = setInterval(fetchPulse, 30000) // Pulse updates every 30s
-    return () => clearInterval(interval)
-  }, [niche])
-
-  const fetchData = async () => {
-    setLoading(true)
-    await Promise.all([fetchPulse(), fetchDrafts()])
-    setLoading(false)
-  }
-
-  const fetchPulse = async () => {
+  const fetchPulse = useCallback(async () => {
     try {
       const data = await apiGet(`/phase9/swarm/pulse?niche=${niche}`)
       setPulse(data)
     } catch (err) {
       console.error('Pulse fetch failed')
     }
-  }
+  }, [niche])
 
-  const fetchDrafts = async () => {
+  const fetchDrafts = useCallback(async () => {
     try {
       const { drafts } = await apiGet('/phase9/autonomic-cm/drafts')
       setDrafts(drafts)
     } catch (err) {
       console.error('Drafts fetch failed')
     }
-  }
+  }, [])
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    await Promise.all([fetchPulse(), fetchDrafts()])
+    setLoading(false)
+  }, [fetchPulse, fetchDrafts])
+
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchPulse, 30000) // Pulse updates every 30s
+    return () => clearInterval(interval)
+  }, [niche, fetchData, fetchPulse])
 
   const handleBroadcast = async () => {
     if (!videoId) {

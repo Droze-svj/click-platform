@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { sendDebugLog as sendDebugLogUtil } from '../utils/debugLog'
 
 interface DebugWrapperProps {
@@ -41,7 +41,7 @@ export default function DebugWrapper({
   const lastPropsRef = useRef<any>(null)
   const mountTimeRef = useRef<number>(Date.now())
 
-  const sendDebugLog = (message: string, data: Record<string, unknown>) => {
+  const sendDebugLog = useCallback((message: string, data: Record<string, unknown>) => {
     console.log('DebugWrapper:', message, { componentName, ...data })
     sendDebugLogUtil('DebugWrapper', `debug_wrapper_${message}`, {
       componentName,
@@ -49,11 +49,13 @@ export default function DebugWrapper({
       sessionId: 'debug-session',
       runId: 'run-debug-wrapper',
     })
-  }
+  }, [componentName])
 
   // Component lifecycle tracking
   useEffect(() => {
-    const mountDuration = Date.now() - mountTimeRef.current
+    const mountedAt = mountTimeRef.current
+    const metrics = renderMetricsRef.current
+    const mountDuration = Date.now() - mountedAt
 
     sendDebugLog('component_mounted', {
       debugLevel,
@@ -68,17 +70,17 @@ export default function DebugWrapper({
     })
 
     return () => {
-      const totalLifetime = Date.now() - mountTimeRef.current
+      const totalLifetime = Date.now() - mountedAt
       sendDebugLog('component_unmounted', {
         totalLifetime,
-        finalRenderCount: renderMetricsRef.current.renderCount,
+        finalRenderCount: metrics.renderCount,
         finalMemory: (performance as any).memory ? {
           used: (performance as any).memory.usedJSHeapSize,
           total: (performance as any).memory.totalJSHeapSize
         } : null
       })
     }
-  }, [componentName, debugLevel, trackRenders, trackProps, trackPerformance])
+  }, [componentName, debugLevel, trackRenders, trackProps, trackPerformance, sendDebugLog])
 
   // Props change detection
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function DebugWrapper({
 
     window.addEventListener('error', handleError)
     return () => window.removeEventListener('error', handleError)
-  }, [componentName])
+  }, [componentName, sendDebugLog])
 
   if (hasError && debugLevel !== 'basic') {
     return (

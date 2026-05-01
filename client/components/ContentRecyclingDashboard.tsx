@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   RefreshCw, TrendingUp, Clock, CheckCircle, XCircle, 
@@ -80,11 +80,7 @@ export default function EntropyReversalNode() {
   const [activeTab, setActiveTab] = useState<'suggestions' | 'plans' | 'stats'>('suggestions')
   const [selectedContent, setSelectedContent] = useState<RecyclableContent | null>(null)
 
-  useEffect(() => {
-    loadData()
-  }, [activeTab])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
@@ -105,7 +101,11 @@ export default function EntropyReversalNode() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const createRecyclingPlan = async (postId: string, options: any = {}) => {
     try {

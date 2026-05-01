@@ -133,6 +133,9 @@ export default function AutoTestRegistration() {
     }, 1000)
 
     return () => clearTimeout(timer)
+    // Run-once on mount: runAutoTest mutates the same state we'd otherwise
+    // depend on (autoRunning), so including it would loop the timer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

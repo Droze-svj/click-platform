@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Filter, X, Clock, Star, TrendingUp, Sparkles, Save, History, Bell, Eye, MoreVertical, Copy, ExternalLink, AlertCircle } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
 
@@ -55,6 +55,17 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
     loadSearchAlerts()
   }, [])
 
+  const loadSuggestions = useCallback(async () => {
+    try {
+      const response = await apiGet<any>(`/search/suggestions?q=${encodeURIComponent(query)}`)
+      if (response?.success) {
+        setSuggestions(response.data?.suggestions || [])
+      }
+    } catch (error) {
+      console.error('Error loading suggestions:', error)
+    }
+  }, [query])
+
   useEffect(() => {
     if (query.length >= 2) {
       const timer = setTimeout(() => {
@@ -64,7 +75,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
     } else {
       setSuggestions([])
     }
-  }, [query])
+  }, [query, loadSuggestions])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -97,16 +108,6 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
     }
   }
 
-  const loadSuggestions = async () => {
-    try {
-      const response = await apiGet<any>(`/search/suggestions?q=${encodeURIComponent(query)}`)
-      if (response?.success) {
-        setSuggestions(response.data?.suggestions || [])
-      }
-    } catch (error) {
-      console.error('Error loading suggestions:', error)
-    }
-  }
 
   const loadSearchHistory = async () => {
     if (process.env.NODE_ENV === 'development') {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CheckCircle, XCircle, Clock, AlertCircle, Eye, MessageSquare, RefreshCw } from 'lucide-react'
 import axios from 'axios'
 
@@ -41,16 +41,12 @@ export default function ApprovalDashboard() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'approved' | 'rejected'>('all')
   const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null)
 
-  useEffect(() => {
-    loadApprovals()
-  }, [filter])
-
-  const loadApprovals = async () => {
+  const loadApprovals = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
       const status = filter !== 'all' ? filter : null
-      
+
       const response = await axios.get(
         `${API_URL}/approvals/my-approvals${status ? `?status=${status}` : ''}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -64,7 +60,11 @@ export default function ApprovalDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
+
+  useEffect(() => {
+    loadApprovals()
+  }, [loadApprovals])
 
   const handleApprove = async (approvalId: string, comment: string = '') => {
     try {

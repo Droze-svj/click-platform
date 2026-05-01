@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, BookOpen, MessageCircle, HelpCircle, ChevronRight } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
 
@@ -26,12 +26,7 @@ export default function HelpCenter() {
   const [isLoading, setIsLoading] = useState(false)
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadCategories()
-    loadArticles()
-  }, [selectedCategory, searchQuery])
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/help/categories', {
         credentials: 'include',
@@ -44,9 +39,9 @@ export default function HelpCenter() {
     } catch (error) {
       console.error('Failed to load categories:', error)
     }
-  }
+  }, [])
 
-  const loadArticles = async () => {
+  const loadArticles = useCallback(async () => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
@@ -66,7 +61,12 @@ export default function HelpCenter() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [selectedCategory, searchQuery])
+
+  useEffect(() => {
+    loadCategories()
+    loadArticles()
+  }, [loadCategories, loadArticles])
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">

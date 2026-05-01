@@ -239,7 +239,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
       tracks.push({ id: i, label: `Layer ${i-4}`, color: '#8B5CF6', icon: Layers });
     }
     return tracks;
-  }, [maxTrack, timelineSegments]);
+  }, [maxTrack]);
 
   // ── Track bands (DOM — drawn beneath the Konva canvas) ──────────────────────
   const totalTrackHeight = DYNAMIC_TRACKS.length * (TRACK_HEIGHT + TRACK_GAP)

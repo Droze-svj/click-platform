@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface NicheInfo {
   niche: string;
@@ -45,13 +45,22 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
   const [loading, setLoading] = useState(false);
   const [copiedHook, setCopiedHook] = useState<string | null>(null);
 
+  const fetchHookTypes = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/intelligence/niche/${currentNiche}/hooks?count=5`);
+      const data = await res.json();
+      if (data.hookTypes) setHookTypes(data.hookTypes);
+    } catch { /* silent */ }
+  }, [currentNiche]);
+
   useEffect(() => {
     fetchNiches();
     fetchHookTypes();
-  }, []);
+  }, [fetchHookTypes]);
 
   useEffect(() => {
     fetchNicheIntel(selectedNiche);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNiche, currentPlatform]);
 
   const fetchNiches = async () => {
@@ -59,14 +68,6 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
       const res = await fetch('/api/intelligence/niches');
       const data = await res.json();
       if (data.success) setAllNiches(data.niches);
-    } catch { /* silent */ }
-  };
-
-  const fetchHookTypes = async () => {
-    try {
-      const res = await fetch(`/api/intelligence/niche/${currentNiche}/hooks?count=5`);
-      const data = await res.json();
-      if (data.hookTypes) setHookTypes(data.hookTypes);
     } catch { /* silent */ }
   };
 

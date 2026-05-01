@@ -52,6 +52,11 @@ export default function RealtimeCollaboration({
       socket.off('connect')
       socket.off('disconnect')
     }
+    // Handlers and joinSession/leaveSession close over stable values; converting
+    // them all to useCallback with their full dep set would create a cycle with
+    // the activeUsers state they update. Effect should only re-run when the
+    // socket or contentId changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, contentId])
 
   const joinSession = async () => {

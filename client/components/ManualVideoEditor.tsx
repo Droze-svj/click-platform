@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Palette,
   Music,
@@ -80,15 +80,7 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
     { id: 'tutorials',   name: 'Learn',       icon: Zap,      gradient: 'from-lime-500 to-green-600' },
   ]
 
-  // Load edit history
-  useEffect(() => {
-    if (videoId) {
-      loadEditHistory()
-      loadPresets()
-    }
-  }, [videoId])
-
-  const loadEditHistory = async () => {
+  const loadEditHistory = useCallback(async () => {
     if (!videoId) return
     try {
       const token = localStorage.getItem('token')
@@ -104,7 +96,16 @@ export default function ManualVideoEditor({ videoId, videoUrl, onExport }: Manua
     } catch (error) {
       console.error('Failed to load edit history', error)
     }
-  }
+  }, [videoId])
+
+  // Load edit history
+  useEffect(() => {
+    if (videoId) {
+      loadEditHistory()
+      loadPresets()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId, loadEditHistory])
 
   const loadPresets = async () => {
     try {
@@ -1176,11 +1177,7 @@ function MarketplaceTab({ onProcess }: { onProcess: any }) {
   const [category, setCategory] = useState('all')
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadTemplates()
-  }, [category])
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const url = category === 'all'
@@ -1197,7 +1194,11 @@ function MarketplaceTab({ onProcess }: { onProcess: any }) {
     } catch (error) {
       console.error('Failed to load templates', error)
     }
-  }
+  }, [category])
+
+  useEffect(() => {
+    loadTemplates()
+  }, [loadTemplates])
 
   const handleDownload = async (templateId: string) => {
     try {
@@ -1263,11 +1264,7 @@ function TutorialsTab({ videoId }: { videoId?: string }) {
   const [tooltips, setTooltips] = useState<any>({})
   const { showToast } = useToast()
 
-  useEffect(() => {
-    loadTutorials()
-  }, [feature])
-
-  const loadTutorials = async () => {
+  const loadTutorials = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const [tutorialsRes, tooltipsRes] = await Promise.all([
@@ -1291,7 +1288,11 @@ function TutorialsTab({ videoId }: { videoId?: string }) {
     } catch (error) {
       console.error('Failed to load tutorials', error)
     }
-  }
+  }, [feature])
+
+  useEffect(() => {
+    loadTutorials()
+  }, [loadTutorials])
 
   return (
     <div className="space-y-4">

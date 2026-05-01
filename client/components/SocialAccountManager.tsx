@@ -44,7 +44,7 @@ export default function SocialAccountManager() {
             try {
                 const connections = await getConnections()
                 const formattedAccounts: SocialAccount[] = []
-                
+
                 Object.entries(connections).forEach(([platform, data]: [string, any]) => {
                     if (data) {
                         formattedAccounts.push({
@@ -56,7 +56,7 @@ export default function SocialAccountManager() {
                         })
                     }
                 })
-                
+
                 setAccounts(formattedAccounts)
             } catch (error) {
                 console.error('Failed to fetch connections:', error)
@@ -66,6 +66,7 @@ export default function SocialAccountManager() {
         }
 
         fetchAccounts()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const handleLink = async (platformId: string) => {

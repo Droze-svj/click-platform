@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './MarketingStrategistChat.css';
 import AgentAvatar from './AgentAvatar';
 
@@ -45,6 +45,14 @@ export default function MarketingStrategistChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const fetchQuickTips = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/intelligence/strategist/tips?niche=${niche || ''}&platform=${platforms[0]}&count=3`);
+      const data = await res.json();
+      if (data.success) setQuickTips(data.tips);
+    } catch { /* silent fail */ }
+  }, [niche, platforms]);
+
   useEffect(() => {
     // Load quick tips on mount
     fetchQuickTips();
@@ -56,19 +64,11 @@ export default function MarketingStrategistChat({
       timestamp: new Date(),
       followUps: STARTER_QUESTIONS.slice(0, 3)
     }]);
-  }, [niche]);
+  }, [niche, fetchQuickTips]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const fetchQuickTips = async () => {
-    try {
-      const res = await fetch(`/api/intelligence/strategist/tips?niche=${niche || ''}&platform=${platforms[0]}&count=3`);
-      const data = await res.json();
-      if (data.success) setQuickTips(data.tips);
-    } catch { /* silent fail */ }
-  };
 
   const sendMessage = async (text?: string) => {
     const question = text || inputValue.trim();

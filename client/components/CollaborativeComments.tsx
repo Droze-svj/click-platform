@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Send, X, User } from 'lucide-react'
 import { apiGet, apiPost } from '../lib/api'
@@ -26,9 +26,22 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  const loadComments = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await apiGet(`/comments?entityId=${entityId}`)
+      setComments((res as any)?.data || [])
+      setTimeout(scrollToBottom, 100)
+    } catch (err) {
+      console.error('Failed to load comments', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [entityId])
+
   useEffect(() => {
     loadComments()
-  }, [entityId])
+  }, [loadComments])
 
   useEffect(() => {
     if (!socket || !entityId) return
@@ -44,19 +57,6 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
       off(`comment:${entityId}`, handleNewComment)
     }
   }, [socket, entityId, on, off])
-
-  const loadComments = async () => {
-    setLoading(true)
-    try {
-      const res = await apiGet(`/comments?entityId=${entityId}`)
-      setComments((res as any)?.data || [])
-      setTimeout(scrollToBottom, 100)
-    } catch (err) {
-      console.error('Failed to load comments', err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSend = async () => {
     if (!newComment.trim() || !user || !teamId) return

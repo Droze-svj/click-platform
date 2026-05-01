@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Wand2, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import axios from 'axios'
 
@@ -36,17 +36,11 @@ export default function ContentAdaptationAssistant({
     originalContent.platforms || ['twitter', 'linkedin', 'instagram', 'facebook', 'youtube', 'tiktok']
   )
 
-  useEffect(() => {
-    if (contentId && originalContent.text) {
-      generateAdaptations()
-    }
-  }, [contentId])
-
-  const generateAdaptations = async () => {
+  const generateAdaptations = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await axios.post(
         `${API_URL}/ai/adapt-content`,
         {
@@ -67,7 +61,13 @@ export default function ContentAdaptationAssistant({
     } finally {
       setLoading(false)
     }
-  }
+  }, [contentId, originalContent.text, originalContent.title, selectedPlatforms, onAdapted])
+
+  useEffect(() => {
+    if (contentId && originalContent.text) {
+      generateAdaptations()
+    }
+  }, [contentId, originalContent.text, generateAdaptations])
 
   const applyAdaptation = async (platform: string, adaptation: Adaptation) => {
     try {

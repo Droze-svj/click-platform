@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Clock, X, Search } from 'lucide-react'
 
 interface RecentSearchesProps {
@@ -11,11 +11,7 @@ interface RecentSearchesProps {
 export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearchesProps) {
   const [searches, setSearches] = useState<string[]>([])
 
-  useEffect(() => {
-    loadRecentSearches()
-  }, [])
-
-  const loadRecentSearches = () => {
+  const loadRecentSearches = useCallback(() => {
     const stored = localStorage.getItem('recent_searches')
     if (stored) {
       try {
@@ -24,7 +20,11 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
         console.error('Failed to load recent searches:', error)
       }
     }
-  }
+  }, [maxItems])
+
+  useEffect(() => {
+    loadRecentSearches()
+  }, [loadRecentSearches])
 
   const saveSearch = (query: string) => {
     if (!query.trim()) return

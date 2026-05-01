@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Sliders, RotateCcw, Download, Upload, Palette, Eye, EyeOff } from 'lucide-react'
 
 interface ColorGradeSettings {
@@ -47,7 +47,7 @@ export default function AdvancedColorGrading({
   const [showPreview, setShowPreview] = useState(true)
   const [draggedPoint, setDraggedPoint] = useState<{ curve: keyof ColorGradeSettings['curves'], index: number } | null>(null)
 
-  const defaultSettings: ColorGradeSettings = {
+  const defaultSettings = useMemo<ColorGradeSettings>(() => ({
     brightness: 100,
     contrast: 100,
     saturation: 100,
@@ -73,9 +73,9 @@ export default function AdvancedColorGrading({
       green: [0, 25, 50, 75, 100],
       blue: [0, 25, 50, 75, 100]
     }
-  }
+  }), [])
 
-  const settings = { ...defaultSettings, ...currentSettings }
+  const settings = useMemo(() => ({ ...defaultSettings, ...currentSettings }), [defaultSettings, currentSettings])
 
   const updateSetting = useCallback((key: keyof ColorGradeSettings, value: any) => {
     onSettingsChange({ ...settings, [key]: value })
@@ -91,7 +91,7 @@ export default function AdvancedColorGrading({
 
   const resetSettings = useCallback(() => {
     onSettingsChange(defaultSettings)
-  }, [onSettingsChange])
+  }, [onSettingsChange, defaultSettings])
 
   const exportSettings = useCallback(() => {
     const dataStr = JSON.stringify(settings, null, 2)
@@ -119,7 +119,7 @@ export default function AdvancedColorGrading({
       }
     }
     reader.readAsText(file)
-  }, [onSettingsChange])
+  }, [onSettingsChange, defaultSettings])
 
   // Draw curves on canvas
   useEffect(() => {

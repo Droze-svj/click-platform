@@ -14,4 +14,6 @@ export class HookSimulator {
     };
   }
 }
-export default new HookSimulator();
+
+const hookSimulator = new HookSimulator();
+export default hookSimulator;

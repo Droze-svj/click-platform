@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { API_URL } from '@/lib/api'
 
@@ -56,11 +56,7 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
   const [aiSummary, setAiSummary] = useState<string | null>(null)
   const [generatingSummary, setGeneratingSummary] = useState(false)
 
-  useEffect(() => {
-    loadRollup()
-  }, [agencyWorkspaceId])
-
-  const loadRollup = async () => {
+  const loadRollup = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const res = await axios.get(
@@ -75,7 +71,11 @@ export default function MultiClientRollupDashboard({ agencyWorkspaceId }: MultiC
     } finally {
       setLoading(false)
     }
-  }
+  }, [agencyWorkspaceId])
+
+  useEffect(() => {
+    loadRollup()
+  }, [loadRollup])
 
   const generateSummary = async () => {
     setGeneratingSummary(true)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
@@ -30,13 +30,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
   const [loading, setLoading] = useState(true)
   const [selectedVersion, setSelectedVersion] = useState<Version | null>(null)
 
-  useEffect(() => {
-    if (contentId) {
-      loadVersions()
-    }
-  }, [contentId])
-
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(
@@ -53,7 +47,13 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
     } finally {
       setLoading(false)
     }
-  }
+  }, [contentId, showToast])
+
+  useEffect(() => {
+    if (contentId) {
+      loadVersions()
+    }
+  }, [contentId, loadVersions])
 
   const handleRestore = async (version: Version) => {
     if (!confirm(`Restore to version ${version.versionNumber}? This will overwrite the current content.`)) {

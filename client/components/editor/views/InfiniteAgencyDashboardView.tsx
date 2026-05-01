@@ -134,6 +134,10 @@ const InfiniteAgencyDashboardView: React.FC = () => {
       const rawSL = slRes as any; if (rawSL.success) setSlaSummary(rawSL.data)
       const rawR = rRes as any; if (rawR.success) setLatestReports(rawR.data.reports)
     } catch { /* Silent */ }
+    // financials/ledgerState are passed as fallback values inside catch chains
+    // for endpoints that may fail; including them would re-fetch on every state
+    // update they themselves write.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => { loadAll() }, [loadAll])

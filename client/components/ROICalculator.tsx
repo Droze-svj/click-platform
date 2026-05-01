@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { DollarSign, TrendingUp, Target, Calculator } from 'lucide-react'
 import axios from 'axios'
 
@@ -28,15 +28,11 @@ export default function ROICalculator() {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d')
   const [hourlyRate, setHourlyRate] = useState(50)
 
-  useEffect(() => {
-    loadROIData()
-  }, [period, hourlyRate])
-
-  const loadROIData = async () => {
+  const loadROIData = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      
+
       const response = await axios.get(
         `${API_URL}/analytics/roi?period=${period}&hourlyRate=${hourlyRate}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -50,7 +46,11 @@ export default function ROICalculator() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [period, hourlyRate])
+
+  useEffect(() => {
+    loadROIData()
+  }, [loadROIData])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {

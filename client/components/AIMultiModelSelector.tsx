@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -45,11 +45,7 @@ export default function AIMultiModelSelector() {
   const [error, setError] = useState<Error | null>(null);
   const { handleError } = useErrorHandler();
 
-  useEffect(() => {
-    fetchModels();
-  }, []);
-
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     if (process.env.NODE_ENV === 'development') {
       console.log('🔧 [AIMultiModelSelector] Skipping models API call in development mode')
       setLoading(false)
@@ -72,7 +68,11 @@ export default function AIMultiModelSelector() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleError]);
+
+  useEffect(() => {
+    fetchModels();
+  }, [fetchModels]);
 
   const initProvider = async (provider: string, model: string) => {
     setLoading(true);

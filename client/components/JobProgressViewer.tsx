@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Clock,
   CheckCircle2,
@@ -61,11 +61,7 @@ export default function JobProgressViewer({
     },
   })
 
-  useEffect(() => {
-    loadJobProgress()
-  }, [jobId, queueName])
-
-  const loadJobProgress = async () => {
+  const loadJobProgress = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await fetch(`/api/jobs/${queueName}/${jobId}/progress`, {
@@ -84,19 +80,26 @@ export default function JobProgressViewer({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [jobId, queueName])
 
-  // Update job with realtime progress
   useEffect(() => {
-    if (realtimeProgress && job) {
-      setJob({
-        ...job,
-        progress: realtimeProgress.progress || job.progress,
+    loadJobProgress()
+  }, [loadJobProgress])
+
+  // Update job with realtime progress. Use functional setState to avoid
+  // depending on `job` (which would re-run this effect on every state change).
+  useEffect(() => {
+    if (!realtimeProgress) return
+    setJob(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        progress: realtimeProgress.progress || prev.progress,
         state: realtimeProgress.status === 'completed' ? 'completed' :
           realtimeProgress.status === 'failed' ? 'failed' :
-            realtimeProgress.status === 'processing' ? 'active' : job.state,
-      })
-    }
+            realtimeProgress.status === 'processing' ? 'active' : prev.state,
+      }
+    })
   }, [realtimeProgress])
 
   if (isLoading && !job) {
