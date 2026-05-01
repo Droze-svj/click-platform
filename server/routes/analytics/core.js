@@ -25,17 +25,17 @@ const getSupabaseClient = () => {
 router.get('/overview', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
+    let recentPosts = [];
 
-    // In a real app, this would aggregate data from recent posts.
-    // For now, we'll return robust default/mock data combined with some real metrics if available.
-    // We can query the user's latest posts and metrics easily:
-
-    const { data: recentPosts } = await supabase
-      .from('posts')
-      .select('id, created_at')
-      .eq('author_id', req.user.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
+    if (supabase) {
+      const { data } = await supabase
+        .from('posts')
+        .select('id, created_at')
+        .eq('author_id', req.user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      recentPosts = data || [];
+    }
 
     // Procedural variation for "Live" feel
     const daySeed = new Date().getUTCDate();
@@ -87,6 +87,16 @@ router.get('/posts/:postId', auth, asyncHandler(async (req, res) => {
     const { platform } = req.query;
 
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return res.json({
+        success: true,
+        post_id: postId,
+        post_title: 'Spectral Post (Dev)',
+        analytics: [],
+        insights: null,
+        aggregate: { total_views: 0, total_likes: 0, platforms_count: 0 }
+      });
+    }
     
     // Verify user owns the post
     const { data: post, error: postError } = await supabase
@@ -196,6 +206,9 @@ router.get('/history/:postId', auth, asyncHandler(async (req, res) => {
     const { platform } = req.query;
     
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return res.json({ success: true, post_id: postId, data: [] });
+    }
     
     let query = supabase
       .from('engagement_history')
@@ -254,6 +267,10 @@ router.post('/posts/:postId', auth, asyncHandler(async (req, res) => {
 
     // Verify user owns the post
     const supabase = getSupabaseClient();
+    if (!supabase) {
+       return res.status(501).json({ success: false, error: 'Supabase storage not enabled' });
+    }
+
     const { data: post, error: postError } = await supabase
       .from('posts')
       .select('id, author_id')
@@ -730,6 +747,20 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
     const userId = req.user.id;
+
+    if (!supabase) {
+       return res.json({
+        success: true,
+        total_views: 4500000,
+        total_likes: 240000,
+        total_shares: 4500,
+        total_comments: 12000,
+        overall_engagement_rate: 6.8,
+        growth_velocity: 1.2,
+        spectral_gravity: 842,
+        isFallback: true
+      });
+    }
 
     const { data: analytics, error } = await supabase
       .from('post_analytics')

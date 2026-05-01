@@ -73,6 +73,11 @@ const scheduledPostSchema = new mongoose.Schema({
     default: 0
   },
   platformPostId: String,
+  postedAt: {
+    type: Date,
+    index: true
+  },
+  lastAnalyticsSync: Date,
   analytics: {
     // Reach & Impressions
     impressions: {
@@ -164,6 +169,8 @@ scheduledPostSchema.index({ agencyWorkspaceId: 1, scheduledTime: 1 }); // Agency
 scheduledPostSchema.index({ clientWorkspaceId: 1, scheduledTime: 1 }); // Client workspace calendar
 scheduledPostSchema.index({ workspaceId: 1, scheduledTime: 1 }); // Workspace calendar
 scheduledPostSchema.index({ campaignId: 1 }); // Campaign posts
+scheduledPostSchema.index({ userId: 1, status: 1, postedAt: -1 }); // Optimal-time aggregation
+scheduledPostSchema.index({ status: 1, lastAnalyticsSync: 1 }); // Resync queue
 
 // Real-time update hooks
 scheduledPostSchema.post('save', async function (doc) {

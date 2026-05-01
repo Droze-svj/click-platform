@@ -356,6 +356,9 @@ setImmediate(() => {
       const { scheduleHealthReports } = require('./services/healthReportSchedulerService');
       scheduleHealthReports();
 
+      const { startIngestionCron } = require('./services/platformIngestionCronService');
+      startIngestionCron();
+
       const { initQueryMonitoring } = require('./services/queryPerformanceMonitor');
       initQueryMonitoring();
 

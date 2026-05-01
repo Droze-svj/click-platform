@@ -5,12 +5,12 @@ const auth = require('../../middleware/auth');
 
 const {
   compressVideo,
-  generateThumbnail,
   getVideoMetadata,
   convertVideoFormat,
   trimVideo,
   extractAudio,
 } = require('../../services/advancedVideoProcessingService');
+const { generateNeuralThumbnail } = require('../../services/thumbnailService');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../../utils/response');
 const logger = require('../../utils/logger');
@@ -237,12 +237,27 @@ router.post('/thumbnail', auth, upload.single('video'), asyncHandler(async (req,
     operation,
     handler: async (onProgress) => {
       onProgress(20, 'Extracting frame');
-      const resultPath = await generateThumbnail(inputPath, outputPath, {
-        time,
-        width: parseInt(width) || 1280,
-        height: parseInt(height) || 720,
-        quality: parseInt(quality) || 90,
-      });
+      // Honor caller-provided `time`. If absent, the neural variant consults
+      // real engagement signal (heatmap / retention) when a postId is known,
+      // and falls back to an ffprobe midpoint instead of a black second-0 frame.
+      const explicitTime = (time !== undefined && time !== null && time !== '')
+        ? Number(time)
+        : undefined;
+      const resultPath = await generateNeuralThumbnail(
+        inputPath,
+        outputPath,
+        {
+          bestThumbnail: explicitTime !== undefined && Number.isFinite(explicitTime)
+            ? { time: explicitTime }
+            : undefined,
+          postId: bodyVideoId && /^[0-9a-f]{24}$/i.test(bodyVideoId) ? bodyVideoId : undefined,
+        },
+        {
+          width: parseInt(width) || 1280,
+          height: parseInt(height) || 720,
+          quality: parseInt(quality) || 90,
+        }
+      );
       onProgress(95, 'Finalizing');
 
       if (!req.file && inputPath && inputPath.includes(`${path.sep}uploads${path.sep}tmp${path.sep}`)) {

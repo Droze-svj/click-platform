@@ -155,8 +155,21 @@ async function runPipeline(job) {
     job.logs.push(`[AgenticGraph] Foley synthesis bypassed: ${err.message}`);
   }
 
+  // Merge core clips with dynamically sourced B-Roll
+  const baseClips = finalGraphOutput?.finalTimeline?.clips || generateMockClips(job.videoId);
+  const brollClips = (job.suggestedBroll || []).map((b, i) => ({
+    id: `broll-${i}`,
+    videoId: b.assetId,
+    title: b.title,
+    url: b.url,
+    startTime: b.startTime,
+    duration: b.endTime - b.startTime,
+    track: 1, // Layer 1 (B-Roll)
+    color: '#F59E0B'
+  }));
+
   job.result = {
-    clips: finalGraphOutput?.finalTimeline?.clips || generateMockClips(job.videoId),
+    clips: [...baseClips, ...brollClips],
     sfx: foleyNodes,
     metadata: generateMockMetadata(),
     calendarSlots: ['Mon 9am', 'Tue 9am', 'Wed 9am'],
@@ -247,10 +260,11 @@ async function executeStep(stepId, job, isRetry = false) {
     case 'broll': {
       logger.info('AgenticStep: Sourcing B-roll', { videoId });
       const { getSmartBRollSuggestions } = require('./aiAssetMatchingService');
-      const suggestions = await getSmartBRollSuggestions(job.transcript || '');
+      const suggestions = await getSmartBRollSuggestions(job.transcript || '', job.words || []);
+      job.suggestedBroll = suggestions.suggestions || [];
       return {
         suggestedClips: suggestions.suggestions?.length || 0,
-        source: suggestions.suggestions?.[0]?.title || 'Stock'
+        source: suggestions.suggestions?.[0]?.query || 'Stock'
       };
     }
 

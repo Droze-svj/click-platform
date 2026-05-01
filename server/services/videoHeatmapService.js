@@ -267,9 +267,101 @@ async function getEngagementHeatmap(postId) {
   }
 }
 
+/**
+ * Pick the best timestamp (in seconds) for a video thumbnail, derived from
+ * real engagement signal — never an arbitrary fallback like "first second".
+ *
+ * Priority of signal:
+ *   1. Existing `VideoEngagementHeatmap` for this post — combined intensity
+ *   2. Retention curve on `VideoMetrics` for this post — peak retention second
+ *   3. Retention curves of the user's other top-performing videos on the same
+ *      platform (transfer signal: where do *their* viewers stay engaged?)
+ *
+ * Returns `null` if no real signal exists (caller should fall back, not guess).
+ */
+async function pickBestThumbnailTime(postId, opts = {}) {
+  try {
+    // 1) Per-post heatmap
+    const heatmap = await VideoEngagementHeatmap.findOne({ postId }).lean();
+    if (heatmap?.heatmap?.data?.length) {
+      const points = heatmap.heatmap.data;
+      const peak = points.reduce((best, p) =>
+        (p.intensity || 0) > (best.intensity || -1) ? p : best
+      , { intensity: -1 });
+      if (peak.second !== undefined && peak.intensity > 0) {
+        return { second: peak.second, source: 'heatmap', confidence: 'high' };
+      }
+    }
+
+    // 2) Per-post retention curve
+    const metrics = await VideoMetrics.findOne({ postId }).lean();
+    const curve = metrics?.retention?.curve || [];
+    if (curve.length) {
+      const peak = curve.reduce((best, p) =>
+        (p.percentage || 0) > (best.percentage || -1) ? p : best
+      , { percentage: -1 });
+      if (peak.second !== undefined && peak.percentage > 0) {
+        return { second: peak.second, source: 'retention', confidence: 'medium' };
+      }
+    }
+
+    // 3) Cross-video transfer: peak retention second among the user's top
+    // videos on the same platform. Useful for brand-new uploads that have no
+    // metrics of their own yet.
+    if (metrics?.workspaceId && metrics?.platform) {
+      const peers = await VideoMetrics.find({
+        workspaceId: metrics.workspaceId,
+        platform: metrics.platform,
+        postId: { $ne: postId },
+        'retention.curve.0': { $exists: true },
+      })
+        .sort({ performanceScore: -1 })
+        .limit(5)
+        .select('retention video.duration')
+        .lean();
+
+      if (peers.length) {
+        // Average retention across peers, normalized to fraction of duration.
+        const buckets = new Map(); // ratio (0..1, 5%) -> sum, count
+        for (const peer of peers) {
+          const dur = peer.video?.duration || 0;
+          if (!dur) continue;
+          for (const p of peer.retention.curve) {
+            const ratio = Math.round((p.second / dur) * 20) / 20;
+            const cur = buckets.get(ratio) || { sum: 0, count: 0 };
+            cur.sum += p.percentage || 0;
+            cur.count += 1;
+            buckets.set(ratio, cur);
+          }
+        }
+        let bestRatio = null;
+        let bestMean = -1;
+        for (const [ratio, { sum, count }] of buckets) {
+          const mean = sum / count;
+          if (mean > bestMean) { bestMean = mean; bestRatio = ratio; }
+        }
+        const targetDuration = opts.videoDuration || metrics.video?.duration || 0;
+        if (bestRatio !== null && targetDuration > 0) {
+          return {
+            second: Math.round(bestRatio * targetDuration),
+            source: 'peer-retention',
+            confidence: 'low',
+          };
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    logger.warn('pickBestThumbnailTime failed', { postId, error: error.message });
+    return null;
+  }
+}
+
 module.exports = {
   generateEngagementHeatmap,
-  getEngagementHeatmap
+  getEngagementHeatmap,
+  pickBestThumbnailTime
 };
 
 

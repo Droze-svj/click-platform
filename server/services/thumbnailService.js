@@ -166,16 +166,56 @@ async function generateThumbnailWithText(videoPath, outputPath, text) {
 }
 
 /**
- * Generate neural-optimized thumbnail (Phase 14)
- * Picks the best frame based on key moments/saliency
+ * Generate neural-optimized thumbnail.
+ *
+ * Frame-time selection (in priority order):
+ *   1. Caller-provided `keyMoments.bestThumbnail.time`
+ *   2. Real engagement signal from videoHeatmapService.pickBestThumbnailTime
+ *      (peak heatmap intensity, peak retention, or peer-video transfer)
+ *   3. ffprobe duration midpoint — better than second 0, which is almost
+ *      always a black frame on platform-encoded videos
  */
-async function generateNeuralThumbnail(videoPath, outputPath, keyMoments = {}) {
-  const bestMoment = keyMoments.bestThumbnail?.time || 0;
-  logger.info('Neural Thumbnail: Targeting best visual moment', { time: bestMoment });
-  
+async function generateNeuralThumbnail(videoPath, outputPath, keyMoments = {}, renderOpts = {}) {
+  let bestMoment = keyMoments.bestThumbnail?.time;
+  let source = 'caller';
+
+  if (bestMoment === undefined && keyMoments.postId) {
+    try {
+      const { pickBestThumbnailTime } = require('./videoHeatmapService');
+      const pick = await pickBestThumbnailTime(keyMoments.postId, {
+        videoDuration: keyMoments.videoDuration,
+      });
+      if (pick) {
+        bestMoment = pick.second;
+        source = pick.source;
+      }
+    } catch (err) {
+      logger.warn('Neural Thumbnail: heatmap lookup failed', { error: err.message });
+    }
+  }
+
+  if (bestMoment === undefined) {
+    bestMoment = await safeMidpoint(videoPath);
+    source = 'midpoint-fallback';
+  }
+
+  logger.info('Neural Thumbnail: targeting frame', { time: bestMoment, source });
   return await generateThumbnail(videoPath, outputPath, {
     time: bestMoment,
-    quality: 95
+    width: renderOpts.width || 1280,
+    height: renderOpts.height || 720,
+    quality: renderOpts.quality || 95,
+  });
+}
+
+function safeMidpoint(videoPath) {
+  return new Promise((resolve) => {
+    try {
+      ffmpeg.ffprobe(videoPath, (err, metadata) => {
+        if (err || !metadata?.format?.duration) return resolve(1);
+        resolve(Math.max(1, Math.floor(metadata.format.duration / 2)));
+      });
+    } catch (_) { resolve(1); }
   });
 }
 

@@ -4,7 +4,21 @@ const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const cron = require('node-cron');
+const { getOptimalPostingWindows } = require('../services/optimalPostingTimeService');
 const router = express.Router();
+
+// Get optimal posting windows derived from a user's real per-platform engagement.
+// Returns `confident: false` (and empty windows) if the user has fewer than the
+// minimum required posts — the UI should NOT show a recommendation in that case.
+router.get('/optimal-times', auth, asyncHandler(async (req, res) => {
+  const { platform, timezone, lookbackDays } = req.query;
+  const result = await getOptimalPostingWindows(req.user._id, {
+    platform: platform || null,
+    timezone: timezone || null,
+    lookbackDays: lookbackDays ? parseInt(lookbackDays, 10) : undefined,
+  });
+  res.json({ success: true, data: result });
+}));
 
 // Schedule a post
 router.post('/schedule', auth, async (req, res) => {
@@ -231,6 +245,7 @@ cron.schedule('* * * * *', async () => {
 
             post.status = 'posted';
             post.platformPostId = result.platformPostId || result._id?.toString() || `post-${Date.now()}`;
+            post.postedAt = new Date();
             await post.save();
 
             logger.info('Post published', {
@@ -251,6 +266,7 @@ cron.schedule('* * * * *', async () => {
           // No connection - mark as posted (mock for now)
           post.status = 'posted';
           post.platformPostId = `mock-${Date.now()}`;
+          post.postedAt = new Date();
           await post.save();
 
           logger.info('Post marked as posted (no connection)', {

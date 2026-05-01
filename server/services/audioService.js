@@ -175,10 +175,56 @@ async function extractAudio(videoPath, outputPath) {
   });
 }
 
+/**
+ * Extract audio energy profile (loudness/energy over time)
+ * @param {string} audioPath - Path to audio file
+ * @returns {Promise<Array<{time: number, energy: number}>>}
+ */
+async function getAudioEnergyProfile(audioPath) {
+  return new Promise((resolve, reject) => {
+    const profile = [];
+    let lastTime = -1;
+    
+    // Use astats filter to get audio statistics
+    ffmpeg(audioPath)
+      .outputOptions([
+        '-af', 'astats=metadata=1:reset=1',
+        '-f', 'null'
+      ])
+      .on('stderr', (stderrLine) => {
+        // Parse pkt_pts_time and lavfi.astats.Overall.RMS_level
+        // We only take samples every 0.1s to avoid flooding
+        const timeMatch = stderrLine.match(/pkt_pts_time:([\d.]+)/);
+        const rmsMatch = stderrLine.match(/lavfi.astats.Overall.RMS_level:([-.\d]+)/);
+        
+        if (timeMatch && rmsMatch) {
+          const time = parseFloat(timeMatch[1]);
+          if (time >= lastTime + 0.1) {
+            const rms = parseFloat(rmsMatch[1]);
+            // Convert RMS dB to 0-1 scale (-60dB to 0dB)
+            const energy = Math.max(0, Math.min(1, (rms + 60) / 60));
+            profile.push({ time, energy });
+            lastTime = time;
+          }
+        }
+      })
+      .on('end', () => {
+        logger.info('Audio energy profile completed', { samples: profile.length });
+        resolve(profile);
+      })
+      .on('error', (err) => {
+        logger.warn('Audio energy profile failed, using mock data', { error: err.message });
+        resolve([]);
+      })
+      .run();
+  });
+}
+
 module.exports = {
   mixMusicWithVideo,
   normalizeAudio,
-  extractAudio
+  extractAudio,
+  getAudioEnergyProfile
 };
 
 

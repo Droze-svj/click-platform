@@ -322,6 +322,17 @@ export default function DynamicSubtitleEngine({
             <AnimatePresence mode="popLayout">
               {currentChunk.map((word, idx) => {
                 const isActive = words.indexOf(word) === activeWordIndex
+                
+                // True Karaoke Fill Calculation
+                let fillPct = 0;
+                if (currentTime >= word.end) fillPct = 100;
+                else if (currentTime > word.start && isActive) {
+                  fillPct = Math.max(0, Math.min(100, ((currentTime - word.start) / (word.end - word.start)) * 100));
+                }
+
+                // Procedural jitter calculation if shouting
+                const proceduralJitter = (isActive && isShouting) ? [-1, 1, -2, 2, 0] : 0
+
                 return (
                   <motion.span
                     key={`${word.text}-${word.start}`}
@@ -330,17 +341,30 @@ export default function DynamicSubtitleEngine({
                       opacity: 1,
                       scale: isActive ? 1.4 * vocalScale : vocalScale,
                       y: 0,
-                      rotate: (isActive && isShouting) ? [-1, 1, -1, 0] : 0,
+                      rotate: proceduralJitter,
                     }}
                     transition={{ duration: 0.15 }}
-                    style={{ fontSize: effectiveFontSize }}
+                    style={{ 
+                      fontSize: effectiveFontSize,
+                      '--karaoke-fill': `${fillPct}%` 
+                    } as React.CSSProperties}
                     className={`uppercase ${activePreset.font} transition-colors duration-200 ${
                       isActive
-                        ? `${activePreset.highlightColor} drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] z-10`
+                        ? `drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] z-10`
                         : 'text-white opacity-40'
                     }`}
                   >
-                    {word.text}
+                    <span 
+                      style={{
+                        background: isActive ? `linear-gradient(to right, var(--tw-gradient-from) var(--karaoke-fill), white var(--karaoke-fill))` : 'white',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: isActive ? 'transparent' : 'white',
+                        display: 'inline-block'
+                      }}
+                      className={isActive ? `from-${activePreset.highlightColor.split('-')[1]}-${activePreset.highlightColor.split('-')[2]}` : ''}
+                    >
+                      {word.text}
+                    </span>
                   </motion.span>
                 )
               })}

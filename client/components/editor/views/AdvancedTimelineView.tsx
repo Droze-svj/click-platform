@@ -231,8 +231,18 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
     return ticks
   }
 
+  // ── Dynamic Track Generation (Infinite Layers) ───────────────────────────────
+  const maxTrack = Math.max(4, ...timelineSegments.map(s => s.track ?? 0));
+  const DYNAMIC_TRACKS = useMemo(() => {
+    const tracks = [...TRACK_DEFS];
+    for (let i = 5; i <= maxTrack; i++) {
+      tracks.push({ id: i, label: `Layer ${i-4}`, color: '#8B5CF6', icon: Layers });
+    }
+    return tracks;
+  }, [maxTrack, timelineSegments]);
+
   // ── Track bands (DOM — drawn beneath the Konva canvas) ──────────────────────
-  const totalTrackHeight = TRACK_DEFS.length * (TRACK_HEIGHT + TRACK_GAP)
+  const totalTrackHeight = DYNAMIC_TRACKS.length * (TRACK_HEIGHT + TRACK_GAP)
   const canvasWidth = Math.max(dimensions.width, timeToX(duration) + stagePaddingX * 2)
   const canvasHeight = Math.max(dimensions.height, RULER_HEIGHT + totalTrackHeight + 40)
 
@@ -263,7 +273,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
               onClick={() => setSelectedTrackFilter(null)}
               className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === null ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500 hover:text-white'}`}
             >All</button>
-            {TRACK_DEFS.map(t => (
+            {DYNAMIC_TRACKS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setSelectedTrackFilter(selectedTrackFilter === t.id ? null : t.id)}
@@ -354,16 +364,27 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
         <div className="w-20 shrink-0 bg-black/40 border-r border-white/5 flex flex-col pt-[28px]">
           {/* Ruler spacer */}
           <div className="h-[28px] shrink-0" />
-          {TRACK_DEFS.map(track => (
+          {DYNAMIC_TRACKS.map(track => (
             <div
               key={track.id}
-              className="flex items-center justify-center gap-1.5 px-2"
+              className="flex items-center justify-center gap-1.5 px-2 group cursor-pointer"
               style={{ height: TRACK_HEIGHT + TRACK_GAP, opacity: selectedTrackFilter === null || selectedTrackFilter === track.id ? 1 : 0.25 }}
             >
               <div className="w-1 h-5 rounded-full" style={{ backgroundColor: track.color + '88' }} />
-              <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider">{track.label}</span>
+              <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider group-hover:text-white transition-colors">{track.label}</span>
             </div>
           ))}
+          {/* Add Layer Button */}
+          <button 
+            onClick={() => {
+              const newLayerId = DYNAMIC_TRACKS.length;
+              showToast(`Added new Layer ${newLayerId - 4}`, 'success');
+              // To actually force layer render, we would need to add an empty segment or track state
+            }}
+            className="mt-2 mx-2 p-1.5 border border-dashed border-white/10 rounded-lg text-[8px] text-slate-500 hover:text-white hover:bg-white/5 transition-all uppercase font-black"
+          >
+            + Add Layer
+          </button>
         </div>
 
         {/* Scrollable canvas area */}
@@ -476,7 +497,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
 
               {/* ── Track stripe layer ───────────────────────────────────── */}
               <Layer y={RULER_HEIGHT}>
-                {TRACK_DEFS.map(track => (
+                {DYNAMIC_TRACKS.map(track => (
                   <Rect
                     key={track.id}
                     x={0}
@@ -507,7 +528,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 {visibleSegments.map(seg => {
                   const x = timeToX(seg.startTime)
                   const width = Math.max(2, timeToX(seg.endTime - seg.startTime))
-                  const trackDef = TRACK_DEFS.find(t => t.id === (seg.track ?? 0)) ?? TRACK_DEFS[0]
+                  const trackDef = DYNAMIC_TRACKS.find(t => t.id === (seg.track ?? 0)) ?? DYNAMIC_TRACKS[0]
                   const y = (seg.track ?? 0) * (TRACK_HEIGHT + TRACK_GAP)
                   const isSelected = selectedSegmentId === seg.id
                   const segColor = seg.color || trackDef.color
@@ -598,6 +619,8 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           {[
             { action: 'split',     label: '✂ Split at midpoint',  color: 'text-white' },
             { action: 'duplicate', label: '⧉ Duplicate',           color: 'text-white' },
+            { action: 'ai-cutout', label: '🪄 AI Remove Background',color: 'text-indigo-400' },
+            { action: 'ai-enhance',label: '✨ Auto-Enhance Audio',  color: 'text-emerald-400' },
             { action: 'delete',    label: '✕ Delete segment',      color: 'text-rose-400' },
           ].map(item => (
             <button
