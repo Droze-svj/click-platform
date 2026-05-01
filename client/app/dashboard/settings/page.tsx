@@ -231,8 +231,8 @@ export default function SovereignCalibrationNodePage() {
                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SOVEREIGN_LATTICE_SYNC:ACTIVE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Calibration</h1>
-                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Calibrating autonomous OS parameters, neural identity DNA, and resonance signal routing.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Settings</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your account, defaults, integrations, and notifications. Set things once here and Click remembers them across every project.</p>
               </div>
            </div>
 
