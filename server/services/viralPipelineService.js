@@ -13,9 +13,8 @@ const { autoEditVideo, exportMultipleFormats } = require('./aiVideoEditingServic
 const { getCompetitiveBenchmarks } = require('./competitiveBenchmarkingService');
 const { generateThumbnail } = require('./thumbnailService');
 const { optimizeImage } = require('../utils/imageOptimizer');
-const OpenAI = require('openai');
-
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+const { aiCallJson } = require('../utils/aiRouter');
+const { buildSystemPrompt } = require('./marketingKnowledge');
 
 /**
  * Main entry point for the One-Click Viral Pipeline (Phase 2)
@@ -41,9 +40,17 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
     const transcriptData = await generateCaptionsForContent(contentId, videoPath, { language: 'en' });
     const transcript = transcriptData.transcript;
     
-    // 2. Viral Hook Analysis (GPT-4o)
-    updateProgress(userId, contentId, 'analyzing_hooks', 25, 'GPT-4o viral analysis & hook scoring...');
-    const hookAnalysis = await analyzeHooksLocally(transcript, content.originalFile.duration || 60);
+    // 2. Viral Hook Analysis (niche-aware, multi-LLM via aiRouter)
+    updateProgress(userId, contentId, 'analyzing_hooks', 25, 'Niche-aware hook scoring...');
+    const hookAnalysis = await analyzeHooksLocally(
+      transcript,
+      content.originalFile.duration || 60,
+      {
+        niche: user.niche || content.metadata?.niche || 'business',
+        platform: targetPlatforms[0] || 'tiktok',
+        language: content.metadata?.language || 'en',
+      },
+    );
     
     content.metadata = { 
       ...content.metadata, 
@@ -176,29 +183,42 @@ function updateProgress(userId, contentId, status, progress, message) {
   }
 }
 
-async function analyzeHooksLocally(transcript, duration) {
-  if (!openai) return generateFallbackAnalysis(transcript);
+async function analyzeHooksLocally(transcript, duration, ctx = {}) {
+  // Niche-aware system prompt — tells the model to use the niche playbook
+  // (voice tone, angles, emotional triggers) and the platform retention
+  // curve. Replaces the generic "you are a viral expert" boilerplate so
+  // outputs are platform/niche-specific instead of generic.
+  const systemPrompt = buildSystemPrompt({
+    persona: 'edit-suggester',
+    niche: ctx.niche || 'business',
+    platform: ctx.platform || 'tiktok',
+    language: ctx.language || 'en',
+    stage: 'analyze',
+    extra: 'Score the hook against the platform\'s 3-second retention window. Output strict JSON only.',
+  });
 
-  try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a viral video expert. Analyze script and return JSON: hookStrength(0-100), viralPotential(0-100), hookType, rewrites(array), directives(array).'
-        },
-        {
-          role: 'user',
-          content: `Duration: ${duration}s\nTranscript: ${transcript.substring(0, 4000)}`
-        }
-      ],
-      response_format: { type: 'json_object' }
-    });
-    return JSON.parse(completion.choices[0].message.content);
-  } catch (error) {
-    logger.error('Pipeline hook analysis failed', { error: error.message });
-    return generateFallbackAnalysis(transcript);
-  }
+  const userPrompt = [
+    `── Task ──`,
+    `Analyse the following ${duration}s video transcript for viral potential on ${ctx.platform || 'tiktok'}.`,
+    `Return JSON with these keys exactly:`,
+    `  hookStrength    (0-100, current opener strength)`,
+    `  viralPotential  (0-100, end-to-end share-likelihood)`,
+    `  hookType        (one of: curiosity-gap, pattern-break, before-after, enemy-frame, problem-promise, list-tease, quote-cold-open, data-flex)`,
+    `  rewrites        (array of 3 rewritten openers, each <12 words, niche-specific)`,
+    `  directives      (array of 3 actionable edit directives — cuts, overlays, pacing — niche-aware)`,
+    ``,
+    `── Transcript ──`,
+    transcript.substring(0, 4000),
+  ].join('\n');
+
+  const fallback = generateFallbackAnalysis(transcript);
+  const result = await aiCallJson(userPrompt, fallback, {
+    systemPrompt,
+    taskType: 'viral-hook-analysis',
+    maxTokens: 1024,
+    temperature: 0.6,
+  });
+  return result || fallback;
 }
 
 function generateFallbackAnalysis() {

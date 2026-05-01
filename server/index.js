@@ -1718,6 +1718,7 @@ app.use('/api/productive/calendar', require('./routes/productive/calendar'));
 app.use('/api/productive/repurposing', require('./routes/productive/repurposing'));
 app.use('/api/productive/ab-testing', require('./routes/productive/ab-testing'));
 app.use('/api/video/ai-editing', require('./routes/video/ai-editing'));
+app.use('/api/video/viral', require('./routes/video/viral'));
 app.use('/api/video/manual-editing', require('./routes/video/manual-editing'));
 app.use('/api/assets', require('./routes/assets'));
 app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));

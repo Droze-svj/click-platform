@@ -95,7 +95,7 @@ import { InsightsSidebar } from './editor/InsightsSidebar'
 import EditorHUD from './editor/EditorHUD'
 import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
-import { apiGet } from '../lib/api'
+import { apiGet, apiPost } from '../lib/api'
 import {
   VideoFilter,
   TextOverlay,
@@ -335,6 +335,42 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     { id: 'suggest-2', time: 8.5, type: 'broll', label: 'B-Roll Suggestion', description: 'Context: "creative flow". Overlay whiteboard animation?', confidence: 0.88, impact: 'medium' },
     { id: 'suggest-3', time: 4.2, type: 'cut', label: 'Silence Detected', description: '0.7s gap. Auto-cut to improve pacing?', confidence: 0.92, impact: 'medium' }
   ])
+
+  const [isMakingViral, setIsMakingViral] = useState(false)
+
+  // POST /api/video/viral/one-click — hits oneClickViralService which
+  // chains hook → pattern interrupts → b-roll → beat sync → CTA in one
+  // call, then maps the response into AIDirectorSuggestion records and
+  // pushes them straight into the AI tab's apply pile via the dispatcher
+  // we already own. Single button = full edit recipe.
+  const handleMakeItViral = useCallback(async () => {
+    if (!videoId) { showToast('No video loaded', 'error'); return }
+    if (isMakingViral) return
+    setIsMakingViral(true)
+    try {
+      showToast('Composing your viral edit recipe…', 'info')
+      const res = await apiPost<{ data: { suggestions: AIDirectorSuggestion[]; stages: any[] } }>(
+        '/video/viral/one-click',
+        { contentId: videoId, niche: contentNiche, platform: 'tiktok' },
+      )
+      const suggestions = (res as any)?.data?.suggestions || (res as any)?.suggestions || []
+      if (!Array.isArray(suggestions) || suggestions.length === 0) {
+        showToast('No suggestions returned — your video may already be tight', 'info')
+        return
+      }
+      // Replace director suggestions with the fresh batch and route the
+      // user to the AI tab so they see the apply pile. New suggestion IDs
+      // are distinct from any prior batch, so the apply Set doesn't need
+      // to be reset — old applied marks naturally don't overlap.
+      setAiDirectorSuggestions(suggestions)
+      setActiveCategory('ai-analysis' as any)
+      showToast(`${suggestions.length} suggestions ready — Apply All to ship it`, 'success')
+    } catch (err: any) {
+      showToast(err?.message || 'Make It Viral failed', 'error')
+    } finally {
+      setIsMakingViral(false)
+    }
+  }, [videoId, isMakingViral, contentNiche, showToast])
 
   // Wired ahead of declaration so the dispatcher passes the freshest
   // segments/overlays into applySuggestion. Defined right after
@@ -1767,6 +1803,20 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
         {/* ── Main workspace: HUD → content row → timeline ── */}
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative pt-[60px]">
+
+          {/* Make It Viral CTA — single click, full edit recipe.
+              Pinned top-right of the workspace at z-50 so it floats
+              above the HUD without claiming layout space. */}
+          <button
+            type="button"
+            onClick={handleMakeItViral}
+            disabled={isMakingViral || !videoId}
+            className="absolute top-4 right-6 z-50 px-5 py-2.5 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white text-xs font-black uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.75)] hover:from-fuchsia-400 hover:to-indigo-400 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center gap-2"
+            title="Run the one-click viral recipe — hook, cuts, B-roll, beat sync, CTA"
+          >
+            <span className="text-base leading-none">{isMakingViral ? '⟳' : '✨'}</span>
+            {isMakingViral ? 'Composing…' : 'Make It Viral'}
+          </button>
 
           <EditorHUD
             projectName={projectName}

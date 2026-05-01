@@ -1,6 +1,12 @@
-// Content Repurposing Service
+// Content Repurposing Service — niche-aware via aiRouter.
+// Why router (not direct Gemini): the same post needs platform-tuned
+// hooks (TikTok punchy 3s, LinkedIn analytical opener) AND niche-tuned
+// voice (finance vs lifestyle). aiRouter + buildSystemPrompt injects
+// both, so output stops being a generic platform-format swap.
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const { aiCallJson } = require('../utils/aiRouter');
+const { buildSystemPrompt } = require('./marketingKnowledge');
 const logger = require('../utils/logger');
 
 /**
@@ -40,45 +46,44 @@ async function repurposeContent(contentId, userId, targetPlatform) {
 
     const guidelines = platformGuidelines[targetPlatform] || platformGuidelines.instagram;
 
-    const prompt = `Repurpose this content for ${targetPlatform}:
+    const niche = content.niche || content.metadata?.niche || 'business';
+    const systemPrompt = buildSystemPrompt({
+      persona: 'caption-writer',
+      niche,
+      platform: targetPlatform,
+      stage: 'repurpose',
+      language: content.language || 'en',
+      extra: `Adapt content for ${targetPlatform} using its retention curve + the niche's voice. Max ${guidelines.maxLength} chars. Return strict JSON only.`,
+    });
+    const userPrompt = [
+      `── Task ──`,
+      `Repurpose this post for ${targetPlatform}.`,
+      `Style cue: ${guidelines.style}`,
+      `Format cue: ${guidelines.format}`,
+      ``,
+      `Original:`,
+      `Title: ${content.title}`,
+      `Body: ${content.body}`,
+      ``,
+      `Return JSON with these keys exactly:`,
+      `  title       (platform-appropriate, niche voice)`,
+      `  body        (rewritten — not just trimmed)`,
+      `  hashtags    (array, niche + platform tuned)`,
+      `  format      (post/carousel/video/thread)`,
+      `  changes     (array of key modifications you made)`,
+    ].join('\n');
 
-Original content:
-Title: ${content.title}
-Body: ${content.body}
-
-Platform requirements:
-- Max length: ${guidelines.maxLength} characters
-- Format: ${guidelines.format}
-- Style: ${guidelines.style}
-
-Provide:
-1. New title (platform-appropriate)
-2. Repurposed body text
-3. Suggested hashtags (if applicable)
-4. Format recommendations (post, carousel, video, etc.)
-
-Format as JSON object with fields: title, body, hashtags (array), format, changes (array of key modifications)`;
-
-    if (!geminiConfigured) {
-      throw new Error('Google AI API key not configured. Please set GOOGLE_AI_API_KEY environment variable.');
+    const repurposed = await aiCallJson(userPrompt, null, {
+      systemPrompt,
+      taskType: 'content-repurpose',
+      maxTokens: 2000,
+      temperature: 0.7,
+    });
+    if (!repurposed) {
+      throw new Error('All AI providers failed and no fallback configured for repurpose');
     }
 
-    const fullPrompt = `You are a content repurposing expert. Adapt content for different platforms while maintaining core message.\n\n${prompt}`;
-    const repurposedText = await geminiGenerate(fullPrompt, { temperature: 0.7, maxTokens: 2000 });
-
-    let repurposed;
-    try {
-      repurposed = JSON.parse(repurposedText);
-    } catch (error) {
-      const jsonMatch = repurposedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        repurposed = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse repurposed content');
-      }
-    }
-
-    logger.info('Content repurposed', { contentId, userId, targetPlatform });
+    logger.info('Content repurposed', { contentId, userId, targetPlatform, niche });
     return repurposed;
   } catch (error) {
     logger.error('Repurpose content error', { error: error.message, contentId });
