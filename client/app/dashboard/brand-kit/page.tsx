@@ -4,6 +4,7 @@ import React from 'react';
 import BrandKit from '../../../components/BrandKit';
 import { motion } from 'framer-motion';
 import { Orbit, Shield, Sparkles } from 'lucide-react';
+import SectionHeader from '../../../components/dashboard/SectionHeader';
 
 export default function BrandKitPage() {
   return (
@@ -13,37 +14,27 @@ export default function BrandKitPage() {
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[50%] bg-purple-600/10 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <header className="mb-12">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-4 mb-4"
-          >
-            <div className="p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500/30">
-              <Orbit className="w-8 h-8 text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">
-                Identity DNA
-              </h1>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  <Shield className="w-3 h-3 text-emerald-500" />
-                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Secure_Lattice</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-                  <Sparkles className="w-3 h-3 text-indigo-500" />
-                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Multi_Profile_v3</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-          <p className="text-slate-400 text-sm max-w-2xl font-medium leading-relaxed">
-            Mange your brand's visual essence across the network. Synchronize colors, typography, logos, and AI-generated style profiles to ensure every piece of content remains perfectly aligned with your strategic identity.
-          </p>
-        </header>
+        <SectionHeader
+          tone="studio"
+          icon={Orbit}
+          kicker="Studio · Brand Kit"
+          title="Brand Kit"
+          subtitle="Your colors, fonts, logos and voice — saved once and applied everywhere Click generates content. Set it up here and every caption, thumbnail and short stays on-brand automatically."
+          badges={
+            <>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                <Shield className="w-3 h-3" />
+                Encrypted
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                <Sparkles className="w-3 h-3" />
+                Multi-profile
+              </span>
+            </>
+          }
+        />
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
