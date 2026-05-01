@@ -143,8 +143,8 @@ function renderFrame(frame: VideoFrame, renderOptions: any = {}) {
     colorAttachments: [{
       view: textureView,
       clearValue: { r: 0, g: 0, b: 0, a: 1 },
-      loadOp: 'clear',
-      storeOp: 'store',
+      loadOp: 'clear' as GPULoadOp,
+      storeOp: 'store' as GPUStoreOp,
     }],
   });
 

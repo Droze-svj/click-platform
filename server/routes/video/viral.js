@@ -20,14 +20,14 @@ const logger = require('../../utils/logger');
 const router = express.Router();
 
 router.post('/one-click', auth, asyncHandler(async (req, res) => {
-  const { contentId, niche, platform, language } = req.body || {};
+  const { contentId, niche, platform, language, targetLanguage } = req.body || {};
   if (!contentId) return sendError(res, 'contentId is required', 400);
   try {
     const result = await runOneClickViral(contentId, {
       user: req.user,
       niche,
       platform,
-      language,
+      language: targetLanguage || language || 'English',
     });
     if (!result.ok) return sendError(res, result.error || 'viral-pipeline-failed', 422);
     return sendSuccess(res, 'One-click viral plan ready', 200, result);

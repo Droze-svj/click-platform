@@ -184,6 +184,21 @@ async function runOneClickViral(contentId, ctx = {}) {
     stages.push({ name: 'cta', status: 'failed', error: err.message });
   }
 
+  // Persist the AI state into the Content model so the workflow tracks progress across sessions
+  try {
+    const aiProposals = suggestions;
+    const telemetryHistory = stages;
+    await Content.findByIdAndUpdate(contentId, {
+      $set: {
+        'metadata.aiProposals': aiProposals,
+        'metadata.telemetryHistory': telemetryHistory,
+        'metadata.lastAiUpdate': Date.now()
+      }
+    });
+  } catch (err) {
+    logger.error('[OneClickViral] Failed to persist AI state', { error: err.message });
+  }
+
   return {
     ok: true,
     contentId,

@@ -51,6 +51,22 @@ router.get('/insights', auth, asyncHandler(async (req, res) => {
   }
 }));
 
+const { getVideoAnalyticsInsights } = require('../../services/videoAnalyticsService');
+
+/**
+ * @swagger
+ * /api/analytics/content/editor-insights:
+ *   get:
+ *     summary: Get actionable AI video analytics insights for the editor
+ *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/editor-insights', auth, asyncHandler(async (req, res) => {
+  const insights = await getVideoAnalyticsInsights(req.user._id);
+  sendSuccess(res, 'Editor analytics insights fetched', 200, insights);
+}));
+
 module.exports = router;
 
 
