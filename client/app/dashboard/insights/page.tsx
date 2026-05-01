@@ -116,7 +116,7 @@ export default function CognitiveForecasterPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24">
+      <div className="min-h-screen relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1750px] mx-auto space-y-12 md:space-y-24">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -144,8 +144,8 @@ export default function CognitiveForecasterPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">PREDICTION_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Forecaster</h1>
-                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-layer receptor analysis and synthetic heuristic projections.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Insights</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Predicted performance for upcoming posts plus the patterns Click has noticed in your audience. Use it to decide what to ship next.</p>
               </div>
            </div>
 

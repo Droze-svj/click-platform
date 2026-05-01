@@ -121,8 +121,8 @@ export default function SignalInterceptionGridPage() {
                        <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase italic leading-none">SCANNER_READY</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Interception Grid</h1>
-                 <p className="text-slate-500 text-[14px] uppercase font-black tracking-[0.4em] mt-6 italic leading-none">Deep-spectrum lattice synchronization and multi-node registry identification.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-4">Search</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Find anything across your videos, posts, scripts, and library. Type a keyword, narrow by type, jump straight to the result.</p>
               </div>
            </div>
 
@@ -143,7 +143,7 @@ export default function SignalInterceptionGridPage() {
         <div className={`${glassStyle} rounded-[6rem] p-20 border-white/5 shadow-[0_100px_250px_rgba(0,0,0,1)] relative z-10 overflow-hidden`}>
            <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700"><Terminal size={400} className="text-white" /></div>
            
-           <div className="grid grid-cols-1 xl:grid-cols-4 gap-12 relative z-10">
+           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-12 relative z-10">
               <div className="xl:col-span-2 relative group/input">
                  <Search className="absolute left-16 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-indigo-400 transition-all duration-300" size={40} />
                  <input

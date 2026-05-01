@@ -140,8 +140,8 @@ export default function NeuralForgePage() {
                        <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">FORGE_CORE_IGNITED</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Neural Forge</h1>
-                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Transforming logic seeds into high-resonance synthetic content payloads.</p>
+                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Content</h1>
+                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Generate captions, hooks, scripts and AI-written posts. Every output is tuned to your niche and platform — paste an idea, get a draft.</p>
               </div>
            </div>
 

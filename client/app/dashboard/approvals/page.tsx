@@ -170,8 +170,8 @@ export default function ConsensusValidationNodePage() {
                 <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">LATTICE_INTEGRITY_SHIELDED</span>
               </div>
             </div>
-            <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-2xl">Consensus</h1>
-            <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.6em] mt-5 italic leading-none">Sovereign validation gates for global operational output synchronization and nodal consensus.</p>
+            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] drop-shadow-2xl">Approvals</h1>
+            <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Posts and edits waiting on someone's review. Approve, reject, or request changes — Click routes the next step automatically.</p>
           </div>
         </div>
 
