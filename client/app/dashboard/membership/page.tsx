@@ -129,15 +129,15 @@ export default function IdentityDNARegistryPage() {
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Fingerprint size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <Fingerprint size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
-                      <Lock size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Identity DNA v22.8.4</span>
+                      <Lock size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-indigo-fg)] italic leading-none">Identity DNA v22.8.4</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
@@ -150,17 +150,17 @@ export default function IdentityDNARegistryPage() {
            </div>
 
            <div className="flex items-center gap-12">
-              <div className={`${glassStyle} px-12 py-8 rounded-[3.5rem] flex items-center gap-8 border-indigo-500/20 bg-indigo-500/5 shadow-3xl group`}>
-                 <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/10 flex items-center justify-center border-2 border-indigo-500/20 shadow-2xl group-hover:rotate-12 transition-transform duration-700">
-                    <Activity size={32} className="text-indigo-400 animate-pulse" />
+              <div className={`${glassStyle} px-12 py-8 rounded-[3.5rem] flex items-center gap-8 border-[var(--tint-indigo-edge)] bg-indigo-500/5 shadow-3xl group`}>
+                 <div className="w-16 h-16 rounded-[1.8rem] bg-[var(--tint-indigo-bg)] flex items-center justify-center border-2 border-[var(--tint-indigo-edge)] shadow-2xl group-hover:rotate-12 transition-transform duration-700">
+                    <Activity size={32} className="text-[var(--tint-indigo-fg)] animate-pulse" />
                  </div>
                  <div>
                     <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">LATTICE_INTEGRITY</span>
-                    <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">PROTOCOLS_ACTIVE</p>
+                    <p className="text-2xl font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] italic leading-none mt-2">PROTOCOLS_ACTIVE</p>
                  </div>
               </div>
               <button onClick={() => loadAccessData()} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-                <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 transition-colors duration-700 group-hover:rotate-180 transition-transform" />
+                <RefreshCw size={32} className="text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700 group-hover:rotate-180 transition-transform" />
               </button>
            </div>
         </header>
@@ -168,25 +168,25 @@ export default function IdentityDNARegistryPage() {
         {/* Current Protocol Presence HUD */}
         {currentMembership && (
           <motion.section initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }}
-            className={`${glassStyle} p-32 rounded-[7rem] border-indigo-500/30 shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden group z-10 bg-black/40`}
+            className={`${glassStyle} p-32 rounded-[7rem] border-[var(--tint-indigo-edge)] shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden group z-10 bg-black/40`}
           >
-            <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-700"><Network size={800} className="text-indigo-400" /></div>
+            <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-700"><Network size={800} className="text-[var(--tint-indigo-fg)]" /></div>
             <div className="flex flex-col xl:flex-row justify-between items-center gap-24 relative z-10">
                <div className="max-w-2xl text-center xl:text-left space-y-12">
                   <div className="flex flex-wrap items-center justify-center xl:justify-start gap-8">
-                     <div className="px-10 py-4 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.6em] bg-indigo-500/10 border-2 border-indigo-500/30 text-indigo-400 shadow-3xl italic animate-pulse">
+                     <div className="px-10 py-4 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.6em] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] shadow-3xl italic animate-pulse">
                         ACTIVE_NODE_UPLINK
                      </div>
                      <div className="flex items-center gap-6 text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none bg-black/80 px-10 py-4 rounded-[2rem] border-2 border-white/5 shadow-inner">
-                       <Database size={20} className="text-indigo-400" /> <span className="opacity-40">PROTOCOL_ID:</span> {currentMembership.subscription?.id?.slice(-16).toUpperCase() || 'ROOT_GENESIS'}
+                       <Database size={20} className="text-[var(--tint-indigo-fg)]" /> <span className="opacity-40">PROTOCOL_ID:</span> {currentMembership.subscription?.id?.slice(-16).toUpperCase() || 'ROOT_GENESIS'}
                      </div>
                   </div>
-                  <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">
+                  <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300 drop-shadow-2xl">
                      {currentMembership.package?.name?.toUpperCase() || 'GENERIC_ACCESS'}
                   </h2>
                   <div className="flex items-center justify-center xl:justify-start gap-10 text-[18px] font-black uppercase tracking-[0.6em] italic leading-none">
                      <span className="text-slate-400">Lifecycle Status:</span>
-                     <span className={currentMembership.subscription?.status === 'active' ? 'text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-amber-400 animate-pulse'}>
+                     <span className={currentMembership.subscription?.status === 'active' ? 'text-[var(--tint-emerald-fg)] drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'text-[var(--tint-amber-fg)] animate-pulse'}>
                         {currentMembership.subscription?.status?.toUpperCase() || 'UNINITIALIZED'}
                      </span>
                   </div>
@@ -225,18 +225,18 @@ export default function IdentityDNARegistryPage() {
                      <span className="text-[14px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none whitespace-nowrap opacity-60">Stratum Tier</span>
                      <div className="w-20 h-[3px] bg-gradient-to-l from-transparent to-indigo-500/20 rounded-full" />
                   </div>
-                  <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none drop-shadow-2xl">{pkg.name.toUpperCase()}</h3>
+                  <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-10 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300 leading-none drop-shadow-2xl">{pkg.name.toUpperCase()}</h3>
                   <p className="text-[16px] text-slate-700 font-bold uppercase italic tracking-widest leading-relaxed mb-16 h-16 line-clamp-2 px-4 shadow-[0_10px_20px_rgba(0,0,0,0.4)]">{pkg.description.toUpperCase()}</p>
                   
                   <div className="py-20 bg-black/60 rounded-[5rem] border-4 border-white/5 mb-16 shadow-inner group-hover:bg-black/80 transition-all duration-300 relative overflow-hidden group/price">
-                    <div className="absolute inset-x-0 bottom-0 h-2 bg-indigo-500/20 animate-pulse" />
+                    <div className="absolute inset-x-0 bottom-0 h-2 bg-[var(--tint-indigo-bg)] animate-pulse" />
                     <div className="flex items-center justify-center gap-6 relative z-10">
                        <span className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">${pkg.price.monthly}</span>
                        <span className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic mb-6">/cycle</span>
                     </div>
                     {pkg.price.yearly > 0 && (
                       <div className="mt-8 relative z-10">
-                         <span className="px-8 py-2 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 text-indigo-400 text-[12px] font-black uppercase tracking-[0.8em] italic">
+                         <span className="px-8 py-2 rounded-full bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[12px] font-black uppercase tracking-[0.8em] italic">
                            ANNUAL_SYNC: ${pkg.price.yearly}/YR
                          </span>
                       </div>
@@ -255,8 +255,8 @@ export default function IdentityDNARegistryPage() {
                        { check: pkg.features.support.prioritySupport, label: 'Prime Command Uplink' }
                      ].map((f, i) => f.check && (
                        <div key={i} className="flex items-center gap-8 text-[14px] font-black text-slate-400 uppercase italic tracking-[0.3em] group-hover:text-white transition-colors duration-700">
-                         <div className="w-8 h-8 rounded-2xl border-2 border-indigo-500/30 flex items-center justify-center bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:scale-125 transition-transform">
-                            <CheckCircle2 size={18} className="text-indigo-400" />
+                         <div className="w-8 h-8 rounded-2xl border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center bg-[var(--tint-indigo-bg)] shadow-[0_0_20px_rgba(99,102,241,0.3)] group-hover:scale-125 transition-transform">
+                            <CheckCircle2 size={18} className="text-[var(--tint-indigo-fg)]" />
                          </div>
                          {f.label}
                        </div>
@@ -299,10 +299,10 @@ export default function IdentityDNARegistryPage() {
 function SaturationCard({ icon: Icon, label, value, limit }: { icon: any; label: string; value: number; limit: number }) {
   const percent = limit === -1 ? 5 : Math.min(100, (value / (limit || 1)) * 100)
   return (
-    <div className="bg-black/60 border-2 border-white/5 p-16 rounded-[4.5rem] group/sat hover:border-indigo-500/40 transition-all duration-300 shadow-inner backdrop-blur-3xl relative overflow-hidden">
+    <div className="bg-black/60 border-2 border-white/5 p-16 rounded-[4.5rem] group/sat hover:border-[var(--tint-indigo-edge)] transition-all duration-300 shadow-inner backdrop-blur-3xl relative overflow-hidden">
        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] to-transparent opacity-0 group-hover/sat:opacity-100 transition-opacity" />
        <div className="flex justify-between items-center mb-12 relative z-10">
-          <span className="text-[15px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none group-hover/sat:text-indigo-400 transition-colors">{label}</span>
+          <span className="text-[15px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none group-hover/sat:text-[var(--tint-indigo-fg)] transition-colors">{label}</span>
           <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border-2 border-white/5 flex items-center justify-center shadow-3xl group-hover/sat:rotate-12 transition-transform duration-300">
              <Icon size={32} className="text-slate-500 group-hover/sat:text-indigo-500" />
           </div>
@@ -325,9 +325,9 @@ function SaturationCard({ icon: Icon, label, value, limit }: { icon: any; label:
 
 function FeatureBox({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="bg-black/80 p-12 rounded-[3.5rem] border-2 border-white/5 hover:border-indigo-500/40 transition-all duration-300 cursor-default shadow-inner group/feat relative overflow-hidden">
+    <div className="bg-black/80 p-12 rounded-[3.5rem] border-2 border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all duration-300 cursor-default shadow-inner group/feat relative overflow-hidden">
        <div className="absolute inset-0 bg-indigo-500/[0.03] opacity-0 group-hover/feat:opacity-100 transition-opacity" />
-       <div className="flex items-center gap-6 text-[13px] font-black text-slate-500 uppercase tracking-[0.6em] mb-8 italic group-hover/feat:text-indigo-400 transition-colors relative z-10">
+       <div className="flex items-center gap-6 text-[13px] font-black text-slate-500 uppercase tracking-[0.6em] mb-8 italic group-hover/feat:text-[var(--tint-indigo-fg)] transition-colors relative z-10">
           <Icon size={24} className="text-indigo-500 animate-pulse" /> {label}
        </div>
        <p className="text-[20px] font-black text-white uppercase italic tracking-[0.4em] leading-none group-hover/feat:text-white transition-colors relative z-10 drop-shadow-2xl">{value.toUpperCase()}</p>

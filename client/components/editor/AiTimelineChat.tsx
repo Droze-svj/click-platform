@@ -78,7 +78,7 @@ export default function AiTimelineChat({
     <div className="flex flex-col h-full w-[320px] bg-black/40 backdrop-blur-xl border-l border-white/10 rounded-r-[2.5rem] overflow-hidden shrink-0">
       {/* Header */}
       <div className="px-4 py-3 bg-white/[0.02] border-b border-white/10 flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-indigo-400" />
+        <Sparkles className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
         <span className="text-[10px] font-black uppercase tracking-widest text-white">Timeline Copilot</span>
       </div>
 
@@ -88,15 +88,15 @@ export default function AiTimelineChat({
           <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%]`}>
             <div className={`px-3 py-2 rounded-2xl text-[11px] ${
               m.role === 'user' 
-                ? 'bg-indigo-500/20 text-indigo-100 rounded-br-sm border border-indigo-500/30' 
+                ? 'bg-[var(--tint-indigo-bg)] text-indigo-100 rounded-br-sm border border-[var(--tint-indigo-edge)]' 
                 : 'bg-white/5 text-slate-300 rounded-bl-sm border border-white/10'
             }`}>
               {m.text}
             </div>
             {m.actionApplied && (
-              <div className="mt-1.5 flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                <Wand2 className="w-3 h-3 text-emerald-400" />
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">{m.actionApplied}</span>
+              <div className="mt-1.5 flex items-center gap-1.5 px-2 py-1 bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] rounded-lg">
+                <Wand2 className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
+                <span className="text-[9px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-wider">{m.actionApplied}</span>
               </div>
             )}
           </div>
@@ -123,7 +123,7 @@ export default function AiTimelineChat({
           <button 
             type="submit"
             disabled={!input.trim() || isProcessing}
-            className="absolute right-2 p-1.5 text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition-colors"
+            className="absolute right-2 p-1.5 text-[var(--tint-indigo-fg)] hover:text-indigo-300 disabled:opacity-50 transition-colors"
           >
             <Send className="w-3.5 h-3.5" />
           </button>

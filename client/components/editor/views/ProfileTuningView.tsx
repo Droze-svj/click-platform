@@ -44,13 +44,13 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
       {/* LEFT: The DNA (Accordion/Tabs) */}
       <div className={`w-[500px] ${glassStyle} rounded-[3rem] p-8 flex flex-col overflow-hidden`}>
         <div className="space-y-6 mb-8">
-          <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 w-fit text-indigo-400 text-[9px] font-black uppercase tracking-widest italic">
+          <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] w-fit text-[var(--tint-indigo-fg)] text-[9px] font-black uppercase tracking-widest italic">
             <Dna className="w-3.5 h-3.5" />
             Parameter DNA Refinement
           </div>
           <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">
             {profile.name}<br />
-            <span className="text-indigo-400">Synthesis Optimization</span>
+            <span className="text-[var(--tint-indigo-fg)]">Synthesis Optimization</span>
           </h2>
         </div>
 
@@ -58,15 +58,15 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
         <div className="flex flex-col gap-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
           {/* PACING TAB */}
           <div
-            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'pacing' ? 'bg-indigo-600/20 border-indigo-500/40' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
+            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'pacing' ? 'bg-indigo-600/20 border-[var(--tint-indigo-edge)]' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
             onClick={() => setActiveTab('pacing')}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Clock3 className={`w-5 h-5 ${activeTab === 'pacing' ? 'text-indigo-400' : 'text-slate-500'}`} />
+                <Clock3 className={`w-5 h-5 ${activeTab === 'pacing' ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-500'}`} />
                 <span className={`text-[10px] font-black uppercase tracking-widest italic ${activeTab === 'pacing' ? 'text-white' : 'text-slate-500'}`}>Pacing Engine</span>
               </div>
-              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'pacing' ? 'rotate-90 text-indigo-400' : 'text-slate-700'}`} />
+              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'pacing' ? 'rotate-90 text-[var(--tint-indigo-fg)]' : 'text-slate-700'}`} />
             </div>
 
             {activeTab === 'pacing' && (
@@ -100,15 +100,15 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
 
           {/* TYPOGRAPHY TAB */}
           <div
-            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'typography' ? 'bg-indigo-600/20 border-indigo-500/40' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
+            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'typography' ? 'bg-indigo-600/20 border-[var(--tint-indigo-edge)]' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
             onClick={() => setActiveTab('typography')}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Type className={`w-5 h-5 ${activeTab === 'typography' ? 'text-indigo-400' : 'text-slate-500'}`} />
+                <Type className={`w-5 h-5 ${activeTab === 'typography' ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-500'}`} />
                 <span className={`text-[10px] font-black uppercase tracking-widest italic ${activeTab === 'typography' ? 'text-white' : 'text-slate-500'}`}>Visual Entities</span>
               </div>
-              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'typography' ? 'rotate-90 text-indigo-400' : 'text-slate-700'}`} />
+              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'typography' ? 'rotate-90 text-[var(--tint-indigo-fg)]' : 'text-slate-700'}`} />
             </div>
 
             {activeTab === 'typography' && (
@@ -151,21 +151,21 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
 
           {/* COLOR TAB */}
           <div
-            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'color' ? 'bg-indigo-600/20 border-indigo-500/40' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
+            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'color' ? 'bg-indigo-600/20 border-[var(--tint-indigo-edge)]' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
             onClick={() => setActiveTab('color')}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Palette className={`w-5 h-5 ${activeTab === 'color' ? 'text-indigo-400' : 'text-slate-500'}`} />
+                <Palette className={`w-5 h-5 ${activeTab === 'color' ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-500'}`} />
                 <span className={`text-[10px] font-black uppercase tracking-widest italic ${activeTab === 'color' ? 'text-white' : 'text-slate-500'}`}>Color Science</span>
               </div>
-              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'color' ? 'rotate-90 text-indigo-400' : 'text-slate-700'}`} />
+              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'color' ? 'rotate-90 text-[var(--tint-indigo-fg)]' : 'text-slate-700'}`} />
             </div>
             {activeTab === 'color' && (
               <div className="pt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-500" onClick={(e) => e.stopPropagation()}>
                 <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between">
                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 border border-indigo-500/20 text-[10px] font-black">L3</div>
+                      <div className="w-8 h-8 rounded-lg bg-[var(--tint-indigo-bg)] flex items-center justify-center text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black">L3</div>
                       <span className="text-[10px] font-black text-white uppercase tracking-widest italic">Sigma-7 Cinematic</span>
                    </div>
                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Active LUT</span>
@@ -187,15 +187,15 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
 
           {/* AUDIO TAB */}
           <div
-            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'audio' ? 'bg-indigo-600/20 border-indigo-500/40' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
+            className={`p-6 rounded-3xl border transition-all text-left space-y-3 group cursor-pointer ${activeTab === 'audio' ? 'bg-indigo-600/20 border-[var(--tint-indigo-edge)]' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
             onClick={() => setActiveTab('audio')}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Volume2 className={`w-5 h-5 ${activeTab === 'audio' ? 'text-indigo-400' : 'text-slate-500'}`} />
+                <Volume2 className={`w-5 h-5 ${activeTab === 'audio' ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-500'}`} />
                 <span className={`text-[10px] font-black uppercase tracking-widest italic ${activeTab === 'audio' ? 'text-white' : 'text-slate-500'}`}>Sonic Architecture</span>
               </div>
-              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'audio' ? 'rotate-90 text-indigo-400' : 'text-slate-700'}`} />
+              <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'audio' ? 'rotate-90 text-[var(--tint-indigo-fg)]' : 'text-slate-700'}`} />
             </div>
             {activeTab === 'audio' && (
               <div className="pt-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-500" onClick={(e) => e.stopPropagation()}>
@@ -232,7 +232,7 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
           </button>
           <button
             onClick={() => onSave(profile)}
-            className="flex-[2] px-8 py-5 rounded-[1.5rem] bg-indigo-600 border border-indigo-500/30 text-[10px] font-black text-white uppercase tracking-[0.3em] italic hover:bg-indigo-500 flex items-center justify-center gap-3 shadow-[0_0_50px_rgba(79,70,229,0.3)] transition-all"
+            className="flex-[2] px-8 py-5 rounded-[1.5rem] bg-indigo-600 border border-[var(--tint-indigo-edge)] text-[10px] font-black text-white uppercase tracking-[0.3em] italic hover:bg-indigo-500 flex items-center justify-center gap-3 shadow-[0_0_50px_rgba(79,70,229,0.3)] transition-all"
           >
             <Save className="w-4 h-4" />
             Commit to DNA Node
@@ -275,12 +275,12 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
 
         <div className={`h-[150px] ${glassStyle} rounded-[3rem] p-8 flex items-center gap-12`}>
            <div className="flex items-center gap-6 group">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20 group-hover:scale-110 transition-transform shadow-2xl">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--tint-indigo-bg)] flex items-center justify-center text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] group-hover:scale-110 transition-transform shadow-2xl">
                  <Settings2 className="w-8 h-8" />
               </div>
               <div className="space-y-1">
                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Node Reliability</div>
-                 <div className="text-3xl font-black text-white italic">98.4% <span className="text-indigo-400 text-sm">OPTIMAL</span></div>
+                 <div className="text-3xl font-black text-white italic">98.4% <span className="text-[var(--tint-indigo-fg)] text-sm">OPTIMAL</span></div>
               </div>
            </div>
 

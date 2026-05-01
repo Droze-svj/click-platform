@@ -107,7 +107,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
       {/* Elite Sub-Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-12 text-center md:text-left">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl">
+          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] shadow-xl">
             <Globe className="w-4 h-4 animate-pulse" />
             Ecosystem Command
           </div>
@@ -153,13 +153,13 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                 <button
                   onClick={() => setActivePreviewId(activePreviewId === platform.id ? null : platform.id)}
                   title={`View AI-driven social media preview for ${platform.id}`}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase italic transition-all ${activePreviewId === platform.id ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase italic transition-all ${activePreviewId === platform.id ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
                 >
                   <Sparkles className={`w-3 h-3 ${activePreviewId === platform.id ? 'animate-pulse' : ''}`} />
                   AI Preview
                 </button>
                 {isConnected ? (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase text-emerald-400 italic">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[9px] font-black uppercase text-[var(--tint-emerald-fg)] italic">
                     <Radio className="w-3 h-3 animate-pulse" />
                     Linked
                   </div>
@@ -192,10 +192,10 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                     >
                       <div className="mt-4 p-6 rounded-[2.5rem] bg-black/60 border border-white/10 shadow-inner space-y-4">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic flex items-center gap-2">
+                          <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic flex items-center gap-2">
                             <Zap className="w-3 h-3" /> Native Format Render
                           </span>
-                          <span className="text-[9px] font-black text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]">Ready for sync</span>
+                          <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] px-3 py-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]">Ready for sync</span>
                         </div>
                         <div className={`h-48 rounded-[2rem] bg-gradient-to-br ${platform.color} flex items-center justify-center relative overflow-hidden group/preview border border-white/10`}>
                           <div className="absolute inset-0 bg-black/40 group-hover/preview:bg-black/20 transition-colors z-10" />
@@ -236,7 +236,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleDisconnect(platform.id, account.platform_user_id)}
-                      className="p-3 bg-rose-500/10 text-rose-500 rounded-2xl border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all shadow-xl"
+                      className="p-3 bg-[var(--tint-rose-bg)] text-rose-500 rounded-2xl border border-[var(--tint-rose-edge)] hover:bg-rose-500 hover:text-white transition-all shadow-xl"
                       title="Disconnect Node"
                     >
                       <X className="w-5 h-5" />
@@ -272,7 +272,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                       </div>
                       <div className="text-left">
                         <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest leading-none mb-2">Neural Status</p>
-                        <p className="text-2xl font-black text-emerald-400 italic uppercase leading-none">Elite</p>
+                        <p className="text-2xl font-black text-[var(--tint-emerald-fg)] italic uppercase leading-none">Elite</p>
                       </div>
                     </div>
                     <button

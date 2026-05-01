@@ -124,7 +124,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   }) => (
     <div className="group/slider relative space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest group-hover/slider:text-indigo-400 transition-colors">
+        <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest group-hover/slider:text-[var(--tint-indigo-fg)] transition-colors">
           {label}
         </span>
         <div className="flex items-center gap-3">
@@ -184,7 +184,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="px-6 py-6 border-b border-white/5 bg-white/[0.02] flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center text-indigo-400">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center text-[var(--tint-indigo-fg)]">
                 <Settings className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
@@ -236,7 +236,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Scissors className="w-4 h-4 text-emerald-400" />
+                  <Scissors className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                   <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Clip Properties</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent ml-2" />
                 </div>
@@ -246,8 +246,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   if (!seg) return null
                   return (
                      <div className="space-y-8">
-                        <div className="p-4 rounded-[1.2rem] bg-emerald-500/5 border border-emerald-500/20 shadow-inner">
-                          <span className="text-[9px] uppercase font-black tracking-[0.3em] text-emerald-400 block mb-1">Target Segment</span>
+                        <div className="p-4 rounded-[1.2rem] bg-emerald-500/5 border border-[var(--tint-emerald-edge)] shadow-inner">
+                          <span className="text-[9px] uppercase font-black tracking-[0.3em] text-[var(--tint-emerald-fg)] block mb-1">Target Segment</span>
                           <span className="text-sm font-bold text-white tracking-tight truncate flex items-center gap-2">
                              <Fingerprint className="w-3 h-3 text-slate-500" />
                              {seg.name}
@@ -257,7 +257,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         <div className="space-y-4">
                            <div className="flex items-center justify-between">
                               <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest">Playback Velocity</span>
-                              <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">{(seg.playbackSpeed ?? 1).toFixed(2)}x</span>
+                              <span className="text-[10px] font-mono font-bold text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] px-2 py-1 rounded">{(seg.playbackSpeed ?? 1).toFixed(2)}x</span>
                            </div>
                            <input
                               type="range" min={0.1} max={4.0} step={0.1} value={seg.playbackSpeed ?? 1}
@@ -274,10 +274,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         <div className="space-y-4 pt-6 border-t border-white/10">
                            <div className="flex items-center justify-between">
                               <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest">Optical SteadyCam</span>
-                              <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">{seg.stabilization ?? 0}%</span>
+                              <span className="text-[10px] font-mono font-bold text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)] px-2 py-1 rounded">{seg.stabilization ?? 0}%</span>
                            </div>
                            <div className="flex items-center gap-4">
-                              <Lock className={`w-5 h-5 ${(seg.stabilization ?? 0) > 0 ? 'text-indigo-400' : 'text-slate-600'}`} />
+                              <Lock className={`w-5 h-5 ${(seg.stabilization ?? 0) > 0 ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-600'}`} />
                               <input
                                  type="range" min={0} max={100} step={1} value={seg.stabilization ?? 0}
                                  title={`Stabilization: ${seg.stabilization ?? 0}%`}
@@ -296,10 +296,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                              <div className="flex flex-col gap-4">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
-                                     <Volume2 className="w-4 h-4 text-rose-400" />
+                                     <Volume2 className="w-4 h-4 text-[var(--tint-rose-fg)]" />
                                      <span className="text-[10px] font-black italic text-slate-400 uppercase tracking-widest">Master Volume</span>
                                   </div>
-                                  <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded">{Math.round((seg.volume ?? 1) * 100)}%</span>
+                                  <span className="text-[10px] font-mono font-bold text-[var(--tint-rose-fg)] bg-[var(--tint-rose-bg)] px-2 py-1 rounded">{Math.round((seg.volume ?? 1) * 100)}%</span>
                                 </div>
                                 <input
                                    type="range" min={0} max={2.0} step={0.05} value={seg.volume ?? 1}
@@ -313,7 +313,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                              </div>
 
                              {seg.type === 'audio' && (
-                               <div className="flex items-center justify-between p-3 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                               <div className="flex items-center justify-between p-3 rounded-xl bg-orange-500/5 border border-[var(--tint-orange-edge)]">
                                   <div className="flex items-center gap-3">
                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${seg.audioDucking ? 'bg-orange-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
                                         <Headphones className="w-4 h-4" />
@@ -386,7 +386,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Activity className="w-4 h-4 text-rose-400" />
+                  <Activity className="w-4 h-4 text-[var(--tint-rose-fg)]" />
                   <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Spatial Transform</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
                 </div>
@@ -401,7 +401,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       <div className="pt-4 border-t border-white/10">
                         <div className="flex items-center justify-between mb-4">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Animation</span>
-                          <span className="text-[9px] text-indigo-400 font-bold">{videoTransformKeyframes?.length || 0} Keyframes</span>
+                          <span className="text-[9px] text-[var(--tint-indigo-fg)] font-bold">{videoTransformKeyframes?.length || 0} Keyframes</span>
                         </div>
                         <motion.button
                           whileHover={{ scale: 1.02 }}
@@ -418,7 +418,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                             }
                             setVideoTransformKeyframes([...(videoTransformKeyframes || []), newKf].sort((a,b) => a.time - b.time))
                           }}
-                          className="w-full py-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(79,70,229,0.2)]"
+                          className="w-full py-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 border border-[var(--tint-indigo-edge)] text-indigo-300 text-[10px] font-black uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(79,70,229,0.2)]"
                         >
                           + Add Keyframe at Playhead
                         </motion.button>
@@ -449,7 +449,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         {videoTransformKeyframes && videoTransformKeyframes.length > 0 && (
                           <div className="mt-4 space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
                             {videoTransformKeyframes.map((kf, i) => (
-                              <div key={kf.id} className="flex flex-col gap-2 p-3 rounded-lg bg-black/40 border border-white/5 group hover:border-indigo-500/30">
+                              <div key={kf.id} className="flex flex-col gap-2 p-3 rounded-lg bg-black/40 border border-white/5 group hover:border-[var(--tint-indigo-edge)]">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
@@ -459,7 +459,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                     onClick={() => {
                                       setVideoTransformKeyframes(videoTransformKeyframes.filter(k => k.id !== kf.id))
                                     }}
-                                    className="text-[9px] text-slate-500 hover:text-rose-400 uppercase font-black"
+                                    className="text-[9px] text-slate-500 hover:text-[var(--tint-rose-fg)] uppercase font-black"
                                   >
                                     Remove
                                   </button>
@@ -506,7 +506,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Palette className="w-4 h-4 text-indigo-400" />
+                  <Palette className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                   <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Global Synthesis</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
                 </div>
@@ -530,13 +530,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Subtitles className="w-4 h-4 text-emerald-400" />
+                  <Subtitles className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                   <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Intelligence Captions</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-emerald-500/20 transition-all cursor-pointer"
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-[var(--tint-emerald-edge)] transition-all cursor-pointer"
                     onClick={() => setCaptionStyle({ ...cap, enabled: !cap.enabled })}>
                     <div className="flex flex-col">
                       <span className="text-[10px] font-black text-white uppercase tracking-widest">Projection Active</span>
@@ -556,7 +556,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           whileHover={{ y: -2 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setCaptionStyle({ ...cap, enabled: true, textStyle: pre.textStyle, layout: pre.layout, size: pre.size, font: pre.font })}
-                          className={`relative p-4 rounded-[1.5rem] border text-left overflow-hidden group/preset ${isActive ? 'bg-indigo-600 border-white/20 shadow-xl' : 'bg-white/[0.02] border-white/5 hover:border-indigo-500/30'}`}
+                          className={`relative p-4 rounded-[1.5rem] border text-left overflow-hidden group/preset ${isActive ? 'bg-indigo-600 border-white/20 shadow-xl' : 'bg-white/[0.02] border-white/5 hover:border-[var(--tint-indigo-edge)]'}`}
                         >
                           <span className={`block text-[11px] font-black italic uppercase tracking-tight ${isActive ? 'text-white' : 'text-slate-400 group-hover/preset:text-white'}`}>{pre.label}</span>
                           <span className={`block text-[8px] mt-1 font-bold italic uppercase ${isActive ? 'text-white/60' : 'text-slate-600'}`}>{pre.description}</span>
@@ -592,7 +592,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 className="space-y-8"
               >
                 <div className="flex items-center gap-3">
-                  <Layers className="w-4 h-4 text-amber-400" />
+                  <Layers className="w-4 h-4 text-[var(--tint-amber-fg)]" />
                   <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] italic">Neural entities</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent ml-2" />
                 </div>
@@ -604,9 +604,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     </div>
                   ) : (
                     textOverlays.map(overlay => (
-                      <div key={overlay.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group-hover:border-amber-500/20 transition-all">
+                      <div key={overlay.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group-hover:border-[var(--tint-amber-edge)] transition-all">
                         <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                          <div className="w-8 h-8 rounded-xl bg-[var(--tint-amber-bg)] flex items-center justify-center text-[var(--tint-amber-fg)]">
                             <Type className="w-4 h-4" />
                           </div>
                           <div className="flex flex-col">

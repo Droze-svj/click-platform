@@ -159,7 +159,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <button
             type="button"
             onClick={() => { try { localStorage.removeItem('editor-timeline-hint-dismissed') } catch { /* ignore */ }; onResetTimelineHint(); showToast('Timeline hint will show again when you open Timeline', 'success'); setActiveCategory('timeline') }}
-            className="mt-2 w-full flex items-center justify-between px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-theme-primary hover:bg-amber-500/20 transition-colors text-sm font-medium"
+            className="mt-2 w-full flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-theme-primary hover:bg-[var(--tint-amber-bg)] transition-colors text-sm font-medium"
           >
             Show timeline shortcuts hint again
             <ChevronRight className="w-4 h-4 text-theme-muted" />
@@ -280,7 +280,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
               className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-elevated border border-subtle text-left hover:bg-surface-card-hover hover:border-default transition-all group"
             >
               <div>
-                <p className="text-sm font-semibold text-theme-primary group-hover:text-violet-600 dark:group-hover:text-violet-400">{item.label}</p>
+                <p className="text-sm font-semibold text-theme-primary group-hover:text-violet-600 dark:group-hover:text-[var(--tint-violet-fg)]">{item.label}</p>
                 <p className="text-[10px] text-theme-muted">{item.desc}</p>
               </div>
               <ChevronRight className="w-4 h-4 text-theme-muted shrink-0" />
@@ -296,7 +296,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         </h3>
         <p className="text-xs text-theme-secondary mb-3">Help us improve the editor. Your preferences and feedback shape what we build next.</p>
         {feedbackSent ? (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Thank you for your feedback.</p>
+          <p className="text-sm text-emerald-600 dark:text-[var(--tint-emerald-fg)] font-medium">Thank you for your feedback.</p>
         ) : (
           <>
             <p className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider mb-2">How&apos;s the editor?</p>

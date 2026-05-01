@@ -531,13 +531,13 @@ export default function PredictiveAnalyticsDashboard({
                 {/* Warnings */}
                 {retentionHeatmap.filter(z => z.warnings.length > 0).map((zone, i) => (
                   <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-[var(--tint-amber-fg)] shrink-0 mt-0.5" />
                     <div>
                       <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
                         ⚠ {zone.timeStart}s–{zone.timeEnd}s ({zone.score}% retention)
                       </span>
                       {zone.warnings.map((w, wi) => (
-                        <p key={wi} className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">{w}</p>
+                        <p key={wi} className="text-xs text-amber-600 dark:text-[var(--tint-amber-fg)] mt-0.5">{w}</p>
                       ))}
                     </div>
                   </div>

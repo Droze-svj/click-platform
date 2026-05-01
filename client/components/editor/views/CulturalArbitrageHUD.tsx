@@ -98,7 +98,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
 
                 <div className="flex items-center gap-4">
                     <div className="px-5 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center gap-3">
-                        <Activity className="w-3 h-3 text-emerald-400" />
+                        <Activity className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
                         <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">Live-Wire Engine Ingesting...</span>
                     </div>
                     <button 
@@ -121,7 +121,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                 <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Market Signals</h5>
                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Emergent Trends Detected</p>
                             </div>
-                            <TrendingUp className="w-5 h-5 text-violet-400" />
+                            <TrendingUp className="w-5 h-5 text-[var(--tint-violet-fg)]" />
                         </div>
 
                         <div className="space-y-6">
@@ -138,16 +138,16 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        className="p-6 rounded-3xl bg-white/5 border border-white/5 group hover:border-violet-500/30 transition-all relative overflow-hidden"
+                                        className="p-6 rounded-3xl bg-white/5 border border-white/5 group hover:border-[var(--tint-violet-edge)] transition-all relative overflow-hidden"
                                     >
                                         <div className="flex items-center justify-between mb-4 relative z-10">
                                             <div className="flex items-center gap-4">
-                                                <div className="px-3 py-1 rounded-lg bg-violet-500/10 text-violet-400">
+                                                <div className="px-3 py-1 rounded-lg bg-[var(--tint-violet-bg)] text-[var(--tint-violet-fg)]">
                                                     <span className="text-[9px] font-black uppercase italic">{signal.niche}</span>
                                                 </div>
                                                 <h6 className="text-lg font-black text-white italic tracking-tight uppercase">{signal.keyword}</h6>
                                             </div>
-                                            <div className="flex items-center gap-2 text-emerald-400">
+                                            <div className="flex items-center gap-2 text-[var(--tint-emerald-fg)]">
                                                 <ArrowUpRight className="w-4 h-4" />
                                                 <span className="text-[11px] font-black lowercase tracking-tighter italic">+{Math.round(signal.velocity * 100)}%</span>
                                             </div>
@@ -187,7 +187,7 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Legacy Assets Ready for Deployment</p>
                             </div>
                             <div className="flex items-center gap-4">
-                                <span className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-500 text-[10px] font-black italic tracking-widest uppercase">CAP: 2 DAILY</span>
+                                <span className="px-4 py-2 rounded-xl bg-[var(--tint-amber-bg)] text-amber-500 text-[10px] font-black italic tracking-widest uppercase">CAP: 2 DAILY</span>
                                 <RefreshCcw className="w-5 h-5 text-amber-500" />
                             </div>
                         </div>
@@ -207,12 +207,12 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                 >
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
-                                            <div className="p-3 rounded-xl bg-violet-500/10 text-violet-400">
+                                            <div className="p-3 rounded-xl bg-[var(--tint-violet-bg)] text-[var(--tint-violet-fg)]">
                                                 <History className="w-4 h-4" />
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Momentum</span>
-                                                <p className="text-xs font-black text-emerald-400 italic">{(asset.historicalViews / 1000).toFixed(1)}K VIEWS</p>
+                                                <p className="text-xs font-black text-[var(--tint-emerald-fg)] italic">{(asset.historicalViews / 1000).toFixed(1)}K VIEWS</p>
                                             </div>
                                         </div>
 
@@ -224,14 +224,14 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                                                 <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Signal</span>
-                                                <div className="flex items-center gap-2 text-amber-400">
+                                                <div className="flex items-center gap-2 text-[var(--tint-amber-fg)]">
                                                     <Flame className="w-3 h-3" />
                                                     <span className="text-[10px] font-black italic italic">{asset.signalStrength}/100</span>
                                                 </div>
                                             </div>
                                             <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                                                 <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Status</span>
-                                                <div className="flex items-center gap-2 text-emerald-400">
+                                                <div className="flex items-center gap-2 text-[var(--tint-emerald-fg)]">
                                                     <CheckCircle className="w-3 h-3" />
                                                     <span className="text-[10px] font-black italic tracking-widest">READY</span>
                                                 </div>

@@ -879,20 +879,20 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
       {/* TOP: BREADCRUMB PRECISION TRACKER (NEW) */}
       <div className="absolute top-0 inset-x-0 h-10 bg-black/60 border-b border-white/5 z-[60] flex items-center px-8 gap-4 backdrop-blur-3xl">
         <div className="flex items-center gap-2">
-           <Orbit className="w-3.5 h-3.5 text-indigo-400" />
+           <Orbit className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Workspace</span>
         </div>
         <ChevronRight className="w-3 h-3 text-slate-700" />
         <div className="flex items-center gap-2">
-           <span className="text-[10px] font-black text-white hover:text-indigo-400 cursor-pointer transition-colors uppercase italic">
+           <span className="text-[10px] font-black text-white hover:text-[var(--tint-indigo-fg)] cursor-pointer transition-colors uppercase italic">
              {currentScene ? `Scene ${currentScene.index}: ${currentScene.title}` : 'Universal Thread'}
            </span>
         </div>
         {selectedSegment && (
           <>
             <ChevronRight className="w-3 h-3 text-slate-700" />
-            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full group/crumb">
-               <Fingerprint className="w-3 h-3 text-indigo-400 group-hover/crumb:animate-pulse" />
+            <div className="flex items-center gap-2 px-3 py-1 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-full group/crumb">
+               <Fingerprint className="w-3 h-3 text-[var(--tint-indigo-fg)] group-hover/crumb:animate-pulse" />
                <span className="text-[9px] font-black text-indigo-300 uppercase italic truncate max-w-[150px]">{selectedSegment.name}</span>
             </div>
           </>
@@ -942,7 +942,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
              <div className="flex items-center gap-6">
                 <div className="relative group/timeinput">
-                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/timeinput:text-indigo-400" />
+                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/timeinput:text-[var(--tint-indigo-fg)]" />
                    <input
                      type="text"
                      value={timestampInput}
@@ -961,11 +961,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
            <div className="flex items-center gap-6">
               <div className="hidden xl:flex items-center gap-2">
-                 <button className="px-5 py-2.5 rounded-2xl border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all flex items-center gap-2">
+                 <button className="px-5 py-2.5 rounded-2xl border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-[var(--tint-emerald-fg)] hover:bg-[var(--tint-emerald-bg)] hover:border-[var(--tint-emerald-edge)] transition-all flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5" />
                     Auto-Sync Audio
                  </button>
-                 <button className="px-5 py-2.5 rounded-2xl border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-fuchsia-400 hover:bg-fuchsia-500/10 hover:border-fuchsia-500/30 transition-all flex items-center gap-2">
+                 <button className="px-5 py-2.5 rounded-2xl border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest text-[var(--tint-fuchsia-fg)] hover:bg-[var(--tint-fuchsia-bg)] hover:border-[var(--tint-fuchsia-edge)] transition-all flex items-center gap-2">
                     <Activity className="w-3.5 h-3.5" />
                     Motion Track
                  </button>
@@ -977,7 +977,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    title="Select Focus Lane"
                    value={focusLane || 'all'}
                    onChange={(e) => setFocusLane(e.target.value === 'all' ? null : e.target.value)}
-                   className="bg-transparent text-[10px] font-black text-indigo-400 uppercase tracking-widest italic outline-none cursor-pointer"
+                   className="bg-transparent text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic outline-none cursor-pointer"
                  >
                     <option value="all">Dynamic Grid</option>
                     <option value="captions">Speech Nodes</option>
@@ -1002,9 +1002,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
               <div className="w-full h-full relative cursor-pointer group/minimap">
                  {/* Mini-map track representation */}
                  <div className="absolute inset-y-2 left-0 right-0 bg-white/5 rounded-full overflow-hidden flex flex-col gap-[1px] p-[1px]">
-                    <div className="flex-1 bg-indigo-500/20 rounded-full w-full" />
+                    <div className="flex-1 bg-[var(--tint-indigo-bg)] rounded-full w-full" />
                     <div className="flex-1 bg-blue-500/20 rounded-full w-[80%]" />
-                    <div className="flex-1 bg-emerald-500/20 rounded-full w-[40%] ml-[20%]" />
+                    <div className="flex-1 bg-[var(--tint-emerald-bg)] rounded-full w-[40%] ml-[20%]" />
                  </div>
 
                  {/* Viewport Bounds Indicator */}
@@ -1091,7 +1091,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                          {activeCommentId === c.id && (
                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl p-3 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2" onClick={e => e.stopPropagation()}>
                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{c.author}</span>
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--tint-indigo-fg)]">{c.author}</span>
                                   <span className="text-[8px] font-mono text-slate-500">{formatTime(c.time)}</span>
                                </div>
                                <p className="text-xs text-slate-200 leading-snug">{c.text}</p>
@@ -1115,11 +1115,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="p-4 space-y-2">
                        {/* LANE: SPEECH NODES */}
                        {(!focusLane || focusLane === 'captions') && (
-                         <div className={`h-24 px-3 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 transition-all duration-500 relative group/track ${focusLane === 'captions' ? 'bg-emerald-500/10 border-emerald-500/30 ring-1 ring-emerald-500/20' : 'bg-black/40 hover:bg-white-[0.02]'}`}>
+                         <div className={`h-24 px-3 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 transition-all duration-500 relative group/track ${focusLane === 'captions' ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] ring-1 ring-emerald-500/20' : 'bg-black/40 hover:bg-white-[0.02]'}`}>
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-2xl opacity-50 group-hover/track:opacity-100 transition-opacity" />
                             <div className="flex items-center justify-between pl-2">
                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-[10px] font-black font-mono text-emerald-400 border border-emerald-500/30">
+                                  <div className="w-8 h-8 rounded-lg bg-[var(--tint-emerald-bg)] flex items-center justify-center text-[10px] font-black font-mono text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]">
                                      V1
                                   </div>
                                   <div className="flex flex-col">
@@ -1172,11 +1172,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
                        {/* LANE: VISUAL ASSETS */}
                        {(!focusLane || focusLane === 'b-roll') && (
-                         <div className={`h-28 px-3 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 transition-all duration-500 relative group/track ${focusLane === 'b-roll' ? 'bg-amber-600/10 border-amber-500/30 ring-1 ring-amber-500/20' : 'bg-black/40 hover:bg-white-[0.02]'}`}>
+                         <div className={`h-28 px-3 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 transition-all duration-500 relative group/track ${focusLane === 'b-roll' ? 'bg-amber-600/10 border-[var(--tint-amber-edge)] ring-1 ring-amber-500/20' : 'bg-black/40 hover:bg-white-[0.02]'}`}>
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-amber-600 rounded-l-2xl opacity-50 group-hover/track:opacity-100 transition-opacity" />
                             <div className="flex items-center justify-between pl-2">
                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-[10px] font-black font-mono text-amber-400 border border-amber-500/30">
+                                  <div className="w-8 h-8 rounded-lg bg-[var(--tint-amber-bg)] flex items-center justify-center text-[10px] font-black font-mono text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)]">
                                      V3
                                   </div>
                                   <div className="flex flex-col">
@@ -1199,11 +1199,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
                        {/* LANE: AUDIO ASSETS */}
                        {(!focusLane || focusLane === 'audio') && (
-                         <div className={`h-24 px-3 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 transition-all duration-500 relative group/track ${focusLane === 'audio' ? 'bg-fuchsia-600/10 border-fuchsia-500/30 ring-1 ring-fuchsia-500/20' : 'bg-black/40 hover:bg-white-[0.02]'}`}>
+                         <div className={`h-24 px-3 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 transition-all duration-500 relative group/track ${focusLane === 'audio' ? 'bg-fuchsia-600/10 border-[var(--tint-fuchsia-edge)] ring-1 ring-fuchsia-500/20' : 'bg-black/40 hover:bg-white-[0.02]'}`}>
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-fuchsia-400 to-fuchsia-700 rounded-l-2xl opacity-50 group-hover/track:opacity-100 transition-opacity" />
                             <div className="flex items-center justify-between pl-2">
                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-lg bg-fuchsia-500/20 flex items-center justify-center text-[10px] font-black font-mono text-fuchsia-400 border border-fuchsia-500/30">
+                                  <div className="w-8 h-8 rounded-lg bg-[var(--tint-fuchsia-bg)] flex items-center justify-center text-[10px] font-black font-mono text-[var(--tint-fuchsia-fg)] border border-[var(--tint-fuchsia-edge)]">
                                      A1
                                   </div>
                                   <div className="flex flex-col">
@@ -1255,8 +1255,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      {/* RETENTION HEATMAP OVERLAY TRACK (ENHANCED) */}
                     <div className="relative h-6 w-full bg-black/40 rounded-xl border border-white/5 mb-6 group/heatmap overflow-hidden">
                        <div className="absolute inset-y-0 left-0 flex items-center px-4 z-10 pointer-events-none">
-                          <Activity className="w-3 h-3 text-indigo-400 opacity-50" />
-                          <span className="text-[7px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">Retention Heatmap // AI Prediction</span>
+                          <Activity className="w-3 h-3 text-[var(--tint-indigo-fg)] opacity-50" />
+                          <span className="text-[7px] font-black text-[var(--tint-indigo-fg)]/50 uppercase tracking-[0.2em] ml-2">Retention Heatmap // AI Prediction</span>
                        </div>
                       {engagementScore?.retentionHeatmap.map((val, i) => (
                         <div
@@ -1278,13 +1278,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="relative h-14 w-full bg-white/[0.02] border border-white/5 rounded-2xl mb-8 overflow-hidden group/waveform shadow-inner">
                        <div className="absolute inset-y-0 left-6 flex items-center z-10 pointer-events-none">
                           <div className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse mr-3 shadow-[0_0_10px_rgba(232,121,249,0.8)]" />
-                          <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-[0.4em] italic opacity-60">Neural Audio Analysis // Quantum Waveform</span>
+                          <span className="text-[8px] font-black text-[var(--tint-fuchsia-fg)] uppercase tracking-[0.4em] italic opacity-60">Neural Audio Analysis // Quantum Waveform</span>
                        </div>
 
                        {/* Playhead Reflection on Waveform */}
                        <div className="absolute top-0 bottom-0 w-[2px] bg-white/10 z-[5] pointer-events-none backdrop-blur-sm" style={{ left: `${timeToX(currentTime)}%` }} />
 
-                       <svg className="absolute inset-0 w-full h-full preserve-3d text-fuchsia-400 opacity-60 group-hover/waveform:opacity-100 transition-opacity duration-700" preserveAspectRatio="none" viewBox="0 0 100 48">
+                       <svg className="absolute inset-0 w-full h-full preserve-3d text-[var(--tint-fuchsia-fg)] opacity-60 group-hover/waveform:opacity-100 transition-opacity duration-700" preserveAspectRatio="none" viewBox="0 0 100 48">
                           <defs>
                              <linearGradient id="waveform-grad" x1="0" y1="0" x2="1" y2="0">
                                 <stop offset="0%" stopColor="#818cf8" stopOpacity="0.1" />
@@ -1333,7 +1333,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           >
                              <Zap className="w-2 h-2 text-white" />
                              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 p-2 rounded-lg opacity-0 group-hover/portal:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                <p className="text-[8px] font-black uppercase text-fuchsia-400">Suggest: Glitch Dissolve</p>
+                                <p className="text-[8px] font-black uppercase text-[var(--tint-fuchsia-fg)]">Suggest: Glitch Dissolve</p>
                              </div>
                           </motion.div>
                        )
@@ -1371,8 +1371,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        {(timelineMode === 'hybrid') && (
                          <div className="relative h-24 w-full bg-white/[0.02] rounded-2xl border border-white/5 mb-6 overflow-hidden custom-scrollbar-thin">
                             <div className="absolute inset-y-0 left-4 flex items-center z-10 pointer-events-none opacity-20">
-                               <MessageSquare className="w-4 h-4 text-indigo-400" />
-                               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-3">Neural Script Lane</span>
+                               <MessageSquare className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
+                               <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest ml-3">Neural Script Lane</span>
                             </div>
                             <div className="h-full flex items-center px-12 gap-1 relative">
                                {visibleWords.map((word, idx) => {
@@ -1402,7 +1402,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        {(!focusLane || focusLane === 'captions') && (
                         <div
                           data-track-drop={4}
-                          className={`h-24 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'captions' ? 'bg-emerald-500/[0.05] border-emerald-500/20' : ''}`}
+                          className={`h-24 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'captions' ? 'bg-emerald-500/[0.05] border-[var(--tint-emerald-edge)]' : ''}`}
                           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
                           onDrop={(e) => handleTrackDrop(e, 4)}
                         >
@@ -1435,7 +1435,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                style={{ left: `${timeToX(o.startTime)}%`, width: `${timeToX(o.endTime) - timeToX(o.startTime)}%` }}
                                whileHover={{ scaleY: 1.05 }}
                                whileTap={{ scale: 0.98 }}
-                               className={`absolute top-4 bottom-4 rounded-xl border-2 flex flex-col justify-center px-4 cursor-pointer group/node transition-all duration-300 ${selectedIds.includes(o.id) ? 'bg-emerald-500/40 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)] z-30 ring-2 ring-emerald-500/20' : 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 z-20 hover:border-emerald-500/50'}`}
+                               className={`absolute top-4 bottom-4 rounded-xl border-2 flex flex-col justify-center px-4 cursor-pointer group/node transition-all duration-300 ${selectedIds.includes(o.id) ? 'bg-emerald-500/40 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)] z-30 ring-2 ring-emerald-500/20' : 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] hover:bg-[var(--tint-emerald-bg)] z-20 hover:border-emerald-500/50'}`}
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(o.id, e.shiftKey || e.metaKey) }}
                                onMouseDown={(e) => handleSegmentBodyMouseDown(e, o as any)}
                              >
@@ -1446,10 +1446,10 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    />
                                 )}
                                 <div className="flex items-center gap-2">
-                                   <Type className="w-3 h-3 text-emerald-400" />
+                                   <Type className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
                                    <span className="text-[10px] font-black text-white italic truncate uppercase">{o.text}</span>
                                 </div>
-                                <div className="text-[8px] font-bold text-emerald-400/60 uppercase tracking-widest mt-1">
+                                <div className="text-[8px] font-bold text-[var(--tint-emerald-fg)]/60 uppercase tracking-widest mt-1">
                                    {formatTime(o.endTime - o.startTime)}
                                 </div>
 
@@ -1591,7 +1591,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       {(!focusLane || focusLane === 'b-roll') && (
                         <div
                           data-track-drop={2}
-                          className={`h-28 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'b-roll' ? 'bg-amber-500/[0.05] border-amber-500/20' : ''}`}
+                          className={`h-28 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'b-roll' ? 'bg-amber-500/[0.05] border-[var(--tint-amber-edge)]' : ''}`}
                           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
                           onDrop={(e) => handleTrackDrop(e, 2)}
                         >
@@ -1610,7 +1610,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 {/* Simulated BG */}
                                 <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.2) 25%, rgba(255,255,255,0.2) 50%, transparent 50%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2) 100%)', backgroundSize: '20px 20px' }} />
 
-                                <div className="p-1.5 bg-black/40 rounded-lg backdrop-blur-md border border-white/10 group-hover/node:bg-amber-500/20 transition-colors z-10 shrink-0">
+                                <div className="p-1.5 bg-black/40 rounded-lg backdrop-blur-md border border-white/10 group-hover/node:bg-[var(--tint-amber-bg)] transition-colors z-10 shrink-0">
                                   <ImageIcon className="w-3.5 h-3.5 text-amber-300" />
                                 </div>
                                 <div className="flex flex-col min-w-0 z-10">
@@ -1694,7 +1694,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       {(!focusLane || focusLane === 'audio') && (
                         <div
                           data-track-drop={6}
-                          className={`h-24 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'audio' ? 'bg-fuchsia-500/[0.05] border-fuchsia-500/20' : ''}`}
+                          className={`h-24 relative rounded-2xl border border-white/[0.03] transition-all duration-500 overflow-hidden ${focusLane === 'audio' ? 'bg-fuchsia-500/[0.05] border-[var(--tint-fuchsia-edge)]' : ''}`}
                           onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
                           onDrop={(e) => handleTrackDrop(e, 6)}
                         >
@@ -1710,7 +1710,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                onClick={(e) => { e.stopPropagation(); onSegmentSelect?.(s.id, e.shiftKey || e.metaKey) }}
                                onMouseDown={(e) => handleSegmentBodyMouseDown(e, s)}
                              >
-                                 <div className="p-1.5 bg-black/40 rounded-lg backdrop-blur-md border border-white/10 group-hover/node:bg-orange-500/20 transition-colors z-10 shrink-0">
+                                 <div className="p-1.5 bg-black/40 rounded-lg backdrop-blur-md border border-white/10 group-hover/node:bg-[var(--tint-orange-bg)] transition-colors z-10 shrink-0">
                                     <Radio className="w-3.5 h-3.5 text-orange-300" />
                                  </div>
                                  <div className="flex-1 h-full flex items-center justify-around gap-[1px] opacity-60 pointer-events-none overflow-hidden mix-blend-screen relative">
@@ -1760,7 +1760,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      {/* Wide Body Gradient */}
                      <div className="absolute top-4 left-[-2px] w-[5px] h-full bg-gradient-to-b from-fuchsia-500/50 via-fuchsia-500/10 to-transparent blur-[2px]" />
                      {/* Playhead Timecode Floating Tag */}
-                     <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 px-2 py-0.5 bg-fuchsia-950/80 backdrop-blur-md border border-fuchsia-500/30 rounded text-[10px] font-black text-fuchsia-100 uppercase shadow-2xl tracking-widest whitespace-nowrap">
+                     <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 px-2 py-0.5 bg-fuchsia-950/80 backdrop-blur-md border border-[var(--tint-fuchsia-edge)] rounded text-[10px] font-black text-fuchsia-100 uppercase shadow-2xl tracking-widest whitespace-nowrap">
                         {displayTime(currentTime)}
                      </div>
                    </motion.div>
@@ -1837,7 +1837,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    onClick={splitAtPlayhead}
                    disabled={!segmentAtPlayheadForSplit}
                    title="Split the selected segment at the current playhead position"
-                   className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${segmentAtPlayheadForSplit ? 'bg-indigo-600/20 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)] border-indigo-500/30 hover:bg-indigo-600 hover:text-white' : 'bg-white/5 border-white/5 text-slate-600'}`}
+                   className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${segmentAtPlayheadForSplit ? 'bg-indigo-600/20 text-[var(--tint-indigo-fg)] shadow-[0_0_15px_rgba(99,102,241,0.2)] border-[var(--tint-indigo-edge)] hover:bg-indigo-600 hover:text-white' : 'bg-white/5 border-white/5 text-slate-600'}`}
                  >
                     <Scissors className="w-3.5 h-3.5" />
                     <span>Split Matrix</span>
@@ -1845,7 +1845,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
 
                  <button
                     disabled={selectedIds.length === 0}
-                    className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${selectedIds.length > 0 ? 'bg-amber-500/20 border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-white shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-white/5 border-white/5 text-slate-600'}`}
+                    className={`px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${selectedIds.length > 0 ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)] hover:bg-amber-500 hover:text-white shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-white/5 border-white/5 text-slate-600'}`}
                     title="Ripple Edit Options"
                  >
                     <Link className="w-3.5 h-3.5" />
@@ -1855,7 +1855,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                  <button
                     onClick={handleDeleteSelected}
                     disabled={selectedIds.length === 0 && !selectedEffectId}
-                    className={`p-2.5 rounded-xl border transition-all ${selectedIds.length > 0 || selectedEffectId ? 'bg-rose-500/20 border-rose-500/30 text-rose-500 hover:bg-rose-500 hover:text-white shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'bg-white/5 border-white/5 text-slate-600'}`}
+                    className={`p-2.5 rounded-xl border transition-all ${selectedIds.length > 0 || selectedEffectId ? 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)] text-rose-500 hover:bg-rose-500 hover:text-white shadow-[0_0_15px_rgba(244,63,94,0.2)]' : 'bg-white/5 border-white/5 text-slate-600'}`}
                     title="Ripple Delete Selected"
                  >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1866,7 +1866,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
            <div className="flex items-center gap-8">
               <div className="flex items-center gap-4 px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
                  <div className="flex items-center gap-2">
-                    <Magnet className={`w-4 h-4 ${snapEnabled ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
+                    <Magnet className={`w-4 h-4 ${snapEnabled ? 'text-[var(--tint-indigo-fg)] animate-pulse' : 'text-slate-600'}`} />
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest hidden sm:inline">Magnetic Edge</span>
                  </div>
                  <button
@@ -1936,7 +1936,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    </button>
                    <div className="h-px bg-white/10 my-1 mx-2" />
                    <button
-                     className="w-full text-left px-4 py-2 hover:bg-rose-500/20 text-rose-400 transition-colors flex items-center justify-between group"
+                     className="w-full text-left px-4 py-2 hover:bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] transition-colors flex items-center justify-between group"
                      onClick={() => {
                         handleDeleteSelected()
                         setContextMenu(null)
@@ -1947,10 +1947,10 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    </button>
                    <div className="h-px bg-white/10 my-1 mx-2" />
                    <button
-                     className="w-full text-left px-4 py-2 hover:bg-indigo-500/20 text-indigo-300 transition-colors flex items-center justify-between group"
+                     className="w-full text-left px-4 py-2 hover:bg-[var(--tint-indigo-bg)] text-indigo-300 transition-colors flex items-center justify-between group"
                      onClick={() => setContextMenu(null)}
                    >
-                     <span className="flex items-center gap-2"><Sparkles className="w-3 h-3 text-indigo-400" /> AI Enhance Selection</span>
+                     <span className="flex items-center gap-2"><Sparkles className="w-3 h-3 text-[var(--tint-indigo-fg)]" /> AI Enhance Selection</span>
                    </button>
                 </>
               )}

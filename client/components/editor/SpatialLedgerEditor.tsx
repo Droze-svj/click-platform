@@ -94,7 +94,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 gap-4 opacity-50">
-      <RefreshCw className="animate-spin text-indigo-400" />
+      <RefreshCw className="animate-spin text-[var(--tint-indigo-fg)]" />
       <span className="text-[10px] font-black uppercase tracking-widest italic">Syncing Spatial Ledger...</span>
     </div>
   )
@@ -109,8 +109,8 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
 
       <div className="flex items-center justify-between border-b border-white/5 pb-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center">
-            <BoxSelect className="text-indigo-400" />
+          <div className="w-12 h-12 bg-[var(--tint-indigo-bg)] rounded-2xl flex items-center justify-center">
+            <BoxSelect className="text-[var(--tint-indigo-fg)]" />
           </div>
           <div>
             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter leading-none">Spatial Memory</h3>
@@ -119,7 +119,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
         </div>
         <div className="text-right">
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Continuity Risk</p>
-          <p className={`text-2xl font-black italic leading-none ${ledger.riskScore > 50 ? 'text-rose-500' : 'text-emerald-400'}`}>
+          <p className={`text-2xl font-black italic leading-none ${ledger.riskScore > 50 ? 'text-rose-500' : 'text-[var(--tint-emerald-fg)]'}`}>
             {ledger.riskScore}%
           </p>
         </div>
@@ -133,13 +133,13 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
             onClick={() => setSelectedEntity(key)}
             className={`p-4 rounded-2xl border cursor-pointer transition-all ${
               selectedEntity === key 
-              ? 'bg-indigo-500/20 border-indigo-500/50' 
+              ? 'bg-[var(--tint-indigo-bg)] border-indigo-500/50' 
               : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05]'
             }`}
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                {entity.isOverridden ? <Lock size={14} className="text-amber-400" /> : <Unlock size={14} className="text-slate-800" />}
+                {entity.isOverridden ? <Lock size={14} className="text-[var(--tint-amber-fg)]" /> : <Unlock size={14} className="text-slate-800" />}
                 <p className="text-sm font-black text-white italic uppercase tracking-tighter">{entity.label}</p>
               </div>
               <span className="text-[8px] font-black text-slate-800 uppercase tracking-widest opacity-50">{entity.type}</span>
@@ -158,7 +158,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
             className="pt-4 border-t border-white/5 space-y-4"
           >
             <div className="flex items-center justify-between">
-               <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] italic">MOD_OVERRIDE: {selectedEntity.toUpperCase()}</p>
+               <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.3em] italic">MOD_OVERRIDE: {selectedEntity.toUpperCase()}</p>
                <button onClick={() => setSelectedEntity(null)} title="Close Selection"><X size={16} className="text-slate-800 hover:text-white" /></button>
             </div>
             <textarea
@@ -179,7 +179,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
       </AnimatePresence>
 
       {ledger.continuityLog.length > 0 && (
-         <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-4 space-y-2">
+         <div className="bg-rose-500/5 border border-[var(--tint-rose-edge)] rounded-2xl p-4 space-y-2">
             <div className="flex items-center gap-2 text-rose-500">
                <AlertTriangle size={14} />
                <span className="text-[9px] font-black uppercase tracking-widest">DIFF_ANOMALY detected</span>

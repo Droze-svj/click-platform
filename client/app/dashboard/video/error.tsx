@@ -47,14 +47,14 @@ export default function VideoError({ error, reset }: { error: Error & { digest?:
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-8 text-white">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full text-center bg-white/[0.02] border border-white/[0.06] rounded-[2.5rem] p-10">
-        <div className="w-14 h-14 bg-violet-500/10 border border-violet-500/20 rounded-[1.25rem] flex items-center justify-center mx-auto mb-5">
-          <Video className="w-7 h-7 text-violet-400" />
+        <div className="w-14 h-14 bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] rounded-[1.25rem] flex items-center justify-center mx-auto mb-5">
+          <Video className="w-7 h-7 text-[var(--tint-violet-fg)]" />
         </div>
-        <h2 className="text-2xl font-black italic mb-3">Video Studio <span className="text-rose-400">Error</span></h2>
+        <h2 className="text-2xl font-black italic mb-3">Video Studio <span className="text-[var(--tint-rose-fg)]">Error</span></h2>
         <p className="text-slate-500 text-sm mb-7">{isChunk ? 'The video editor module failed to load. Clearing cache and retrying should fix this.' : 'An unexpected error occurred in the video studio.'}</p>
         <div className="flex gap-3">
           <button onClick={isChunk ? async () => { if ('caches' in window) { const n = await caches.keys(); await Promise.all(n.map(k => caches.delete(k))) }; reset() } : reset}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-violet-600/20 border border-violet-500/30 text-violet-300 font-black text-[10px] uppercase tracking-widest hover:bg-violet-600/30 transition-all">
+            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-violet-600/20 border border-[var(--tint-violet-edge)] text-violet-300 font-black text-[10px] uppercase tracking-widest hover:bg-violet-600/30 transition-all">
             {isChunk ? <Trash2 className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />}
             {isChunk ? 'Clear & Retry' : 'Try Again'}
           </button>

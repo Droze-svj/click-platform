@@ -124,12 +124,12 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
   }, [])
 
   const platforms = [
-    { id: 'twitter', name: 'Twitter/X', icon: Twitter, color: `text-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.4)]` },
+    { id: 'twitter', name: 'Twitter/X', icon: Twitter, color: `text-[var(--tint-indigo-fg)] shadow-[0_0_20px_rgba(99,102,241,0.4)]` },
     { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: `text-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]` },
     { id: 'facebook', name: 'Facebook', icon: Facebook, color: `text-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]` },
-    { id: 'instagram', name: 'Instagram', icon: Instagram, color: `text-fuchsia-400 shadow-[0_0_20px_rgba(232,121,249,0.4)]` },
+    { id: 'instagram', name: 'Instagram', icon: Instagram, color: `text-[var(--tint-fuchsia-fg)] shadow-[0_0_20px_rgba(232,121,249,0.4)]` },
     { id: 'youtube', name: 'YouTube', icon: Youtube, color: `text-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)]` },
-    { id: 'tiktok', name: 'TikTok', icon: Music, color: `text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]` }
+    { id: 'tiktok', name: 'TikTok', icon: Music, color: `text-[var(--tint-cyan-fg)] shadow-[0_0_20px_rgba(34,211,238,0.4)]` }
   ]
 
   const contentTypeIcons = {
@@ -300,7 +300,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                     <span className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-600 block italic">Neural Transformation Velocity</span>
                     <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase">{status === 'completed' ? 'Synchronization Complete' : status === 'processing' ? 'Synthesis Active' : 'Idle State'}</h3>
                   </div>
-                  <div className={`text-6xl font-black italic tracking-tighter tabular-nums ${status === 'completed' ? 'text-emerald-400' : `text-${currentTheme.accent}`}`}>
+                  <div className={`text-6xl font-black italic tracking-tighter tabular-nums ${status === 'completed' ? 'text-[var(--tint-emerald-fg)]' : `text-${currentTheme.accent}`}`}>
                     {status === 'completed' ? '100' : status === 'processing' ? '65' : '0'}<span className="text-xl not-italic ml-2 opacity-40">%</span>
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.8)]" />
                         <h3 className="text-[12px] font-black uppercase tracking-[0.5em] text-slate-500 italic">Target Cluster Repositories</h3>
                       </div>
-                      <div className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.4em] italic bg-indigo-500/5 px-6 py-2 rounded-full border border-indigo-500/20">{selectedPlatforms.length} Ecosystems Active</div>
+                      <div className="text-[11px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] italic bg-indigo-500/5 px-6 py-2 rounded-full border border-[var(--tint-indigo-edge)]">{selectedPlatforms.length} Ecosystems Active</div>
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-6 gap-8">
@@ -403,7 +403,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <motion.div
                       whileHover={{ y: -8, scale: 1.02 }}
-                      className={`relative p-12 rounded-[3.5rem] bg-white/[0.02] border-2 transition-all duration-700 cursor-pointer overflow-hidden group/opt ${autoSchedule ? 'border-emerald-500/30 bg-emerald-500/5 shadow-3xl' : 'border-white/5'}`}
+                      className={`relative p-12 rounded-[3.5rem] bg-white/[0.02] border-2 transition-all duration-700 cursor-pointer overflow-hidden group/opt ${autoSchedule ? 'border-[var(--tint-emerald-edge)] bg-emerald-500/5 shadow-3xl' : 'border-white/5'}`}
                       onClick={() => setAutoSchedule(!autoSchedule)}
                     >
                       <div className="flex items-center gap-10 relative z-10">
@@ -508,7 +508,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                             key={i}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="flex items-center gap-8 text-emerald-400 font-bold"
+                            className="flex items-center gap-8 text-[var(--tint-emerald-fg)] font-bold"
                           >
                             <span className="text-slate-700 font-black tabular-nums text-sm">[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
                             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse" />
@@ -528,7 +528,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                   className="space-y-16"
                 >
                   {/* Completed Status HUD */}
-                  <div className={`p-20 rounded-[4.5rem] ${glassStyle} border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden text-center`}>
+                  <div className={`p-20 rounded-[4.5rem] ${glassStyle} border-[var(--tint-emerald-edge)] bg-emerald-500/5 relative overflow-hidden text-center`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
                     <div className="relative z-10 space-y-12">
                       <div className="w-32 h-32 rounded-[3rem] bg-emerald-500 flex items-center justify-center mx-auto shadow-[0_30px_60px_rgba(16,185,129,0.4)] border border-white/20">
@@ -542,7 +542,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pt-10">
                         <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-2xl">
                           <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">Estimated Yield</div>
-                          <div className="text-6xl font-black text-emerald-400 tracking-tighter italic tabular-nums">+42<span className="text-2xl ml-1 opacity-40">%</span></div>
+                          <div className="text-6xl font-black text-[var(--tint-emerald-fg)] tracking-tighter italic tabular-nums">+42<span className="text-2xl ml-1 opacity-40">%</span></div>
                         </div>
                         <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-2xl">
                           <div className="text-[11px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 italic">Neural Integrity</div>

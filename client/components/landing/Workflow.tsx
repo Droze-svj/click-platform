@@ -50,7 +50,7 @@ export function Workflow() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">
-            FROM CLIP TO <span className="text-fuchsia-400">CASCADE</span>
+            FROM CLIP TO <span className="text-[var(--tint-fuchsia-fg)]">CASCADE</span>
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg md:text-xl font-medium">
             Four steps. Roughly 90 seconds of your time. The rest is Click.

@@ -260,9 +260,9 @@ export default function BackgroundFluxTerminalPage() {
 function MetricHUD({ title, value, icon, color, subtitle }: { title: string; value: string | number; icon: any; color: string; subtitle: string }) {
   const colors: any = {
     blue: 'from-blue-600/20 to-transparent border-blue-500/30 text-blue-400 shadow-[0_0_60px_rgba(59,130,246,0.15)]',
-    emerald: 'from-emerald-600/20 to-transparent border-emerald-500/30 text-emerald-400 shadow-[0_0_60px_rgba(16,185,129,0.15)]',
-    rose: 'from-rose-600/20 to-transparent border-rose-500/30 text-rose-400 shadow-[0_0_60px_rgba(225,29,72,0.15)]',
-    amber: 'from-amber-600/20 to-transparent border-amber-500/30 text-amber-400 shadow-[0_0_60px_rgba(245,158,11,0.15)]'
+    emerald: 'from-emerald-600/20 to-transparent border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] shadow-[0_0_60px_rgba(16,185,129,0.15)]',
+    rose: 'from-rose-600/20 to-transparent border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] shadow-[0_0_60px_rgba(225,29,72,0.15)]',
+    amber: 'from-amber-600/20 to-transparent border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)] shadow-[0_0_60px_rgba(245,158,11,0.15)]'
   }
   return (
     <motion.div whileHover={{ y: -10, scale: 1.02 }} className={`${glassStyle} p-12 rounded-[4.5rem] relative overflow-hidden group shadow-[0_60px_150px_rgba(0,0,0,0.8)] bg-black/40`}>
@@ -281,7 +281,7 @@ function MetricHUD({ title, value, icon, color, subtitle }: { title: string; val
 
 function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: string; icon: any }) {
   return (
-    <div className="flex items-center gap-10 pl-8 border-l-[6px] border-indigo-500/40 relative group">
+    <div className="flex items-center gap-10 pl-8 border-l-[6px] border-[var(--tint-indigo-edge)] relative group">
        <div className="absolute -left-[6px] top-0 bottom-0 w-[6px] bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)] group-hover:h-full transition-all" />
        <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center shadow-[0_40px_100px_rgba(0,0,0,0.6)] group-hover:rotate-12 transition-transform duration-700">{icon}</div>
        <div>
@@ -295,10 +295,10 @@ function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: str
 function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; onCancel: (id: string) => void; onView: () => void; index: number; isDiffracted?: boolean }) {
   const getStatusStyle = (state: string) => {
     switch (state) {
-      case 'completed': return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+      case 'completed': return 'border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] shadow-[0_0_30px_rgba(16,185,129,0.2)]'
       case 'active': return 'border-blue-500/30 text-blue-400 bg-blue-500/10 shadow-[0_0_30px_rgba(59,130,246,0.2)]'
-      case 'failed': return 'border-rose-500/30 text-rose-400 bg-rose-500/10 shadow-[0_0_30px_rgba(244,63,94,0.2)]'
-      case 'delayed': return 'border-amber-500/30 text-amber-400 bg-amber-500/10 shadow-[0_0_30px_rgba(245,158,11,0.2)]'
+      case 'failed': return 'border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] bg-[var(--tint-rose-bg)] shadow-[0_0_30px_rgba(244,63,94,0.2)]'
+      case 'delayed': return 'border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)] bg-[var(--tint-amber-bg)] shadow-[0_0_30px_rgba(245,158,11,0.2)]'
       default: return 'border-white/10 text-slate-400 bg-white/5'
     }
   }
@@ -329,7 +329,7 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
              <div className="w-1 h-12 bg-white/5 rounded-full" />
              <button onClick={onView} className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:bg-blue-600/20 active:scale-75 shadow-2xl"><Eye size={36}/></button>
              {(job.state === 'active' || job.state === 'waiting' || job.state === 'delayed') && (
-                <button onClick={() => onCancel(job.id)} className="w-16 h-16 rounded-[2.2rem] bg-rose-950/20 border-2 border-rose-500/20 flex items-center justify-center text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/20 transition-all duration-300 active:scale-75 shadow-2xl"><X size={36}/></button>
+                <button onClick={() => onCancel(job.id)} className="w-16 h-16 rounded-[2.2rem] bg-rose-950/20 border-2 border-[var(--tint-rose-edge)] flex items-center justify-center text-rose-500/30 hover:text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] transition-all duration-300 active:scale-75 shadow-2xl"><X size={36}/></button>
              )}
           </div>
        </div>
@@ -376,7 +376,7 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
              )}
           </div>
           {job.attemptsMade > 1 && (
-             <div className="flex items-center gap-4 px-6 py-2 bg-amber-500/5 border-2 border-amber-500/20 rounded-full">
+             <div className="flex items-center gap-4 px-6 py-2 bg-amber-500/5 border-2 border-[var(--tint-amber-edge)] rounded-full">
                 <RefreshCw size={14} className="text-amber-500 animate-spin" style={{ animationDuration: '4s' }} />
                 <span className="text-[11px] font-black text-amber-500 uppercase tracking-widest italic">RETRY_THRESHOLD_CYCLE_0{job.attemptsMade}</span>
              </div>

@@ -69,7 +69,7 @@ export default function OptimalPostingWindow({ niche, platform, onSchedule, clas
   }
 
   return (
-    <div className={`rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04] p-4 ${className}`}>
+    <div className={`rounded-2xl border border-[var(--tint-fuchsia-edge)] bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04] p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Clock size={12} className="text-fuchsia-300" />
@@ -82,7 +82,7 @@ export default function OptimalPostingWindow({ niche, platform, onSchedule, clas
 
       {loading ? (
         <div className="flex items-center gap-2 py-2">
-          <Loader2 size={11} className="text-fuchsia-400 animate-spin" />
+          <Loader2 size={11} className="text-[var(--tint-fuchsia-fg)] animate-spin" />
           <span className="text-[10px] text-slate-500">Reading platform peaks + niche windows…</span>
         </div>
       ) : error ? (
@@ -96,7 +96,7 @@ export default function OptimalPostingWindow({ niche, platform, onSchedule, clas
               <button
                 type="button"
                 onClick={() => onSchedule?.(w.hour, w.rationale)}
-                className="w-full flex items-start gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-fuchsia-500/30 hover:bg-fuchsia-500/[0.06] transition-all group text-left"
+                className="w-full flex items-start gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-fuchsia-edge)] hover:bg-fuchsia-500/[0.06] transition-all group text-left"
               >
                 <div className="flex-shrink-0 w-12 text-center">
                   <div className="text-[14px] font-black text-white tabular-nums">{fmtHour(w.hour)}</div>
@@ -105,7 +105,7 @@ export default function OptimalPostingWindow({ niche, platform, onSchedule, clas
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[10px] font-bold text-white">{w.label}</span>
-                    <span className="text-[8px] font-mono text-emerald-400 ml-auto">{Math.round(w.confidence * 100)}%</span>
+                    <span className="text-[8px] font-mono text-[var(--tint-emerald-fg)] ml-auto">{Math.round(w.confidence * 100)}%</span>
                   </div>
                   {w.rationale.slice(0, 1).map((r, ri) => (
                     <p key={ri} className="text-[9px] text-slate-500 leading-relaxed line-clamp-2">{r}</p>

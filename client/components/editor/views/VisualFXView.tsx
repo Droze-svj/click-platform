@@ -145,7 +145,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-theme-primary truncate">{preset.name}</p>
                   {(preset as any).ai && (
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[7px] font-black text-amber-500 uppercase tracking-tighter animate-pulse">
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-[7px] font-black text-amber-500 uppercase tracking-tighter animate-pulse">
                       <Zap className="w-2 h-2" />
                       AI Rec
                     </span>

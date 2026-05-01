@@ -107,9 +107,9 @@ export default function AdvancedSchedulingHub() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {[
           { label: 'Total Trajectories', val: posts.length, icon: Layers, color: 'text-white' },
-          { label: 'Optimal Alignment', val: analytics?.optimalTimeUsage ? `${Math.round(analytics.optimalTimeUsage)}%` : '---', icon: TrendingUp, color: 'text-emerald-400' },
-          { label: 'Signal Conflicts', val: analytics?.conflictRate ? Math.round(analytics.conflictRate) : 0, icon: AlertTriangle, color: 'text-rose-400' },
-          { label: 'Active Recursions', val: analytics?.byStatus?.active || 0, icon: RefreshCw, color: 'text-indigo-400' },
+          { label: 'Optimal Alignment', val: analytics?.optimalTimeUsage ? `${Math.round(analytics.optimalTimeUsage)}%` : '---', icon: TrendingUp, color: 'text-[var(--tint-emerald-fg)]' },
+          { label: 'Signal Conflicts', val: analytics?.conflictRate ? Math.round(analytics.conflictRate) : 0, icon: AlertTriangle, color: 'text-[var(--tint-rose-fg)]' },
+          { label: 'Active Recursions', val: analytics?.byStatus?.active || 0, icon: RefreshCw, color: 'text-[var(--tint-indigo-fg)]' },
         ].map((stat, i) => (
           <motion.div 
             key={stat.label}
@@ -199,11 +199,11 @@ export default function AdvancedSchedulingHub() {
 
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-4">
-                      <span className="text-[11px] font-black uppercase tracking-widest bg-white/5 px-4 py-1 rounded-full border border-white/10 text-indigo-400 italic">
+                      <span className="text-[11px] font-black uppercase tracking-widest bg-white/5 px-4 py-1 rounded-full border border-white/10 text-[var(--tint-indigo-fg)] italic">
                         {post.platform.toUpperCase()}
                       </span>
                       {post.status === 'failed' && (
-                        <span className="flex items-center gap-2 text-rose-400 text-[10px] font-black uppercase italic">
+                        <span className="flex items-center gap-2 text-[var(--tint-rose-fg)] text-[10px] font-black uppercase italic">
                           <AlertTriangle size={12} /> Signal Conflict
                         </span>
                       )}
@@ -218,7 +218,7 @@ export default function AdvancedSchedulingHub() {
                     </div>
                     <button 
                       title="View Details"
-                      className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center hover:bg-indigo-500/20 transition-all text-slate-500 hover:text-white"
+                      className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center hover:bg-[var(--tint-indigo-bg)] transition-all text-slate-500 hover:text-white"
                     >
                       <ChevronRight size={20} aria-hidden="true" />
                     </button>
@@ -241,7 +241,7 @@ export default function AdvancedSchedulingHub() {
                         <h4 className="text-2xl font-black italic uppercase tracking-tighter mb-2">{tpl.name}</h4>
                         <p className="text-slate-500 text-[12px] uppercase font-bold tracking-widest mb-6">{tpl.platforms?.join(' + ')}</p>
                         <div className="flex items-center justify-between mt-8">
-                           <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">{tpl.usageCount} Deployments</span>
+                           <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">{tpl.usageCount} Deployments</span>
                            <button className="px-6 py-2 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all">Apply Pattern</button>
                         </div>
                       </motion.div>
@@ -252,19 +252,19 @@ export default function AdvancedSchedulingHub() {
 
                   {activeTab === 'recursion' && (
                     <div className="space-y-8">
-                       <div className={`${glassStyle} p-12 rounded-[5rem] bg-indigo-500/5 border-indigo-500/20`}>
+                       <div className={`${glassStyle} p-12 rounded-[5rem] bg-indigo-500/5 border-[var(--tint-indigo-edge)]`}>
                           <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-6">Active Recursion Assigns</h3>
                           <div className="space-y-4">
                              {analytics?.byStatus?.active > 0 ? (
                                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 flex items-center justify-between">
                                   <div className="flex items-center gap-6">
-                                     <RefreshCw className="text-indigo-400 animate-spin-slow" size={24} />
+                                     <RefreshCw className="text-[var(--tint-indigo-fg)] animate-spin-slow" size={24} />
                                      <div>
                                         <p className="font-bold italic uppercase tracking-tight">Daily Diffusion Pattern</p>
                                         <p className="text-[10px] text-slate-500 font-black uppercase">Next Execution: T-Minus 4h</p>
                                      </div>
                                   </div>
-                                  <button className="px-6 py-2 bg-rose-500/10 text-rose-400 rounded-full text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Suspend</button>
+                                  <button className="px-6 py-2 bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] rounded-full text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all">Suspend</button>
                                </div>
                              ) : (
                                <div className="py-12 text-center opacity-30 italic uppercase tracking-[0.5em] text-[12px] font-black">No active recursions</div>
@@ -284,7 +284,7 @@ export default function AdvancedSchedulingHub() {
                    <div className={`${glassStyle} p-12 rounded-[5rem] bg-gradient-to-br from-indigo-500/10 to-transparent`}>
                       <div className="flex items-center gap-8 mb-12">
                         <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.05] border border-white/10 flex items-center justify-center">
-                          <LinkIcon size={32} className="text-indigo-400" />
+                          <LinkIcon size={32} className="text-[var(--tint-indigo-fg)]" />
                         </div>
                         <div>
                           <h3 className="text-3xl font-black italic uppercase tracking-tighter">Private iCal Feed</h3>
@@ -313,7 +313,7 @@ export default function AdvancedSchedulingHub() {
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <button className={`${glassStyle} p-10 rounded-[4rem] flex flex-col items-center text-center gap-6 hover:bg-white/[0.05]`}>
                          <div className="w-16 h-16 rounded-3xl bg-white/[0.02] border border-white/10 flex items-center justify-center">
-                            <Globe size={24} className="text-emerald-400" />
+                            <Globe size={24} className="text-[var(--tint-emerald-fg)]" />
                          </div>
                          <div>
                             <p className="text-[14px] font-black italic uppercase mb-1">Google Direct Sync</p>
@@ -322,7 +322,7 @@ export default function AdvancedSchedulingHub() {
                       </button>
                       <button className={`${glassStyle} p-10 rounded-[4rem] flex flex-col items-center text-center gap-6 hover:bg-white/[0.05]`}>
                          <div className="w-16 h-16 rounded-3xl bg-white/[0.02] border border-white/10 flex items-center justify-center">
-                            <Archive size={24} className="text-indigo-400" />
+                            <Archive size={24} className="text-[var(--tint-indigo-fg)]" />
                          </div>
                          <div>
                             <p className="text-[14px] font-black italic uppercase mb-1">Export Static Snapshot</p>
@@ -342,7 +342,7 @@ export default function AdvancedSchedulingHub() {
           <div className={`${glassStyle} p-8 rounded-[4rem] relative overflow-hidden bg-gradient-to-br from-indigo-500/[0.03] to-transparent`}>
             <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12"><RefreshCw size={150} /></div>
             <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-8 flex items-center gap-4">
-              <Sparkle className="text-indigo-400" size={24} /> Recursion Engine
+              <Sparkle className="text-[var(--tint-indigo-fg)]" size={24} /> Recursion Engine
             </h3>
             <p className="text-slate-400 text-[13px] italic mb-8 leading-relaxed font-medium">Automate content diffusion patterns across high-impact temporal windows.</p>
             <button className="w-full py-4 bg-white text-black rounded-[2rem] text-[13px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-indigo-500 hover:text-white transition-all duration-700 italic group">
@@ -354,12 +354,12 @@ export default function AdvancedSchedulingHub() {
           <div className={`${glassStyle} p-8 rounded-[4rem] relative overflow-hidden bg-gradient-to-br from-emerald-500/[0.03] to-transparent`}>
              <div className="absolute top-0 right-0 p-8 opacity-[0.03] -rotate-12"><Zap size={150} /></div>
              <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-8 flex items-center gap-4">
-              <Target className="text-emerald-400" size={24} /> Optimization
+              <Target className="text-[var(--tint-emerald-fg)]" size={24} /> Optimization
             </h3>
             <div className="space-y-6">
               {[
-                { label: 'Signal Overlap Detection', status: 'ACTIVE', color: 'text-emerald-400' },
-                { label: 'Peak Variance Modeling', status: 'OPTIMIZING', color: 'text-indigo-400' },
+                { label: 'Signal Overlap Detection', status: 'ACTIVE', color: 'text-[var(--tint-emerald-fg)]' },
+                { label: 'Peak Variance Modeling', status: 'OPTIMIZING', color: 'text-[var(--tint-indigo-fg)]' },
                 { label: 'Audience Stratum Sync', status: 'STANDBY', color: 'text-slate-500' }
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-3xl">
@@ -396,15 +396,15 @@ export default function AdvancedSchedulingHub() {
                      <button 
                        key={opt.label}
                        onClick={() => handleBulkReschedule(opt.ms)}
-                       className="py-6 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/5 text-[15px] font-black uppercase italic tracking-widest hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-all group flex items-center justify-center gap-4"
+                       className="py-6 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/5 text-[15px] font-black uppercase italic tracking-widest hover:border-indigo-500/50 hover:bg-[var(--tint-indigo-bg)] transition-all group flex items-center justify-center gap-4"
                      >
                         {opt.label} <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
                      </button>
                    ))}
                 </div>
 
-                <div className="p-8 bg-rose-500/5 border border-rose-500/20 rounded-3xl flex items-start gap-6">
-                  <AlertTriangle className="text-rose-400 mt-1" size={24} />
+                <div className="p-8 bg-rose-500/5 border border-[var(--tint-rose-edge)] rounded-3xl flex items-start gap-6">
+                  <AlertTriangle className="text-[var(--tint-rose-fg)] mt-1" size={24} />
                   <p className="text-[12px] font-black text-slate-400 uppercase italic leading-relaxed">WARNING: Bulk temporal shifts may introduce new signal conflicts. AI auto-resolution will attempt to mitigate during sync.</p>
                 </div>
              </motion.div>

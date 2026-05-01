@@ -31,10 +31,10 @@ interface VideoItem {
 }
 
 const STATUS_CFG: Record<string, { label: string; dot: string; badge: string; icon: any; color: string }> = {
-  completed:  { label: 'COMPLETED',    dot: 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: CheckCircle, color: 'text-emerald-400' },
-  processing: { label: 'PROCESSING',     dot: 'bg-indigo-500 animate-pulse shadow-[0_0_20px_rgba(99,102,241,0.5)]', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', icon: Loader2, color: 'text-indigo-400' },
-  pending:    { label: 'QUEUED',      dot: 'bg-amber-500 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.5)]', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: Clock, color: 'text-amber-400' },
-  failed:     { label: 'FAILED',      dot: 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20', icon: AlertCircle, color: 'text-rose-400' },
+  completed:  { label: 'COMPLETED',    dot: 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]', badge: 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]', icon: CheckCircle, color: 'text-[var(--tint-emerald-fg)]' },
+  processing: { label: 'PROCESSING',     dot: 'bg-indigo-500 animate-pulse shadow-[0_0_20px_rgba(99,102,241,0.5)]', badge: 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]', icon: Loader2, color: 'text-[var(--tint-indigo-fg)]' },
+  pending:    { label: 'QUEUED',      dot: 'bg-amber-500 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.5)]', badge: 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]', icon: Clock, color: 'text-[var(--tint-amber-fg)]' },
+  failed:     { label: 'FAILED',      dot: 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]', badge: 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)]', icon: AlertCircle, color: 'text-[var(--tint-rose-fg)]' },
 }
 
 const glassStyle = 'backdrop-blur-[var(--glass-blur)] bg-[var(--glass-surface)] border border-[var(--glass-border)] shadow-[var(--glass-glow)] transition-all duration-300'
@@ -186,7 +186,7 @@ export default function KineticSynthesisHubPage() {
           <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
        </div>
        <div className="space-y-4 text-center">
-          <p className="text-[14px] font-bold text-indigo-400 uppercase tracking-[0.4em] animate-pulse leading-none">Loading videos…</p>
+          <p className="text-[14px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] animate-pulse leading-none">Loading videos…</p>
        </div>
     </div>
   )
@@ -208,7 +208,7 @@ export default function KineticSynthesisHubPage() {
               <motion.div
                 initial={{ scale: 0.92 }}
                 animate={{ scale: 1 }}
-                className="relative z-10 px-8 sm:px-12 py-12 sm:py-16 rounded-[2rem] sm:rounded-[3rem] border-2 border-dashed border-indigo-400/60 bg-indigo-500/10 max-w-xl mx-auto text-center"
+                className="relative z-10 px-8 sm:px-12 py-12 sm:py-16 rounded-[2rem] sm:rounded-[3rem] border-2 border-dashed border-indigo-400/60 bg-[var(--tint-indigo-bg)] max-w-xl mx-auto text-center"
               >
                 <Upload className="w-12 h-12 sm:w-16 sm:h-16 text-indigo-300 mx-auto mb-6" />
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
@@ -235,13 +235,13 @@ export default function KineticSynthesisHubPage() {
               <button type="button" onClick={() => router.push('/dashboard')} className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[1.8rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors active:scale-95">
                 <ArrowLeft size={24} />
               </button>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center shadow-xl">
-                <Film size={32} className="text-indigo-400" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center shadow-xl">
+                <Film size={32} className="text-[var(--tint-indigo-fg)]" />
               </div>
               <div className="flex-1">
                  <div className="flex items-center gap-3 mb-2 flex-wrap">
-                   <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                   <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400">Click · Video Studio</span>
+                   <Cpu size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                   <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)]">Click · Video Studio</span>
                  </div>
                  <h1 className="text-[clamp(1.5rem,6vw,4rem)] font-black text-[var(--text-main)] tracking-tighter leading-none mb-2">Video Library</h1>
               </div>
@@ -260,9 +260,9 @@ export default function KineticSynthesisHubPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10">
           {[
-            { label: 'Videos',          value: videos.length,    icon: Layers,          color: 'text-indigo-400',  bg: 'bg-indigo-500/5' },
-            { label: 'Completed',       value: completedCount,   icon: ActivitySquare,  color: 'text-emerald-400', bg: 'bg-emerald-500/5' },
-            { label: 'Total Clips',     value: totalClips,       icon: Sparkles,        color: 'text-rose-400',    bg: 'bg-rose-500/5' },
+            { label: 'Videos',          value: videos.length,    icon: Layers,          color: 'text-[var(--tint-indigo-fg)]',  bg: 'bg-indigo-500/5' },
+            { label: 'Completed',       value: completedCount,   icon: ActivitySquare,  color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-emerald-500/5' },
+            { label: 'Total Clips',     value: totalClips,       icon: Sparkles,        color: 'text-[var(--tint-rose-fg)]',    bg: 'bg-rose-500/5' },
           ].map(s => (
             <div key={s.label} className={`${glassStyle} rounded-[2rem] p-6 sm:p-7 flex items-center gap-5 group hover:bg-[var(--glass-surface-heavy)]`}>
                <div className={`w-12 h-12 sm:w-14 sm:h-14 ${s.bg} rounded-2xl flex items-center justify-center border border-[var(--glass-border)]`}>
@@ -315,7 +315,7 @@ export default function KineticSynthesisHubPage() {
                 const cfg = getStatusCfg(video.status)
                 const clips = video.generatedContent?.shortVideos || []
                 return (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} key={video._id} className={`${glassStyle} rounded-[3rem] sm:rounded-[5rem] overflow-hidden group flex flex-col hover:border-indigo-500/30`}>
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} key={video._id} className={`${glassStyle} rounded-[3rem] sm:rounded-[5rem] overflow-hidden group flex flex-col hover:border-[var(--tint-indigo-edge)]`}>
                     <div className="aspect-video relative bg-black/60 overflow-hidden border-b border-[var(--glass-border)]">
                       <video src={video.originalFile?.url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
                       <div className="absolute top-6 left-6 flex items-center gap-3 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-black text-white">

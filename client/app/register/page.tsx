@@ -398,11 +398,11 @@ export default function Register() {
               transition={{ duration: 1, delay: 0.2 }}
               className="mx-auto w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/10 border border-white/10 flex items-center justify-center shadow-2xl relative"
             >
-              <div className="absolute inset-0 bg-fuchsia-500/20 blur-xl rounded-full" />
+              <div className="absolute inset-0 bg-[var(--tint-fuchsia-bg)] blur-xl rounded-full" />
               <ClickLogo size={44} className="relative z-10" />
             </motion.div>
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-[9px] font-black uppercase tracking-[0.3em] italic text-fuchsia-400">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-[9px] font-black uppercase tracking-[0.3em] italic text-[var(--tint-fuchsia-fg)]">
                 <ClickLogo size={12} />
                 Initialize Profile
               </div>
@@ -417,7 +417,7 @@ export default function Register() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Synchronization Matrix</span>
-                <span className="text-[10px] font-mono text-indigo-400">{formProgress}%</span>
+                <span className="text-[10px] font-mono text-[var(--tint-indigo-fg)]">{formProgress}%</span>
               </div>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
                 <motion.div
@@ -444,7 +444,7 @@ export default function Register() {
           )}
 
           {selectedPlan && (
-            <div className="mb-5 px-5 py-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between gap-4">
+            <div className="mb-5 px-5 py-4 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 mb-1">
                   Signing up for
@@ -528,14 +528,14 @@ export default function Register() {
                     </div>
 
                     {passwordValidation.errors.length > 0 && (
-                      <ul className="text-[10px] text-rose-400 mt-2 space-y-1">
+                      <ul className="text-[10px] text-[var(--tint-rose-fg)] mt-2 space-y-1">
                         {passwordValidation.errors.map((err, idx) => (
                           <li key={idx} className="flex gap-2"><span className="text-rose-500">×</span> {err}</li>
                         ))}
                       </ul>
                     )}
                     {passwordValidation.isValid && passwordValidation.feedback.length > 0 && (
-                      <ul className="text-[10px] text-emerald-400 mt-2 space-y-1">
+                      <ul className="text-[10px] text-[var(--tint-emerald-fg)] mt-2 space-y-1">
                         {passwordValidation.feedback.map((msg, idx) => (
                           <li key={idx} className="flex gap-2"><span className="text-emerald-500">❖</span> {msg}</li>
                         ))}
@@ -582,17 +582,17 @@ export default function Register() {
                 </div>
                 <span className="text-[11px] text-slate-400 font-medium leading-relaxed">
                   I accept the Neural Forge{' '}
-                  <Link href="/terms" target="_blank" className="text-white hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">
+                  <Link href="/terms" target="_blank" className="text-white hover:text-[var(--tint-indigo-fg)] underline decoration-indigo-500/30 underline-offset-2 transition-colors">
                     Terms Code
                   </Link>
                   {' '}and{' '}
-                  <Link href="/privacy" target="_blank" className="text-white hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">
+                  <Link href="/privacy" target="_blank" className="text-white hover:text-[var(--tint-indigo-fg)] underline decoration-indigo-500/30 underline-offset-2 transition-colors">
                     Privacy Node
                   </Link>
                 </span>
               </label>
               {touched.terms && !acceptedTerms && (
-                <p className="mt-2 text-[10px] text-rose-400 ml-9">
+                <p className="mt-2 text-[10px] text-[var(--tint-rose-fg)] ml-9">
                   Acceptance of protocols is strictly required
                 </p>
               )}
@@ -644,7 +644,7 @@ export default function Register() {
               {t('auth.hasAccount')}{' '}
               <Link
                 href="/login"
-                className="text-white hover:text-fuchsia-400 transition-colors ml-2 underline decoration-fuchsia-500/30 underline-offset-4"
+                className="text-white hover:text-[var(--tint-fuchsia-fg)] transition-colors ml-2 underline decoration-fuchsia-500/30 underline-offset-4"
               >
                 {t('auth.login')}
               </Link>

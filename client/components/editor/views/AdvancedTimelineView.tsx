@@ -257,8 +257,8 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
       {/* ── Top Control Bar ─────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 bg-white/[0.025] border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-500/15 rounded-xl border border-indigo-500/20">
-            <Compass className="w-4 h-4 text-indigo-400" />
+          <div className="p-2 bg-[var(--tint-indigo-bg)] rounded-xl border border-[var(--tint-indigo-edge)]">
+            <Compass className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
           </div>
           <div>
             <h3 className="font-black text-white italic uppercase tracking-wide text-[11px]">Advanced Spatial Timeline</h3>
@@ -289,7 +289,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           <button
             onClick={handleRunVAD}
             disabled={!vadReady || vadProcessing}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${vadProcessing ? 'bg-sky-500/20 text-sky-400 animate-pulse' : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
+            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${vadProcessing ? 'bg-[var(--tint-sky-bg)] text-[var(--tint-sky-fg)] animate-pulse' : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
             title="Run Local Edge VAD"
           >
             {vadProcessing ? 'Processing Edge AI...' : 'Run VAD Matrix'}
@@ -301,7 +301,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           <div className="flex items-center gap-1 bg-white/5 rounded-lg border border-white/10 px-1.5 py-1">
             <button
                onClick={() => clearGhostCurve()}
-               className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter ${!activeProfile ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
+               className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter ${!activeProfile ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]' : 'text-slate-500 hover:text-white'}`}
             >
               Raw
             </button>
@@ -309,19 +309,19 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
               <button
                 key={p.id}
                 onClick={() => loadGhostCurve(p.id)}
-                className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${activeProfile?.id === p.id ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
+                className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${activeProfile?.id === p.id ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]' : 'text-slate-500 hover:text-white'}`}
               >
                 {p.name.split(' ')[0]}
               </button>
             ))}
-            <Ghost className={`w-3 h-3 ml-1 ${activeProfile ? 'text-indigo-400 animate-pulse' : 'text-slate-600'}`} />
+            <Ghost className={`w-3 h-3 ml-1 ${activeProfile ? 'text-[var(--tint-indigo-fg)] animate-pulse' : 'text-slate-600'}`} />
           </div>
 
           <div className="h-4 w-px bg-white/10" />
 
           <button
             onClick={() => setIsMagnetic(v => !v)}
-            className={`p-1.5 rounded-lg border transition-all ${isMagnetic ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-white/5 border-white/10 text-slate-500'}`}
+            className={`p-1.5 rounded-lg border transition-all ${isMagnetic ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]' : 'bg-white/5 border-white/10 text-slate-500'}`}
             title="Magnetic snap"
           >
             <Magnet className="w-3.5 h-3.5" />
@@ -619,9 +619,9 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           {[
             { action: 'split',     label: '✂ Split at midpoint',  color: 'text-white' },
             { action: 'duplicate', label: '⧉ Duplicate',           color: 'text-white' },
-            { action: 'ai-cutout', label: '🪄 AI Remove Background',color: 'text-indigo-400' },
-            { action: 'ai-enhance',label: '✨ Auto-Enhance Audio',  color: 'text-emerald-400' },
-            { action: 'delete',    label: '✕ Delete segment',      color: 'text-rose-400' },
+            { action: 'ai-cutout', label: '🪄 AI Remove Background',color: 'text-[var(--tint-indigo-fg)]' },
+            { action: 'ai-enhance',label: '✨ Auto-Enhance Audio',  color: 'text-[var(--tint-emerald-fg)]' },
+            { action: 'delete',    label: '✕ Delete segment',      color: 'text-[var(--tint-rose-fg)]' },
           ].map(item => (
             <button
               key={item.action}

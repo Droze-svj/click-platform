@@ -183,7 +183,7 @@ export default function OperationalSequenceHubPage() {
            <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
         </div>
         <div className="space-y-4 text-center">
-           <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Operational Sequences...</p>
+           <p className="text-[14px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Operational Sequences...</p>
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none">PROTOCOL_SYNC_ACTIVE</p>
         </div>
      </div>
@@ -206,15 +206,15 @@ export default function OperationalSequenceHubPage() {
                 className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl">
                 <Target size={40} />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-3xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Layers size={48} className="text-indigo-400 relative z-10 group-hover:rotate-180 transition-transform duration-300" />
+                <Layers size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:rotate-180 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-4">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Operational Lattice v14.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Operational Lattice v14.2</span>
                    </div>
                    <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] animate-ping" />
@@ -240,23 +240,23 @@ export default function OperationalSequenceHubPage() {
         <AnimatePresence>
            {suggestions.length > 0 && (
              <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className={`${glassStyle} rounded-[6rem] p-20 shadow-[0_100px_300px_rgba(0,0,0,0.6)] relative overflow-hidden z-20 group`}>
-                <div className="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none group-hover:rotate-180 transition-transform duration-[4s]"><Sparkles size={600} className="text-indigo-400" /></div>
+                <div className="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none group-hover:rotate-180 transition-transform duration-[4s]"><Sparkles size={600} className="text-[var(--tint-indigo-fg)]" /></div>
                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter flex items-center gap-8 mb-16">
-                   <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center animate-pulse shadow-3xl"><Cpu size={40} className="text-indigo-400" /></div>
+                   <div className="w-20 h-20 rounded-[2.5rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center animate-pulse shadow-3xl"><Cpu size={40} className="text-[var(--tint-indigo-fg)]" /></div>
                    Autonomous Sequence Induction
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
                    {suggestions.map((s, i) => (
-                      <div key={i} className="p-12 rounded-[4.5rem] bg-white/[0.02] border-2 border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.05] transition-all duration-300 group/card shadow-2xl relative overflow-hidden">
+                      <div key={i} className="p-12 rounded-[4.5rem] bg-white/[0.02] border-2 border-white/10 hover:border-[var(--tint-indigo-edge)] hover:bg-white/[0.05] transition-all duration-300 group/card shadow-2xl relative overflow-hidden">
                          <div className="absolute top-0 right-0 p-10 opacity-[0.02] group-hover/card:opacity-[0.12] transition-opacity duration-300"><Radio size={180} /></div>
-                         <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-6 group-hover/card:text-indigo-400 transition-colors duration-300">{s.title}</h3>
+                         <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-6 group-hover/card:text-[var(--tint-indigo-fg)] transition-colors duration-300">{s.title}</h3>
                          <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest leading-tight mb-12 italic opacity-60 group-hover/card:opacity-100 transition-opacity duration-300">{s.description}</p>
                          {s.workflowId && (
                            <button 
                              onClick={() => handleExecute(s.workflowId)} 
                              disabled={!!executingId} 
                              title="Deploy Sequence Logic"
-                             className="flex items-center gap-6 text-[14px] font-black text-indigo-400 uppercase tracking-[0.5em] hover:text-white transition-all duration-700 italic group/btn"
+                             className="flex items-center gap-6 text-[14px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] hover:text-white transition-all duration-700 italic group/btn"
                            >
                                DEPLOY_SEQUENCE <ChevronRight size={20} className="group-hover/btn:translate-x-4 transition-transform duration-700" />
                            </button>
@@ -280,18 +280,18 @@ export default function OperationalSequenceHubPage() {
                 <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.15] transition-opacity duration-300 pointer-events-none group-hover:rotate-180"><Layout size={320} className="text-white" /></div>
                 <div className="flex justify-between items-start mb-12 relative z-10">
                    <div className="space-y-4">
-                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300">{w.name}</h3>
+                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300">{w.name}</h3>
                       <p className="text-[13px] font-black text-slate-500 uppercase tracking-[0.4em] font-mono leading-none italic opacity-60 group-hover:opacity-100 transition-opacity duration-300">{w.description || "NULL_DESCRIPTOR"}</p>
                    </div>
-                   {w.isTemplate && <span className="px-6 py-2 rounded-2xl bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-3xl">TEMPLATE</span>}
+                   {w.isTemplate && <span className="px-6 py-2 rounded-2xl bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-2 border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-widest italic shadow-3xl">TEMPLATE</span>}
                 </div>
 
                 <div className="mb-12 relative z-10">
                    <div className="flex items-center gap-6 mb-8"><div className="h-px bg-white/10 flex-1" /><span className="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em] italic opacity-40">OPERATIONAL_CHAIN</span><div className="h-px bg-white/10 flex-1" /></div>
                    <div className="space-y-6">
                       {w.steps.map((step, i) => (
-                        <div key={i} className="flex items-center gap-8 p-6 rounded-[2rem] bg-black/40 border border-white/5 group/step transition-all duration-300 hover:border-indigo-500/30">
-                           <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[14px] font-black italic shadow-inner">{step.order}</div>
+                        <div key={i} className="flex items-center gap-8 p-6 rounded-[2rem] bg-black/40 border border-white/5 group/step transition-all duration-300 hover:border-[var(--tint-indigo-edge)]">
+                           <div className="w-12 h-12 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] flex items-center justify-center text-[14px] font-black italic shadow-inner">{step.order}</div>
                            <span className="text-[14px] font-black text-white uppercase tracking-widest italic flex-1">{step.action.replace(/_/g, ' ')}</span>
                            {i < w.steps.length - 1 && <ChevronRight size={24} className="text-slate-500 animate-pulse" />}
                         </div>
@@ -300,19 +300,19 @@ export default function OperationalSequenceHubPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-4 mb-16 relative z-10">
-                   {w.tags?.map(t => <span key={t} className="px-6 py-2 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-slate-500 uppercase italic tracking-widest hover:text-indigo-400 hover:border-indigo-500/50 transition-all cursor-default">#{t}</span>)}
+                   {w.tags?.map(t => <span key={t} className="px-6 py-2 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-slate-500 uppercase italic tracking-widest hover:text-[var(--tint-indigo-fg)] hover:border-indigo-500/50 transition-all cursor-default">#{t}</span>)}
                 </div>
 
                 <div className="mt-auto pt-10 border-t-2 border-white/5 flex items-center justify-between mb-12 relative z-10">
                    <div className="flex items-center gap-12">
                       <div className="space-y-2">
                          <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic leading-none opacity-40">EXECUTIONS</p>
-                         <p className="text-[18px] font-black text-white italic tabular-nums leading-none group-hover:text-indigo-400 transition-colors duration-300">{w.frequency}</p>
+                         <p className="text-[18px] font-black text-white italic tabular-nums leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300">{w.frequency}</p>
                       </div>
                       {w.lastUsed && (
                         <div className="space-y-2">
                            <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic leading-none opacity-40">LAST_PULSE</p>
-                           <p className="text-[18px] font-black text-white italic leading-none group-hover:text-emerald-400 transition-colors duration-300">{new Date(w.lastUsed).toLocaleDateString().toUpperCase()}</p>
+                           <p className="text-[18px] font-black text-white italic leading-none group-hover:text-[var(--tint-emerald-fg)] transition-colors duration-300">{new Date(w.lastUsed).toLocaleDateString().toUpperCase()}</p>
                         </div>
                       )}
                    </div>
@@ -337,7 +337,7 @@ export default function OperationalSequenceHubPage() {
                    <button 
                      onClick={() => handleDelete(w._id)} 
                      title="Terminate Sequence Node"
-                     className="w-20 h-20 rounded-[2.2rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300 shadow-3xl active:scale-95 group"
+                     className="w-20 h-20 rounded-[2.2rem] bg-rose-500/5 border-2 border-[var(--tint-rose-edge)] flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-300 shadow-3xl active:scale-95 group"
                    >
                      <Trash2 size={28} className="group-hover:scale-110 transition-transform duration-700" />
                    </button>
@@ -354,10 +354,10 @@ export default function OperationalSequenceHubPage() {
                    <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none group-hover:rotate-180 transition-transform duration-[4s]"><Compass size={600} className="text-white" /></div>
                    <div className="flex justify-between items-center mb-20 relative z-10 border-b-2 border-white/10 pb-12">
                       <div className="flex items-center gap-12">
-                        <div className="w-24 h-24 rounded-[3rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl animate-pulse"><Layers size={48} className="text-indigo-400" /></div>
+                        <div className="w-24 h-24 rounded-[3rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-3xl animate-pulse"><Layers size={48} className="text-[var(--tint-indigo-fg)]" /></div>
                         <div>
                           <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">{editingWorkflow ? 'Configure Sequence' : 'Initialize Sequence'}</h2>
-                          <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.6em] italic leading-none">LOGIC_SEQUENCE_SYNTHESIS</p>
+                          <p className="text-[14px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.6em] italic leading-none">LOGIC_SEQUENCE_SYNTHESIS</p>
                         </div>
                       </div>
                       <button 
@@ -426,13 +426,13 @@ export default function OperationalSequenceHubPage() {
                          <label className="text-[18px] font-black text-white uppercase tracking-[1.2em] italic leading-none block mb-8 text-center">OPERATIONAL_FLOW_ARCHITECTURE</label>
                          <div className="space-y-8">
                             {form.steps.map((step, i) => (
-                               <div key={i} className="flex items-center gap-10 p-8 bg-white/[0.02] border-2 border-white/10 rounded-[4rem] group/step transition-all duration-300 hover:border-indigo-500/40 hover:bg-white/[0.05] shadow-2xl">
-                                  <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/20 text-indigo-400 flex items-center justify-center font-black text-3xl italic shadow-inner">{i + 1}</div>
+                               <div key={i} className="flex items-center gap-10 p-8 bg-white/[0.02] border-2 border-white/10 rounded-[4rem] group/step transition-all duration-300 hover:border-[var(--tint-indigo-edge)] hover:bg-white/[0.05] shadow-2xl">
+                                  <div className="w-16 h-16 rounded-2xl bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] flex items-center justify-center font-black text-3xl italic shadow-inner">{i + 1}</div>
                                   <select 
                                     value={step.action} 
                                     title={`Select Step ${i + 1} Action`}
                                     onChange={e => { const up = [...form.steps]; up[i].action = e.target.value; setForm(f => ({ ...f, steps: up })) }} 
-                                    className="flex-1 bg-transparent text-3xl font-black text-white uppercase italic tracking-tighter focus:outline-none appearance-none cursor-pointer group-hover/step:text-indigo-400 transition-colors"
+                                    className="flex-1 bg-transparent text-3xl font-black text-white uppercase italic tracking-tighter focus:outline-none appearance-none cursor-pointer group-hover/step:text-[var(--tint-indigo-fg)] transition-colors"
                                   >
                                      <option value="">SELECT_MODULAR_NODE_ACTION...</option>
                                      {ACTIONS.map(a => <option key={a.value} value={a.value} className="bg-[#050505]">{a.label}</option>)}
@@ -440,7 +440,7 @@ export default function OperationalSequenceHubPage() {
                                   <button 
                                     onClick={() => { const up = form.steps.filter((_, j) => j !== i); setForm(f => ({ ...f, steps: up.length ? up : [{ action: '', config: {} }] })) }} 
                                     title="Remove Sequence Step"
-                                    className="w-16 h-16 rounded-2xl bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-700 shadow-3xl"
+                                    className="w-16 h-16 rounded-2xl bg-rose-500/5 border-2 border-[var(--tint-rose-edge)] flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-700 shadow-3xl"
                                   >
                                     <X size={28} />
                                   </button>
@@ -448,7 +448,7 @@ export default function OperationalSequenceHubPage() {
                             ))}
                             <button 
                               onClick={() => setForm(f => ({ ...f, steps: [...f.steps, { action: '', config: {} }] }))} 
-                              className="w-full py-12 border-4 border-dashed border-white/10 rounded-[5rem] text-[20px] font-black text-slate-500 uppercase tracking-[1em] hover:border-indigo-500/50 hover:text-indigo-400 transition-all duration-300 italic bg-white/[0.01]"
+                              className="w-full py-12 border-4 border-dashed border-white/10 rounded-[5rem] text-[20px] font-black text-slate-500 uppercase tracking-[1em] hover:border-indigo-500/50 hover:text-[var(--tint-indigo-fg)] transition-all duration-300 italic bg-white/[0.01]"
                             >
                               + APPEND_SEQUENCE_STEP
                             </button>

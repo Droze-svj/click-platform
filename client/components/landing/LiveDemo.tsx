@@ -10,7 +10,7 @@ const NICHES = [
     id: 'finance',
     label: 'Finance',
     accent: 'from-emerald-500/30 to-emerald-500/0',
-    pillBg: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+    pillBg: 'bg-[var(--tint-emerald-bg)] text-emerald-300 border-[var(--tint-emerald-edge)]',
     metrics: [
       { label: 'Hook strength', value: '94/100', tone: 'from-emerald-500/20' },
       { label: 'Predicted reach', value: '+312K', tone: 'from-blue-500/20' },
@@ -22,7 +22,7 @@ const NICHES = [
     id: 'fitness',
     label: 'Fitness',
     accent: 'from-rose-500/30 to-rose-500/0',
-    pillBg: 'bg-rose-500/10 text-rose-300 border-rose-500/20',
+    pillBg: 'bg-[var(--tint-rose-bg)] text-rose-300 border-[var(--tint-rose-edge)]',
     metrics: [
       { label: 'Hook strength', value: '91/100', tone: 'from-rose-500/20' },
       { label: 'Predicted reach', value: '+184K', tone: 'from-amber-500/20' },
@@ -34,7 +34,7 @@ const NICHES = [
     id: 'lifestyle',
     label: 'Lifestyle',
     accent: 'from-violet-500/30 to-violet-500/0',
-    pillBg: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
+    pillBg: 'bg-[var(--tint-violet-bg)] text-violet-300 border-[var(--tint-violet-edge)]',
     metrics: [
       { label: 'Hook strength', value: '88/100', tone: 'from-violet-500/20' },
       { label: 'Predicted reach', value: '+221K', tone: 'from-fuchsia-500/20' },
@@ -76,11 +76,11 @@ export function LiveDemo() {
                 <div className="w-3 h-3 rounded-full bg-green-500/80" />
               </div>
               <div className="mx-auto px-4 py-1.5 rounded-md bg-white/5 text-[10px] text-white/40 font-mono tracking-widest flex items-center gap-2">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <ShieldCheck className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
                 CLICK · {niche.label.toUpperCase()} · LIVE
               </div>
               <div className="hidden md:flex items-center gap-2 ml-auto">
-                <span className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono">
+                <span className="flex items-center gap-1.5 text-[10px] text-[var(--tint-emerald-fg)] font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   AI ACTIVE
                 </span>
@@ -91,7 +91,7 @@ export function LiveDemo() {
             <div className="flex flex-1 overflow-hidden relative">
               {/* Sidebar */}
               <div className="hidden md:flex w-20 border-r border-white/5 p-4 flex-col gap-6 items-center bg-black/20">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center text-[var(--tint-indigo-fg)] mb-4">
                   <Zap className="w-5 h-5" />
                 </div>
                 {[Users, Sparkles, Cpu, TrendingUp].map((Icon, i) => (

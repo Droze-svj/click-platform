@@ -31,9 +31,9 @@ export default function SpectralLoader({
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="w-32 h-32 rounded-[2.5rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-[0_0_100px_rgba(79,70,229,0.2)] mb-12"
+          className="w-32 h-32 rounded-[2.5rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-[0_0_100px_rgba(79,70,229,0.2)] mb-12"
         >
-          <Brain size={48} className="text-indigo-400" />
+          <Brain size={48} className="text-[var(--tint-indigo-fg)]" />
         </motion.div>
 
         <motion.div
@@ -45,7 +45,7 @@ export default function SpectralLoader({
              {message}
            </span>
            <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-               <Shield size={10} className="text-indigo-400 animate-pulse" />
+               <Shield size={10} className="text-[var(--tint-indigo-fg)] animate-pulse" />
                <span className="text-[8px] font-black text-slate-800 tracking-widest uppercase italic leading-none">
                  {subMessage}
                </span>

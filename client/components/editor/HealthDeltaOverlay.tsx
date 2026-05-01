@@ -20,10 +20,10 @@ const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversit
       >
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-3">
-             <Activity className="w-4 h-4 text-emerald-400" />
+             <Activity className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Predictive Health HUD</span>
           </div>
-          <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-bold text-emerald-400 uppercase tracking-widest">
+          <div className="px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[8px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-widest">
             Elite
           </div>
         </div>
@@ -37,7 +37,7 @@ const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversit
                  </div>
               </div>
               <div className="flex flex-col items-end gap-1">
-                 <div className="flex items-center gap-1.5 text-emerald-400">
+                 <div className="flex items-center gap-1.5 text-[var(--tint-emerald-fg)]">
                     <TrendingUp className="w-3 h-3" />
                     <span className="text-[11px] font-black italic">+{diversityDelta}%</span>
                  </div>
@@ -48,7 +48,7 @@ const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversit
            <div className="space-y-3">
               <div className="flex items-center justify-between">
                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                    <ShieldCheck className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Retention Alignment</span>
                  </div>
                  <span className="text-[10px] font-bold text-white italic">{engagementPotential}%</span>
@@ -63,7 +63,7 @@ const HealthDeltaOverlay: React.FC<HealthDeltaOverlayProps> = ({ score, diversit
            </div>
 
            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-              <BarChart3 className="w-3.5 h-3.5 text-orange-400" />
+              <BarChart3 className="w-3.5 h-3.5 text-[var(--tint-orange-fg)]" />
               <p className="text-[9px] font-bold text-slate-400 leading-tight">
                 This video is <span className="text-white">optimized</span> for current viral patterns in your niche.
               </p>

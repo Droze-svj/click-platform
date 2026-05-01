@@ -49,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback
       return (
-        <div className="flex flex-col items-center justify-center p-8 m-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-400 max-w-lg mx-auto overflow-hidden">
+        <div className="flex flex-col items-center justify-center p-8 m-4 rounded-3xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] max-w-lg mx-auto overflow-hidden">
           <h2 className="text-xl font-black mb-2 uppercase tracking-widest">Neural UI Exception</h2>
           <p className="text-sm text-center mb-4 opacity-80">
             A fatal error occurred in the component tree.

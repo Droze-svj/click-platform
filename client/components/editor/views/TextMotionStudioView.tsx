@@ -360,7 +360,7 @@ const TextMotionStudioView: React.FC<Props> = ({
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Click · Text & Motion Studio</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-fuchsia-fg)]">Click · Text & Motion Studio</span>
         </div>
         <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Text, type & motion</h2>
         <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
@@ -449,8 +449,8 @@ const TextMotionStudioView: React.FC<Props> = ({
       )}
 
       {/* Footer note */}
-      <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
-        <Layers className="w-4 h-4 text-fuchsia-400 flex-shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-[var(--tint-fuchsia-edge)] bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
+        <Layers className="w-4 h-4 text-[var(--tint-fuchsia-fg)] flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-[11px] font-bold text-fuchsia-300 leading-snug">Live-wired to the segment store.</p>
           <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
@@ -474,7 +474,7 @@ const StyleGrid: React.FC<{ items: CaptionStyle[]; onApply: (s: CaptionStyle) =>
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(s)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-fuchsia-500/40 transition-colors overflow-hidden text-left group"
+          className="rounded-2xl bg-black/40 border border-white/10 hover:border-[var(--tint-fuchsia-edge)] transition-colors overflow-hidden text-left group"
         >
           {/* Live preview */}
           <div className="aspect-video bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.15),transparent_55%),radial-gradient(circle_at_80%_80%,rgba(217,70,239,0.18),transparent_55%)] flex items-center justify-center p-5 relative overflow-hidden">
@@ -527,7 +527,7 @@ const AnimationGrid: React.FC<{ items: TextAnimation[]; onApply: (a: TextAnimati
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(a)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-amber-500/40 transition-colors overflow-hidden text-left group"
+          className="rounded-2xl bg-black/40 border border-white/10 hover:border-[var(--tint-amber-edge)] transition-colors overflow-hidden text-left group"
         >
           <div className="aspect-video bg-[radial-gradient(circle_at_50%_50%,rgba(245,158,11,0.12),transparent_60%)] flex items-center justify-center p-4 overflow-hidden">
             <AnimationPreview kind={a.preview} />
@@ -537,7 +537,7 @@ const AnimationGrid: React.FC<{ items: TextAnimation[]; onApply: (a: TextAnimati
               <p className="text-[12px] font-bold text-white truncate">{a.name}</p>
               <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mt-0.5"><MoodIcon className="w-2.5 h-2.5" />{a.tag}</p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">+</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--tint-amber-bg)] text-amber-300 border border-[var(--tint-amber-edge)]">+</span>
           </div>
         </motion.button>
       )
@@ -616,7 +616,7 @@ const MotionGrid: React.FC<{ items: MotionPreset[]; onApply: (m: MotionPreset) =
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(m)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-cyan-500/40 transition-colors overflow-hidden text-left group"
+          className="rounded-2xl bg-black/40 border border-white/10 hover:border-[var(--tint-cyan-edge)] transition-colors overflow-hidden text-left group"
         >
           <div className="aspect-video bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.12),transparent_60%)] relative overflow-hidden">
             <MotionPreview kind={m.preview} />
@@ -626,7 +626,7 @@ const MotionGrid: React.FC<{ items: MotionPreset[]; onApply: (m: MotionPreset) =
               <p className="text-[12px] font-bold text-white truncate">{m.name}</p>
               <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 mt-0.5"><MoodIcon className="w-2.5 h-2.5" />{m.tag}</p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">+</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--tint-cyan-bg)] text-cyan-300 border border-[var(--tint-cyan-edge)]">+</span>
           </div>
         </motion.button>
       )
@@ -686,10 +686,10 @@ const FontGrid: React.FC<{ items: FontEntry[]; onApply: (f: FontEntry) => void }
           layout
           whileHover={{ y: -3 }}
           onClick={() => onApply(f)}
-          className="rounded-2xl bg-black/40 border border-white/10 hover:border-emerald-500/40 transition-colors p-5 text-left group"
+          className="rounded-2xl bg-black/40 border border-white/10 hover:border-[var(--tint-emerald-edge)] transition-colors p-5 text-left group"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5"><MoodIcon className="w-3 h-3" />{f.mood}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--tint-emerald-fg)] flex items-center gap-1.5"><MoodIcon className="w-3 h-3" />{f.mood}</span>
             <span className="text-[9px] font-mono text-slate-500">{f.weights.join(' · ')}</span>
           </div>
           <p className="text-3xl text-white mb-2 leading-tight" style={{ fontFamily: f.family, fontWeight: f.weights[Math.floor(f.weights.length / 2)] }}>{f.name}</p>

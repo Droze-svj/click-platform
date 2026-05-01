@@ -26,10 +26,10 @@ interface HealthStatus { api: 'ok' | 'slow' | 'down' | 'checking'; db: 'ok' | 's
 
 const ICON_MAP: Record<LogLevel, React.ElementType> = { error: AlertCircle, warn: AlertTriangle, info: Activity, success: CheckCircle2 }
 const COLOR_MAP: Record<LogLevel, string> = {
-  error:   'text-rose-400 bg-rose-500/10 border-rose-500/20',
-  warn:    'text-amber-400 bg-amber-500/10 border-amber-500/20',
-  info:    'text-sky-400 bg-sky-500/10 border-sky-500/20',
-  success: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  error:   'text-[var(--tint-rose-fg)] bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]',
+  warn:    'text-[var(--tint-amber-fg)] bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]',
+  info:    'text-[var(--tint-sky-fg)] bg-[var(--tint-sky-bg)] border-[var(--tint-sky-edge)]',
+  success: 'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
 }
 
 // ── Singleton stores ──────────────────────────────────────────────────────────
@@ -246,7 +246,7 @@ export default function ClickDebugPanel() {
   const statusDot = (s: string) => s === 'ok' || s === 'online' ? 'bg-emerald-500 shadow-emerald-500/50' : s === 'slow' ? 'bg-amber-500 shadow-amber-500/50' : s === 'checking' ? 'bg-sky-500 animate-pulse shadow-sky-500/50' : 'bg-rose-500 shadow-rose-500/50'
   const unfixedErrors = logs.filter(l => l.level === 'error' && !l.fixed).length
   const copyLog = (e: LogEntry) => { navigator.clipboard.writeText(`[${e.level.toUpperCase()}] ${e.message}`); setCopiedId(e.id); setTimeout(() => setCopiedId(null), 1500) }
-  const reqStatusColor = (r: RequestEntry) => !r.status ? 'text-slate-600' : r.error ? 'text-rose-400' : r.status >= 400 ? 'text-rose-400' : r.status >= 300 ? 'text-amber-400' : 'text-emerald-400'
+  const reqStatusColor = (r: RequestEntry) => !r.status ? 'text-slate-600' : r.error ? 'text-[var(--tint-rose-fg)]' : r.status >= 400 ? 'text-[var(--tint-rose-fg)]' : r.status >= 300 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-emerald-fg)]'
   const TABS = [
     { id: 'logs' as const,     label: 'Logs',    badge: unfixedErrors > 0 ? unfixedErrors : null },
     { id: 'requests' as const, label: 'Network', badge: reqs.filter(r => r.error || (r.status ?? 0) >= 400).length || null },
@@ -270,11 +270,11 @@ export default function ClickDebugPanel() {
             {/* ── Header ── */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-xl bg-indigo-600/20 border border-indigo-500/20 flex items-center justify-center">
-                  <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="w-7 h-7 rounded-xl bg-indigo-600/20 border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+                  <Shield className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <span className={`text-[11px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white' : 'text-slate-900'}`}>Click Debug</span>
-                {unfixedErrors > 0 && <span className="text-[8px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded-full animate-pulse">{unfixedErrors}!</span>}
+                {unfixedErrors > 0 && <span className="text-[8px] font-black bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border border-[var(--tint-rose-edge)] px-1.5 py-0.5 rounded-full animate-pulse">{unfixedErrors}!</span>}
               </div>
               <div className="flex items-center gap-1">
                 {perfMs != null && <span className="text-[8px] font-bold text-slate-700 mr-2 flex items-center gap-1"><Timer size={9} />{perfMs}ms load</span>}
@@ -297,7 +297,7 @@ export default function ClickDebugPanel() {
               </div>
               {health.memory != null && (
                 <div className="flex items-center gap-1.5 ml-auto">
-                  <span className={`text-[8px] font-black ${health.memory > 300 ? 'text-amber-400' : 'text-slate-600'}`}>{health.memory}MB</span>
+                  <span className={`text-[8px] font-black ${health.memory > 300 ? 'text-[var(--tint-amber-fg)]' : 'text-slate-600'}`}>{health.memory}MB</span>
                 </div>
               )}
               <button title="Re-ping API" onClick={pingApi} className="p-1 rounded-lg text-slate-700 hover:text-white hover:bg-white/5 transition-all ml-auto"><RefreshCw size={9} /></button>
@@ -312,7 +312,7 @@ export default function ClickDebugPanel() {
                   }`}
                 >
                   {tab.label}
-                  {tab.badge ? <span className={`text-[7px] font-black px-1 rounded-full ${activeTab === tab.id ? 'bg-rose-500/30 text-rose-300' : 'bg-rose-500/20 text-rose-500'}`}>{tab.badge}</span> : null}
+                  {tab.badge ? <span className={`text-[7px] font-black px-1 rounded-full ${activeTab === tab.id ? 'bg-rose-500/30 text-rose-300' : 'bg-[var(--tint-rose-bg)] text-rose-500'}`}>{tab.badge}</span> : null}
                 </button>
               ))}
             </div>
@@ -338,8 +338,8 @@ export default function ClickDebugPanel() {
                           <p className="opacity-30 text-[7px] mt-0.5">{new Date(entry.ts).toLocaleTimeString()}</p>
                         </div>
                         <div className="flex gap-0.5 shrink-0">
-                          <button title="Copy" onClick={() => copyLog(entry)} className="p-1 rounded-lg text-slate-700 hover:text-white transition-all">{copiedId === entry.id ? <CheckCircle2 size={9} className="text-emerald-400" /> : <Copy size={9} />}</button>
-                          <button title="Mark fixed" onClick={() => debugFix(entry.id)} className="p-1 rounded-lg text-slate-700 hover:text-emerald-400 transition-all"><CheckCircle2 size={9} /></button>
+                          <button title="Copy" onClick={() => copyLog(entry)} className="p-1 rounded-lg text-slate-700 hover:text-white transition-all">{copiedId === entry.id ? <CheckCircle2 size={9} className="text-[var(--tint-emerald-fg)]" /> : <Copy size={9} />}</button>
+                          <button title="Mark fixed" onClick={() => debugFix(entry.id)} className="p-1 rounded-lg text-slate-700 hover:text-[var(--tint-emerald-fg)] transition-all"><CheckCircle2 size={9} /></button>
                         </div>
                       </div>
                     )
@@ -380,7 +380,7 @@ export default function ClickDebugPanel() {
                     <div className="p-3 rounded-2xl bg-white/[0.025] border border-white/[0.05]">
                       <div className="flex justify-between mb-1.5">
                         <span className="text-[10px] font-black text-white">JS Heap</span>
-                        <span className={`text-[10px] font-black ${(health.memory ?? 0) > 300 ? 'text-amber-400' : 'text-emerald-400'}`}>{health.memory ?? 0}MB / 512MB</span>
+                        <span className={`text-[10px] font-black ${(health.memory ?? 0) > 300 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-emerald-fg)]'}`}>{health.memory ?? 0}MB / 512MB</span>
                       </div>
                       <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden" role="progressbar" aria-valuenow={health.memory || 0} aria-valuemin={0} aria-valuemax={512} aria-label="JS heap usage">
                         <motion.div animate={{ width: `${Math.min(((health.memory || 0) / 512) * 100, 100)}%` }} className={`h-full rounded-full ${(health.memory || 0) > 400 ? 'bg-rose-500' : (health.memory || 0) > 200 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
@@ -391,7 +391,7 @@ export default function ClickDebugPanel() {
                     <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.025] border border-white/[0.05]">
                       <Timer className="w-4 h-4 text-slate-600" />
                       <div className="flex-1"><p className="text-[10px] font-black text-white">Page Load Time</p><p className="text-[8px] text-slate-600">{perfMs < 1500 ? 'Fast' : perfMs < 3000 ? 'Acceptable' : 'Slow — check bundle size'}</p></div>
-                      <span className={`text-[11px] font-black ${perfMs < 1500 ? 'text-emerald-400' : perfMs < 3000 ? 'text-amber-400' : 'text-rose-400'}`}>{perfMs}ms</span>
+                      <span className={`text-[11px] font-black ${perfMs < 1500 ? 'text-[var(--tint-emerald-fg)]' : perfMs < 3000 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'}`}>{perfMs}ms</span>
                     </div>
                   )}
                   <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.025] border border-white/[0.05]">
@@ -407,8 +407,8 @@ export default function ClickDebugPanel() {
                   <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest px-2 pt-1 pb-2">One-click auto-fixes</p>
                   {AUTO_FIXES.map(fix => (
                     <button key={fix.id} onClick={fix.action} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/25 hover:bg-indigo-500/5 transition-all text-left group">
-                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] flex items-center justify-center group-hover:bg-indigo-500/15 transition-colors">
-                        <fix.icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 transition-colors" />
+                      <div className="w-7 h-7 rounded-xl bg-white/[0.04] flex items-center justify-center group-hover:bg-[var(--tint-indigo-bg)] transition-colors">
+                        <fix.icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors" />
                       </div>
                       <div>
                         <p className="text-[10px] font-black text-slate-300 group-hover:text-white transition-colors">{fix.label}</p>
@@ -437,10 +437,10 @@ export default function ClickDebugPanel() {
         onClick={() => { setOpen(true); setMinimized(false) }}
         title="Open Debug Panel (⌘⇧D)"
         className={`pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full border shadow-xl transition-all backdrop-blur-xl ${
-          unfixedErrors > 0 ? 'bg-rose-600/20 border-rose-500/40 text-rose-300 shadow-rose-500/20' : isDark ? 'bg-[#08080f]/95 border-white/[0.08] text-slate-500 hover:text-white shadow-black/40' : 'bg-white/95 border-black/[0.08] text-slate-500 hover:text-slate-900 shadow-indigo-500/10'
+          unfixedErrors > 0 ? 'bg-rose-600/20 border-[var(--tint-rose-edge)] text-rose-300 shadow-rose-500/20' : isDark ? 'bg-[#08080f]/95 border-white/[0.08] text-slate-500 hover:text-white shadow-black/40' : 'bg-white/95 border-black/[0.08] text-slate-500 hover:text-slate-900 shadow-indigo-500/10'
         }`}
       >
-        <Bug size={12} className={unfixedErrors > 0 ? 'text-rose-400' : ''} />
+        <Bug size={12} className={unfixedErrors > 0 ? 'text-[var(--tint-rose-fg)]' : ''} />
         <span className="text-[8px] font-black uppercase tracking-widest">
           {unfixedErrors > 0 ? `${unfixedErrors} Error${unfixedErrors > 1 ? 's' : ''}` : 'Debug'}
         </span>

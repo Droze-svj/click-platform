@@ -15,13 +15,13 @@ const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-
 
 const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }: any) => {
   const colors: Record<string, string> = {
-    indigo: 'text-indigo-400 border-indigo-500/20 bg-indigo-500/10',
-    emerald: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10',
-    amber: 'text-amber-400 border-amber-500/20 bg-amber-500/10',
-    rose: 'text-rose-400 border-rose-500/20 bg-rose-500/10',
+    indigo: 'text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)]',
+    emerald: 'text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)] bg-[var(--tint-emerald-bg)]',
+    amber: 'text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)] bg-[var(--tint-amber-bg)]',
+    rose: 'text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)] bg-[var(--tint-rose-bg)]',
     purple: 'text-purple-400 border-purple-500/20 bg-purple-500/10',
-    cyan: 'text-cyan-400 border-cyan-500/20 bg-cyan-500/10',
-    orange: 'text-orange-400 border-orange-500/20 bg-orange-500/10'
+    cyan: 'text-[var(--tint-cyan-fg)] border-[var(--tint-cyan-edge)] bg-[var(--tint-cyan-bg)]',
+    orange: 'text-[var(--tint-orange-fg)] border-[var(--tint-orange-edge)] bg-[var(--tint-orange-bg)]'
   }
 
   return (
@@ -74,9 +74,9 @@ const ArbitragePanel = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {offers.map(offer => (
-                    <div key={offer.id} className="p-6 rounded-3xl bg-orange-500/5 border border-orange-500/20 flex flex-col justify-between">
+                    <div key={offer.id} className="p-6 rounded-3xl bg-orange-500/5 border border-[var(--tint-orange-edge)] flex flex-col justify-between">
                         <div>
-                            <p className="text-[10px] text-orange-400 uppercase font-black tracking-widest mb-1">{offer.velocity} velocity</p>
+                            <p className="text-[10px] text-[var(--tint-orange-fg)] uppercase font-black tracking-widest mb-1">{offer.velocity} velocity</p>
                             <h4 className="text-xl font-black text-white italic uppercase mb-4">{offer.name}</h4>
                             <div className="flex gap-4 mb-6">
                                 <div className="text-center">
@@ -154,9 +154,9 @@ const StabilityPanel = () => {
             
             <div className="space-y-4">
                 {[
-                    { label: 'Phase 1: Quality Wall (Tests)', status: '82% coverage', icon: CheckCircle2, color: 'text-emerald-400' },
-                    { label: 'Phase 2: OAuth Persistence', status: 'Healthy', icon: Zap, color: 'text-cyan-400' },
-                    { label: 'Phase 3: S3 Asset Migration', status: 'In Progress', icon: Cloud, color: 'text-amber-400' }
+                    { label: 'Phase 1: Quality Wall (Tests)', status: '82% coverage', icon: CheckCircle2, color: 'text-[var(--tint-emerald-fg)]' },
+                    { label: 'Phase 2: OAuth Persistence', status: 'Healthy', icon: Zap, color: 'text-[var(--tint-cyan-fg)]' },
+                    { label: 'Phase 3: S3 Asset Migration', status: 'In Progress', icon: Cloud, color: 'text-[var(--tint-amber-fg)]' }
                 ].map(item => (
                     <div key={item.label} className="flex justify-between items-center p-6 rounded-2xl bg-white/[0.02] border border-white/5">
                         <div className="flex items-center gap-4">

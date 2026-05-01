@@ -114,13 +114,13 @@ export default function LanguagePicker({ compact = false, className = '' }: Prop
               onClick={() => select(code)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 text-left text-[12px] transition-colors ${
                 active
-                  ? 'bg-fuchsia-500/10 text-white'
+                  ? 'bg-[var(--tint-fuchsia-bg)] text-white'
                   : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
               }`}
             >
               <span aria-hidden className="text-base">{languageFlags[code]}</span>
               <span className="flex-1 font-bold">{languageNames[code]}</span>
-              {active && <Check size={12} className="text-fuchsia-400" />}
+              {active && <Check size={12} className="text-[var(--tint-fuchsia-fg)]" />}
             </button>
           )
         })}
@@ -139,9 +139,9 @@ export default function LanguagePicker({ compact = false, className = '' }: Prop
         aria-label={t('language.picker') || 'Select language'}
         aria-haspopup="listbox"
         aria-expanded={open ? 'true' : 'false'}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 hover:border-fuchsia-500/40 hover:bg-fuchsia-500/[0.06] transition-all text-[10px] font-bold text-slate-300 hover:text-white ${className}`}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 hover:border-[var(--tint-fuchsia-edge)] hover:bg-fuchsia-500/[0.06] transition-all text-[10px] font-bold text-slate-300 hover:text-white ${className}`}
       >
-        <Globe size={11} className="text-fuchsia-400" />
+        <Globe size={11} className="text-[var(--tint-fuchsia-fg)]" />
         <span aria-hidden className="text-[12px] leading-none">{languageFlags[language]}</span>
         {!compact && <span className="uppercase tracking-[0.18em]">{language === 'zh-Hans' ? 'ZH' : language.toUpperCase()}</span>}
         <ChevronDown size={10} className={`transition-transform ${open ? 'rotate-180' : ''}`} />

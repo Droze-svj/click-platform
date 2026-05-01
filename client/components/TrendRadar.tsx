@@ -84,8 +84,8 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
       {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex items-center gap-6">
-          <div className="p-5 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 shadow-xl shadow-indigo-600/5">
-            <Radio className="w-8 h-8 text-indigo-400 animate-pulse" />
+          <div className="p-5 rounded-3xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-xl shadow-indigo-600/5">
+            <Radio className="w-8 h-8 text-[var(--tint-indigo-fg)] animate-pulse" />
           </div>
           <div className="space-y-1">
             <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">TREND RADAR <span className="text-indigo-500">2.0</span></h2>
@@ -94,7 +94,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
         </div>
 
         {alerts.some(a => a.urgency === 'high') && (
-          <div className="flex items-center gap-4 px-6 py-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl shadow-xl shadow-rose-600/5 animate-pulse">
+          <div className="flex items-center gap-4 px-6 py-3 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-2xl shadow-xl shadow-rose-600/5 animate-pulse">
             <Zap className="w-4 h-4 text-rose-500" />
             <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest">{alerts.filter(a => a.urgency === 'high').length} CRITICAL ANOMALIES DETECTED</span>
           </div>
@@ -128,7 +128,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           {/* LEFT: ALERTS */}
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
-              <Target className="w-4 h-4 text-indigo-400" />
+              <Target className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
               <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">Viral Signal Matrix</h3>
             </div>
             
@@ -142,7 +142,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                     className={`group cursor-pointer rounded-[2rem] border transition-all overflow-hidden ${
                       expandedAlert === alert.id 
                         ? 'bg-white/[0.06] border-white/20 shadow-2xl p-8' 
-                        : 'bg-white/[0.02] border-white/5 hover:border-indigo-500/30 p-6'
+                        : 'bg-white/[0.02] border-white/5 hover:border-[var(--tint-indigo-edge)] p-6'
                     }`}
                     onClick={() => setExpandedAlert(expandedAlert === alert.id ? null : alert.id)}
                   >
@@ -199,7 +199,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           {/* RIGHT: FORMATS */}
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
               <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">Engagement Architecture</h3>
             </div>
 
@@ -208,7 +208,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                 <motion.div
                   key={i}
                   variants={itemVariants}
-                  className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-emerald-500/30 transition-all hover:bg-white/[0.04]"
+                  className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-[var(--tint-emerald-edge)] transition-all hover:bg-white/[0.04]"
                 >
                   <div className="flex items-center gap-6">
                     <div className="text-2xl font-black text-emerald-500/20 group-hover:text-emerald-500/40 transition-colors uppercase italic tracking-tighter">#{i+1}</div>
@@ -218,7 +218,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                     </div>
                   </div>
                   <div className="text-right space-y-1">
-                    <div className="text-sm font-black text-emerald-400 italic">+{Math.round((fmt.engagement_multiplier - 1) * 100)}%</div>
+                    <div className="text-sm font-black text-[var(--tint-emerald-fg)] italic">+{Math.round((fmt.engagement_multiplier - 1) * 100)}%</div>
                     <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">{fmt.longevity} ROI</div>
                   </div>
                 </motion.div>
@@ -226,11 +226,11 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
             </div>
 
             {/* AI PREDICTION CARD */}
-            <div className="p-8 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border border-indigo-500/20 rounded-[2.5rem] relative overflow-hidden group/ai">
+            <div className="p-8 bg-gradient-to-br from-indigo-600/10 to-purple-600/10 border border-[var(--tint-indigo-edge)] rounded-[2.5rem] relative overflow-hidden group/ai">
                <Layers className="absolute -right-10 -bottom-10 w-40 h-40 text-indigo-500/5 group-hover/ai:rotate-12 transition-transform duration-700" />
                <div className="relative space-y-4">
                   <div className="flex items-center gap-3">
-                     <Cpu className="w-5 h-5 text-indigo-400" />
+                     <Cpu className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                      <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Neural Projection</span>
                   </div>
                   <p className="text-xs text-white/60 font-medium leading-relaxed italic">

@@ -86,10 +86,10 @@ export const GovernanceDashboard: React.FC = () => {
             <div className={`${glassStyle} rounded-[2.5rem] overflow-hidden`}>
                 <div className="p-8 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Terminal className="w-5 h-5 text-emerald-400" />
+                        <Terminal className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                         <h5 className="text-sm font-black text-white uppercase tracking-widest italic">Immutable Decision Stream</h5>
                     </div>
-                    <div className="px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                    <div className="px-4 py-2 rounded-lg bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]">
                         <span className="text-[8px] font-black uppercase tracking-widest">Integrity Check: VALID</span>
                     </div>
                 </div>
@@ -144,17 +144,17 @@ export const GovernanceDashboard: React.FC = () => {
                                     </td>
                                     <td className="p-6 text-center">
                                         <span className={`px-3 py-1.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
-                                            action.severity === 'critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                                            action.severity === 'high' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                            action.severity === 'critical' ? 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)]' :
+                                            action.severity === 'high' ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)]' :
                                             'bg-white/5 border-white/10 text-slate-400'
                                         }`}>
                                             {action.severity}
                                         </span>
                                     </td>
                                     <td className="p-6">
-                                        <div className="flex items-center gap-3 group-hover:text-emerald-400 transition-colors">
+                                        <div className="flex items-center gap-3 group-hover:text-[var(--tint-emerald-fg)] transition-colors">
                                             <Hash className="w-3 h-3 opacity-40" />
-                                            <code className="text-[9px] font-mono text-slate-500 group-hover:text-emerald-400/80">
+                                            <code className="text-[9px] font-mono text-slate-500 group-hover:text-[var(--tint-emerald-fg)]/80">
                                                 {action.metadata?.decisionHash?.substring(0, 16)}...
                                             </code>
                                         </div>
@@ -181,7 +181,7 @@ export const GovernanceDashboard: React.FC = () => {
             {/* Bottom Insight */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className={`${glassStyle} rounded-[2rem] p-6 flex items-center gap-5`}>
-                     <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                     <div className="p-3 bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] rounded-xl">
                          <Key className="w-5 h-5" />
                      </div>
                      <div>
@@ -200,7 +200,7 @@ export const GovernanceDashboard: React.FC = () => {
                 </div>
                 <div className={`${glassStyle} rounded-[2rem] p-6 flex items-center justify-between group cursor-pointer hover:bg-white/5 transition-all`}>
                      <div className="flex items-center gap-5">
-                        <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+                        <div className="p-3 bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] rounded-xl">
                             <AlertTriangle className="w-5 h-5" />
                         </div>
                         <div>

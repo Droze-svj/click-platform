@@ -52,7 +52,7 @@ export function Pricing() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">
-            UNLOCK <span className="text-fuchsia-400">MULTIPLIER</span>
+            UNLOCK <span className="text-[var(--tint-fuchsia-fg)]">MULTIPLIER</span>
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg font-medium mb-8">
             Designed for creators who value time above all. Switch tiers any time.

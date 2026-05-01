@@ -15,7 +15,7 @@ import ToastContainer from '../../../../../components/ToastContainer'
 import SpectralLoader from '../../../../../components/SpectralLoader'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
-const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
+const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-[var(--tint-indigo-edge)] transition-all duration-500'
 
 interface InsightMatrix {
   potencyScore: number;
@@ -97,8 +97,8 @@ export default function StrategicSynthesisHub() {
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Zap size={16} className="text-violet-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-violet-400 italic leading-none">Scanning Engine v2.0</span>
+                      <Zap size={16} className="text-[var(--tint-violet-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-violet-fg)] italic leading-none">Scanning Engine v2.0</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <Sparkles size={12} className="text-white animate-pulse" />
@@ -118,7 +118,7 @@ export default function StrategicSynthesisHub() {
                  <div className="absolute top-0 right-0 p-32 opacity-[0.02] pointer-events-none"><Network size={600} className="text-white" /></div>
                  
                  <div className="flex items-center gap-8 mb-16 relative z-10 px-8">
-                    <div className="p-6 rounded-[2.5rem] bg-violet-500/5 border border-violet-500/20 shadow-2xl"><TrendingUp size={40} className="text-violet-400" /></div>
+                    <div className="p-6 rounded-[2.5rem] bg-violet-500/5 border border-[var(--tint-violet-edge)] shadow-2xl"><TrendingUp size={40} className="text-[var(--tint-violet-fg)]" /></div>
                     <div>
                        <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Predictive ROI Projection</h3>
                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Heuristic outcome modeling for next 30 global cycles.</p>
@@ -127,7 +127,7 @@ export default function StrategicSynthesisHub() {
 
                  <div className="flex-1 flex flex-col justify-center items-center gap-12 relative z-10">
                     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                      className="w-96 h-96 rounded-full border-[20px] border-violet-500/20 flex flex-col items-center justify-center bg-black/40 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] relative"
+                      className="w-96 h-96 rounded-full border-[20px] border-[var(--tint-violet-edge)] flex flex-col items-center justify-center bg-black/40 shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] relative"
                     >
                        <div className="absolute inset-0 rounded-full border border-violet-500/50 animate-ping opacity-20" />
                        <div className="text-[120px] font-black italic text-white tracking-tighter tabular-nums leading-none">
@@ -138,16 +138,16 @@ export default function StrategicSynthesisHub() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
                        <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 flex items-start gap-8 group hover:bg-white/[0.05] transition-all">
-                          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20 group-hover:scale-110 transition-transform"><Target size={32} className="text-indigo-400" /></div>
+                          <div className="w-16 h-16 rounded-2xl bg-[var(--tint-indigo-bg)] flex items-center justify-center shrink-0 border border-[var(--tint-indigo-edge)] group-hover:scale-110 transition-transform"><Target size={32} className="text-[var(--tint-indigo-fg)]" /></div>
                           <div>
-                             <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-2 italic">STRATEGIC_DIRECTIVE</div>
+                             <div className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] mb-2 italic">STRATEGIC_DIRECTIVE</div>
                              <p className="text-[18px] font-black text-white italic leading-tight uppercase tracking-tight">{matrix?.specificAdvice}</p>
                           </div>
                        </div>
                        <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-10 flex items-start gap-8 group hover:bg-white/[0.05] transition-all">
-                          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20 group-hover:scale-110 transition-transform"><Flame size={32} className="text-rose-400" /></div>
+                          <div className="w-16 h-16 rounded-2xl bg-[var(--tint-rose-bg)] flex items-center justify-center shrink-0 border border-[var(--tint-rose-edge)] group-hover:scale-110 transition-transform"><Flame size={32} className="text-[var(--tint-rose-fg)]" /></div>
                           <div>
-                             <div className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] mb-2 italic">KINETIC_FLOW</div>
+                             <div className="text-[10px] font-black text-[var(--tint-rose-fg)] uppercase tracking-[0.4em] mb-2 italic">KINETIC_FLOW</div>
                              <p className="text-[18px] font-black text-white italic leading-tight uppercase tracking-tight">{matrix?.kineticResonance}</p>
                           </div>
                        </div>
@@ -162,7 +162,7 @@ export default function StrategicSynthesisHub() {
                  <div className="absolute top-0 right-0 p-24 opacity-0.02 pointer-events-none border-none"><Cpu size={400} className="text-white opacity-[0.02]" /></div>
                  
                  <div className="flex items-center gap-6 mb-16 relative z-10">
-                    <div className="p-5 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/20"><Brain size={32} className="text-indigo-400" /></div>
+                    <div className="p-5 rounded-[2rem] bg-indigo-500/5 border border-[var(--tint-indigo-edge)]"><Brain size={32} className="text-[var(--tint-indigo-fg)]" /></div>
                     <div>
                        <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Signal Diagnostic</h3>
                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Detected resonance gaps in content DNA.</p>
@@ -191,7 +191,7 @@ export default function StrategicSynthesisHub() {
                        <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic">Signal Gaps Detected</span>
                        <div className="flex flex-wrap gap-4">
                           {(matrix?.signalGaps || ['Data Missing']).map(gap => (
-                            <div key={gap} className="px-8 py-4 rounded-[2rem] bg-black/60 border border-white/10 flex items-center gap-4 group hover:border-indigo-500/40 transition-all">
+                            <div key={gap} className="px-8 py-4 rounded-[2rem] bg-black/60 border border-white/10 flex items-center gap-4 group hover:border-[var(--tint-indigo-edge)] transition-all">
                                <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(79,70,229,1)]" />
                                <span className="text-[14px] font-black text-white uppercase tracking-tight italic">{gap}</span>
                             </div>

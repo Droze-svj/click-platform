@@ -339,11 +339,11 @@ export default function AIContentOperationsDashboard() {
 
   const getGradeColor = (grade: string) => {
     switch (grade) {
-      case 'A': return `text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]`
-      case 'B': return 'text-cyan-400 drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]'
-      case 'C': return 'text-violet-400 drop-shadow-[0_0_20px_rgba(139,92,246,0.5)]'
-      case 'D': return 'text-fuchsia-400 drop-shadow-[0_0_20px_rgba(232,121,249,0.5)]'
-      default: return 'text-rose-400 drop-shadow-[0_0_20px_rgba(244,63,94,0.5)]'
+      case 'A': return `text-[var(--tint-emerald-fg)] drop-shadow-[0_0_20px_rgba(52,211,153,0.5)]`
+      case 'B': return 'text-[var(--tint-cyan-fg)] drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]'
+      case 'C': return 'text-[var(--tint-violet-fg)] drop-shadow-[0_0_20px_rgba(139,92,246,0.5)]'
+      case 'D': return 'text-[var(--tint-fuchsia-fg)] drop-shadow-[0_0_20px_rgba(232,121,249,0.5)]'
+      default: return 'text-[var(--tint-rose-fg)] drop-shadow-[0_0_20px_rgba(244,63,94,0.5)]'
     }
   }
 
@@ -413,7 +413,7 @@ export default function AIContentOperationsDashboard() {
                  <div className="space-y-4">
                   <AnimatePresence mode="popLayout">
                     {repairLogs.map((log, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-6 text-emerald-400 font-bold">
+                      <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-6 text-[var(--tint-emerald-fg)] font-bold">
                         <span className="text-slate-700 font-black tabular-nums">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse" />
                         <span className="tracking-tight uppercase">{log}</span>
@@ -529,7 +529,7 @@ export default function AIContentOperationsDashboard() {
             <div className={`${glassStyle} p-16 rounded-[4.5rem] group border-white/5`}>
               <div className="flex-1 space-y-12">
                 <div className="flex items-center gap-6">
-                  <TrendingUp className="w-8 h-8 text-emerald-400" />
+                  <TrendingUp className="w-8 h-8 text-[var(--tint-emerald-fg)]" />
                   <h2 className="text-5xl font-black text-white italic uppercase">Apex Flow</h2>
                 </div>
                 <div className="text-8xl font-black text-white italic tabular-nums leading-none">
@@ -563,7 +563,7 @@ export default function AIContentOperationsDashboard() {
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
             <h3 className="text-2xl font-black text-white italic uppercase mb-8">Neural Audit</h3>
             <div className="text-6xl font-black text-white italic tabular-nums">99.9%</div>
-            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">Compliance Score</div>
+            <div className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest mt-2">Compliance Score</div>
           </div>
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
             <h3 className="text-2xl font-black text-white italic uppercase mb-8">Auto Loop</h3>

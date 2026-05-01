@@ -86,7 +86,7 @@ function SpatialViewport({ layers }: { layers: SpatialLayer[] }) {
 
       {/* Depth indicator axis */}
       <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/10">
-        <Move3D className="w-3 h-3 text-indigo-400" />
+        <Move3D className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
         <span className="text-[8px] font-black text-white/50 uppercase tracking-widest">Z-Axis Active</span>
       </div>
     </div>
@@ -197,7 +197,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
           {/* Layer Stack */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-4`}>
             <div className="flex items-center gap-3 mb-2">
-              <Layers className="w-4 h-4 text-indigo-400" />
+              <Layers className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">Depth Layer Stack</span>
               <span className="ml-auto text-[9px] font-black text-slate-600 uppercase tracking-widest">Drag to reorder</span>
             </div>
@@ -209,7 +209,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
                 onClick={() => setSelectedLayerId(layer.id)}
                 className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all cursor-pointer border ${
                   selectedLayerId === layer.id
-                    ? 'border-indigo-500/40 bg-indigo-500/10'
+                    ? 'border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)]'
                     : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'
                 }`}
               >
@@ -244,7 +244,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
                 className={`${glassStyle} rounded-[2.5rem] p-6 space-y-6`}
               >
                 <div className="flex items-center gap-3">
-                  <Sliders className="w-4 h-4 text-fuchsia-400" />
+                  <Sliders className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
                   <span className="text-sm font-black text-white uppercase tracking-wider">Layer Properties</span>
                 </div>
 
@@ -334,7 +334,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
           {/* Export Formats */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-4`}>
             <div className="flex items-center gap-3">
-              <Download className="w-4 h-4 text-emerald-400" />
+              <Download className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">Spatial Export</span>
             </div>
 
@@ -345,7 +345,7 @@ const SpatialTimelineView: React.FC<SpatialTimelineViewProps> = ({ showToast }) 
                 onClick={() => setSelectedFormat(fmt.id)}
                 className={`flex items-center gap-4 px-5 py-4 rounded-2xl cursor-pointer transition-all border ${
                   selectedFormat === fmt.id
-                    ? 'border-indigo-500/40 bg-indigo-500/10'
+                    ? 'border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)]'
                     : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'
                 }`}
               >

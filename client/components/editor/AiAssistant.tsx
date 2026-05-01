@@ -189,13 +189,13 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                              {branches.map(branch => (
                                 <div
                                     key={branch.id}
-                                    className={`p-3 rounded-2xl border flex items-center justify-between group transition-all ${branch.active ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                    className={`p-3 rounded-2xl border flex items-center justify-between group transition-all ${branch.active ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <GitBranch className={`w-3.5 h-3.5 ${branch.active ? 'text-indigo-400' : 'text-slate-500'}`} />
+                                        <GitBranch className={`w-3.5 h-3.5 ${branch.active ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-500'}`} />
                                         <div className="flex flex-col">
                                             <span className={`text-[10px] font-bold ${branch.active ? 'text-white' : 'text-slate-400 uppercase tracking-tight'}`}>{branch.name}</span>
-                                            {branch.diff && <span className="text-[7px] text-emerald-400 font-bold uppercase tracking-wider">+12 Cuts, -2 Overlays</span>}
+                                            {branch.diff && <span className="text-[7px] text-[var(--tint-emerald-fg)] font-bold uppercase tracking-wider">+12 Cuts, -2 Overlays</span>}
                                         </div>
                                     </div>
 
@@ -222,9 +222,9 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                             <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Viral Pulse</p>
                             <span className="flex h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
                         </div>
-                        <div className="p-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 space-y-3 group cursor-pointer hover:bg-rose-500/15 transition-all">
+                        <div className="p-4 rounded-3xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] space-y-3 group cursor-pointer hover:bg-[var(--tint-rose-bg)] transition-all">
                             <div className="flex items-center gap-3">
-                                <TrendingUp className="w-5 h-5 text-rose-400" />
+                                <TrendingUp className="w-5 h-5 text-[var(--tint-rose-fg)]" />
                                 <div>
                                     <p className="text-[10px] font-black text-white uppercase tracking-tighter italic">Remix Opportunity</p>
                                     <p className="text-[8px] text-rose-300 font-bold uppercase tracking-widest">Trend: &quot;Capybara Chill&quot; (+450%)</p>
@@ -276,7 +276,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                 type="button"
                                 onClick={fetchSuggestions}
                                 disabled={loadingSuggestions}
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/30 text-[9px] font-black uppercase tracking-[0.18em] text-violet-300 hover:bg-violet-500/20 disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] text-[9px] font-black uppercase tracking-[0.18em] text-violet-300 hover:bg-[var(--tint-violet-bg)] disabled:opacity-50"
                             >
                                 <Wand2 className="w-3 h-3" />
                                 {loadingSuggestions ? 'Loading…' : 'Suggest'}
@@ -303,19 +303,19 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => applySuggestion(s)}
-                                            className="w-full text-left p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-violet-500/30 hover:bg-violet-500/[0.06] transition-all group"
+                                            className="w-full text-left p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-[var(--tint-violet-edge)] hover:bg-violet-500/[0.06] transition-all group"
                                         >
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className={`text-[8px] font-black uppercase tracking-[0.18em] px-1.5 py-0.5 rounded ${
-                                                    s.kind === 'hook' ? 'bg-rose-500/15 text-rose-300' :
-                                                    s.kind === 'cta' ? 'bg-emerald-500/15 text-emerald-300' :
-                                                    s.kind === 'caption' ? 'bg-amber-500/15 text-amber-300' :
-                                                    'bg-sky-500/15 text-sky-300'
+                                                    s.kind === 'hook' ? 'bg-[var(--tint-rose-bg)] text-rose-300' :
+                                                    s.kind === 'cta' ? 'bg-[var(--tint-emerald-bg)] text-emerald-300' :
+                                                    s.kind === 'caption' ? 'bg-[var(--tint-amber-bg)] text-amber-300' :
+                                                    'bg-[var(--tint-sky-bg)] text-sky-300'
                                                 }`}>{s.kind}</span>
                                                 <span className="text-[9px] font-mono text-theme-muted tabular-nums">
                                                     {s.timeRange ? `${s.timeRange.start.toFixed(1)}s` : ''}
                                                 </span>
-                                                <span className="ml-auto text-[8px] text-emerald-400 font-bold">+{Math.round(s.expectedRetentionDelta * 100)}%</span>
+                                                <span className="ml-auto text-[8px] text-[var(--tint-emerald-fg)] font-bold">+{Math.round(s.expectedRetentionDelta * 100)}%</span>
                                                 <ChevronRight className="w-3 h-3 text-theme-muted group-hover:text-violet-300 transition-colors" />
                                             </div>
                                             <p className="text-[10px] text-theme-secondary leading-snug line-clamp-2">{s.description}</p>
@@ -329,9 +329,9 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                         {/* Style DNA Sync Badge */}
                         {styleDNA && (
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 group cursor-pointer hover:bg-indigo-500/10 transition-all" onClick={onNormalizeStyle}>
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-[var(--tint-indigo-edge)] bg-indigo-500/5 group cursor-pointer hover:bg-[var(--tint-indigo-bg)] transition-all" onClick={onNormalizeStyle}>
                                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-tighter">Style Sync: {styleDNA.theme || 'Vlog'}</span>
+                                <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-tighter">Style Sync: {styleDNA.theme || 'Vlog'}</span>
                                 <div className="hidden group-hover:flex items-center gap-1 ml-1 pl-1 border-l border-white/10">
                                     <span className="text-[7px] text-white font-bold opacity-70">Nudge to DNA?</span>
                                 </div>

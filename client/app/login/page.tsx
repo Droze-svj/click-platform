@@ -182,11 +182,11 @@ export default function Login() {
               transition={{ duration: 1, delay: 0.2 }}
               className="mx-auto w-20 h-20 rounded-[1.8rem] bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/10 border border-white/10 flex items-center justify-center shadow-2xl relative"
             >
-              <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full" />
+              <div className="absolute inset-0 bg-[var(--tint-indigo-bg)] blur-xl rounded-full" />
               <ClickLogo size={44} className="relative z-10" />
             </motion.div>
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-[0.3em] italic text-indigo-400">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[9px] font-black uppercase tracking-[0.3em] italic text-[var(--tint-indigo-fg)]">
                 <ClickLogo size={12} />
                 Authentication Required
               </div>
@@ -212,7 +212,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2 group/field">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-focus-within/field:text-indigo-400 transition-colors block ml-2">Secure Link / Email</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-focus-within/field:text-[var(--tint-indigo-fg)] transition-colors block ml-2">Secure Link / Email</label>
               <div className="relative">
                 <FormField
                   label=""
@@ -230,7 +230,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-2 group/field">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-focus-within/field:text-indigo-400 transition-colors block ml-2">Access Key / Password</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-focus-within/field:text-[var(--tint-indigo-fg)] transition-colors block ml-2">Access Key / Password</label>
               <div className="relative">
                 <FormField
                   label=""
@@ -293,7 +293,7 @@ export default function Login() {
               {t('auth.noAccount')}{' '}
               <a
                 href="/register"
-                className="text-white hover:text-indigo-400 transition-colors ml-2 underline decoration-indigo-500/30 underline-offset-4"
+                className="text-white hover:text-[var(--tint-indigo-fg)] transition-colors ml-2 underline decoration-indigo-500/30 underline-offset-4"
               >
                 {t('auth.register')}
               </a>

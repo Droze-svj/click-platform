@@ -98,13 +98,13 @@ const PLATFORMS = ['tiktok', 'instagram', 'twitter', 'youtube', 'linkedin', 'fac
 
 const SEVERITY_STYLES = {
   error: { badge: 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25', icon: XCircle, dot: 'bg-red-500' },
-  warning: { badge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25', icon: AlertTriangle, dot: 'bg-amber-500' },
+  warning: { badge: 'bg-[var(--tint-amber-bg)] text-amber-600 dark:text-[var(--tint-amber-fg)] border border-amber-500/25', icon: AlertTriangle, dot: 'bg-amber-500' },
   info: { badge: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/25', icon: Info, dot: 'bg-blue-500' },
 }
 
 const STATUS_STYLES = {
-  passed: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-600 dark:text-emerald-400', icon: ShieldCheck },
-  warning: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-600 dark:text-amber-400', icon: ShieldAlert },
+  passed: { bg: 'bg-[var(--tint-emerald-bg)]', border: 'border-[var(--tint-emerald-edge)]', text: 'text-emerald-600 dark:text-[var(--tint-emerald-fg)]', icon: ShieldCheck },
+  warning: { bg: 'bg-[var(--tint-amber-bg)]', border: 'border-[var(--tint-amber-edge)]', text: 'text-amber-600 dark:text-[var(--tint-amber-fg)]', icon: ShieldAlert },
   failed: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-600 dark:text-red-400', icon: ShieldX },
 }
 
@@ -175,7 +175,7 @@ function BreakdownRow({
       className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
     >
       <div className="flex items-center gap-2.5">
-        <div className={`p-1.5 rounded-lg ${passed ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+        <div className={`p-1.5 rounded-lg ${passed ? 'bg-[var(--tint-emerald-bg)] text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
           <Icon className="w-4 h-4" />
         </div>
         <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{label}</span>
@@ -388,7 +388,7 @@ export default function ComplianceDashboard() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all border-b-2 -mb-px ${
                   activeTab === tab.id
-                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                    ? 'border-indigo-500 text-indigo-600 dark:text-[var(--tint-indigo-fg)]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
@@ -689,7 +689,7 @@ export default function ComplianceDashboard() {
                               : 'bg-gray-50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-800/50 opacity-60'
                           }`}
                         >
-                          <div className="p-2 bg-indigo-500/10 rounded-lg">
+                          <div className="p-2 bg-[var(--tint-indigo-bg)] rounded-lg">
                             <CatIcon className="w-4 h-4 text-indigo-500" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -758,11 +758,11 @@ export default function ComplianceDashboard() {
                           {policy.recommendedHashtags !== undefined && (
                             <div className="flex justify-between text-sm">
                               <dt className="text-gray-500">Recommended hashtags</dt>
-                              <dd className="font-mono text-indigo-600 dark:text-indigo-400">{policy.recommendedHashtags}</dd>
+                              <dd className="font-mono text-indigo-600 dark:text-[var(--tint-indigo-fg)]">{policy.recommendedHashtags}</dd>
                             </div>
                           )}
                           {policy.noExternalLinks && (
-                            <div className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
+                            <div className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-[var(--tint-amber-fg)]">
                               <AlertTriangle className="w-3.5 h-3.5" />
                               No clickable external links in captions
                             </div>

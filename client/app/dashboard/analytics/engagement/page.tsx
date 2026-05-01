@@ -32,15 +32,15 @@ export default function ResonanceCommandMatrixPage() {
                 <ArrowLeft size={24} />
               </button>
               <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                    <Fingerprint size={20} className="text-indigo-400" />
+                 <div className="w-10 h-10 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+                    <Fingerprint size={20} className="text-[var(--tint-indigo-fg)]" />
                  </div>
                  <h1 className="text-2xl font-black italic text-white uppercase tracking-tighter">Resonance_Matrix</h1>
               </div>
            </div>
-           <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-2xl">
-              <Shield size={14} className="text-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-black text-emerald-400 tracking-[0.3em] uppercase italic">Sovereign_Shield_Active</span>
+           <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-2xl">
+              <Shield size={14} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+              <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] tracking-[0.3em] uppercase italic">Sovereign_Shield_Active</span>
            </div>
         </div>
 

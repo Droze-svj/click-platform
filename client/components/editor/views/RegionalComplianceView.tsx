@@ -57,9 +57,9 @@ export const RegionalComplianceView: React.FC = () => {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'PASS': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-            case 'CAUTION': return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-            case 'ALERT': return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+            case 'PASS': return 'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]'
+            case 'CAUTION': return 'text-[var(--tint-amber-fg)] bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]'
+            case 'ALERT': return 'text-[var(--tint-rose-fg)] bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]'
             default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20'
         }
     }
@@ -94,7 +94,7 @@ export const RegionalComplianceView: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden`}>
                         <div className="flex items-center justify-between relative z-10">
                             <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Audit Configuration</h5>
-                            <Map className="w-5 h-5 text-amber-400" />
+                            <Map className="w-5 h-5 text-[var(--tint-amber-fg)]" />
                         </div>
 
                         <div className="space-y-6 relative z-10">
@@ -145,7 +145,7 @@ export const RegionalComplianceView: React.FC = () => {
                                 <p className="text-[10px] font-bold text-slate-500 italic mt-1 uppercase">ADVISORY MODE ACTIVE</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]">
                             <Zap className="w-3 h-3" />
                             <span className="text-[8px] font-black uppercase tracking-widest">Optimized</span>
                         </div>
@@ -207,13 +207,13 @@ export const RegionalComplianceView: React.FC = () => {
                                         <div className="space-y-4">
                                             {result?.regionalIssues.map((issue, i) => (
                                                 <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                                                    <Flag className="w-3 h-3 text-rose-400 mt-1" />
+                                                    <Flag className="w-3 h-3 text-[var(--tint-rose-fg)] mt-1" />
                                                     <span className="text-[10px] font-bold text-slate-400 italic leading-snug">{issue}</span>
                                                 </div>
                                             )) || (
                                                 <div className="flex items-center gap-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                                                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                                    <span className="text-[10px] font-bold text-emerald-400 italic">No cultural conflicts detected</span>
+                                                    <CheckCircle2 className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
+                                                    <span className="text-[10px] font-bold text-[var(--tint-emerald-fg)] italic">No cultural conflicts detected</span>
                                                 </div>
                                             )}
                                         </div>
@@ -229,7 +229,7 @@ export const RegionalComplianceView: React.FC = () => {
                                                 <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                                                     <span className="text-[10px] font-black text-white uppercase italic">{platform}</span>
                                                     <span className={`text-[10px] font-black uppercase italic ${
-                                                        risk === 'HIGH' ? 'text-rose-400' : 'text-emerald-400'
+                                                        risk === 'HIGH' ? 'text-[var(--tint-rose-fg)]' : 'text-[var(--tint-emerald-fg)]'
                                                     }`}>{risk}</span>
                                                 </div>
                                             )) || (
@@ -245,13 +245,13 @@ export const RegionalComplianceView: React.FC = () => {
                                         <Info className="w-5 h-5 text-blue-400" />
                                         <h6 className="text-sm font-black text-white uppercase italic tracking-tighter italic">Compliance Justification</h6>
                                     </div>
-                                    <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic border-l-2 border-amber-500/30 pl-6">
+                                    <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic border-l-2 border-[var(--tint-amber-edge)] pl-6">
                                         "{result?.justification}"
                                     </p>
                                     
                                     {result?.requiresHumanOverride && (
                                         <div className="pt-4 flex items-center justify-between border-t border-white/5 mt-6">
-                                            <div className="flex items-center gap-3 text-amber-400">
+                                            <div className="flex items-center gap-3 text-[var(--tint-amber-fg)]">
                                                 <ShieldAlert className="w-4 h-4" />
                                                 <span className="text-[10px] font-black uppercase italic">Decision: Human Override Required</span>
                                             </div>

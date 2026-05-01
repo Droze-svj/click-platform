@@ -59,7 +59,7 @@ const PacingHeatmap = ({ segments }: { segments: any[] }) => {
               className={`${color} h-full border-r border-black/20 last:border-0 relative group first:rounded-l-xl last:rounded-r-xl`}
             >
               <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl bg-[#080810]/95 text-[9px] text-white opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none border border-white/10 shadow-2xl z-20">
-                <span className="font-black italic uppercase text-indigo-400 mr-2">{s.section}</span>
+                <span className="font-black italic uppercase text-[var(--tint-indigo-fg)] mr-2">{s.section}</span>
                 <span className="font-bold">{s.density.toFixed(1)} W/S</span>
               </div>
             </div>
@@ -122,7 +122,7 @@ export default function NeuralStrategyHub() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/[0.05] pb-12">
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em]">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[10px] font-black uppercase tracking-[0.3em]">
             <Sparkles className="w-3.5 h-3.5" />
             Sovereign Strategist Overdrive
           </div>
@@ -144,7 +144,7 @@ export default function NeuralStrategyHub() {
                 placeholder="Query Topic..."
                 className="px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/10 text-white font-bold text-sm w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all placeholder:text-slate-600 focus:bg-white/[0.05]"
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-[var(--tint-indigo-fg)] transition-colors" />
             </div>
            <button
              onClick={runPrediction}
@@ -163,13 +163,13 @@ export default function NeuralStrategyHub() {
           {/* Live Trends Section */}
           <div className={`${glassStyle} p-10 group`}>
              <div className="absolute -top-24 -right-24 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700">
-               <TrendingUp className="w-80 h-80 text-indigo-400 rotate-12" />
+               <TrendingUp className="w-80 h-80 text-[var(--tint-indigo-fg)] rotate-12" />
              </div>
              
              <div className="flex items-center justify-between mb-10 relative">
                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner">
-                    <TrendingUp className="w-6 h-6 text-indigo-400" />
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-inner">
+                    <TrendingUp className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Signal Ingestion</h2>
@@ -183,17 +183,17 @@ export default function NeuralStrategyHub() {
  
              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative">
                 {trends?.strategy && (
-                  <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent border border-indigo-500/20 space-y-6 shadow-2xl transition-all hover:bg-white/[0.01]">
+                  <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent border border-[var(--tint-indigo-edge)] space-y-6 shadow-2xl transition-all hover:bg-white/[0.01]">
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                      <div className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest flex items-center gap-2">
                         <Zap className="w-3 h-3" /> Recommended Mold
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase">
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] text-[8px] font-black uppercase">
                         High Delta Potential
                       </div>
                     </div>
                     <div className="text-4xl font-black text-white italic uppercase leading-none">{trends.strategy.mold}</div>
-                    <p className="text-sm text-slate-400 leading-relaxed italic border-l-2 border-indigo-500/30 pl-4 py-1">
+                    <p className="text-sm text-slate-400 leading-relaxed italic border-l-2 border-[var(--tint-indigo-edge)] pl-4 py-1">
                       &quot;{trends.strategy.explanation}&quot;
                     </p>
                     <div className="flex flex-wrap gap-2 pt-2">
@@ -205,7 +205,7 @@ export default function NeuralStrategyHub() {
                 )}
                 <div className="space-y-6">
                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                    <Activity className="w-3 h-3 text-indigo-400" /> Trending Pulse
+                    <Activity className="w-3 h-3 text-[var(--tint-indigo-fg)]" /> Trending Pulse
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     {(trends?.trends || Array(4).fill({})).map((t: any, i: number) => {
@@ -224,8 +224,8 @@ export default function NeuralStrategyHub() {
                                 <TrendingUp className="w-3 h-3" /> {t.growth}
                               </span>
                             )}
-                            <div className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">
-                               <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest font-mono">
+                            <div className="px-2 py-0.5 rounded bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                               <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest font-mono">
                                  {t.views || 'LIVE'}
                                </span>
                             </div>
@@ -252,8 +252,8 @@ export default function NeuralStrategyHub() {
  
                 <div className="flex items-center justify-between relative">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg">
-                      <Target className="w-6 h-6 text-emerald-400" />
+                    <div className="w-12 h-12 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-lg">
+                      <Target className="w-6 h-6 text-[var(--tint-emerald-fg)]" />
                     </div>
                     <div>
                       <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Viral Forecast</h2>
@@ -262,8 +262,8 @@ export default function NeuralStrategyHub() {
                   </div>
                   <div className={`px-10 py-4 rounded-full font-black text-xs italic uppercase tracking-[0.25em] border-2 shadow-2xl transition-all ${
                     prediction.tier === 'VIRAL' || prediction.tier === 'BREAKOUT'
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-emerald-500/10'
-                    : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                    ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)] shadow-emerald-500/10'
+                    : 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]'
                   }`}>
                     {prediction.tier} TIER REACHED
                   </div>
@@ -274,7 +274,7 @@ export default function NeuralStrategyHub() {
                     <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Growth Probability</div>
                     <div className="flex items-baseline gap-2">
                        <span className="text-8xl font-black text-white italic leading-[0.7]">{prediction.probability}</span>
-                       <span className="text-3xl font-black text-indigo-400 italic">%</span>
+                       <span className="text-3xl font-black text-[var(--tint-indigo-fg)] italic">%</span>
                     </div>
                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
                        <motion.div
@@ -290,8 +290,8 @@ export default function NeuralStrategyHub() {
                   <div className="flex flex-col justify-center space-y-6">
                     <div className="space-y-4">
                        <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group overflow-hidden relative">
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="flex items-center gap-2 text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2 relative z-10">
+                          <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--tint-indigo-bg)] blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="flex items-center gap-2 text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest mb-2 relative z-10">
                              <Users className="w-3.5 h-3.5" /> Forecasted Audience
                           </div>
                           <div className="text-2xl font-black text-white italic uppercase tracking-tighter relative z-10">
@@ -301,8 +301,8 @@ export default function NeuralStrategyHub() {
                           </div>
                        </div>
                        <div className="p-6 rounded-[2rem] bg-emerald-500/03 border border-emerald-500/10 hover:bg-emerald-500/05 transition-all group overflow-hidden relative">
-                          <div className="absolute bottom-0 left-0 w-20 h-20 bg-emerald-500/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="flex items-center gap-2 text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2 relative z-10">
+                          <div className="absolute bottom-0 left-0 w-20 h-20 bg-[var(--tint-emerald-bg)] blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="flex items-center gap-2 text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest mb-2 relative z-10">
                              <DollarSign className="w-3.5 h-3.5" /> ROI Projection
                           </div>
                           <div className="text-2xl font-black text-white italic tracking-tighter relative z-10">
@@ -319,8 +319,8 @@ export default function NeuralStrategyHub() {
                     <div className="space-y-3">
                       {prediction.factors.map((f: string, i: number) => (
                         <div key={i} className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-slate-200 text-xs font-bold transition-all hover:bg-white/[0.05] group">
-                          <div className="w-5 h-5 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                             <CheckCircle2 className="w-3 h-3 text-emerald-400 group-hover:scale-125 transition-transform" />
+                          <div className="w-5 h-5 rounded-lg bg-[var(--tint-emerald-bg)] flex items-center justify-center border border-[var(--tint-emerald-edge)]">
+                             <CheckCircle2 className="w-3 h-3 text-[var(--tint-emerald-fg)] group-hover:scale-125 transition-transform" />
                           </div>
                           <span className="tracking-tight">{f}</span>
                         </div>
@@ -332,10 +332,10 @@ export default function NeuralStrategyHub() {
                 {/* Heatmap Visualization */}
                 <PacingHeatmap segments={prediction.pacingHeatmap} />
  
-                <div className="p-10 rounded-[2.5rem] bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden group">
+                <div className="p-10 rounded-[2.5rem] bg-gradient-to-r from-amber-500/10 to-transparent border border-[var(--tint-amber-edge)] flex flex-col md:flex-row items-center gap-8 shadow-2xl relative overflow-hidden group">
                   <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-10 pointer-events-none" />
-                  <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center animate-pulse border border-amber-500/30 flex-shrink-0 relative z-10">
-                    <Zap className="w-10 h-10 text-amber-400" />
+                  <div className="w-20 h-20 rounded-full bg-[var(--tint-amber-bg)] flex items-center justify-center animate-pulse border border-[var(--tint-amber-edge)] flex-shrink-0 relative z-10">
+                    <Zap className="w-10 h-10 text-[var(--tint-amber-fg)]" />
                   </div>
                   <div className="flex-1 relative z-10 text-center md:text-left">
                     <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 mb-2">
@@ -356,15 +356,15 @@ export default function NeuralStrategyHub() {
             <div className={`${glassStyle} p-10 space-y-8 bg-gradient-to-br from-indigo-500/05 to-transparent`}>
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-indigo-400" />
+                    <Activity className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                     <div>
                       <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Swarm Node Reasoning</h3>
                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-0.5">Secure AI Consensus Log</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Live Sync</span>
+                    <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Live Sync</span>
                   </div>
                </div>
                <div className="space-y-4 max-h-56 overflow-y-auto pr-4 custom-scrollbar">
@@ -377,7 +377,7 @@ export default function NeuralStrategyHub() {
                     "Sovereignty Ledger updated with latest trend DNA.",
                     "Optimization recommendation generated via Autonomous Reasoning."
                   ].map((log, i) => (
-                    <div key={i} className={`flex gap-4 text-[10px] font-mono border-l-2 border-white/5 pl-6 py-2 transition-colors hover:border-indigo-500/40 relative group`}>
+                    <div key={i} className={`flex gap-4 text-[10px] font-mono border-l-2 border-white/5 pl-6 py-2 transition-colors hover:border-[var(--tint-indigo-edge)] relative group`}>
                        <div className="absolute left-[-2px] top-0 bottom-0 w-[2px] bg-indigo-500 scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300" />
                        <span className="text-slate-600 font-bold shrink-0">[{new Date().toLocaleTimeString()}]</span>
                        <span className={`${i % 2 === 0 ? 'text-slate-300' : 'text-indigo-300/80'} font-medium`}>{log}</span>
@@ -422,11 +422,11 @@ export default function NeuralStrategyHub() {
            {/* Neural Quality Center */}
            <div className={`${glassStyle} p-10 group`}>
              <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-all duration-1000 group-hover:scale-125">
-               <ShieldCheck className="w-48 h-48 text-indigo-400" />
+               <ShieldCheck className="w-48 h-48 text-[var(--tint-indigo-fg)]" />
              </div>
              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner">
-                  <ShieldCheck className="w-6 h-6 text-indigo-400" />
+                <div className="w-12 h-12 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-inner">
+                  <ShieldCheck className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Neural Integrity</h3>
              </div>
@@ -449,9 +449,9 @@ export default function NeuralStrategyHub() {
              </div>
              <div className="space-y-4">
                {[
-                 { label: 'Auto-Foley', icon: Volume2, color: 'text-indigo-400', active: true },
-                 { label: 'B-Roll Agent', icon: Tv, color: 'text-orange-400', active: false },
-                 { label: 'Caption Swarm', icon: FileText, color: 'text-emerald-400', active: true },
+                 { label: 'Auto-Foley', icon: Volume2, color: 'text-[var(--tint-indigo-fg)]', active: true },
+                 { label: 'B-Roll Agent', icon: Tv, color: 'text-[var(--tint-orange-fg)]', active: false },
+                 { label: 'Caption Swarm', icon: FileText, color: 'text-[var(--tint-emerald-fg)]', active: true },
                ].map((asset, i) => (
                  <div key={i} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] transition-all group cursor-pointer relative overflow-hidden">
                    <div className="flex items-center gap-4 relative z-10">

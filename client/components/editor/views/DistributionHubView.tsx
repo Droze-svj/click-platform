@@ -60,7 +60,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
       {/* Elite Control Header */}
       <div className="flex items-center justify-between gap-6">
         <div className="space-y-2">
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 italic">
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[10px] font-black uppercase tracking-[0.3em] text-[var(--tint-emerald-fg)] italic">
                 <Globe className="w-3.5 h-3.5 animate-pulse" />
                 Global Uplink Active
             </div>
@@ -109,8 +109,8 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
                 <div className="flex items-center justify-between mb-10 relative z-10">
                     <div className="flex items-center gap-6">
-                        <div className="p-4 rounded-[1.2rem] bg-emerald-500/10 border border-emerald-500/20 shadow-xl">
-                            <Target className="w-6 h-6 text-emerald-400" />
+                        <div className="p-4 rounded-[1.2rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-xl">
+                            <Target className="w-6 h-6 text-[var(--tint-emerald-fg)]" />
                         </div>
                         <div>
                         <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Social Push Matrix</h4>
@@ -146,7 +146,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                             <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1 italic">Neural Tags (Optimized)</label>
                             <div className="flex flex-wrap gap-2">
                                 {['#viral', '#growth', '#ai', '#creative', '#edit'].map(t => (
-                                    <span key={t} className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black text-emerald-400 italic">
+                                    <span key={t} className="px-4 py-2 bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] rounded-full text-[10px] font-black text-[var(--tint-emerald-fg)] italic">
                                         {t}
                                     </span>
                                 ))}
@@ -205,8 +205,8 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
             <div className={`${glassStyle} rounded-[3rem] p-10`}>
                 <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-6">
-                        <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
-                            <Calendar className="w-6 h-6 text-indigo-400" />
+                        <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                            <Calendar className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                         </div>
                         <div>
                             <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Neural Matrix</h4>
@@ -229,9 +229,9 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                         <div key={d} className="text-center text-[9px] font-black uppercase text-slate-600 tracking-[0.3em] italic mb-4">{d}</div>
                     ))}
                     {Array.from({ length: 14 }).map((_, i) => (
-                        <div key={i} className={`min-h-[140px] p-4 rounded-3xl border ${i === 3 ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-black/20 border-white/5'} hover:border-white/10 transition-all group`}>
+                        <div key={i} className={`min-h-[140px] p-4 rounded-3xl border ${i === 3 ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]' : 'bg-black/20 border-white/5'} hover:border-white/10 transition-all group`}>
                             <div className="flex justify-between items-center mb-4">
-                                <span className={`text-lg font-black italic ${i === 3 ? 'text-indigo-400' : 'text-slate-700'}`}>{i + 1}</span>
+                                <span className={`text-lg font-black italic ${i === 3 ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-700'}`}>{i + 1}</span>
                                 {i === 3 && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,1)]" />}
                             </div>
 
@@ -269,8 +269,8 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
              {/* Platform Connection Status (Elite) */}
             <div className={`${glassStyle} p-10 rounded-[3rem] space-y-8`}>
                 <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
-                    <Share2 className="w-6 h-6 text-indigo-400" />
+                    <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                    <Share2 className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                     </div>
                     <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">IDENTITY<br />CLUSTERS</h4>
                 </div>
@@ -301,8 +301,8 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
             {/* Neural Dispatch Stream */}
             <div className={`${glassStyle} p-10 rounded-[3rem] space-y-8 relative overflow-hidden group`}>
                 <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.2rem] bg-emerald-500/10 border border-emerald-500/20">
-                        <Zap className="w-6 h-6 text-emerald-400" />
+                    <div className="p-4 rounded-[1.2rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
+                        <Zap className="w-6 h-6 text-[var(--tint-emerald-fg)]" />
                     </div>
                     <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">LIVE<br />UPLINK</h4>
                 </div>
@@ -317,7 +317,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                         <div key={idx} className="p-6 bg-black/40 border border-white/5 rounded-[2rem]">
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-xs font-black text-white italic uppercase tracking-[0.2em]">{stream.platform}</span>
-                                <span className={`text-[9px] font-black px-3 py-1 rounded-full ${stream.error ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'} uppercase tracking-widest`}>
+                                <span className={`text-[9px] font-black px-3 py-1 rounded-full ${stream.error ? 'bg-red-500/10 text-red-400' : 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)]'} uppercase tracking-widest`}>
                                     {stream.status}
                                 </span>
                             </div>

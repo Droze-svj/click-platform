@@ -100,7 +100,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Palette className="w-4 h-4 text-indigo-400" />
+          <Palette className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
           <span className="text-[11px] font-black uppercase tracking-widest text-white">Brand Kit</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -111,7 +111,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
           </button>
           <button onClick={handleReset}
             title="Reset brand kit"
-            className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 transition-colors">
+            className="p-1.5 rounded-lg bg-white/[0.04] hover:bg-[var(--tint-rose-bg)] text-slate-500 hover:text-[var(--tint-rose-fg)] transition-colors">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -190,7 +190,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
         {/* Font size */}
         <div className="flex items-center justify-between mt-2">
           <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Size</span>
-          <span className="text-[9px] font-black text-indigo-400">{kit.captionFontSize}px</span>
+          <span className="text-[9px] font-black text-[var(--tint-indigo-fg)]">{kit.captionFontSize}px</span>
         </div>
         <input type="range" min={20} max={60} step={2} value={kit.captionFontSize}
           onChange={e => updateKit('captionFontSize', parseInt(e.target.value))}
@@ -206,14 +206,14 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
           onChange={handleLogoUpload} />
         <div className="flex gap-2">
           <button onClick={() => fileInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.04] border border-dashed border-white/10 hover:border-indigo-500/40 text-slate-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest">
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[0.04] border border-dashed border-white/10 hover:border-[var(--tint-indigo-edge)] text-slate-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest">
             <Upload className="w-3.5 h-3.5" />
             {kit.logoUrl ? 'Replace Logo' : 'Upload Logo'}
           </button>
           {kit.logoUrl && (
             <button onClick={() => updateKit('logoUrl', undefined)}
               title="Remove logo"
-              className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all">
+              className="p-2.5 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] transition-all">
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
@@ -237,7 +237,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Opacity</span>
-              <span className="text-[9px] font-black text-indigo-400">{kit.logoOpacity}%</span>
+              <span className="text-[9px] font-black text-[var(--tint-indigo-fg)]">{kit.logoOpacity}%</span>
             </div>
             <input type="range" min={20} max={100} step={5} value={kit.logoOpacity}
               onChange={e => updateKit('logoOpacity', parseInt(e.target.value))}
@@ -264,7 +264,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
         <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave}
           className={`flex-1 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${
             saved
-              ? 'bg-emerald-600/20 border border-emerald-500/30 text-emerald-400'
+              ? 'bg-emerald-600/20 border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
               : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-indigo-600/20'
           }`}>
           {saved ? <><CheckCircle2 className="w-3.5 h-3.5" />Saved!</> : <><Save className="w-3.5 h-3.5" />Save Kit</>}

@@ -60,8 +60,8 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div className="flex items-center gap-6">
-                <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
-                    <FlaskConical className="w-6 h-6 text-indigo-400" />
+                <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                    <FlaskConical className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <div>
                 <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Oracle Sandbox</h4>
@@ -86,12 +86,12 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                     className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10"
                 >
                     {sandbox.variants.map((variant) => (
-                        <div key={variant.variantId} className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-6 group hover:border-indigo-500/20 transition-all">
+                        <div key={variant.variantId} className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-6 group hover:border-[var(--tint-indigo-edge)] transition-all">
                             <div className="flex items-center justify-between">
                                 <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg">
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{variant.variantId}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-indigo-400">
+                                <div className="flex items-center gap-2 text-[var(--tint-indigo-fg)]">
                                     <TrendingUp className="w-3.5 h-3.5" />
                                     <span className="text-[10px] font-black italic">{(variant.velocity * 100).toFixed(0)}% Lift</span>
                                 </div>
@@ -115,7 +115,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                                     <DollarSign className="w-3 h-3" />
                                     <span className="text-[10px] font-black">${variant.budget.toFixed(2)}</span>
                                 </div>
-                                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="p-2 bg-[var(--tint-indigo-bg)] rounded-lg text-[var(--tint-indigo-fg)] opacity-0 group-hover:opacity-100 transition-opacity">
                                     <ArrowUpRight className="w-4 h-4" />
                                 </div>
                             </div>
@@ -148,7 +148,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                     </div>
                 </div>
                 <div className="flex items-center gap-6">
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic animate-pulse">Scanning viral nodes...</span>
+                    <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic animate-pulse">Scanning viral nodes...</span>
                     <div className="h-4 w-40 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
                         <div className="h-full bg-indigo-500/50 w-2/3 rounded-full animate-progress" />
                     </div>

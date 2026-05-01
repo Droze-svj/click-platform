@@ -38,7 +38,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div>
-            <h2 className="text-xl font-black uppercase tracking-[0.2em] italic text-violet-400 flex items-center gap-3">
+            <h2 className="text-xl font-black uppercase tracking-[0.2em] italic text-[var(--tint-violet-fg)] flex items-center gap-3">
               <Lightbulb className="w-5 h-5" />
               Strategic Intelligence // Cognitive Loop
             </h2>
@@ -73,8 +73,8 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
         {/* Left: WIN Summary */}
         <div className="col-span-4 bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 flex flex-col gap-6">
            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                 <Target className="w-4 h-4 text-emerald-400" />
+              <div className="p-2 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
+                 <Target className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
               </div>
               <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Winning DNA Summary: {selectedNiche}</h3>
            </div>
@@ -89,11 +89,11 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
               <div className="grid grid-cols-2 gap-3">
                  <div className="p-4 rounded-3xl bg-white/5 border border-white/5 text-center">
                     <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Avg. Hook CTR</p>
-                    <p className="text-xl font-black text-emerald-400">12.4%</p>
+                    <p className="text-xl font-black text-[var(--tint-emerald-fg)]">12.4%</p>
                  </div>
                  <div className="p-4 rounded-3xl bg-white/5 border border-white/5 text-center">
                     <p className="text-[8px] font-black text-slate-500 uppercase mb-1">Conversion Velocity</p>
-                    <p className="text-xl font-black text-violet-400">High</p>
+                    <p className="text-xl font-black text-[var(--tint-violet-fg)]">High</p>
                  </div>
               </div>
            </div>
@@ -104,7 +104,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 overflow-y-auto custom-scrollbar">
               <div className="flex items-center justify-between mb-8">
                  <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Autonomous Strategy for {selectedNiche}</h3>
-                 <span className="text-[8px] px-2 py-1 rounded bg-violet-500/20 text-violet-400 font-black uppercase">Stress-Test Live</span>
+                 <span className="text-[8px] px-2 py-1 rounded bg-[var(--tint-violet-bg)] text-[var(--tint-violet-fg)] font-black uppercase">Stress-Test Live</span>
               </div>
 
               <div className="space-y-6">
@@ -114,14 +114,14 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
                      transition={{ delay: i * 0.1 }}
-                     className="group relative p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-violet-500/30 transition-all cursor-pointer"
+                     className="group relative p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-[var(--tint-violet-edge)] transition-all cursor-pointer"
                    >
                      <div className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-violet-500 transition-colors">
                         <Zap className="w-3 h-3 text-white" />
                      </div>
 
                      <div className="flex items-start gap-5">
-                        <div className="w-10 h-10 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center font-black text-violet-400 text-sm italic">
+                        <div className="w-10 h-10 rounded-full bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] flex items-center justify-center font-black text-[var(--tint-violet-fg)] text-sm italic">
                           0{i+1}
                         </div>
                         <div className="flex-1">
@@ -129,12 +129,12 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
                            <p className="text-[10px] text-slate-400 leading-relaxed mb-4 italic">&ldquo;{pivot.reason}&rdquo;</p>
                            <div className="flex items-center justify-between mt-4">
                                <div className="flex items-center gap-2">
-                                  <TrendingUp className="w-3 h-3 text-emerald-400" />
-                                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Impact: {pivot.expectedImpact}</span>
+                                  <TrendingUp className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
+                                  <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest">Impact: {pivot.expectedImpact}</span>
                                </div>
-                               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                                  <ShieldCheck className="w-2.5 h-2.5 text-indigo-400" />
-                                  <span className="text-[8px] font-black text-indigo-400 uppercase">Confidence: {pivot.confidence || 92}%</span>
+                               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                                  <ShieldCheck className="w-2.5 h-2.5 text-[var(--tint-indigo-fg)]" />
+                                  <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase">Confidence: {pivot.confidence || 92}%</span>
                                </div>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
                    </motion.div>
                  )) : (
                      <div className="h-64 flex flex-col items-center justify-center text-slate-600 gap-4 opacity-40 italic">
-                       {loading ? <Zap className="w-12 h-12 animate-pulse text-violet-400" /> : <BarChart3 className="w-12 h-12" />}
+                       {loading ? <Zap className="w-12 h-12 animate-pulse text-[var(--tint-violet-fg)]" /> : <BarChart3 className="w-12 h-12" />}
                        <p className="text-xs uppercase tracking-widest">{loading ? `Synthesizing ${selectedNiche} Strategy...` : 'Analyzing platform signals...'}</p>
                     </div>
                  )}

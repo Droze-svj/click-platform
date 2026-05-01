@@ -73,7 +73,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
 
                 <div className={`px-6 py-4 rounded-2xl flex items-center gap-4 border transition-all ${
                     isEvolutionWindow 
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                    ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]' 
                     : 'bg-white/5 border-white/10 text-slate-500'
                 }`}>
                     <Clock className="w-4 h-4" />
@@ -90,7 +90,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8`}>
                     <div className="flex items-center justify-between">
                         <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Action Matrix</h5>
-                        <Sparkles className="w-5 h-5 text-amber-400" />
+                        <Sparkles className="w-5 h-5 text-[var(--tint-amber-fg)]" />
                     </div>
 
                     <div className="space-y-4">
@@ -105,8 +105,8 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                                 >
                                     <div className="flex items-center gap-5">
                                         <div className="p-3 bg-white/5 rounded-xl">
-                                            {action.type === 'ADJUST_VOLUME' && <Volume2 className="w-4 h-4 text-indigo-400" />}
-                                            {action.type === 'STABILIZE' && <Zap className="w-4 h-4 text-amber-400" />}
+                                            {action.type === 'ADJUST_VOLUME' && <Volume2 className="w-4 h-4 text-[var(--tint-indigo-fg)]" />}
+                                            {action.type === 'STABILIZE' && <Zap className="w-4 h-4 text-[var(--tint-amber-fg)]" />}
                                             {action.type === 'ENLARGE_TEXT' && <Maximize className="w-4 h-4 text-blue-400" />}
                                         </div>
                                         <div>
@@ -132,7 +132,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
 
                 {/* Evolution Trigger */}
                 <div className="flex flex-col gap-6">
-                    <div className={`${glassStyle} rounded-[2.5rem] p-10 flex-1 flex flex-col items-center justify-center text-center space-y-8 border-2 border-dashed border-white/5 group hover:border-amber-500/20 transition-all`}>
+                    <div className={`${glassStyle} rounded-[2.5rem] p-10 flex-1 flex flex-col items-center justify-center text-center space-y-8 border-2 border-dashed border-white/5 group hover:border-[var(--tint-amber-edge)] transition-all`}>
                         <div className="p-8 rounded-[3rem] bg-white/5 group-hover:bg-amber-500 text-white transition-all shadow-2xl relative">
                             <RefreshCw className={`w-12 h-12 ${loading ? 'animate-spin' : ''}`} />
                             {loading && (

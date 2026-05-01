@@ -60,7 +60,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
       {/* Elite Sub-Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-12 text-center md:text-left pt-4">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] italic text-emerald-400 shadow-xl">
+          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-emerald-fg)] shadow-xl">
             <Sparkles className="w-4 h-4 animate-pulse" />
             Neural Extraction
           </div>
@@ -78,7 +78,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
           <button
             onClick={() => setActivePreview(!activePreview)}
             title={activePreview ? "Disable AI Preview" : "Enable AI Preview"}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase italic transition-all ${activePreview ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase italic transition-all ${activePreview ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
           >
             <Eye className={`w-3 h-3 ${activePreview ? 'animate-pulse' : ''}`} />
             AI Render Preview
@@ -103,7 +103,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
                 {/* Simulated Matrix Background Extraction */}
                 <div className="absolute inset-0 z-0 bg-transparent flex items-center justify-center">
                   <div className={`absolute inset-0 backdrop-blur-sm transition-all duration-[2s] ${chromaKey.enabled ? 'bg-emerald-500/5' : 'bg-[#00ff00]'}`} style={{ backgroundColor: chromaKey.enabled ? 'transparent' : chromaKey.color }} />
-                  <div className={`absolute inset-0 border-[4px] border-dashed rounded-[2rem] m-6 transition-all duration-[2s] ${chromaKey.enabled ? 'border-emerald-500/30 rotate-3 scale-105 opacity-100' : 'border-black/20 opacity-30'}`} />
+                  <div className={`absolute inset-0 border-[4px] border-dashed rounded-[2rem] m-6 transition-all duration-[2s] ${chromaKey.enabled ? 'border-[var(--tint-emerald-edge)] rotate-3 scale-105 opacity-100' : 'border-black/20 opacity-30'}`} />
                 </div>
                 {/* Subject Placeholder */}
                 <div className="relative z-10 w-32 h-48 bg-gradient-to-b from-white/90 to-slate-400/90 rounded-[2rem] border border-white/20 shadow-2xl flex items-center justify-center mt-12 group-hover:scale-105 transition-transform">
@@ -112,8 +112,8 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
                 {/* Holographic readout */}
                 {chromaKey.enabled && (
                   <div className="absolute top-6 left-8 z-20 space-y-2">
-                    <div className="px-3 py-1 rounded bg-black/40 border border-emerald-500/30 text-[9px] font-mono text-emerald-400">TOL: {(chromaKey.tolerance * 100).toFixed(0)}%</div>
-                    <div className="px-3 py-1 rounded bg-black/40 border border-emerald-500/30 text-[9px] font-mono text-emerald-400">SPL: {(chromaKey.spill * 100).toFixed(0)}%</div>
+                    <div className="px-3 py-1 rounded bg-black/40 border border-[var(--tint-emerald-edge)] text-[9px] font-mono text-[var(--tint-emerald-fg)]">TOL: {(chromaKey.tolerance * 100).toFixed(0)}%</div>
+                    <div className="px-3 py-1 rounded bg-black/40 border border-[var(--tint-emerald-edge)] text-[9px] font-mono text-[var(--tint-emerald-fg)]">SPL: {(chromaKey.spill * 100).toFixed(0)}%</div>
                   </div>
                 )}
               </div>
@@ -177,7 +177,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
                 { label: 'Spill Suppression', prop: 'spill' as keyof ChromaKeySettings, desc: 'Color bounce removal' },
                 { label: 'Edge Softness', prop: 'edge' as keyof ChromaKeySettings, desc: 'Border feathering' }
               ].map((slider) => (
-                <div key={slider.prop} className="bg-black/40 p-5 rounded-[1.5rem] border border-white/5 group hover:border-emerald-500/30 transition-colors">
+                <div key={slider.prop} className="bg-black/40 p-5 rounded-[1.5rem] border border-white/5 group hover:border-[var(--tint-emerald-edge)] transition-colors">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400">{slider.label}</span>
@@ -237,7 +237,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
               <button
                 onClick={() => showToast('Optimization routine running...', 'info')}
                 title="Optimize Neural Weights"
-                className="px-6 py-4 rounded-[1.5rem] bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500/20 transition-all"
+                className="px-6 py-4 rounded-[1.5rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] font-black text-[10px] uppercase tracking-widest hover:bg-[var(--tint-indigo-bg)] transition-all"
               >
                 Optimize Weights
               </button>

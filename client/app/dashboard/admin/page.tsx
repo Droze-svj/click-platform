@@ -138,7 +138,7 @@ export default function SovereignOversightTerminalPage() {
 
   if (error || !data) return (
     <div className="min-h-screen bg-[#020205] flex items-center justify-center p-10">
-       <div className={`${glassStyle} p-12 rounded-[3rem] border-rose-500/20 text-center max-w-xl`}>
+       <div className={`${glassStyle} p-12 rounded-[3rem] border-[var(--tint-rose-edge)] text-center max-w-xl`}>
           <ShieldAlert size={64} className="text-rose-500 mx-auto mb-8 animate-bounce" />
           <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Oversight Error</h2>
           <p className="text-slate-400 text-[13px] font-black uppercase tracking-widest italic mb-10">{error || 'UNAUTHORIZED_ACCESS_DETECTED'}</p>
@@ -160,19 +160,19 @@ export default function SovereignOversightTerminalPage() {
         {/* Global Oversight Header */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <div className="w-20 h-20 bg-amber-500/5 border border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-20 h-20 bg-amber-500/5 border border-[var(--tint-amber-edge)] rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent opacity-100" />
-                <Shield size={40} className="text-amber-400 relative z-10 group-hover:scale-110 transition-transform duration-700" />
+                <Shield size={40} className="text-[var(--tint-amber-fg)] relative z-10 group-hover:scale-110 transition-transform duration-700" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Binary size={14} className="text-amber-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">Oversight Matrix v9.2.0</span>
+                      <Binary size={14} className="text-[var(--tint-amber-fg)] animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[var(--tint-amber-fg)] italic leading-none">Oversight Matrix v9.2.0</span>
                    </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <ShieldCheck size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">AUTHORIZED_ROOT</span>
+                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-inner">
+                       <ShieldCheck size={12} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                       <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">AUTHORIZED_ROOT</span>
                    </div>
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Admin</h1>
@@ -193,10 +193,10 @@ export default function SovereignOversightTerminalPage() {
 
         {/* Global Vitality Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-           <VitalityCard icon={Users} label="Node Operatives" value={data.overview.users.total} trend={`${data.overview.users.verified} Verified`} color="text-indigo-400" bg="bg-indigo-500/10" />
-           <VitalityCard icon={FileText} label="Content Payloads" value={data.overview.posts.total} trend={`${data.overview.posts.published} Published`} color="text-emerald-400" bg="bg-emerald-500/10" />
-           <VitalityCard icon={Orbit} label="Neural Sync Nodes" value={data.overview.social.connected_accounts} trend="LATTICE_ACTIVE" color="text-fuchsia-400" bg="bg-fuchsia-500/10" />
-           <VitalityCard icon={Activity} label="Lattice Vitality" value={data.system_health.database === 'healthy' ? 'OPTIMAL' : 'ANOMALY'} trend={`Uptime: ${formatUptime(data.system_health.uptime)}`} color="text-amber-400" bg="bg-amber-500/10" isHealthy={data.system_health.database === 'healthy'} />
+           <VitalityCard icon={Users} label="Node Operatives" value={data.overview.users.total} trend={`${data.overview.users.verified} Verified`} color="text-[var(--tint-indigo-fg)]" bg="bg-[var(--tint-indigo-bg)]" />
+           <VitalityCard icon={FileText} label="Content Payloads" value={data.overview.posts.total} trend={`${data.overview.posts.published} Published`} color="text-[var(--tint-emerald-fg)]" bg="bg-[var(--tint-emerald-bg)]" />
+           <VitalityCard icon={Orbit} label="Neural Sync Nodes" value={data.overview.social.connected_accounts} trend="LATTICE_ACTIVE" color="text-[var(--tint-fuchsia-fg)]" bg="bg-[var(--tint-fuchsia-bg)]" />
+           <VitalityCard icon={Activity} label="Lattice Vitality" value={data.system_health.database === 'healthy' ? 'OPTIMAL' : 'ANOMALY'} trend={`Uptime: ${formatUptime(data.system_health.uptime)}`} color="text-[var(--tint-amber-fg)]" bg="bg-[var(--tint-amber-bg)]" isHealthy={data.system_health.database === 'healthy'} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 relative z-10">
@@ -205,7 +205,7 @@ export default function SovereignOversightTerminalPage() {
               <div className={`${glassStyle} p-12 rounded-[5rem] border-white/5 shadow-inner`}>
                  <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 mb-8">
                     <div className="flex items-center gap-6">
-                       <Scan size={24} className="text-amber-400" />
+                       <Scan size={24} className="text-[var(--tint-amber-fg)]" />
                        <h3 className="text-[14px] font-black text-white uppercase tracking-[0.5em] italic">Resonance Feed</h3>
                     </div>
                     <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-white transition-colors italic">VIEW_ALL_LOGS</button>
@@ -213,12 +213,12 @@ export default function SovereignOversightTerminalPage() {
                  
                  <div className="space-y-12 p-4">
                     <div className="space-y-6">
-                       <label className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic pl-6">New Operative Signatures</label>
+                       <label className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.6em] italic pl-6">New Operative Signatures</label>
                        <div className="grid grid-cols-1 gap-4">
                           {data.recent_activity.users.slice(0, 4).map((user) => (
-                            <div key={user.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-indigo-500/30 transition-all duration-700 flex items-center justify-between shadow-inner">
+                            <div key={user.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all duration-700 flex items-center justify-between shadow-inner">
                                <div className="flex items-center gap-6">
-                                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/5 border border-[var(--tint-indigo-edge)] flex items-center justify-center text-[var(--tint-indigo-fg)] group-hover:scale-110 transition-transform">
                                      <UserCheck size={24} />
                                   </div>
                                   <div>
@@ -236,12 +236,12 @@ export default function SovereignOversightTerminalPage() {
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.6em] italic pl-6">Pending Content Payloads</label>
+                       <label className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.6em] italic pl-6">Pending Content Payloads</label>
                        <div className="grid grid-cols-1 gap-4">
                           {data.recent_activity.posts.slice(0, 4).map((post) => (
-                            <div key={post.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-emerald-500/30 transition-all duration-700 flex items-center justify-between shadow-inner">
+                            <div key={post.id} className="group p-8 rounded-[2.5rem] bg-black/60 border border-white/5 hover:border-[var(--tint-emerald-edge)] transition-all duration-700 flex items-center justify-between shadow-inner">
                                <div className="flex items-center gap-6 max-w-[70%]">
-                                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform flex-shrink-0">
+                                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 border border-[var(--tint-emerald-edge)] flex items-center justify-center text-[var(--tint-emerald-fg)] group-hover:scale-110 transition-transform flex-shrink-0">
                                      <FileText size={24} />
                                   </div>
                                   <div className="truncate">
@@ -251,7 +251,7 @@ export default function SovereignOversightTerminalPage() {
                                </div>
                                <div className="text-right">
                                   <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest italic ${
-                                     post.status === 'published' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                     post.status === 'published' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]' : 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)]'
                                   }`}>
                                      {post.status.toUpperCase()}
                                   </span>
@@ -269,7 +269,7 @@ export default function SovereignOversightTerminalPage() {
            <div className="space-y-16">
               <div className={`${glassStyle} p-12 rounded-[5rem] border-white/5 shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] bg-black/40`}>
                  <div className="flex items-center gap-6 border-b border-white/5 pb-8 mb-10 px-4">
-                    <Database size={20} className="text-amber-400" />
+                    <Database size={20} className="text-[var(--tint-amber-fg)]" />
                     <h3 className="text-[13px] font-black text-white uppercase tracking-[0.5em] italic">Core Vitality</h3>
                  </div>
                  
@@ -280,7 +280,7 @@ export default function SovereignOversightTerminalPage() {
                     <div className="pt-6 border-t border-white/5">
                        <div className="flex justify-between items-center mb-4 px-2">
                           <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Cognitive Buffer</label>
-                          <span className="text-[11px] font-mono text-indigo-400 font-bold">
+                          <span className="text-[11px] font-mono text-[var(--tint-indigo-fg)] font-bold">
                              {formatMemory(data.system_health.memory.heapUsed)}/ {formatMemory(data.system_health.memory.heapTotal)}
                           </span>
                        </div>
@@ -300,9 +300,9 @@ export default function SovereignOversightTerminalPage() {
               <div className="space-y-6">
                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.8em] italic pl-8">Quick Oversight Commands</h4>
                  <div className="grid grid-cols-1 gap-6">
-                    <CommandButton icon={Users} label="Manage_Node_Operatives" desc="View and calibrate operative permissions" color="text-indigo-400" onClick={() => router.push('/dashboard/admin/users')} />
-                    <CommandButton icon={FileText} label="Moderate_Payloads" desc="Review and authorize content flows" color="text-emerald-400" onClick={() => router.push('/dashboard/admin/posts')} />
-                    <CommandButton icon={BarChart3} label="Global_Lattice_Analytics" desc="Full-spectrum system telemetry" color="text-fuchsia-400" onClick={() => router.push('/dashboard/admin/analytics')} />
+                    <CommandButton icon={Users} label="Manage_Node_Operatives" desc="View and calibrate operative permissions" color="text-[var(--tint-indigo-fg)]" onClick={() => router.push('/dashboard/admin/users')} />
+                    <CommandButton icon={FileText} label="Moderate_Payloads" desc="Review and authorize content flows" color="text-[var(--tint-emerald-fg)]" onClick={() => router.push('/dashboard/admin/posts')} />
+                    <CommandButton icon={BarChart3} label="Global_Lattice_Analytics" desc="Full-spectrum system telemetry" color="text-[var(--tint-fuchsia-fg)]" onClick={() => router.push('/dashboard/admin/analytics')} />
                  </div>
               </div>
            </div>
@@ -341,7 +341,7 @@ function HealthRow({ label, status }: { label: string; status: string }) {
        <span className="text-[12px] font-black text-white uppercase italic tracking-[0.3em]">{label}</span>
        <div className="flex items-center gap-4">
           <div className={`w-3 h-3 rounded-full ${isHealthy ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-rose-500 animate-pulse outline outline-rose-500/30'}`} />
-          <span className={`text-[11px] font-black uppercase italic tracking-widest ${isHealthy ? 'text-emerald-400' : 'text-rose-500'}`}>{status.toUpperCase()}</span>
+          <span className={`text-[11px] font-black uppercase italic tracking-widest ${isHealthy ? 'text-[var(--tint-emerald-fg)]' : 'text-rose-500'}`}>{status.toUpperCase()}</span>
        </div>
     </div>
   )

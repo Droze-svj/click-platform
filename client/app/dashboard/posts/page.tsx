@@ -32,17 +32,17 @@ interface Post {
 const STATUS_CFG = {
   published: { 
     label: 'DEPLOYED_PHANTOM', 
-    color: 'text-emerald-400', 
-    bg: 'bg-emerald-500/10', 
-    border: 'border-emerald-500/20', 
+    color: 'text-[var(--tint-emerald-fg)]', 
+    bg: 'bg-[var(--tint-emerald-bg)]', 
+    border: 'border-[var(--tint-emerald-edge)]', 
     dot: 'bg-emerald-500',
     glow: 'shadow-[0_0_20px_rgba(16,185,129,0.5)]'
   },
   scheduled: { 
     label: 'LOCKED_TRAJECTORY', 
-    color: 'text-indigo-400', 
-    bg: 'bg-indigo-500/10', 
-    border: 'border-indigo-500/20', 
+    color: 'text-[var(--tint-indigo-fg)]', 
+    bg: 'bg-[var(--tint-indigo-bg)]', 
+    border: 'border-[var(--tint-indigo-edge)]', 
     dot: 'bg-indigo-500',
     glow: 'shadow-[0_0_20px_rgba(99,102,241,0.5)]'
   },
@@ -109,9 +109,9 @@ export default function SignalDiffusionArchivePage() {
 
   const STATS = [
     { label: 'Payload Particles', val: posts.length, color: 'text-white', icon: Database },
-    { label: 'Deployed Phantoms', val: posts.filter(p => p.status === 'published').length, color: 'text-emerald-400', icon: Activity },
-    { label: 'Locked Trajectories', val: posts.filter(p => p.status === 'scheduled').length, color: 'text-indigo-400', icon: Target },
-    { label: 'Inert Particles', val: posts.filter(p => p.status === 'draft').length, color: 'text-rose-400', icon: Cpu },
+    { label: 'Deployed Phantoms', val: posts.filter(p => p.status === 'published').length, color: 'text-[var(--tint-emerald-fg)]', icon: Activity },
+    { label: 'Locked Trajectories', val: posts.filter(p => p.status === 'scheduled').length, color: 'text-[var(--tint-indigo-fg)]', icon: Target },
+    { label: 'Inert Particles', val: posts.filter(p => p.status === 'draft').length, color: 'text-[var(--tint-rose-fg)]', icon: Cpu },
   ]
 
   return (
@@ -132,15 +132,15 @@ export default function SignalDiffusionArchivePage() {
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Archive size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <Archive size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Signal Diffusion v24.8.4</span>
+                      <Fingerprint size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-indigo-fg)] italic leading-none">Signal Diffusion v24.8.4</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
@@ -154,7 +154,7 @@ export default function SignalDiffusionArchivePage() {
 
            <div className="flex items-center gap-12">
               <button onClick={() => loadLattice(true)} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-                 <RefreshCw size={32} className={`text-slate-500 group-hover:text-indigo-400 transition-colors duration-700 ${refreshing ? 'animate-spin' : ''}`} />
+                 <RefreshCw size={32} className={`text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               <Link href="/dashboard/posts/create"
                 className="px-16 py-8 bg-white text-black rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:bg-indigo-600 hover:text-white transition-all duration-300 flex items-center gap-8 italic active:scale-95 group relative overflow-hidden outline-none border-none"
@@ -196,7 +196,7 @@ export default function SignalDiffusionArchivePage() {
                  ))}
               </div>
               <div className="flex items-center gap-10 relative z-10">
-                <div className="text-[13px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">
+                <div className="text-[13px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none border-l-4 border-[var(--tint-indigo-edge)] pl-8 ml-4">
                   {posts.length} TRAJECTORIES_ONLINE
                 </div>
                 <div className="w-4 h-4 rounded-full bg-indigo-500 animate-ping shadow-[0_0_20px_rgba(99,102,241,1)]" />
@@ -220,7 +220,7 @@ export default function SignalDiffusionArchivePage() {
                        return (
                          <motion.div 
                            initial={{ opacity: 0, scale: 0.9, y: 50 }} whileInView={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8, delay: i * 0.05 }}
-                           key={post.id} className="group relative flex flex-col bg-[#050505] border-2 border-white/5 rounded-[5.5rem] overflow-hidden hover:border-indigo-500/40 hover:bg-white/[0.04] transition-all duration-300 shadow-[0_40px_100px_rgba(0,0,0,1)] hover:shadow-indigo-500/[0.05]"
+                           key={post.id} className="group relative flex flex-col bg-[#050505] border-2 border-white/5 rounded-[5.5rem] overflow-hidden hover:border-[var(--tint-indigo-edge)] hover:bg-white/[0.04] transition-all duration-300 shadow-[0_40px_100px_rgba(0,0,0,1)] hover:shadow-indigo-500/[0.05]"
                          >
                             <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-300 pointer-events-none group-hover:scale-150 rotate-12"><Database size={300} /></div>
                             
@@ -230,18 +230,18 @@ export default function SignalDiffusionArchivePage() {
                                   <span className={`text-[12px] font-black uppercase tracking-[0.4em] ${cfg.color} italic leading-none`}>{cfg.label}</span>
                                </div>
                                {post.categories?.[0] && (
-                                 <div className="px-6 py-2 rounded-2xl bg-indigo-500/5 text-indigo-400 border-2 border-indigo-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-inner">
+                                 <div className="px-6 py-2 rounded-2xl bg-indigo-500/5 text-[var(--tint-indigo-fg)] border-2 border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-widest italic shadow-inner">
                                    {post.categories[0]}
                                  </div>
                                )}
                             </div>
                             
                             <div className="p-14 flex-1 space-y-10 relative z-10 bg-gradient-to-br from-white/[0.02] to-transparent">
-                               <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-700 drop-shadow-2xl">{post.title || 'UNNAMED_PHANTOM'}</h3>
+                               <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700 drop-shadow-2xl">{post.title || 'UNNAMED_PHANTOM'}</h3>
                                {post.excerpt && <p className="text-[15px] text-slate-500 font-extrabold italic uppercase leading-relaxed line-clamp-3 tracking-tighter opacity-80 group-hover:text-white transition-colors">{post.excerpt}</p>}
                                <div className="flex flex-wrap gap-4 pt-6 border-t-2 border-white/5">
                                   {post.tags?.slice(0, 3).map((tag, i) => (
-                                    <span key={i} className="px-5 py-2.5 rounded-2xl bg-black/60 border-2 border-white/5 text-[11px] font-black text-slate-500 uppercase italic tracking-[0.2em] group-hover:border-indigo-500/20 group-hover:text-white transition-all shadow-inner">#{tag}</span>
+                                    <span key={i} className="px-5 py-2.5 rounded-2xl bg-black/60 border-2 border-white/5 text-[11px] font-black text-slate-500 uppercase italic tracking-[0.2em] group-hover:border-[var(--tint-indigo-edge)] group-hover:text-white transition-all shadow-inner">#{tag}</span>
                                   ))}
                                </div>
                             </div>
@@ -260,12 +260,12 @@ export default function SignalDiffusionArchivePage() {
                                         <div className="absolute inset-0 bg-indigo-500 opacity-0 group-hover/edit:opacity-20 transition-opacity" />
                                         <Edit size={28} className="group-hover/edit:rotate-12 transition-transform relative z-10" />
                                      </button>
-                                     <button onClick={() => router.push(`/dashboard/analytics`)} className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all shadow-3xl active:scale-75 hover:scale-110 relative overflow-hidden group/stats">
+                                     <button onClick={() => router.push(`/dashboard/analytics`)} className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center text-[var(--tint-indigo-fg)] hover:bg-indigo-600 hover:text-white transition-all shadow-3xl active:scale-75 hover:scale-110 relative overflow-hidden group/stats">
                                         <BarChart2 size={28} className="group-hover/stats:scale-110 transition-transform relative z-10" />
                                      </button>
                                   </div>
                                </div>
-                               <button onClick={() => handlePurge(post.id)} className="w-16 h-16 rounded-[1.8rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-3xl active:scale-75 group/purge">
+                               <button onClick={() => handlePurge(post.id)} className="w-16 h-16 rounded-[1.8rem] bg-rose-500/5 border-2 border-[var(--tint-rose-edge)] flex items-center justify-center text-rose-500 hover:bg-rose-600 hover:text-white transition-all shadow-3xl active:scale-75 group/purge">
                                   <Trash2 size={28} className="group-hover/purge:rotate-[30deg] transition-transform" />
                                </button>
                             </div>
@@ -285,9 +285,9 @@ export default function SignalDiffusionArchivePage() {
                    <span className="text-[13px] font-black text-slate-500 uppercase tracking-[1em] italic opacity-40">TEMPORAL_FRAME_{currentPage}</span>
                 </div>
                 <div className="flex items-center gap-10 p-2 bg-black/40 rounded-[3rem] border-2 border-white/5 shadow-inner">
-                   <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-18 h-18 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-3xl hover:border-indigo-500/40"><ChevronLeft size={36}/></button>
+                   <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-18 h-18 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-3xl hover:border-[var(--tint-indigo-edge)]"><ChevronLeft size={36}/></button>
                    <div className="w-1 h-8 bg-white/5 rounded-full" />
-                   <button onClick={() => setCurrentPage(p => p + 1)} disabled={posts.length < PAGE_SIZE} className="w-18 h-18 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-3xl hover:border-indigo-500/40"><ChevronRight size={36}/></button>
+                   <button onClick={() => setCurrentPage(p => p + 1)} disabled={posts.length < PAGE_SIZE} className="w-18 h-18 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-5 transition-all active:scale-75 shadow-3xl hover:border-[var(--tint-indigo-edge)]"><ChevronRight size={36}/></button>
                 </div>
              </div>
            )}

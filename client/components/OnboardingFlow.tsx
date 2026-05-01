@@ -213,13 +213,13 @@ function WelcomeStep() {
   return (
     <div className="text-center space-y-8 py-4">
       <div className="relative inline-block">
-        <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
+        <div className="absolute inset-0 bg-[var(--tint-indigo-bg)] blur-3xl rounded-full" />
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          className="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center"
+          className="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-dashed border-[var(--tint-indigo-edge)] flex items-center justify-center"
         >
-          <Rocket className="w-16 h-16 md:w-20 md:h-20 text-indigo-400" />
+          <Rocket className="w-16 h-16 md:w-20 md:h-20 text-[var(--tint-indigo-fg)]" />
         </motion.div>
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
@@ -242,9 +242,9 @@ function WelcomeStep() {
 function ProfileStep({ onComplete }: { onComplete: () => void }) {
   const [selected, setSelected] = useState('')
   const niches = [
-    { id: 'tech', name: 'Technology', icon: <Zap className="w-5 h-5 text-indigo-400" /> },
-    { id: 'finance', name: 'Finance', icon: <ShieldCheck className="w-5 h-5 text-emerald-400" /> },
-    { id: 'media', name: 'Media/Ent', icon: <Video className="w-5 h-5 text-rose-400" /> },
+    { id: 'tech', name: 'Technology', icon: <Zap className="w-5 h-5 text-[var(--tint-indigo-fg)]" /> },
+    { id: 'finance', name: 'Finance', icon: <ShieldCheck className="w-5 h-5 text-[var(--tint-emerald-fg)]" /> },
+    { id: 'media', name: 'Media/Ent', icon: <Video className="w-5 h-5 text-[var(--tint-rose-fg)]" /> },
     { id: 'creators', name: 'Creators', icon: <Users className="w-5 h-5 text-blue-400" /> }
   ]
 
@@ -285,7 +285,7 @@ function ExploreFeaturesStep() {
     <div className="space-y-6">
       {highlights.map((h, i) => (
         <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/5 flex items-center gap-6 group hover:bg-white/10 transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--tint-indigo-bg)] flex items-center justify-center text-[var(--tint-indigo-fg)] group-hover:scale-110 transition-transform">
             {h.icon}
           </div>
           <div>

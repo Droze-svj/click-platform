@@ -135,10 +135,10 @@ export default function TeamPresence() {
       </motion.button>
 
       {/* Collective Strategy Signal (Phase 10) */}
-      <div className="hidden lg:flex px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 items-center gap-3 shadow-lg shadow-indigo-500/5">
+      <div className="hidden lg:flex px-4 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] items-center gap-3 shadow-lg shadow-indigo-500/5">
          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
          <div className="flex flex-col">
-            <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest italic leading-none">Collective Strategy</span>
+            <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic leading-none">Collective Strategy</span>
             <span className="text-[9px] font-bold text-white uppercase italic mt-0.5">Focus: AI Productivity (High velocity)</span>
          </div>
       </div>

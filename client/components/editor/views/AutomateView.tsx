@@ -296,7 +296,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     <div className="space-y-8 max-w-6xl mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row items-start justify-between gap-8">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-3 px-5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400">
+          <div className="inline-flex items-center gap-3 px-5 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)]">
             <Zap className="w-3.5 h-3.5 animate-pulse" />
             Neural Automations
           </div>
@@ -304,7 +304,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
         </div>
       </div>
 
-      <motion.div className={`${glassStyle} rounded-[3rem] p-8 border-indigo-500/20 overflow-hidden relative group`}>
+      <motion.div className={`${glassStyle} rounded-[3rem] p-8 border-[var(--tint-indigo-edge)] overflow-hidden relative group`}>
         <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center gap-8">
           <div className="flex items-center gap-5 flex-1">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg"><Wand2 className="w-7 h-7 text-white" /></div>
@@ -335,22 +335,22 @@ const AutomateView: React.FC<AutomateViewProps> = ({
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-8 space-y-6">
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
-                  <p className="text-[8px] font-black text-indigo-400 uppercase mb-1">Hook Score</p>
+                  <p className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase mb-1">Hook Score</p>
                   <p className="text-3xl font-black text-white italic">{pipelineResult.hookScore}%</p>
                 </div>
                 <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
-                  <p className="text-[8px] font-black text-emerald-400 uppercase mb-1">Sales Score</p>
+                  <p className="text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase mb-1">Sales Score</p>
                   <p className="text-3xl font-black text-white italic">{pipelineResult.roiData?.salesScore}%</p>
                 </div>
                 <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
-                  <p className="text-[8px] font-black text-amber-400 uppercase mb-1">Estimated ROI</p>
+                  <p className="text-[8px] font-black text-[var(--tint-amber-fg)] uppercase mb-1">Estimated ROI</p>
                   <p className="text-2xl font-black text-white italic">${pipelineResult.roiData?.estimatedROI.toLocaleString()}</p>
                 </div>
               </div>
 
               {/* Ad Scaling Hub */}
               {pipelineResult.adPotential?.isHighPotential && (
-                <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="p-6 rounded-[2rem] bg-indigo-600/10 border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
+                <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="p-6 rounded-[2rem] bg-indigo-600/10 border border-[var(--tint-indigo-edge)] flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-indigo-500/50 shadow-lg">
                       <Rocket className="w-6 h-6 text-white" />
@@ -362,7 +362,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                       <p className="text-[8px] font-black text-indigo-400 uppercase">Est. Test CPC</p>
+                       <p className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase">Est. Test CPC</p>
                        <p className="text-lg font-black text-white italic">$0.12</p>
                     </div>
                     <button onClick={handleLaunchAds} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-600/20">Launch $5/Day Test Ad</button>
@@ -402,22 +402,22 @@ const AutomateView: React.FC<AutomateViewProps> = ({
 
               {/* Whop Monetization Bridge */}
               {pipelineResult.monetizationPlan && (
-                <div className="p-6 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/20 space-y-4">
+                <div className="p-6 rounded-[2rem] bg-emerald-500/5 border border-[var(--tint-emerald-edge)] space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <ShoppingCart className="w-5 h-5 text-emerald-400" />
+                      <ShoppingCart className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                       <p className="text-[11px] font-black text-white uppercase tracking-widest italic">Conversion-Triggered Overlays</p>
                     </div>
-                    <span className="text-[8px] font-black text-emerald-400/60 uppercase tracking-widest">Whop Sync Active</span>
+                    <span className="text-[8px] font-black text-[var(--tint-emerald-fg)]/60 uppercase tracking-widest">Whop Sync Active</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(((pipelineResult.monetizationPlan as any).triggers) || []).map((step: any, idx: number) => (
                       <div key={idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[8px] font-black text-indigo-400 uppercase px-2 py-0.5 bg-indigo-500/10 rounded-md">@{step.startTime}s</span>
+                          <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase px-2 py-0.5 bg-[var(--tint-indigo-bg)] rounded-md">@{step.startTime}s</span>
                           <div className="flex items-center gap-1">
-                             <TrendingUp className="w-3 h-3 text-emerald-400" />
-                             <span className="text-[8px] font-black text-emerald-400 uppercase">{(step.intentScore * 100).toFixed(0)}% Intent</span>
+                             <TrendingUp className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
+                             <span className="text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase">{(step.intentScore * 100).toFixed(0)}% Intent</span>
                           </div>
                         </div>
                         <p className="text-[10px] font-black text-white uppercase truncate">{step.productName}</p>
@@ -430,7 +430,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
               )}
 
               {pipelineResult.viralThumbnailUrl && (
-                <div className="p-4 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between">
+                <div className="p-4 rounded-3xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <Image src={pipelineResult.adPotential?.thumbnail || pipelineResult.viralThumbnailUrl} alt="Viral Frame" width={400} height={225} className="w-20 h-12 rounded-lg object-cover border border-white/10" />
                     <div>

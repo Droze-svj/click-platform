@@ -131,7 +131,7 @@ export default function NeuralWorkspaceHub() {
 
       {/* Hero Header */}
       <div className="space-y-8 border-b border-white/[0.05] pb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em]">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[10px] font-black uppercase tracking-[0.3em]">
           <Fingerprint className="w-3.5 h-3.5" />
           Sovereign Governance Node
         </div>
@@ -145,8 +145,8 @@ export default function NeuralWorkspaceHub() {
                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                Autonomous Permissions Sync · March 2026
             </p>
-            <p className="text-slate-400 text-sm leading-relaxed italic border-l-2 border-indigo-500/30 pl-4">
-              Multi-brand management with <span className="text-indigo-400 font-bold">Neural Clearance</span> and global compliance crystallization.
+            <p className="text-slate-400 text-sm leading-relaxed italic border-l-2 border-[var(--tint-indigo-edge)] pl-4">
+              Multi-brand management with <span className="text-[var(--tint-indigo-fg)] font-bold">Neural Clearance</span> and global compliance crystallization.
             </p>
           </div>
           <motion.button
@@ -173,7 +173,7 @@ export default function NeuralWorkspaceHub() {
                   : 'bg-white/[0.02] text-slate-500 border-white/5 hover:bg-white/[0.05] hover:text-slate-300'
               }`}
             >
-              <Building2 className={`w-4 h-4 ${selectedWorkspace?._id === ws._id ? 'text-indigo-400' : 'text-slate-600'}`} />
+              <Building2 className={`w-4 h-4 ${selectedWorkspace?._id === ws._id ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-600'}`} />
               <span className="text-[11px] font-black uppercase tracking-widest">{ws.name}</span>
               <span className="text-[9px] font-bold opacity-30 italic font-mono">/{ws.type.substring(0,3)}</span>
             </button>
@@ -191,9 +191,9 @@ export default function NeuralWorkspaceHub() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {/* Core Attributes */}
               <motion.div variants={itemVariants} className={`${glassStyle} p-10 group`}>
-                <div className="absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute -right-12 -top-12 w-48 h-48 bg-[var(--tint-indigo-bg)] blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400 shadow-inner">
+                  <div className="w-14 h-14 rounded-2xl bg-[var(--tint-indigo-bg)] flex items-center justify-center border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] shadow-inner">
                     <Building2 className="w-7 h-7" />
                   </div>
                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">Core Cluster Hub</div>
@@ -203,7 +203,7 @@ export default function NeuralWorkspaceHub() {
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Sync Status</div>
-                      <div className="text-lg font-black text-emerald-400 italic uppercase leading-none flex items-center gap-1.5">
+                      <div className="text-lg font-black text-[var(--tint-emerald-fg)] italic uppercase leading-none flex items-center gap-1.5">
                         <span className="w-1 h-1 rounded-full bg-emerald-500" /> Normal
                       </div>
                     </div>
@@ -217,7 +217,7 @@ export default function NeuralWorkspaceHub() {
                     </div>
                     <div className="space-y-2">
                       <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Residency</div>
-                      <div className="text-lg font-black text-indigo-400 italic uppercase leading-none flex items-center gap-1.5 font-mono">
+                      <div className="text-lg font-black text-[var(--tint-indigo-fg)] italic uppercase leading-none flex items-center gap-1.5 font-mono">
                         <Globe className="w-3 h-3" />
                         {selectedWorkspace.settings?.dataResidency?.region?.toUpperCase() || 'GLB'}
                       </div>
@@ -228,9 +228,9 @@ export default function NeuralWorkspaceHub() {
 
               {/* Permission Matrix */}
               <motion.div variants={itemVariants} className={`${glassStyle} p-10 group`}>
-                <div className="absolute -right-12 -top-12 w-48 h-48 bg-emerald-500/10 blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute -right-12 -top-12 w-48 h-48 bg-[var(--tint-emerald-bg)] blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="flex items-center justify-between mb-8 relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-inner">
+                  <div className="w-14 h-14 rounded-2xl bg-[var(--tint-emerald-bg)] flex items-center justify-center border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] shadow-inner">
                     <ShieldCheck className="w-7 h-7" />
                   </div>
                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">Clearance Grid</div>
@@ -244,7 +244,7 @@ export default function NeuralWorkspaceHub() {
                           {key.replace(/([A-Z])/g, ' $1').trim()}
                         </span>
                         {value ? (
-                          <div className="p-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                          <div className="p-1 rounded-md bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
                             <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                           </div>
                         ) : (
@@ -263,8 +263,8 @@ export default function NeuralWorkspaceHub() {
             <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-10 group`}>
               <div className="flex items-center justify-between border-b border-white/[0.05] pb-10">
                 <div className="flex items-center gap-4">
-                  <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                    <Activity className="w-5 h-5 text-indigo-400" />
+                  <div className="p-2.5 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                    <Activity className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Sovereign Ledger</h3>
@@ -293,12 +293,12 @@ export default function NeuralWorkspaceHub() {
                           <Clock className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-black text-white italic tracking-tight uppercase group-hover:text-indigo-400 transition-colors">{log.action}</h4>
+                          <h4 className="text-lg font-black text-white italic tracking-tight uppercase group-hover:text-[var(--tint-indigo-fg)] transition-colors">{log.action}</h4>
                           <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest font-mono mt-1 block">{new Date(log.timestamp).toLocaleString()}</span>
                         </div>
                       </div>
                       <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1">
-                        <ArrowUpRight className="w-4 h-4 text-indigo-400" />
+                        <ArrowUpRight className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                       </div>
                     </motion.div>
                   ))
@@ -343,8 +343,8 @@ export default function NeuralWorkspaceHub() {
               <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 relative group`}>
                 <div className="absolute inset-0 bg-emerald-500/05 opacity-20 pointer-events-none" />
                 <div className="flex items-center gap-4 relative z-10">
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                    <Shield className="w-5 h-5 text-emerald-400" />
+                  <div className="p-2.5 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
+                    <Shield className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Governance Status</h3>
@@ -355,7 +355,7 @@ export default function NeuralWorkspaceHub() {
                   <div className="flex items-center justify-between p-5 px-6 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05]">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global GDPR</span>
                     {compliance.gdprEnabled ? (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[9px] font-black border border-emerald-500/20 italic uppercase tracking-widest">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] rounded-full text-[9px] font-black border border-[var(--tint-emerald-edge)] italic uppercase tracking-widest">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Normal
                       </div>
                     ) : (
@@ -373,10 +373,10 @@ export default function NeuralWorkspaceHub() {
                     </div>
                   </div>
                   {compliance.issues && compliance.issues.length > 0 && (
-                    <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-center gap-4 shadow-xl shadow-amber-500/05">
-                      <AlertTriangle className="w-7 h-7 text-amber-400" />
+                    <div className="p-6 bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] rounded-[2rem] flex items-center gap-4 shadow-xl shadow-amber-500/05">
+                      <AlertTriangle className="w-7 h-7 text-[var(--tint-amber-fg)]" />
                       <div>
-                        <div className="text-[11px] font-black text-amber-400 uppercase tracking-widest">{compliance.issues.length} Integrity Gaps</div>
+                        <div className="text-[11px] font-black text-[var(--tint-amber-fg)] uppercase tracking-widest">{compliance.issues.length} Integrity Gaps</div>
                         <p className="text-[9px] text-slate-600 font-bold uppercase tracking-tight mt-0.5">Optimization available</p>
                       </div>
                     </div>
@@ -389,8 +389,8 @@ export default function NeuralWorkspaceHub() {
             {sla && (
               <motion.div variants={itemVariants} className={`${glassStyle} p-10 space-y-8 group`}>
                 <div className="flex items-center gap-4">
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <BarChart3 className="w-5 h-5 text-amber-400" />
+                  <div className="p-2.5 rounded-xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)]">
+                    <BarChart3 className="w-5 h-5 text-[var(--tint-amber-fg)]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white italic uppercase tracking-tight">SLA Telemetry</h3>
@@ -402,7 +402,7 @@ export default function NeuralWorkspaceHub() {
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Signal Purity</span>
                       <span className={`text-2xl font-black italic tabular-nums ${
-                        sla.compliance?.uptime ? 'text-emerald-400' : 'text-rose-500'
+                        sla.compliance?.uptime ? 'text-[var(--tint-emerald-fg)]' : 'text-rose-500'
                       }`}>
                         {sla.actual?.uptime?.toFixed(3)}<span className="text-[10px] opacity-40 ml-1 font-mono">%</span>
                       </span>
@@ -428,7 +428,7 @@ export default function NeuralWorkspaceHub() {
                     </div>
                   </div>
                   {sla.violations && sla.violations.length > 0 && (
-                    <div className="p-6 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] flex items-center gap-4 shadow-xl shadow-rose-500/05">
+                    <div className="p-6 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-[2rem] flex items-center gap-4 shadow-xl shadow-rose-500/05">
                       <ZapOff className="w-7 h-7 text-rose-500" />
                       <div>
                         <div className="text-[11px] font-black text-rose-500 uppercase tracking-widest">{sla.violations.length} Dropouts</div>
@@ -447,8 +447,8 @@ export default function NeuralWorkspaceHub() {
       <motion.div variants={itemVariants} className={`${glassStyle} p-12 space-y-10 relative group bg-gradient-to-br from-indigo-500/05 to-purple-500/05`}>
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-600/10 blur-[100px] rounded-full group-hover:bg-indigo-600/20 transition-all duration-1000" />
         <div className="flex flex-col md:flex-row items-center gap-8 relative z-10 border-b border-white/[0.05] pb-10">
-          <div className="w-20 h-20 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-            <Brain className="w-10 h-10 text-indigo-400" />
+          <div className="w-20 h-20 rounded-[2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+            <Brain className="w-10 h-10 text-[var(--tint-indigo-fg)]" />
           </div>
           <div className="text-center md:text-left">
             <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter">SWARM ADVISOR</h3>
@@ -461,27 +461,27 @@ export default function NeuralWorkspaceHub() {
         {advisorData ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
             {/* Next Best Action */}
-            <div className="md:col-span-2 p-8 rounded-[2.5rem] bg-indigo-500/05 border border-indigo-500/10 space-y-4 shadow-inner group-hover:border-indigo-500/20 transition-all">
-              <div className="flex items-center gap-2.5 text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+            <div className="md:col-span-2 p-8 rounded-[2.5rem] bg-indigo-500/05 border border-indigo-500/10 space-y-4 shadow-inner group-hover:border-[var(--tint-indigo-edge)] transition-all">
+              <div className="flex items-center gap-2.5 text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">
                 <Lightbulb className="w-4 h-4" /> Next Strategic Node
               </div>
-              <p className="text-white font-bold text-lg leading-relaxed italic border-l-2 border-indigo-500/30 pl-6">&quot;{advisorData.nba}&quot;</p>
+              <p className="text-white font-bold text-lg leading-relaxed italic border-l-2 border-[var(--tint-indigo-edge)] pl-6">&quot;{advisorData.nba}&quot;</p>
             </div>
             {/* Forecast */}
             <div className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/[0.05] space-y-4 shadow-inner">
-              <div className="flex items-center gap-2.5 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+              <div className="flex items-center gap-2.5 text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest">
                 <TrendingUp className="w-4 h-4" /> Predicted Yield
               </div>
-              <p className="text-emerald-400 font-black text-2xl italic tracking-tight">{advisorData.forecast}</p>
+              <p className="text-[var(--tint-emerald-fg)] font-black text-2xl italic tracking-tight">{advisorData.forecast}</p>
             </div>
             {/* Workflow Efficiency */}
             <div className="md:col-span-3 space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
-                  <Zap className="w-4 h-4 text-amber-400" /> Swarm Alignment Score
+                  <Zap className="w-4 h-4 text-[var(--tint-amber-fg)]" /> Swarm Alignment Score
                 </div>
                 <span className={`text-3xl font-black italic tabular-nums ${
-                  advisorData.efficiency >= 80 ? 'text-emerald-400' : advisorData.efficiency >= 60 ? 'text-amber-400' : 'text-rose-400'
+                  advisorData.efficiency >= 80 ? 'text-[var(--tint-emerald-fg)]' : advisorData.efficiency >= 60 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'
                 }`}>{advisorData.efficiency}<span className="text-[10px] opacity-30 ml-1 font-mono font-bold">%</span></span>
               </div>
               <div className="h-3 rounded-full bg-white/[0.02] overflow-hidden p-0.5 border border-white/[0.05]">

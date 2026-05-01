@@ -97,7 +97,7 @@ export default function SwarmCollectiveNodePage() {
           <Network size={80} className="text-indigo-500 animate-spin relative z-10" />
         </div>
         <div className="space-y-4 text-center">
-          <p className="text-[14px] font-bold text-indigo-400 uppercase tracking-[0.4em] animate-pulse leading-none">Loading teams…</p>
+          <p className="text-[14px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] animate-pulse leading-none">Loading teams…</p>
           <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.3em] leading-none">Please wait</p>
         </div>
       </div>
@@ -120,14 +120,14 @@ export default function SwarmCollectiveNodePage() {
             className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors active:scale-95 hover:border-rose-500/50">
             <ArrowLeft size={28} />
           </button>
-          <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-xl relative">
+          <div className="w-20 h-20 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-[2.5rem] flex items-center justify-center shadow-xl relative">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent" />
-             <Users size={36} className="text-indigo-400 relative z-10" />
+             <Users size={36} className="text-[var(--tint-indigo-fg)] relative z-10" />
           </div>
           <div>
             <div className="flex items-center gap-3 mb-3">
               <Activity className="text-indigo-500 animate-pulse" size={14} />
-              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400 leading-none">Click · Teams</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)] leading-none">Click · Teams</span>
             </div>
             <h1 className="text-6xl font-black text-white tracking-tighter leading-none mb-3">Teams</h1>
             <p className="text-slate-400 text-[14px] font-medium tracking-wide leading-relaxed">Collaborate with editors, reviewers, and contributors on shared content.</p>
@@ -143,17 +143,17 @@ export default function SwarmCollectiveNodePage() {
       </div>
 
       {/* Collaboration Hub */}
-      <div className={`${glassStyle} p-10 rounded-[3rem] relative overflow-hidden group/hud z-10 border-indigo-500/10 hover:border-indigo-500/30`}>
-         <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none group-hover/hud:opacity-[0.08] transition-all duration-700"><Radio size={300} className="text-indigo-400" /></div>
+      <div className={`${glassStyle} p-10 rounded-[3rem] relative overflow-hidden group/hud z-10 border-indigo-500/10 hover:border-[var(--tint-indigo-edge)]`}>
+         <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none group-hover/hud:opacity-[0.08] transition-all duration-700"><Radio size={300} className="text-[var(--tint-indigo-fg)]" /></div>
          <div className="relative z-10 max-w-3xl">
             <div className="flex items-center gap-5 mb-5">
-               <div className="w-12 h-12 rounded-[1.2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center">
-                  <MessageSquare size={22} className="text-indigo-400" />
+               <div className="w-12 h-12 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center">
+                  <MessageSquare size={22} className="text-[var(--tint-indigo-fg)]" />
                </div>
                <h3 className="text-3xl font-black text-white tracking-tighter leading-tight">Collaboration Hub</h3>
             </div>
             <p className="text-[15px] text-slate-300 font-medium leading-relaxed mb-8 max-w-2xl">
-              Each team gets <strong className="text-indigo-400">shared assets</strong>, <strong className="text-indigo-400">comment threads</strong>, and an <strong className="text-indigo-400">approval queue</strong>. Manage tasks, briefs, and reviews together.
+              Each team gets <strong className="text-[var(--tint-indigo-fg)]">shared assets</strong>, <strong className="text-[var(--tint-indigo-fg)]">comment threads</strong>, and an <strong className="text-[var(--tint-indigo-fg)]">approval queue</strong>. Manage tasks, briefs, and reviews together.
             </p>
             <button type="button" onClick={() => router.push('/dashboard/tasks')}
               title="Open tasks"
@@ -166,11 +166,11 @@ export default function SwarmCollectiveNodePage() {
       </div>
 
       {teams.length === 0 ? (
-        <div className={`${glassStyle} rounded-[3rem] p-16 text-center border-dashed border-2 border-white/10 flex flex-col items-center z-10 hover:border-indigo-500/20 group/empty transition-colors`}>
-          <div className="w-24 h-24 rounded-[2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center mb-8 relative">
-             <Network size={44} className="text-slate-500 group-hover/empty:text-indigo-400 transition-colors" />
+        <div className={`${glassStyle} rounded-[3rem] p-16 text-center border-dashed border-2 border-white/10 flex flex-col items-center z-10 hover:border-[var(--tint-indigo-edge)] group/empty transition-colors`}>
+          <div className="w-24 h-24 rounded-[2rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center mb-8 relative">
+             <Network size={44} className="text-slate-500 group-hover/empty:text-[var(--tint-indigo-fg)] transition-colors" />
           </div>
-          <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover/empty:text-indigo-400 transition-colors">No teams yet</h3>
+          <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover/empty:text-[var(--tint-indigo-fg)] transition-colors">No teams yet</h3>
           <p className="text-slate-400 text-[14px] font-medium max-w-md mb-8 leading-relaxed">
             Create your first team to invite collaborators, share assets, and run approval workflows.
           </p>
@@ -188,7 +188,7 @@ export default function SwarmCollectiveNodePage() {
           {/* Swarm Scanner */}
           <div className={`${glassStyle} rounded-[3rem] p-6 flex items-center gap-4 relative z-10 border-white/5`}>
              <div className="flex items-center gap-3 pl-6 pr-2 border-r-2 border-white/5">
-                <Target size={20} className="text-indigo-400" />
+                <Target size={20} className="text-[var(--tint-indigo-fg)]" />
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic whitespace-nowrap hidden md:inline">SCAN_SWARM</span>
              </div>
              <input
@@ -199,12 +199,12 @@ export default function SwarmCollectiveNodePage() {
                 className="flex-1 bg-transparent text-[13px] font-medium text-white focus:outline-none placeholder:text-slate-500 px-3"
              />
              {search && (
-                <button type="button" onClick={() => setSearch('')} title="Clear" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-500/20 transition-colors">
+                <button type="button" onClick={() => setSearch('')} title="Clear" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[var(--tint-rose-bg)] transition-colors">
                    <X size={14} />
                 </button>
              )}
              <div className="px-4 py-2 rounded-full bg-black/60 border border-white/5 text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2 whitespace-nowrap">
-                <Database size={12} className="text-indigo-400" /> {filteredTeams.length} / {teams.length}
+                <Database size={12} className="text-[var(--tint-indigo-fg)]" /> {filteredTeams.length} / {teams.length}
              </div>
           </div>
 
@@ -227,13 +227,13 @@ export default function SwarmCollectiveNodePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05, duration: 1 }}
               whileHover={{ y: -20, scale: 1.02 }}
-              className={`${glassStyle} rounded-[6rem] p-16 group relative flex flex-col min-h-[500px] border-white/5 hover:border-indigo-500/40 transition-all duration-300 overflow-hidden shadow-[0_60px_150px_rgba(0,0,0,0.8)]`}
+              className={`${glassStyle} rounded-[6rem] p-16 group relative flex flex-col min-h-[500px] border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all duration-300 overflow-hidden shadow-[0_60px_150px_rgba(0,0,0,0.8)]`}
             >
               <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover:opacity-[0.1] transition-opacity duration-500 rotate-12 group-hover:rotate-0"><Cpu size={300} /></div>
               
               <div className="flex justify-between items-start mb-12">
-                <div className="w-24 h-24 rounded-[3rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500 group-hover:rotate-[360deg] transition-all duration-300 shadow-3xl">
-                   <Cpu size={48} className="text-indigo-400 group-hover:text-white transition-colors duration-300" />
+                <div className="w-24 h-24 rounded-[3rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center group-hover:bg-indigo-500 group-hover:rotate-[360deg] transition-all duration-300 shadow-3xl">
+                   <Cpu size={48} className="text-[var(--tint-indigo-fg)] group-hover:text-white transition-colors duration-300" />
                 </div>
                 {isPrimeOrchestrator(team) && (
                   <div className="px-3 py-1 bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full shadow-md flex items-center gap-1.5">
@@ -243,8 +243,8 @@ export default function SwarmCollectiveNodePage() {
               </div>
 
               <div className="flex-1 mb-8 relative z-10">
-                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.3em] mb-2">Team #{String(idx + 1).padStart(2, '0')}</p>
-                <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover:text-indigo-400 transition-colors leading-tight line-clamp-2">{team.name}</h3>
+                <p className="text-[10px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-[0.3em] mb-2">Team #{String(idx + 1).padStart(2, '0')}</p>
+                <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover:text-[var(--tint-indigo-fg)] transition-colors leading-tight line-clamp-2">{team.name}</h3>
                 {team.description && (
                   <div className="p-4 bg-black/40 rounded-[1.2rem] border border-white/5 shadow-inner mb-4">
                     <p className="text-[13px] text-slate-300 font-medium leading-relaxed line-clamp-3">
@@ -261,10 +261,10 @@ export default function SwarmCollectiveNodePage() {
                   const entries = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).slice(0, 4)
                   if (entries.length === 0) return null
                   const colorFor = (r: string) =>
-                    r.includes('admin') || r.includes('owner') ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                    : r.includes('editor') || r.includes('mod') ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    r.includes('admin') || r.includes('owner') ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]'
+                    : r.includes('editor') || r.includes('mod') ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]'
                     : r.includes('view') ? 'bg-slate-500/10 text-slate-400 border-slate-500/30'
-                    : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                    : 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]'
                   return (
                     <div className="flex flex-wrap gap-2">
                       {entries.map(([role, count]) => (
@@ -293,7 +293,7 @@ export default function SwarmCollectiveNodePage() {
                  </div>
                  <div className="text-right flex flex-col items-end gap-1">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] leading-none">Members</p>
-                    <p className="text-2xl font-black text-indigo-400 tabular-nums leading-none tracking-tight">{team.members.length}</p>
+                    <p className="text-2xl font-black text-[var(--tint-indigo-fg)] tabular-nums leading-none tracking-tight">{team.members.length}</p>
                  </div>
               </div>
 
@@ -322,8 +322,8 @@ export default function SwarmCollectiveNodePage() {
               <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:scale-125 transition-transform duration-700"><UserPlus size={400} className="text-white" /></div>
               
               <div className="flex items-center gap-5 mb-10 relative z-10">
-                <div className="w-14 h-14 rounded-[1.4rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-lg">
-                  <UserPlus size={26} className="text-indigo-400" />
+                <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-lg">
+                  <UserPlus size={26} className="text-[var(--tint-indigo-fg)]" />
                 </div>
                 <div>
                   <h2 className="text-3xl font-black text-white tracking-tighter leading-tight">Create a new team</h2>

@@ -36,7 +36,7 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
       <div className="flex items-center justify-between relative z-10">
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-white flex items-center gap-3">
-            <History className="w-6 h-6 text-indigo-400" />
+            <History className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
             Surge History Ledger
           </h2>
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none">
@@ -59,7 +59,7 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
          </div>
          <div className="p-6 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/10 flex flex-col gap-1 shadow-inner">
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Avg ROI Lift</span>
-            <span className="text-2xl font-black text-emerald-400 italic">
+            <span className="text-2xl font-black text-[var(--tint-emerald-fg)] italic">
                +{entries.length > 0 ? (entries.reduce((acc, e) => acc + parseFloat(e.predictedROI), 0) / entries.length).toFixed(1) : '0.0'}%
             </span>
          </div>
@@ -102,22 +102,22 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
                  </div>
                  <div className="col-span-3 flex items-center gap-2">
                     <span className="text-[10px] font-black text-slate-500 line-through truncate max-w-[80px]">{entry.previousStyle}</span>
-                    <TrendingUp className="w-3 h-3 text-indigo-400 shrink-0" />
+                    <TrendingUp className="w-3 h-3 text-[var(--tint-indigo-fg)] shrink-0" />
                     <span className="text-[10px] font-black text-white truncate max-w-[100px]">{entry.newStyle}</span>
                  </div>
                  <div className="col-span-2">
                     <div className="flex items-center gap-2">
-                       <Zap className="w-3 h-3 text-amber-400 fill-current" />
+                       <Zap className="w-3 h-3 text-[var(--tint-amber-fg)] fill-current" />
                        <span className="text-[11px] font-black text-white">{entry.probability}</span>
                     </div>
                  </div>
                  <div className="col-span-2">
-                    <span className="text-[12px] font-black text-emerald-400 italic">+{entry.predictedROI}</span>
+                    <span className="text-[12px] font-black text-[var(--tint-emerald-fg)] italic">+{entry.predictedROI}</span>
                  </div>
                  <div className="col-span-1 text-right">
                     <div className="flex justify-end items-center gap-1">
-                       <ShieldCheck className="w-3 h-3 text-indigo-400" />
-                       <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Bridged</span>
+                       <ShieldCheck className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
+                       <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Bridged</span>
                     </div>
                  </div>
               </motion.div>

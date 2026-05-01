@@ -52,10 +52,10 @@ const SAMPLE: TrendItem[] = [
 ]
 
 const CATEGORY_CFG: Record<TrendCategory, { label: string; icon: any; color: string; bg: string }> = {
-  hooks:    { label: 'Hooks',    icon: Sparkles,    color: 'text-amber-400',    bg: 'bg-amber-500/10 border-amber-500/30' },
-  sounds:   { label: 'Sounds',   icon: Music,       color: 'text-fuchsia-400',  bg: 'bg-fuchsia-500/10 border-fuchsia-500/30' },
-  formats:  { label: 'Formats',  icon: BarChart3,   color: 'text-emerald-400',  bg: 'bg-emerald-500/10 border-emerald-500/30' },
-  hashtags: { label: 'Hashtags', icon: Hash,        color: 'text-indigo-400',   bg: 'bg-indigo-500/10 border-indigo-500/30' },
+  hooks:    { label: 'Hooks',    icon: Sparkles,    color: 'text-[var(--tint-amber-fg)]',    bg: 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]' },
+  sounds:   { label: 'Sounds',   icon: Music,       color: 'text-[var(--tint-fuchsia-fg)]',  bg: 'bg-[var(--tint-fuchsia-bg)] border-[var(--tint-fuchsia-edge)]' },
+  formats:  { label: 'Formats',  icon: BarChart3,   color: 'text-[var(--tint-emerald-fg)]',  bg: 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]' },
+  hashtags: { label: 'Hashtags', icon: Hash,        color: 'text-[var(--tint-indigo-fg)]',   bg: 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]' },
 }
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.6)] transition-all duration-300'
@@ -104,13 +104,13 @@ export default function TrendsPage() {
             <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
-            <div className="w-20 h-20 bg-rose-500/10 border-2 border-rose-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Flame size={40} className="text-rose-400" />
+            <div className="w-20 h-20 bg-[var(--tint-rose-bg)] border-2 border-[var(--tint-rose-edge)] rounded-[2.5rem] flex items-center justify-center shadow-3xl">
+              <Flame size={40} className="text-[var(--tint-rose-fg)]" />
             </div>
             <div>
               <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-rose-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-rose-400 italic leading-none">Trend Radar</span>
+                <Activity size={14} className="text-[var(--tint-rose-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-[var(--tint-rose-fg)] italic leading-none">Trend Radar</span>
               </div>
               <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Discover</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Trending hooks · sounds · formats · hashtags. Tuned to your niche signal.</p>
@@ -182,7 +182,7 @@ export default function TrendsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: i * 0.03 }}
-                    className={`${glassStyle} rounded-[2rem] p-7 flex flex-col gap-5 hover:border-rose-500/30 group`}
+                    className={`${glassStyle} rounded-[2rem] p-7 flex flex-col gap-5 hover:border-[var(--tint-rose-edge)] group`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className={`w-12 h-12 rounded-[1rem] ${cfg.bg} border flex items-center justify-center`}>
@@ -190,19 +190,19 @@ export default function TrendsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-slate-300 text-[8px] font-black uppercase tracking-[0.3em] italic flex items-center gap-1.5">
-                          <TrendingUp size={10} className="text-emerald-400" /> +{t.velocity}%
+                          <TrendingUp size={10} className="text-[var(--tint-emerald-fg)]" /> +{t.velocity}%
                         </span>
-                        <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[8px] font-black uppercase tracking-[0.3em] italic flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 rounded-full bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)] text-[8px] font-black uppercase tracking-[0.3em] italic flex items-center gap-1.5">
                           <Zap size={10} /> {t.score}
                         </span>
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xl font-black text-white italic leading-tight tracking-tight mb-3 group-hover:text-rose-400 transition-colors">{t.title}</p>
+                      <p className="text-xl font-black text-white italic leading-tight tracking-tight mb-3 group-hover:text-[var(--tint-rose-fg)] transition-colors">{t.title}</p>
                       <p className="text-[11px] text-slate-400 leading-relaxed font-medium line-clamp-3">{t.detail}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap text-[9px] font-black uppercase tracking-[0.3em] italic">
-                      <span className="px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-slate-300 flex items-center gap-1.5"><Radio size={10} className="text-indigo-400" /> {t.platform}</span>
+                      <span className="px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-slate-300 flex items-center gap-1.5"><Radio size={10} className="text-[var(--tint-indigo-fg)]" /> {t.platform}</span>
                       <span className="px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-slate-300">{t.niche}</span>
                       <span className="px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 text-slate-300 flex items-center gap-1.5"><Eye size={10} /> {t.uses}</span>
                     </div>
@@ -218,12 +218,12 @@ export default function TrendsPage() {
 
         {/* Footer note */}
         <div className={`${glassStyle} rounded-[2rem] p-7 flex items-center gap-5 border-rose-500/10`}>
-          <div className="w-12 h-12 rounded-[1rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
-            <Clock size={20} className="text-rose-400" />
+          <div className="w-12 h-12 rounded-[1rem] bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center flex-shrink-0">
+            <Clock size={20} className="text-[var(--tint-rose-fg)]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black text-rose-400 uppercase tracking-[0.5em] italic mb-1.5 leading-none">SIGNAL_SOURCE</p>
-            <p className="text-[12px] text-slate-300 leading-relaxed font-medium">Showing seeded sample trends. <Link href="/dashboard/integrations" className="text-rose-400 hover:text-rose-300 underline decoration-rose-500/40 underline-offset-4">Connect a social account</Link> to receive live trend data tuned to your audience.</p>
+            <p className="text-[10px] font-black text-[var(--tint-rose-fg)] uppercase tracking-[0.5em] italic mb-1.5 leading-none">SIGNAL_SOURCE</p>
+            <p className="text-[12px] text-slate-300 leading-relaxed font-medium">Showing seeded sample trends. <Link href="/dashboard/integrations" className="text-[var(--tint-rose-fg)] hover:text-rose-300 underline decoration-rose-500/40 underline-offset-4">Connect a social account</Link> to receive live trend data tuned to your audience.</p>
           </div>
         </div>
       </div>

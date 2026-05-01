@@ -139,7 +139,7 @@ const ApprovalQueueView: React.FC = () => {
       <div className="flex-1 flex flex-col gap-8">
         <div className="flex items-center justify-between px-2">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-emerald-400 flex items-center gap-3">
+            <h2 className="text-2xl font-black tracking-tight text-[var(--tint-emerald-fg)] flex items-center gap-3">
               <ShieldCheck className="w-6 h-6" />
               Approval Queue
             </h2>
@@ -187,7 +187,7 @@ const ApprovalQueueView: React.FC = () => {
                     onClick={() => setSelectedId(approval._id)}
                     className={`p-6 rounded-[2rem] border transition-all cursor-pointer group flex items-center justify-between ${
                       selectedId === approval._id 
-                        ? 'bg-emerald-500/10 border-emerald-500/40' 
+                        ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]' 
                         : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
                     }`}
                   >
@@ -213,7 +213,7 @@ const ApprovalQueueView: React.FC = () => {
                           <div className="flex items-center gap-2">
                              <span className="text-[10px] font-black text-white uppercase">{approval.workflowId.name}</span>
                              <ArrowRight className="w-3 h-3 text-slate-600" />
-                             <span className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[8px] font-black text-violet-400 uppercase">Stage {approval.currentStage + 1}</span>
+                             <span className="px-3 py-1 rounded-full bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] text-[8px] font-black text-[var(--tint-violet-fg)] uppercase">Stage {approval.currentStage + 1}</span>
                           </div>
                        </div>
                        
@@ -242,7 +242,7 @@ const ApprovalQueueView: React.FC = () => {
             <div className="p-8 flex flex-col gap-8 h-full">
                <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                     <History className="w-4 h-4 text-violet-400" />
+                     <History className="w-4 h-4 text-[var(--tint-violet-fg)]" />
                      Decision Matrix
                   </h3>
                   <button onClick={() => setSelectedId(null)} className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all">
@@ -269,16 +269,16 @@ const ApprovalQueueView: React.FC = () => {
                        <motion.div 
                          initial={{ opacity: 0, y: 10 }}
                          animate={{ opacity: 1, y: 0 }}
-                         className="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 mb-4"
+                         className="p-4 rounded-2xl bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] mb-4"
                        >
                           <div className="flex items-center justify-between mb-2">
                              <div className="flex items-center gap-2">
-                                <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                                <Sparkles className="w-3.5 h-3.5 text-[var(--tint-violet-fg)]" />
                                 <span className="text-[10px] font-black text-white uppercase italic">AI Revision Drafted</span>
                              </div>
                              <button 
                                onClick={() => setShowDiff(true)}
-                               className="text-[9px] font-black text-violet-400 uppercase hover:underline"
+                               className="text-[9px] font-black text-[var(--tint-violet-fg)] uppercase hover:underline"
                              >
                                 Visual Diff &rarr;
                              </button>
@@ -321,7 +321,7 @@ const ApprovalQueueView: React.FC = () => {
                   <button
                     onClick={() => handleAction('request-changes')}
                     disabled={processing || !comment}
-                    className="py-4 rounded-[1.5rem] bg-amber-500/10 border border-amber-500/50 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-black transition-all disabled:opacity-50"
+                    className="py-4 rounded-[1.5rem] bg-[var(--tint-amber-bg)] border border-amber-500/50 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-black transition-all disabled:opacity-50"
                   >
                      <MessageSquare className="w-4 h-4" />
                      Request Change
@@ -329,7 +329,7 @@ const ApprovalQueueView: React.FC = () => {
                   <button
                     onClick={() => handleAction('reject')}
                     disabled={processing || !comment}
-                    className="py-4 rounded-[1.5rem] bg-rose-500/10 border border-rose-500/50 text-rose-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50"
+                    className="py-4 rounded-[1.5rem] bg-[var(--tint-rose-bg)] border border-rose-500/50 text-rose-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50"
                   >
                      <XCircle className="w-4 h-4" />
                      Final Rejection

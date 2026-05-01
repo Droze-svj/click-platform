@@ -102,19 +102,19 @@ const HOOK_LIBRARY: HookEntry[] = [
 ]
 
 const NICHE_COLORS: Record<HookNiche, string> = {
-  Finance:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-  Fitness:       'text-orange-400  bg-orange-500/10  border-orange-500/20',
+  Finance:       'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
+  Fitness:       'text-[var(--tint-orange-fg)]  bg-[var(--tint-orange-bg)]  border-[var(--tint-orange-edge)]',
   Relationships: 'text-pink-400    bg-pink-500/10    border-pink-500/20',
-  Tech:          'text-indigo-400  bg-indigo-500/10  border-indigo-500/20',
-  Food:          'text-amber-400   bg-amber-500/10   border-amber-500/20',
-  Mindset:       'text-violet-400  bg-violet-500/10  border-violet-500/20',
+  Tech:          'text-[var(--tint-indigo-fg)]  bg-[var(--tint-indigo-bg)]  border-[var(--tint-indigo-edge)]',
+  Food:          'text-[var(--tint-amber-fg)]   bg-[var(--tint-amber-bg)]   border-[var(--tint-amber-edge)]',
+  Mindset:       'text-[var(--tint-violet-fg)]  bg-[var(--tint-violet-bg)]  border-[var(--tint-violet-edge)]',
 }
 
 const TYPE_COLORS: Record<HookType, string> = {
-  Curiosity: 'text-sky-400    bg-sky-500/10    border-sky-500/20',
-  Shock:     'text-rose-400   bg-rose-500/10   border-rose-500/20',
-  Story:     'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20',
-  Authority: 'text-amber-400  bg-amber-500/10  border-amber-500/20',
+  Curiosity: 'text-[var(--tint-sky-fg)]    bg-[var(--tint-sky-bg)]    border-[var(--tint-sky-edge)]',
+  Shock:     'text-[var(--tint-rose-fg)]   bg-[var(--tint-rose-bg)]   border-[var(--tint-rose-edge)]',
+  Story:     'text-[var(--tint-fuchsia-fg)] bg-[var(--tint-fuchsia-bg)] border-[var(--tint-fuchsia-edge)]',
+  Authority: 'text-[var(--tint-amber-fg)]  bg-[var(--tint-amber-bg)]  border-[var(--tint-amber-edge)]',
 }
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
@@ -503,7 +503,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
               >
                 <div className="p-8 bg-white/[0.02] border-b border-white/5 flex flex-wrap items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-4 text-emerald-400">
+                    <div className="flex items-center gap-4 text-[var(--tint-emerald-fg)]">
                       <Check className="w-6 h-6 shadow-inner" />
                       <span className="text-[10px] font-black uppercase tracking-[0.4em] italic">Synthesized Alpha</span>
                     </div>
@@ -526,7 +526,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                         onClick={() => setCopyMenuOpen((o) => !o)}
                         className="px-6 py-4 bg-white/[0.05] hover:bg-white/[0.1] rounded-2xl border border-white/10 transition-all flex items-center gap-4"
                       >
-                        {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white" />}
+                        {copied ? <Check className="w-4 h-4 text-[var(--tint-emerald-fg)]" /> : <Copy className="w-4 h-4 text-white" />}
                         <span className="text-[10px] font-black uppercase tracking-widest italic">Bridge</span>
                         <ChevronDown className="w-4 h-4" />
                       </button>
@@ -548,7 +548,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                   <section className="space-y-10">
                     <div className="flex items-center gap-6">
                       <div className="w-1.5 h-10 bg-indigo-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.6)]" />
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-400/80">SYNTHESIZED VARIATIONS</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--tint-indigo-fg)]/80">SYNTHESIZED VARIATIONS</h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -556,18 +556,18 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                         <motion.div
                           key={idx}
                           whileHover={{ y: -4 }}
-                          className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all space-y-4 group/var shadow-inner"
+                          className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all space-y-4 group/var shadow-inner"
                         >
                           <div className="flex items-center justify-between">
-                             <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                                {idx === 0 ? <Zap className="w-4 h-4 text-indigo-400" /> : idx === 1 ? <UserCircle className="w-4 h-4 text-indigo-400" /> : <Sparkles className="w-4 h-4 text-indigo-400" />}
+                             <div className="p-3 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                                {idx === 0 ? <Zap className="w-4 h-4 text-[var(--tint-indigo-fg)]" /> : idx === 1 ? <UserCircle className="w-4 h-4 text-[var(--tint-indigo-fg)]" /> : <Sparkles className="w-4 h-4 text-[var(--tint-indigo-fg)]" />}
                              </div>
-                             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{h.type}</span>
+                             <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">{h.type}</span>
                           </div>
                           <p className="text-[13px] text-white font-bold leading-relaxed">{h.text}</p>
                           <button
                             onClick={() => { setGeneratedScript({ ...generatedScript, hook: h.text }); showToast('Hook Variant Applied', 'success') }}
-                            className="w-full py-3 rounded-lg bg-indigo-500/10 text-indigo-400 text-[8px] font-black uppercase tracking-widest opacity-0 group-hover/var:opacity-100 transition-opacity border border-indigo-500/10 hover:bg-indigo-500 hover:text-white"
+                            className="w-full py-3 rounded-lg bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] text-[8px] font-black uppercase tracking-widest opacity-0 group-hover/var:opacity-100 transition-opacity border border-indigo-500/10 hover:bg-indigo-500 hover:text-white"
                           >
                              Apply to Master
                           </button>
@@ -582,7 +582,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                             <p className="text-[11px] text-slate-600 italic leading-relaxed">{m.desc}</p>
                             <button
                               onClick={() => { navigator.clipboard.writeText(`${m.title}\n${m.desc}`); showToast('Marketing Node bridged', 'success') }}
-                              className="text-[8px] font-bold text-indigo-400/50 hover:text-indigo-400 transition-colors uppercase tracking-widest mt-2"
+                              className="text-[8px] font-bold text-[var(--tint-indigo-fg)]/50 hover:text-[var(--tint-indigo-fg)] transition-colors uppercase tracking-widest mt-2"
                             >
                                Copy Metadata
                             </button>
@@ -611,7 +611,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                   <section className="space-y-6">
                     <div className="flex items-center gap-6">
                       <div className="w-1.5 h-10 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-400/80">02. ELITE VALUE DELIVERY</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--tint-emerald-fg)]/80">02. ELITE VALUE DELIVERY</h4>
                     </div>
                     <p className="text-xl text-slate-300 font-medium leading-[2.2] whitespace-pre-wrap">{generatedScript.body}</p>
                   </section>
@@ -619,7 +619,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                   <section className="space-y-6">
                     <div className="flex items-center gap-6">
                       <div className="w-1.5 h-10 bg-rose-500 rounded-full shadow-[0_0_12px_rgba(244,63,94,0.6)]" />
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-rose-400/80">03. PSYCHOLOGICAL CTA</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--tint-rose-fg)]/80">03. PSYCHOLOGICAL CTA</h4>
                     </div>
                     <p className="text-2xl font-black text-white tracking-tight uppercase leading-relaxed">{generatedScript.cta}</p>
                   </section>

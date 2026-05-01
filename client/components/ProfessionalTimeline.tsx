@@ -829,7 +829,7 @@ export default function ProfessionalTimeline({
             >
               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 hidden group-hover:block z-50">
                 <div className="bg-gray-900 border border-emerald-500 p-2 rounded-lg shadow-2xl min-w-[150px]">
-                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">AI Suggestion: {suggestion.type}</p>
+                  <p className="text-[10px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-wider mb-1">AI Suggestion: {suggestion.type}</p>
                   <p className="text-xs text-white leading-tight mb-2">{suggestion.description}</p>
                   <button
                     onClick={(e) => {

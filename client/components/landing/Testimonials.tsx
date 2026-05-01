@@ -21,7 +21,7 @@ const SCENARIOS = [
     setup: 'Posting daily, hitting 10k followers, watch-time stuck at 35%.',
     win: 'Niche-aware retention rewrites + auto-cuts.',
     metric: 'Watch-time → 60%+',
-    accent: 'text-fuchsia-400',
+    accent: 'text-[var(--tint-fuchsia-fg)]',
   },
   {
     Icon: Layers,
@@ -29,7 +29,7 @@ const SCENARIOS = [
     setup: '8 client channels. Editor backlog grew faster than the roster.',
     win: 'Workspace switching + approval workflows.',
     metric: 'Per-client edit time ÷ 5',
-    accent: 'text-amber-400',
+    accent: 'text-[var(--tint-amber-fg)]',
   },
   {
     Icon: GraduationCap,
@@ -45,7 +45,7 @@ const SCENARIOS = [
     setup: 'Finance creator. Generic AI captions kept missing the dollar anchor.',
     win: 'Niche playbook bakes the voice into every prompt.',
     metric: 'CTR on hook frames ↑ 2.4×',
-    accent: 'text-emerald-400',
+    accent: 'text-[var(--tint-emerald-fg)]',
   },
 ];
 
@@ -58,7 +58,7 @@ export function Testimonials() {
             Scenarios · Real customer stories landing soon
           </span>
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">
-            BUILT FOR THE WAY <span className="text-indigo-400">CREATORS WIN</span>
+            BUILT FOR THE WAY <span className="text-[var(--tint-indigo-fg)]">CREATORS WIN</span>
           </h2>
           <p className="text-slate-400 text-base md:text-lg font-medium max-w-2xl mx-auto">
             Click optimises for the metrics you actually care about — by creator type, not by buzzword.
@@ -75,7 +75,7 @@ export function Testimonials() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ delay: i * 0.1 }}
-                className={`${glass} p-7 rounded-3xl group hover:border-indigo-500/30 hover:-translate-y-1 transition-all duration-300 flex flex-col`}
+                className={`${glass} p-7 rounded-3xl group hover:border-[var(--tint-indigo-edge)] hover:-translate-y-1 transition-all duration-300 flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-5">
                   <div className={`w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center ${s.accent}`}>

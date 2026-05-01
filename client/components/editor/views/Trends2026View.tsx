@@ -164,9 +164,9 @@ export default function Trends2026View({
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">2026</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-fuchsia-fg)]">2026</span>
               <span className="w-1 h-1 rounded-full bg-fuchsia-500/60" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Creative AI Tools</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-fuchsia-fg)]">Creative AI Tools</span>
             </div>
             <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Manual editor — 2026 toolkit</h2>
             <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">Trend-tuned hooks, beat-matched cuts, B-roll suggestions, viral overlays. Apply selectively.</p>
@@ -178,12 +178,12 @@ export default function Trends2026View({
       {/* Live trend report — composed from the marketing-knowledge playbooks
            via Gemini. Refreshes when the workflow niche/platform changes. */}
       {liveTrends && (liveTrends.hooks?.length || liveTrends.formats?.length) ? (
-        <div className="rounded-2xl p-5 border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04]">
+        <div className="rounded-2xl p-5 border border-[var(--tint-fuchsia-edge)] bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-fuchsia-400" />
+              <TrendingUp className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
               <span className="text-[11px] font-black uppercase tracking-[0.3em] text-fuchsia-300">Live niche signals</span>
-              <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+              <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] text-emerald-300 border border-[var(--tint-emerald-edge)]">
                 {liveTrends.source === 'ai' ? 'AI' : 'Playbook'}
               </span>
             </div>
@@ -210,14 +210,14 @@ export default function Trends2026View({
           {liveTrends.hashtags?.primary?.length ? (
             <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap gap-1.5">
               {[...liveTrends.hashtags.primary, ...(liveTrends.hashtags.niche || [])].slice(0, 8).map((h: string, i: number) => (
-                <span key={i} className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300">{h}</span>
+                <span key={i} className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-fuchsia-300">{h}</span>
               ))}
             </div>
           ) : null}
         </div>
       ) : liveLoading ? (
         <div className="rounded-2xl p-5 border border-white/[0.06] bg-white/[0.02] flex items-center gap-3">
-          <Loader2 className="w-4 h-4 text-fuchsia-400 animate-spin" />
+          <Loader2 className="w-4 h-4 text-[var(--tint-fuchsia-fg)] animate-spin" />
           <span className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">Pulling live niche signals…</span>
         </div>
       ) : null}
@@ -225,7 +225,7 @@ export default function Trends2026View({
       {/* Niche selector */}
       <div className={`${glassStyle} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-3">
-          <Target className="w-4 h-4 text-fuchsia-400" />
+          <Target className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
           <span className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-300">Tune to niche</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -247,10 +247,10 @@ export default function Trends2026View({
         {templates.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
             {templates.map((t, i) => (
-              <div key={i} className="rounded-xl bg-white/[0.02] border border-white/10 p-3.5 hover:border-fuchsia-500/30 transition-colors">
+              <div key={i} className="rounded-xl bg-white/[0.02] border border-white/10 p-3.5 hover:border-[var(--tint-fuchsia-edge)] transition-colors">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Flame className="w-3.5 h-3.5 text-fuchsia-400" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-fuchsia-400">{t.expected}</span>
+                  <Flame className="w-3.5 h-3.5 text-[var(--tint-fuchsia-fg)]" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--tint-fuchsia-fg)]">{t.expected}</span>
                 </div>
                 <p className="text-[13px] text-white font-medium leading-snug">{t.pattern}</p>
               </div>
@@ -262,8 +262,8 @@ export default function Trends2026View({
       {/* Hook detector */}
       <div className={`${glassStyle} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-amber-400" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-[var(--tint-amber-fg)]" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">AI Hook Detector</h3>
@@ -278,19 +278,19 @@ export default function Trends2026View({
               onClick={() => handleApplyHook(h)}
               className={`w-full text-left rounded-xl p-3.5 border transition-colors flex items-center gap-4 ${
                 appliedHookId === h.id
-                  ? 'bg-amber-500/10 border-amber-500/40 shadow-[0_0_40px_rgba(245,158,11,0.15)]'
-                  : 'bg-white/[0.02] border-white/10 hover:border-amber-500/30'
+                  ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] shadow-[0_0_40px_rgba(245,158,11,0.15)]'
+                  : 'bg-white/[0.02] border-white/10 hover:border-[var(--tint-amber-edge)]'
               }`}
             >
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black tabular-nums text-lg flex-shrink-0 ${
-                h.score >= 90 ? 'bg-amber-500 text-black' : h.score >= 80 ? 'bg-amber-500/20 text-amber-300' : 'bg-white/5 text-slate-300'
+                h.score >= 90 ? 'bg-amber-500 text-black' : h.score >= 80 ? 'bg-[var(--tint-amber-bg)] text-amber-300' : 'bg-white/5 text-slate-300'
               }`}>{h.score}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-semibold text-white truncate">{h.label}</p>
                 <p className="text-[10px] text-slate-400 mt-0.5 truncate">{h.reason}</p>
                 <p className="text-[9px] font-mono text-slate-500 mt-0.5">{h.start.toFixed(1)}s → {h.end.toFixed(1)}s</p>
               </div>
-              {appliedHookId === h.id ? <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-500 flex-shrink-0" />}
+              {appliedHookId === h.id ? <CheckCircle2 className="w-4 h-4 text-[var(--tint-amber-fg)] flex-shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-500 flex-shrink-0" />}
             </button>
           ))}
         </div>
@@ -300,8 +300,8 @@ export default function Trends2026View({
         {/* Beat-matched cuts */}
         <div className={`${glassStyle} rounded-2xl p-5`}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
-              <Music className="w-4 h-4 text-cyan-400" />
+            <div className="w-9 h-9 rounded-xl bg-[var(--tint-cyan-bg)] border border-[var(--tint-cyan-edge)] flex items-center justify-center">
+              <Music className="w-4 h-4 text-[var(--tint-cyan-fg)]" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Beat-Matched Cuts</h3>
@@ -319,7 +319,7 @@ export default function Trends2026View({
               onChange={(e) => setBpm(parseInt(e.target.value, 10))}
               className="flex-1 accent-cyan-500"
             />
-            <span className="text-2xl font-black tabular-nums text-cyan-400 min-w-[3.5rem] text-right">{bpm}</span>
+            <span className="text-2xl font-black tabular-nums text-[var(--tint-cyan-fg)] min-w-[3.5rem] text-right">{bpm}</span>
           </div>
           <p className="text-[10px] text-slate-500 mt-1.5">Cut every {(60 / bpm).toFixed(2)}s · {(60 / bpm * 4).toFixed(2)}s per bar</p>
           <button type="button" onClick={handleApplyBeatCuts} className="mt-4 w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-[12px] font-bold transition-colors flex items-center justify-center gap-2">
@@ -330,8 +330,8 @@ export default function Trends2026View({
         {/* Engagement predictor */}
         <div className={`${glassStyle} rounded-2xl p-5`}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-emerald-400" />
+            <div className="w-9 h-9 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center">
+              <Activity className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Engagement Predictor</h3>
@@ -346,7 +346,7 @@ export default function Trends2026View({
                 <span className="text-base text-slate-500 ml-1">/100</span>
               </p>
               {predictedScore != null && (
-                <p className={`text-[10px] font-bold ${predictedScore >= 80 ? 'text-emerald-400' : predictedScore >= 60 ? 'text-amber-400' : 'text-rose-400'}`}>
+                <p className={`text-[10px] font-bold ${predictedScore >= 80 ? 'text-[var(--tint-emerald-fg)]' : predictedScore >= 60 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'}`}>
                   {predictedScore >= 80 ? 'STRONG · ship it' : predictedScore >= 60 ? 'OK · iterate' : 'WEAK · rework hook'}
                 </p>
               )}
@@ -363,8 +363,8 @@ export default function Trends2026View({
       {/* B-roll Auto-Suggest */}
       <div className={`${glassStyle} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center">
-            <Layers className="w-4 h-4 text-violet-400" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] flex items-center justify-center">
+            <Layers className="w-4 h-4 text-[var(--tint-violet-fg)]" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">B-roll Auto-Insert</h3>
@@ -373,18 +373,18 @@ export default function Trends2026View({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {BROLL_SUGGESTIONS.map((b) => (
-            <div key={b.id} className="rounded-xl bg-white/[0.02] border border-white/10 hover:border-violet-500/30 transition-colors p-3.5 flex items-start gap-3">
+            <div key={b.id} className="rounded-xl bg-white/[0.02] border border-white/10 hover:border-[var(--tint-violet-edge)] transition-colors p-3.5 flex items-start gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center text-white text-[10px] font-black flex-shrink-0">
                 {b.tag.slice(0, 2)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-violet-400">{b.tag}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-[var(--tint-violet-fg)]">{b.tag}</span>
                 </div>
                 <p className="text-[12px] font-semibold text-white truncate">{b.label}</p>
                 <p className="text-[10px] text-slate-400 mt-0.5">{b.reason}</p>
               </div>
-              <button type="button" onClick={() => showToast?.(`✓ Queued: ${b.label}`, 'success')} className="text-[10px] font-bold uppercase tracking-wider text-violet-400 hover:text-violet-300 px-2 py-1 rounded-lg border border-violet-500/30 hover:bg-violet-500/10 transition-colors flex-shrink-0">
+              <button type="button" onClick={() => showToast?.(`✓ Queued: ${b.label}`, 'success')} className="text-[10px] font-bold uppercase tracking-wider text-[var(--tint-violet-fg)] hover:text-violet-300 px-2 py-1 rounded-lg border border-[var(--tint-violet-edge)] hover:bg-[var(--tint-violet-bg)] transition-colors flex-shrink-0">
                 ADD
               </button>
             </div>
@@ -395,8 +395,8 @@ export default function Trends2026View({
       {/* Pattern-interrupt overlays */}
       <div className={`${glassStyle} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
-            <Wand2 className="w-4 h-4 text-rose-400" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center">
+            <Wand2 className="w-4 h-4 text-[var(--tint-rose-fg)]" />
           </div>
           <div className="flex-1">
             <h3 className="text-base font-bold text-white">Pattern-Interrupt FX</h3>
@@ -412,7 +412,7 @@ export default function Trends2026View({
                 type="button"
                 onClick={() => handleApplyOverlay(k)}
                 className={`rounded-xl p-3 text-left border transition-colors ${
-                  active ? 'bg-rose-500/10 border-rose-500/40' : 'bg-white/[0.02] border-white/10 hover:border-rose-500/30'
+                  active ? 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]' : 'bg-white/[0.02] border-white/10 hover:border-[var(--tint-rose-edge)]'
                 }`}
               >
                 <p className={`text-[18px] mb-1 ${active ? 'text-rose-300' : 'text-slate-400'}`}>{k.preview}</p>
@@ -427,8 +427,8 @@ export default function Trends2026View({
       {/* Trending sound match */}
       <div className={`${glassStyle} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-            <Volume2 className="w-4 h-4 text-emerald-400" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center">
+            <Volume2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Trending Sound Match</h3>
@@ -443,8 +443,8 @@ export default function Trends2026View({
               onClick={() => handleApplyTrendingSound(s)}
               className={`w-full text-left rounded-xl p-3.5 border transition-colors flex items-center gap-4 ${
                 appliedSoundId === s.id
-                  ? 'bg-emerald-500/10 border-emerald-500/40'
-                  : 'bg-white/[0.02] border-white/10 hover:border-emerald-500/30'
+                  ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]'
+                  : 'bg-white/[0.02] border-white/10 hover:border-[var(--tint-emerald-edge)]'
               }`}
             >
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white flex-shrink-0">
@@ -453,13 +453,13 @@ export default function Trends2026View({
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-semibold text-white truncate">{s.title}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">{s.platform}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[var(--tint-emerald-fg)]">{s.platform}</span>
                   <span className="text-[9px] font-mono text-slate-500">{s.bpm} BPM</span>
                   <span className="text-[9px] font-mono text-slate-500">{s.mood}</span>
                   <span className="text-[9px] font-mono text-slate-500">{s.uses}</span>
                 </div>
               </div>
-              {appliedSoundId === s.id ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <ArrowRight className="w-4 h-4 text-slate-500" />}
+              {appliedSoundId === s.id ? <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" /> : <ArrowRight className="w-4 h-4 text-slate-500" />}
             </button>
           ))}
         </div>
@@ -468,11 +468,11 @@ export default function Trends2026View({
       {/* Voice clone */}
       <div className={`${glassStyle} rounded-2xl p-5`}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">
-            <Mic className="w-4 h-4 text-indigo-400" />
+          <div className="w-9 h-9 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+            <Mic className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">Voice Clone Narration <Lock className="w-3 h-3 text-amber-400" /></h3>
+            <h3 className="text-base font-bold text-white flex items-center gap-2">Voice Clone Narration <Lock className="w-3 h-3 text-[var(--tint-amber-fg)]" /></h3>
             <p className="text-[11px] text-slate-400">Fill voiceover gaps with your own cloned voice · Pro tier</p>
           </div>
         </div>
@@ -483,7 +483,7 @@ export default function Trends2026View({
               type="button"
               onClick={() => { setVoicePreset(v.id); showToast?.(`Voice preset: ${v.label}`, 'info') }}
               className={`text-left rounded-xl p-3 border transition-colors ${
-                voicePreset === v.id ? 'bg-indigo-500/10 border-indigo-500/40' : 'bg-white/[0.02] border-white/10 hover:border-indigo-500/30'
+                voicePreset === v.id ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]' : 'bg-white/[0.02] border-white/10 hover:border-[var(--tint-indigo-edge)]'
               }`}
             >
               <p className="text-[12px] font-semibold text-white">{v.label}</p>
@@ -494,8 +494,8 @@ export default function Trends2026View({
       </div>
 
       {/* Footer note */}
-      <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
-        <Info className="w-4 h-4 text-fuchsia-400 flex-shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-[var(--tint-fuchsia-edge)] bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
+        <Info className="w-4 h-4 text-[var(--tint-fuchsia-fg)] flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-[11px] font-bold text-fuchsia-300 leading-snug">Most tools use seeded sample data</p>
           <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">

@@ -381,7 +381,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
               onChange={(e) => setExportOptions(prev => ({ ...prev, allowSmartRefit: e.target.checked }))}
               className="rounded border-orange-300 text-orange-500 focus:ring-orange-500"
             />
-            <span className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+            <span className="text-sm font-bold text-orange-600 dark:text-[var(--tint-orange-fg)] flex items-center gap-1">
               AI Smart-Refit
               <span className="text-[8px] bg-orange-100 dark:bg-orange-900/40 px-1 rounded">BETA</span>
             </span>
@@ -406,13 +406,13 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">Alpha Access</span>
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-[var(--tint-indigo-bg)] px-3 py-1 rounded-full border border-[var(--tint-indigo-edge)]">Alpha Access</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="space-y-4">
-            <label className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-indigo-500/30 transition-all cursor-pointer group">
+            <label className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-[var(--tint-indigo-edge)] transition-all cursor-pointer group">
               <div className={`p-2 rounded-xl transition-colors ${exportOptions.isScheduled ? 'bg-indigo-500 text-white' : 'bg-gray-50 dark:bg-gray-800'}`}>
                 <Clock className="w-4 h-4" />
               </div>
@@ -449,7 +449,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
           </div>
 
           <div className="space-y-4">
-            <label className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-emerald-500/30 transition-all cursor-pointer group">
+            <label className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-[var(--tint-emerald-edge)] transition-all cursor-pointer group">
               <div className={`p-2 rounded-xl transition-colors ${exportOptions.postToAllLinked ? 'bg-emerald-500 text-white' : 'bg-gray-50 dark:bg-gray-800'}`}>
                 <Zap className="w-4 h-4" />
               </div>

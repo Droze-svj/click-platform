@@ -159,7 +159,7 @@ export default function TeamDetailsPage() {
            <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
            <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
         </div>
-        <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Swarm Node...</p>
+        <p className="text-[14px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Swarm Node...</p>
       </div>
     )
   }
@@ -189,7 +189,7 @@ export default function TeamDetailsPage() {
         <button
           onClick={() => router.push('/dashboard/teams')}
           title="Return to Swarm Matrix"
-          className="inline-flex items-center gap-4 text-slate-500 hover:text-indigo-400 transition-all text-[12px] font-black uppercase tracking-[0.6em] italic"
+          className="inline-flex items-center gap-4 text-slate-500 hover:text-[var(--tint-indigo-fg)] transition-all text-[12px] font-black uppercase tracking-[0.6em] italic"
         >
           <ArrowLeft className="w-5 h-5" />
           BACK_TO_COLLECTIVE
@@ -199,19 +199,19 @@ export default function TeamDetailsPage() {
           <div className="space-y-6">
              <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
-                   <Layers size={16} className="text-indigo-400" />
-                   <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Swarm Cluster v12.4</span>
+                   <Layers size={16} className="text-[var(--tint-indigo-fg)]" />
+                   <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-indigo-fg)] italic leading-none">Swarm Cluster v12.4</span>
                 </div>
-                <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">ACTIVE_NODE</div>
+                <div className="px-4 py-1.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black text-[var(--tint-indigo-fg)] tracking-widest uppercase italic leading-none">ACTIVE_NODE</div>
              </div>
              <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">{team.name.toUpperCase()}</h1>
              {team.description && (
                <p className="text-[18px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed max-w-2xl opacity-60">{team.description.toUpperCase()}</p>
              )}
              <div className="flex flex-wrap gap-10 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none opacity-40 pt-4">
-               <span className="flex items-center gap-3"><Shield size={16} className="text-indigo-400" /> ARCHITECT: {team.ownerId?.name?.toUpperCase()}</span>
-               <span className="flex items-center gap-3"><Users size={16} className="text-indigo-400" /> {team.members.length} NEURAL_UNITS</span>
-               <span className="flex items-center gap-3"><Activity size={16} className="text-indigo-400" /> UPTIME: {new Date(team.createdAt).toLocaleDateString().toUpperCase()}</span>
+               <span className="flex items-center gap-3"><Shield size={16} className="text-[var(--tint-indigo-fg)]" /> ARCHITECT: {team.ownerId?.name?.toUpperCase()}</span>
+               <span className="flex items-center gap-3"><Users size={16} className="text-[var(--tint-indigo-fg)]" /> {team.members.length} NEURAL_UNITS</span>
+               <span className="flex items-center gap-3"><Activity size={16} className="text-[var(--tint-indigo-fg)]" /> UPTIME: {new Date(team.createdAt).toLocaleDateString().toUpperCase()}</span>
              </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function TeamDetailsPage() {
               <div className={`${glassStyle} rounded-[4rem] overflow-hidden`}>
                 <div className="px-12 py-10 border-b-2 border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-6">
-                     <Users className="w-6 h-6 text-indigo-400" />
+                     <Users className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                      <h2 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">CLUSTER_MEMBERS</h2>
                   </div>
                   <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{team.members.length} UNITS_SYNCED</div>
@@ -234,20 +234,20 @@ export default function TeamDetailsPage() {
                       className="px-12 py-10 flex flex-wrap items-center justify-between gap-8 hover:bg-white/[0.02] transition-colors group"
                     >
                       <div className="flex items-center gap-8">
-                        <div className="w-20 h-20 rounded-[2rem] bg-white/[0.05] border-2 border-white/10 flex items-center justify-center text-xl font-black text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-xl italic">
+                        <div className="w-20 h-20 rounded-[2rem] bg-white/[0.05] border-2 border-white/10 flex items-center justify-center text-xl font-black text-[var(--tint-indigo-fg)] group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-xl italic">
                           {(m.userId?.name || '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <p className="text-[20px] font-black text-white italic uppercase tracking-tighter leading-tight">{m.userId?.name}</p>
                           <p className="text-[12px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 mb-2">{m.userId?.email}</p>
-                          <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic opacity-40">
+                          <p className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic opacity-40">
                             INITIALIZED: {new Date(m.joinedAt).toLocaleDateString().toUpperCase()}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-6">
                         {isOwner(m) ? (
-                          <div className="px-6 py-2 rounded-full bg-amber-500/10 border-2 border-amber-500/20 text-[10px] font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-3">
+                          <div className="px-6 py-2 rounded-full bg-[var(--tint-amber-bg)] border-2 border-[var(--tint-amber-edge)] text-[10px] font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-3">
                             <Shield className="w-4 h-4" />
                             CORE_OWNER
                           </div>
@@ -269,14 +269,14 @@ export default function TeamDetailsPage() {
                             <button
                               onClick={() => handleRemoveMember((m.userId as any)._id)}
                               disabled={!!removing}
-                              className="w-12 h-12 flex items-center justify-center text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/5 rounded-2xl transition-all border-2 border-transparent hover:border-rose-500/20"
+                              className="w-12 h-12 flex items-center justify-center text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/5 rounded-2xl transition-all border-2 border-transparent hover:border-[var(--tint-rose-edge)]"
                               title="Terminate Node Connection"
                             >
                               <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                         ) : (
-                          <div className={`px-6 py-2 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest italic`}>
+                          <div className={`px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic`}>
                             {m.role.toUpperCase()}
                           </div>
                         )}
@@ -290,7 +290,7 @@ export default function TeamDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-6">
                  <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
                     <div className="flex items-center gap-6">
-                       <Share2 className="w-6 h-6 text-indigo-400" />
+                       <Share2 className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                        <h3 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">LATTICE_INTEGRATION</h3>
                     </div>
                     <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">Cross-link modular components with this cluster to synchronize narrative and kinetic assets.</p>
@@ -303,17 +303,17 @@ export default function TeamDetailsPage() {
                  </div>
                  <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
                     <div className="flex items-center gap-6">
-                       <Zap className="w-6 h-6 text-indigo-400" />
+                       <Zap className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                        <h3 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">SWARM_TELEMETRY</h3>
                     </div>
                     <div className="space-y-4">
                        <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">ID_DNA_REGISTRY</span>
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">VERIFIED</span>
+                          <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">VERIFIED</span>
                        </div>
                        <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">NEURAL_SYNC_RATE</span>
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">99.8%</span>
+                          <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">99.8%</span>
                        </div>
                     </div>
                  </div>
@@ -323,9 +323,9 @@ export default function TeamDetailsPage() {
            <div className="lg:col-span-4 space-y-12">
               {/* Invite Node */}
               {canManage && (
-                <div className={`${glassStyle} rounded-[4rem] p-12 space-y-10 shadow-[20px_40px_100px_rgba(0,0,0,0.8)] border-indigo-500/20`}>
+                <div className={`${glassStyle} rounded-[4rem] p-12 space-y-10 shadow-[20px_40px_100px_rgba(0,0,0,0.8)] border-[var(--tint-indigo-edge)]`}>
                    <div className="flex items-center gap-6">
-                      <UserPlus className="w-6 h-6 text-indigo-400" />
+                      <UserPlus className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                       <h2 className="text-[20px] font-black text-white italic uppercase tracking-tighter">NODE_INDUCTION</h2>
                    </div>
                    <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">
@@ -333,7 +333,7 @@ export default function TeamDetailsPage() {
                    </p>
                    <div className="space-y-6">
                       <div className="relative group/input">
-                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/input:text-indigo-400 transition-colors" />
+                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/input:text-[var(--tint-indigo-fg)] transition-colors" />
                         <input
                           type="email"
                           value={inviteEmail}

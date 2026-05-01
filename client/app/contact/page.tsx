@@ -19,9 +19,9 @@ export default function ContactPage() {
         <div className="grid sm:grid-cols-3 gap-4">
           <a
             href="mailto:hello@click.example"
-            className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-indigo-500/30 hover:-translate-y-1 transition-all duration-300"
+            className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-indigo-edge)] hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center mb-5 text-indigo-300 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center mb-5 text-indigo-300 group-hover:scale-110 transition-transform">
               <Mail className="w-6 h-6" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-black mb-2 tracking-tight">General</h2>
@@ -33,9 +33,9 @@ export default function ContactPage() {
 
           <a
             href="mailto:support@click.example"
-            className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/30 hover:-translate-y-1 transition-all duration-300"
+            className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-emerald-edge)] hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-5 text-emerald-300 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center mb-5 text-emerald-300 group-hover:scale-110 transition-transform">
               <MessageCircle className="w-6 h-6" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-black mb-2 tracking-tight">Support</h2>
@@ -47,9 +47,9 @@ export default function ContactPage() {
 
           <a
             href="mailto:sales@click.example?subject=Agency%20Plan%20Inquiry"
-            className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-amber-500/30 hover:-translate-y-1 transition-all duration-300"
+            className="group p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-amber-edge)] hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-5 text-amber-300 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center mb-5 text-amber-300 group-hover:scale-110 transition-transform">
               <Building2 className="w-6 h-6" aria-hidden="true" />
             </div>
             <h2 className="text-lg font-black mb-2 tracking-tight">Agencies</h2>

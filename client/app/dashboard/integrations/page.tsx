@@ -49,10 +49,10 @@ const PROVIDER_GRADIENT: Record<string, string> = {
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; dot: string; bg: string }> = {
-  active:   { label: 'Connected', color: 'text-emerald-400', dot: 'bg-emerald-500', bg: 'bg-emerald-500/10' },
+  active:   { label: 'Connected', color: 'text-[var(--tint-emerald-fg)]', dot: 'bg-emerald-500', bg: 'bg-[var(--tint-emerald-bg)]' },
   inactive: { label: 'Inactive',  color: 'text-slate-400',  dot: 'bg-slate-600',  bg: 'bg-white/5' },
-  error:    { label: 'Auth Failed', color: 'text-rose-400',   dot: 'bg-rose-500',   bg: 'bg-rose-500/10' },
-  pending:  { label: 'Connecting', color: 'text-amber-400',  dot: 'bg-amber-500',  bg: 'bg-amber-500/10' },
+  error:    { label: 'Auth Failed', color: 'text-[var(--tint-rose-fg)]',   dot: 'bg-rose-500',   bg: 'bg-[var(--tint-rose-bg)]' },
+  pending:  { label: 'Connecting', color: 'text-[var(--tint-amber-fg)]',  dot: 'bg-amber-500',  bg: 'bg-[var(--tint-amber-bg)]' },
 }
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl transition-all duration-300'
@@ -159,14 +159,14 @@ export default function IntegrationsPage() {
             <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl">
               <ArrowLeft size={24} />
             </button>
-            <div className="w-16 h-16 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-2xl flex items-center justify-center shadow-2xl relative group">
+            <div className="w-16 h-16 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-2xl flex items-center justify-center shadow-2xl relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Network size={32} className="text-indigo-400 relative z-10" />
+              <Network size={32} className="text-[var(--tint-indigo-fg)] relative z-10" />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Connection Mesh</span>
+                <Cpu size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)]/80 italic">Neural Connection Mesh</span>
               </div>
               <h1 className="text-4xl font-black text-white tracking-tight leading-none">Platform Vault</h1>
               <p className="text-slate-400 text-sm mt-2 font-medium max-w-lg">Manage your social ecosystems. Connect platforms to automate publishing and track performance data.</p>
@@ -182,9 +182,9 @@ export default function IntegrationsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 relative z-10">
           {[
             { label: 'Total Connections', value: installed.length, icon: Link2, color: 'text-white' },
-            { label: 'Active Sync',  value: installed.filter(i => i.status === 'active').length, icon: Zap, color: 'text-emerald-400' },
-            { label: 'Issues Found',   value: installed.filter(i => i.status === 'error').length, icon: AlertTriangle, color: 'text-rose-400' },
-            { label: 'Supported Apps',value: marketplace.length, icon: Globe, color: 'text-indigo-400' },
+            { label: 'Active Sync',  value: installed.filter(i => i.status === 'active').length, icon: Zap, color: 'text-[var(--tint-emerald-fg)]' },
+            { label: 'Issues Found',   value: installed.filter(i => i.status === 'error').length, icon: AlertTriangle, color: 'text-[var(--tint-rose-fg)]' },
+            { label: 'Supported Apps',value: marketplace.length, icon: Globe, color: 'text-[var(--tint-indigo-fg)]' },
           ].map((s, i) => (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} key={i} className={`${glassStyle} rounded-3xl p-6 flex items-center gap-4 hover:bg-white/[0.04]`}>
               <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center">
@@ -202,11 +202,11 @@ export default function IntegrationsPage() {
         <AnimatePresence>
           {showMarketplace && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden space-y-8 relative z-10">
-              <div className={`${glassStyle} rounded-[2.5rem] p-8 lg:p-12 bg-indigo-500/5 border-indigo-500/20`}>
+              <div className={`${glassStyle} rounded-[2.5rem] p-8 lg:p-12 bg-indigo-500/5 border-[var(--tint-indigo-edge)]`}>
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12">
                   <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                      <Globe size={28} className="text-indigo-400" />
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+                      <Globe size={28} className="text-[var(--tint-indigo-fg)]" />
                     </div>
                     <div>
                       <h2 className="text-3xl font-black text-white tracking-tight leading-none mb-2">Connect New Platforms</h2>
@@ -239,7 +239,7 @@ export default function IntegrationsPage() {
                               <h4 className="text-xl font-black text-white tracking-tight truncate leading-none mb-2">{m.name}</h4>
                               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">{m.category || 'Social'}</p>
                             </div>
-                            {m.popular && <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[8px] font-black uppercase tracking-widest">POPULAR</span>}
+                            {m.popular && <span className="px-2.5 py-1 rounded-full bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)] text-[8px] font-black uppercase tracking-widest">POPULAR</span>}
                           </div>
                           <p className="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2 opacity-80">{m.description}</p>
                           <button onClick={() => handleInstall(m)} disabled={isInstalling} className="mt-auto py-3 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-40 flex items-center justify-center gap-2 group-hover:shadow-lg active:scale-95">
@@ -260,8 +260,8 @@ export default function IntegrationsPage() {
         <div className={`${glassStyle} rounded-[2.5rem] overflow-hidden bg-black/40 relative z-10`}>
           <div className="flex items-center justify-between gap-6 px-10 py-8 border-b border-white/5">
             <div className="flex items-center gap-6">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-xl">
-                <Radio size={28} className="text-emerald-400" />
+              <div className="w-14 h-14 rounded-2xl bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-xl">
+                <Radio size={28} className="text-[var(--tint-emerald-fg)]" />
               </div>
               <div>
                 <h2 className="text-3xl font-black text-white tracking-tight leading-none">Active Ecosystem</h2>
@@ -314,7 +314,7 @@ export default function IntegrationsPage() {
                       <button className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white hover:border-white/20 flex items-center justify-center transition-all active:scale-90 shadow-lg">
                         <Settings size={18} />
                       </button>
-                      <button onClick={() => setRemoveTargetId(intg._id)} className="w-11 h-11 rounded-xl bg-rose-500/5 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all active:scale-90 shadow-lg">
+                      <button onClick={() => setRemoveTargetId(intg._id)} className="w-11 h-11 rounded-xl bg-rose-500/5 border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all active:scale-90 shadow-lg">
                         <Trash2 size={18} />
                       </button>
                     </div>
@@ -329,13 +329,13 @@ export default function IntegrationsPage() {
         <AnimatePresence>
           {removeTarget && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-3xl" onClick={() => !removing && setRemoveTargetId(null)}>
-              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} onClick={e => e.stopPropagation()} className={`${glassStyle} rounded-[3rem] p-10 max-w-xl w-full border-rose-500/20 bg-[#050505]`}>
+              <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} onClick={e => e.stopPropagation()} className={`${glassStyle} rounded-[3rem] p-10 max-w-xl w-full border-[var(--tint-rose-edge)] bg-[#050505]`}>
                 <div className="flex items-center gap-6 mb-8">
-                  <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border-2 border-rose-500/30 flex items-center justify-center">
-                    <Unlink size={28} className="text-rose-400" />
+                  <div className="w-16 h-16 rounded-2xl bg-[var(--tint-rose-bg)] border-2 border-[var(--tint-rose-edge)] flex items-center justify-center">
+                    <Unlink size={28} className="text-[var(--tint-rose-fg)]" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] italic mb-1 block">Termination Protocol</span>
+                    <span className="text-[10px] font-black text-[var(--tint-rose-fg)] uppercase tracking-[0.4em] italic mb-1 block">Termination Protocol</span>
                     <h3 className="text-2xl font-black text-white tracking-tight uppercase italic leading-none">Disconnect {removeTarget.name}?</h3>
                   </div>
                 </div>

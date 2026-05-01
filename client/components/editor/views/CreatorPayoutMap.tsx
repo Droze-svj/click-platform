@@ -79,7 +79,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
       {/* Header HUD */}
       <div className="flex items-center justify-between relative z-20">
         <div className="flex flex-col gap-1">
-          <h2 className={`text-2xl font-black uppercase tracking-[0.2em] italic flex items-center gap-3 ${viewMode === 'evolution' ? 'text-indigo-400' : 'text-emerald-400'}`}>
+          <h2 className={`text-2xl font-black uppercase tracking-[0.2em] italic flex items-center gap-3 ${viewMode === 'evolution' ? 'text-[var(--tint-indigo-fg)]' : 'text-[var(--tint-emerald-fg)]'}`}>
             <Globe className="w-6 h-6" />
             {viewMode === 'evolution' ? 'Global Evolution Cartography' : 'Global Revenue Cartography'}
           </h2>
@@ -125,7 +125,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
            <div className="h-10 w-[1px] bg-white/10" />
            <div className="flex flex-col items-end">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">{viewMode === 'evolution' ? 'Fastest Node' : 'Active Nodes'}</span>
-              <span className={`text-2xl font-black italic ${viewMode === 'evolution' ? 'text-indigo-400' : 'text-emerald-400'}`}>
+              <span className={`text-2xl font-black italic ${viewMode === 'evolution' ? 'text-[var(--tint-indigo-fg)]' : 'text-[var(--tint-emerald-fg)]'}`}>
                 {viewMode === 'evolution' ? 'APAC' : '3,055'}
               </span>
            </div>
@@ -161,10 +161,10 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                       transition={{ duration: 2, repeat: Infinity }}
                       className="relative flex items-center justify-center"
                     >
-                       <div className="absolute w-12 h-12 rounded-full bg-indigo-500/10 blur-xl" />
-                       <Cpu className="w-6 h-6 text-indigo-400 opacity-40 shrink-0" />
+                       <div className="absolute w-12 h-12 rounded-full bg-[var(--tint-indigo-bg)] blur-xl" />
+                       <Cpu className="w-6 h-6 text-[var(--tint-indigo-fg)] opacity-40 shrink-0" />
                     </motion.div>
-                    <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-indigo-600/20 backdrop-blur-sm border border-indigo-500/20 px-2 py-0.5 rounded text-[6px] font-black text-indigo-300 uppercase tracking-widest">
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-indigo-600/20 backdrop-blur-sm border border-[var(--tint-indigo-edge)] px-2 py-0.5 rounded text-[6px] font-black text-indigo-300 uppercase tracking-widest">
                        Surge Echo: {f.probability}
                     </div>
                  </div>
@@ -225,7 +225,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 w-44 p-5 rounded-3xl bg-black/95 border border-white/10 backdrop-blur-3xl opacity-0 group-hover/node:opacity-100 transition-all z-20 pointer-events-none shadow-2xl">
                    <div className="flex justify-between items-start mb-3 border-b border-white/5 pb-2">
                       <span className="text-[10px] font-black text-white uppercase tracking-wider">{region.name}</span>
-                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${viewMode === 'style' ? 'bg-violet-500/20 text-violet-400' : viewMode === 'evolution' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-emerald-500/20 text-emerald-400'}`}>{region.growth}</span>
+                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${viewMode === 'style' ? 'bg-[var(--tint-violet-bg)] text-[var(--tint-violet-fg)]' : viewMode === 'evolution' ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]' : 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)]'}`}>{region.growth}</span>
                    </div>
 
                    {viewMode === 'revenue' && (
@@ -247,7 +247,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                            <span className="text-[8px] font-black text-slate-500 uppercase">Top Style DNA:</span>
                            <div className="flex items-center justify-between">
                               <span className="text-[11px] font-black text-white uppercase italic">{region.styleDNA.topStyle}</span>
-                              <span className="text-[10px] font-mono text-violet-400">{region.styleDNA.matchScore}%</span>
+                              <span className="text-[10px] font-mono text-[var(--tint-violet-fg)]">{region.styleDNA.matchScore}%</span>
                            </div>
                         </div>
                      </div>
@@ -257,12 +257,12 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                      <div className="space-y-3">
                         <div className="flex flex-col gap-1">
                            <span className="text-[8px] font-black text-slate-500 uppercase flex items-center gap-2">
-                             <Zap className="w-2 h-2 text-indigo-400 fill-current" />
+                             <Zap className="w-2 h-2 text-[var(--tint-indigo-fg)] fill-current" />
                              Evolution Velocity:
                            </span>
                            <div className="flex items-center justify-between">
                               <span className="text-[14px] font-black text-white italic">{region.evolutionVelocity}v</span>
-                              <span className={`text-[8px] font-black uppercase ${region.evolutionVelocity > 80 ? 'text-emerald-400' : 'text-indigo-300'}`}>
+                              <span className={`text-[8px] font-black uppercase ${region.evolutionVelocity > 80 ? 'text-[var(--tint-emerald-fg)]' : 'text-indigo-300'}`}>
                                 {region.evolutionVelocity > 80 ? 'Hyper-Evolving' : 'Stable Mutation'}
                               </span>
                            </div>
@@ -282,12 +282,12 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                             className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2"
                           >
                              <div className="flex items-center gap-2">
-                                <Cpu className="w-3 h-3 text-indigo-400 animate-pulse" />
+                                <Cpu className="w-3 h-3 text-[var(--tint-indigo-fg)] animate-pulse" />
                                 <span className="text-[7px] font-black text-white uppercase tracking-widest">Predictive Surge Forecast</span>
                              </div>
                              <div className="flex justify-between items-end">
                                 <div className="flex flex-col">
-                                   <span className="text-[12px] font-black text-indigo-400 italic">{evolutionForecast.find(f => f.regionId === region.id).probability} Probability</span>
+                                   <span className="text-[12px] font-black text-[var(--tint-indigo-fg)] italic">{evolutionForecast.find(f => f.regionId === region.id).probability} Probability</span>
                                    <span className="text-[7px] text-slate-500 uppercase font-black">Next Shift Imminent</span>
                                 </div>
                                 <div className="text-right">
@@ -333,9 +333,9 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                    .map((region, i) => (
                    <div key={region.id} className="p-5 rounded-[2rem] bg-white/5 border border-white/5 flex items-center gap-5 group hover:bg-white/10 transition-all">
                       <div className={`w-10 h-10 rounded-full border flex items-center justify-center font-black italic transition-colors ${
-                        viewMode === 'style' ? 'bg-violet-500/10 border-violet-500/20 text-violet-400' :
-                        viewMode === 'evolution' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
-                        'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        viewMode === 'style' ? 'bg-[var(--tint-violet-bg)] border-[var(--tint-violet-edge)] text-[var(--tint-violet-fg)]' :
+                        viewMode === 'evolution' ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]' :
+                        'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
                       }`}>
                         0{i+1}
                       </div>
@@ -343,9 +343,9 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
                          <div className="flex justify-between mb-1">
                             <span className="text-[11px] font-black text-white uppercase tracking-tight">{region.name}</span>
                             <span className={`text-[10px] font-black uppercase ${
-                              viewMode === 'style' ? 'text-violet-400 italic' :
-                              viewMode === 'evolution' ? 'text-indigo-400' :
-                              'text-emerald-400'
+                              viewMode === 'style' ? 'text-[var(--tint-violet-fg)] italic' :
+                              viewMode === 'evolution' ? 'text-[var(--tint-indigo-fg)]' :
+                              'text-[var(--tint-emerald-fg)]'
                             }`}>
                                {viewMode === 'revenue' ? region.growth : viewMode === 'style' ? region.styleDNA.topStyle : `${region.evolutionVelocity}v`}
                             </span>
@@ -370,14 +370,14 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
               </div>
 
               <div className={`p-6 rounded-[2.5rem] border ${
-                viewMode === 'style' ? 'bg-violet-600/10 border-violet-500/20' :
-                viewMode === 'evolution' ? 'bg-indigo-600/10 border-indigo-500/20' :
-                'bg-emerald-600/10 border-emerald-500/20'
+                viewMode === 'style' ? 'bg-violet-600/10 border-[var(--tint-violet-edge)]' :
+                viewMode === 'evolution' ? 'bg-indigo-600/10 border-[var(--tint-indigo-edge)]' :
+                'bg-emerald-600/10 border-[var(--tint-emerald-edge)]'
               }`}>
                  <div className="flex items-center gap-3 mb-3">
-                    {viewMode === 'style' ? <Fingerprint className="w-4 h-4 text-violet-400" /> :
-                     viewMode === 'evolution' ? <Zap className="w-4 h-4 text-indigo-400" /> :
-                     <ArrowUpRight className="w-4 h-4 text-emerald-400" />}
+                    {viewMode === 'style' ? <Fingerprint className="w-4 h-4 text-[var(--tint-violet-fg)]" /> :
+                     viewMode === 'evolution' ? <Zap className="w-4 h-4 text-[var(--tint-indigo-fg)]" /> :
+                     <ArrowUpRight className="w-4 h-4 text-[var(--tint-emerald-fg)]" />}
                     <span className="text-[10px] font-black text-white uppercase tracking-widest">
                       {viewMode === 'style' ? 'Stylistic Signal DNA' :
                        viewMode === 'evolution' ? 'Neural Adaptation Insights' :

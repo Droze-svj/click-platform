@@ -721,7 +721,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                       y: snapLines.y !== undefined ? snapLines.y : rawY
                     })
                   }}
-                  className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
+                  className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-[var(--tint-indigo-bg)]' : 'hover:ring-1 hover:ring-white/50'}`}
                   disableDragging={isPlaying}
                   enableResizing={false}
                   onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(text.id) }}
@@ -761,7 +761,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               </div>
             </div>
             <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
-               <Activity className="w-3.5 h-3.5 text-indigo-400" />
+               <Activity className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
                <div className="flex flex-col">
                  <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Performance</span>
                  <div className="flex gap-2 text-xs font-mono font-bold text-indigo-300">
@@ -771,8 +771,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                    <span className="opacity-50">|</span>
                    <span
                      className={
-                       gpuStatus === 'ready' ? 'text-emerald-400'
-                       : gpuStatus === 'unavailable' ? 'text-amber-400'
+                       gpuStatus === 'ready' ? 'text-[var(--tint-emerald-fg)]'
+                       : gpuStatus === 'unavailable' ? 'text-[var(--tint-amber-fg)]'
                        : 'text-white/40'
                      }
                      title={
@@ -796,7 +796,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
               return (
                 <div
-                  className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2"
+                  className="flex bg-[var(--tint-amber-bg)] backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2"
                   title="These ops are applied at export time only — preview shows segments in their original direction with normal audio sync."
                 >
                   <span className="text-[9px] font-black uppercase text-amber-300/80 tracking-wider">Export-only</span>
@@ -977,11 +977,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             </div>
 
             <div className="px-5 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-6 pointer-events-auto">
-              <button onClick={onPlayPause} className="text-white hover:text-indigo-400 transition-colors">
+              <button onClick={onPlayPause} className="text-white hover:text-[var(--tint-indigo-fg)] transition-colors">
                 {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
               </button>
               <div className="w-px h-4 bg-white/10" />
-              <button onClick={handleBeforeAfterToggle} className={`transition-colors ${showAppliedFilters ? 'text-indigo-400' : 'text-white/40'}`}>
+              <button onClick={handleBeforeAfterToggle} className={`transition-colors ${showAppliedFilters ? 'text-[var(--tint-indigo-fg)]' : 'text-white/40'}`}>
                 {showAppliedFilters ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
             </div>
@@ -1007,13 +1007,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(99,102,241,0.05)_50%)] bg-[length:100%_4px] pointer-events-none" />
 
               {/* Top HUD Label */}
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-indigo-500/20 backdrop-blur-md border border-indigo-500/40 rounded-full flex items-center gap-3">
-                <Fingerprint className="w-4 h-4 text-indigo-400 animate-pulse" />
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-[var(--tint-indigo-bg)] backdrop-blur-md border border-[var(--tint-indigo-edge)] rounded-full flex items-center gap-3">
+                <Fingerprint className="w-4 h-4 text-[var(--tint-indigo-fg)] animate-pulse" />
                 <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic leading-none">Neural DNA Vault Active</span>
               </div>
 
               {/* Data Streams (Simplified) */}
-              <div className="absolute top-0 bottom-0 left-12 w-px bg-indigo-500/20" />
+              <div className="absolute top-0 bottom-0 left-12 w-px bg-[var(--tint-indigo-bg)]" />
               <div className="absolute top-1/4 left-14 space-y-2 opacity-50">
                  <div className="text-[8px] font-mono text-indigo-300">SEG_ID: {Math.random().toString(16).slice(2,8)}</div>
                  <div className="text-[8px] font-mono text-indigo-300">DNA_MATCH: 99.42%</div>

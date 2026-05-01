@@ -19,24 +19,24 @@ const PILLARS: Pillar[] = [
     icon: BrainCircuit,
     title: 'Neural Video Studio',
     desc: 'Footage in, viral objects out. Our engine learns your niche, your voice, and precisely what keeps your specific audience watching until the last frame.',
-    color: 'text-indigo-400',
-    bg: 'bg-indigo-500/10',
+    color: 'text-[var(--tint-indigo-fg)]',
+    bg: 'bg-[var(--tint-indigo-bg)]',
     bullets: ['Niche-aware retention rewrites', 'Autonomous cut-point detection', 'High-fidelity dynamic captions'],
   },
   {
     icon: Network,
     title: 'Omni-Channel Mesh',
     desc: 'Publish once. Dominate everywhere. Click reformats every clip per platform specification and schedules deliveries to optimal engagement windows.',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
+    color: 'text-[var(--tint-emerald-fg)]',
+    bg: 'bg-[var(--tint-emerald-bg)]',
     bullets: ['9:16 / 1:1 / 16:9 auto-conforming', 'Optimal-time AI scheduling', 'Native OAuth for all platforms'],
   },
   {
     icon: Zap,
     title: 'Consensus Analytics',
     desc: 'Predict virality before you hit post. Performance data flows back into the forge — what worked yesterday shapes tomorrow’s neural suggestions.',
-    color: 'text-amber-400',
-    bg: 'bg-amber-500/10',
+    color: 'text-[var(--tint-amber-fg)]',
+    bg: 'bg-[var(--tint-amber-bg)]',
     bullets: ['Pre-publish retention forecasting', 'Performance learning feedback loops', 'Cross-niche trend radar (6h refresh)'],
   },
 ];
@@ -55,7 +55,7 @@ export function EnginePillars() {
         <div className="text-center mb-24 space-y-6">
           <div className="flex items-center justify-center gap-3">
              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-400/80 italic">The Engine Core</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[var(--tint-indigo-fg)]/80 italic">The Engine Core</span>
           </div>
           <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none text-white">
             NEURAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40 italic">ARCHITECTURES</span>
@@ -76,7 +76,7 @@ export function EnginePillars() {
                 viewport={{ once: true, margin: '-100px' }}
                 transition={{ delay: i * 0.1, duration: 0.8 }}
                 whileHover={{ y: -10 }}
-                className={`${glass} p-10 rounded-[3rem] group hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all duration-500`}
+                className={`${glass} p-10 rounded-[3rem] group hover:bg-white/[0.04] hover:border-[var(--tint-indigo-edge)] transition-all duration-500`}
               >
                 <div
                   className={`w-16 h-16 rounded-[1.4rem] ${p.bg} border border-white/10 flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ${p.color}`}

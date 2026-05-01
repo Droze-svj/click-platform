@@ -45,15 +45,15 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
   }
 
   return (
-    <div className={`${glassStyle} rounded-[3rem] p-10 overflow-hidden relative group border-white/5 hover:border-indigo-500/30 transition-all`}>
+    <div className={`${glassStyle} rounded-[3rem] p-10 overflow-hidden relative group border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all`}>
       <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:rotate-12 transition-transform duration-300">
          <Radio size={120} className="text-white" />
       </div>
 
       <div className="flex items-center justify-between mb-10 relative z-10">
         <div className="flex items-center gap-4">
-           <div className="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center">
-              <Shield size={20} className="text-indigo-400" />
+           <div className="w-10 h-10 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-xl flex items-center justify-center">
+              <Shield size={20} className="text-[var(--tint-indigo-fg)]" />
            </div>
            <div>
               <h3 className="text-[10px] font-black text-slate-700 uppercase tracking-[0.3em] mb-1 italic">Temporal Hub</h3>

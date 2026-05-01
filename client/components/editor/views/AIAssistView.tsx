@@ -29,10 +29,10 @@ import { useState } from 'react'
 import { apiPost } from '../../../lib/api'
 
 const CREATIVITY_TIPS = [
-  { icon: TargetIcon, title: 'Hook Velocity', desc: 'Secure retention in the first 3s. Grab attention with a bold semantic claim.', id: 'edit' as EditorCategory, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-  { icon: Type, title: 'Conversion Matrix', desc: 'Add "Subscribe" or "Link in Bio" nodes as calibrated text overlays.', id: 'edit' as EditorCategory, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  { icon: Film, title: 'B-Roll Clusters', desc: 'Saturate dead air with visual variety. Inject B-roll from Neural Repository.', id: 'assets' as EditorCategory, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  { icon: Zap, title: 'Semantic Sync', desc: 'Use Elite AI to bridge transcription and trim dead air nodes.', id: 'ai-edit' as EditorCategory, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+  { icon: TargetIcon, title: 'Hook Velocity', desc: 'Secure retention in the first 3s. Grab attention with a bold semantic claim.', id: 'edit' as EditorCategory, color: 'text-[var(--tint-rose-fg)]', bg: 'bg-[var(--tint-rose-bg)]' },
+  { icon: Type, title: 'Conversion Matrix', desc: 'Add "Subscribe" or "Link in Bio" nodes as calibrated text overlays.', id: 'edit' as EditorCategory, color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)]' },
+  { icon: Film, title: 'B-Roll Clusters', desc: 'Saturate dead air with visual variety. Inject B-roll from Neural Repository.', id: 'assets' as EditorCategory, color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-[var(--tint-emerald-bg)]' },
+  { icon: Zap, title: 'Semantic Sync', desc: 'Use Elite AI to bridge transcription and trim dead air nodes.', id: 'ai-edit' as EditorCategory, color: 'text-[var(--tint-fuchsia-fg)]', bg: 'bg-[var(--tint-fuchsia-bg)]' },
 ]
 
 interface AIAssistViewProps {
@@ -65,8 +65,8 @@ const SUGGESTION_ICON: Record<AIDirectorSuggestion['type'], React.ComponentType<
 }
 
 const IMPACT_TONE: Record<AIDirectorSuggestion['impact'], { bar: string; text: string; bg: string }> = {
-  high: { bar: 'bg-rose-500', text: 'text-rose-300', bg: 'bg-rose-500/10' },
-  medium: { bar: 'bg-amber-500', text: 'text-amber-300', bg: 'bg-amber-500/10' },
+  high: { bar: 'bg-rose-500', text: 'text-rose-300', bg: 'bg-[var(--tint-rose-bg)]' },
+  medium: { bar: 'bg-amber-500', text: 'text-amber-300', bg: 'bg-[var(--tint-amber-bg)]' },
   low: { bar: 'bg-slate-500', text: 'text-slate-400', bg: 'bg-slate-500/10' },
 }
 
@@ -150,7 +150,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
         >
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-[10px] font-bold uppercase tracking-widest text-fuchsia-300">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-[10px] font-bold uppercase tracking-widest text-fuchsia-300">
                 <Sparkles className="w-3 h-3" />
                 Director Suggestions
               </div>
@@ -197,7 +197,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                 <div
                   key={s.id}
                   className={`flex items-center gap-4 p-4 rounded-2xl border transition-colors ${applied
-                    ? 'bg-emerald-500/5 border-emerald-500/20 opacity-60'
+                    ? 'bg-emerald-500/5 border-[var(--tint-emerald-edge)] opacity-60'
                     : 'bg-white/[0.02] border-white/10 hover:bg-white/[0.04] hover:border-white/15'}`}
                 >
                   <div className={`w-10 h-10 rounded-xl ${tone.bg} border border-white/5 flex items-center justify-center shrink-0`}>
@@ -208,7 +208,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                       <span className="text-xs font-bold uppercase tracking-widest text-white">{s.label}</span>
                       <span className="text-[10px] tabular-nums text-slate-500">@ {s.time.toFixed(1)}s</span>
                       <span className={`text-[10px] font-bold uppercase tracking-widest ${tone.text}`}>{s.impact}</span>
-                      {applied && <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Applied</span>}
+                      {applied && <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--tint-emerald-fg)]">Applied</span>}
                     </div>
                     <p className="text-sm text-slate-400 truncate">{s.description}</p>
                   </div>
@@ -219,7 +219,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                       disabled={applied}
                       onClick={() => onApplyOne?.(s)}
                       className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${applied
-                        ? 'bg-emerald-500/10 text-emerald-400 cursor-default'
+                        ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] cursor-default'
                         : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'}`}
                     >
                       {applied ? (
@@ -253,7 +253,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-10 mb-12 relative z-10">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-emerald-400 shadow-xl">
+            <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-emerald-fg)] shadow-xl">
               <Activity className="w-4 h-4 animate-pulse" />
               Cognitive Support
             </div>
@@ -276,7 +276,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                 whileHover={{ scale: 1.02, x: 4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => { setActiveCategory(tip.id); showToast(`Opening ${tip.id}`, 'info') }}
-                className="group w-full flex items-start gap-6 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-emerald-500/30 hover:bg-white/[0.05] transition-all duration-500 text-left shadow-inner"
+                className="group w-full flex items-start gap-6 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-emerald-edge)] hover:bg-white/[0.05] transition-all duration-500 text-left shadow-inner"
               >
                 <div className={`w-16 h-16 rounded-[1.2rem] ${tip.bg} flex items-center justify-center shrink-0 border border-white/5 shadow-2xl transition-transform group-hover:scale-110`}>
                   <Icon className={`w-7 h-7 ${tip.color}`} />
@@ -285,7 +285,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                   <p className="text-xl font-black text-white italic uppercase tracking-tighter">{tip.title}</p>
                   <p className="text-sm text-slate-500 font-medium italic group-hover:text-slate-300 transition-colors leading-relaxed">{tip.desc}</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-slate-800 group-hover:text-emerald-400 transition-colors shrink-0" />
+                <ChevronRight className="w-6 h-6 text-slate-800 group-hover:text-[var(--tint-emerald-fg)] transition-colors shrink-0" />
               </motion.button>
             )
           })}
@@ -303,7 +303,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
 
         <div className="flex flex-col lg:flex-row items-center justify-between gap-10 relative z-10">
           <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-4 text-fuchsia-400">
+            <div className="flex items-center gap-4 text-[var(--tint-fuchsia-fg)]">
               <CheckCircle2 className="w-6 h-6" />
               <span className="text-[10px] font-black uppercase tracking-[0.4em] italic shadow-inner">Elite Node Protocol</span>
             </div>
@@ -335,7 +335,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
         </div>
 
         <div className="relative z-10 max-w-xl mx-auto space-y-6">
-           <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl mx-auto">
+           <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] shadow-xl mx-auto">
               <Zap className="w-4 h-4" />
               Timeline Polish
             </div>

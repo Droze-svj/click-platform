@@ -226,14 +226,14 @@ const scoreRingColor = (v: number) =>
   v >= 90 ? '#34d399' : v >= 70 ? '#fbbf24' : '#f87171'
 
 const scoreTxtColor = (v: number) =>
-  v >= 90 ? 'text-emerald-400' : v >= 70 ? 'text-amber-400' : 'text-rose-400'
+  v >= 90 ? 'text-[var(--tint-emerald-fg)]' : v >= 70 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'
 
 const scoreBg = (v: number) =>
   v >= 90
-    ? 'bg-emerald-500/10 border-emerald-500/20'
+    ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]'
     : v >= 70
-    ? 'bg-amber-500/10 border-amber-500/20'
-    : 'bg-rose-500/10 border-rose-500/20'
+    ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]'
+    : 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]'
 
 // ─── Delta Flasher hook ───────────────────────────────────────────────────────
 
@@ -297,7 +297,7 @@ function MetricPill({
             exit={{ opacity: 0, scale: 0.7 }}
             transition={{ duration: 0.3 }}
             className={`absolute -top-1 left-1/2 -translate-x-1/2 text-[9px] font-black pointer-events-none ${
-              delta > 0 ? 'text-emerald-400' : 'text-rose-400'
+              delta > 0 ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'
             }`}
           >
             {delta > 0 ? `+${delta}` : delta}
@@ -398,7 +398,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-400/60 leading-tight hidden sm:block"
+                  className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--tint-indigo-fg)]/60 leading-tight hidden sm:block"
                 >
                   • {categoryLabel}
                 </motion.span>
@@ -416,10 +416,10 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               transition={{ duration: 0.2 }}
               className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest shrink-0 ${
                 autosaveStatus === 'saving'
-                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                  ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)]'
                   : autosaveStatus === 'error'
-                  ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  ? 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)]'
+                  : 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
               }`}
             >
               {autosaveStatus === 'saving' ? (
@@ -439,10 +439,10 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
           {styleDNA && (
             <div 
               onClick={onNormalizeStyle}
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 group cursor-pointer hover:bg-indigo-500/10 transition-all"
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-[var(--tint-indigo-edge)] bg-indigo-500/5 group cursor-pointer hover:bg-[var(--tint-indigo-bg)] transition-all"
             >
                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-               <span className="text-[8px] font-black text-indigo-400 uppercase tracking-tighter">Style Sync: {styleDNA.theme || 'Vlog'}</span>
+               <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-tighter">Style Sync: {styleDNA.theme || 'Vlog'}</span>
                <div className="hidden group-hover:flex items-center gap-1 ml-1 pl-1 border-l border-white/10">
                   <span className="text-[7px] text-white font-bold opacity-70">Nudge to DNA?</span>
                </div>
@@ -506,9 +506,9 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
         {/* ── Neural Command ── */}
         <button
           onClick={onCommandK}
-          className="flex-1 min-w-0 flex items-center gap-2.5 px-3 h-8 rounded-xl border border-white/[0.06] hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all group neural-hud-command"
+          className="flex-1 min-w-0 flex items-center gap-2.5 px-3 h-8 rounded-xl border border-white/[0.06] hover:border-[var(--tint-indigo-edge)] hover:bg-indigo-500/5 transition-all group neural-hud-command"
         >
-          <Search className="w-3 h-3 text-slate-500 group-hover:text-indigo-400 transition-colors shrink-0" />
+          <Search className="w-3 h-3 text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors shrink-0" />
           <span className="text-[10px] font-black italic uppercase tracking-[0.25em] text-slate-600 group-hover:text-slate-400 transition-colors truncate">
             NEURAL_SYNAPSE…
           </span>
@@ -665,7 +665,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
 
           <HUDTooltip label="Neural AI" shortcut="Open AI console">
             <button className="relative group flex items-center justify-center w-8 h-8 rounded-xl hover:bg-indigo-600 transition-all text-slate-400 hover:text-white">
-              <div className="absolute inset-0 rounded-xl bg-indigo-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 rounded-xl bg-[var(--tint-indigo-bg)] blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
               <Sparkles className="w-3.5 h-3.5 relative z-10" />
             </button>
           </HUDTooltip>
@@ -676,7 +676,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${
                 gpuBackend === 'webgpu'
                   ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  : 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
               }`}
               title={gpuVendor ?? 'GPU Accelerated'}
             >
@@ -687,16 +687,16 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
 
           {/* Agent Running Badge */}
           {agentRunning && (
-            <div className="flex items-center gap-1.5 ml-1 px-2 py-1 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20">
-              <Bot className="w-3 h-3 text-fuchsia-400 animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-fuchsia-400 hidden lg:block">Agent_Active</span>
+            <div className="flex items-center gap-1.5 ml-1 px-2 py-1 rounded-xl bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)]">
+              <Bot className="w-3 h-3 text-[var(--tint-fuchsia-fg)] animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-[var(--tint-fuchsia-fg)] hidden lg:block">Agent_Active</span>
             </div>
           )}
 
           {/* Live indicator */}
-          <div className="flex items-center gap-1.5 ml-1 px-2 py-1 rounded-xl bg-rose-500/10 border border-rose-500/20">
-            <Radio className="w-3 h-3 text-rose-400 animate-pulse" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-rose-400 hidden lg:block">Live</span>
+          <div className="flex items-center gap-1.5 ml-1 px-2 py-1 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)]">
+            <Radio className="w-3 h-3 text-[var(--tint-rose-fg)] animate-pulse" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-[var(--tint-rose-fg)] hidden lg:block">Live</span>
           </div>
         </div>
 
@@ -761,7 +761,7 @@ function MetricPopover({
 
       {/* AI tip */}
       <div className="flex gap-1.5">
-        <Brain className="w-3 h-3 text-indigo-400 shrink-0 mt-0.5" />
+        <Brain className="w-3 h-3 text-[var(--tint-indigo-fg)] shrink-0 mt-0.5" />
         <p className="text-[9px] text-slate-400 leading-relaxed">{tip}</p>
       </div>
     </motion.div>

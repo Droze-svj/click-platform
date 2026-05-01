@@ -78,9 +78,9 @@ export default function DashboardOverview() {
     return (
       <div className="flex flex-col items-center justify-center py-24 space-y-4">
         <div className="relative">
-          <div className="absolute inset-0 bg-indigo-500/20 blur-2xl rounded-full animate-pulse" />
-          <div className="w-16 h-16 rounded-3xl border-2 border-indigo-500/30 border-t-indigo-500 animate-spin flex items-center justify-center">
-            <Zap className="w-6 h-6 text-indigo-400" />
+          <div className="absolute inset-0 bg-[var(--tint-indigo-bg)] blur-2xl rounded-full animate-pulse" />
+          <div className="w-16 h-16 rounded-3xl border-2 border-[var(--tint-indigo-edge)] border-t-indigo-500 animate-spin flex items-center justify-center">
+            <Zap className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
           </div>
         </div>
         <span className="text-slate-400 font-bold uppercase tracking-widest text-xs">Synchronizing Intelligence</span>
@@ -90,8 +90,8 @@ export default function DashboardOverview() {
 
   if (error) {
     return (
-      <div className="p-8 rounded-[2.5rem] bg-rose-500/10 border border-rose-500/20 text-center space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+      <div className="p-8 rounded-[2.5rem] bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-center space-y-4">
+        <div className="w-12 h-12 rounded-2xl bg-[var(--tint-rose-bg)] flex items-center justify-center mx-auto text-[var(--tint-rose-fg)]">
           <ShieldCheck className="w-6 h-6" />
         </div>
         <h3 className="text-xl font-bold text-white">Connection Interrupted</h3>
@@ -120,7 +120,7 @@ export default function DashboardOverview() {
 
             <div className="flex flex-col md:flex-row items-center justify-between gap-10">
               <div className="space-y-6 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-black uppercase tracking-widest">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-xs font-black uppercase tracking-widest">
                   <Sparkles className="w-3 h-3" />
                   Elite Access Active
                 </div>
@@ -128,15 +128,15 @@ export default function DashboardOverview() {
                   Welcome back, <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{overview.user.name.split(' ')[0]}</span>.
                 </h1>
                 <p className="text-slate-400 text-lg md:text-xl font-medium max-w-xl">
-                  Your autonomous ecosystem is performing perfectly. Engagement is <span className="text-emerald-400 font-bold">up 14.2%</span> since your last visit.
+                  Your autonomous ecosystem is performing perfectly. Engagement is <span className="text-[var(--tint-emerald-fg)] font-bold">up 14.2%</span> since your last visit.
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                  <span className="px-5 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                  <span className="px-5 py-2 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <CheckCircle2 className="w-3 h-3" />
                     Verified Domain
                   </span>
-                  <span className="px-5 py-2 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                  <span className="px-5 py-2 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <ShieldCheck className="w-3 h-3" />
                     Enterprise Safe
                   </span>
@@ -145,7 +145,7 @@ export default function DashboardOverview() {
 
               <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                 <button className="flex flex-col items-center justify-center p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
-                  <Plus className="w-8 h-8 text-indigo-400 mb-2 group-hover:scale-110 transition-transform" />
+                  <Plus className="w-8 h-8 text-[var(--tint-indigo-fg)] mb-2 group-hover:scale-110 transition-transform" />
                   <span className="text-xs font-black text-white uppercase tracking-widest">New Content</span>
                 </button>
                 <button className="flex flex-col items-center justify-center p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
@@ -162,10 +162,10 @@ export default function DashboardOverview() {
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: 'Intelligence Core', value: stats.postsCount, sub: 'Optimized Posts', icon: <FileText className="text-indigo-400" />, color: 'indigo' },
+            { label: 'Intelligence Core', value: stats.postsCount, sub: 'Optimized Posts', icon: <FileText className="text-[var(--tint-indigo-fg)]" />, color: 'indigo' },
             { label: 'Brand Reach', value: stats.followersCount.toLocaleString(), sub: 'Global Audience', icon: <Users className="text-blue-400" />, color: 'blue' },
-            { label: 'Engagement Velocity', value: `${stats.engagementRate}%`, sub: 'Above Benchmark', icon: <TrendingUp className="text-emerald-400" />, color: 'emerald' },
-            { label: 'Retention Health', value: stats.trialDaysLeft, sub: 'Days Remaining', icon: <Clock className="text-amber-400" />, color: 'amber' }
+            { label: 'Engagement Velocity', value: `${stats.engagementRate}%`, sub: 'Above Benchmark', icon: <TrendingUp className="text-[var(--tint-emerald-fg)]" />, color: 'emerald' },
+            { label: 'Retention Health', value: stats.trialDaysLeft, sub: 'Days Remaining', icon: <Clock className="text-[var(--tint-amber-fg)]" />, color: 'amber' }
           ].map((s, i) => (
             <motion.div
               key={i}
@@ -203,7 +203,7 @@ export default function DashboardOverview() {
             <div className={`relative ${glassStyle} p-10 rounded-[3rem] overflow-hidden`}>
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
-                  <Zap className="w-5 h-5 text-indigo-400" />
+                  <Zap className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                   <h2 className="text-2xl font-black text-white tracking-tight">Direct Operations</h2>
                 </div>
                 <button className="p-3 rounded-2xl bg-white/5 text-slate-500">
@@ -214,7 +214,7 @@ export default function DashboardOverview() {
                 {overview.quickActions.map((action: any) => (
                   <button
                     key={action.id}
-                    className="p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/30 transition-all text-left group"
+                    className="p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:bg-white/10 hover:border-[var(--tint-indigo-edge)] transition-all text-left group"
                   >
                     <div className="text-4xl mb-6 group-hover:scale-110 transition-transform origin-left">{action.icon}</div>
                     <h3 className="text-lg font-black text-white mb-2">{action.title}</h3>
@@ -232,7 +232,7 @@ export default function DashboardOverview() {
             <div className={`relative ${glassStyle} p-10 rounded-[3rem] overflow-hidden`}>
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
-                  <Activity className="w-5 h-5 text-emerald-400" />
+                  <Activity className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                   <h2 className="text-2xl font-black text-white tracking-tight">Intelligence Log</h2>
                 </div>
                 <div className="flex items-center gap-3">
@@ -251,16 +251,16 @@ export default function DashboardOverview() {
                     className="p-6 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer"
                   >
                     <div className="flex items-center gap-6">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${notif.type === 'info' ? 'bg-indigo-500/10 text-indigo-400' :
-                          notif.type === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
-                            'bg-amber-500/10 text-amber-400'
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${notif.type === 'info' ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]' :
+                          notif.type === 'success' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)]' :
+                            'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)]'
                         }`}>
                         {notif.type === 'info' ? <Zap className="w-5 h-5" /> :
                           notif.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> :
                             <AlertCircle className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h4 className="font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">{notif.title}</h4>
+                        <h4 className="font-bold text-white mb-1 group-hover:text-[var(--tint-indigo-fg)] transition-colors">{notif.title}</h4>
                         <p className="text-sm text-slate-500 font-medium">{notif.message}</p>
                       </div>
                     </div>

@@ -54,8 +54,8 @@ export default function GlobalError({
 
               {/* Icon */}
               <div className="relative mx-auto mb-8 w-fit">
-                <div className="w-20 h-20 rounded-[1.75rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-[0_0_40px_rgba(239,68,68,0.15)]">
-                  <AlertTriangle className="w-9 h-9 text-rose-400" />
+                <div className="w-20 h-20 rounded-[1.75rem] bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+                  <AlertTriangle className="w-9 h-9 text-[var(--tint-rose-fg)]" />
                 </div>
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 rounded-full border-2 border-[#07070f] flex items-center justify-center">
                   <Zap size={9} className="text-white" />
@@ -63,13 +63,13 @@ export default function GlobalError({
               </div>
 
               {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 mb-5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] mb-5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                <span className="text-[8px] font-black uppercase tracking-[0.35em] text-rose-400">{title}</span>
+                <span className="text-[8px] font-black uppercase tracking-[0.35em] text-[var(--tint-rose-fg)]">{title}</span>
               </div>
 
               <h1 className="text-4xl font-black italic tracking-tighter mb-4">
-                System <span className="text-rose-400">Offline</span>
+                System <span className="text-[var(--tint-rose-fg)]">Offline</span>
               </h1>
 
               <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-sm mx-auto">{detail}</p>

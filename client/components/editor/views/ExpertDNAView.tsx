@@ -93,7 +93,7 @@ export const ExpertDNAView: React.FC = () => {
                       <div className="space-y-2 flex-1 min-w-[120px]">
                          <div className="flex items-center justify-between">
                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Creative Randomness</span>
-                             <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">{(randomness * 100).toFixed(0)}%</span>
+                             <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">{(randomness * 100).toFixed(0)}%</span>
                          </div>
                          <input 
                             type="range" 
@@ -136,7 +136,7 @@ export const ExpertDNAView: React.FC = () => {
                                     initial={{ scale: 0.95, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all relative overflow-hidden"
+                                    className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-[var(--tint-indigo-edge)] transition-all relative overflow-hidden"
                                 >
                                     <div className="flex flex-col gap-4 relative z-10">
                                        <div className="flex items-center justify-between">
@@ -147,7 +147,7 @@ export const ExpertDNAView: React.FC = () => {
                                        <div className="space-y-2">
                                           <div className="flex items-center justify-between">
                                              <span className="text-[8px] font-black text-slate-600 uppercase">Viral Affinity</span>
-                                             <span className="text-[8px] font-black text-indigo-400 uppercase">{(marker.strength * 100).toFixed(0)}%</span>
+                                             <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase">{(marker.strength * 100).toFixed(0)}%</span>
                                           </div>
                                           <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                                              <motion.div 
@@ -177,7 +177,7 @@ export const ExpertDNAView: React.FC = () => {
                 <div className="xl:col-span-1 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8`}>
                         <div className="flex items-center gap-4">
-                            <Activity className="w-6 h-6 text-emerald-400" />
+                            <Activity className="w-6 h-6 text-[var(--tint-emerald-fg)]" />
                             <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Stability Analaysis</h5>
                         </div>
 
@@ -185,15 +185,15 @@ export const ExpertDNAView: React.FC = () => {
                             <div className="p-8 bg-black/40 border border-white/5 rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4">
                                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Consensus Stability</span>
                                 <h3 className={`text-5xl font-black italic tracking-tighter leading-none uppercase ${
-                                    (dna?.consensusStability ?? 0) > 0.7 ? 'text-emerald-400' : 'text-amber-400'
+                                    (dna?.consensusStability ?? 0) > 0.7 ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-amber-fg)]'
                                 }`}>
                                     {((dna?.consensusStability ?? 0) * 100).toFixed(0)}%
                                 </h3>
                             </div>
 
-                            <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div className="p-6 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-3xl space-y-4 relative overflow-hidden">
                                 <div className="flex items-center gap-3">
-                                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                                    <Sparkles className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Growth Recommendation</span>
                                 </div>
                                 <p className="text-xs font-bold text-white italic leading-relaxed relative z-10">

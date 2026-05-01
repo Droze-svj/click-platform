@@ -15,12 +15,12 @@ const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-
 // ─── Section Header ────────────────────────────────────────────────────────
 const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }: any) => {
   const colors: Record<string, string> = {
-    indigo: 'text-indigo-400 border-indigo-500/20 bg-indigo-500/10',
-    emerald: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10',
-    amber: 'text-amber-400 border-amber-500/20 bg-amber-500/10',
-    rose: 'text-rose-400 border-rose-500/20 bg-rose-500/10',
+    indigo: 'text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)]',
+    emerald: 'text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)] bg-[var(--tint-emerald-bg)]',
+    amber: 'text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)] bg-[var(--tint-amber-bg)]',
+    rose: 'text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)] bg-[var(--tint-rose-bg)]',
     purple: 'text-purple-400 border-purple-500/20 bg-purple-500/10',
-    cyan: 'text-cyan-400 border-cyan-500/20 bg-cyan-500/10'
+    cyan: 'text-[var(--tint-cyan-fg)] border-[var(--tint-cyan-edge)] bg-[var(--tint-cyan-bg)]'
   }
 
   return (
@@ -73,8 +73,8 @@ const NeuralBroadcasterPanel = () => {
   }
 
   const platColor: Record<string, string> = {
-    tiktok: 'text-cyan-400 border-cyan-500/20 bg-cyan-500/10',
-    youtube_shorts: 'text-rose-400 border-rose-500/20 bg-rose-500/10',
+    tiktok: 'text-[var(--tint-cyan-fg)] border-[var(--tint-cyan-edge)] bg-[var(--tint-cyan-bg)]',
+    youtube_shorts: 'text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)] bg-[var(--tint-rose-bg)]',
     instagram_reels: 'text-purple-400 border-purple-500/20 bg-purple-500/10'
   }
 
@@ -84,7 +84,7 @@ const NeuralBroadcasterPanel = () => {
       
       <div className="p-6 rounded-2xl bg-cyan-500/5 border border-cyan-500/15">
         <p className="text-xs text-slate-400 leading-relaxed italic">
-          <span className="text-cyan-400 font-black not-italic">How it works:</span> The engine bypasses human publishing, automatically finding the algorithmic &quot;golden minute&quot; to deploy across all short-form platforms simultaneously, injecting your Phase 8 AEO tags perfectly formatted for each.
+          <span className="text-[var(--tint-cyan-fg)] font-black not-italic">How it works:</span> The engine bypasses human publishing, automatically finding the algorithmic &quot;golden minute&quot; to deploy across all short-form platforms simultaneously, injecting your Phase 8 AEO tags perfectly formatted for each.
         </p>
       </div>
 
@@ -100,11 +100,11 @@ const NeuralBroadcasterPanel = () => {
             <div className="flex justify-between items-center p-4 rounded-xl border border-white/5 bg-white/[0.02]">
               <div>
                 <p className="text-sm font-black text-white">Algorithmic Launch Window</p>
-                <p className="text-[10px] font-mono text-cyan-400">{new Date(pipeline.timingLogic.scheduledTime).toLocaleString()}</p>
+                <p className="text-[10px] font-mono text-[var(--tint-cyan-fg)]">{new Date(pipeline.timingLogic.scheduledTime).toLocaleString()}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs font-bold text-slate-400">Velocity Propensity</p>
-                <p className="text-xl font-black text-emerald-400">{(pipeline.timingLogic.predictedVelocity * 100).toFixed(1)}%</p>
+                <p className="text-xl font-black text-[var(--tint-emerald-fg)]">{(pipeline.timingLogic.predictedVelocity * 100).toFixed(1)}%</p>
               </div>
             </div>
 
@@ -191,7 +191,7 @@ const FederatedSwarmPanel = () => {
                     <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">{sig.platform.replace('_', ' ')}</p>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xs font-black ${sig.status === 'DOMINANT' ? 'text-indigo-400' : sig.status === 'RISING' ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    <p className={`text-xs font-black ${sig.status === 'DOMINANT' ? 'text-[var(--tint-indigo-fg)]' : sig.status === 'RISING' ? 'text-[var(--tint-emerald-fg)]' : 'text-slate-400'}`}>
                       {sig.status}
                     </p>
                     <p className="text-[10px] font-mono text-slate-400 mt-1">v.{sig.viralScore}</p>
@@ -257,19 +257,19 @@ const AutonomicCMPaPanel = () => {
       
       <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
         <p className="text-xs text-slate-400 leading-relaxed italic">
-          <span className="text-emerald-400 font-black not-italic">Omnipresence Logic:</span> The agent monitors all connected social channels, analyzing sentiment in real-time. It prioritizes high-impact engagement to maximize the &quot;Golden Hour&quot; algorithmic boost.
+          <span className="text-[var(--tint-emerald-fg)] font-black not-italic">Omnipresence Logic:</span> The agent monitors all connected social channels, analyzing sentiment in real-time. It prioritizes high-impact engagement to maximize the &quot;Golden Hour&quot; algorithmic boost.
         </p>
       </div>
 
       <div className="flex items-center gap-6">
         <button onClick={launchAgent} disabled={running || loading}
-          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${running ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-95'}`}>
+          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${running ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-emerald-500/50 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-95'}`}>
           {loading ? <Orbit className="w-4 h-4 animate-spin" /> : (running ? <ShieldCheck className="w-4 h-4" /> : <Brain className="w-4 h-4" />)}
           {running ? 'Agent Live & Monitoring' : 'Deploy CM Agent'}
         </button>
 
         {running && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 animate-pulse">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[10px] font-bold text-[var(--tint-emerald-fg)] animate-pulse">
             <span className="w-2 h-2 rounded-full bg-emerald-500" /> ACTIVE PULSE
           </div>
         )}
@@ -321,12 +321,12 @@ const OracleSandboxPanel = () => {
       
       <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/15">
         <p className="text-xs text-slate-400 leading-relaxed italic">
-          <span className="text-amber-400 font-black not-italic">The Strategy:</span> Generates 3 totally different UGC variants, runs them for 2 hours on $5 ad-sets, and automatically scales the winner with the remaining daily budget.
+          <span className="text-[var(--tint-amber-fg)] font-black not-italic">The Strategy:</span> Generates 3 totally different UGC variants, runs them for 2 hours on $5 ad-sets, and automatically scales the winner with the remaining daily budget.
         </p>
       </div>
 
       <button onClick={deployVariants} disabled={deployed}
-        className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${deployed ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20 active:scale-95'}`}>
+        className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${deployed ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-amber-500/50 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20 active:scale-95'}`}>
         <Zap className="w-4 h-4" />
         {deployed ? 'Variants Scaling in Background' : 'Deploy Sandbox Array'}
       </button>
@@ -355,7 +355,7 @@ export default function Phase9Dashboard() {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`${pill} text-cyan-400 border-cyan-500/20`}>Phase 9 — Sovereign Omnipresence</span>
+              <span className={`${pill} text-[var(--tint-cyan-fg)] border-[var(--tint-cyan-edge)]`}>Phase 9 — Sovereign Omnipresence</span>
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
             </div>
             <h1 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Global Network</h1>

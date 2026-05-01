@@ -54,7 +54,7 @@ export default function ThemeToggle({ size = 'md', showLabel = false, showSystem
         {/* Glow ring on active */}
         <motion.span
           animate={{ opacity: isDark ? 0.5 : 0 }}
-          className="absolute inset-0 rounded-2xl bg-indigo-500/20 pointer-events-none"
+          className="absolute inset-0 rounded-2xl bg-[var(--tint-indigo-bg)] pointer-events-none"
         />
 
         {/* Icon swap */}

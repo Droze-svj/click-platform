@@ -199,19 +199,19 @@ export default function ContentDetailPage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <CircuitBoard size={48} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
+                <CircuitBoard size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:rotate-90 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Network size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Cognitive Diagnostic v5.2</span>
+                      <Network size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Cognitive Diagnostic v5.2</span>
                    </div>
-                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <Radio size={14} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">OP_INTEGRITY_STABLE</span>
+                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-inner">
+                       <Radio size={14} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                       <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">OP_INTEGRITY_STABLE</span>
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{content.title || 'NULL_NODE'}</h1>
@@ -259,7 +259,7 @@ export default function ContentDetailPage() {
                      {content.description && (
                         <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
                            <div className="flex items-center gap-6 mb-4">
-                              <Info size={32} className="text-indigo-400" />
+                              <Info size={32} className="text-[var(--tint-indigo-fg)]" />
                               <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Strategic Intent</h2>
                            </div>
                            <p className="text-2xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity duration-300">{content.description}</p>
@@ -269,7 +269,7 @@ export default function ContentDetailPage() {
                      {content.transcript && (
                         <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
                            <div className="flex items-center gap-6 mb-4">
-                              <CircuitBoard size={32} className="text-emerald-400" />
+                              <CircuitBoard size={32} className="text-[var(--tint-emerald-fg)]" />
                               <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Spectral Transcript</h2>
                            </div>
                            <p className="text-xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity duration-300 whitespace-pre-wrap">{content.transcript}</p>
@@ -280,10 +280,10 @@ export default function ContentDetailPage() {
                         <div className={`${glassStyle} rounded-[6rem] p-16 space-y-16 group bg-black/40 border-indigo-500/10`}>
                            <div className="flex items-center justify-between border-b border-white/5 pb-10">
                               <div className="flex items-center gap-8">
-                                 <Sparkles size={44} className="text-indigo-400" />
+                                 <Sparkles size={44} className="text-[var(--tint-indigo-fg)]" />
                                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter">Synthetic Manifests</h2>
                               </div>
-                              <div className="px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">NEURAL_SYNC_SUCCESS</div>
+                              <div className="px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">NEURAL_SYNC_SUCCESS</div>
                            </div>
                            {content.generatedContent.socialPosts && (
                               <div className="space-y-12">
@@ -300,11 +300,11 @@ export default function ContentDetailPage() {
                                              <Copy size={24} />
                                           </button>
                                        </div>
-                                       <p className="text-3xl font-black text-slate-200 italic leading-tight uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 relative z-10">{post.content}</p>
+                                       <p className="text-3xl font-black text-slate-200 italic leading-tight uppercase tracking-tighter mb-10 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300 relative z-10">{post.content}</p>
                                        {post.hashtags && post.hashtags.length > 0 && (
                                           <div className="flex flex-wrap gap-4 relative z-10">
                                              {post.hashtags.map((tag: string, i: number) => (
-                                                <span key={i} className="text-[12px] font-black text-indigo-400 bg-indigo-500/10 px-6 py-2 rounded-2xl border border-indigo-500/20 italic">#{tag.toUpperCase()}</span>
+                                                <span key={i} className="text-[12px] font-black text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)] px-6 py-2 rounded-2xl border border-[var(--tint-indigo-edge)] italic">#{tag.toUpperCase()}</span>
                                              ))}
                                           </div>
                                        )}
@@ -320,7 +320,7 @@ export default function ContentDetailPage() {
                      {/* Resonance Injection Control */}
                      <div className={`${glassStyle} rounded-[4.5rem] p-10 space-y-6 bg-black/60 shadow-[0_60px_100px_rgba(0,0,0,0.6)] border-indigo-500/10`}>
                         <div className="flex items-center gap-6 mb-4 px-4">
-                           <Zap size={32} className="text-amber-400" />
+                           <Zap size={32} className="text-[var(--tint-amber-fg)]" />
                            <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">Resonance Injection</h3>
                         </div>
                         <div className="flex gap-4">
@@ -366,10 +366,10 @@ export default function ContentDetailPage() {
                            ].map((s, i) => (
                               <div key={i} className="flex items-center justify-between group/stat">
                                  <div className="flex items-center gap-5">
-                                    <s.icon size={18} className="text-slate-500 group-hover/stat:text-indigo-400 transition-colors" />
+                                    <s.icon size={18} className="text-slate-500 group-hover/stat:text-[var(--tint-indigo-fg)] transition-colors" />
                                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{s.label}</p>
                                  </div>
-                                 <p className="text-[14px] font-black text-white uppercase tracking-widest italic group-hover/stat:text-indigo-400 transition-colors leading-none">{s.val}</p>
+                                 <p className="text-[14px] font-black text-white uppercase tracking-widest italic group-hover/stat:text-[var(--tint-indigo-fg)] transition-colors leading-none">{s.val}</p>
                               </div>
                            ))}
                         </div>
@@ -378,12 +378,12 @@ export default function ContentDetailPage() {
                      {/* Axiom Mapping */}
                      <div className={`${glassStyle} rounded-[5rem] p-16 space-y-12 bg-black/40`}>
                         <div className="flex items-center gap-6 mb-4">
-                           <Hash size={32} className="text-indigo-400" />
+                           <Hash size={32} className="text-[var(--tint-indigo-fg)]" />
                            <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Axiom Mapping</h2>
                         </div>
                         <div className="flex flex-wrap gap-4">
                            {content.tags && content.tags.map((tag, index) => (
-                              <span key={index} className="px-8 py-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-3xl text-[12px] font-black italic tracking-widest uppercase shadow-2xl hover:bg-indigo-500 hover:text-white transition-all duration-700">
+                              <span key={index} className="px-8 py-3 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] rounded-3xl text-[12px] font-black italic tracking-widest uppercase shadow-2xl hover:bg-indigo-500 hover:text-white transition-all duration-700">
                                  #{tag.toUpperCase()}
                               </span>
                            ))}
@@ -453,7 +453,7 @@ export default function ContentDetailPage() {
                         <span className="text-[11px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none mr-6">SYNCHRONIZED_MATRICES:</span>
                         {viewingLang && (
                            <button onClick={() => setViewingLang(null)}
-                              className="px-10 py-5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic shadow-inner hover:bg-amber-500 hover:text-white transition-all">
+                              className="px-10 py-5 bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-amber-500 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic shadow-inner hover:bg-amber-500 hover:text-white transition-all">
                               {t('translation.viewOriginal')}
                            </button>
                         )}

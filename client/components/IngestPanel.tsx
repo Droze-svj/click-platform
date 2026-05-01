@@ -316,7 +316,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
       <div className="p-6 lg:p-8 min-h-[280px] relative">
         {busy && (
           <div className="absolute inset-0 z-20 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 rounded-b-3xl">
-            <Loader2 size={28} className="text-fuchsia-400 animate-spin" />
+            <Loader2 size={28} className="text-[var(--tint-fuchsia-fg)] animate-spin" />
             <p className="text-[11px] font-black text-white uppercase tracking-[0.3em]">
               {progress != null
                 ? tr('ingest.uploading', 'Uploading {percent}%', { percent: progress })
@@ -341,7 +341,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                 : 'border-white/10 bg-white/[0.02] hover:border-white/20'
             }`}
           >
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-violet-500/20 border border-fuchsia-500/30 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-violet-500/20 border border-[var(--tint-fuchsia-edge)] flex items-center justify-center">
               <Upload size={22} className="text-fuchsia-300" />
             </div>
             <div>
@@ -372,7 +372,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                   value={linkValue}
                   onChange={(e) => setLinkValue(e.target.value)}
                   placeholder={tr('ingest.linkPlaceholder', 'https://www.tiktok.com/@user/video/12345 or https://cdn/clip.mp4')}
-                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-fuchsia-500/40 focus:outline-none"
+                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-[var(--tint-fuchsia-edge)] focus:outline-none"
                 />
                 <button type="button" onClick={() => ingestUrl(linkValue)}
                   className="px-5 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white text-[11px] font-black uppercase tracking-[0.18em] shadow-lg hover:shadow-fuchsia-500/30">
@@ -443,7 +443,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                 value={linkValue}
                 onChange={(e) => setLinkValue(e.target.value)}
                 placeholder={tr('ingest.cloudPlaceholder', 'https://drive.google.com/file/d/…/view')}
-                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-fuchsia-500/40 focus:outline-none"
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[var(--tint-fuchsia-edge)] focus:outline-none"
               />
               <button type="button" onClick={() => ingestUrl(linkValue, 'cloud')}
                 className="px-5 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-[11px] font-black uppercase tracking-[0.18em]">
@@ -471,7 +471,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                 {recents.map(r => (
                   <li key={r.id}>
                     <button type="button" onClick={() => remix(r.id)}
-                      className="w-full text-left p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:border-fuchsia-500/30 hover:bg-fuchsia-500/[0.04] transition-all flex items-center gap-3">
+                      className="w-full text-left p-3 rounded-xl border border-white/10 bg-white/[0.02] hover:border-[var(--tint-fuchsia-edge)] hover:bg-fuchsia-500/[0.04] transition-all flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-fuchsia-500/30 to-violet-500/30 flex items-center justify-center flex-shrink-0">
                         <RefreshCw size={13} className="text-fuchsia-300" />
                       </div>
@@ -490,8 +490,8 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
         )}
 
         {error && (
-          <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 flex items-start gap-2">
-            <AlertCircle size={13} className="text-rose-400 flex-shrink-0 mt-0.5" />
+          <div className="mt-4 rounded-xl border border-[var(--tint-rose-edge)] bg-[var(--tint-rose-bg)] px-3 py-2.5 flex items-start gap-2">
+            <AlertCircle size={13} className="text-[var(--tint-rose-fg)] flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-rose-200 leading-relaxed flex-1">{error}</p>
             <button type="button" onClick={() => setError(null)} title="Dismiss error" aria-label="Dismiss error" className="text-rose-300 hover:text-white">
               <X size={12} />

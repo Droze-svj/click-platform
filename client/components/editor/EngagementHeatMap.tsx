@@ -62,8 +62,8 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
 
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
+          <div className="p-2.5 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
+            <Activity className="w-4 h-4 text-[var(--tint-emerald-fg)] animate-pulse" />
           </div>
           <div>
             <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic">Neural Engagement Map</h4>
@@ -73,7 +73,7 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
 
         <div className="flex items-center gap-6">
            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-emerald-400 tabular-nums">94% PROP</span>
+              <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] tabular-nums">94% PROP</span>
               <span className="text-[7px] font-bold text-slate-600 uppercase tracking-tighter">Alpha Peak</span>
            </div>
            <Flame className="w-4 h-4 text-orange-500" />

@@ -53,7 +53,7 @@ interface DynamicSubtitleEngineProps {
 
 const PRESETS: SubtitlePreset[] = [
   { id: 'hormozi', name: 'Viral Impact', font: 'font-black', color: 'text-white', highlightColor: 'text-yellow-400', animation: 'pop' },
-  { id: 'beast', name: 'Retention Glow', font: 'font-bold', color: 'text-white', highlightColor: 'text-emerald-400', animation: 'glow' },
+  { id: 'beast', name: 'Retention Glow', font: 'font-bold', color: 'text-white', highlightColor: 'text-[var(--tint-emerald-fg)]', animation: 'glow' },
   { id: 'minimal', name: 'Clean Studio', font: 'font-medium', color: 'text-white', highlightColor: 'text-blue-400', animation: 'bounce' }
 ]
 
@@ -234,7 +234,7 @@ export default function DynamicSubtitleEngine({
         {/* Smart Dodge Toggle */}
         <div className="mt-5 flex items-center justify-between px-4 py-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-indigo-400" />
+            <Shield className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
             <div>
               <p className="text-[10px] font-black text-white uppercase">Smart Dodge</p>
               <p className="text-[9px] text-slate-500">
@@ -242,7 +242,7 @@ export default function DynamicSubtitleEngine({
               </p>
             </div>
             {internalZones.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-[8px] font-black text-indigo-400">
+              <span className="px-2 py-0.5 rounded-full bg-[var(--tint-indigo-bg)] text-[8px] font-black text-[var(--tint-indigo-fg)]">
                 {internalZones.length} zone{internalZones.length !== 1 ? 's' : ''}
               </span>
             )}
@@ -251,7 +251,7 @@ export default function DynamicSubtitleEngine({
             onClick={() => setSmartDodgeActive(v => !v)}
             title="Toggle Smart Dodge"
             aria-label="Toggle Smart Dodge face avoidance"
-            className="flex items-center gap-1 text-indigo-400"
+            className="flex items-center gap-1 text-[var(--tint-indigo-fg)]"
           >
             {smartDodgeActive
               ? <ToggleRight className="w-6 h-6" />
@@ -264,7 +264,7 @@ export default function DynamicSubtitleEngine({
         {volumeLevel !== undefined && (
           <div className="mt-3 flex items-center justify-between px-4 py-3 rounded-xl bg-rose-500/5 border border-rose-500/10">
             <div className="flex items-center gap-2">
-              <Mic className="w-4 h-4 text-rose-400" />
+              <Mic className="w-4 h-4 text-[var(--tint-rose-fg)]" />
               <div>
                 <p className="text-[10px] font-black text-white uppercase">Vocal Intensity</p>
                 <p className="text-[9px] text-slate-500">
@@ -305,7 +305,7 @@ export default function DynamicSubtitleEngine({
             } as React.CSSProperties}
           >
             {zone.label && (
-              <span className="absolute -top-4 left-0 text-[7px] font-black text-indigo-400 uppercase tracking-widest bg-black/60 px-1 rounded">
+              <span className="absolute -top-4 left-0 text-[7px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest bg-black/60 px-1 rounded">
                 {zone.label}
               </span>
             )}
@@ -380,7 +380,7 @@ export default function DynamicSubtitleEngine({
             {smartDodgeActive && (
               <>
                 <span className="text-white/20">·</span>
-                <Eye className="w-3 h-3 text-indigo-400" />
+                <Eye className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                 Smart Dodge {isDetecting ? '⚡' : 'Active'}
               </>
             )}

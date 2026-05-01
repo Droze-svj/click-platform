@@ -79,7 +79,7 @@ const NEW_2026_CATEGORIES = [
     icon: Library,
     color: 'from-rose-500 to-fuchsia-600',
     bgColor: 'bg-rose-900/20',
-    textColor: 'text-rose-400',
+    textColor: 'text-[var(--tint-rose-fg)]',
     description: 'B-roll · music · GIFs · stickers · transitions · SFX',
     badge: 'NEW',
   },
@@ -89,7 +89,7 @@ const NEW_2026_CATEGORIES = [
     icon: Wand2,
     color: 'from-amber-500 to-rose-500',
     bgColor: 'bg-amber-900/20',
-    textColor: 'text-amber-400',
+    textColor: 'text-[var(--tint-amber-fg)]',
     description: 'One-click style bundles',
     badge: 'NEW',
   },
@@ -99,7 +99,7 @@ const NEW_2026_CATEGORIES = [
     icon: Type,
     color: 'from-fuchsia-500 to-purple-700',
     bgColor: 'bg-fuchsia-900/20',
-    textColor: 'text-fuchsia-400',
+    textColor: 'text-[var(--tint-fuchsia-fg)]',
     description: 'Captions · animations · motion · fonts',
     badge: 'NEW',
   },
@@ -109,7 +109,7 @@ const NEW_2026_CATEGORIES = [
     icon: Sparkles,
     color: 'from-fuchsia-600 to-purple-700',
     bgColor: 'bg-fuchsia-900/20',
-    textColor: 'text-fuchsia-400',
+    textColor: 'text-[var(--tint-fuchsia-fg)]',
     description: 'Hooks · beats · engagement predictor',
   },
 ]
@@ -354,7 +354,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] font-black text-slate-500 hover:bg-white/[0.06] hover:text-white transition-all group italic uppercase tracking-widest"
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="w-3.5 h-3.5 group-hover:text-indigo-400 transition-colors" />
+                      <Icon className="w-3.5 h-3.5 group-hover:text-[var(--tint-indigo-fg)] transition-colors" />
                       <span className="truncate">{category.label}</span>
                     </div>
                     <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -432,7 +432,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     } ${isLocked ? 'opacity-40' : ''}`}>
                       {isLocked
                         ? <Lock className="w-3.5 h-3.5 text-slate-600" />
-                        : <Icon className={`${isCollapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-indigo-400'}`} />
+                        : <Icon className={`${isCollapsed ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-[var(--tint-indigo-fg)]'}`} />
                       }
                     </div>
 
@@ -446,18 +446,18 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                           {(category as any).badge && (
                             <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-wider ${
                               (category as any).badge === '2026'
-                                ? 'bg-fuchsia-500/20 text-fuchsia-400'
+                                ? 'bg-[var(--tint-fuchsia-bg)] text-[var(--tint-fuchsia-fg)]'
                                 : (category as any).badge === 'PRO'
-                                ? 'bg-amber-500/20 text-amber-400'
+                                ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)]'
                                 : (category as any).badge === 'BETA'
-                                ? 'bg-rose-500/20 text-rose-400'
-                                : 'bg-emerald-500/20 text-emerald-400'
+                                ? 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)]'
+                                : 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)]'
                             }`}>
                               {(category as any).badge}
                             </span>
                           )}
                           {isLocked && requiredTier && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[7px] font-black uppercase">
+                            <span className="px-1.5 py-0.5 rounded-md bg-[var(--tint-amber-bg)] text-amber-500 text-[7px] font-black uppercase">
                               {requiredTier}+
                             </span>
                           )}
@@ -495,7 +495,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all z-10"
                     title={isPinned ? 'Unpin' : 'Pin to top'}
                   >
-                    <Pin className={`w-3 h-3 ${isPinned ? 'text-indigo-400 fill-indigo-400' : ''}`} />
+                    <Pin className={`w-3 h-3 ${isPinned ? 'text-[var(--tint-indigo-fg)] fill-indigo-400' : ''}`} />
                   </motion.button>
                 )}
               </div>
@@ -517,7 +517,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
               </div>
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">{deviceView}</span>
             </div>
-            <div className="text-[11px] font-black text-indigo-400 font-mono tabular-nums">{formatTime(videoDuration)}</div>
+            <div className="text-[11px] font-black text-[var(--tint-indigo-fg)] font-mono tabular-nums">{formatTime(videoDuration)}</div>
           </div>
         )}
 
@@ -550,7 +550,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                  <Command className="w-3 h-3 text-indigo-400" /> Keyboard Shortcuts
+                  <Command className="w-3 h-3 text-[var(--tint-indigo-fg)]" /> Keyboard Shortcuts
                 </p>
                 <button onClick={() => setShowShortcuts(false)} title="Close shortcuts" className="text-slate-600 hover:text-white">
                   <X className="w-3.5 h-3.5" />

@@ -68,16 +68,16 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
   return (
     <div className="lumina-card p-8 space-y-8 relative overflow-hidden group">
       {/* Background Pulse */}
-      <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-emerald-500/10 blur-[80px] rounded-full animate-pulse" />
+      <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-[var(--tint-emerald-bg)] blur-[80px] rounded-full animate-pulse" />
       
       <div className="flex items-center justify-between mb-8 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400 border border-emerald-500/30 shadow-xl shadow-emerald-500/10">
+          <div className="p-3 bg-[var(--tint-emerald-bg)] rounded-2xl text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)] shadow-xl shadow-emerald-500/10">
             <Cpu className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Adaptive Learning Matrix</h3>
-            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em] mt-1 block">Live Niche Evolution Loop</span>
+            <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.3em] mt-1 block">Live Niche Evolution Loop</span>
           </div>
         </div>
         
@@ -108,9 +108,9 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
               className="space-y-4"
             >
               {suggestions.map((s) => (
-                <div key={s.id} className="p-6 bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 hover:border-emerald-500/30 rounded-[2rem] transition-all flex items-center justify-between group/item">
+                <div key={s.id} className="p-6 bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 hover:border-[var(--tint-emerald-edge)] rounded-[2rem] transition-all flex items-center justify-between group/item">
                   <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-emerald-400 shadow-2xl">
+                    <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-[var(--tint-emerald-fg)] shadow-2xl">
                       {s.type === 'music' && <Music className="w-6 h-6" />}
                       {s.type === 'hook' && <Sparkles className="w-6 h-6" />}
                       {s.type === 'gif' && <Smile className="w-6 h-6" />}
@@ -119,7 +119,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                     <div>
                       <h4 className="text-sm font-black text-white uppercase italic tracking-tighter leading-none mb-2">
                         {s.title}
-                        <span className="ml-3 px-2 py-0.5 rounded-full bg-emerald-500/20 text-[8px] text-emerald-400 tracking-widest">
+                        <span className="ml-3 px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] text-[8px] text-[var(--tint-emerald-fg)] tracking-widest">
                           {Math.round(s.confidence * 100)}% Match
                         </span>
                       </h4>
@@ -132,7 +132,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleFeedback(s.id, s.type, 'positive', s)}
-                      className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'positive' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-emerald-400 hover:border-emerald-500/30'}`}
+                      className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'positive' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-[var(--tint-emerald-fg)] hover:border-[var(--tint-emerald-edge)]'}`}
                     >
                       <ThumbsUp className="w-4 h-4" />
                     </motion.button>
@@ -140,7 +140,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleFeedback(s.id, s.type, 'negative', s)}
-                      className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'negative' ? 'bg-rose-600 text-white border-rose-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-rose-400 hover:border-rose-500/30'}`}
+                      className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'negative' ? 'bg-rose-600 text-white border-rose-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-[var(--tint-rose-fg)] hover:border-[var(--tint-rose-edge)]'}`}
                     >
                       <ThumbsDown className="w-4 h-4" />
                     </motion.button>
@@ -163,8 +163,8 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
               exit={{ opacity: 0, x: -20 }}
               className="p-10 text-center space-y-6"
             >
-              <div className="w-20 h-20 bg-emerald-500/10 rounded-[2.5rem] border border-emerald-500/20 flex items-center justify-center mx-auto shadow-2xl">
-                <Brain className="w-10 h-10 text-emerald-400 animate-pulse" />
+              <div className="w-20 h-20 bg-[var(--tint-emerald-bg)] rounded-[2.5rem] border border-[var(--tint-emerald-edge)] flex items-center justify-center mx-auto shadow-2xl">
+                <Brain className="w-10 h-10 text-[var(--tint-emerald-fg)] animate-pulse" />
               </div>
               <div>
                 <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">Personal DNA Evolving</h4>
@@ -172,11 +172,11 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
-                  <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest block mb-2">Pacing Drift</span>
+                  <span className="text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest block mb-2">Pacing Drift</span>
                   <p className="text-[10px] text-white font-black italic">+12% Energy Preference</p>
                 </div>
                 <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
-                  <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Vibe Cluster</span>
+                  <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest block mb-2">Vibe Cluster</span>
                   <p className="text-[10px] text-white font-black italic">Sarcastic / Witty Bias</p>
                 </div>
               </div>
@@ -187,10 +187,10 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
 
       <div className="pt-8 border-t border-white/5 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3">
-          <Zap className="w-4 h-4 text-emerald-400" />
+          <Zap className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
           <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] italic">Continuous Learning Loop: ONLINE</p>
         </div>
-        <button className="text-[9px] font-black text-white px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-xl hover:bg-emerald-600 hover:text-white transition-all uppercase tracking-widest">
+        <button className="text-[9px] font-black text-white px-4 py-2 bg-emerald-600/20 border border-[var(--tint-emerald-edge)] rounded-xl hover:bg-emerald-600 hover:text-white transition-all uppercase tracking-widest">
           View Learning Logs
         </button>
       </div>

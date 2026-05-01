@@ -178,9 +178,9 @@ const WORKFLOW_STEPS: { id: EditorCategory; label: string; icon?: React.ElementT
   { id: 'color', label: 'SPECTRAL_GRADING', icon: Video, color: 'text-blue-400' },
   { id: 'ai', label: 'NEURAL_SYNTHESIS', icon: AiIcon, color: 'text-purple-400' },
   { id: 'effects', label: 'VISUAL_FX_MATRIX', icon: LayersIcon, color: 'text-yellow-400' },
-  { id: 'remix', label: 'SWARM_REMIX', icon: Sparkles, color: 'text-fuchsia-400' },
-  { id: 'predict', label: 'RETENTION_FORECAST', icon: BrainCircuit, color: 'text-indigo-400' },
-  { id: 'intelligence', label: 'IDENTITY_DNA_LATTICE', icon: Database, color: 'text-emerald-400' },
+  { id: 'remix', label: 'SWARM_REMIX', icon: Sparkles, color: 'text-[var(--tint-fuchsia-fg)]' },
+  { id: 'predict', label: 'RETENTION_FORECAST', icon: BrainCircuit, color: 'text-[var(--tint-indigo-fg)]' },
+  { id: 'intelligence', label: 'IDENTITY_DNA_LATTICE', icon: Database, color: 'text-[var(--tint-emerald-fg)]' },
   { id: 'timeline', label: 'TEMPORAL_SEQUENCE', icon: List, color: 'text-gray-400' },
   { id: 'export', label: 'FINAL_MANIFEST', icon: Send, color: 'text-white' },
   { id: 'style-vault', label: 'DNA_VAULT_CORE', icon: Orbit, color: 'text-pink-400' },
@@ -1915,7 +1915,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 title={contentPanelCollapsed ? 'Show tool panel' : 'Hide tool panel'}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   contentPanelCollapsed
-                    ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
+                    ? 'bg-indigo-600/20 border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] hover:bg-indigo-600/40'
                     : 'bg-white/[0.04] border-white/[0.08] text-slate-500 hover:text-white hover:border-white/20'
                 }`}
               >
@@ -1999,9 +1999,9 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                       key={s.id}
                       title={`${s.label}: ${s.status}${s.error ? ` — ${s.error}` : ''}`}
                       className={`px-1.5 py-0.5 rounded uppercase tracking-widest ${
-                        s.status === 'done' ? 'bg-emerald-500/15 text-emerald-300' :
-                        s.status === 'running' ? 'bg-violet-500/15 text-violet-300' :
-                        s.status === 'failed' ? 'bg-rose-500/15 text-rose-300' :
+                        s.status === 'done' ? 'bg-[var(--tint-emerald-bg)] text-emerald-300' :
+                        s.status === 'running' ? 'bg-[var(--tint-violet-bg)] text-violet-300' :
+                        s.status === 'failed' ? 'bg-[var(--tint-rose-bg)] text-rose-300' :
                         'bg-white/[0.04] text-slate-600'
                       }`}
                     >
@@ -2047,7 +2047,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                   propertiesPanelOpen
                     ? 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
-                    : 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
+                    : 'bg-indigo-600/20 border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] hover:bg-indigo-600/40'
                 }`}
               >
                 <span className="hidden sm:block">{propertiesPanelOpen ? 'Hide Props' : 'Show Props'}</span>
@@ -2160,7 +2160,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   <Film className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">Neural Monitoring</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 rounded-full text-emerald-400 text-[9px] font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[var(--tint-emerald-bg)] backdrop-blur-md border border-[var(--tint-emerald-edge)] rounded-full text-[var(--tint-emerald-fg)] text-[9px] font-bold">
                   <Zap className="w-3 h-3 fill-emerald-400 animate-pulse" />
                   REAL-TIME SYNC
                 </div>
@@ -2271,7 +2271,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">Neural Engine</span>
                   </div>
                   <div className="h-4 w-px bg-white/10 mx-2" />
-                  <span className="text-xl font-black font-mono text-indigo-400 tabular-nums tracking-tighter">
+                  <span className="text-xl font-black font-mono text-[var(--tint-indigo-fg)] tabular-nums tracking-tighter">
                     {formatTime(videoState.currentTime)} <span className="text-slate-700 mx-1">/</span> {formatTime(videoState.duration)}
                   </span>
                 </div>

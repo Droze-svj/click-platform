@@ -86,7 +86,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+            className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[10px] font-black uppercase tracking-[0.4em] shadow-[0_0_20px_rgba(99,102,241,0.2)]"
           >
             <Database className="w-4 h-4 animate-spin-slow" />
             Neural DNA Repository
@@ -95,22 +95,22 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
             STYLE<br />ARCHIVE
           </h2>
           <p className="text-slate-500 font-medium max-w-xl text-lg italic uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-lg inline-block">
-            Global Creative Intelligence <span className="text-indigo-400">Sync Active</span>
+            Global Creative Intelligence <span className="text-[var(--tint-indigo-fg)]">Sync Active</span>
           </p>
         </div>
 
         <div className="flex gap-4">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className={`${glassStyle} px-10 py-8 rounded-[3rem] flex items-center gap-8 group hover:border-indigo-500/40 transition-all cursor-default relative overflow-hidden`}
+            className={`${glassStyle} px-10 py-8 rounded-[3rem] flex items-center gap-8 group hover:border-[var(--tint-indigo-edge)] transition-all cursor-default relative overflow-hidden`}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-xl">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--tint-indigo-bg)] flex items-center justify-center text-[var(--tint-indigo-fg)] group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-xl">
               <History className="w-7 h-7" />
             </div>
             <div>
               <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1 italic">Efficiency Delta</div>
-              <div className="text-4xl font-black text-white italic tracking-tight">+142.5h <span className="text-indigo-400 text-sm">SAVED</span></div>
+              <div className="text-4xl font-black text-white italic tracking-tight">+142.5h <span className="text-[var(--tint-indigo-fg)] text-sm">SAVED</span></div>
             </div>
           </motion.div>
         </div>
@@ -129,10 +129,10 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
           whileHover={{ scale: 1.02, y: -8, boxShadow: '0 20px 40px rgba(99,102,241,0.1)' }}
           whileTap={{ scale: 0.98 }}
           onClick={onTrainNew}
-          className={`${glassStyle} p-12 rounded-[4rem] border-white/5 border-dashed border-2 flex flex-col items-center justify-center gap-10 group hover:border-indigo-500/40 hover:bg-indigo-600/[0.02] transition-all min-h-[450px] relative overflow-hidden`}
+          className={`${glassStyle} p-12 rounded-[4rem] border-white/5 border-dashed border-2 flex flex-col items-center justify-center gap-10 group hover:border-[var(--tint-indigo-edge)] hover:bg-indigo-600/[0.02] transition-all min-h-[450px] relative overflow-hidden`}
         >
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.1)_0%,transparent_70%)]" />
-          <div className="w-28 h-28 rounded-[3rem] bg-indigo-600/20 flex items-center justify-center text-indigo-400 border border-indigo-500/30 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
+          <div className="w-28 h-28 rounded-[3rem] bg-indigo-600/20 flex items-center justify-center text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-[0_0_50px_rgba(99,102,241,0.3)]">
             <Plus className="w-12 h-12" />
           </div>
           <div className="text-center space-y-4 relative z-10">
@@ -181,16 +181,16 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
               </div>
 
               <div className="grid grid-cols-2 gap-5">
-                <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/5 group-hover:border-indigo-500/20 transition-colors">
+                <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/5 group-hover:border-[var(--tint-indigo-edge)] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-3 h-3 text-indigo-400" />
+                    <Target className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                     <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Pacing</span>
                   </div>
                   <span className="text-xl font-black text-white italic">{profile.pacing.medianClipLength}s Cuts</span>
                 </div>
-                <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/5 group-hover:border-indigo-500/20 transition-colors">
+                <div className="p-6 rounded-[2.5rem] bg-white/5 border border-white/5 group-hover:border-[var(--tint-indigo-edge)] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-3 h-3 text-indigo-400" />
+                    <Sparkles className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                     <span className="block text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Design</span>
                   </div>
                   <span className="text-xl font-black text-white italic truncate">{profile.assets.fontFamily}</span>
@@ -198,7 +198,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
               </div>
             </div>
 
-            <div className="relative z-10 pt-8 flex items-center justify-between border-t border-white/10 group-hover:border-indigo-500/30 transition-colors">
+            <div className="relative z-10 pt-8 flex items-center justify-between border-t border-white/10 group-hover:border-[var(--tint-indigo-edge)] transition-colors">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -206,7 +206,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
                   e.stopPropagation()
                   onApplyProfile(profile)
                 }}
-                className="flex items-center gap-3 group/apply px-6 py-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 hover:bg-white hover:text-black hover:border-white transition-all shadow-xl"
+                className="flex items-center gap-3 group/apply px-6 py-3 rounded-2xl bg-indigo-600/10 border border-[var(--tint-indigo-edge)] hover:bg-white hover:text-black hover:border-white transition-all shadow-xl"
               >
                 <Zap className={`w-5 h-5 ${i % 2 === 0 ? 'text-blue-400' : 'text-purple-400'} group-hover/apply:text-black group-hover/apply:animate-pulse`} />
                 <span className="text-[11px] font-black uppercase tracking-widest italic">Deploy Logic</span>

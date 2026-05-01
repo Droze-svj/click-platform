@@ -82,7 +82,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
     <div className="h-full flex flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Fingerprint className="w-5 h-5 text-indigo-400" />
+          <Fingerprint className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
           <h2 className="text-lg font-black tracking-tight text-white italic uppercase">The Mimic // Style Mirror</h2>
         </div>
         <button
@@ -94,7 +94,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
         </button>
       </div>
 
-      <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic border-l-2 border-indigo-500/30 pl-4">
+      <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic border-l-2 border-[var(--tint-indigo-edge)] pl-4">
         Paste a URL or upload a video. Our AI will extract the <span className="text-white">Pacing, Color DNA, and Graphic Style</span> to apply it to your project instantly.
       </p>
 
@@ -109,7 +109,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
           >
             <div className="group relative">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <LinkIcon className="w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                <LinkIcon className="w-4 h-4 text-slate-500 group-focus-within:text-[var(--tint-indigo-fg)] transition-colors" />
               </div>
               <input
                 type="text"
@@ -121,8 +121,8 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-6 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 hover:border-indigo-500/30 transition-all cursor-pointer flex flex-col items-center gap-3 group">
-                <Upload className="w-6 h-6 text-slate-500 group-hover:text-indigo-400 transition-all" />
+              <div className="p-6 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 hover:border-[var(--tint-indigo-edge)] transition-all cursor-pointer flex flex-col items-center gap-3 group">
+                <Upload className="w-6 h-6 text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-all" />
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Upload File</span>
               </div>
               <button
@@ -146,7 +146,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
           >
             <div className="relative">
               <div className="w-24 h-24 rounded-full border-4 border-white/5 flex items-center justify-center">
-                <Zap className="w-10 h-10 text-indigo-400 animate-pulse" />
+                <Zap className="w-10 h-10 text-[var(--tint-indigo-fg)] animate-pulse" />
               </div>
               <svg className="absolute inset-0 w-24 h-24 -rotate-90">
                 <circle
@@ -182,9 +182,9 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <div className="p-6 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between">
+            <div className="p-6 rounded-[2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <CheckCircle2 className="w-8 h-8 text-indigo-400" />
+                <CheckCircle2 className="w-8 h-8 text-[var(--tint-indigo-fg)]" />
                 <div>
                   <h3 className="text-sm font-black text-white italic">{extractedProfile.name}</h3>
                   <p className="text-[10px] font-bold text-indigo-300/60 uppercase tracking-widest">Visual DNA Extracted Successfully</p>

@@ -17,14 +17,14 @@ const pill = 'px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[
 
 const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }: any) => {
   const colors: Record<string, string> = {
-    indigo: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10 shadow-[0_0_30px_rgba(99,102,241,0.2)]',
-    emerald: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]',
-    amber: 'text-amber-400 border-amber-500/30 bg-amber-500/10 shadow-[0_0_30px_rgba(245,158,11,0.2)]',
-    rose: 'text-rose-400 border-rose-500/30 bg-rose-500/10 shadow-[0_0_30px_rgba(244,63,94,0.2)]',
+    indigo: 'text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)] shadow-[0_0_30px_rgba(99,102,241,0.2)]',
+    emerald: 'text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)] bg-[var(--tint-emerald-bg)] shadow-[0_0_30px_rgba(16,185,129,0.2)]',
+    amber: 'text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)] bg-[var(--tint-amber-bg)] shadow-[0_0_30px_rgba(245,158,11,0.2)]',
+    rose: 'text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)] bg-[var(--tint-rose-bg)] shadow-[0_0_30px_rgba(244,63,94,0.2)]',
     purple: 'text-purple-400 border-purple-500/30 bg-purple-500/10 shadow-[0_0_30_rgba(168,85,247,0.2)]',
-    cyan: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10 shadow-[0_0_30_rgba(6,182,212,0.2)]',
-    orange: 'text-orange-400 border-orange-500/30 bg-orange-500/10 shadow-[0_0_30px_rgba(249,115,22,0.2)]',
-    fuchsia: 'text-fuchsia-400 border-fuchsia-500/30 bg-fuchsia-500/10 shadow-[0_0_30px_rgba(232,121,249,0.2)]'
+    cyan: 'text-[var(--tint-cyan-fg)] border-[var(--tint-cyan-edge)] bg-[var(--tint-cyan-bg)] shadow-[0_0_30_rgba(6,182,212,0.2)]',
+    orange: 'text-[var(--tint-orange-fg)] border-[var(--tint-orange-edge)] bg-[var(--tint-orange-bg)] shadow-[0_0_30px_rgba(249,115,22,0.2)]',
+    fuchsia: 'text-[var(--tint-fuchsia-fg)] border-[var(--tint-fuchsia-edge)] bg-[var(--tint-fuchsia-bg)] shadow-[0_0_30px_rgba(232,121,249,0.2)]'
   }
 
   return (
@@ -77,12 +77,12 @@ const ArbitragePanel = () => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 {offers.map(offer => (
                     <motion.div key={offer.id} whileHover={{ y: -10, backgroundColor: 'rgba(249,115,22,0.06)' }}
-                      className={`${glass} p-12 flex flex-col justify-between border-orange-500/10 hover:border-orange-500/30 transition-all duration-1000 relative overflow-hidden group min-h-[400px]`}>
+                      className={`${glass} p-12 flex flex-col justify-between border-orange-500/10 hover:border-[var(--tint-orange-edge)] transition-all duration-1000 relative overflow-hidden group min-h-[400px]`}>
                         <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-1000"><DollarSign size={200} /></div>
                         
                         <div className="relative z-10">
                             <div className="flex items-center gap-4 mb-4">
-                              <span className="text-[10px] text-orange-400 uppercase font-black tracking-[0.4em] italic px-5 py-2 rounded-full bg-orange-500/5 border border-orange-500/20">{offer.velocity} Velocity Flux</span>
+                              <span className="text-[10px] text-[var(--tint-orange-fg)] uppercase font-black tracking-[0.4em] italic px-5 py-2 rounded-full bg-orange-500/5 border border-[var(--tint-orange-edge)]">{offer.velocity} Velocity Flux</span>
                               <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse shadow-[0_0_10px_rgba(249,115,22,1)]" />
                             </div>
                             <h4 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-8 leading-tight drop-shadow-2xl">{offer.name}</h4>
@@ -90,11 +90,11 @@ const ArbitragePanel = () => {
                             <div className="flex gap-12 mb-12">
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic opacity-40">CONVERSION_RESISTANCE</p>
-                                    <p className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{(offer.conversionRate * 100).toFixed(1)}<span className="text-xl text-orange-400 opacity-40 ml-1">%</span></p>
+                                    <p className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{(offer.conversionRate * 100).toFixed(1)}<span className="text-xl text-[var(--tint-orange-fg)] opacity-40 ml-1">%</span></p>
                                 </div>
                                 <div className="space-y-2 border-l-2 border-white/10 pl-12">
                                     <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic opacity-40">PAYOUT_CAPITAL_VALUE</p>
-                                    <p className="text-4xl font-black text-emerald-400 italic tracking-tighter tabular-nums leading-none"><span className="text-xl opacity-40 mr-1">$</span>{offer.pcv}</p>
+                                    <p className="text-4xl font-black text-[var(--tint-emerald-fg)] italic tracking-tighter tabular-nums leading-none"><span className="text-xl opacity-40 mr-1">$</span>{offer.pcv}</p>
                                 </div>
                             </div>
                         </div>
@@ -137,8 +137,8 @@ const EncirclementPanel = () => {
 
     const stats = [
         { label: 'Lattice Health', value: network ? (network.health * 100).toFixed(1) : '---', unit: '%', color: 'text-purple-400', icon: ShieldCheck },
-        { label: 'Aggregated Revenue', value: network ? (network.overLordStats.totalRevenueAggregated / 1000000).toFixed(1) : '---', unit: 'M+', color: 'text-emerald-400', icon: TrendingUp },
-        { label: 'Victory Vectors', value: network ? network.overLordStats.victoriesToday : '---', unit: 'FLUX', color: 'text-fuchsia-400', icon: Zap },
+        { label: 'Aggregated Revenue', value: network ? (network.overLordStats.totalRevenueAggregated / 1000000).toFixed(1) : '---', unit: 'M+', color: 'text-[var(--tint-emerald-fg)]', icon: TrendingUp },
+        { label: 'Victory Vectors', value: network ? network.overLordStats.victoriesToday : '---', unit: 'FLUX', color: 'text-[var(--tint-fuchsia-fg)]', icon: Zap },
     ]
 
     return (
@@ -171,9 +171,9 @@ const EncirclementPanel = () => {
                     <p className="opacity-40 uppercase tracking-widest border-b border-purple-500/10 pb-2 mb-4">--- INITIATING SECURE ENCIRCLEMENT ---</p>
                     <p className="flex gap-4"><span>[21:42:01]</span> <span className="text-white font-bold">SYSTEM</span> <span>Initializing S2S encrypted tunnel to sibling node alpha-zero...</span></p>
                     <p className="flex gap-4"><span>[21:42:04]</span> <span className="text-white font-bold">SYSTEM</span> <span>Encirclement active. 14 sibling instances connected across substrate.</span></p>
-                    <p className="flex gap-4"><span>[21:43:12]</span> <span className="text-fuchsia-400 font-bold">PULSE</span> <span>Vector Received: Hook &quot;e7a1b&quot; dominating in Cluster-East. Velocity: +142/hr.</span></p>
-                    <p className="flex gap-4"><span>[21:43:15]</span> <span className="text-emerald-400 font-bold">UPLINK</span> <span>Local Synthesis updated with +14% velocity weighting from sibling pulse.</span></p>
-                    <p className="flex gap-4"><span>[21:44:28]</span> <span className="text-amber-400 font-bold">ROUTING</span> <span>Arbitrage Funnel adjusted in Node_Beta based on sibling ROAS data (2.45x).</span></p>
+                    <p className="flex gap-4"><span>[21:43:12]</span> <span className="text-[var(--tint-fuchsia-fg)] font-bold">PULSE</span> <span>Vector Received: Hook &quot;e7a1b&quot; dominating in Cluster-East. Velocity: +142/hr.</span></p>
+                    <p className="flex gap-4"><span>[21:43:15]</span> <span className="text-[var(--tint-emerald-fg)] font-bold">UPLINK</span> <span>Local Synthesis updated with +14% velocity weighting from sibling pulse.</span></p>
+                    <p className="flex gap-4"><span>[21:44:28]</span> <span className="text-[var(--tint-amber-fg)] font-bold">ROUTING</span> <span>Arbitrage Funnel adjusted in Node_Beta based on sibling ROAS data (2.45x).</span></p>
                     <p className="flex gap-4 animate-pulse"><span>[21:45:00]</span> <span className="text-purple-400 font-bold">STABLE</span> <span>Lattice integrity maintained at 98.4%. Continuing mission.</span></p>
                 </div>
             </div>
@@ -189,18 +189,18 @@ const StabilityPanel = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 {[
-                    { label: 'Phase 1: Performance Firewall', status: '82% coverage', icon: CheckCircle2, color: 'text-emerald-400', desc: 'Comprehensive unit & integration test suite' },
-                    { label: 'Phase 2: Persistent Identity', status: 'LOCKED', icon: Zap, color: 'text-cyan-400', desc: 'OAuth token persistence & refresh sync' },
-                    { label: 'Phase 3: Spectral Storage', status: 'IN_PROGRESS', icon: Cloud, color: 'text-amber-400', desc: 'Direct-to-S3 high-velocity asset migration' }
+                    { label: 'Phase 1: Performance Firewall', status: '82% coverage', icon: CheckCircle2, color: 'text-[var(--tint-emerald-fg)]', desc: 'Comprehensive unit & integration test suite' },
+                    { label: 'Phase 2: Persistent Identity', status: 'LOCKED', icon: Zap, color: 'text-[var(--tint-cyan-fg)]', desc: 'OAuth token persistence & refresh sync' },
+                    { label: 'Phase 3: Spectral Storage', status: 'IN_PROGRESS', icon: Cloud, color: 'text-[var(--tint-amber-fg)]', desc: 'Direct-to-S3 high-velocity asset migration' }
                 ].map((item, i) => (
                     <motion.div key={item.label} whileHover={{ scale: 1.02, backgroundColor: 'rgba(6,182,212,0.03)' }}
-                      className={`${glass} p-10 flex flex-col justify-between border-cyan-500/10 hover:border-cyan-500/40 transition-all duration-700 group min-h-[320px] shadow-[0_40px_100px_rgba(0,0,0,0.4)]`}>
+                      className={`${glass} p-10 flex flex-col justify-between border-cyan-500/10 hover:border-[var(--tint-cyan-edge)] transition-all duration-700 group min-h-[320px] shadow-[0_40px_100px_rgba(0,0,0,0.4)]`}>
                         <div className="space-y-8">
                             <div className="flex items-center justify-between">
-                                <div className={`w-14 h-14 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-700`}>
+                                <div className={`w-14 h-14 rounded-2xl bg-cyan-500/5 border border-[var(--tint-cyan-edge)] flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-700`}>
                                    <item.icon className={item.color} size={28} />
                                 </div>
-                                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest italic">{item.status}</span>
+                                <span className="text-[10px] font-black text-[var(--tint-cyan-fg)] uppercase tracking-widest italic">{item.status}</span>
                             </div>
                             <div>
                                 <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">{item.label}</h4>
@@ -215,9 +215,9 @@ const StabilityPanel = () => {
                 ))}
             </div>
 
-            <div className={`p-10 rounded-[3rem] ${glass} bg-rose-500/5 border-rose-500/20 flex flex-col md:flex-row items-center justify-between gap-12 hover:border-rose-500/40 transition-all duration-700 shadow-[0_50px_150px_rgba(244,63,94,0.1)]`}>
+            <div className={`p-10 rounded-[3rem] ${glass} bg-rose-500/5 border-[var(--tint-rose-edge)] flex flex-col md:flex-row items-center justify-between gap-12 hover:border-[var(--tint-rose-edge)] transition-all duration-700 shadow-[0_50px_150px_rgba(244,63,94,0.1)]`}>
                 <div className="flex items-center gap-8">
-                    <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center animate-pulse"><AlertTriangle className="text-rose-500" size={40} /></div>
+                    <div className="w-20 h-20 rounded-[2rem] bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center animate-pulse"><AlertTriangle className="text-rose-500" size={40} /></div>
                     <div>
                         <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Emergency Node Killswitch</h4>
                         <p className="text-[12px] font-bold text-slate-800 uppercase tracking-[0.4em] italic opacity-60">Instant lattice disconnect // Zero-Day Protocol</p>

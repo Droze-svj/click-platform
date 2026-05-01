@@ -204,14 +204,14 @@ export default function VideoEditPage({ params }: PageProps) {
       <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12 py-12 relative z-10">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
           <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-3xl flex items-center justify-center shadow-2xl relative group">
+            <div className="w-20 h-20 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-3xl flex items-center justify-center shadow-2xl relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Edit3 size={40} className="text-indigo-400 relative z-10" />
+              <Edit3 size={40} className="text-[var(--tint-indigo-fg)] relative z-10" />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Workflow Orchestrator</span>
+                <Cpu size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)]/80 italic">Neural Workflow Orchestrator</span>
               </div>
               <h1 className="text-[clamp(2.5rem,8vw,5rem)] font-black text-[var(--text-main)] tracking-tighter leading-none italic uppercase">Studio Selection</h1>
               <p className="text-[var(--text-dim)] text-sm mt-2 font-medium max-w-lg italic">{video?.title || 'Untitled Manifest'}</p>
@@ -248,32 +248,32 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
 
             <div className="space-y-6">
-              <button onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-8 p-10 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:bg-[var(--glass-surface-heavy)] hover:border-indigo-500/30 transition-all duration-500 text-left shadow-2xl overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[60px] opacity-0 group-hover:opacity-40 transition-opacity" />
-                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:scale-110 transition-all shadow-inner">
-                  <Sparkles className="w-8 h-8 text-indigo-400" />
+              <button onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-8 p-10 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:bg-[var(--glass-surface-heavy)] hover:border-[var(--tint-indigo-edge)] transition-all duration-500 text-left shadow-2xl overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--tint-indigo-bg)] blur-[60px] opacity-0 group-hover:opacity-40 transition-opacity" />
+                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center group-hover:scale-110 transition-all shadow-inner">
+                  <Sparkles className="w-8 h-8 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                      <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Neural Forge</h2>
-                     <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[8px] font-black text-indigo-400 uppercase italic">RECOMMENDED</span>
+                     <span className="px-3 py-1 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase italic">RECOMMENDED</span>
                   </div>
                   <p className="text-sm text-[var(--text-dim)] font-medium italic opacity-70">Initialize the AI engine to synthesize rough clips and viral hooks automatically.</p>
-                  <div className="mt-6 flex items-center gap-3 text-indigo-400 font-black text-[11px] uppercase tracking-widest italic group-hover:gap-5 transition-all">
+                  <div className="mt-6 flex items-center gap-3 text-[var(--tint-indigo-fg)] font-black text-[11px] uppercase tracking-widest italic group-hover:gap-5 transition-all">
                     Initialize Forge <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </button>
 
-              <button onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-8 p-10 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:bg-[var(--glass-surface-heavy)] hover:border-rose-500/30 transition-all duration-500 text-left shadow-2xl overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[60px] opacity-0 group-hover:opacity-40 transition-opacity" />
-                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center group-hover:scale-110 transition-all shadow-inner">
-                  <Video className="w-8 h-8 text-rose-400" />
+              <button onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-8 p-10 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:bg-[var(--glass-surface-heavy)] hover:border-[var(--tint-rose-edge)] transition-all duration-500 text-left shadow-2xl overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--tint-rose-bg)] blur-[60px] opacity-0 group-hover:opacity-40 transition-opacity" />
+                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center group-hover:scale-110 transition-all shadow-inner">
+                  <Video className="w-8 h-8 text-[var(--tint-rose-fg)]" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight mb-2">Spectral Studio</h2>
                   <p className="text-sm text-[var(--text-dim)] font-medium italic opacity-70">Access the full kinetic calibration matrix for manual timeline mastery.</p>
-                  <div className="mt-6 flex items-center gap-3 text-rose-400 font-black text-[11px] uppercase tracking-widest italic group-hover:gap-5 transition-all">
+                  <div className="mt-6 flex items-center gap-3 text-[var(--tint-rose-fg)] font-black text-[11px] uppercase tracking-widest italic group-hover:gap-5 transition-all">
                     Access Studio <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -368,9 +368,9 @@ export default function VideoEditPage({ params }: PageProps) {
               </motion.div>
             ) : aiEditResult ? (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                <div className="bg-emerald-500/5 border-2 border-emerald-500/20 rounded-[4rem] p-12 flex flex-col md:flex-row items-center gap-12 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity rotate-12"><CheckCircle2 size={300} className="text-emerald-400" /></div>
-                  <div className="w-24 h-24 rounded-[3rem] bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-3xl relative z-10"><CheckCircle2 size={48} className="text-emerald-400" /></div>
+                <div className="bg-emerald-500/5 border-2 border-[var(--tint-emerald-edge)] rounded-[4rem] p-12 flex flex-col md:flex-row items-center gap-12 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity rotate-12"><CheckCircle2 size={300} className="text-[var(--tint-emerald-fg)]" /></div>
+                  <div className="w-24 h-24 rounded-[3rem] bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-3xl relative z-10"><CheckCircle2 size={48} className="text-[var(--tint-emerald-fg)]" /></div>
                   <div className="flex-1 text-center md:text-left relative z-10">
                     <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2">Manifest Stable</h2>
                     <p className="text-[var(--text-dim)] font-medium italic uppercase tracking-widest text-[11px] opacity-60">Neural forge synthesis complete. Temporal blueprint ready.</p>
@@ -401,7 +401,7 @@ export default function VideoEditPage({ params }: PageProps) {
                                <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic group-hover/factor:text-blue-400 transition-colors">{f.name}</p>
                                <p className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{f.value}</p>
                             </div>
-                            <div className={`px-4 py-2 rounded-full text-[11px] font-black italic tracking-widest ${f.impact.startsWith('+') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                            <div className={`px-4 py-2 rounded-full text-[11px] font-black italic tracking-widest ${f.impact.startsWith('+') ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]' : 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border border-[var(--tint-rose-edge)]'}`}>
                                {f.impact}
                             </div>
                           </div>
@@ -416,9 +416,9 @@ export default function VideoEditPage({ params }: PageProps) {
                 <div className="lg:col-span-4 space-y-8">
                   {showAnalysis && aiAnalysis && (
                     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] p-10 rounded-[4rem] space-y-8 relative overflow-hidden">
-                       <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none rotate-12"><Activity size={180} className="text-emerald-400" /></div>
+                       <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none rotate-12"><Activity size={180} className="text-[var(--tint-emerald-fg)]" /></div>
                        <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"><CheckCircle2 size={28} className="text-emerald-400" /></div>
+                          <div className="w-14 h-14 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center"><CheckCircle2 size={28} className="text-[var(--tint-emerald-fg)]" /></div>
                           <div>
                              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">Diagnostics</h3>
                              <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic mt-1">UPLINK_SUCCESSFUL</p>
@@ -470,7 +470,7 @@ export default function VideoEditPage({ params }: PageProps) {
                         </div>
                         <div className="space-y-10">
                            <div className="space-y-8">
-                              <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic flex items-center gap-4 px-4"><LayoutGrid size={16} className="text-indigo-400" /> MATRIX_CALIBRATION</label>
+                              <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic flex items-center gap-4 px-4"><LayoutGrid size={16} className="text-[var(--tint-indigo-fg)]" /> MATRIX_CALIBRATION</label>
                               <div className="space-y-6">
                                  <div className="p-8 rounded-[3.5rem] bg-black/40 border-2 border-white/5 space-y-6">
                                     <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic">TARGET_DOMAIN</p>

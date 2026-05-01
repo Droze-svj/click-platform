@@ -80,13 +80,13 @@ export default function DailyChallenges() {
     <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg shadow-lg p-6 border border-orange-200 dark:border-orange-800">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+          <Trophy className="w-5 h-5 text-orange-600 dark:text-[var(--tint-orange-fg)]" />
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
             Daily Challenges
           </h3>
         </div>
         {completedCount > 0 && (
-          <div className="flex items-center gap-1 text-sm text-orange-600 dark:text-orange-400">
+          <div className="flex items-center gap-1 text-sm text-orange-600 dark:text-[var(--tint-orange-fg)]">
             <Flame className="w-4 h-4" />
             <span>{completedCount}/{challenges.length} completed</span>
           </div>
@@ -108,12 +108,12 @@ export default function DailyChallenges() {
                 <div className={`p-2 rounded-lg ${
                   isNearComplete
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                    : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+                    : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-[var(--tint-orange-fg)]'
                 }`}>
                   <Target className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                  <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-[var(--tint-orange-fg)] transition-colors">
                     {challenge.title}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
@@ -124,7 +124,7 @@ export default function DailyChallenges() {
                   <div className="mb-2">
                     <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                       <span>{challenge.current} / {challenge.target}</span>
-                      <span className="text-orange-600 dark:text-orange-400 font-medium">
+                      <span className="text-orange-600 dark:text-[var(--tint-orange-fg)] font-medium">
                         {Math.round(progress)}%
                       </span>
                     </div>
@@ -166,7 +166,7 @@ export default function DailyChallenges() {
       {activeChallenges.length > 3 && (
         <button
           onClick={() => router.push('/dashboard/achievements')}
-          className="mt-4 w-full text-center text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
+          className="mt-4 w-full text-center text-sm text-orange-600 dark:text-[var(--tint-orange-fg)] hover:text-orange-700 dark:hover:text-orange-300 font-medium"
         >
           View all challenges →
         </button>

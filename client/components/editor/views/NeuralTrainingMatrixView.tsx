@@ -91,7 +91,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative w-[600px] h-[600px] rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-8 transition-all duration-700 cursor-pointer overflow-hidden ${dragActive ? 'border-indigo-500 bg-indigo-500/10 scale-105 shadow-[0_0_100px_rgba(99,102,241,0.2)]' : 'border-white/10 bg-white/[0.02]'}`}
+          className={`relative w-[600px] h-[600px] rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-8 transition-all duration-700 cursor-pointer overflow-hidden ${dragActive ? 'border-indigo-500 bg-[var(--tint-indigo-bg)] scale-105 shadow-[0_0_100px_rgba(99,102,241,0.2)]' : 'border-white/10 bg-white/[0.02]'}`}
         >
           {/* Liquid Ring Animation (CSS Only) */}
           <div className="absolute inset-4 rounded-full border border-white/5 animate-[spin_20s_linear_infinite]" />
@@ -106,7 +106,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
                 exit={{ opacity: 0, y: -10 }}
                 className="flex flex-col items-center gap-8 z-10"
               >
-                <div className="w-24 h-24 rounded-3xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 text-indigo-400">
+                <div className="w-24 h-24 rounded-3xl bg-[var(--tint-indigo-bg)] flex items-center justify-center border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]">
                   <Upload className="w-10 h-10 animate-bounce" />
                 </div>
                 <div className="text-center space-y-3">
@@ -128,11 +128,11 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
                     className="w-40 h-40 rounded-full border-4 border-t-indigo-500 border-r-transparent border-l-transparent border-b-transparent"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Cpu className="w-16 h-16 text-indigo-400 animate-pulse" />
+                    <Cpu className="w-16 h-16 text-[var(--tint-indigo-fg)] animate-pulse" />
                   </div>
                 </div>
                 <div className="text-center">
-                   <h3 className="text-2xl font-black text-indigo-400 italic tracking-[0.3em] uppercase">Training Engine Active</h3>
+                   <h3 className="text-2xl font-black text-[var(--tint-indigo-fg)] italic tracking-[0.3em] uppercase">Training Engine Active</h3>
                    <div className="mt-4 h-1 w-48 bg-white/10 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ x: "-100%" }}
@@ -158,7 +158,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
       {/* Right Terminal Sidebar */}
       <div className={`w-[450px] ${glassStyle} rounded-[3rem] p-8 flex flex-col`}>
         <div className="flex items-center gap-3 border-b border-white/10 pb-6 mb-8">
-           <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+           <div className="p-2 rounded-lg bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]">
               <TerminalIcon className="w-4 h-4" />
            </div>
            <h4 className="text-[10px] font-black text-white uppercase tracking-widest italic">Extraction Terminal v4.0</h4>
@@ -169,9 +169,9 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
             <div key={log.id} className="flex items-start gap-4 group">
               <div className="pt-1">
                 {log.status === 'done' ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                 ) : log.status === 'loading' ? (
-                  <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-[var(--tint-indigo-fg)] animate-spin" />
                 ) : (
                   <div className="w-4 h-4 rounded-full border border-white/10" />
                 )}
@@ -181,7 +181,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
                   {log.text}
                 </div>
                 {log.status === 'loading' && (
-                  <div className="text-[9px] text-indigo-400/50 font-mono">
+                  <div className="text-[9px] text-[var(--tint-indigo-fg)]/50 font-mono">
                     Node: 0x4f...{Math.random().toString(16).slice(2, 6)} | CPU: 88.2%
                   </div>
                 )}
@@ -191,7 +191,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
         </div>
 
         <div className="mt-8 p-6 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-4">
-           <div className="flex items-center gap-2 text-indigo-400">
+           <div className="flex items-center gap-2 text-[var(--tint-indigo-fg)]">
               <Zap className="w-4 h-4" />
               <span className="text-[9px] font-black uppercase tracking-widest italic">AI Engine Status</span>
            </div>

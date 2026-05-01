@@ -80,18 +80,18 @@ export default function SovereignAnalyticsMatrix() {
         {/* Matrix Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                <Brain size={44} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Shield size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Diagnostic Matrix v9.4.2</span>
+                      <Shield size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Diagnostic Matrix v9.4.2</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <ActivitySquare size={12} className="text-indigo-400 animate-pulse" />
+                       <ActivitySquare size={12} className="text-[var(--tint-indigo-fg)] animate-pulse" />
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">RESONANCE_MONITOR_ACTIVE</span>
                    </div>
                  </div>
@@ -118,11 +118,11 @@ export default function SovereignAnalyticsMatrix() {
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             className={`xl:col-span-2 ${glass} p-12 rounded-[5rem] flex flex-col lg:flex-row items-center gap-16 bg-gradient-to-br from-indigo-500/5 to-transparent border-white/5 shadow-2xl relative overflow-hidden`}
           >
-            <div className="absolute right-0 top-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute right-0 top-0 w-64 h-64 bg-[var(--tint-indigo-bg)] blur-[100px] rounded-full pointer-events-none" />
             
             {/* Neural Potency Ring */}
             <div className="flex flex-col items-center gap-6 shrink-0 relative z-10">
-              <div className={`w-52 h-52 rounded-full border-[10px] border-indigo-500/30 flex flex-col items-center justify-center bg-indigo-500/5 shadow-[inset_0_0_60px_rgba(0,0,0,0.8)] relative group`}>
+              <div className={`w-52 h-52 rounded-full border-[10px] border-[var(--tint-indigo-edge)] flex flex-col items-center justify-center bg-indigo-500/5 shadow-[inset_0_0_60px_rgba(0,0,0,0.8)] relative group`}>
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className={`text-7xl font-black italic tracking-tighter text-white tabular-nums leading-none`}>
                   {data?.avg_engagement_rate || 0}%
@@ -137,17 +137,17 @@ export default function SovereignAnalyticsMatrix() {
             {/* Heuristic Inference Feed */}
             <div className="space-y-8 flex-1 relative z-10 text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-4">
-                <Sparkles size={18} className="text-indigo-400 animate-pulse" />
-                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">Engine_Heuristic_Link</span>
+                <Sparkles size={18} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.6em] italic">Engine_Heuristic_Link</span>
               </div>
               <h2 className="text-4xl font-black italic text-white leading-tight uppercase tracking-tighter max-w-xl">
                  &ldquo;Spectral signals are {(data?.avg_engagement_rate ?? 0) > 5 ? 'PEAKING' : 'STABLE'}. Kinetic resonance manifests in frames 0-4.&rdquo;
               </h2>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-widest italic">
+                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic">
                     <TrendingUp size={12} /> SIGNAL_POSITIVE
                  </div>
-                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black text-violet-400 uppercase tracking-widest italic">
+                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] text-[10px] font-black text-[var(--tint-violet-fg)] uppercase tracking-widest italic">
                     <Activity size={12} /> RESONANCE_LOCK
                  </div>
               </div>
@@ -156,10 +156,10 @@ export default function SovereignAnalyticsMatrix() {
 
           {/* Quick Metrics Grid */}
           <div className="xl:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-10">
-             <ScoreCard label="Global Reach" value={fmt(data?.total_views || 0)} icon={Eye} color="text-rose-400" trend="+12.4%" />
-             <ScoreCard label="Spectral Gravity" value={fmt(data?.total_engagement || 0)} icon={Waves} color="text-violet-400" trend="+8.2%" />
-             <ScoreCard label="Sync Nodes" value={data?.total_posts || 0} icon={Boxes} color="text-indigo-400" trend="Active" />
-             <ScoreCard label="Cortex Sync" value="MASTER" icon={Cpu} color="text-emerald-400" trend="VERIFIED" />
+             <ScoreCard label="Global Reach" value={fmt(data?.total_views || 0)} icon={Eye} color="text-[var(--tint-rose-fg)]" trend="+12.4%" />
+             <ScoreCard label="Spectral Gravity" value={fmt(data?.total_engagement || 0)} icon={Waves} color="text-[var(--tint-violet-fg)]" trend="+8.2%" />
+             <ScoreCard label="Sync Nodes" value={data?.total_posts || 0} icon={Boxes} color="text-[var(--tint-indigo-fg)]" trend="Active" />
+             <ScoreCard label="Cortex Sync" value="MASTER" icon={Cpu} color="text-[var(--tint-emerald-fg)]" trend="VERIFIED" />
           </div>
         </div>
 
@@ -168,7 +168,7 @@ export default function SovereignAnalyticsMatrix() {
            <div className="absolute top-0 right-0 p-32 opacity-[0.01] pointer-events-none border-none"><Monitor size={500} /></div>
            <div className="flex flex-col md:flex-row items-center justify-between px-16 py-12 border-b border-white/5 bg-white/[0.01] gap-8 relative z-10">
               <div className="flex items-center gap-8 text-white">
-                 <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><Terminal size={32} className="text-indigo-400" /></div>
+                 <div className="p-4 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-2xl shadow-indigo-500/20"><Terminal size={32} className="text-[var(--tint-indigo-fg)]" /></div>
                  <div>
                     <h3 className="text-4xl font-black italic uppercase tracking-tighter leading-none mb-1">Spectral Node Repository</h3>
                     <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">Real-time surveillance of manifested content nodes.</p>
@@ -188,7 +188,7 @@ export default function SovereignAnalyticsMatrix() {
                  </div>
 
                  <div className="flex-1 min-w-0">
-                   <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-700">{node.title}</p>
+                   <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700">{node.title}</p>
                    <div className="flex items-center gap-6 mt-3 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none">
                       <div className="flex items-center gap-2"><Cpu size={14} /> <span>{node.platform.toUpperCase()} PHANTOM NODE</span></div>
                       <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />
@@ -201,11 +201,11 @@ export default function SovereignAnalyticsMatrix() {
                      <div className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{fmt(node.views)}</div>
                      <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">SATURATION</div>
                    </div>
-                   <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl font-black border-2 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${(node.viralScore ?? 0) >= 80 ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10' : 'border-indigo-500/30 text-indigo-400 bg-indigo-500/10'}`}>
+                   <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl font-black border-2 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.4)] ${(node.viralScore ?? 0) >= 80 ? 'border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)]' : 'border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)]'}`}>
                      {node.viralScore ?? 0}
                    </div>
                    <div className="flex flex-col items-center gap-1">
-                      <ArrowUpRight size={24} className="text-emerald-400 opacity-20 group-hover:opacity-100 transition-opacity" />
+                      <ArrowUpRight size={24} className="text-[var(--tint-emerald-fg)] opacity-20 group-hover:opacity-100 transition-opacity" />
                    </div>
                  </div>
                </motion.div>

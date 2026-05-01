@@ -129,9 +129,9 @@ export const FleetControlHUD: React.FC = () => {
             {/* Aggregated Intelligence */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: 'Active Nodes', val: status?.aggregation.onlineNodes, total: status?.aggregation.totalNodes, icon: Cpu, color: 'text-indigo-400' },
-                    { label: 'Network Integrity', val: `${((status?.aggregation.networkIntegrity ?? 0) * 100).toFixed(0)}%`, icon: ShieldCheck, color: 'text-emerald-400' },
-                    { label: 'Fleet Revenue', val: `$${status?.aggregation.totalRevenue.toLocaleString()}`, icon: Zap, color: 'text-amber-400' },
+                    { label: 'Active Nodes', val: status?.aggregation.onlineNodes, total: status?.aggregation.totalNodes, icon: Cpu, color: 'text-[var(--tint-indigo-fg)]' },
+                    { label: 'Network Integrity', val: `${((status?.aggregation.networkIntegrity ?? 0) * 100).toFixed(0)}%`, icon: ShieldCheck, color: 'text-[var(--tint-emerald-fg)]' },
+                    { label: 'Fleet Revenue', val: `$${status?.aggregation.totalRevenue.toLocaleString()}`, icon: Zap, color: 'text-[var(--tint-amber-fg)]' },
                     { label: 'Active Tasks', val: status?.aggregation.activeGenerations, icon: Activity, color: 'text-blue-400' }
                 ].map((stat, i) => (
                     <div key={i} className={`${glassStyle} rounded-3xl p-6 space-y-4`}>
@@ -154,8 +154,8 @@ export const FleetControlHUD: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     className={`p-6 rounded-[2rem] border flex items-center justify-between gap-6 ${
                         status.recommendation.priority === 'high' 
-                        ? 'bg-indigo-500/10 border-indigo-500/20' 
-                        : 'bg-amber-500/10 border-amber-500/20'
+                        ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]' 
+                        : 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]'
                     }`}
                 >
                     <div className="flex items-center gap-6">
@@ -182,7 +182,7 @@ export const FleetControlHUD: React.FC = () => {
                             layout
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className={`${glassStyle} rounded-[2rem] p-8 space-y-6 group hover:border-indigo-500/30 transition-all`}
+                            className={`${glassStyle} rounded-[2rem] p-8 space-y-6 group hover:border-[var(--tint-indigo-edge)] transition-all`}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -199,7 +199,7 @@ export const FleetControlHUD: React.FC = () => {
                                         { id: 'ig', icon: Instagram },
                                         { id: 'yt', icon: Youtube }
                                     ].map(plat => (
-                                        <plat.icon key={plat.id} className="w-2.5 h-2.5 text-indigo-400 opacity-60 hover:opacity-100 transition-opacity" />
+                                        <plat.icon key={plat.id} className="w-2.5 h-2.5 text-[var(--tint-indigo-fg)] opacity-60 hover:opacity-100 transition-opacity" />
                                     ))}
                                 </div>
                             </div>
@@ -211,7 +211,7 @@ export const FleetControlHUD: React.FC = () => {
                                 </div>
                                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
                                     <span className="text-[8px] font-black text-slate-600 uppercase block mb-1">Yield</span>
-                                    <span className="text-sm font-black text-emerald-400 italic">${node.metrics.revenueDay}</span>
+                                    <span className="text-sm font-black text-[var(--tint-emerald-fg)] italic">${node.metrics.revenueDay}</span>
                                 </div>
                             </div>
 
@@ -219,7 +219,7 @@ export const FleetControlHUD: React.FC = () => {
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
                                     Pulse: {new Date(node.lastPulse).toLocaleTimeString()}
                                 </span>
-                                <button className="flex items-center gap-2 text-[9px] font-black text-indigo-400 uppercase tracking-widest hover:text-white transition-colors">
+                                <button className="flex items-center gap-2 text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest hover:text-white transition-colors">
                                     Inspect Node <ChevronRight className="w-3 h-3" />
                                 </button>
                             </div>

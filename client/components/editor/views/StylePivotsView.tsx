@@ -25,7 +25,7 @@ const PIVOTS = [
     description: 'Mixed-media collage and high-velocity sensory overload.',
     icon: Zap,
     color: 'from-fuchsia-500 to-purple-600',
-    accent: 'text-fuchsia-400',
+    accent: 'text-[var(--tint-fuchsia-fg)]',
     philosophy: 'More is more. Sensory overload as a hook.'
   },
   {
@@ -34,7 +34,7 @@ const PIVOTS = [
     description: 'Y3K chrome, silicon gradients, and high-gloss optimism.',
     icon: Terminal,
     color: 'from-cyan-400 to-blue-600',
-    accent: 'text-cyan-400',
+    accent: 'text-[var(--tint-cyan-fg)]',
     philosophy: 'The future we were promised, rendered in 4K.'
   },
   {
@@ -43,7 +43,7 @@ const PIVOTS = [
     description: 'Deep calming palettes and clean editorial typography.',
     icon: Ghost,
     color: 'from-emerald-500 to-teal-700',
-    accent: 'text-emerald-400',
+    accent: 'text-[var(--tint-emerald-fg)]',
     philosophy: 'Minimalism for the overstimulated mind.'
   }
 ]
@@ -127,7 +127,7 @@ const StylePivotsView: React.FC<StylePivotsViewProps> = ({ currentPivot, onSelec
 
       <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 backdrop-blur-md">
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[var(--tint-indigo-bg)] flex items-center justify-center text-[var(--tint-indigo-fg)] flex-shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>

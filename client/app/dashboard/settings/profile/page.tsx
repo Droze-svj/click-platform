@@ -122,19 +122,19 @@ export default function IdentityMatrixInterfacePage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={32} />
               </button>
-              <div className="w-20 h-20 bg-indigo-500/5 border border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-20 h-20 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Fingerprint size={40} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform duration-700" />
+                <Fingerprint size={40} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-110 transition-transform duration-700" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Node Identity v8.4.1</span>
+                      <Cpu size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Node Identity v8.4.1</span>
                    </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <Shield size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SIGNATURE_STABLE</span>
+                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-inner">
+                       <Shield size={12} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                       <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">SIGNATURE_STABLE</span>
                    </div>
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Profile</h1>
@@ -160,12 +160,12 @@ export default function IdentityMatrixInterfacePage() {
                 className={`${glassStyle} p-16 rounded-[6rem] flex flex-col items-center text-center space-y-12 border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.6)]`}
               >
                  <div className="relative group/avatar">
-                    <div className="w-56 h-56 rounded-[4.5rem] bg-black/60 border border-white/10 p-3 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300 group-hover/avatar:border-indigo-500/40 group-hover/avatar:scale-105">
+                    <div className="w-56 h-56 rounded-[4.5rem] bg-black/60 border border-white/10 p-3 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300 group-hover/avatar:border-[var(--tint-indigo-edge)] group-hover/avatar:scale-105">
                        <div className="w-full h-full rounded-[3.8rem] overflow-hidden bg-white/[0.02] flex items-center justify-center relative">
                           {preview ? (
                             <img src={preview} alt="Profile" className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110 grayscale group-hover/avatar:grayscale-0" />
                           ) : (
-                            <User className="w-24 h-24 text-slate-500 group-hover/avatar:text-indigo-400 transition-all duration-300" />
+                            <User className="w-24 h-24 text-slate-500 group-hover/avatar:text-[var(--tint-indigo-fg)] transition-all duration-300" />
                           )}
                           <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
                        </div>
@@ -193,8 +193,8 @@ export default function IdentityMatrixInterfacePage() {
                           </div>
                        </button>
                     )}
-                    <div className="p-8 rounded-[3rem] bg-black/60 border border-white/5 flex items-center justify-between group cursor-default shadow-inner hover:border-indigo-500/30 transition-all duration-300">
-                       <div className="flex items-center gap-5 text-slate-400 group-hover:text-indigo-400 transition-colors duration-700">
+                    <div className="p-8 rounded-[3rem] bg-black/60 border border-white/5 flex items-center justify-between group cursor-default shadow-inner hover:border-[var(--tint-indigo-edge)] transition-all duration-300">
+                       <div className="flex items-center gap-5 text-slate-400 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700">
                           <Activity size={20} className="animate-pulse" />
                           <span className="text-[12px] font-black uppercase tracking-[0.4em] italic">Logic Tier</span>
                        </div>
@@ -207,7 +207,7 @@ export default function IdentityMatrixInterfacePage() {
                 className={`${glassStyle} p-12 rounded-[5rem] space-y-12 border-white/5 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]`}
               >
                  <div className="flex items-center gap-6 border-b border-white/5 pb-8">
-                    <Network size={20} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
+                    <Network size={20} className="text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors" />
                     <h3 className="text-[13px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">Mesh Hub Uplinks</h3>
                  </div>
                  <div className="space-y-10">
@@ -229,7 +229,7 @@ export default function IdentityMatrixInterfacePage() {
                  <div className="absolute top-0 right-0 p-32 opacity-[0.01] pointer-events-none"><Terminal size={600} className="text-white" /></div>
                  
                  <div className="flex items-center gap-8 mb-20 relative z-10">
-                    <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Target size={40} className="text-indigo-400 animate-pulse" /></div>
+                    <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-[var(--tint-indigo-edge)] shadow-2xl"><Target size={40} className="text-[var(--tint-indigo-fg)] animate-pulse" /></div>
                     <div>
                        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Signature Terminal</h2>
                        <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Calibrating neural bio-synthesis, operational parameters and mission hub coordinates.</p>
@@ -252,7 +252,7 @@ export default function IdentityMatrixInterfacePage() {
                             onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value.slice(0, 500) }))}
                             rows={8}
                             placeholder="OUTLINE YOUR LOGIC PARADIGM AND CORE HEURISTICS..."
-                            className="w-full bg-black/60 border border-white/10 rounded-[4rem] px-12 py-12 text-[18px] font-black text-white uppercase italic tracking-[0.1em] focus:outline-none focus:border-indigo-500/40 transition-all placeholder:text-slate-600 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] leading-relaxed min-h-[300px] font-mono"
+                            className="w-full bg-black/60 border border-white/10 rounded-[4rem] px-12 py-12 text-[18px] font-black text-white uppercase italic tracking-[0.1em] focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all placeholder:text-slate-600 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] leading-relaxed min-h-[300px] font-mono"
                             title="Bio"
                           />
                           <div className="absolute top-8 right-8 pointer-events-none opacity-5 group-focus-within:opacity-20 transition-opacity">
@@ -282,7 +282,7 @@ export default function IdentityMatrixInterfacePage() {
                           <select
                             value={profile.niche}
                             onChange={(e) => setProfile(prev => ({ ...prev, niche: e.target.value }))}
-                            className="w-full bg-black/60 border border-white/10 rounded-[3rem] px-12 py-8 text-[15px] font-black text-indigo-400 uppercase italic tracking-[0.4em] focus:outline-none appearance-none cursor-pointer hover:bg-black/80 transition-all shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]"
+                            className="w-full bg-black/60 border border-white/10 rounded-[3rem] px-12 py-8 text-[15px] font-black text-[var(--tint-indigo-fg)] uppercase italic tracking-[0.4em] focus:outline-none appearance-none cursor-pointer hover:bg-black/80 transition-all shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]"
                             title="Niche"
                           >
                              <option value="" className="bg-black">SELECT_DOMAIN_EXPERTISE</option>
@@ -295,13 +295,13 @@ export default function IdentityMatrixInterfacePage() {
                              <option value="entertainment" className="bg-black">KINETIC_FLOW (ENTERTAINMENT)</option>
                              <option value="other" className="bg-black">NULL_CATEGORY_OVERRIDE</option>
                           </select>
-                          <div className="absolute right-12 top-1/2 -translate-y-1/2 text-indigo-400 rotate-90 pointer-events-none transition-transform group-hover/select:rotate-0"><ArrowRight size={28} /></div>
+                          <div className="absolute right-12 top-1/2 -translate-y-1/2 text-[var(--tint-indigo-fg)] rotate-90 pointer-events-none transition-transform group-hover/select:rotate-0"><ArrowRight size={28} /></div>
                        </div>
                     </div>
                  </div>
 
                  <div className="pt-20 mt-20 border-t border-white/5 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-6 text-slate-500 group-hover:text-indigo-400 transition-colors duration-300">
+                    <div className="flex items-center gap-6 text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300">
                        <Shield size={24} className="text-indigo-600/50" />
                        <span className="text-[12px] font-black uppercase tracking-[0.4em] italic leading-none">Encryption_Standard: AES-256_SOVEREIGN</span>
                     </div>
@@ -332,16 +332,16 @@ export default function IdentityMatrixInterfacePage() {
 function UplinkField({ icon: Icon, label, value, placeholder, onChange }: { icon: any; label: string; value: string; placeholder: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-5 group/uplink">
-       <div className="flex items-center gap-4 text-slate-400 italic px-4 group-hover/uplink:text-indigo-400 transition-colors duration-700">
+       <div className="flex items-center gap-4 text-slate-400 italic px-4 group-hover/uplink:text-[var(--tint-indigo-fg)] transition-colors duration-700">
           <Icon size={18} />
           <span className="text-[11px] font-black uppercase tracking-[0.5em]">{label}</span>
        </div>
        <div className="relative">
           <input type="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} title={label}
-            className="w-full bg-black/40 border border-white/5 rounded-[2rem] px-10 py-6 text-[13px] font-mono text-indigo-400 focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-600 italic shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]"
+            className="w-full bg-black/40 border border-white/5 rounded-[2rem] px-10 py-6 text-[13px] font-mono text-[var(--tint-indigo-fg)] focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all placeholder:text-slate-600 italic shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]"
           />
           <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/uplink:opacity-100 transition-opacity">
-             <Zap size={14} className="text-indigo-400 animate-pulse" />
+             <Zap size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
           </div>
        </div>
     </div>
@@ -351,9 +351,9 @@ function UplinkField({ icon: Icon, label, value, placeholder, onChange }: { icon
 function ConfigField({ icon: Icon, label, value, placeholder, onChange, isLarge = false, isLocked = false }: { icon: any; label: string; value: string; placeholder: string; onChange: (v: string) => void; isLarge?: boolean; isLocked?: boolean }) {
   return (
     <div className="space-y-6 group/field">
-       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-8 group-hover/field:text-indigo-400/50 transition-colors duration-700">{label}</label>
+       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic pl-8 group-hover/field:text-[var(--tint-indigo-fg)]/50 transition-colors duration-700">{label}</label>
        <div className="relative group">
-          <Icon className={`absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-300 ${isLocked ? 'text-slate-500 group-hover:text-amber-500/50' : 'text-slate-500 group-focus-within:text-indigo-400 group-hover:scale-110'}`} size={isLarge ? 28 : 22} />
+          <Icon className={`absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-300 ${isLocked ? 'text-slate-500 group-hover:text-amber-500/50' : 'text-slate-500 group-focus-within:text-[var(--tint-indigo-fg)] group-hover:scale-110'}`} size={isLarge ? 28 : 22} />
           <input
             type="text"
             value={value}

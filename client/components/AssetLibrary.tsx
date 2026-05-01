@@ -440,9 +440,9 @@ export default function AssetLibrary({
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-              className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center"
+              className="w-20 h-20 rounded-full border-2 border-dashed border-[var(--tint-indigo-edge)] flex items-center justify-center"
             >
-              <Cpu className="w-10 h-10 text-indigo-400" />
+              <Cpu className="w-10 h-10 text-[var(--tint-indigo-fg)]" />
             </motion.div>
             <div className={`text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] animate-pulse`}>Analyzing Neural Strands...</div>
           </div>
@@ -565,7 +565,7 @@ export default function AssetLibrary({
 
                 {/* Info Area */}
                 <div className="p-6 space-y-3">
-                  <h4 className="text-lg font-black text-white tracking-tight italic truncate group-hover:text-indigo-400 transition-colors">
+                  <h4 className="text-lg font-black text-white tracking-tight italic truncate group-hover:text-[var(--tint-indigo-fg)] transition-colors">
                     {asset.title || 'UNTITLED NODE'}
                   </h4>
                   <div className="flex items-center justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
@@ -594,11 +594,11 @@ export default function AssetLibrary({
                   onSelectAsset(asset)
                 }}
               >
-                <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 transition-all duration-700 ${asset.type === 'music' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 transition-all duration-700 ${asset.type === 'music' ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]' : 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)]'}`}>
                   {getAssetIcon(asset.type)}
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="text-2xl font-black text-white italic tracking-tight group-hover:text-indigo-400 transition-colors">
+                  <h4 className="text-2xl font-black text-white italic tracking-tight group-hover:text-[var(--tint-indigo-fg)] transition-colors">
                     {asset.title || 'UNTITLED NODE'}
                   </h4>
                   <div className="flex items-center gap-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">
@@ -642,7 +642,7 @@ export default function AssetLibrary({
             <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)] flex items-center gap-6">
               <div className="relative">
                 <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
-                <div className="absolute inset-0 bg-indigo-500/20 blur-[10px] rounded-full" />
+                <div className="absolute inset-0 bg-[var(--tint-indigo-bg)] blur-[10px] rounded-full" />
               </div>
               <div className="space-y-1">
                 <div className="text-[11px] font-black text-white uppercase tracking-widest leading-none">Neural Intake Active</div>

@@ -52,18 +52,18 @@ export default function DashboardError({
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 max-w-xl w-full bg-white/[0.03] border border-white/[0.08] rounded-[3rem] p-10 text-center shadow-2xl"
       >
-        <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6">
-          <AlertCircle className="w-8 h-8 text-rose-400" />
+        <div className="w-16 h-16 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-[1.5rem] flex items-center justify-center mx-auto mb-6">
+          <AlertCircle className="w-8 h-8 text-[var(--tint-rose-fg)]" />
         </div>
 
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 mb-5">
-          <span className="text-[8px] font-black uppercase tracking-widest text-rose-400">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] mb-5">
+          <span className="text-[8px] font-black uppercase tracking-widest text-[var(--tint-rose-fg)]">
             {isChunkError ? 'Code Chunk Error' : isNetworkError ? 'Network Error' : 'Runtime Error'}
           </span>
         </div>
 
         <h1 className="text-3xl font-black italic tracking-tighter mb-3">
-          Something went <span className="text-rose-400">wrong</span>
+          Something went <span className="text-[var(--tint-rose-fg)]">wrong</span>
         </h1>
 
         <p className="text-slate-500 text-sm leading-relaxed mb-4">
@@ -85,8 +85,8 @@ export default function DashboardError({
 
         {/* Auto-recovery indicator */}
         {/chunk|loading|network/i.test(error.message) && (
-          <div className="mb-5 flex items-center gap-2 p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-            <RefreshCw className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
+          <div className="mb-5 flex items-center gap-2 p-3 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+            <RefreshCw className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)] animate-spin" />
             <p className="text-[9px] font-bold text-indigo-300">Auto-recovery in progress…</p>
           </div>
         )}
@@ -101,7 +101,7 @@ export default function DashboardError({
 
           {isChunkError && (
             <button onClick={clearCacheAndRetry}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-black text-[11px] uppercase tracking-widest hover:bg-indigo-600/30 transition-all active:scale-95"
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-indigo-600/20 border border-[var(--tint-indigo-edge)] text-indigo-300 font-black text-[11px] uppercase tracking-widest hover:bg-indigo-600/30 transition-all active:scale-95"
             >
               <Trash2 className="w-4 h-4" /> Clear Cache + Retry
             </button>

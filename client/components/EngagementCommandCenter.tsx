@@ -41,23 +41,23 @@ interface CommandCenterData {
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
 function getScoreColor(score: number) {
-  if (score >= 80) return 'text-emerald-400'
-  if (score >= 60) return 'text-amber-400'
-  return 'text-rose-400'
+  if (score >= 80) return 'text-[var(--tint-emerald-fg)]'
+  if (score >= 60) return 'text-[var(--tint-amber-fg)]'
+  return 'text-[var(--tint-rose-fg)]'
 }
 
 function getScoreBg(score: number) {
-  if (score >= 80) return 'bg-emerald-500/10 border-emerald-500/20'
-  if (score >= 60) return 'bg-amber-500/10 border-amber-500/20'
-  return 'bg-rose-500/10 border-rose-500/20'
+  if (score >= 80) return 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]'
+  if (score >= 60) return 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]'
+  return 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]'
 }
 
 function getAnomalyIcon(type: string) {
   switch (type) {
-    case 'virality_spike': return <Flame className="w-5 h-5 text-orange-400 animate-pulse" />
-    case 'shadow_banned':  return <AlertTriangle className="w-5 h-5 text-rose-400 animate-bounce" />
-    case 'drop_off':       return <TrendingDown className="w-5 h-5 text-amber-400" />
-    default:               return <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+    case 'virality_spike': return <Flame className="w-5 h-5 text-[var(--tint-orange-fg)] animate-pulse" />
+    case 'shadow_banned':  return <AlertTriangle className="w-5 h-5 text-[var(--tint-rose-fg)] animate-bounce" />
+    case 'drop_off':       return <TrendingDown className="w-5 h-5 text-[var(--tint-amber-fg)]" />
+    default:               return <CheckCircle2 className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
   }
 }
 
@@ -130,15 +130,15 @@ export default function ResonanceCommandMatrix() {
         {/* Matrix Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Brain size={44} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-700" />
+                <Brain size={44} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-125 transition-transform duration-700" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Resonance Matrix v9.4.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Resonance Matrix v9.4.2</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
@@ -162,7 +162,7 @@ export default function ResonanceCommandMatrix() {
           {[
             { label: 'Resonance Integrity', value: data.overallScore, unit: '%', icon: Brain, color: getScoreColor(data.overallScore), trend: 'NODE_HEALTH' },
             { label: 'Saturation (24h)', value: (data.totalViews / 1000).toFixed(1), unit: 'K', icon: Eye, color: 'text-white', trend: 'CUMULATIVE_REACH' },
-            { label: 'Avg Affinity', value: data.avgEngagementRate.toFixed(1), unit: '%', icon: Heart, color: 'text-rose-400', trend: 'SIGNAL_TRAJECTORY' },
+            { label: 'Avg Affinity', value: data.avgEngagementRate.toFixed(1), unit: '%', icon: Heart, color: 'text-[var(--tint-rose-fg)]', trend: 'SIGNAL_TRAJECTORY' },
             { label: 'Workflow Velocity', value: data.workflowEfficiencyScore, unit: '%', icon: Zap, color: getScoreColor(data.workflowEfficiencyScore), trend: 'IDEATION_THROUGHPUT' },
           ].map((kpi, i) => (
             <motion.div key={kpi.label} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
@@ -188,15 +188,15 @@ export default function ResonanceCommandMatrix() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-16 relative z-10">
            {/* Heuristic Protocol Advice */}
            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-             className={`${glass} p-16 rounded-[6rem] bg-gradient-to-br from-indigo-500/10 to-transparent border-indigo-500/20 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)] relative flex flex-col justify-between min-h-[400px] group transition-all duration-1000`}
+             className={`${glass} p-16 rounded-[6rem] bg-gradient-to-br from-indigo-500/10 to-transparent border-[var(--tint-indigo-edge)] shadow-[inset_0_0_100px_rgba(0,0,0,0.4)] relative flex flex-col justify-between min-h-[400px] group transition-all duration-1000`}
            >
               <div className="absolute top-0 right-0 p-16 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity duration-1000"><Terminal size={300} /></div>
               <div className="space-y-12 relative z-10">
                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-2xl animate-pulse"><Sparkles size={32} className="text-indigo-400" /></div>
+                    <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-2xl animate-pulse"><Sparkles size={32} className="text-[var(--tint-indigo-fg)]" /></div>
                     <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Heuristic Protocol</h3>
                  </div>
-                 <div className="border-l-4 border-indigo-500/40 pl-10 space-y-6">
+                 <div className="border-l-4 border-[var(--tint-indigo-edge)] pl-10 space-y-6">
                     <p className="text-4xl font-black text-white leading-tight italic tracking-tighter max-w-2xl">
                        &quot;{data.nextBestAction}&quot;
                     </p>
@@ -205,7 +205,7 @@ export default function ResonanceCommandMatrix() {
                     </p>
                  </div>
               </div>
-              <div className="flex items-center gap-6 text-[11px] font-black text-indigo-400 uppercase tracking-[0.8em] italic border-t border-white/5 pt-12">
+              <div className="flex items-center gap-6 text-[11px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.8em] italic border-t border-white/5 pt-12">
                  MISSION_CRITICAL_UPDATE_ACTIVE
               </div>
            </motion.div>
@@ -213,17 +213,17 @@ export default function ResonanceCommandMatrix() {
            {/* Kinetic Signal Breach Card */}
            {data.peakVelocityPost && (
              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
-               className={`${glass} p-16 rounded-[6rem] bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)] cursor-pointer group flex flex-col justify-between min-h-[400px] transition-all duration-1000`}
+               className={`${glass} p-16 rounded-[6rem] bg-gradient-to-br from-orange-500/10 to-transparent border-[var(--tint-orange-edge)] shadow-[inset_0_0_100px_rgba(0,0,0,0.4)] cursor-pointer group flex flex-col justify-between min-h-[400px] transition-all duration-1000`}
                onClick={() => setSelectedPost(data.peakVelocityPost)}
              >
                 <div className="absolute top-0 right-0 p-16 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-1000"><Network size={320} /></div>
                 <div className="space-y-10 relative z-10">
                   <div className="flex items-center justify-between">
                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-[2rem] bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-2xl"><Flame size={32} className="text-orange-400 animate-pulse" /></div>
+                        <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-orange-bg)] border border-[var(--tint-orange-edge)] flex items-center justify-center shadow-2xl"><Flame size={32} className="text-[var(--tint-orange-fg)] animate-pulse" /></div>
                         <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Kinetic Breach</h3>
                      </div>
-                     <ArrowUpRight size={40} className="text-orange-400 opacity-20 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
+                     <ArrowUpRight size={40} className="text-[var(--tint-orange-fg)] opacity-20 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                   </div>
                   <div className="text-9xl font-black text-white italic tracking-tighter leading-none mt-8 drop-shadow-2xl">
                     +{data.peakVelocityPost.velocity}<span className="text-3xl text-slate-500 ml-2 not-italic tracking-widest opacity-40">/HR_FLUX</span>
@@ -231,13 +231,13 @@ export default function ResonanceCommandMatrix() {
                   <div className="flex items-center gap-6">
                     <p className="text-2xl font-black text-white/50 uppercase italic tracking-widest">{data.peakVelocityPost.platform.toUpperCase()} PHANTOM NODE</p>
                     <div className="h-2 w-2 rounded-full bg-orange-500" />
-                    <p className="text-2xl font-black text-orange-400 italic">{(data.peakVelocityPost.views / 1000).toFixed(1)}K SATURATION</p>
+                    <p className="text-2xl font-black text-[var(--tint-orange-fg)] italic">{(data.peakVelocityPost.views / 1000).toFixed(1)}K SATURATION</p>
                   </div>
                 </div>
 
                 {data.peakVelocityPost.anomalyAdvice && (
-                  <div className="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 relative z-10 group-hover:border-orange-500/40 transition-all duration-1000">
-                    <div className="text-[12px] font-black text-orange-400 uppercase tracking-widest italic mb-2">→ ADVISORY_PROTOCOL:</div>
+                  <div className="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 relative z-10 group-hover:border-[var(--tint-orange-edge)] transition-all duration-1000">
+                    <div className="text-[12px] font-black text-[var(--tint-orange-fg)] uppercase tracking-widest italic mb-2">→ ADVISORY_PROTOCOL:</div>
                     <p className="text-[18px] font-black text-white italic tracking-tight leading-snug">{data.peakVelocityPost.anomalyAdvice.action}</p>
                   </div>
                 )}
@@ -249,7 +249,7 @@ export default function ResonanceCommandMatrix() {
         <div className={`${glass} p-12 rounded-[6rem] space-y-12 border-white/5 shadow-[inset_0_0_100px_rgba(0,0,0,0.6)] relative overflow-hidden`}>
            <div className="absolute top-0 right-0 p-32 opacity-[0.015] pointer-events-none border-none"><Terminal size={400} /></div>
            <div className="flex items-center gap-8 mb-12 relative z-10">
-              <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><ActivitySquare size={40} className="text-indigo-400" /></div>
+              <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-[var(--tint-indigo-edge)] shadow-2xl shadow-indigo-500/20"><ActivitySquare size={40} className="text-[var(--tint-indigo-fg)]" /></div>
               <div>
                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Node Integrity Ledger</h2>
                  <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">Diagnostic surveillance of high-cadence content nodes across the global substrate.</p>
@@ -271,7 +271,7 @@ export default function ResonanceCommandMatrix() {
                       <div className="flex items-center gap-6 mb-3">
                          <span className="text-2xl font-black text-white uppercase italic tracking-tighter">{post.platform} NODE</span>
                          {post.anomalyType !== 'none' && (
-                           <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest border border-orange-500/30 px-4 py-1.5 rounded-full bg-orange-500/5 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
+                           <span className="text-[10px] font-black text-[var(--tint-orange-fg)] uppercase tracking-widest border border-[var(--tint-orange-edge)] px-4 py-1.5 rounded-full bg-orange-500/5 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
                              {post.anomalyType.replace('_', ' ')}
                            </span>
                          )}
@@ -307,7 +307,7 @@ export default function ResonanceCommandMatrix() {
                  
                  <div className="flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-10">
-                       <div className="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-all duration-700">
+                       <div className="w-20 h-20 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-[2.5rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-all duration-700">
                           {getAnomalyIcon(selectedPost.anomalyType)}
                        </div>
                        <div>
@@ -328,14 +328,14 @@ export default function ResonanceCommandMatrix() {
                  </div>
 
                  {selectedPost.anomalyType !== 'none' && selectedPost.anomalyAdvice && (
-                   <div className="p-16 rounded-[4rem] bg-indigo-600/10 border border-indigo-500/30 space-y-8 relative z-10 shadow-[inset_0_0_80px_rgba(99,102,241,0.1)]">
+                   <div className="p-16 rounded-[4rem] bg-indigo-600/10 border border-[var(--tint-indigo-edge)] space-y-8 relative z-10 shadow-[inset_0_0_80px_rgba(99,102,241,0.1)]">
                       <div className="flex items-center justify-between">
-                         <div className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic">→ HEURISTIC_RECOMMENDATION</div>
+                         <div className="text-[12px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.8em] italic">→ HEURISTIC_RECOMMENDATION</div>
                          <div className="flex items-center gap-4 text-orange-500 text-[11px] font-black uppercase tracking-widest italic animate-pulse">
                             <AlertTriangle size={16} /> {selectedPost.anomalyAdvice.urgency}
                          </div>
                       </div>
-                      <p className="text-4xl font-black text-white italic tracking-tighter leading-tight border-l-4 border-indigo-500/30 pl-10">
+                      <p className="text-4xl font-black text-white italic tracking-tighter leading-tight border-l-4 border-[var(--tint-indigo-edge)] pl-10">
                         {selectedPost.anomalyAdvice.action}
                       </p>
                       <p className="text-[16px] text-slate-800 font-black italic leading-relaxed pl-10 opacity-80 uppercase tracking-widest border-l-4 border-indigo-500/10">
@@ -345,10 +345,10 @@ export default function ResonanceCommandMatrix() {
                  )}
 
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
-                    <DetailStat label="Saturation" value={selectedPost.views.toLocaleString()} icon={Eye} color="text-emerald-400" />
-                    <DetailStat label="Affinity" value={selectedPost.likes.toLocaleString()} icon={Heart} color="text-rose-400" />
-                    <DetailStat label="Signals" value={selectedPost.comments.toLocaleString()} icon={MessageSquare} color="text-indigo-400" />
-                    <DetailStat label="Flux Rate" value={`${selectedPost.velocity}/hr`} icon={Zap} color="text-amber-400" />
+                    <DetailStat label="Saturation" value={selectedPost.views.toLocaleString()} icon={Eye} color="text-[var(--tint-emerald-fg)]" />
+                    <DetailStat label="Affinity" value={selectedPost.likes.toLocaleString()} icon={Heart} color="text-[var(--tint-rose-fg)]" />
+                    <DetailStat label="Signals" value={selectedPost.comments.toLocaleString()} icon={MessageSquare} color="text-[var(--tint-indigo-fg)]" />
+                    <DetailStat label="Flux Rate" value={`${selectedPost.velocity}/hr`} icon={Zap} color="text-[var(--tint-amber-fg)]" />
                  </div>
                  
                  <div className="pt-8 flex justify-center relative z-10">

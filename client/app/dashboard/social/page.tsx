@@ -177,14 +177,14 @@ export default function SocialPage() {
         {/* Header HUD */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-50">
           <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-3xl flex items-center justify-center shadow-2xl relative group">
+            <div className="w-20 h-20 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-3xl flex items-center justify-center shadow-2xl relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Globe size={40} className="text-indigo-400 relative z-10" />
+              <Globe size={40} className="text-[var(--tint-indigo-fg)] relative z-10" />
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Uplink Interface</span>
+                <Cpu size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)]/80 italic">Neural Uplink Interface</span>
               </div>
               <h1 className="text-5xl font-black text-white tracking-tighter leading-none italic uppercase">Social Vault</h1>
               <p className="text-slate-400 text-sm mt-2 font-medium max-w-lg italic">Manage your platform manifest. Establish neural links to automate content dissemination across the social mesh.</p>
@@ -223,7 +223,7 @@ export default function SocialPage() {
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500`}>
                     <cfg.icon size={32} className="text-white" />
                   </div>
-                  <div className={`px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-[0.2em] italic flex items-center gap-2 ${isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-slate-300 border-white/5'}`}>
+                  <div className={`px-4 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-[0.2em] italic flex items-center gap-2 ${isActive ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' : 'bg-white/5 text-slate-300 border-white/5'}`}>
                     <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-600'}`} />
                     {isActive ? 'UPLINKED' : 'OFFLINE'}
                   </div>
@@ -257,7 +257,7 @@ export default function SocialPage() {
                         <button onClick={() => window.open(account.metadata?.profile_url || '#', '_blank')} className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all active:scale-90">
                           <ExternalLink size={16} />
                         </button>
-                        <button onClick={() => disconnectAccount(id)} disabled={isDisconnecting} className="w-10 h-10 rounded-xl bg-rose-500/5 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-90 shadow-xl disabled:opacity-40">
+                        <button onClick={() => disconnectAccount(id)} disabled={isDisconnecting} className="w-10 h-10 rounded-xl bg-rose-500/5 border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] hover:bg-rose-500 hover:text-white transition-all active:scale-90 shadow-xl disabled:opacity-40">
                           {isDisconnecting ? <RefreshCw size={16} className="animate-spin" /> : <Unlink size={16} />}
                         </button>
                       </div>
@@ -290,9 +290,9 @@ export default function SocialPage() {
         {/* Security / System Stats HUD */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
           {[
-            { label: 'Neural Encryption', val: '256-BIT SHARDS', icon: Shield, col: 'text-indigo-400' },
-            { label: 'Link Latency', val: '12ms AVG', icon: Activity, col: 'text-emerald-400' },
-            { label: 'Secure Protocols', val: 'OAUTH 2.0 MATRIX', icon: Lock, col: 'text-cyan-400' },
+            { label: 'Neural Encryption', val: '256-BIT SHARDS', icon: Shield, col: 'text-[var(--tint-indigo-fg)]' },
+            { label: 'Link Latency', val: '12ms AVG', icon: Activity, col: 'text-[var(--tint-emerald-fg)]' },
+            { label: 'Secure Protocols', val: 'OAUTH 2.0 MATRIX', icon: Lock, col: 'text-[var(--tint-cyan-fg)]' },
           ].map((s, i) => (
             <div key={i} className={`${glassStyle} rounded-[2rem] p-6 flex items-center gap-6`}>
               <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-center">

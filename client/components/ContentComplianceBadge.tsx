@@ -36,13 +36,13 @@ const STATUS_CONFIG = {
   passed: {
     icon: ShieldCheck,
     label: 'Compliant',
-    badgeClass: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30',
+    badgeClass: 'bg-[var(--tint-emerald-bg)] text-emerald-600 dark:text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]',
     iconClass: 'text-emerald-500',
   },
   warning: {
     icon: ShieldAlert,
     label: 'Warnings',
-    badgeClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',
+    badgeClass: 'bg-[var(--tint-amber-bg)] text-amber-600 dark:text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)]',
     iconClass: 'text-amber-500',
   },
   failed: {

@@ -17,11 +17,11 @@ const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-
 // ─── Stat Card ─────────────────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, label, value, subValue, color = 'indigo' }: any) => {
   const colors: Record<string, string> = {
-    indigo: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
-    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    rose: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
+    indigo: 'text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]',
+    emerald: 'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
+    rose: 'text-[var(--tint-rose-fg)] bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]',
+    amber: 'text-[var(--tint-amber-fg)] bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]',
+    cyan: 'text-[var(--tint-cyan-fg)] bg-[var(--tint-cyan-bg)] border-[var(--tint-cyan-edge)]'
   }
 
   return (
@@ -44,10 +44,10 @@ const SyndicateDebate = ({ debate, onExecute }: any) => (
   <div className={`${glass} p-10 space-y-8`}>
     <div className="flex items-center justify-between">
       <h3 className="text-2xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
-        <Cpu className="w-6 h-6 text-indigo-400" />
+        <Cpu className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
         Syndicate Debate (Neural Council)
       </h3>
-      <span className={`${pill} text-indigo-400 border-indigo-500/20`}>Phase 23 Consenus Protocol</span>
+      <span className={`${pill} text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]`}>Phase 23 Consenus Protocol</span>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {(debate || [
@@ -56,7 +56,7 @@ const SyndicateDebate = ({ debate, onExecute }: any) => (
         { name: 'Retention Arch', status: 'REFINE', mood: 'Analytical', color: 'amber', text: 'Bridge at 03:45 shows 12% drop potential. Prepend retention hook.' },
         { name: 'Niche Infiltrator', status: 'APPROVE', mood: 'Stealth', color: 'purple', text: 'Arbitrage match: "Agentic Workflows" rising in Tokyo niche.' }
       ]).map((a: any, i: number) => (
-        <div key={i} className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all">
+        <div key={i} className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl group hover:border-[var(--tint-indigo-edge)] transition-all">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-black text-white uppercase">{a.name}</span>
             <span className={`text-[8px] font-black text-${a.color}-400 px-2 py-0.5 rounded-full border border-${a.color}-500/20`}>{a.status}</span>
@@ -71,7 +71,7 @@ const SyndicateDebate = ({ debate, onExecute }: any) => (
 const GovernanceLedger = ({ actions }: any) => (
   <div className={`${glass} p-10 space-y-8`}>
     <h3 className="text-2xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
-      <Shield className="w-6 h-6 text-emerald-400" />
+      <Shield className="w-6 h-6 text-[var(--tint-emerald-fg)]" />
       Governance Ledger (Immutable)
     </h3>
     <div className="space-y-4">
@@ -92,7 +92,7 @@ const ComplianceShield = ({ status }: any) => (
   <div className={`${glass} p-8 space-y-6`}>
     <div className="flex items-center justify-between">
       <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Compliance Shield</h4>
-      <span className="text-emerald-400 text-[10px] font-black">{status.status}</span>
+      <span className="text-[var(--tint-emerald-fg)] text-[10px] font-black">{status.status}</span>
     </div>
     <div className="flex items-center gap-4">
       <Globe className="w-12 h-12 text-emerald-500/50" />
@@ -108,7 +108,7 @@ const FleetExpansionMonitor = ({ fleet }: any) => (
   <div className={`${glass} p-8 space-y-6`}>
     <div className="flex items-center justify-between">
       <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Fleet Scaling</h4>
-      <span className="text-indigo-400 text-[10px] font-black italic">CONSERVATIVE</span>
+      <span className="text-[var(--tint-indigo-fg)] text-[10px] font-black italic">CONSERVATIVE</span>
     </div>
     <div className="space-y-4">
       <div className="flex justify-between text-[10px] font-black uppercase italic">
@@ -224,7 +224,7 @@ export default function OverlordDashboard() {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <span className={`${pill} text-indigo-400 border-indigo-500/20`}>Overlord Terminal v1.1 [Phase 13 Active]</span>
+              <span className={`${pill} text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]`}>Overlord Terminal v1.1 [Phase 13 Active]</span>
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white italic uppercase tracking-tighter leading-none">Command Center</h1>
@@ -235,7 +235,7 @@ export default function OverlordDashboard() {
           <button 
             onClick={runVerification}
             disabled={verifying}
-            className={`px-6 py-3 rounded-2xl ${verifying ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'} font-black text-[10px] uppercase tracking-widest transition-all`}
+            className={`px-6 py-3 rounded-2xl ${verifying ? 'bg-[var(--tint-amber-bg)] text-amber-500' : 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)] hover:bg-[var(--tint-emerald-bg)]'} font-black text-[10px] uppercase tracking-widest transition-all`}
           >
             {verifying ? 'Verifying Network...' : 'Run Global Verification'}
           </button>
@@ -254,18 +254,18 @@ export default function OverlordDashboard() {
         <div className="space-y-2">
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Database Node</p>
           <div className="flex items-center gap-3">
-            <Database className="w-5 h-5 text-indigo-400" />
+            <Database className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
             <p className="text-lg font-black text-white italic uppercase leading-none">{healthStatus?.database.status || 'Checking...'}</p>
           </div>
           <div className="flex gap-2">
-            {healthStatus?.database.mongodb && <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-wider bg-indigo-500/10 px-1.5 py-0.5 rounded">Mongo</span>}
-            {healthStatus?.database.prisma && <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-wider bg-indigo-500/10 px-1.5 py-0.5 rounded">Prisma</span>}
+            {healthStatus?.database.mongodb && <span className="text-[8px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-wider bg-[var(--tint-indigo-bg)] px-1.5 py-0.5 rounded">Mongo</span>}
+            {healthStatus?.database.prisma && <span className="text-[8px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-wider bg-[var(--tint-indigo-bg)] px-1.5 py-0.5 rounded">Prisma</span>}
           </div>
         </div>
         <div className="space-y-2">
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cache Cluster</p>
           <div className="flex items-center gap-3">
-            <Zap className="w-5 h-5 text-amber-400" />
+            <Zap className="w-5 h-5 text-[var(--tint-amber-fg)]" />
             <p className="text-lg font-black text-white italic uppercase leading-none">{healthStatus?.cache.status || 'Checking...'}</p>
           </div>
           <p className="text-[9px] font-mono text-slate-500">{healthStatus?.cache.type} | Latency: {healthStatus?.cache.latency}</p>
@@ -281,7 +281,7 @@ export default function OverlordDashboard() {
         <div className="space-y-2">
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Platform API</p>
           <div className="flex items-center gap-3">
-            <Globe className="w-5 h-5 text-emerald-400" />
+            <Globe className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
             <p className="text-lg font-black text-white italic uppercase leading-none">{healthStatus?.api.status || 'Checking...'}</p>
           </div>
           <p className="text-[9px] font-mono text-slate-500">Nexus Version: {healthStatus?.api.version}</p>
@@ -297,7 +297,7 @@ export default function OverlordDashboard() {
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Neural Rendering & Auto-Correction Health</p>
             </div>
             <div className="flex gap-4">
-              <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-indigo-500/20">4K Upscaling: ACTIVE</span>
+              <span className="px-3 py-1 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] text-[8px] font-black uppercase tracking-widest rounded-full border border-[var(--tint-indigo-edge)]">4K Upscaling: ACTIVE</span>
               <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-purple-500/20">B-Roll IA: ARMED</span>
             </div>
           </div>
@@ -316,7 +316,7 @@ export default function OverlordDashboard() {
             <div className="p-6 bg-white/[0.02] rounded-3xl border border-white/[0.05]">
               <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">B-Roll Coverage</p>
               <p className="text-3xl font-black text-white italic">31<span className="text-indigo-500">%</span></p>
-              <p className="text-[8px] font-bold text-indigo-400 mt-1 uppercase tracking-tighter">Optimal Engagement Density</p>
+              <p className="text-[8px] font-bold text-[var(--tint-indigo-fg)] mt-1 uppercase tracking-tighter">Optimal Engagement Density</p>
             </div>
           </div>
         </div>
@@ -384,7 +384,7 @@ export default function OverlordDashboard() {
               <p className="text-xs font-black text-white uppercase italic">{l.lang}</p>
               <div className="flex items-center justify-between">
                 <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{l.status}</span>
-                <span className="text-[10px] font-black text-indigo-400">{l.reach}</span>
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)]">{l.reach}</span>
               </div>
               <div className="w-full h-1 bg-white/[0.05] rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-500 w-[60%]" />
@@ -428,7 +428,7 @@ export default function OverlordDashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-tighter">{op.room}</p>
+                    <p className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-tighter">{op.room}</p>
                     <p className="text-[8px] font-bold text-slate-600 mt-1">{op.time}</p>
                   </div>
                 </div>
@@ -440,7 +440,7 @@ export default function OverlordDashboard() {
         <div className={`${glass} p-10 space-y-8`}>
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Urgent Review</h3>
-            <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-black border border-rose-500/30">4</span>
+            <span className="w-6 h-6 rounded-full bg-[var(--tint-rose-bg)] text-rose-500 flex items-center justify-center text-[10px] font-black border border-[var(--tint-rose-edge)]">4</span>
           </div>
           
           <div className="space-y-4">
@@ -450,7 +450,7 @@ export default function OverlordDashboard() {
               { title: 'YouTube: Solar Dev Update', reviewer: 'Required: Producer', sla: '3h 45m', priority: 'Medium' },
               { title: 'Instagram: Bio-Gen Promo', reviewer: 'Required: Linguistic', sla: 'Overdue', priority: 'Critical' },
             ].map((task, i) => (
-              <div key={i} className={`p-4 rounded-2xl border ${task.priority === 'Critical' ? 'bg-rose-500/5 border-rose-500/20' : 'bg-white/[0.02] border-white/[0.05]'} space-y-3`}>
+              <div key={i} className={`p-4 rounded-2xl border ${task.priority === 'Critical' ? 'bg-rose-500/5 border-[var(--tint-rose-edge)]' : 'bg-white/[0.02] border-white/[0.05]'} space-y-3`}>
                 <div className="flex justify-between items-start">
                   <p className="text-xs font-black text-white leading-tight pr-4">{task.title}</p>
                   <span className={`px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-widest ${
@@ -463,7 +463,7 @@ export default function OverlordDashboard() {
                     <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{task.reviewer}</span>
                   </div>
-                  <span className={`text-[9px] font-black uppercase ${task.sla.includes('left') || task.sla === 'Overdue' ? 'text-rose-400' : 'text-slate-500'}`}>{task.sla}</span>
+                  <span className={`text-[9px] font-black uppercase ${task.sla.includes('left') || task.sla === 'Overdue' ? 'text-[var(--tint-rose-fg)]' : 'text-slate-500'}`}>{task.sla}</span>
                 </div>
               </div>
             ))}
@@ -486,7 +486,7 @@ export default function OverlordDashboard() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black text-slate-500 uppercase">Provider:</span>
-                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Whop Cloud 🟢</span>
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Whop Cloud 🟢</span>
               </div>
             </div>
           </div>
@@ -512,7 +512,7 @@ export default function OverlordDashboard() {
               </div>
               <div className="flex gap-1 h-8 items-end">
                 {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-                  <div key={i} className="flex-1 bg-indigo-500/20 rounded-t-sm" style={{ height: `${h}%` }} />
+                  <div key={i} className="flex-1 bg-[var(--tint-indigo-bg)] rounded-t-sm" style={{ height: `${h}%` }} />
                 ))}
               </div>
               <p className="text-[9px] font-bold text-slate-600 uppercase">Real-time revenue delta</p>
@@ -547,7 +547,7 @@ export default function OverlordDashboard() {
             ].map((p, i) => (
               <div key={i} className="flex items-center justify-between group cursor-pointer">
                 <div>
-                  <p className="text-xs font-black text-white group-hover:text-indigo-400 transition-colors uppercase">{p.name}</p>
+                  <p className="text-xs font-black text-white group-hover:text-[var(--tint-indigo-fg)] transition-colors uppercase">{p.name}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[9px] font-bold text-slate-500">{p.price}</span>
                     <span className="text-[7px] font-black px-1.5 py-0.5 bg-white/[0.05] rounded text-slate-400 uppercase tracking-widest">{p.status}</span>
@@ -595,9 +595,9 @@ export default function OverlordDashboard() {
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { label: 'Kinetic Sharpness', score: 92, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
-                { label: 'Emotional Polarity', score: 78, color: 'text-rose-400', bg: 'bg-rose-500/20' },
-                { label: 'Pattern-Interrupt', score: 85, color: 'text-amber-400', bg: 'bg-amber-500/20' }
+                { label: 'Kinetic Sharpness', score: 92, color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)]' },
+                { label: 'Emotional Polarity', score: 78, color: 'text-[var(--tint-rose-fg)]', bg: 'bg-[var(--tint-rose-bg)]' },
+                { label: 'Pattern-Interrupt', score: 85, color: 'text-[var(--tint-amber-fg)]', bg: 'bg-[var(--tint-amber-bg)]' }
               ].map((m, i) => (
                 <div key={i} className="p-6 bg-white/[0.02] rounded-3xl border border-white/[0.05] space-y-3">
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{m.label}</p>
@@ -629,7 +629,7 @@ export default function OverlordDashboard() {
                   <div key={i} className="flex items-center justify-between py-3 border-b border-white/[0.02]">
                     <div className="flex items-center gap-4">
                       <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                        <Radio className={`w-4 h-4 ${s.status === 'Crowned' ? 'text-emerald-400' : 'text-amber-400 animate-pulse'}`} />
+                        <Radio className={`w-4 h-4 ${s.status === 'Crowned' ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-amber-fg)] animate-pulse'}`} />
                       </div>
                       <div>
                         <p className="text-xs font-black text-white">{s.id} <span className="text-slate-500">[{s.platform}]</span></p>
@@ -637,7 +637,7 @@ export default function OverlordDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-xs font-black uppercase ${s.status === 'Crowned' ? 'text-emerald-400' : 'text-slate-400'}`}>{s.winner}</p>
+                      <p className={`text-xs font-black uppercase ${s.status === 'Crowned' ? 'text-[var(--tint-emerald-fg)]' : 'text-slate-400'}`}>{s.winner}</p>
                       <p className="text-[8px] font-bold text-slate-700 tracking-tighter">{s.gain}</p>
                     </div>
                   </div>
@@ -649,7 +649,7 @@ export default function OverlordDashboard() {
           <div className={`${glass} p-10 space-y-8 flex flex-col justify-between`}>
             <div className="space-y-6">
               <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-indigo-400" />
+                <Sparkles className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                 Strategic Protocol
               </h3>
               <div className="space-y-4">
@@ -660,7 +660,7 @@ export default function OverlordDashboard() {
                 ].map((r, i) => (
                   <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
                     <span className="text-[10px] font-black text-slate-300 uppercase">{r.rule}</span>
-                    <span className={`text-[8px] font-black px-2 py-1 rounded ${r.status === 'ACTIVE' || r.status === 'ENABLED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-400'}`}>{r.status}</span>
+                    <span className={`text-[8px] font-black px-2 py-1 rounded ${r.status === 'ACTIVE' || r.status === 'ENABLED' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)]' : 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]'}`}>{r.status}</span>
                   </div>
                 ))}
               </div>
@@ -688,7 +688,7 @@ export default function OverlordDashboard() {
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Autonomous Asset Recycling & Legacy Neural Bridge</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Neural Bridge: Syncing ⚡️</span>
+              <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest">Neural Bridge: Syncing ⚡️</span>
             </div>
           </div>
 
@@ -701,7 +701,7 @@ export default function OverlordDashboard() {
               </div>
               <div className="flex gap-1 h-12 items-end">
                 {[60, 40, 80, 50, 90, 70, 85].map((h, i) => (
-                  <div key={i} className="flex-1 bg-emerald-500/20 rounded-t-sm" style={{ height: `${h}%` }} />
+                  <div key={i} className="flex-1 bg-[var(--tint-emerald-bg)] rounded-t-sm" style={{ height: `${h}%` }} />
                 ))}
               </div>
               <p className="text-[9px] font-bold text-slate-600 uppercase">Legacy momentum detected</p>
@@ -746,7 +746,7 @@ export default function OverlordDashboard() {
         <div className={`${glass} p-10 space-y-8 flex flex-col justify-between relative overflow-hidden`}>
           <div className="space-y-6">
             <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
-              <Radio className="w-5 h-5 text-emerald-400" />
+              <Radio className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
               Resurrection Queue
             </h3>
             <div className="space-y-4">
@@ -760,13 +760,13 @@ export default function OverlordDashboard() {
                     <p className="text-[10px] font-black text-white uppercase">{q.title}</p>
                     <p className="text-[8px] font-bold text-slate-600 uppercase mt-0.5">{q.type}</p>
                   </div>
-                  <span className="text-[10px] font-black text-emerald-400 font-mono">{q.signal}</span>
+                  <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] font-mono">{q.signal}</span>
                 </div>
               ))}
             </div>
           </div>
           
-          <button className="w-full py-4 border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-300 font-black text-[10px] uppercase tracking-widest transition-all rounded-2xl">
+          <button className="w-full py-4 border border-[var(--tint-emerald-edge)] bg-emerald-500/5 hover:bg-[var(--tint-emerald-bg)] text-emerald-300 font-black text-[10px] uppercase tracking-widest transition-all rounded-2xl">
             Manual Resurrection Scan
           </button>
         </div>
@@ -779,7 +779,7 @@ export default function OverlordDashboard() {
         <div className="flex items-center justify-between relative z-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`${pill} text-emerald-400 border-emerald-500/20`}>Phase 20: Hyper-Sensitive Pulse ACTIVE</span>
+              <span className={`${pill} text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]`}>Phase 20: Hyper-Sensitive Pulse ACTIVE</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
             <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Community Pulse</h2>
@@ -787,7 +787,7 @@ export default function OverlordDashboard() {
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Resonance Velocity</p>
-            <p className="text-3xl font-black text-emerald-400 italic font-mono">+12.4% / hr</p>
+            <p className="text-3xl font-black text-[var(--tint-emerald-fg)] italic font-mono">+12.4% / hr</p>
           </div>
         </div>
 
@@ -798,9 +798,9 @@ export default function OverlordDashboard() {
               <div className="relative w-32 h-32 flex items-center justify-center">
                 <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-full" />
                 <div className="absolute inset-0 border-4 border-emerald-500 border-t-transparent rounded-full animate-[spin_3s_linear_infinite]" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 85%, 0 85%)' }} />
-                <span className="text-2xl font-black text-white italic">85<span className="text-xs text-emerald-400">%</span></span>
+                <span className="text-2xl font-black text-white italic">85<span className="text-xs text-[var(--tint-emerald-fg)]">%</span></span>
               </div>
-              <p className="text-xs font-black text-emerald-400 uppercase italic">Reaching Resonance</p>
+              <p className="text-xs font-black text-[var(--tint-emerald-fg)] uppercase italic">Reaching Resonance</p>
             </div>
 
             <div className="space-y-3">
@@ -860,8 +860,8 @@ export default function OverlordDashboard() {
             </div>
             
             <div className="pt-4">
-              <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
-                <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">AI Recommendation</p>
+              <div className="p-4 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                <p className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest mb-1">AI Recommendation</p>
                 <p className="text-[10px] font-bold text-slate-300 leading-tight italic">Detecting minor "Pricing Diffraction". Deploying "Value-Transparency" hook variation suggested.</p>
               </div>
             </div>
@@ -882,7 +882,7 @@ export default function OverlordDashboard() {
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Spectral Revenue Forecasting & Yield Optimization</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Projection Model: High-Fidelity 💎</span>
+              <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Projection Model: High-Fidelity 💎</span>
             </div>
           </div>
 
@@ -894,7 +894,7 @@ export default function OverlordDashboard() {
                 <span className="text-xs font-bold text-emerald-500 mb-1">+$5.2k</span>
               </div>
               <div className="relative h-16 w-full pt-4">
-                <div className="absolute inset-0 bg-indigo-500/10 rounded-lg overflow-hidden">
+                <div className="absolute inset-0 bg-[var(--tint-indigo-bg)] rounded-lg overflow-hidden">
                   <div className="h-full bg-indigo-500/30 w-[85%] blur-sm" />
                 </div>
                 <div className="relative z-10 h-full flex items-end justify-between px-2 pb-2">
@@ -910,12 +910,12 @@ export default function OverlordDashboard() {
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monetization Delta</p>
               <div className="flex items-end gap-2">
                 <span className="text-4xl font-black text-white">+$2.1k</span>
-                <span className="text-[10px] font-black text-indigo-400 mb-1">Pivot Gain</span>
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] mb-1">Pivot Gain</span>
               </div>
               <div className="space-y-3 pt-2">
                 <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase">
                   <span>Optimization Yield</span>
-                  <span className="text-emerald-400">+18.5%</span>
+                  <span className="text-[var(--tint-emerald-fg)]">+18.5%</span>
                 </div>
                 <div className="w-full h-1 bg-white/[0.05] rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 w-[18.5%]" />
@@ -943,14 +943,14 @@ export default function OverlordDashboard() {
         <div className={`${glass} p-10 space-y-8 flex flex-col justify-between relative overflow-hidden`}>
           <div className="space-y-6">
             <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
-              <BarChart3 className="w-5 h-5 text-indigo-400" />
+              <BarChart3 className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
               Yield Curve
             </h3>
             <div className="h-40 relative flex items-end justify-between gap-1 px-2 border-b border-l border-white/10">
               {[15, 25, 20, 45, 30, 60, 50, 85, 70, 95].map((h, i) => (
                 <div key={i} className="flex-1 bg-gradient-to-t from-indigo-500/40 to-indigo-500/10 rounded-t-sm" style={{ height: `${h}%` }} />
               ))}
-              <div className="absolute top-4 right-4 text-[8px] font-black text-indigo-400 uppercase tracking-widest">Reach vs Rev</div>
+              <div className="absolute top-4 right-4 text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Reach vs Rev</div>
             </div>
             <div className="flex justify-between text-[8px] font-bold text-slate-600 uppercase px-1">
               <span>0 (Viral Reach)</span>
@@ -958,7 +958,7 @@ export default function OverlordDashboard() {
             </div>
           </div>
           
-          <button className="w-full py-4 border border-indigo-500/30 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-300 font-black text-[10px] uppercase tracking-widest transition-all rounded-2xl">
+          <button className="w-full py-4 border border-[var(--tint-indigo-edge)] bg-indigo-500/5 hover:bg-[var(--tint-indigo-bg)] text-indigo-300 font-black text-[10px] uppercase tracking-widest transition-all rounded-2xl">
             Simulate Yield Swarm
           </button>
         </div>
@@ -1031,7 +1031,7 @@ export default function OverlordDashboard() {
              <div className="relative h-32 flex items-center justify-center">
                 <div className="absolute inset-0 border border-emerald-500/5 rounded-full animate-ping" />
                 <div className="text-center">
-                   <p className="text-xl font-black text-emerald-400 italic font-mono">AGENTIC AI</p>
+                   <p className="text-xl font-black text-[var(--tint-emerald-fg)] italic font-mono">AGENTIC AI</p>
                    <p className="text-[8px] font-black text-slate-600 uppercase mt-2">Global Alpha Spike</p>
                 </div>
              </div>
@@ -1079,12 +1079,12 @@ export default function OverlordDashboard() {
                       <p className="text-[9px] font-mono text-slate-500">Node-ID: {node._id || node.id || 'SYNCING'}</p>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-[9px] font-black uppercase text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-md border border-indigo-500/20">
+                      <span className="text-[9px] font-black uppercase text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)] px-2 py-1 rounded-md border border-[var(--tint-indigo-edge)]">
                         {node.nodeType.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-8 py-6">
-                      <p className="text-sm font-black text-emerald-400 font-mono">${(node.metrics?.revenueDay || 0).toLocaleString()}</p>
+                      <p className="text-sm font-black text-[var(--tint-emerald-fg)] font-mono">${(node.metrics?.revenueDay || 0).toLocaleString()}</p>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-2">
@@ -1109,10 +1109,10 @@ export default function OverlordDashboard() {
 
             <div className="space-y-4">
               {manifest?.manifest?.map((offer: any, i: number) => (
-                <div key={i} className={`p-6 rounded-3xl border transition-all ${i === 0 ? 'bg-emerald-500/10 border-emerald-500/30 shadow-lg shadow-emerald-500/5' : 'bg-white/[0.02] border-white/5 opacity-60'}`}>
+                <div key={i} className={`p-6 rounded-3xl border transition-all ${i === 0 ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] shadow-lg shadow-emerald-500/5' : 'bg-white/[0.02] border-white/5 opacity-60'}`}>
                   <div className="flex justify-between items-start mb-2">
                     <p className="text-[10px] font-black text-slate-500 uppercase">{offer.platform}</p>
-                    {i === 0 && <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Active Steer</span>}
+                    {i === 0 && <span className="text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest bg-[var(--tint-emerald-bg)] px-2 py-0.5 rounded border border-[var(--tint-emerald-edge)]">Active Steer</span>}
                   </div>
                   <p className="text-lg font-black text-white italic mb-3">{offer.name}</p>
                   <div className="flex items-center justify-between mt-4 border-t border-white/5 pt-4">
@@ -1122,7 +1122,7 @@ export default function OverlordDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-[8px] font-bold text-slate-500 uppercase">CVR Matrix</p>
-                      <p className="text-sm font-black text-indigo-400 italic">{(offer.cvr * 100).toFixed(1)}%</p>
+                      <p className="text-sm font-black text-[var(--tint-indigo-fg)] italic">{(offer.cvr * 100).toFixed(1)}%</p>
                     </div>
                   </div>
                 </div>
@@ -1154,8 +1154,8 @@ export default function OverlordDashboard() {
       {/* ── Knowledge Ledger ── */}
       <div className={`${glass} p-12 space-y-10`}>
         <div className="flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <Database className="w-6 h-6 text-amber-400" />
+          <div className="w-14 h-14 rounded-2xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center">
+            <Database className="w-6 h-6 text-[var(--tint-amber-fg)]" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-white italic uppercase tracking-tight">Intelligence Ledger</h2>
@@ -1166,7 +1166,7 @@ export default function OverlordDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ledger?.ledger?.map((item: any, i: number) => (
             <div key={i} className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 relative group">
-              <div className="absolute top-8 right-8 text-[10px] font-mono text-amber-400 opacity-60">
+              <div className="absolute top-8 right-8 text-[10px] font-mono text-[var(--tint-amber-fg)] opacity-60">
                 v.{(item.viralScore * 100).toFixed(0)}
               </div>
               <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">{item.lastSource}</p>
@@ -1176,7 +1176,7 @@ export default function OverlordDashboard() {
                   <span className="w-1 h-1 rounded-full bg-emerald-500" />
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{item.nodesSynced} Nodes Synced</p>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-500 group-hover:text-amber-400 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-500 group-hover:text-[var(--tint-amber-fg)] transition-colors">
                   <Lock className="w-3 h-3" />
                 </div>
               </div>

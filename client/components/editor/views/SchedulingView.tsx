@@ -89,7 +89,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
       {/* Elite Header Control Cluster */}
       <div className="flex flex-col xl:flex-row items-center justify-between gap-10">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl">
+          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] shadow-xl">
             <BarChart3 className="w-4 h-4 animate-pulse" />
             Chrono Management
           </div>
@@ -169,10 +169,10 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                 key={i}
                 variants={itemVariants}
                 whileHover={{ scale: 1.02, y: -4 }}
-                className={`min-h-[160px] p-6 rounded-[2.5rem] border transition-all duration-500 relative group ${isTodayActive ? 'bg-white/10 border-indigo-500/40 shadow-3xl shadow-indigo-500/10' : 'bg-black/20 border-white/5 hover:border-white/10 hover:bg-white/[0.02]'}`}
+                className={`min-h-[160px] p-6 rounded-[2.5rem] border transition-all duration-500 relative group ${isTodayActive ? 'bg-white/10 border-[var(--tint-indigo-edge)] shadow-3xl shadow-indigo-500/10' : 'bg-black/20 border-white/5 hover:border-white/10 hover:bg-white/[0.02]'}`}
               >
                 <div className="flex justify-between items-center mb-6">
-                  <span className={`text-xl font-black italic ${isTodayActive ? 'text-indigo-400' : 'text-slate-700 group-hover:text-slate-400'}`}>
+                  <span className={`text-xl font-black italic ${isTodayActive ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-700 group-hover:text-slate-400'}`}>
                     {format(day, 'd')}
                   </span>
                   {dayPosts.length > 0 && (
@@ -187,7 +187,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                     <motion.div
                       key={post.id}
                       whileHover={{ x: 4 }}
-                      className="p-3 bg-black/40 border border-white/5 rounded-[1.2rem] group/post cursor-pointer hover:border-indigo-500/30 transition-all shadow-xl"
+                      className="p-3 bg-black/40 border border-white/5 rounded-[1.2rem] group/post cursor-pointer hover:border-[var(--tint-indigo-edge)] transition-all shadow-xl"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 space-y-2">
@@ -211,7 +211,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                           >
                             Optimize
                           </button>
-                          <button title="Share Post" className="p-3 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-500 hover:text-white rounded-xl transition-all"><Share2 className="w-4 h-4" /></button>
+                          <button title="Share Post" className="p-3 bg-[var(--tint-indigo-bg)] hover:bg-indigo-500 text-indigo-500 hover:text-white rounded-xl transition-all"><Share2 className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </motion.div>
@@ -225,7 +225,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
 
                 {isTodayActive && (
                   <div className="absolute inset-x-0 bottom-4 flex justify-center">
-                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.3em] italic">Current Cycle</span>
+                    <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.3em] italic">Current Cycle</span>
                   </div>
                 )}
               </motion.div>
@@ -249,8 +249,8 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
 
           <div className="relative z-10">
             <div className="flex items-center gap-6 mb-8">
-              <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
-                <MessageSquare className="w-6 h-6 text-indigo-400" />
+              <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                <MessageSquare className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
               </div>
               <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">STRATEGY<br />FORECAST</h4>
             </div>
@@ -261,8 +261,8 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
 
           <div className="mt-12 flex items-center justify-between relative z-10">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                <Globe className="w-5 h-5 text-emerald-400 animate-pulse" />
+              <div className="p-3 bg-[var(--tint-emerald-bg)] rounded-2xl border border-[var(--tint-emerald-edge)]">
+                <Globe className="w-5 h-5 text-[var(--tint-emerald-fg)] animate-pulse" />
               </div>
               <div>
                 <p className="text-[10px] font-black text-white uppercase tracking-widest italic">Global Synthesis</p>
@@ -280,8 +280,8 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
             </div>
 
             <div className="flex items-center gap-6 mb-12 relative z-10">
-                <div className="p-4 rounded-[1.2rem] bg-emerald-500/10 border border-emerald-500/20 shadow-xl">
-                    <Target className="w-6 h-6 text-emerald-400" />
+                <div className="p-4 rounded-[1.2rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-xl">
+                    <Target className="w-6 h-6 text-[var(--tint-emerald-fg)]" />
                 </div>
                 <div>
                    <h2 className="text-3xl font-black text-white italic tracking-tighter leading-none uppercase">Social Push Matrix</h2>
@@ -306,7 +306,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                             <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1 italic">Neural Tags (Platform optimized)</label>
                             <div className="flex flex-wrap gap-2">
                                 {['#viral', '#growth', '#ai', '#creative', '#edit'].map(t => (
-                                    <span key={t} className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black text-emerald-400 italic">
+                                    <span key={t} className="px-4 py-2 bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] rounded-full text-[10px] font-black text-[var(--tint-emerald-fg)] italic">
                                         {t}
                                     </span>
                                 ))}
@@ -356,14 +356,14 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
 
           <div className="flex items-center justify-between mb-10 relative z-10">
             <div className="flex items-center gap-6">
-              <div className="p-4 rounded-[1.2rem] bg-orange-500/10 border border-orange-500/20">
-                <Activity className="w-6 h-6 text-orange-400" />
+              <div className="p-4 rounded-[1.2rem] bg-[var(--tint-orange-bg)] border border-[var(--tint-orange-edge)]">
+                <Activity className="w-6 h-6 text-[var(--tint-orange-fg)]" />
               </div>
               <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">TACTICAL<br />PIPELINE</h4>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,1)]" />
-              <span className="px-6 py-2 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-full text-[10px] font-black uppercase tracking-[0.3em] italic shadow-lg">3 Nodes Pending</span>
+              <span className="px-6 py-2 bg-[var(--tint-orange-bg)] text-[var(--tint-orange-fg)] border border-[var(--tint-orange-edge)] rounded-full text-[10px] font-black uppercase tracking-[0.3em] italic shadow-lg">3 Nodes Pending</span>
             </div>
           </div>
 
@@ -381,12 +381,12 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
               >
                 <div className="flex items-center gap-8 flex-1">
                   <div className="w-16 h-16 bg-white/5 rounded-[1.5rem] border border-white/5 flex items-center justify-center text-[10px] font-black text-slate-700 uppercase italic shadow-inner group-hover:scale-110 transition-transform">
-                    {idx === 0 ? <Radio className="w-6 h-6 text-indigo-500" /> : <Layers className="w-6 h-6 text-orange-400" />}
+                    {idx === 0 ? <Radio className="w-6 h-6 text-indigo-500" /> : <Layers className="w-6 h-6 text-[var(--tint-orange-fg)]" />}
                   </div>
                   <div className="flex-1 space-y-3">
                     <div className="flex justify-between items-center">
                       <p className="text-lg font-black text-white italic uppercase tracking-tighter">{job.l}</p>
-                      <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">{job.s}</p>
+                      <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">{job.s}</p>
                     </div>
                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
                       <motion.div

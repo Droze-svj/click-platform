@@ -120,15 +120,15 @@ export default function SectorResonanceMatrixPage() {
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-amber-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
-              <div className="w-24 h-24 bg-amber-500/5 border-2 border-amber-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(245,158,11,0.3)] relative group overflow-hidden">
+              <div className="w-24 h-24 bg-amber-500/5 border-2 border-[var(--tint-amber-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(245,158,11,0.3)] relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent opacity-100" />
-                <Target size={48} className="text-amber-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <Target size={48} className="text-[var(--tint-amber-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-amber-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-amber-400 italic leading-none">Sector Intelligence v24.1.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-amber-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-amber-fg)] italic leading-none">Sector Intelligence v24.1.2</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,1)]" />
@@ -141,17 +141,17 @@ export default function SectorResonanceMatrixPage() {
            </div>
 
            <div className="flex items-center gap-12">
-              <div className={`${glassStyle} px-12 py-8 rounded-[3.5rem] flex items-center gap-8 border-amber-500/20 bg-amber-500/5 shadow-3xl group`}>
-                 <div className="w-16 h-16 rounded-[1.8rem] bg-amber-500/10 flex items-center justify-center border-2 border-amber-500/20 shadow-2xl group-hover:rotate-12 transition-transform duration-700">
-                    <Activity size={32} className="text-amber-400 animate-pulse" />
+              <div className={`${glassStyle} px-12 py-8 rounded-[3.5rem] flex items-center gap-8 border-[var(--tint-amber-edge)] bg-amber-500/5 shadow-3xl group`}>
+                 <div className="w-16 h-16 rounded-[1.8rem] bg-[var(--tint-amber-bg)] flex items-center justify-center border-2 border-[var(--tint-amber-edge)] shadow-2xl group-hover:rotate-12 transition-transform duration-700">
+                    <Activity size={32} className="text-[var(--tint-amber-fg)] animate-pulse" />
                  </div>
                  <div>
                     <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">MATRIX_SCAN_STATUS</span>
-                    <p className="text-2xl font-black text-amber-400 uppercase tracking-[0.4em] italic leading-none mt-2">ACTIVE_SCANNING</p>
+                    <p className="text-2xl font-black text-[var(--tint-amber-fg)] uppercase tracking-[0.4em] italic leading-none mt-2">ACTIVE_SCANNING</p>
                  </div>
               </div>
               <button onClick={() => loadLattice()} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-                <RefreshCw size={32} className={`text-slate-500 group-hover:text-amber-400 transition-colors duration-700 ${saving ? 'animate-spin' : ''}`} />
+                <RefreshCw size={32} className={`text-slate-500 group-hover:text-[var(--tint-amber-fg)] transition-colors duration-700 ${saving ? 'animate-spin' : ''}`} />
               </button>
            </div>
         </header>
@@ -159,17 +159,17 @@ export default function SectorResonanceMatrixPage() {
         <AnimatePresence>
            {error && (
              <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} 
-               className="p-10 rounded-[4rem] bg-rose-500/10 border-2 border-rose-500/30 flex items-center gap-10 shadow-3xl backdrop-blur-3xl"
+               className="p-10 rounded-[4rem] bg-[var(--tint-rose-bg)] border-2 border-[var(--tint-rose-edge)] flex items-center gap-10 shadow-3xl backdrop-blur-3xl"
              >
-                <X size={48} className="text-rose-500 animate-pulse bg-rose-500/10 p-2 rounded-2xl" />
+                <X size={48} className="text-rose-500 animate-pulse bg-[var(--tint-rose-bg)] p-2 rounded-2xl" />
                 <p className="text-[16px] font-black text-rose-500 uppercase tracking-[0.8em] italic leading-none">{error}</p>
              </motion.div>
            )}
            {success && (
              <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} 
-               className="p-10 rounded-[4rem] bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center gap-10 shadow-3xl backdrop-blur-3xl"
+               className="p-10 rounded-[4rem] bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] flex items-center gap-10 shadow-3xl backdrop-blur-3xl"
              >
-                <CheckCircle size={48} className="text-emerald-500 bg-emerald-500/10 p-2 rounded-2xl" />
+                <CheckCircle size={48} className="text-emerald-500 bg-[var(--tint-emerald-bg)] p-2 rounded-2xl" />
                 <p className="text-[16px] font-black text-emerald-500 uppercase tracking-[0.8em] italic leading-none">{success}</p>
              </motion.div>
            )}
@@ -182,16 +182,16 @@ export default function SectorResonanceMatrixPage() {
            >
               <div className="p-16 border-b-2 border-white/5 flex items-center justify-between mb-12 bg-white/[0.02] rounded-t-[6rem]">
                  <div className="flex items-center gap-8">
-                    <div className="w-16 h-16 rounded-[1.8rem] bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-3xl"><Terminal size={28} className="text-amber-400" /></div>
+                    <div className="w-16 h-16 rounded-[1.8rem] bg-[var(--tint-amber-bg)] border-2 border-[var(--tint-amber-edge)] flex items-center justify-center shadow-3xl"><Terminal size={28} className="text-[var(--tint-amber-fg)]" /></div>
                     <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Lattice Matrix</h2>
                  </div>
                  <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] italic">HEURISTIC_SECTOR_LOCK</div>
               </div>
-              <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:rotate-45 transition-transform duration-[10s]"><Terminal size={600} className="text-amber-400" /></div>
+              <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:rotate-45 transition-transform duration-[10s]"><Terminal size={600} className="text-[var(--tint-amber-fg)]" /></div>
               
               <div className="p-10 space-y-16 relative z-10 flex-1 flex flex-col">
                  <div className="space-y-8">
-                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-amber-500/20 pl-6">Sector Designations</label>
+                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-[var(--tint-amber-edge)] pl-6">Sector Designations</label>
                     <div className="grid grid-cols-2 gap-8">
                        {sectors.map((sector) => (
                          <motion.button
@@ -202,7 +202,7 @@ export default function SectorResonanceMatrixPage() {
                            className={`px-12 py-10 rounded-[4rem] text-[18px] font-black uppercase tracking-[0.4em] border-2 transition-all duration-300 italic shadow-3xl relative overflow-hidden flex items-center justify-between group/cell ${
                              userSector === sector
                                ? 'bg-white text-black border-white shadow-[0_60px_150px_rgba(255,255,255,0.1)]'
-                               : 'bg-black/40 border-white/5 text-slate-400 hover:text-white hover:border-amber-500/40'
+                               : 'bg-black/40 border-white/5 text-slate-400 hover:text-white hover:border-[var(--tint-amber-edge)]'
                            }`}
                          >
                             <div className="absolute inset-x-0 bottom-0 h-1 bg-amber-500/30 scale-x-0 group-hover/cell:scale-x-100 transition-transform" />
@@ -225,12 +225,12 @@ export default function SectorResonanceMatrixPage() {
                             <h3 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-2xl">{currentPack.name}</h3>
                          </div>
                       </div>
-                      <p className="text-[20px] text-slate-700 font-black uppercase tracking-widest italic leading-relaxed mb-12 relative z-10 px-6 border-l-8 border-amber-500/20">{currentPack.description.toUpperCase()}</p>
+                      <p className="text-[20px] text-slate-700 font-black uppercase tracking-widest italic leading-relaxed mb-12 relative z-10 px-6 border-l-8 border-[var(--tint-amber-edge)]">{currentPack.description.toUpperCase()}</p>
                       <div className="space-y-8 relative z-10">
                          <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic leading-none ml-6">Operational Schematics</p>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-4">
                             {(currentPack.templates || []).map((t: any, idx: number) => (
-                               <div key={idx} className="flex items-center gap-6 px-10 py-6 bg-black/80 border-2 border-white/5 rounded-[3rem] text-[15px] font-black text-white uppercase italic tracking-[0.2em] hover:border-amber-500/40 hover:scale-105 transition-all cursor-default shadow-3xl">
+                               <div key={idx} className="flex items-center gap-6 px-10 py-6 bg-black/80 border-2 border-white/5 rounded-[3rem] text-[15px] font-black text-white uppercase italic tracking-[0.2em] hover:border-[var(--tint-amber-edge)] hover:scale-105 transition-all cursor-default shadow-3xl">
                                   <div className="w-4 h-4 rounded-full bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,1)] animate-pulse" />
                                   {t.name.toUpperCase()}
                                </div>
@@ -248,18 +248,18 @@ export default function SectorResonanceMatrixPage() {
            >
               <div className="p-16 border-b-2 border-white/5 flex items-center justify-between mb-12 bg-white/[0.02] rounded-t-[6rem]">
                  <div className="flex items-center gap-8">
-                    <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Palette size={28} className="text-indigo-400" /></div>
+                    <div className="w-16 h-16 rounded-[1.8rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-3xl"><Palette size={28} className="text-[var(--tint-indigo-fg)]" /></div>
                     <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Identity Hash</h2>
                  </div>
                  <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-indigo-500 text-[10px] font-black uppercase tracking-[0.5em] italic">VISUAL_SIGNATURE_SYNC</div>
               </div>
-              <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none -rotate-12 translate-x-1/2 -translate-y-1/2"><Palette size={800} className="text-indigo-400" /></div>
+              <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none -rotate-12 translate-x-1/2 -translate-y-1/2"><Palette size={800} className="text-[var(--tint-indigo-fg)]" /></div>
               
               <div className="p-10 space-y-16 relative z-10 flex-1">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-8">
-                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Resonance Polarity</label>
-                       <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-indigo-500/40 transition-all">
+                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-[var(--tint-indigo-edge)] pl-6">Resonance Polarity</label>
+                       <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-[var(--tint-indigo-edge)] transition-all">
                           <div className="w-24 h-24 rounded-[3rem] shadow-3xl relative overflow-hidden border-4 border-white/10 cursor-pointer active:scale-90 transition-transform">
                              <input type="color" value={identitySettings.primaryColor} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} className="absolute inset-0 scale-[5] cursor-pointer" />
                           </div>
@@ -267,8 +267,8 @@ export default function SectorResonanceMatrixPage() {
                        </div>
                     </div>
                     <div className="space-y-8">
-                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Diffraction Baseline</label>
-                       <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-indigo-500/40 transition-all">
+                       <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-[var(--tint-indigo-edge)] pl-6">Diffraction Baseline</label>
+                       <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-[var(--tint-indigo-edge)] transition-all">
                           <div className="w-24 h-24 rounded-[3rem] shadow-3xl relative overflow-hidden border-4 border-white/10 cursor-pointer active:scale-90 transition-transform">
                              <input type="color" value={identitySettings.secondaryColor} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} className="absolute inset-0 scale-[5] cursor-pointer" />
                           </div>
@@ -278,7 +278,7 @@ export default function SectorResonanceMatrixPage() {
                  </div>
 
                  <div className="space-y-8">
-                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Logic Topography</label>
+                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-[var(--tint-indigo-edge)] pl-6">Logic Topography</label>
                     <div className="relative group/sel">
                        <select value={identitySettings.font} onChange={e => setIdentitySettings({ ...identitySettings, font: e.target.value })} className="w-full appearance-none bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-5xl font-black text-white italic uppercase focus:border-indigo-500/50 transition-all shadow-inner cursor-pointer hover:bg-black/80 hover:shadow-[inset_0_0_50px_rgba(255,255,255,0.02)]">
                           <option value="Arial" className="bg-[#050505]">ARIAL_LOGIC</option>
@@ -286,16 +286,16 @@ export default function SectorResonanceMatrixPage() {
                           <option value="Verdana" className="bg-[#050505]">VERDANA_FLOW</option>
                           <option value="Georgia" className="bg-[#050505]">GEORGIA_ARRAY</option>
                        </select>
-                       <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-none text-white/20 group-hover/sel:text-indigo-400 transition-all bg-black/40 p-4 rounded-3xl border border-white/5 backdrop-blur-3xl shadow-3xl">
+                       <div className="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-none text-white/20 group-hover/sel:text-[var(--tint-indigo-fg)] transition-all bg-black/40 p-4 rounded-3xl border border-white/5 backdrop-blur-3xl shadow-3xl">
                           <ChevronRight size={48} className="rotate-90" />
                        </div>
                     </div>
                  </div>
 
                  <div className="space-y-8">
-                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Visual Signature Uplink</label>
+                    <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-[var(--tint-indigo-edge)] pl-6">Visual Signature Uplink</label>
                     <div className="flex items-center gap-8 bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-6 shadow-inner group/url focus-within:border-indigo-500/60 transition-all hover:bg-black/80">
-                       <Globe size={48} className="text-slate-500 group-focus-within/url:text-indigo-400 transition-all group-hover/url:rotate-12" />
+                       <Globe size={48} className="text-slate-500 group-focus-within/url:text-[var(--tint-indigo-fg)] transition-all group-hover/url:rotate-12" />
                        <input type="url" value={identitySettings.logo} onChange={e => setIdentitySettings({ ...identitySettings, logo: e.target.value })} className="flex-1 bg-transparent py-6 text-2xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" placeholder="HTTPS://IDENTITY_UPLINK..." />
                     </div>
                  </div>
@@ -333,25 +333,25 @@ export default function SectorResonanceMatrixPage() {
         {/* Neural Lattice Navigation Swarm */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10 pt-24 border-t-2 border-white/5">
            {[
-             { label: 'Neural Forge', desc: 'Synthetic logic crafting.', icon: Sparkles, color: 'text-indigo-400', href: '/dashboard/content' },
-             { label: 'Temporal Hub', desc: 'Optimal node deployment.', icon: Calendar, color: 'text-amber-400', href: '/dashboard/scheduler' },
+             { label: 'Neural Forge', desc: 'Synthetic logic crafting.', icon: Sparkles, color: 'text-[var(--tint-indigo-fg)]', href: '/dashboard/content' },
+             { label: 'Temporal Hub', desc: 'Optimal node deployment.', icon: Calendar, color: 'text-[var(--tint-amber-fg)]', href: '/dashboard/scheduler' },
              { label: 'Axiom Vault', desc: 'Wisdom fractal repository.', icon: Network, color: 'text-purple-400', href: '/dashboard/library' },
-             { label: 'Blueprint Array', desc: 'Operational prototypes.', icon: Layers, color: 'text-emerald-400', href: '/dashboard/templates' },
+             { label: 'Blueprint Array', desc: 'Operational prototypes.', icon: Layers, color: 'text-[var(--tint-emerald-fg)]', href: '/dashboard/templates' },
            ].map((a, i) => (
              <motion.button 
                whileHover={{ y: -20, scale: 1.05, backgroundColor: 'rgba(255,255,255,0.08)' }} 
                initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: i * 0.1 }}
                key={a.label} onClick={() => router.push(a.href)} 
-               className={`${glassStyle} p-14 rounded-[5.5rem] group text-center flex flex-col items-center gap-10 border-white/5 hover:border-indigo-500/30 transition-all duration-300 shadow-[0_40px_100px_rgba(0,0,0,0.6)] bg-black/60`}
+               className={`${glassStyle} p-14 rounded-[5.5rem] group text-center flex flex-col items-center gap-10 border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all duration-300 shadow-[0_40px_100px_rgba(0,0,0,0.6)] bg-black/60`}
              >
                 <div className="w-24 h-24 bg-white/[0.03] border-2 border-white/10 rounded-[2.5rem] flex items-center justify-center group-hover:rotate-[30deg] group-hover:scale-110 transition-all duration-300 shadow-3xl">
                    <a.icon size={48} className={a.color} />
                 </div>
                 <div className="space-y-3">
-                   <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors">{a.label}</h4>
+                   <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors">{a.label}</h4>
                    <p className="text-[13px] text-slate-400 font-black uppercase tracking-widest italic leading-none opacity-40 group-hover:opacity-100 transition-opacity">{a.desc}</p>
                 </div>
-                <div className="w-16 h-16 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-indigo-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-4 shadow-3xl">
+                <div className="w-16 h-16 rounded-full bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center text-[var(--tint-indigo-fg)] opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-4 shadow-3xl">
                    <ArrowRight size={32} />
                 </div>
              </motion.button>

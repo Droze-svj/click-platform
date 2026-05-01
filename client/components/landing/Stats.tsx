@@ -47,10 +47,10 @@ export function Stats() {
   }, []);
 
   const STATS = [
-    { label: 'Active Creators', value: formatCount(metrics.creators), Icon: Users, color: 'text-indigo-400' },
-    { label: 'Clips Generated', value: formatCount(metrics.clipsGenerated), Icon: Layers, color: 'text-fuchsia-400' },
+    { label: 'Active Creators', value: formatCount(metrics.creators), Icon: Users, color: 'text-[var(--tint-indigo-fg)]' },
+    { label: 'Clips Generated', value: formatCount(metrics.clipsGenerated), Icon: Layers, color: 'text-[var(--tint-fuchsia-fg)]' },
     { label: 'Avg. Brand Lift', value: `${metrics.brandLiftPct}%`, Icon: TrendingUp, color: 'text-blue-400' },
-    { label: 'System Uptime', value: `${metrics.uptimePct}%`, Icon: ShieldCheck, color: 'text-emerald-400' },
+    { label: 'System Uptime', value: `${metrics.uptimePct}%`, Icon: ShieldCheck, color: 'text-[var(--tint-emerald-fg)]' },
   ];
 
   return (
@@ -59,7 +59,7 @@ export function Stats() {
       <div className="max-w-7xl mx-auto">
         {metrics.source && metrics.source !== 'fallback' && (
           <div className="flex justify-center mb-10">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-widest">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-emerald-300 text-[10px] font-bold uppercase tracking-widest">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse" aria-hidden="true" />
               Live · updated every 5 min
             </span>

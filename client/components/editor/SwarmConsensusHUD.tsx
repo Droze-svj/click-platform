@@ -38,7 +38,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
       action: 'Synthesizing viral hook geometry...', 
       status: 'suggesting', 
       icon: BrainCircuit, 
-      color: 'text-fuchsia-400' 
+      color: 'text-[var(--tint-fuchsia-fg)]' 
     },
     { 
       agent: 'Neural Analyst', 
@@ -46,7 +46,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
       action: 'Cross-referencing historical ROI nodes...', 
       status: 'thinking', 
       icon: Search, 
-      color: 'text-indigo-400' 
+      color: 'text-[var(--tint-indigo-fg)]' 
     },
     { 
       agent: 'Sovereign Architect', 
@@ -54,7 +54,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
       action: 'Refining hook with high-retention parameters...', 
       status: 'validating', 
       icon: Zap, 
-      color: 'text-fuchsia-400' 
+      color: 'text-[var(--tint-fuchsia-fg)]' 
     }
   ]
 
@@ -95,13 +95,13 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
         <div className="relative z-10 space-y-10">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-[0.3em]">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[9px] font-black uppercase tracking-[0.3em]">
                 <Activity className="w-3 h-3" /> SWARM CONSENSUS 2.0
               </div>
               <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">{taskName}</h3>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-              <ShieldCheck className="w-6 h-6 text-emerald-400 animate-pulse" />
+              <ShieldCheck className="w-6 h-6 text-[var(--tint-emerald-fg)] animate-pulse" />
             </div>
           </div>
 
@@ -159,7 +159,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
                     ))}
                 </div>
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic flex items-center gap-2">
-                  <Fingerprint className="w-3 h-3 text-indigo-400" />
+                  <Fingerprint className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                   Neural Integrity: 99.8%
                 </span>
              </div>

@@ -136,15 +136,15 @@ export default function KineticExecutionMatrixPage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
-              <div className="w-24 h-24 bg-emerald-500/5 border border-emerald-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-emerald-500/5 border border-[var(--tint-emerald-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-100" />
-                <Target size={48} className="text-emerald-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <Target size={48} className="text-[var(--tint-emerald-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">Kinetic Lattice v14.9.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-emerald-fg)] italic leading-none">Kinetic Lattice v14.9.2</span>
                    </div>
                    <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <div className={`w-3 h-3 rounded-full ${connected ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,1)]' : 'bg-rose-500 animate-ping'}`} />
@@ -172,7 +172,7 @@ export default function KineticExecutionMatrixPage() {
               </nav>
               <div className="h-16 w-1 bg-white/5 mx-2 rounded-full" />
               <button onClick={() => setSortByUrgency(!sortByUrgency)} 
-                className={`flex items-center gap-8 px-14 py-6 rounded-[2.8rem] border-2 transition-all duration-300 italic shadow-2xl hover:scale-105 active:scale-95 ${sortByUrgency ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.2)]' : 'bg-white/[0.02] border-white/5 text-slate-400 hover:text-white'}`}
+                className={`flex items-center gap-8 px-14 py-6 rounded-[2.8rem] border-2 transition-all duration-300 italic shadow-2xl hover:scale-105 active:scale-95 ${sortByUrgency ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)] shadow-[0_0_40px_rgba(245,158,11,0.2)]' : 'bg-white/[0.02] border-white/5 text-slate-400 hover:text-white'}`}
               >
                  <Zap size={24} className={sortByUrgency ? 'animate-pulse' : ''} />
                  <span className="text-[13px] font-black uppercase tracking-[0.5em]">URGENCY_FLUX_SORT</span>
@@ -211,7 +211,7 @@ export default function KineticExecutionMatrixPage() {
                 <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-12">
                    {STATUSES.map((s, idx) => (
                      <div key={s} onDragOver={e => { e.preventDefault(); setDragOverStatus(s) }} onDragLeave={() => setDragOverStatus(null)} onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (id) updateNode(id, { status: s }); setDragOverStatus(null) }}
-                       className={`flex flex-col rounded-[5.5rem] border-2 transition-all duration-300 min-h-[900px] shadow-[0_80px_200px_rgba(0,0,0,0.8)] relative group/lane ${dragOverStatus === s ? 'bg-emerald-500/10 border-emerald-400/50 ring-[20px] ring-emerald-500/5' : 'bg-black/60 border-white/5 hover:border-white/10'}`}
+                       className={`flex flex-col rounded-[5.5rem] border-2 transition-all duration-300 min-h-[900px] shadow-[0_80px_200px_rgba(0,0,0,0.8)] relative group/lane ${dragOverStatus === s ? 'bg-[var(--tint-emerald-bg)] border-emerald-400/50 ring-[20px] ring-emerald-500/5' : 'bg-black/60 border-white/5 hover:border-white/10'}`}
                      >
                         <header className="p-12 border-b-2 border-white/5 relative overflow-hidden rounded-t-[5.5rem] bg-white/[0.02]">
                            <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover/lane:rotate-90 transition-transform duration-300"><Scan size={200} /></div>
@@ -220,7 +220,7 @@ export default function KineticExecutionMatrixPage() {
                                  <div className={`w-3 h-3 rounded-full ${s === 'done' ? 'bg-emerald-500' : 'bg-indigo-500'} shadow-[0_0_15px_rgba(99,102,241,1)] animate-pulse`} />
                                  <h3 className="text-[14px] font-black text-white uppercase tracking-[0.6em] italic leading-none">{STATUS_LABELS[s]}</h3>
                               </div>
-                              <span className="px-5 py-2 rounded-2xl bg-black/60 border-2 border-white/10 flex items-center justify-center text-[12px] font-black text-indigo-400 tabular-nums shadow-inner italic">L0{idx + 1}::{byStatus(s).length}</span>
+                              <span className="px-5 py-2 rounded-2xl bg-black/60 border-2 border-white/10 flex items-center justify-center text-[12px] font-black text-[var(--tint-indigo-fg)] tabular-nums shadow-inner italic">L0{idx + 1}::{byStatus(s).length}</span>
                            </div>
                         </header>
                         <div className="p-10 flex-1 space-y-10 overflow-y-auto custom-scrollbar bg-black/20">
@@ -261,14 +261,14 @@ export default function KineticExecutionMatrixPage() {
                    <div className="min-w-[1600px] space-y-16 relative z-10">
                       <header className="flex items-center gap-16 mb-24 border-b-4 border-white/5 pb-16 px-12">
                          <div className="w-[500px] flex items-center gap-8">
-                            <Anchor size={32} className="text-indigo-400" />
+                            <Anchor size={32} className="text-[var(--tint-indigo-fg)]" />
                             <div className="text-[16px] font-black text-white uppercase tracking-[1.5em] italic leading-none">OBJECTIVE_CHRONOS_ANCHOR</div>
                          </div>
                          <div className="flex-1 flex justify-between text-[14px] font-black text-slate-400 uppercase tracking-[1em] italic px-24">
                             <span>T_PAST_RESONANCE</span>
                             <div className="flex flex-col items-center">
                                <div className="w-1 h-12 bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
-                               <span className="mt-4 text-indigo-400">NOW_SYNC</span>
+                               <span className="mt-4 text-[var(--tint-indigo-fg)]">NOW_SYNC</span>
                             </div>
                             <span>T_FUTURE_TRAJECTORY</span>
                          </div>
@@ -283,7 +283,7 @@ export default function KineticExecutionMatrixPage() {
                              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
                                key={task._id} className="flex items-center gap-16 group h-24 hover:bg-white/[0.02] rounded-[3rem] transition-all px-12"
                              >
-                                <div className="w-[450px] truncate text-[24px] font-black text-white italic uppercase tracking-tighter group-hover:text-emerald-400 transition-all duration-700 flex items-center gap-6">
+                                <div className="w-[450px] truncate text-[24px] font-black text-white italic uppercase tracking-tighter group-hover:text-[var(--tint-emerald-fg)] transition-all duration-700 flex items-center gap-6">
                                    <div className={`w-4 h-4 rounded-full ${task.priority === 'urgent' ? 'bg-rose-500 animate-pulse' : 'bg-indigo-500'} shadow-[0_0_15px_rgba(99,102,241,0.5)]`} />
                                    {task.title}
                                 </div>
@@ -307,10 +307,10 @@ export default function KineticExecutionMatrixPage() {
 
         {/* Nodal Injector HUD (Command Center) */}
         <footer className="fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-6xl px-12 z-[100]">
-           <div className={`${glassStyle} rounded-[6rem] p-4 flex items-center gap-6 border-emerald-500/30 shadow-[0_100px_300px_rgba(0,0,0,1)] ring-[20px] ring-black/80 group hover:border-emerald-500/60 transition-all duration-300 backdrop-blur-3xl bg-black/40`}>
+           <div className={`${glassStyle} rounded-[6rem] p-4 flex items-center gap-6 border-[var(--tint-emerald-edge)] shadow-[0_100px_300px_rgba(0,0,0,1)] ring-[20px] ring-black/80 group hover:border-emerald-500/60 transition-all duration-300 backdrop-blur-3xl bg-black/40`}>
               <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-600 text-white flex items-center justify-center group-hover:rotate-180 transition-transform duration-300 shadow-[0_0_50px_rgba(16,185,129,0.4)] border-4 border-black/40"><Plus size={44} /></div>
               <div className="flex-1 relative">
-                 <div className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity"><Terminal size={28} className="text-emerald-400" /></div>
+                 <div className="absolute left-6 top-1/2 -translate-y-1/2 opacity-20 group-focus-within:opacity-100 transition-opacity"><Terminal size={28} className="text-[var(--tint-emerald-fg)]" /></div>
                  <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && createTaskNode(addingForParent)} 
                    placeholder={addingForParent ? `Inject child резонанс for [NODE_ID::${addingForParent.slice(-8).toUpperCase()}]...` : 'Initialize NEW sovereign directive node in the matrix...'} 
                    className="w-full bg-transparent border-none focus:ring-0 text-4xl font-black text-white uppercase tracking-tighter placeholder:text-slate-600 italic pl-16 py-8 h-20" autoComplete="off" title="Node Inject" 
@@ -350,7 +350,7 @@ export default function KineticExecutionMatrixPage() {
 
 function DirectiveCard({ task, onSelect, onDragStart }: any) {
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date()
-  const priorityStyle = task.priority === 'urgent' ? 'border-rose-500/30 bg-rose-500/5 text-rose-500 shadow-[0_0_40px_rgba(225,29,72,0.1)]' : task.priority === 'high' ? 'border-amber-500/30 bg-amber-500/5 text-amber-500 shadow-[0_0_40px_rgba(245,158,11,0.1)]' : 'border-white/5 bg-white/5 text-slate-400'
+  const priorityStyle = task.priority === 'urgent' ? 'border-[var(--tint-rose-edge)] bg-rose-500/5 text-rose-500 shadow-[0_0_40px_rgba(225,29,72,0.1)]' : task.priority === 'high' ? 'border-[var(--tint-amber-edge)] bg-amber-500/5 text-amber-500 shadow-[0_0_40px_rgba(245,158,11,0.1)]' : 'border-white/5 bg-white/5 text-slate-400'
   
   return (
     <motion.div 
@@ -363,11 +363,11 @@ function DirectiveCard({ task, onSelect, onDragStart }: any) {
       
       <div className="flex justify-between items-start mb-10 relative z-10">
          <div className="space-y-2 flex-1 mr-4">
-            <h4 className="text-[28px] font-black italic uppercase tracking-tighter text-white group-hover:text-emerald-400 transition-colors duration-300 leading-[0.9]">{task.title}</h4>
+            <h4 className="text-[28px] font-black italic uppercase tracking-tighter text-white group-hover:text-[var(--tint-emerald-fg)] transition-colors duration-300 leading-[0.9]">{task.title}</h4>
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic font-mono">ID::{task._id.slice(-8).toUpperCase()}</span>
          </div>
          {task.urgencyScore != null && (
-           <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/80 border-2 border-amber-500/20 shadow-2xl">
+           <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-black/80 border-2 border-[var(--tint-amber-edge)] shadow-2xl">
               <Zap size={18} className="text-amber-500 animate-pulse" />
               <span className="text-[14px] font-black text-amber-500 italic tabular-nums leading-none">{task.urgencyScore}</span>
            </div>
@@ -376,7 +376,7 @@ function DirectiveCard({ task, onSelect, onDragStart }: any) {
 
       <div className="space-y-8 relative z-10 border-t border-white/5 pt-8">
          <div className="flex flex-wrap items-center gap-6">
-            <div className={`flex items-center gap-3 px-6 py-2 rounded-full border-2 text-[11px] font-black uppercase tracking-widest italic transition-all duration-700 ${isOverdue ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 shadow-[0_0_30px_rgba(225,29,72,0.2)]' : 'bg-black/60 border-white/10 text-slate-500'}`}>
+            <div className={`flex items-center gap-3 px-6 py-2 rounded-full border-2 text-[11px] font-black uppercase tracking-widest italic transition-all duration-700 ${isOverdue ? 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)] text-rose-500 shadow-[0_0_30px_rgba(225,29,72,0.2)]' : 'bg-black/60 border-white/10 text-slate-500'}`}>
                <Timer size={16} /> {task.dueDate ? new Date(task.dueDate).toLocaleDateString().toUpperCase() : 'NO_TIME_LOCK'}
             </div>
             <div className={`flex items-center gap-3 px-6 py-2 rounded-full border-2 text-[11px] font-black uppercase tracking-widest italic transition-all duration-300 ${priorityStyle}`}>
@@ -385,7 +385,7 @@ function DirectiveCard({ task, onSelect, onDragStart }: any) {
          </div>
          <div className="flex items-center justify-between opacity-20 group-hover:opacity-100 transition-opacity duration-300">
             <div className="flex -space-x-4">
-               {[1,2].map(i => <div key={i} className="w-10 h-10 rounded-full bg-slate-800 border-4 border-black group-hover:border-emerald-500/30 transition-colors" />)}
+               {[1,2].map(i => <div key={i} className="w-10 h-10 rounded-full bg-slate-800 border-4 border-black group-hover:border-[var(--tint-emerald-edge)] transition-colors" />)}
             </div>
             <div className="flex items-center gap-3 text-slate-400 text-[10px] font-black uppercase tracking-widest italic">
                <Share2 size={16} className="text-slate-500" /> {Math.floor(Math.random() * 5)} LINKS_ACTIVE
@@ -416,8 +416,8 @@ function DirectiveRow({ task, expanded, expandedTasks, expandToggle, onSelect, o
         <div className="flex items-center gap-12 px-12 opacity-0 group-hover:opacity-100 transition-all duration-300 relative z-10 translate-x-12 group-hover:translate-x-0">
            {task.dueDate && <div className="flex items-center gap-4 text-[12px] font-black uppercase tracking-widest text-slate-400 italic px-8 py-3 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner"><Clock size={16} /> {new Date(task.dueDate).toLocaleDateString().toUpperCase()}</div>}
            <div className="flex items-center gap-6">
-              <button onClick={() => onAddSub(task._id)} className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-700 shadow-2xl active:scale-75"><Plus size={28} /></button>
-              <button onClick={() => onPurge(task._id)} className="w-16 h-16 rounded-[2rem] bg-rose-950/20 border-2 border-rose-500/10 flex items-center justify-center text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/20 transition-all duration-700 shadow-2xl active:scale-75"><Trash2 size={28} /></button>
+              <button onClick={() => onAddSub(task._id)} className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-[var(--tint-emerald-fg)] hover:bg-[var(--tint-emerald-bg)] transition-all duration-700 shadow-2xl active:scale-75"><Plus size={28} /></button>
+              <button onClick={() => onPurge(task._id)} className="w-16 h-16 rounded-[2rem] bg-rose-950/20 border-2 border-rose-500/10 flex items-center justify-center text-rose-500/30 hover:text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] transition-all duration-700 shadow-2xl active:scale-75"><Trash2 size={28} /></button>
            </div>
         </div>
       </motion.div>
@@ -456,14 +456,14 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
          
          <header className="flex items-center justify-between mb-24 relative z-10 border-b-4 border-white/5 pb-16">
             <div className="flex items-center gap-16">
-               <div className="w-28 h-28 rounded-[3.5rem] bg-emerald-500/10 border-4 border-emerald-500/30 flex items-center justify-center shadow-[0_40px_100px_rgba(16,185,129,0.3)] animate-pulse relative overflow-hidden">
+               <div className="w-28 h-28 rounded-[3.5rem] bg-[var(--tint-emerald-bg)] border-4 border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(16,185,129,0.3)] animate-pulse relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent" />
-                  <Target size={56} className="text-emerald-400 relative z-10" />
+                  <Target size={56} className="text-[var(--tint-emerald-fg)] relative z-10" />
                </div>
                <div>
                   <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Node_Diagnostic</h2>
                   <div className="flex items-center gap-6">
-                     <span className="text-[14px] font-black text-emerald-400 uppercase tracking-[0.8em] italic leading-none bg-emerald-500/5 px-8 py-3 rounded-[2rem] border-2 border-emerald-500/20 shadow-inner">ID::{task._id.toUpperCase()}</span>
+                     <span className="text-[14px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.8em] italic leading-none bg-emerald-500/5 px-8 py-3 rounded-[2rem] border-2 border-[var(--tint-emerald-edge)] shadow-inner">ID::{task._id.toUpperCase()}</span>
                      <div className="flex items-center gap-4 px-6 py-2 rounded-full border-2 border-white/5 shadow-inner">
                         <div className="w-4 h-4 rounded-full bg-indigo-500 glow-effect" />
                         <span className="text-[12px] font-black text-slate-400 uppercase tracking-widest italic">RESONANCE_HEARTBEAT_STABLE</span>
@@ -471,19 +471,19 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
                   </div>
                </div>
             </div>
-            <button onClick={onClose} className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-4 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:rotate-180 hover:bg-rose-500/20 active:scale-75 shadow-2xl"><X size={44} /></button>
+            <button onClick={onClose} className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-4 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:rotate-180 hover:bg-[var(--tint-rose-bg)] active:scale-75 shadow-2xl"><X size={44} /></button>
          </header>
 
          <main className="space-y-20 relative z-10">
             <section className="space-y-10 group/field">
-               <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-emerald-400 transition-colors">DIRECTIVE_DESIGNATION_NODE</label>
+               <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-[var(--tint-emerald-fg)] transition-colors">DIRECTIVE_DESIGNATION_NODE</label>
                <input type="text" defaultValue={task.title} onBlur={e => e.target.value !== task.title && onUpdate({ title: e.target.value })} 
                  className="w-full bg-black/80 border-4 border-white/10 rounded-[4.5rem] px-16 py-12 text-7xl font-black text-white italic uppercase tracking-tighter focus:border-emerald-500/50 transition-all duration-300 shadow-2xl outline-none" 
                />
             </section>
 
             <section className="space-y-10 group/field">
-               <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-indigo-400 transition-colors">SOVEREIGN_PARAMETRIC_BRIEF</label>
+               <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-[var(--tint-indigo-fg)] transition-colors">SOVEREIGN_PARAMETRIC_BRIEF</label>
                <textarea defaultValue={task.description} onBlur={e => e.target.value !== task.description && onUpdate({ description: e.target.value })} rows={6} 
                  className="w-full bg-black/80 border-4 border-white/10 rounded-[5.5rem] px-16 py-16 text-4xl font-black text-slate-500 italic uppercase tracking-tighter focus:border-indigo-500/50 transition-all duration-300 placeholder:text-slate-600 leading-relaxed shadow-2xl outline-none custom-scrollbar" 
                  placeholder="OUTLINE_CORE_MISSION_OBJECTIVES..." 
@@ -492,7 +492,7 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
                <section className="space-y-10 group/field">
-                  <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-indigo-400 transition-colors">RESONANCE_PHASE_STATE</label>
+                  <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-[var(--tint-indigo-fg)] transition-colors">RESONANCE_PHASE_STATE</label>
                   <div className="relative group/select">
                      <select value={task.status} onChange={e => onUpdate({ status: e.target.value })} 
                        className="w-full bg-black/80 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-[20px] font-black text-white uppercase tracking-[0.8em] italic shadow-[0_40px_100px_rgba(0,0,0,0.4)] focus:border-indigo-500/50 outline-none appearance-none cursor-pointer"
@@ -503,7 +503,7 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
                   </div>
                </section>
                <section className="space-y-10 group/field">
-                  <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-amber-400 transition-colors">CRITICALITY_FLUX_THRESHOLD</label>
+                  <label className="text-[15px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none ml-10 group-focus-within/field:text-[var(--tint-amber-fg)] transition-colors">CRITICALITY_FLUX_THRESHOLD</label>
                   <div className="relative group/select">
                      <select value={task.priority} onChange={e => onUpdate({ priority: e.target.value })} 
                        className="w-full bg-black/80 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-[20px] font-black text-white uppercase tracking-[0.8em] italic shadow-[0_40px_100px_rgba(0,0,0,0.4)] focus:border-amber-500/50 outline-none appearance-none cursor-pointer"
@@ -518,11 +518,11 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
             <section className="space-y-10 pt-20 border-t-4 border-white/5">
                <div className="flex items-center justify-between mb-8 px-10">
                   <div className="flex items-center gap-6">
-                     <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center animate-bounce shadow-2xl"><Network size={28} className="text-indigo-400" /></div>
+                     <div className="w-12 h-12 bg-[var(--tint-indigo-bg)] rounded-2xl flex items-center justify-center animate-bounce shadow-2xl"><Network size={28} className="text-[var(--tint-indigo-fg)]" /></div>
                      <h3 className="text-[16px] font-black text-white uppercase tracking-[1.2em] italic">SOVEREIGN_MESH_RESONANCE_CHANNEL</h3>
                   </div>
-                  <div className="flex items-center gap-4 text-[12px] font-black text-indigo-400 uppercase tracking-[0.5em] italic bg-indigo-500/5 px-6 py-2 rounded-full border-2 border-white/5 group relative overflow-hidden">
-                     <div className="absolute inset-0 bg-indigo-500/10 animate-pulse pointer-events-none" />
+                  <div className="flex items-center gap-4 text-[12px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] italic bg-indigo-500/5 px-6 py-2 rounded-full border-2 border-white/5 group relative overflow-hidden">
+                     <div className="absolute inset-0 bg-[var(--tint-indigo-bg)] animate-pulse pointer-events-none" />
                      <Radio size={16} /> SIGNAL_SYNCED_V12.0
                   </div>
                </div>
@@ -538,7 +538,7 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
                   {messages.map((m, i) => (
                     <motion.div initial={{ opacity: 0, x: m.userId === userId ? 20 : -20 }} animate={{ opacity: 1, x: 0 }} key={i} className={`flex flex-col gap-4 ${m.userId === userId ? 'items-end' : 'items-start'}`}>
                        <div className="flex items-center gap-6 mb-3 px-6">
-                          <span className={`text-[12px] font-black uppercase tracking-[0.8em] italic ${m.userId === userId ? 'text-indigo-400' : 'text-slate-400'}`}>{m.userId === userId ? 'CONTROLLER_NODE' : 'EXTERNAL_PHANTOM'}</span>
+                          <span className={`text-[12px] font-black uppercase tracking-[0.8em] italic ${m.userId === userId ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-400'}`}>{m.userId === userId ? 'CONTROLLER_NODE' : 'EXTERNAL_PHANTOM'}</span>
                           <span className="text-[10px] font-black text-slate-500 uppercase italic font-mono">{new Date(m.createdAt).toLocaleTimeString()}</span>
                        </div>
                        <div className={`max-w-[85%] p-12 rounded-[4.5rem] italic text-[24px] font-black uppercase tracking-tighter shadow-2xl leading-tight border-2 ${m.userId === userId ? 'bg-indigo-600 text-white border-white/20 rounded-tr-none shadow-indigo-600/40 translate-x-4' : 'bg-black/80 border-white/10 text-slate-400 rounded-tl-none -translate-x-4'}`}>

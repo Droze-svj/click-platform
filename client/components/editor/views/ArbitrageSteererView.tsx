@@ -108,28 +108,28 @@ export const ArbitrageSteererView: React.FC = () => {
                 <div className="xl:col-span-1 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden`}>
                         <div className="flex items-center gap-4">
-                            <Target className="w-6 h-6 text-indigo-400" />
+                            <Target className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                             <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Yield Analysis</h5>
                         </div>
 
                         <div className="space-y-6 relative z-10">
                             <div className="space-y-2">
                                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Best EPC</span>
-                                <h3 className="text-4xl font-black text-emerald-400 italic tracking-tighter uppercase leading-none">
+                                <h3 className="text-4xl font-black text-[var(--tint-emerald-fg)] italic tracking-tighter uppercase leading-none">
                                     ${manifest?.activeSteer.priority.toFixed(2)}
                                 </h3>
                             </div>
 
-                            <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl space-y-4">
+                            <div className="p-6 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-3xl space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <Zap className="w-4 h-4 text-indigo-400" />
+                                    <Zap className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Recommended Steer</span>
                                 </div>
                                 <p className="text-xs font-bold text-white italic leading-relaxed">
                                     {manifest?.recommendation}
                                 </p>
                                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                                   <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Confidence: HIGH</span>
+                                   <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Confidence: HIGH</span>
                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sync: 42ms</span>
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ export const ArbitrageSteererView: React.FC = () => {
 
                         <div className="space-y-4">
                             {manifest?.manifest.map((offer, idx) => (
-                                <div key={idx} className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all">
+                                <div key={idx} className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-[var(--tint-indigo-edge)] transition-all">
                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                       <div className="flex items-center gap-6">
                                          <div className={`p-4 rounded-2xl ${idx === 0 ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500'} transition-colors`}>
@@ -173,7 +173,7 @@ export const ArbitrageSteererView: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{offer.platform}</span>
                                                <div className="w-1 h-1 bg-slate-800 rounded-full" />
-                                               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">{offer.category}</span>
+                                               <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">{offer.category}</span>
                                             </div>
                                          </div>
                                       </div>
@@ -181,7 +181,7 @@ export const ArbitrageSteererView: React.FC = () => {
                                       <div className="flex flex-wrap items-center gap-6">
                                          <div className="text-right">
                                             <span className="text-[8px] font-black text-slate-600 uppercase block mb-1">EPC Score</span>
-                                            <span className="text-xl font-black text-emerald-400 italic">${offer.priority.toFixed(2)}</span>
+                                            <span className="text-xl font-black text-[var(--tint-emerald-fg)] italic">${offer.priority.toFixed(2)}</span>
                                          </div>
                                          <div className="text-right">
                                             <span className="text-[8px] font-black text-slate-600 uppercase block mb-1">Conv. Rate</span>

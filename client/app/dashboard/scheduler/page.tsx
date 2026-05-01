@@ -124,8 +124,8 @@ export default function ContentSchedulerPage() {
               <button onClick={() => router.push('/dashboard')} className="w-14 h-14 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl hover:border-white/20 backdrop-blur-3xl group">
                 <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
               </button>
-              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-lg relative">
-                <Send size={32} className="text-emerald-400" />
+              <div className="w-16 h-16 bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] rounded-2xl flex items-center justify-center shadow-lg relative">
+                <Send size={32} className="text-[var(--tint-emerald-fg)]" />
               </div>
               <div>
                  <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-md">Multi-Platform Scheduler</h1>
@@ -135,7 +135,7 @@ export default function ContentSchedulerPage() {
 
            <div className="flex items-center gap-6">
               <button onClick={() => loadSchedule(true)} className={`${glassStyle} w-14 h-14 rounded-full flex items-center justify-center group active:scale-95 hover:bg-white/[0.05]`}>
-                <RefreshCw size={24} className={`text-slate-400 group-hover:text-emerald-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw size={24} className={`text-slate-400 group-hover:text-[var(--tint-emerald-fg)] transition-colors ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               <button onClick={() => router.push('/dashboard/calendar')} className="px-8 py-4 bg-white/[0.02] border border-white/5 text-slate-300 hover:text-white hover:bg-white/[0.05] rounded-full text-sm font-bold shadow-lg transition-all flex items-center gap-3">
                 <Calendar size={20} /> View Calendar
@@ -147,7 +147,7 @@ export default function ContentSchedulerPage() {
            {/* Composer */}
            <div className="lg:col-span-3 space-y-8">
               <div className={`${glassStyle} rounded-3xl p-10 bg-[#050505]`}>
-                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Layers size={20} className="text-emerald-400" /> Select Platforms</h3>
+                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Layers size={20} className="text-[var(--tint-emerald-fg)]" /> Select Platforms</h3>
                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 mb-10">
                     {PLATFORMS.map(p => {
                       const active = selectedPlatforms.includes(p.id)
@@ -161,7 +161,7 @@ export default function ContentSchedulerPage() {
                     })}
                  </div>
 
-                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Edit3 size={20} className="text-emerald-400" /> Compose Post</h3>
+                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Edit3 size={20} className="text-[var(--tint-emerald-fg)]" /> Compose Post</h3>
                  <div className="relative mb-10">
                     <textarea
                       ref={textareaRef}
@@ -170,19 +170,19 @@ export default function ContentSchedulerPage() {
                       placeholder="Write your caption here..."
                       className={`w-full bg-black/60 border rounded-2xl p-6 text-lg text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all resize-none min-h-[160px] ${charCount > currentLimit ? 'border-rose-500/50 ring-rose-500/20' : 'border-white/10 focus:ring-emerald-500/20 focus:border-emerald-500/50'}`}
                     />
-                    <div className={`absolute bottom-4 right-4 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md ${charCount > currentLimit ? 'bg-rose-500/20 text-rose-400' : 'bg-white/10 text-slate-400'}`}>
+                    <div className={`absolute bottom-4 right-4 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md ${charCount > currentLimit ? 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)]' : 'bg-white/10 text-slate-400'}`}>
                        {charCount} / {currentLimit}
                     </div>
                  </div>
 
-                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Clock size={20} className="text-emerald-400" /> Schedule Time</h3>
+                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Clock size={20} className="text-[var(--tint-emerald-fg)]" /> Schedule Time</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    <button onClick={() => setUseOptimalTime(true)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${useOptimalTime ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
+                    <button onClick={() => setUseOptimalTime(true)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${useOptimalTime ? 'bg-[var(--tint-emerald-bg)] border-emerald-500/50 text-[var(--tint-emerald-fg)]' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
                        <Zap size={28} />
                        <span className="font-bold">Optimal AI Time</span>
                        <span className="text-xs opacity-60">Posts when followers are active</span>
                     </button>
-                    <button onClick={() => setUseOptimalTime(false)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${!useOptimalTime ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
+                    <button onClick={() => setUseOptimalTime(false)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${!useOptimalTime ? 'bg-[var(--tint-indigo-bg)] border-indigo-500/50 text-[var(--tint-indigo-fg)]' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
                        <Calendar size={28} />
                        <span className="font-bold">Custom Time</span>
                        <span className="text-xs opacity-60">Select a specific date and time</span>
@@ -231,18 +231,18 @@ export default function ContentSchedulerPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                              <p className="text-white font-medium truncate mb-1">{post.content.text || 'No text content'}</p>
-                             <div className="flex items-center gap-2 text-xs text-amber-400/80 font-medium">
+                             <div className="flex items-center gap-2 text-xs text-[var(--tint-amber-fg)]/80 font-medium">
                                 <Clock size={14} /> {new Date(post.scheduledTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                              </div>
                           </div>
-                          <button onClick={() => handleDelete(post._id)} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors self-center opacity-0 group-hover:opacity-100">
+                          <button onClick={() => handleDelete(post._id)} className="p-2 text-slate-500 hover:text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] rounded-lg transition-colors self-center opacity-0 group-hover:opacity-100">
                              <Trash2 size={18} />
                           </button>
                        </motion.div>
                      )
                    })}
                    {upcomingPosts.length > 8 && (
-                     <button onClick={() => router.push('/dashboard/calendar')} className="w-full py-4 text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
+                     <button onClick={() => router.push('/dashboard/calendar')} className="w-full py-4 text-sm font-bold text-[var(--tint-indigo-fg)] hover:text-indigo-300 transition-colors bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
                        View all {upcomingPosts.length} posts in Calendar
                      </button>
                    )}

@@ -64,9 +64,9 @@ export const NetworkStatusHUD: React.FC = () => {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'healthy': return 'text-emerald-400'
-            case 'warning': return 'text-amber-400'
-            case 'expired': return 'text-rose-400'
+            case 'healthy': return 'text-[var(--tint-emerald-fg)]'
+            case 'warning': return 'text-[var(--tint-amber-fg)]'
+            case 'expired': return 'text-[var(--tint-rose-fg)]'
             case 'error': return 'text-rose-500'
             default: return 'text-slate-500'
         }
@@ -74,9 +74,9 @@ export const NetworkStatusHUD: React.FC = () => {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'healthy': return <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            case 'warning': return <AlertTriangle className="w-4 h-4 text-amber-400" />
-            case 'expired': return <Key className="w-4 h-4 text-rose-400" />
+            case 'healthy': return <ShieldCheck className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
+            case 'warning': return <AlertTriangle className="w-4 h-4 text-[var(--tint-amber-fg)]" />
+            case 'expired': return <Key className="w-4 h-4 text-[var(--tint-rose-fg)]" />
             case 'error': return <Activity className="w-4 h-4 text-rose-500" />
             default: return <RefreshCcw className="w-4 h-4 text-slate-500" />
         }
@@ -98,7 +98,7 @@ export const NetworkStatusHUD: React.FC = () => {
 
                 <div className="flex items-center gap-4">
                     <div className="px-5 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center gap-3">
-                        <Activity className={`w-3 h-3 ${health?.status === 'operational' ? 'text-emerald-400' : 'text-rose-400'}`} />
+                        <Activity className={`w-3 h-3 ${health?.status === 'operational' ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'}`} />
                         <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">
                             {health?.status === 'operational' ? 'Global Nodes Operational' : 'Network Stability Degraded'}
                         </span>
@@ -124,7 +124,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                 <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Distribution Nodes</h5>
                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Verified OAuth Connectivity</p>
                             </div>
-                            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                            <ShieldCheck className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -139,7 +139,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: i * 0.05 }}
-                                        className="p-6 rounded-3xl bg-white/5 border border-white/5 group hover:border-emerald-500/30 transition-all"
+                                        className="p-6 rounded-3xl bg-white/5 border border-white/5 group hover:border-[var(--tint-emerald-edge)] transition-all"
                                     >
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-3">
@@ -176,7 +176,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                 <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Platform Fuel</h5>
                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">API Rate-Limit Quotas</p>
                             </div>
-                            <Database className="w-5 h-5 text-emerald-400" />
+                            <Database className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                         </div>
 
                         <div className="space-y-8">
@@ -188,7 +188,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                             <h6 className="text-[10px] font-black text-white italic uppercase">{quota.label}</h6>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-[10px] font-black text-emerald-400 italic">{quota.used} / {quota.limit}</span>
+                                            <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] italic">{quota.used} / {quota.limit}</span>
                                         </div>
                                     </div>
                                     <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
@@ -225,7 +225,7 @@ export const NetworkStatusHUD: React.FC = () => {
                     </div>
                     <div>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Core State</span>
-                        <h6 className="text-[10px] font-black text-emerald-400 italic uppercase tracking-widest mt-1">Click Node High-Integrity</h6>
+                        <h6 className="text-[10px] font-black text-[var(--tint-emerald-fg)] italic uppercase tracking-widest mt-1">Click Node High-Integrity</h6>
                     </div>
                 </div>
                 <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>

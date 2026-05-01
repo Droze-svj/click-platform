@@ -50,7 +50,7 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex flex-col p-8 sm:p-12 overflow-hidden">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-[0.2em] italic text-violet-400 flex items-center gap-4">
+          <h2 className="text-3xl font-black uppercase tracking-[0.2em] italic text-[var(--tint-violet-fg)] flex items-center gap-4">
             <Split className="w-8 h-8" />
             AI Revision Diff
           </h2>
@@ -122,17 +122,17 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
         {/* AI Proposed V2 Panel */}
         <div className="flex flex-col gap-6">
            <div className="flex items-center justify-between px-2">
-              <span className="text-[11px] font-black text-violet-400 uppercase tracking-widest flex items-center gap-2">
+              <span className="text-[11px] font-black text-[var(--tint-violet-fg)] uppercase tracking-widest flex items-center gap-2">
                  <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
                  Click V2 Proposal
               </span>
               <span className="text-[9px] font-mono text-violet-500/60 uppercase">Heuristic Revision (Staging)</span>
            </div>
            
-           <div className="flex-1 bg-violet-500/[0.02] border border-violet-500/20 rounded-[3rem] p-8 flex flex-col gap-8">
+           <div className="flex-1 bg-violet-500/[0.02] border border-[var(--tint-violet-edge)] rounded-[3rem] p-8 flex flex-col gap-8">
               <div className="flex items-start gap-6">
-                 <div className="w-14 h-14 rounded-2xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
-                    <Wand2 className="w-7 h-7 text-violet-400" />
+                 <div className="w-14 h-14 rounded-2xl bg-[var(--tint-violet-bg)] flex items-center justify-center border border-[var(--tint-violet-edge)] shadow-[0_0_20px_rgba(139,92,246,0.1)]">
+                    <Wand2 className="w-7 h-7 text-[var(--tint-violet-fg)]" />
                  </div>
                  <div className="flex-1">
                     <h4 className="text-xl font-black text-white italic uppercase tracking-tight">AI Enhancement Logic</h4>
@@ -145,9 +145,9 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
               <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
                  <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-4 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity">
-                       <Sparkles className="w-4 h-4 text-violet-400" />
+                       <Sparkles className="w-4 h-4 text-[var(--tint-violet-fg)]" />
                     </div>
-                    <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest">Logic Delta</span>
+                    <span className="text-[9px] font-black text-[var(--tint-violet-fg)] uppercase tracking-widest">Logic Delta</span>
                     
                     <div className="space-y-3">
                        {[
@@ -160,14 +160,14 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
                             <span className="text-[10px] font-black text-slate-500 uppercase">{delta.label}</span>
                             <div className="flex items-center gap-3">
                                <span className="text-[10px] font-black text-white italic">{delta.change}</span>
-                               <span className={`text-[7px] font-black px-2 py-0.5 rounded-full ${delta.intensity === 'High' ? 'bg-violet-500/20 text-violet-400' : 'bg-slate-500/10 text-slate-500'} uppercase`}>{delta.intensity} Shift</span>
+                               <span className={`text-[7px] font-black px-2 py-0.5 rounded-full ${delta.intensity === 'High' ? 'bg-[var(--tint-violet-bg)] text-[var(--tint-violet-fg)]' : 'bg-slate-500/10 text-slate-500'} uppercase`}>{delta.intensity} Shift</span>
                             </div>
                          </div>
                        ))}
                     </div>
                  </div>
 
-                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 flex gap-4">
+                 <div className="bg-amber-500/5 border border-[var(--tint-amber-edge)] rounded-2xl p-6 flex gap-4">
                     <Info className="w-5 h-5 text-amber-500 flex-shrink-0" />
                     <div>
                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest italic">Confidence Score: 94%</p>

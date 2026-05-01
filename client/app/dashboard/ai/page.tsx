@@ -53,19 +53,19 @@ export default function CognitiveLogicMatrixPage() {
         {/* Cognitive Header Hub */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <div className="w-24 h-24 bg-violet-500/5 border-2 border-violet-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(139,92,246,0.3)] relative group overflow-hidden">
+              <div className="w-24 h-24 bg-violet-500/5 border-2 border-[var(--tint-violet-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(139,92,246,0.3)] relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-transparent opacity-100" />
-                <Brain size={48} className="text-violet-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <Brain size={48} className="text-[var(--tint-violet-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
-                      <Binary size={14} className="text-violet-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-violet-400 italic leading-none">Logic Matrix v12.4.1</span>
+                      <Binary size={14} className="text-[var(--tint-violet-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-violet-fg)] italic leading-none">Logic Matrix v12.4.1</span>
                    </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <Shield size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">PARADIGM_STABLE</span>
+                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-inner">
+                       <Shield size={12} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                       <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">PARADIGM_STABLE</span>
                    </div>
                  </div>
                  <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-2 drop-shadow-2xl">Cognitive</h1>
@@ -133,18 +133,18 @@ export default function CognitiveLogicMatrixPage() {
                      <div className="absolute inset-0 bg-violet-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                      <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
                         <div className="flex items-center gap-10">
-                           <div className="w-20 h-20 rounded-[2.5rem] bg-violet-500/5 border-2 border-violet-500/20 flex items-center justify-center animate-pulse shadow-3xl group-hover:rotate-12 transition-transform duration-300">
+                           <div className="w-20 h-20 rounded-[2.5rem] bg-violet-500/5 border-2 border-[var(--tint-violet-edge)] flex items-center justify-center animate-pulse shadow-3xl group-hover:rotate-12 transition-transform duration-300">
                               <Radio size={40} className="text-violet-500" />
                            </div>
                            <div>
                               <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Neural Surveillance</h3>
-                              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-violet-500/20 pl-8 ml-4">Real-time inference tracking and cognitive load monitoring.</p>
+                              <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-[var(--tint-violet-edge)] pl-8 ml-4">Real-time inference tracking and cognitive load monitoring.</p>
                            </div>
                         </div>
                         <div className="flex items-center gap-10">
                            <div className="px-10 py-4 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
                               <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">SWARM_SYNC_LATENCY:</span>
-                              <span className="text-[15px] font-black text-violet-400 italic tabular-nums ml-4 drop-shadow-[0_0_10px_rgba(139,92,246,0.5)]">32μs</span>
+                              <span className="text-[15px] font-black text-[var(--tint-violet-fg)] italic tabular-nums ml-4 drop-shadow-[0_0_10px_rgba(139,92,246,0.5)]">32μs</span>
                            </div>
                            <button className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-[0.6em] italic rounded-[3rem] hover:bg-violet-600 hover:text-white transition-all duration-300 shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-90 border-none">
                               FORCE_CALIBRATION
@@ -154,8 +154,8 @@ export default function CognitiveLogicMatrixPage() {
                      
                      <div className="grid grid-cols-4 gap-8 mt-20 relative z-10">
                         {Array.from({ length: 4 }).map((_, i) => (
-                          <div key={i} className="p-10 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-violet-500/30 transition-all duration-300 group/monitor shadow-inner flex flex-col items-center gap-6">
-                             <div className="w-14 h-14 rounded-2xl bg-violet-500/5 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:scale-110 transition-transform duration-[1.5s]"><Orbit size={28} className="animate-spin-slow" /></div>
+                          <div key={i} className="p-10 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-[var(--tint-violet-edge)] transition-all duration-300 group/monitor shadow-inner flex flex-col items-center gap-6">
+                             <div className="w-14 h-14 rounded-2xl bg-violet-500/5 border border-[var(--tint-violet-edge)] flex items-center justify-center text-[var(--tint-violet-fg)] group-hover:scale-110 transition-transform duration-[1.5s]"><Orbit size={28} className="animate-spin-slow" /></div>
                              <div className="text-center">
                                 <p className="text-[10px] font-black text-slate-500 uppercase italic leading-none mb-3">SECTOR_0{i+1}_LOAD</p>
                                 <p className="text-4xl font-black italic text-white tabular-nums leading-none tracking-tighter">{(80 + Math.random() * 15).toFixed(1)}%</p>
@@ -210,9 +210,9 @@ export default function CognitiveLogicMatrixPage() {
 
 function ParadigmCard({ icon: Icon, title, desc, buttonText, onClick, color }: { icon: any; title: string; desc: string; buttonText: string; onClick: () => void; color: string }) {
   const colorClasses = {
-    violet: 'text-violet-400 bg-violet-500/10 border-violet-500/20 hover:border-violet-500/40',
-    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40',
-    indigo: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 hover:border-indigo-500/40',
+    violet: 'text-[var(--tint-violet-fg)] bg-[var(--tint-violet-bg)] border-[var(--tint-violet-edge)] hover:border-[var(--tint-violet-edge)]',
+    emerald: 'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] hover:border-[var(--tint-emerald-edge)]',
+    indigo: 'text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] hover:border-[var(--tint-indigo-edge)]',
   }[color as 'violet' | 'emerald' | 'indigo']
 
   const btnClasses = {

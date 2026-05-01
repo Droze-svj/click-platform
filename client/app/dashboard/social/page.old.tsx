@@ -53,7 +53,7 @@ function ResonanceProtocolAudit() {
     <div className={`${glassStyle} rounded-[6rem] p-20 relative overflow-hidden mt-32 group border-indigo-500/10 shadow-[0_60px_150px_rgba(0,0,0,0.8)] bg-black/40`}>
       <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none group-hover:rotate-12 transition-transform duration-300"><Shield size={400} className="text-white" /></div>
       <div className="flex items-center gap-10 mb-16 relative z-10">
-        <div className="w-24 h-24 bg-indigo-500/5 rounded-[3rem] flex items-center justify-center border border-indigo-500/20 shadow-2xl"><Fingerprint className="text-indigo-400" size={48} /></div>
+        <div className="w-24 h-24 bg-indigo-500/5 rounded-[3rem] flex items-center justify-center border border-[var(--tint-indigo-edge)] shadow-2xl"><Fingerprint className="text-[var(--tint-indigo-fg)]" size={48} /></div>
         <div>
            <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Protocol Audit</h2>
            <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Autonomous node decryption and presence verification active.</p>
@@ -61,21 +61,21 @@ function ResonanceProtocolAudit() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10">
         {nodes.map(({ key, label, desc }) => (
-          <div key={key} className="flex items-center justify-between p-12 bg-black/60 border border-white/5 rounded-[4rem] group/node hover:bg-white/[0.04] transition-all hover:border-indigo-500/30 shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]">
+          <div key={key} className="flex items-center justify-between p-12 bg-black/60 border border-white/5 rounded-[4rem] group/node hover:bg-white/[0.04] transition-all hover:border-[var(--tint-indigo-edge)] shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]">
             <div className="flex flex-col gap-3">
-               <span className="text-2xl font-black text-white uppercase tracking-tighter italic group-hover/node:text-indigo-400 transition-colors leading-none">{label}</span>
+               <span className="text-2xl font-black text-white uppercase tracking-tighter italic group-hover/node:text-[var(--tint-indigo-fg)] transition-colors leading-none">{label}</span>
                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{desc}</span>
             </div>
             <div className="flex items-center gap-6">
               {audit === null ? (
                 <div className="w-10 h-10 rounded-full border-4 border-slate-900 border-t-indigo-500 animate-spin" />
               ) : audit[key] ? (
-                <div className="flex items-center gap-4 px-8 py-3 rounded-full bg-emerald-500/5 border border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.2)] group-hover/node:bg-emerald-500 group-hover/node:text-black transition-all">
+                <div className="flex items-center gap-4 px-8 py-3 rounded-full bg-emerald-500/5 border border-[var(--tint-emerald-edge)] shadow-[0_0_40px_rgba(16,185,129,0.2)] group-hover/node:bg-emerald-500 group-hover/node:text-black transition-all">
                   <CheckCircle className="w-6 h-6 text-emerald-500 group-hover/node:text-black" />
                   <span className="text-[11px] font-black uppercase italic tracking-[0.2em] group-hover/node:text-black leading-none">RESONANT</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-4 px-8 py-3 rounded-full bg-rose-500/5 border border-rose-500/20 shadow-[0_0_40px_rgba(244,63,94,0.2)] group-hover/node:bg-rose-500 group-hover/node:text-white transition-all">
+                <div className="flex items-center gap-4 px-8 py-3 rounded-full bg-rose-500/5 border border-[var(--tint-rose-edge)] shadow-[0_0_40px_rgba(244,63,94,0.2)] group-hover/node:bg-rose-500 group-hover/node:text-white transition-all">
                   <AlertCircle className="w-6 h-6 text-rose-500 group-hover/node:text-white" />
                   <span className="text-[11px] font-black uppercase italic tracking-[0.2em] group-hover/node:text-white leading-none">ISOLATED</span>
                 </div>
@@ -215,7 +215,7 @@ function ResonanceHubContent() {
             </div>
           </div>
           {account ? (
-             <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-pulse">
+             <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/5 border border-[var(--tint-emerald-edge)] flex items-center justify-center text-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-pulse">
                 <CheckCircle size={40} />
              </div>
           ) : (
@@ -236,7 +236,7 @@ function ResonanceHubContent() {
                 )}
                 <div className="flex-1 min-w-0 relative z-10">
                    <p className="text-3xl font-black text-white truncate uppercase italic tracking-tighter leading-none mb-4">{account.display_name}</p>
-                   <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic group-hover/item:text-indigo-400 transition-colors leading-none font-mono">ID: {account.username}</p>
+                   <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic group-hover/item:text-[var(--tint-indigo-fg)] transition-colors leading-none font-mono">ID: {account.username}</p>
                 </div>
                 <div className="flex flex-col gap-4 relative z-10">
                    {meta.url && (
@@ -244,12 +244,12 @@ function ResonanceHubContent() {
                        className="w-16 h-16 bg-white text-black rounded-[1.8rem] hover:bg-white hover:text-black transition-all flex items-center justify-center shadow-xl group/btn scale-100 hover:scale-110" title="Peek"><ExternalLink size={28} /></button>
                    )}
                    <button onClick={() => handleSyncTermination(p, account.platform_user_id)} disabled={terminating === p}
-                     className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-[1.8rem] text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-2xl active:scale-95" title="Terminate"><Unlink size={28} /></button>
+                     className="w-16 h-16 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-[1.8rem] text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-2xl active:scale-95" title="Terminate"><Unlink size={28} /></button>
                 </div>
              </div>
              <div className="px-10 py-6 rounded-full bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-center gap-6 shadow-inner">
                 <ActivitySquare size={20} className="text-emerald-500 animate-pulse" />
-                <span className="text-[12px] font-black text-emerald-400 uppercase tracking-[0.6em] italic leading-none">NODE_RESONANCE_STEADY</span>
+                <span className="text-[12px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.6em] italic leading-none">NODE_RESONANCE_STEADY</span>
              </div>
           </div>
         ) : (
@@ -294,7 +294,7 @@ function ResonanceHubContent() {
             </div>
           </div>
           {xNodes.length > 0 ? (
-             <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-pulse">
+             <div className="w-20 h-20 rounded-[2.5rem] bg-emerald-500/5 border border-[var(--tint-emerald-edge)] flex items-center justify-center text-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-pulse">
                 <CheckCircle size={40} />
              </div>
           ) : (
@@ -323,7 +323,7 @@ function ResonanceHubContent() {
                        <button onClick={() => window.open(`https://twitter.com/${account.username}`, '_blank')}
                          className="w-16 h-16 bg-white text-black rounded-[1.8rem] transition-all flex items-center justify-center shadow-xl hover:scale-110"><ExternalLink size={28} /></button>
                        <button onClick={() => handleSyncTermination('twitter', account.platform_user_id)} disabled={terminating === 'twitter'}
-                         className="w-16 h-16 bg-rose-500/10 border border-rose-500/20 rounded-[1.8rem] text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-2xl active:scale-95"><Unlink size={28} /></button>
+                         className="w-16 h-16 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-[1.8rem] text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-2xl active:scale-95"><Unlink size={28} /></button>
                     </div>
                   </div>
                 ))}
@@ -372,19 +372,19 @@ function ResonanceHubContent() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Network size={48} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
+                <Network size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Resonance Hub v9.8.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Resonance Hub v9.8.2</span>
                    </div>
-                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 shadow-inner">
-                       <Radio size={14} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">MESH_SYNC_OPTIMAL</span>
+                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-inner">
+                       <Radio size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                       <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] tracking-widest uppercase italic leading-none">MESH_SYNC_OPTIMAL</span>
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Resonance Hub</h1>
@@ -402,26 +402,26 @@ function ResonanceHubContent() {
 
         <AnimatePresence mode="wait">
           {error && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-12 rounded-[5rem] bg-rose-500/5 border border-rose-500/20 flex items-center justify-between gap-12 shadow-[0_40px_100px_rgba(244,63,94,0.1)] relative overflow-hidden group">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-12 rounded-[5rem] bg-rose-500/5 border border-[var(--tint-rose-edge)] flex items-center justify-between gap-12 shadow-[0_40px_100px_rgba(244,63,94,0.1)] relative overflow-hidden group">
                <div className="absolute top-0 right-0 p-12 opacity-[0.05] group-hover:opacity-20 transition-opacity"><AlertCircle size={150} /></div>
                <div className="flex items-center gap-12 relative z-10">
-                  <div className="w-20 h-20 bg-rose-500/10 rounded-[2.5rem] flex items-center justify-center shadow-inner"><AlertCircle className="text-rose-500" size={44} /></div>
+                  <div className="w-20 h-20 bg-[var(--tint-rose-bg)] rounded-[2.5rem] flex items-center justify-center shadow-inner"><AlertCircle className="text-rose-500" size={44} /></div>
                   <div>
                     <h4 className="text-[12px] font-black text-rose-500 uppercase tracking-[0.5em] italic mb-2">SYSTEM_DIFFRACTION_DETECTED</h4>
-                    <p className="text-4xl font-black text-rose-400 uppercase tracking-tighter italic leading-none">{error}</p>
+                    <p className="text-4xl font-black text-[var(--tint-rose-fg)] uppercase tracking-tighter italic leading-none">{error}</p>
                   </div>
                </div>
-               <button onClick={() => setError(null)} className="w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center relative z-10"><X size={32} /></button>
+               <button onClick={() => setError(null)} className="w-16 h-16 rounded-full bg-[var(--tint-rose-bg)] text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center relative z-10"><X size={32} /></button>
             </motion.div>
           )}
           {success && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-12 rounded-[5rem] bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between gap-12 shadow-[0_40px_100px_rgba(16,185,129,0.1)] relative overflow-hidden group">
                <div className="absolute top-0 right-0 p-12 opacity-[0.05] group-hover:opacity-20 transition-opacity"><CheckCircle size={150} /></div>
                <div className="flex items-center gap-12 relative z-10">
-                  <div className="w-20 h-20 bg-emerald-500/10 rounded-[2.5rem] flex items-center justify-center shadow-inner border border-emerald-500/20"><CheckCircle className="text-emerald-500" size={44} /></div>
+                  <div className="w-20 h-20 bg-[var(--tint-emerald-bg)] rounded-[2.5rem] flex items-center justify-center shadow-inner border border-[var(--tint-emerald-edge)]"><CheckCircle className="text-emerald-500" size={44} /></div>
                   <div>
                     <h4 className="text-[12px] font-black text-emerald-500 uppercase tracking-[0.5em] italic mb-2">OPERATIONAL_SYNC_SUCCESS</h4>
-                    <p className="text-4xl font-black text-emerald-400 uppercase tracking-tighter italic leading-none">{success}</p>
+                    <p className="text-4xl font-black text-[var(--tint-emerald-fg)] uppercase tracking-tighter italic leading-none">{success}</p>
                   </div>
                </div>
                <button onClick={() => setSuccess(null)} className="w-16 h-16 rounded-full bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center relative z-10"><X size={32} /></button>
@@ -444,12 +444,12 @@ function ResonanceHubContent() {
         {/* Neural Grid Access */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 relative z-10 pt-32 border-t border-white/5">
            {[
-             { label: 'Spectral Sync', desc: 'Performance heuristics.', icon: BarChart3, color: 'text-indigo-400', href: '/dashboard/analytics' },
-             { label: 'Temporal Hub', desc: 'Node deployment windows.', icon: Calendar, color: 'text-emerald-400', href: '/dashboard/scheduler' },
+             { label: 'Spectral Sync', desc: 'Performance heuristics.', icon: BarChart3, color: 'text-[var(--tint-indigo-fg)]', href: '/dashboard/analytics' },
+             { label: 'Temporal Hub', desc: 'Node deployment windows.', icon: Calendar, color: 'text-[var(--tint-emerald-fg)]', href: '/dashboard/scheduler' },
              { label: 'Neural Forge', desc: 'Synthetic logic crafting.', icon: Sparkles, color: 'text-purple-400', href: '/dashboard/content' },
-             { label: 'Axiom Vault',  desc: 'Wisdom fractal repository.', icon: Quote, color: 'text-amber-400', href: '/dashboard/quotes' },
+             { label: 'Axiom Vault',  desc: 'Wisdom fractal repository.', icon: Quote, color: 'text-[var(--tint-amber-fg)]', href: '/dashboard/quotes' },
            ].map((a, i) => (
-             <motion.button whileHover={{ y: -20, backgroundColor: 'rgba(255,255,255,0.08)' }} key={a.label} onClick={() => router.push(a.href)} className={`${glassStyle} p-16 rounded-[6rem] group text-center flex flex-col items-center gap-12 border-white/5 hover:border-indigo-500/40 transition-all duration-300 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black/40`}>
+             <motion.button whileHover={{ y: -20, backgroundColor: 'rgba(255,255,255,0.08)' }} key={a.label} onClick={() => router.push(a.href)} className={`${glassStyle} p-16 rounded-[6rem] group text-center flex flex-col items-center gap-12 border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all duration-300 shadow-[0_60px_100px_rgba(0,0,0,0.6)] bg-black/40`}>
                 <div className="w-24 h-24 bg-white/[0.02] border border-white/10 rounded-[3rem] flex items-center justify-center group-hover:rotate-45 group-hover:scale-125 transition-all duration-300 shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]">
                    <a.icon size={48} className={a.color} />
                 </div>

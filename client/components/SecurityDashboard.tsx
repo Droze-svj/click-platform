@@ -71,7 +71,7 @@ export default function SecurityDashboard() {
       case 'critical':
         return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
       case 'high':
-        return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20'
+        return 'text-orange-600 dark:text-[var(--tint-orange-fg)] bg-orange-50 dark:bg-orange-900/20'
       case 'medium':
         return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
       default:
@@ -100,7 +100,7 @@ export default function SecurityDashboard() {
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-2">
-              <XCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <XCircle className="w-5 h-5 text-orange-600 dark:text-[var(--tint-orange-fg)]" />
               <p className="text-sm text-gray-600 dark:text-gray-400">Failed Logins</p>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.failedLogins}</p>

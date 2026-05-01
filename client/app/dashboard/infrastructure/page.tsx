@@ -69,13 +69,13 @@ export default function SubstrateIntegrityTerminalPage() {
            <Shield size={1200} className="text-white absolute -top-40 -right-40 rotate-[30deg] blur-[2px]" />
         </div>
         <motion.div initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.8 }}
-          className={`${glassStyle} p-32 rounded-[6rem] max-w-3xl text-center border-rose-500/20 shadow-[0_40px_150px_rgba(225,29,72,0.1)] relative z-10 bg-black/40 backdrop-blur-[100px]`}
+          className={`${glassStyle} p-32 rounded-[6rem] max-w-3xl text-center border-[var(--tint-rose-edge)] shadow-[0_40px_150px_rgba(225,29,72,0.1)] relative z-10 bg-black/40 backdrop-blur-[100px]`}
         >
-           <div className="w-32 h-32 bg-rose-500/10 rounded-[3.5rem] border-4 border-rose-500/20 flex items-center justify-center mx-auto mb-16 shadow-3xl animate-pulse">
+           <div className="w-32 h-32 bg-[var(--tint-rose-bg)] rounded-[3.5rem] border-4 border-[var(--tint-rose-edge)] flex items-center justify-center mx-auto mb-16 shadow-3xl animate-pulse">
               <ShieldAlert size={80} className="text-rose-500" />
            </div>
            <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter mb-8 leading-none drop-shadow-2xl">Access Diffracted</h2>
-           <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-relaxed mb-16 max-w-xl mx-auto border-l-4 border-rose-500/20 pl-8">
+           <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-relaxed mb-16 max-w-xl mx-auto border-l-4 border-[var(--tint-rose-edge)] pl-8">
              Mission critical substrate telemetry is restricted to administrative entities. Your entry vector has been logged into the Sovereign Integrity Ledger.
            </p>
            <button onClick={() => router.push('/dashboard')} 
@@ -105,19 +105,19 @@ export default function SubstrateIntegrityTerminalPage() {
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Server size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <Server size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Substrate Telemetry v18.4.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-indigo-fg)] italic leading-none">Substrate Telemetry v18.4.2</span>
                    </div>
-                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 shadow-inner">
+                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] shadow-inner">
                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)]" />
-                       <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">CORE_STABILITY_SECURED</span>
+                       <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] tracking-widest uppercase italic leading-none">CORE_STABILITY_SECURED</span>
                    </div>
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Infrastructure</h1>
@@ -126,17 +126,17 @@ export default function SubstrateIntegrityTerminalPage() {
            </div>
 
            <div className="flex items-center gap-12">
-              <div className={`${glassStyle} px-12 py-8 rounded-[3.5rem] flex items-center gap-8 border-indigo-500/20 bg-indigo-500/5 shadow-3xl group`}>
-                 <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/10 flex items-center justify-center border-2 border-indigo-500/20 shadow-2xl group-hover:rotate-12 transition-transform duration-700">
-                    <Activity size={32} className="text-indigo-400 animate-pulse" />
+              <div className={`${glassStyle} px-12 py-8 rounded-[3.5rem] flex items-center gap-8 border-[var(--tint-indigo-edge)] bg-indigo-500/5 shadow-3xl group`}>
+                 <div className="w-16 h-16 rounded-[1.8rem] bg-[var(--tint-indigo-bg)] flex items-center justify-center border-2 border-[var(--tint-indigo-edge)] shadow-2xl group-hover:rotate-12 transition-transform duration-700">
+                    <Activity size={32} className="text-[var(--tint-indigo-fg)] animate-pulse" />
                  </div>
                  <div>
                     <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic leading-none opacity-40">RESISTANCE_STATUS</span>
-                    <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">SYSTEM_OPTIMAL</p>
+                    <p className="text-2xl font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] italic leading-none mt-2">SYSTEM_OPTIMAL</p>
                  </div>
               </div>
               <button onClick={() => window.location.reload()} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-                <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 transition-colors duration-700 group-hover:rotate-180 transition-transform" />
+                <RefreshCw size={32} className="text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700 group-hover:rotate-180 transition-transform" />
               </button>
            </div>
         </header>
@@ -150,10 +150,10 @@ export default function SubstrateIntegrityTerminalPage() {
               <div className="p-16 border-b-2 border-white/5 flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden bg-white/[0.02]">
                  <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-[5s]"><Orbit size={500} className="text-white" /></div>
                  <div className="flex items-center gap-10 relative z-10">
-                    <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Database size={40} className="text-indigo-400" /></div>
+                    <div className="w-20 h-20 rounded-[2.5rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-3xl"><Database size={40} className="text-[var(--tint-indigo-fg)]" /></div>
                     <div>
                        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Operations Matrix</h2>
-                       <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Lattice density: 1.4PB // Neural Flux: 12.8 GHz</p>
+                       <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-[var(--tint-indigo-edge)] pl-8 ml-4">Lattice density: 1.4PB // Neural Flux: 12.8 GHz</p>
                     </div>
                  </div>
                  <div className="flex items-center gap-6 relative z-10">
@@ -171,12 +171,12 @@ export default function SubstrateIntegrityTerminalPage() {
            {/* Heuristic Resource Monitoring Grid */}
            <section className="grid grid-cols-1 xl:grid-cols-3 gap-16 relative z-10">
               {[
-                { label: 'Neural Buffer', val: '92.4%', icon: Brain, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                { label: 'Lattice Capacity', val: '42.8 TB', icon: HardDrive, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                { label: 'Swarm Latency', val: '12 ms', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' }
+                { label: 'Neural Buffer', val: '92.4%', icon: Brain, color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)]' },
+                { label: 'Lattice Capacity', val: '42.8 TB', icon: HardDrive, color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-[var(--tint-emerald-bg)]' },
+                { label: 'Swarm Latency', val: '12 ms', icon: Zap, color: 'text-[var(--tint-amber-fg)]', bg: 'bg-[var(--tint-amber-bg)]' }
               ].map((s, i) => (
                 <motion.div initial={{ opacity: 0, scale: 0.9, x: i % 2 === 0 ? -50 : 50 }} whileInView={{ opacity: 1, scale: 1, x: 0 }} transition={{ duration: 0.8, delay: i * 0.1 }}
-                  key={i} className={`${glassStyle} p-16 rounded-[5.5rem] group bg-black/40 relative overflow-hidden flex flex-col items-center text-center hover:border-indigo-500/40 shadow-3xl border-white/5`}
+                  key={i} className={`${glassStyle} p-16 rounded-[5.5rem] group bg-black/40 relative overflow-hidden flex flex-col items-center text-center hover:border-[var(--tint-indigo-edge)] shadow-3xl border-white/5`}
                 >
                   <div className="absolute top-0 right-0 p-16 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-300 pointer-events-none group-hover:rotate-12 group-hover:scale-150"><s.icon size={250} /></div>
                   <div className="flex items-center justify-center mb-12 w-full">
@@ -185,7 +185,7 @@ export default function SubstrateIntegrityTerminalPage() {
                     </div>
                   </div>
                   <p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] mb-6 italic leading-none opacity-60 group-hover:text-white transition-colors">{s.label}</p>
-                  <h3 className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-4 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{s.val}</h3>
+                  <h3 className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-4 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300 drop-shadow-2xl">{s.val}</h3>
                   <div className="w-48 h-1.5 bg-black/60 rounded-full mt-4 overflow-hidden border border-white/5">
                      <motion.div initial={{ width: 0 }} whileInView={{ width: '80%' }} transition={{ duration: 2, delay: 0.5 }} className={`h-full bg-gradient-to-r from-transparent to-current ${s.color} opacity-40`} />
                   </div>

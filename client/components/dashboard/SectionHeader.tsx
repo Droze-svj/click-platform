@@ -22,10 +22,10 @@ import { ArrowLeft, type LucideIcon } from 'lucide-react'
 export type SectionTone = 'studio' | 'publish' | 'grow' | 'manage' | 'neutral'
 
 const TONE_STYLES: Record<SectionTone, { iconBg: string; iconBorder: string; iconColor: string; kickerColor: string }> = {
-  studio:  { iconBg: 'bg-violet-500/10',  iconBorder: 'border-violet-500/30',  iconColor: 'text-violet-300',  kickerColor: 'text-violet-300/80' },
-  publish: { iconBg: 'bg-amber-500/10',   iconBorder: 'border-amber-500/30',   iconColor: 'text-amber-300',   kickerColor: 'text-amber-300/80' },
-  grow:    { iconBg: 'bg-emerald-500/10', iconBorder: 'border-emerald-500/30', iconColor: 'text-emerald-300', kickerColor: 'text-emerald-300/80' },
-  manage:  { iconBg: 'bg-sky-500/10',     iconBorder: 'border-sky-500/30',     iconColor: 'text-sky-300',     kickerColor: 'text-sky-300/80' },
+  studio:  { iconBg: 'bg-[var(--tint-violet-bg)]',  iconBorder: 'border-[var(--tint-violet-edge)]',  iconColor: 'text-violet-300',  kickerColor: 'text-violet-300/80' },
+  publish: { iconBg: 'bg-[var(--tint-amber-bg)]',   iconBorder: 'border-[var(--tint-amber-edge)]',   iconColor: 'text-amber-300',   kickerColor: 'text-amber-300/80' },
+  grow:    { iconBg: 'bg-[var(--tint-emerald-bg)]', iconBorder: 'border-[var(--tint-emerald-edge)]', iconColor: 'text-emerald-300', kickerColor: 'text-emerald-300/80' },
+  manage:  { iconBg: 'bg-[var(--tint-sky-bg)]',     iconBorder: 'border-[var(--tint-sky-edge)]',     iconColor: 'text-sky-300',     kickerColor: 'text-sky-300/80' },
   neutral: { iconBg: 'bg-white/5',        iconBorder: 'border-white/10',       iconColor: 'text-slate-200',   kickerColor: 'text-slate-400' },
 }
 

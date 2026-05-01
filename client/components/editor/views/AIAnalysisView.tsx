@@ -113,7 +113,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-10 mb-10 relative z-10">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl">
+            <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] shadow-xl">
               <Activity className="w-4 h-4 animate-pulse" />
               Neural Analytics
             </div>
@@ -167,15 +167,15 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
           >
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-6">
-                <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl">
-                  <Target className="w-6 h-6 text-indigo-400" />
+                <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-2xl">
+                  <Target className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">OPTIMAL NODE SUGGESTIONS</h3>
                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 block italic">Click to bridge to Chrono Matrix</span>
                 </div>
               </div>
-              <span className="px-6 py-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-[10px] font-black uppercase tracking-[0.4em] italic shadow-lg">
+              <span className="px-6 py-2 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] rounded-full text-[10px] font-black uppercase tracking-[0.4em] italic shadow-lg">
                 {suggestions.length} Signals Decoded
               </span>
             </div>
@@ -187,11 +187,11 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="group relative p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:bg-white/[0.05] transition-all duration-500 flex flex-col gap-6 shadow-inner"
+                  className="group relative p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-indigo-edge)] hover:bg-white/[0.05] transition-all duration-500 flex flex-col gap-6 shadow-inner"
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic leading-none">{s.type.toUpperCase()} NODE</span>
+                      <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic leading-none">{s.type.toUpperCase()} NODE</span>
                       <p className="text-xl font-black text-white italic tracking-tighter uppercase tabular-nums">@{s.time.toFixed(1)}s</p>
                     </div>
                     <motion.button
@@ -233,8 +233,8 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
             <Sparkles className="w-24 h-24 text-fuchsia-500" />
           </div>
           <div className="flex items-center gap-8 mb-6">
-            <div className="w-20 h-20 rounded-[1.8rem] bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center shadow-2xl">
-              <Sparkles className="w-10 h-10 text-fuchsia-400 group-hover:animate-pulse" />
+            <div className="w-20 h-20 rounded-[1.8rem] bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] flex items-center justify-center shadow-2xl">
+              <Sparkles className="w-10 h-10 text-[var(--tint-fuchsia-fg)] group-hover:animate-pulse" />
             </div>
             <div>
               <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">ELITE AI</h3>
@@ -256,8 +256,8 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
             <Layers className="w-24 h-24 text-indigo-500" />
           </div>
           <div className="flex items-center gap-8 mb-6">
-            <div className="w-20 h-20 rounded-[1.8rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-2xl">
-              <Layers className="w-10 h-10 text-indigo-400" />
+            <div className="w-20 h-20 rounded-[1.8rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-2xl">
+              <Layers className="w-10 h-10 text-[var(--tint-indigo-fg)]" />
             </div>
             <div>
               <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">MATRIX</h3>
@@ -278,7 +278,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
           <Radio className="w-12 h-12 text-indigo-500 animate-pulse" />
         </div>
         <p className="text-[11px] text-slate-500 font-black flex items-center gap-4 italic uppercase tracking-widest leading-relaxed relative z-10">
-          <TrendingUp className="w-5 h-5 text-indigo-400 shrink-0" />
+          <TrendingUp className="w-5 h-5 text-[var(--tint-indigo-fg)] shrink-0" />
           PRO ADVISORY: Transcribe in Elite AI Hub first for deep semantic mapping. Sync suggested edit points here to initialize clips.
         </p>
       </motion.div>

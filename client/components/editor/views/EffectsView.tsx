@@ -537,7 +537,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 <button
                   type="button"
                   onClick={addKeyframeAtPlayhead}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-[var(--tint-amber-bg)] text-amber-500 hover:bg-amber-500/30 transition-colors"
                   title="Add keyframe at current playhead (or press K)"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
@@ -547,7 +547,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                   <button
                     type="button"
                     onClick={removeKeyframeAtPlayhead}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] hover:bg-rose-500/30 transition-colors"
                     title="Remove keyframe at playhead"
                   >
                     <MinusCircle className="w-3.5 h-3.5" />
@@ -606,7 +606,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                       }
                       showToast(`Pasted ${next.length} keyframe(s)`, 'success')
                     }}
-                    className="flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/30"
+                    className="flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-bold bg-[var(--tint-amber-bg)] text-amber-600 dark:text-[var(--tint-amber-fg)] hover:bg-amber-500/30"
                     title="Paste keyframes"
                   >
                     <ClipboardPaste className="w-3.5 h-3.5" />
@@ -619,7 +619,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                     showToast('Analyzing motion…', 'info')
                     setTimeout(() => showToast('✓ Motion track locked', 'success'), 1500)
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors group/track"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] hover:bg-indigo-500/30 transition-colors group/track"
                   title="Pin overlay to moving objects in the video"
                 >
                   <Waypoints className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
@@ -662,7 +662,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                     </button>
                     <label className="text-[10px] font-bold text-theme-muted w-24 shrink-0 flex items-center gap-1">
                       {label}
-                      {active && <span className="text-[8px] font-bold text-amber-500 bg-amber-500/20 px-1.5 py-0.5 rounded" title={`${count} keyframe(s)`}>Animated</span>}
+                      {active && <span className="text-[8px] font-bold text-amber-500 bg-[var(--tint-amber-bg)] px-1.5 py-0.5 rounded" title={`${count} keyframe(s)`}>Animated</span>}
                     </label>
                     <input
                       type="range"
@@ -772,11 +772,11 @@ const EffectsView: React.FC<EffectsViewProps> = ({
               </div>
               <div className="flex items-center gap-4 bg-surface-elevated/50 p-3 rounded-2xl border border-white/5">
                 <div className="flex items-center gap-2">
-                  <Spline className="w-3.5 h-3.5 text-indigo-400" />
+                  <Spline className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
                   <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Bezier Curve Control</span>
                 </div>
                 <div className="flex-1 flex items-center gap-3">
-                  <div className="h-8 w-16 bg-black/40 rounded border border-indigo-500/20 relative flex items-center justify-center overflow-hidden">
+                  <div className="h-8 w-16 bg-black/40 rounded border border-[var(--tint-indigo-edge)] relative flex items-center justify-center overflow-hidden">
                      <svg className="w-full h-full p-1 overflow-visible" viewBox="0 0 100 100">
                         <path d="M 0 100 C 42 100 58 0 100 0" stroke="currentColor" fill="none" className="text-indigo-500" strokeWidth="3" />
                      </svg>
@@ -786,7 +786,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                     placeholder="0.42, 0, 0.58, 1"
                     className="flex-1 bg-black/60 border border-white/5 rounded-lg px-3 py-1.5 text-[10px] font-mono text-indigo-300 placeholder-slate-700 outline-none focus:border-indigo-500/50"
                   />
-                  <button className="px-3 py-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg text-[9px] font-black uppercase hover:bg-indigo-500/20 transition-all">Connect</button>
+                  <button className="px-3 py-1.5 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] rounded-lg text-[9px] font-black uppercase hover:bg-[var(--tint-indigo-bg)] transition-all">Connect</button>
                 </div>
               </div>
               </div>

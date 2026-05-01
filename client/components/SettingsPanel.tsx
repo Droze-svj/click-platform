@@ -115,7 +115,7 @@ export default function SettingsPanel() {
             {/* Translation Accuracy - Elite Integration */}
             <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
               <label className="block text-xs font-black uppercase text-gray-500 mb-4 flex items-center gap-2">
-                <Brain className="w-4 h-4 text-emerald-400" />
+                <Brain className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                 Master Translation Accuracy
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -128,17 +128,17 @@ export default function SettingsPanel() {
                     key={acc.id}
                     onClick={() => updatePreference('translationAccuracy', acc.id as any)}
                     className={`p-4 rounded-xl border text-left transition-all ${preferences.translationAccuracy === acc.id
-                        ? 'bg-emerald-500/10 border-emerald-500/50 shadow-sm'
+                        ? 'bg-[var(--tint-emerald-bg)] border-emerald-500/50 shadow-sm'
                         : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                   >
-                    <span className={`block font-bold text-sm ${preferences.translationAccuracy === acc.id ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>{acc.label}</span>
+                    <span className={`block font-bold text-sm ${preferences.translationAccuracy === acc.id ? 'text-emerald-700 dark:text-[var(--tint-emerald-fg)]' : 'text-gray-900 dark:text-white'}`}>{acc.label}</span>
                     <span className="block text-[10px] text-gray-500 mt-1">{acc.desc}</span>
                   </button>
                 ))}
               </div>
               {preferences.translationAccuracy === 'quantum' && (
-                <p className="mt-3 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold italic animate-pulse">
+                <p className="mt-3 text-[10px] text-emerald-600 dark:text-[var(--tint-emerald-fg)] font-bold italic animate-pulse">
                   ✓ Quantum Accuracy Active: Real-time cultural phrasing and sentiment analysis engaged globally.
                 </p>
               )}
@@ -167,7 +167,7 @@ export default function SettingsPanel() {
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 hover:border-emerald-500/30 rounded-xl transition-colors">
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 hover:border-[var(--tint-emerald-edge)] rounded-xl transition-colors">
               <div>
                 <p className="font-bold text-sm text-gray-900 dark:text-white">Click Cloud Autosync</p>
                 <p className="text-[10px] text-gray-500">Continuous background sync to Click Servers</p>

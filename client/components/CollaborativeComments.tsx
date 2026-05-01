@@ -125,7 +125,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
                 className="space-y-1"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-indigo-400 uppercase italic">{comment.userName}</span>
+                  <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase italic">{comment.userName}</span>
                   <span className="text-[8px] font-bold text-slate-600 uppercase tabular-nums">
                     {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -152,7 +152,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
           <button
             onClick={handleSend}
             disabled={sending || !newComment.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-30"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-[var(--tint-indigo-bg)] text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-30"
           >
             <Send className="w-4 h-4" />
           </button>

@@ -173,11 +173,11 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 className="p-8"
               >
                 <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-indigo-400" />
+                  <div className="w-8 h-8 rounded-xl bg-indigo-600/20 border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+                    <Brain className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                   </div>
                   <div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-indigo-400">AI Calibration</div>
+                    <div className="text-[9px] font-black uppercase tracking-widest text-[var(--tint-indigo-fg)]">AI Calibration</div>
                     <div className="text-[10px] text-slate-500">Step {quizStep + 1} of 3</div>
                   </div>
                   <div className="ml-auto flex gap-1.5">
@@ -239,7 +239,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                     </div>
                     {selectedGoal && (
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20"
+                        className="mt-4 p-3 rounded-2xl bg-indigo-600/10 border border-[var(--tint-indigo-edge)]"
                       >
                         <p className="text-[10px] text-indigo-300">
                           <span className="font-black">✦ AI Mode: </span>{selectedGoal.tip}
@@ -264,23 +264,23 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 className="p-8"
               >
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/20 border border-emerald-500/30 mb-4">
-                    <Zap className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-600/20 border border-[var(--tint-emerald-edge)] mb-4">
+                    <Zap className="w-3.5 h-3.5 text-[var(--tint-emerald-fg)]" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--tint-emerald-fg)]">
                       AI Configured for {NICHE_TYPES.find(n => n.id === nicheType)?.label || 'You'}
                     </span>
                   </div>
                   <h2 className="text-2xl font-black tracking-tight mb-2">Your AI stack is ready</h2>
                   <p className="text-slate-500 text-sm leading-relaxed">
                     Every edit is now scored specifically for{' '}
-                    <span className="text-indigo-400 font-bold">{CREATOR_GOALS.find(g => g.id === creatorGoal)?.label || 'your goal'}</span>.
+                    <span className="text-[var(--tint-indigo-fg)] font-bold">{CREATOR_GOALS.find(g => g.id === creatorGoal)?.label || 'your goal'}</span>.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mb-6">
                   {[
-                    { icon: Target, label: 'Goal-Tuned', desc: 'Scoring', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                    { icon: Rocket, label: 'Platform', desc: 'Optimized', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                    { icon: Target, label: 'Goal-Tuned', desc: 'Scoring', color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)]' },
+                    { icon: Rocket, label: 'Platform', desc: 'Optimized', color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-[var(--tint-emerald-bg)]' },
                     { icon: Brain, label: 'Neural', desc: 'Calibrated', color: 'text-purple-400', bg: 'bg-purple-500/10' },
                   ].map(f => (
                     <div key={f.label} className={`p-3 rounded-2xl ${f.bg} border border-white/5 text-center`}>
@@ -330,7 +330,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 <h3 className="text-xl font-black tracking-tight mb-2">{step.title}</h3>
                 <p className="text-slate-400 text-sm mb-4">{step.subtitle}</p>
 
-                <div className="p-3 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 mb-6">
+                <div className="p-3 rounded-2xl bg-indigo-600/10 border border-[var(--tint-indigo-edge)] mb-6">
                   <p className="text-[10px] text-indigo-300 leading-relaxed">
                     <span className="font-black">✦ Pro tip: </span>{step.tip}
                   </p>
@@ -359,7 +359,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                 <h3 className="text-2xl font-black mb-2">You&apos;re all set!</h3>
                 <p className="text-slate-400 text-sm">
                   CLICK is tuned for{' '}
-                  <span className="text-indigo-400 font-bold">{CREATOR_GOALS.find(g => g.id === creatorGoal)?.label || 'success'}</span>.
+                  <span className="text-[var(--tint-indigo-fg)] font-bold">{CREATOR_GOALS.find(g => g.id === creatorGoal)?.label || 'success'}</span>.
                   Make your first video go viral.
                 </p>
               </motion.div>

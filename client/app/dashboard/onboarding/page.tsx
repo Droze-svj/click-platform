@@ -112,7 +112,7 @@ export default function OnboardingPage() {
         <div className="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 animate-pulse" />
         <Compass size={80} className="text-emerald-500 animate-spin relative z-10" />
       </div>
-      <p className="text-[12px] font-black text-emerald-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Loading Activation Sequence...</p>
+      <p className="text-[12px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.8em] animate-pulse italic leading-none">Loading Activation Sequence...</p>
     </div>
   )
 
@@ -127,13 +127,13 @@ export default function OnboardingPage() {
             <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
-            <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Compass size={40} className="text-emerald-400" />
+            <div className="w-20 h-20 bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] rounded-[2.5rem] flex items-center justify-center shadow-3xl">
+              <Compass size={40} className="text-[var(--tint-emerald-fg)]" />
             </div>
             <div>
               <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-emerald-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400 italic leading-none">Activation Sequence</span>
+                <Activity size={14} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-[var(--tint-emerald-fg)] italic leading-none">Activation Sequence</span>
               </div>
               <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Get Started</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Stepwise initialization of your sovereign Click instance.</p>
@@ -147,14 +147,14 @@ export default function OnboardingPage() {
         </div>
 
         {/* Progress Strip */}
-        <div className={`${glassStyle} rounded-[3rem] p-10 ${isComplete ? 'border-emerald-500/30 shadow-[0_0_120px_rgba(16,185,129,0.15)]' : 'border-emerald-500/10'}`}>
+        <div className={`${glassStyle} rounded-[3rem] p-10 ${isComplete ? 'border-[var(--tint-emerald-edge)] shadow-[0_0_120px_rgba(16,185,129,0.15)]' : 'border-emerald-500/10'}`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-5">
-              <div className={`w-14 h-14 rounded-[1.4rem] ${isComplete ? 'bg-emerald-500 text-black' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} flex items-center justify-center shadow-xl`}>
+              <div className={`w-14 h-14 rounded-[1.4rem] ${isComplete ? 'bg-emerald-500 text-black' : 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]'} flex items-center justify-center shadow-xl`}>
                 {isComplete ? <CheckCircle size={26} /> : <Zap size={26} />}
               </div>
               <div>
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-2 leading-none">{isComplete ? 'SEQUENCE_COMPLETE' : 'PROGRESS'}</p>
+                <p className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">{isComplete ? 'SEQUENCE_COMPLETE' : 'PROGRESS'}</p>
                 <p className="text-3xl font-black text-white italic uppercase tracking-tight leading-none">{completedCount} / {totalCount} STEPS</p>
               </div>
             </div>
@@ -177,19 +177,19 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`${glassStyle} rounded-[2.5rem] p-8 flex flex-col lg:flex-row items-center gap-6 ${step.completed ? 'border-emerald-500/30 bg-emerald-500/[0.02]' : isLocked ? 'opacity-50' : 'hover:border-emerald-500/20'}`}
+                className={`${glassStyle} rounded-[2.5rem] p-8 flex flex-col lg:flex-row items-center gap-6 ${step.completed ? 'border-[var(--tint-emerald-edge)] bg-emerald-500/[0.02]' : isLocked ? 'opacity-50' : 'hover:border-[var(--tint-emerald-edge)]'}`}
               >
                 <div className="flex items-center gap-5 flex-1 w-full">
                   <div className="relative flex-shrink-0">
-                    <div className={`w-14 h-14 rounded-[1.4rem] flex items-center justify-center shadow-xl ${step.completed ? 'bg-emerald-500 text-black' : isLocked ? 'bg-white/5 text-slate-600 border border-white/10' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'}`}>
+                    <div className={`w-14 h-14 rounded-[1.4rem] flex items-center justify-center shadow-xl ${step.completed ? 'bg-emerald-500 text-black' : isLocked ? 'bg-white/5 text-slate-600 border border-white/10' : 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)]'}`}>
                       {step.completed ? <CheckCircle size={26} /> : isLocked ? <Lock size={22} /> : <Icon size={26} />}
                     </div>
-                    <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#020205] border ${step.completed ? 'border-emerald-500/40 text-emerald-400' : 'border-white/10 text-slate-500'} flex items-center justify-center text-[10px] font-black italic tabular-nums`}>{idx + 1}</div>
+                    <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#020205] border ${step.completed ? 'border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]' : 'border-white/10 text-slate-500'} flex items-center justify-center text-[10px] font-black italic tabular-nums`}>{idx + 1}</div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <h3 className={`text-2xl font-black italic uppercase tracking-tight leading-tight ${step.completed ? 'text-emerald-400 line-through decoration-emerald-500/40' : 'text-white'}`}>{step.title}</h3>
-                      {step.completed && <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] font-black uppercase tracking-[0.3em] italic">DONE</span>}
+                      <h3 className={`text-2xl font-black italic uppercase tracking-tight leading-tight ${step.completed ? 'text-[var(--tint-emerald-fg)] line-through decoration-emerald-500/40' : 'text-white'}`}>{step.title}</h3>
+                      {step.completed && <span className="px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)] text-[8px] font-black uppercase tracking-[0.3em] italic">DONE</span>}
                     </div>
                     {step.description && <p className="text-[12px] text-slate-400 leading-relaxed font-medium">{step.description}</p>}
                   </div>
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                     </Link>
                   )}
                   {!step.completed && (
-                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title="Mark as complete" className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
+                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title="Mark as complete" className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-[var(--tint-emerald-fg)] hover:border-[var(--tint-emerald-edge)] flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
                       {isCompleting ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                     </button>
                   )}
@@ -213,12 +213,12 @@ export default function OnboardingPage() {
 
         {/* Completion banner */}
         {isComplete && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[3rem] p-12 border-emerald-500/30 text-center flex flex-col items-center gap-6 shadow-[0_0_120px_rgba(16,185,129,0.15)]`}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[3rem] p-12 border-[var(--tint-emerald-edge)] text-center flex flex-col items-center gap-6 shadow-[0_0_120px_rgba(16,185,129,0.15)]`}>
             <div className="w-20 h-20 rounded-[2rem] bg-emerald-500 text-black flex items-center justify-center shadow-[0_30px_80px_rgba(16,185,129,0.4)]">
               <Sparkles size={40} />
             </div>
             <div>
-              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-3 leading-none">SOVEREIGN_INSTANCE_ACTIVATED</p>
+              <p className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.5em] italic mb-3 leading-none">SOVEREIGN_INSTANCE_ACTIVATED</p>
               <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-tight mb-3">You&apos;re fully wired in.</h2>
               <p className="text-[12px] text-slate-400 uppercase font-black tracking-[0.4em] italic">Click is now operating at full capacity for your account.</p>
             </div>

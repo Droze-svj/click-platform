@@ -27,7 +27,7 @@ export function PricingCard({ plan, period, onSelect, index }: Props) {
       transition={{ delay: index * 0.1 }}
       className={`relative flex flex-col rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 ${
         featured
-          ? 'bg-gradient-to-b from-indigo-500/15 to-fuchsia-500/5 border-2 border-indigo-500/40 shadow-[0_0_60px_rgba(99,102,241,0.25)]'
+          ? 'bg-gradient-to-b from-indigo-500/15 to-fuchsia-500/5 border-2 border-[var(--tint-indigo-edge)] shadow-[0_0_60px_rgba(99,102,241,0.25)]'
           : `${glass} hover:border-white/20`
       }`}
     >

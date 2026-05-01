@@ -201,7 +201,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                       Quick Content
                     </h2>
                     <div className="flex items-center gap-2">
-                       <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/20 italic">
+                       <span className="text-[10px] font-black bg-[var(--tint-emerald-bg)] text-emerald-500 px-3 py-1 rounded-full border border-[var(--tint-emerald-edge)] italic">
                         STRATEGIC MODE ACTIVE
                       </span>
                       {marketHealth && (
@@ -254,13 +254,13 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between"
+                        className="p-4 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-between"
                       >
                         <div className="flex items-center gap-3">
-                          <ShieldCheck className="w-4 h-4 text-indigo-400 animate-pulse" />
+                          <ShieldCheck className="w-4 h-4 text-[var(--tint-indigo-fg)] animate-pulse" />
                           <span className="text-[10px] font-bold text-indigo-300 uppercase italic">Sovereignty Integrity Check...</span>
                         </div>
-                        <div className="text-[10px] font-black text-indigo-400">92% ORIGINAL</div>
+                        <div className="text-[10px] font-black text-[var(--tint-indigo-fg)]">92% ORIGINAL</div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -277,7 +277,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                     <button
                       onClick={() => setVariance('radical')}
                       title="Neural Refresh: Maximum Variance"
-                      className="flex-1 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all group"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-[var(--tint-indigo-fg)] hover:bg-white/10 transition-all group"
                     >
                       <RefreshCcw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                     </button>

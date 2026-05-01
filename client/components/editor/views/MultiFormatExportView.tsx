@@ -113,7 +113,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
         
         {/* Header Section */}
         <div className="flex flex-col gap-4">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400 w-fit shadow-2xl">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] w-fit shadow-2xl">
             <Zap className="w-4 h-4 animate-pulse" />
             Social Repurpose Hub
           </div>
@@ -122,7 +122,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl font-medium leading-relaxed">
             Automatically adapt your project into multiple industry-standard formats simultaneously using the 
-            Neural Refit core. Assets are registered in the <span className="text-indigo-400 font-black">Social Vault</span> as they complete.
+            Neural Refit core. Assets are registered in the <span className="text-[var(--tint-indigo-fg)] font-black">Social Vault</span> as they complete.
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                 onClick={() => !isExporting && toggleFormat(profile.id)}
                 className={`relative overflow-hidden rounded-[2.5rem] border-2 transition-all p-8 text-left ${
                   isSelected 
-                    ? 'border-indigo-500 bg-indigo-500/10 shadow-3xl shadow-indigo-500/20' 
+                    ? 'border-indigo-500 bg-[var(--tint-indigo-bg)] shadow-3xl shadow-indigo-500/20' 
                     : 'border-white/5 bg-white/20 hover:border-white/20'
                 } ${isExporting ? 'cursor-default' : 'cursor-pointer'}`}
               >
@@ -171,7 +171,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                     <div className="mt-4 space-y-2">
                        <div className="flex justify-between items-center text-[10px] font-black uppercase italic tracking-widest">
                           <span className="text-slate-500">Synthesizing...</span>
-                          <span className="text-indigo-400">{Math.round(currentProgress)}%</span>
+                          <span className="text-[var(--tint-indigo-fg)]">{Math.round(currentProgress)}%</span>
                        </div>
                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                           <motion.div 
@@ -236,12 +236,12 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <div className="px-6 py-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-emerald-400">
+              <div className="px-6 py-4 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-between">
+                <div className="flex items-center gap-4 text-[var(--tint-emerald-fg)]">
                    <Share2 className="w-5 h-5" />
                    <span className="text-[11px] font-black uppercase tracking-widest">Syncing to Social Vault...</span>
                 </div>
-                <button className="text-[10px] font-black text-white hover:text-emerald-400 uppercase italic tracking-widest transition-colors flex items-center gap-2">
+                <button className="text-[10px] font-black text-white hover:text-[var(--tint-emerald-fg)] uppercase italic tracking-widest transition-colors flex items-center gap-2">
                   View Vault <History className="w-3.5 h-3.5" />
                 </button>
               </div>

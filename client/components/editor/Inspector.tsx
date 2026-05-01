@@ -125,7 +125,7 @@ function TextOverlayInspector({
           rows={2}
           aria-label="Text overlay content"
           placeholder="Caption text"
-          className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-[12px] text-white focus:border-fuchsia-500/40 focus:outline-none resize-none"
+          className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-[12px] text-white focus:border-[var(--tint-fuchsia-edge)] focus:outline-none resize-none"
         />
       </FieldRow>
       <FieldRow label="Font size" suffix="px">
@@ -225,7 +225,7 @@ function NumberField({ value, onChange, step, min, max, label }: { value: number
         const v = parseFloat(e.target.value)
         if (Number.isFinite(v)) onChange(v)
       }}
-      className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-[12px] text-white text-right tabular-nums focus:border-fuchsia-500/40 focus:outline-none"
+      className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-[12px] text-white text-right tabular-nums focus:border-[var(--tint-fuchsia-edge)] focus:outline-none"
     />
   )
 }
@@ -246,7 +246,7 @@ function ToggleField({ value, onChange, onLabel, offLabel }: { value: boolean; o
   return (
     <button type="button" onClick={() => onChange(!value)} aria-pressed={value ? 'true' : 'false'}
       className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border transition-all ${
-        value ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-white/[0.02] border-white/10 text-slate-500 hover:text-white'
+        value ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-amber-300' : 'bg-white/[0.02] border-white/10 text-slate-500 hover:text-white'
       }`}>
       {value ? onLabel : offLabel}
       {value ? 'Locked' : 'Unlocked'}
@@ -258,7 +258,7 @@ function DangerZone({ onDelete, label }: { onDelete: () => void; label: string }
   return (
     <div className="pt-3 border-t border-white/[0.06]">
       <button type="button" onClick={onDelete}
-        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-rose-500/20 bg-rose-500/[0.04] text-rose-300 text-[10px] font-bold uppercase tracking-[0.22em] hover:bg-rose-500/10 hover:border-rose-500/40">
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-[var(--tint-rose-edge)] bg-rose-500/[0.04] text-rose-300 text-[10px] font-bold uppercase tracking-[0.22em] hover:bg-[var(--tint-rose-bg)] hover:border-[var(--tint-rose-edge)]">
         <Trash2 size={11} /> {label}
       </button>
     </div>

@@ -86,8 +86,8 @@ export const FiscalAutonomyHUD: React.FC = () => {
             {/* Main Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {[
-                    { label: 'Fiscal Velocity', value: `$${velocity?.velocity.toFixed(2)}/hr`, sub: 'Real-time Yield Rate', icon: Zap, color: 'text-indigo-400' },
-                    { label: 'Revenue Per Dispatch', value: `$${velocity?.rpd.toFixed(2)}`, sub: 'Avg Post Yield', icon: Globe, color: 'text-emerald-400' },
+                    { label: 'Fiscal Velocity', value: `$${velocity?.velocity.toFixed(2)}/hr`, sub: 'Real-time Yield Rate', icon: Zap, color: 'text-[var(--tint-indigo-fg)]' },
+                    { label: 'Revenue Per Dispatch', value: `$${velocity?.rpd.toFixed(2)}`, sub: 'Avg Post Yield', icon: Globe, color: 'text-[var(--tint-emerald-fg)]' },
                     { label: 'Earnings Per Click', value: `$${velocity?.epc.toFixed(2)}`, sub: 'Link Performance', icon: TrendingUp, color: 'text-blue-400' },
                     { label: 'Pulse Revenue (24h)', value: `$${velocity?.pulseRevenue.toFixed(0)}`, sub: 'Collective Yield', icon: DollarSign, color: 'text-white' }
                 ].map((stat, i) => (
@@ -142,7 +142,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-[14px] font-black text-white italic">{Math.round(node.yield * 100)}% Yield</div>
-                                        <div className="text-[10px] font-black text-emerald-400 flex items-center justify-end gap-1 mt-1">
+                                        <div className="text-[10px] font-black text-[var(--tint-emerald-fg)] flex items-center justify-end gap-1 mt-1">
                                             <ArrowUpRight className="w-3 h-3" />
                                             {node.trend}
                                         </div>
@@ -151,9 +151,9 @@ export const FiscalAutonomyHUD: React.FC = () => {
                             ))}
                         </div>
 
-                        <div className="mt-10 p-8 rounded-3xl bg-indigo-500/10 border border-indigo-500/20">
+                        <div className="mt-10 p-8 rounded-3xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
                             <div className="flex items-start gap-4">
-                                <Zap className="w-5 h-5 text-indigo-400 mt-1" />
+                                <Zap className="w-5 h-5 text-[var(--tint-indigo-fg)] mt-1" />
                                 <div>
                                     <p className="text-[11px] font-black text-indigo-300 uppercase italic tracking-widest text-balance">Autonomous Pivot Advisory</p>
                                     <p className="text-[10px] font-bold text-slate-400 mt-2 leading-relaxed">
@@ -216,7 +216,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
 
             {/* Bottom Footer Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-10">
-                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6 group hover:border-indigo-500/30 transition-all`}>
+                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6 group hover:border-[var(--tint-indigo-edge)] transition-all`}>
                     <div className="p-4 rounded-2xl bg-indigo-600 shadow-xl shadow-indigo-600/20">
                         <Cpu className="w-6 h-6 text-white" />
                     </div>
@@ -225,13 +225,13 @@ export const FiscalAutonomyHUD: React.FC = () => {
                         <h6 className="text-[12px] font-black text-white italic uppercase tracking-widest mt-1">Autonomous Mastery</h6>
                     </div>
                 </div>
-                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6 group hover:border-emerald-500/30 transition-all`}>
+                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6 group hover:border-[var(--tint-emerald-edge)] transition-all`}>
                     <div className="p-4 rounded-2xl bg-emerald-600 shadow-xl shadow-emerald-600/20">
                         <Repeat className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Attribution State</span>
-                        <h6 className="text-[12px] font-black text-emerald-400 italic uppercase tracking-widest mt-1">Zero-Drift Synchronized</h6>
+                        <h6 className="text-[12px] font-black text-[var(--tint-emerald-fg)] italic uppercase tracking-widest mt-1">Zero-Drift Synchronized</h6>
                     </div>
                 </div>
                 <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6 group hover:border-blue-500/30 transition-all`}>

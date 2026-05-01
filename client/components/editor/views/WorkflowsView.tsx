@@ -58,7 +58,7 @@ const WorkflowsView: React.FC = () => {
     <div className="flex flex-col gap-8 h-full">
       <div className="flex items-center justify-between px-2">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-violet-400 flex items-center gap-4">
+          <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-[var(--tint-violet-fg)] flex items-center gap-4">
             <GitBranch className="w-6 h-6" />
             Approval Pipelines
           </h2>
@@ -133,11 +133,11 @@ const WorkflowsView: React.FC = () => {
                        <div>
                           <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-3">
-                               <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-                                  <Shield className="w-5 h-5 text-violet-400" />
+                               <div className="w-10 h-10 rounded-xl bg-[var(--tint-violet-bg)] flex items-center justify-center border border-[var(--tint-violet-edge)]">
+                                  <Shield className="w-5 h-5 text-[var(--tint-violet-fg)]" />
                                </div>
                                {workflow.isDefault && (
-                                 <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black text-emerald-400 uppercase">Default Protocol</span>
+                                 <span className="px-3 py-1 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase">Default Protocol</span>
                                )}
                             </div>
                             <Settings className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" />
@@ -176,19 +176,19 @@ const WorkflowsView: React.FC = () => {
                       setEditingId(undefined)
                       setIsCreating(true)
                     }}
-                    className="border-2 border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 group cursor-pointer hover:border-violet-500/30 transition-all min-h-[250px]"
+                    className="border-2 border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 group cursor-pointer hover:border-[var(--tint-violet-edge)] transition-all min-h-[250px]"
                  >
                     <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-violet-500 transition-all">
                        <Plus className="w-6 h-6 text-slate-500 group-hover:text-black" />
                     </div>
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-violet-400 transition-all">Initialize New Protocol</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-[var(--tint-violet-fg)] transition-all">Initialize New Protocol</span>
                  </motion.div>
               </div>
 
               <div className="col-span-12 grid grid-cols-2 gap-8">
                  <div className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 flex flex-col gap-6">
                     <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                       <Clock className="w-4 h-4 text-emerald-400" />
+                       <Clock className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                        Recent Approval Latency
                     </h3>
                     <div className="space-y-4">
@@ -201,7 +201,7 @@ const WorkflowsView: React.FC = () => {
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
                             <div className="flex items-center gap-4">
                                <span className="text-[11px] font-mono text-white">{stat.value}</span>
-                               <span className={`text-[8px] font-black ${stat.trend.startsWith('-') ? 'text-emerald-400' : 'text-rose-400'} uppercase`}>{stat.trend}</span>
+                               <span className={`text-[8px] font-black ${stat.trend.startsWith('-') ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'} uppercase`}>{stat.trend}</span>
                             </div>
                          </div>
                        ))}
@@ -210,7 +210,7 @@ const WorkflowsView: React.FC = () => {
 
                  <div className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 flex flex-col gap-6">
                     <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                       <Zap className="w-4 h-4 text-amber-400" />
+                       <Zap className="w-4 h-4 text-[var(--tint-amber-fg)]" />
                        System Health
                     </h3>
                     <div className="flex-1 flex flex-col justify-center items-center gap-6">
@@ -225,7 +225,7 @@ const WorkflowsView: React.FC = () => {
                           </div>
                        </div>
                        <p className="text-[10px] text-center text-slate-400 uppercase font-bold max-w-[250px] leading-relaxed">
-                          Your pipelines are currently operating with <span className="text-emerald-400 italic">Optimal Integrity</span>.
+                          Your pipelines are currently operating with <span className="text-[var(--tint-emerald-fg)] italic">Optimal Integrity</span>.
                        </p>
                     </div>
                  </div>

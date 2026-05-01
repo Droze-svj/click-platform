@@ -170,7 +170,7 @@ export default function NarrativeLogicMatrixPage() {
           <PenTool size={80} className="text-emerald-500 animate-spin relative z-10" />
        </div>
        <div className="space-y-4 text-center">
-          <p className="text-[12px] font-bold text-emerald-400 uppercase tracking-[0.4em] animate-pulse leading-none">Loading scripts…</p>
+          <p className="text-[12px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-[0.4em] animate-pulse leading-none">Loading scripts…</p>
           <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.3em] leading-none">Please wait</p>
        </div>
     </div>
@@ -193,15 +193,15 @@ export default function NarrativeLogicMatrixPage() {
                 className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
                 <ArrowLeft size={40} />
               </button>
-              <div className="w-24 h-24 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] rounded-[3rem] flex items-center justify-center shadow-3xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-100" />
-                <BookOpen size={48} className="text-emerald-400 relative z-10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
+                <BookOpen size={48} className="text-[var(--tint-emerald-fg)] relative z-10 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-4">
-                      <Fingerprint size={16} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[12px] font-bold uppercase tracking-[0.4em] text-emerald-400 leading-none">Click · Scripts</span>
+                      <Fingerprint size={16} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                      <span className="text-[12px] font-bold uppercase tracking-[0.4em] text-[var(--tint-emerald-fg)] leading-none">Click · Scripts</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/60 border border-white/5 shadow-inner">
                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
@@ -227,9 +227,9 @@ export default function NarrativeLogicMatrixPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
           {[
             { label: 'Total Scripts', value: scripts.length, color: 'text-white', icon: Layers, bg: 'bg-white/5' },
-            { label: 'YouTube',       value: scripts.filter(s => s.type === 'youtube').length, color: 'text-rose-400', icon: Radio, bg: 'bg-rose-500/5' },
-            { label: 'Social Media',  value: scripts.filter(s => s.type === 'social-media').length, color: 'text-emerald-400', icon: Gauge, bg: 'bg-emerald-500/5' },
-            { label: 'Email',         value: scripts.filter(s => s.type === 'email').length, color: 'text-amber-400', icon: Zap, bg: 'bg-amber-500/5' },
+            { label: 'YouTube',       value: scripts.filter(s => s.type === 'youtube').length, color: 'text-[var(--tint-rose-fg)]', icon: Radio, bg: 'bg-rose-500/5' },
+            { label: 'Social Media',  value: scripts.filter(s => s.type === 'social-media').length, color: 'text-[var(--tint-emerald-fg)]', icon: Gauge, bg: 'bg-emerald-500/5' },
+            { label: 'Email',         value: scripts.filter(s => s.type === 'email').length, color: 'text-[var(--tint-amber-fg)]', icon: Zap, bg: 'bg-amber-500/5' },
           ].map((s, i) => (
             <motion.div 
                initial={{ opacity: 0, y: 30 }} 
@@ -255,27 +255,27 @@ export default function NarrativeLogicMatrixPage() {
                animate={{ opacity: 1, scale: 1, y: 0 }} 
                exit={{ opacity: 0, scale: 0.95, y: 100 }} 
                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-               className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 border-emerald-500/30 shadow-[0_100px_250px_rgba(0,0,0,1)]`}
+               className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 border-[var(--tint-emerald-edge)] shadow-[0_100px_250px_rgba(0,0,0,1)]`}
             >
                <div className="bg-emerald-600/10 p-20 border-b-2 border-emerald-600/20 flex flex-col xl:flex-row items-center justify-between gap-16 relative overflow-hidden backdrop-blur-3xl">
                 <div className="absolute inset-0 opacity-[0.1] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #10b981, transparent 60%)' }} />
                 <div className="relative flex items-center gap-8">
-                   <div className="w-16 h-16 bg-white/10 rounded-[1.6rem] flex items-center justify-center shadow-xl shadow-emerald-500/20 border-2 border-white/20"><Cpu size={28} className="text-emerald-400" /></div>
+                   <div className="w-16 h-16 bg-white/10 rounded-[1.6rem] flex items-center justify-center shadow-xl shadow-emerald-500/20 border-2 border-white/20"><Cpu size={28} className="text-[var(--tint-emerald-fg)]" /></div>
                    <div>
-                      <p className="text-emerald-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-2 leading-none">AI Script Generator</p>
+                      <p className="text-[var(--tint-emerald-fg)] text-[11px] font-bold uppercase tracking-[0.3em] mb-2 leading-none">AI Script Generator</p>
                       <h2 className="text-white font-black tracking-tighter text-4xl leading-tight">Generate a new script</h2>
                    </div>
                 </div>
-                <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                   <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-[0.3em]">Engine ready</span>
+                   <span className="text-[11px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-[0.3em]">Engine ready</span>
                 </div>
               </div>
 
               <form onSubmit={handleLinguisticSynthesis} className="p-12 space-y-12 bg-black/80">
                 <div className="space-y-5">
                   <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                     <Target size={18} className="text-emerald-400" />
+                     <Target size={18} className="text-[var(--tint-emerald-fg)]" />
                      <label className="text-[12px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">Quick start prompts</label>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -295,7 +295,7 @@ export default function NarrativeLogicMatrixPage() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
                   <div className="xl:col-span-2 space-y-5">
                     <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                       <Terminal size={18} className="text-emerald-400" />
+                       <Terminal size={18} className="text-[var(--tint-emerald-fg)]" />
                        <label htmlFor="seed-input" className="text-[12px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">What&apos;s your script about?</label>
                     </div>
                     <div className="relative group/input">
@@ -315,7 +315,7 @@ export default function NarrativeLogicMatrixPage() {
 
                   <div className="space-y-5">
                     <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                       <Radio size={18} className="text-emerald-400" />
+                       <Radio size={18} className="text-[var(--tint-emerald-fg)]" />
                        <label className="text-[12px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">Platform</label>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -337,7 +337,7 @@ export default function NarrativeLogicMatrixPage() {
                   <div className="space-y-10">
                      <div className="space-y-5">
                         <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                           <Activity size={18} className="text-emerald-400" />
+                           <Activity size={18} className="text-[var(--tint-emerald-fg)]" />
                            <label className="text-[12px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">Tone</label>
                         </div>
                         <div className="flex flex-wrap gap-2.5">
@@ -358,7 +358,7 @@ export default function NarrativeLogicMatrixPage() {
                         {(vector === 'youtube' || vector === 'podcast') && (
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
-                               <Clock size={16} className="text-emerald-400" />
+                               <Clock size={16} className="text-[var(--tint-emerald-fg)]" />
                                <label htmlFor="magnitude-input" className="text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">Duration (minutes)</label>
                             </div>
                             <input
@@ -375,7 +375,7 @@ export default function NarrativeLogicMatrixPage() {
                         )}
                         <div className="space-y-3">
                            <div className="flex items-center gap-3">
-                              <Target size={16} className="text-emerald-400" />
+                              <Target size={16} className="text-[var(--tint-emerald-fg)]" />
                               <label htmlFor="receptor-input" className="text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">Target audience</label>
                            </div>
                            <input
@@ -392,7 +392,7 @@ export default function NarrativeLogicMatrixPage() {
 
                      <div className="space-y-3 pt-2">
                         <div className="flex items-center gap-3">
-                           <Hash size={16} className="text-emerald-400" />
+                           <Hash size={16} className="text-[var(--tint-emerald-fg)]" />
                            <label htmlFor="particles-input" className="text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em] leading-none">Keywords (max 10)</label>
                         </div>
                         <input
@@ -440,7 +440,7 @@ export default function NarrativeLogicMatrixPage() {
                initial={{ opacity: 0, x: -50 }} 
                animate={{ opacity: 1, x: 0 }} 
                exit={{ opacity: 0, x: -50 }}
-               className="flex flex-col md:flex-row items-center justify-between gap-12 p-12 bg-emerald-500/5 border border-emerald-500/20 rounded-[5rem] relative z-20 shadow-[0_40px_100px_rgba(16,185,129,0.1)] backdrop-blur-3xl overflow-hidden group"
+               className="flex flex-col md:flex-row items-center justify-between gap-12 p-12 bg-emerald-500/5 border border-[var(--tint-emerald-edge)] rounded-[5rem] relative z-20 shadow-[0_40px_100px_rgba(16,185,129,0.1)] backdrop-blur-3xl overflow-hidden group"
             >
               <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500 group-hover:h-2 transition-all duration-700" />
               <div className="flex items-center gap-6">
@@ -449,8 +449,8 @@ export default function NarrativeLogicMatrixPage() {
                     <div className="relative w-14 h-14 bg-emerald-500 text-black rounded-[1.4rem] flex items-center justify-center shadow-xl border border-white/20"><Zap size={22} /></div>
                  </div>
                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-emerald-400 mb-2 leading-none">Latest script</p>
-                    <p className="text-2xl font-black text-white tracking-tight truncate max-w-3xl leading-tight group-hover:text-emerald-400 transition-colors">{activePhantom.title}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[var(--tint-emerald-fg)] mb-2 leading-none">Latest script</p>
+                    <p className="text-2xl font-black text-white tracking-tight truncate max-w-3xl leading-tight group-hover:text-[var(--tint-emerald-fg)] transition-colors">{activePhantom.title}</p>
                  </div>
               </div>
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -473,7 +473,7 @@ export default function NarrativeLogicMatrixPage() {
           <div className="flex flex-col md:flex-row items-center justify-between px-20 py-20 border-b-2 border-white/5 bg-white/[0.01] gap-16 relative overflow-hidden backdrop-blur-3xl">
             <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700"><Database size={400} className="text-white" /></div>
             <div className="flex items-center gap-6 relative z-10">
-               <div className="w-14 h-14 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[1.6rem] flex items-center justify-center shadow-lg"><Network size={26} className="text-indigo-400" /></div>
+               <div className="w-14 h-14 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-[1.6rem] flex items-center justify-center shadow-lg"><Network size={26} className="text-[var(--tint-indigo-fg)]" /></div>
                <div>
                   <h2 className="text-3xl font-black text-white tracking-tighter leading-none mb-2">Your scripts</h2>
                   <p className="text-[13px] text-slate-400 font-medium leading-none">Browse, edit, duplicate, and export.</p>
@@ -482,7 +482,7 @@ export default function NarrativeLogicMatrixPage() {
 
             <div className="flex items-center gap-3 relative z-10">
                <div className="px-5 py-2.5 rounded-full bg-black/60 border border-white/5 text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em] flex items-center gap-3">
-                  <Database size={14} className="text-indigo-400" /> {filteredScripts.length} / {scripts.length} scripts
+                  <Database size={14} className="text-[var(--tint-indigo-fg)]" /> {filteredScripts.length} / {scripts.length} scripts
                </div>
             </div>
           </div>
@@ -491,7 +491,7 @@ export default function NarrativeLogicMatrixPage() {
           {scripts.length > 0 && (
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 px-10 py-5 border-b border-white/5 bg-black/40 relative z-10">
                <div className="relative flex-1 group/search">
-                  <Target size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/search:text-emerald-400 transition-colors" />
+                  <Target size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/search:text-[var(--tint-emerald-fg)] transition-colors" />
                   <input
                      type="text"
                      value={search}
@@ -500,7 +500,7 @@ export default function NarrativeLogicMatrixPage() {
                      className="w-full bg-black/60 border border-white/10 rounded-full pl-12 pr-10 py-3 text-[13px] font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-slate-500"
                   />
                   {search && (
-                     <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-500/20">
+                     <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[var(--tint-rose-bg)]">
                         <X size={12} />
                      </button>
                   )}
@@ -565,14 +565,14 @@ export default function NarrativeLogicMatrixPage() {
                       
                       <div className="flex-1 min-w-0 relative z-10">
                         <div className="flex items-center gap-4 mb-2">
-                          <p className="text-2xl font-black text-white tracking-tight truncate group-hover:text-emerald-400 transition-colors leading-tight">{s.topic || s.title || 'Untitled script'}</p>
+                          <p className="text-2xl font-black text-white tracking-tight truncate group-hover:text-[var(--tint-emerald-fg)] transition-colors leading-tight">{s.topic || s.title || 'Untitled script'}</p>
                           {isNew && <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-emerald-500 text-black uppercase tracking-[0.2em] shadow-lg">New</span>}
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-[12px] font-medium text-slate-400">
-                          <span className="px-3 py-1 bg-black/40 rounded-md border border-white/5 transition-colors group-hover:border-emerald-500/30 group-hover:text-emerald-400 text-[11px] font-bold uppercase tracking-[0.2em]">{cfg.label}</span>
+                          <span className="px-3 py-1 bg-black/40 rounded-md border border-white/5 transition-colors group-hover:border-[var(--tint-emerald-edge)] group-hover:text-[var(--tint-emerald-fg)] text-[11px] font-bold uppercase tracking-[0.2em]">{cfg.label}</span>
                           <div className="w-1 h-1 rounded-full bg-slate-700" />
-                          <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Database size={14} className="text-indigo-400" /> {s.wordCount.toLocaleString()} words</span>
-                          {s.duration != null && <><div className="w-1 h-1 rounded-full bg-slate-700" /><span className="flex items-center gap-2 group-hover:text-white transition-colors"><Gauge size={14} className="text-indigo-400" /> {s.duration} min read</span></>}
+                          <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Database size={14} className="text-[var(--tint-indigo-fg)]" /> {s.wordCount.toLocaleString()} words</span>
+                          {s.duration != null && <><div className="w-1 h-1 rounded-full bg-slate-700" /><span className="flex items-center gap-2 group-hover:text-white transition-colors"><Gauge size={14} className="text-[var(--tint-indigo-fg)]" /> {s.duration} min read</span></>}
                           <div className="w-1 h-1 rounded-full bg-slate-700" />
                           <span className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity"><Clock size={14} /> {new Date(s.createdAt).toLocaleDateString()}</span>
                         </div>
@@ -589,10 +589,10 @@ export default function NarrativeLogicMatrixPage() {
                         </button>
                         <button type="button" onClick={() => handleSequenceCapture(s)}
                           className="w-11 h-11 bg-white/[0.03] border border-white/10 text-slate-300 hover:text-white hover:border-white/30 rounded-[1rem] flex items-center justify-center transition-colors active:scale-95" title="Copy script">
-                          {copyId === s._id ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                          {copyId === s._id ? <Check size={16} className="text-[var(--tint-emerald-fg)]" /> : <Copy size={16} />}
                         </button>
                         <button type="button" onClick={() => setPurgeTargetId(s._id)}
-                          className="w-11 h-11 bg-rose-500/5 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-[1rem] flex items-center justify-center transition-colors active:scale-95" title="Delete">
+                          className="w-11 h-11 bg-rose-500/5 border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] hover:bg-rose-500 hover:text-white rounded-[1rem] flex items-center justify-center transition-colors active:scale-95" title="Delete">
                           <Trash2 size={16} />
                         </button>
                         <div className="w-px h-8 bg-white/10 mx-2" />
@@ -620,15 +620,15 @@ export default function NarrativeLogicMatrixPage() {
                exit={{ opacity: 0, scale: 0.92, y: 24 }}
                transition={{ type: 'spring', damping: 22, stiffness: 240 }}
                onClick={e => e.stopPropagation()}
-               className={`${glassStyle} rounded-[4rem] p-12 max-w-2xl w-full border-rose-500/20 shadow-[0_60px_180px_rgba(244,63,94,0.15)] relative overflow-hidden`}
+               className={`${glassStyle} rounded-[4rem] p-12 max-w-2xl w-full border-[var(--tint-rose-edge)] shadow-[0_60px_180px_rgba(244,63,94,0.15)] relative overflow-hidden`}
             >
                <div className="absolute top-0 right-0 p-12 opacity-[0.04] pointer-events-none"><Trash2 size={220} className="text-rose-500" /></div>
                <div className="flex items-start gap-5 mb-8 relative z-10">
-                  <div className="w-12 h-12 rounded-[1.2rem] bg-rose-500/10 border-2 border-rose-500/30 flex items-center justify-center shrink-0">
-                     <Trash2 size={20} className="text-rose-400" />
+                  <div className="w-12 h-12 rounded-[1.2rem] bg-[var(--tint-rose-bg)] border-2 border-[var(--tint-rose-edge)] flex items-center justify-center shrink-0">
+                     <Trash2 size={20} className="text-[var(--tint-rose-fg)]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                     <p className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.3em] mb-2">Permanent action</p>
+                     <p className="text-[10px] font-bold text-[var(--tint-rose-fg)] uppercase tracking-[0.3em] mb-2">Permanent action</p>
                      <h3 className="text-2xl font-black text-white tracking-tight leading-tight mb-2">Delete this script?</h3>
                      <p className="text-[13px] font-medium text-slate-400 leading-relaxed">
                         <span className="text-white font-bold">{purgeTarget.topic || purgeTarget.title || 'Untitled script'}</span> will be permanently deleted. This cannot be undone.

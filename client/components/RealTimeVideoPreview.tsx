@@ -336,10 +336,10 @@ export default function RealTimeVideoPreview({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_70%)]" />
         <div className="relative flex flex-col items-center justify-center space-y-6">
           <div className="relative">
-            <div className="absolute inset-0 border-2 border-indigo-500/30 rounded-full scale-150 animate-ping" style={{ animationDuration: '3s' }} />
+            <div className="absolute inset-0 border-2 border-[var(--tint-indigo-edge)] rounded-full scale-150 animate-ping" style={{ animationDuration: '3s' }} />
             <div className="w-12 h-12 border border-indigo-500 border-t-white/80 rounded-full animate-spin shadow-[0_0_30px_rgba(99,102,241,0.5)]" />
           </div>
-          <span className="text-xs font-black text-indigo-400/80 uppercase tracking-[0.3em] font-mono blur-[0.2px]">
+          <span className="text-xs font-black text-[var(--tint-indigo-fg)]/80 uppercase tracking-[0.3em] font-mono blur-[0.2px]">
             Booting Render Engine...
           </span>
         </div>
@@ -350,7 +350,7 @@ export default function RealTimeVideoPreview({
   const durationInFrames = Math.max(1, Math.floor(metadata.durationInSeconds * metadata.fps))
 
   return (
-    <div className={`relative w-full h-full bg-[#050505] rounded-[2rem] overflow-hidden group shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 transition-all duration-700 hover:shadow-[0_0_80px_rgba(99,102,241,0.15)] hover:border-indigo-500/30 ${className || ''}`}>
+    <div className={`relative w-full h-full bg-[#050505] rounded-[2rem] overflow-hidden group shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 transition-all duration-700 hover:shadow-[0_0_80px_rgba(99,102,241,0.15)] hover:border-[var(--tint-indigo-edge)] ${className || ''}`}>
       {/* Dynamic Edge Glow & Vignette */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/0 to-black/40 z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
       <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-[2rem] z-30 pointer-events-none" />

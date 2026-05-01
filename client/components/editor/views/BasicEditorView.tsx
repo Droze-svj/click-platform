@@ -187,7 +187,7 @@ function ImageOverlayKeyframePanel({
   return (
     <div className="mt-8 pt-8 border-t border-white/5 space-y-6">
       <div className="flex items-center gap-4">
-        <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+        <div className="p-2.5 rounded-xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)]">
           <Timer className="w-4 h-4 text-amber-500" />
         </div>
         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Image Keyframes</span>
@@ -198,7 +198,7 @@ function ImageOverlayKeyframePanel({
           value={selectedId}
           onChange={(e) => setSelectedId(e.target.value)}
           title="Select image overlay"
-          className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/10 text-white text-xs font-black italic uppercase focus:outline-none focus:border-amber-500/40 transition-all cursor-pointer"
+          className="px-6 py-3 rounded-2xl bg-white/[0.03] border border-white/10 text-white text-xs font-black italic uppercase focus:outline-none focus:border-[var(--tint-amber-edge)] transition-all cursor-pointer"
         >
           {imageOverlays.map((o) => (
             <option key={o.id} value={o.id} className="bg-slate-900">{o.url.length > 35 ? o.url.slice(0, 32) + '…' : o.url}</option>
@@ -229,11 +229,11 @@ function ImageOverlayKeyframePanel({
       <div className="p-6 rounded-[1.5rem] bg-white/[0.02] border border-white/5 font-mono text-[10px] text-slate-500 italic flex justify-between items-center group/kfdata">
         <span>STRAND DATA @ {currentTime.toFixed(2)}s</span>
         <div className="flex gap-4">
-          <span className="group-hover/kfdata:text-amber-400 transition-colors">X: {current.positionX.toFixed(1)}%</span>
-          <span className="group-hover/kfdata:text-amber-400 transition-colors">Y: {current.positionY.toFixed(1)}%</span>
-          <span className="group-hover/kfdata:text-amber-400 transition-colors">SCALE: {(current.scale * 100).toFixed(0)}%</span>
-          <span className="group-hover/kfdata:text-amber-400 transition-colors">ROT: {current.rotation.toFixed(0)}°</span>
-          <span className="group-hover/kfdata:text-amber-400 transition-colors">OPACITY: {(current.opacity * 100).toFixed(0)}%</span>
+          <span className="group-hover/kfdata:text-[var(--tint-amber-fg)] transition-colors">X: {current.positionX.toFixed(1)}%</span>
+          <span className="group-hover/kfdata:text-[var(--tint-amber-fg)] transition-colors">Y: {current.positionY.toFixed(1)}%</span>
+          <span className="group-hover/kfdata:text-[var(--tint-amber-fg)] transition-colors">SCALE: {(current.scale * 100).toFixed(0)}%</span>
+          <span className="group-hover/kfdata:text-[var(--tint-amber-fg)] transition-colors">ROT: {current.rotation.toFixed(0)}°</span>
+          <span className="group-hover/kfdata:text-[var(--tint-amber-fg)] transition-colors">OPACITY: {(current.opacity * 100).toFixed(0)}%</span>
         </div>
       </div>
     </div>
@@ -1281,7 +1281,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             value={globalSearch}
             onChange={e => setGlobalSearch(e.target.value)}
             placeholder="Search all tools… (filters, motion, text)"
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all"
           />
           {globalSearch && (
             <button onClick={() => setGlobalSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
@@ -1303,7 +1303,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <button key={i} onClick={() => { setActiveEditTab(r.tab); r.action() }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors text-left border-b border-white/[0.04] last:border-0"
                 >
-                  <Sparkles className="w-3 h-3 text-indigo-400 shrink-0" />
+                  <Sparkles className="w-3 h-3 text-[var(--tint-indigo-fg)] shrink-0" />
                   <span className="text-[11px] text-slate-200 font-black">{r.label}</span>
                   <span className="ml-auto text-[9px] text-slate-600 font-black uppercase tracking-widest">{r.tab}</span>
                 </button>
@@ -1328,8 +1328,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             <Redo2 className="w-3 h-3" /> Redo
           </motion.button>
           <div className="flex-1" />
-          {overlayCount > 0 && <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">{overlayCount} layers</span>}
-          {hasLook && <button onClick={resetFilters} className="text-[9px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors">Reset look</button>}
+          {overlayCount > 0 && <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">{overlayCount} layers</span>}
+          {hasLook && <button onClick={resetFilters} className="text-[9px] font-black text-[var(--tint-rose-fg)] hover:text-rose-300 uppercase tracking-widest transition-colors">Reset look</button>}
         </div>
 
         {/* Animated Tab bar */}
@@ -1367,7 +1367,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Waveform</span>
-                <span className="text-[10px] font-black text-indigo-400 font-mono">{currentTime.toFixed(2)}s / {duration.toFixed(1)}s</span>
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] font-mono">{currentTime.toFixed(2)}s / {duration.toFixed(1)}s</span>
               </div>
               <div className="relative h-12 flex gap-px items-center overflow-hidden rounded-xl bg-black/40">
                 {Array.from({ length: 48 }, (_, i) => {
@@ -1394,7 +1394,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Speed Ramp</span>
-                <span className={`text-sm font-black font-mono ${speedValue < 1 ? 'text-cyan-400' : speedValue > 1 ? 'text-orange-400' : 'text-indigo-400'}`}>{speedValue}×</span>
+                <span className={`text-sm font-black font-mono ${speedValue < 1 ? 'text-[var(--tint-cyan-fg)]' : speedValue > 1 ? 'text-[var(--tint-orange-fg)]' : 'text-[var(--tint-indigo-fg)]'}`}>{speedValue}×</span>
               </div>
               <input
                 type="range" min={0.25} max={4} step={0.25} value={speedValue}
@@ -1417,17 +1417,17 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 operate on the segment under the playhead. */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: RotateCcw, label: 'Reverse', sub: hasSegmentSelection ? 'Flip selected clip' : 'Select a clip first', color: 'text-violet-400', action: () => onReverseSelected?.(), comingSoon: !onReverseSelected, requiresSelection: true },
-                { icon: Split, label: 'Split at Playhead', sub: `@ ${currentTime.toFixed(1)}s`, color: 'text-indigo-400', action: () => onSplitAtPlayhead?.(), comingSoon: !onSplitAtPlayhead, requiresSelection: false },
-                { icon: Maximize, label: 'Freeze Frame', sub: `Hold 1s @ ${currentTime.toFixed(1)}s`, color: 'text-amber-400', action: () => onFreezeAtPlayhead?.(1.0), comingSoon: !onFreezeAtPlayhead, requiresSelection: false },
-                { icon: Scissors, label: 'Trim to In/Out', sub: trimInPoint != null && trimOutPoint != null ? `${(trimOutPoint - trimInPoint).toFixed(2)}s` : 'Set In + Out below', color: 'text-emerald-400', action: () => {
+                { icon: RotateCcw, label: 'Reverse', sub: hasSegmentSelection ? 'Flip selected clip' : 'Select a clip first', color: 'text-[var(--tint-violet-fg)]', action: () => onReverseSelected?.(), comingSoon: !onReverseSelected, requiresSelection: true },
+                { icon: Split, label: 'Split at Playhead', sub: `@ ${currentTime.toFixed(1)}s`, color: 'text-[var(--tint-indigo-fg)]', action: () => onSplitAtPlayhead?.(), comingSoon: !onSplitAtPlayhead, requiresSelection: false },
+                { icon: Maximize, label: 'Freeze Frame', sub: `Hold 1s @ ${currentTime.toFixed(1)}s`, color: 'text-[var(--tint-amber-fg)]', action: () => onFreezeAtPlayhead?.(1.0), comingSoon: !onFreezeAtPlayhead, requiresSelection: false },
+                { icon: Scissors, label: 'Trim to In/Out', sub: trimInPoint != null && trimOutPoint != null ? `${(trimOutPoint - trimInPoint).toFixed(2)}s` : 'Set In + Out below', color: 'text-[var(--tint-emerald-fg)]', action: () => {
                   if (trimInPoint == null || trimOutPoint == null) {
                     showToast('Set both In and Out points first', 'info')
                     return
                   }
                   onTrimSelectedToRange?.(trimInPoint, trimOutPoint)
                 }, comingSoon: !onTrimSelectedToRange, requiresSelection: true },
-                { icon: ArrowLeft, label: 'J-Cut', sub: hasSegmentSelection ? 'Audio leads 0.5s' : 'Select a clip first', color: 'text-rose-400', action: () => onJCutSelected?.(0.5), comingSoon: !onJCutSelected, requiresSelection: true },
+                { icon: ArrowLeft, label: 'J-Cut', sub: hasSegmentSelection ? 'Audio leads 0.5s' : 'Select a clip first', color: 'text-[var(--tint-rose-fg)]', action: () => onJCutSelected?.(0.5), comingSoon: !onJCutSelected, requiresSelection: true },
                 { icon: ChevronRight, label: 'L-Cut', sub: hasSegmentSelection ? 'Audio tail 0.5s' : 'Select a clip first', color: 'text-pink-400', action: () => onLCutSelected?.(0.5), comingSoon: !onLCutSelected, requiresSelection: true },
               ].map(({ icon: Icon, label, sub, color, action, comingSoon, requiresSelection }) => {
                 const disabled = !!comingSoon || (requiresSelection && !hasSegmentSelection)
@@ -1456,7 +1456,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       <div className="text-[8px] text-slate-600 mt-0.5">{sub}</div>
                     </div>
                     {comingSoon && (
-                      <span className="absolute top-1.5 right-1.5 text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/20">
+                      <span className="absolute top-1.5 right-1.5 text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-[var(--tint-amber-bg)] text-amber-300 border border-[var(--tint-amber-edge)]">
                         Soon
                       </span>
                     )}
@@ -1481,7 +1481,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     if (trimOutPoint != null && currentTime >= trimOutPoint) setTrimOutPoint(null)
                     showToast(`In set @ ${currentTime.toFixed(2)}s`, 'success')
                   }}
-                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all"
+                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-[var(--tint-emerald-bg)] text-emerald-300 border border-[var(--tint-emerald-edge)] hover:bg-[var(--tint-emerald-bg)] transition-all"
                 >
                   Set In
                 </button>
@@ -1495,7 +1495,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     setTrimOutPoint(currentTime)
                     showToast(`Out set @ ${currentTime.toFixed(2)}s`, 'success')
                   }}
-                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all"
+                  className="px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-[var(--tint-emerald-bg)] text-emerald-300 border border-[var(--tint-emerald-edge)] hover:bg-[var(--tint-emerald-bg)] transition-all"
                 >
                   Set Out
                 </button>
@@ -1570,11 +1570,11 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             </div>
 
             {/* ── Auto-Caption ─────────────────────────────────────────── */}
-            <div className="rounded-2xl bg-gradient-to-b from-indigo-600/10 to-purple-600/5 border border-indigo-500/20 overflow-hidden">
+            <div className="rounded-2xl bg-gradient-to-b from-indigo-600/10 to-purple-600/5 border border-[var(--tint-indigo-edge)] overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-3 pt-3 pb-2">
                 <div className="flex items-center gap-1.5">
-                  <Mic className="w-3.5 h-3.5 text-indigo-400" />
+                  <Mic className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">AI Auto-Caption</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1588,7 +1588,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                         setCaptionSuccess(null)
                         showToast('Auto-captions cleared', 'info')
                       }}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[8px] font-black text-indigo-300 hover:bg-rose-500/20 hover:border-rose-500/30 hover:text-rose-300 transition-all uppercase tracking-widest"
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[8px] font-black text-indigo-300 hover:bg-[var(--tint-rose-bg)] hover:border-[var(--tint-rose-edge)] hover:text-rose-300 transition-all uppercase tracking-widest"
                     >
                       <Trash2 className="w-2.5 h-2.5" />{autoCaps} captions
                     </button>
@@ -1596,8 +1596,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {/* Transcript status */}
                   <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest ${
                     (transcript?.fullText || manualTranscript.trim())
-                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-                      : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                      ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
+                      : 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)]'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full inline-block ${
                       (transcript?.fullText || manualTranscript.trim()) ? 'bg-emerald-400' : 'bg-amber-400'
@@ -1708,9 +1708,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <AnimatePresence>
                   {captionSuccess !== null && (
                     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                      className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
+                      className="flex items-center gap-2 p-2 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--tint-emerald-fg)] shrink-0" />
                       <p className="text-[9px] text-emerald-300 font-black">{captionSuccess} captions added in {captionStyle} style</p>
                     </motion.div>
                   )}
@@ -1749,7 +1749,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <AnimatePresence>
                   {captionError && (
                     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                      className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20"
+                      className="p-2 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)]"
                     >
                       <p className="text-[9px] text-rose-300 leading-relaxed">{captionError}</p>
                     </motion.div>
@@ -1763,7 +1763,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
               <input value={textPresetSearch} onChange={e => setTextPresetSearch(e.target.value)}
                 placeholder="Search presets…"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all"
               />
             </div>
 
@@ -1783,7 +1783,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {presets.slice(0, 8).map((p, i) => (
                     <button key={`${p.label}-${i}`}
                       onClick={() => handleAddOverlay(p)}
-                      className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-indigo-500/30 transition-all text-left group"
+                      className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-[var(--tint-indigo-edge)] transition-all text-left group"
                     >
                       <div className="text-[10px] font-black text-slate-200 group-hover:text-white truncate">{p.label}</div>
                       <div className="text-[8px] text-slate-600 group-hover:text-slate-400 truncate mt-0.5">{p.text}</div>
@@ -1799,14 +1799,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1 block mb-1.5">Active Text ({textOverlays?.length})</span>
                 <div className="space-y-1">
                   {textOverlays?.map(o => (
-                    <div key={o.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer ${selectedTextId === o.id ? 'bg-indigo-600/20 border-indigo-500/30' : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.05]'}`}
+                    <div key={o.id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer ${selectedTextId === o.id ? 'bg-indigo-600/20 border-[var(--tint-indigo-edge)]' : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.05]'}`}
                       onClick={() => setSelectedTextId(o.id)}
                     >
                       <Type className="w-3 h-3 text-slate-400 shrink-0" />
                       <span className="flex-1 text-[10px] font-black text-slate-200 truncate">{o.text}</span>
                       <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
                       <button onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
-                        className="text-slate-600 hover:text-rose-400 transition-colors"
+                        className="text-slate-600 hover:text-[var(--tint-rose-fg)] transition-colors"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>
                   ))}
@@ -1821,7 +1821,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <motion.div
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-3 rounded-2xl bg-white/[0.03] border border-indigo-500/20 space-y-3"
+                  className="p-3 rounded-2xl bg-white/[0.03] border border-[var(--tint-indigo-edge)] space-y-3"
                 >
                   {/* Preview */}
                   <div className="relative h-16 rounded-xl overflow-hidden bg-black/60 border border-white/5 flex items-center justify-center">
@@ -1838,7 +1838,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <span className="absolute top-1.5 left-2 text-[8px] font-black text-slate-600 uppercase tracking-widest">Live Preview</span>
                   </div>
 
-                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-400 block">Editing: {o.text.slice(0, 24)}{o.text.length > 24 ? '…' : ''}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-[var(--tint-indigo-fg)] block">Editing: {o.text.slice(0, 24)}{o.text.length > 24 ? '…' : ''}</span>
                   <input value={o.text} onChange={e => updateTextOverlay(o.id, { text: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none focus:border-indigo-500/50 transition-all"
                   />
@@ -1939,14 +1939,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{selectedFilterName}</span>
-                  <span className="text-[10px] font-black text-indigo-400 font-mono">{filtStrength}%</span>
+                  <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] font-mono">{filtStrength}%</span>
                 </div>
                 <input type="range" min={0} max={100} value={filtStrength}
                   onChange={e => setFiltStrength(Number(e.target.value))}
                   className="w-full accent-indigo-500"
                 />
                 <div className="flex justify-between mt-1">
-                  <button onClick={resetFilters} className="text-[9px] text-slate-500 hover:text-rose-400 font-black uppercase tracking-widest transition-colors">Reset</button>
+                  <button onClick={resetFilters} className="text-[9px] text-slate-500 hover:text-[var(--tint-rose-fg)] font-black uppercase tracking-widest transition-colors">Reset</button>
                   <div className="flex gap-2">
                     {setCompareMode && ['before','after','split'].map(m => (
                       <button key={m} onClick={() => setCompareMode(m as any)}
@@ -1995,7 +1995,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <div role="button" onClick={e => { e.stopPropagation(); togglePinFilter(p.n) }}
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-1"
                   >
-                    <Pin className={`w-3 h-3 ${pinnedFilterNames.includes(p.n) ? 'text-indigo-400' : 'text-slate-500'}`} />
+                    <Pin className={`w-3 h-3 ${pinnedFilterNames.includes(p.n) ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-500'}`} />
                   </div>
                 </motion.button>
               ))}
@@ -2012,7 +2012,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
                 <input value={motionTemplateSearch} onChange={e => setMotionTemplateSearch(e.target.value)}
                   placeholder="Search templates…"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all"
                 />
               </div>
               <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
@@ -2035,7 +2035,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     if (!t) return null
                     return (
                       <button key={t.id} onClick={() => applyMotionGraphicTemplate(t)}
-                        className="flex-shrink-0 px-3 py-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/40 transition-all text-left"
+                        className="flex-shrink-0 px-3 py-2 rounded-xl bg-indigo-600/20 border border-[var(--tint-indigo-edge)] hover:bg-indigo-600/40 transition-all text-left"
                       >
                         <div className="text-[10px] font-black text-indigo-300 whitespace-nowrap">{t.name}</div>
                       </button>
@@ -2049,16 +2049,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             <div className="grid grid-cols-1 gap-2">
               {filteredMotionTemplates.map(t => (
                 <button key={t.id} onClick={() => applyMotionGraphicTemplate(t)}
-                  className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-indigo-500/30 transition-all text-left group"
+                  className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-[var(--tint-indigo-edge)] transition-all text-left group"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                    <Wand2 className="w-4 h-4 text-indigo-400" />
+                  <div className="w-8 h-8 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shrink-0">
+                    <Wand2 className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[11px] font-black text-slate-200 group-hover:text-white">{t.name}</div>
                     <div className="text-[9px] text-slate-500 group-hover:text-slate-400 mt-0.5">{t.description}</div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 shrink-0 mt-1 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-[var(--tint-indigo-fg)] shrink-0 mt-1 transition-colors" />
                 </button>
               ))}
             </div>
@@ -2074,7 +2074,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex gap-2">
                 {(['rect','circle','line'] as const).map(kind => (
                   <button key={kind} onClick={() => addShape(kind)}
-                    className="flex-1 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-indigo-500/30 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest capitalize transition-all"
+                    className="flex-1 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-[var(--tint-indigo-edge)] text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest capitalize transition-all"
                   >{kind}</button>
                 ))}
               </div>
@@ -2093,7 +2093,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex gap-2">
                 <input value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)}
                   placeholder="Paste image URL…"
-                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
+                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all"
                 />
                 <button onClick={addImageOverlay} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Add</button>
               </div>
@@ -2105,7 +2105,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex gap-2">
                 <input value={svgUrlInput} onChange={e => setSvgUrlInput(e.target.value)}
                   placeholder="SVG URL or data URI…"
-                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
+                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all"
                 />
                 <button onClick={addSvgOverlay} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Add</button>
               </div>
@@ -2122,7 +2122,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <div className="grid grid-cols-2 gap-1.5">
                   {GRADIENT_PRESETS.map(p => (
                     <button key={p.id} onClick={() => addGradientOverlay(p)}
-                      className="px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/10 hover:border-indigo-500/30 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all text-left"
+                      className="px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/10 hover:border-[var(--tint-indigo-edge)] text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all text-left"
                     >{p.name}</button>
                   ))}
                 </div>
@@ -2139,14 +2139,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <div className="space-y-1">
                   {textOverlays?.map(o => (
                     <div key={o.id} className="group">
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.06] hover:border-indigo-500/20 transition-all cursor-pointer"
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.06] hover:border-[var(--tint-indigo-edge)] transition-all cursor-pointer"
                         onClick={() => { setActiveEditTab('text'); setSelectedTextId(o.id) }}
                       >
-                        <Type className="w-3 h-3 text-indigo-400 shrink-0" />
+                        <Type className="w-3 h-3 text-[var(--tint-indigo-fg)] shrink-0" />
                         <span className="flex-1 text-[10px] text-slate-300 truncate">{o.text}</span>
                         <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}–{o.endTime.toFixed(1)}s</span>
                         <button onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
-                          className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
+                          className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-[var(--tint-rose-fg)] transition-all"
                         ><Trash2 className="w-3 h-3" /></button>
                       </div>
                       {/* Opacity row */}
@@ -2163,20 +2163,20 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   ))}
                   {shapeOverlays?.map(o => (
                     <div key={o.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group">
-                      <Box className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <Box className="w-3 h-3 text-[var(--tint-emerald-fg)] shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300 capitalize">{o.kind}</span>
                       <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
                       <button onClick={() => setShapeOverlays?.((prev: ShapeOverlay[]) => prev.filter(s => s.id !== o.id))}
-                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
+                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-[var(--tint-rose-fg)] transition-all"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>
                   ))}
                   {imageOverlays?.map(o => (
                     <div key={o.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group">
-                      <ImageIcon className="w-3 h-3 text-amber-400 shrink-0" />
+                      <ImageIcon className="w-3 h-3 text-[var(--tint-amber-fg)] shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300 truncate">{o.url.split('/').pop()}</span>
                       <button onClick={() => setImageOverlays?.((prev: ImageOverlay[]) => prev.filter(i => i.id !== o.id))}
-                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
+                        className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-[var(--tint-rose-fg)] transition-all"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>
                   ))}
@@ -2188,7 +2188,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No layers yet</p>
                 <p className="text-[9px] text-slate-700 max-w-[160px] leading-relaxed">Add shapes, images, or SVGs above. Text overlays appear here too.</p>
                 <button onClick={() => { setActiveEditTab('text'); handleAddOverlay('New Text') }}
-                  className="px-4 py-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-[9px] font-black text-indigo-400 hover:bg-indigo-600/40 transition-all uppercase tracking-widest"
+                  className="px-4 py-2 rounded-xl bg-indigo-600/20 border border-[var(--tint-indigo-edge)] text-[9px] font-black text-[var(--tint-indigo-fg)] hover:bg-indigo-600/40 transition-all uppercase tracking-widest"
                 >+ Add Text Layer</button>
               </div>
             )}
@@ -2211,11 +2211,11 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <div className="mt-2 space-y-1">
                   {savedCompounds.map(c => (
                     <div key={c.id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white/[0.02] border border-white/[0.04] group">
-                      <Archive className="w-3 h-3 text-violet-400 shrink-0" />
+                      <Archive className="w-3 h-3 text-[var(--tint-violet-fg)] shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300">{c.name}</span>
                       <span className="text-[8px] text-slate-600">{c.duration}s</span>
-                      <button onClick={() => addCompoundToTimeline(c)} className="px-2 py-0.5 rounded-lg bg-indigo-600/30 text-indigo-400 text-[8px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all">Inject</button>
-                      <button onClick={() => deleteCompound(c.id)} className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"><Trash2 className="w-3 h-3" /></button>
+                      <button onClick={() => addCompoundToTimeline(c)} className="px-2 py-0.5 rounded-lg bg-indigo-600/30 text-[var(--tint-indigo-fg)] text-[8px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all">Inject</button>
+                      <button onClick={() => deleteCompound(c.id)} className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-[var(--tint-rose-fg)] transition-all"><Trash2 className="w-3 h-3" /></button>
                     </div>
                   ))}
                 </div>
@@ -2233,9 +2233,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="space-y-2">
                 {CREATIVITY_PACKS.map(pack => (
                   <button key={pack.id} onClick={() => applyCreativityPack(pack.id)}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-indigo-500/30 transition-all text-left group"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-[var(--tint-indigo-edge)] transition-all text-left group"
                   >
-                    <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <Zap className="w-4 h-4 text-[var(--tint-indigo-fg)] shrink-0" />
                     <div>
                       <div className="text-[11px] font-black text-slate-200 group-hover:text-white">{pack.name}</div>
                       <div className="text-[9px] text-slate-500 group-hover:text-slate-400">{pack.description}</div>
@@ -2267,9 +2267,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 {PLATFORM_BUNDLES.map(b => (
                   <button key={b.id} onClick={() => applyPlatformBundle(b)}
-                    className="flex flex-col gap-1 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 hover:border-indigo-500/20 transition-all text-left group"
+                    className="flex flex-col gap-1 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 hover:border-[var(--tint-indigo-edge)] transition-all text-left group"
                   >
-                    <Globe className="w-4 h-4 text-indigo-400 mb-1" />
+                    <Globe className="w-4 h-4 text-[var(--tint-indigo-fg)] mb-1" />
                     <div className="text-[10px] font-black text-slate-200 group-hover:text-white leading-tight">{b.label}</div>
                     <div className="text-[8px] text-slate-500 group-hover:text-slate-400">{b.desc}</div>
                   </button>
@@ -2294,7 +2294,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {customStyleBundles.map(b => (
                     <button key={b.id}
                       onClick={() => { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev: VideoFilter) => ({ ...prev, ...b.filter } as VideoFilter)); showToast(`${b.name} applied`, 'success') }}
-                      className="px-3 py-1.5 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[9px] font-black text-violet-300 hover:bg-violet-600/40 transition-all"
+                      className="px-3 py-1.5 rounded-xl bg-violet-600/20 border border-[var(--tint-violet-edge)] text-[9px] font-black text-violet-300 hover:bg-violet-600/40 transition-all"
                     >{b.name}</button>
                   ))}
                 </div>
@@ -2327,7 +2327,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Retention Heatmap</span>
-                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">α Peak @ 4.2s</span>
+                <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">α Peak @ 4.2s</span>
               </div>
               <div className="flex gap-1 h-16 items-end">
                 {[60,45,85,55,95,40,75,55,88,98,35,68,60,92,48,70,50,85,72,60].map((h, i) => (
@@ -2371,16 +2371,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             </div>
 
             {/* AI Suggestions */}
-            <div className="p-4 rounded-2xl bg-indigo-500/[0.06] border border-indigo-500/20">
+            <div className="p-4 rounded-2xl bg-indigo-500/[0.06] border border-[var(--tint-indigo-edge)]">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">AI Directives</span>
+                <Sparkles className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--tint-indigo-fg)]">AI Directives</span>
               </div>
               <div className="space-y-2">
                 {[
-                  { icon: Target, text: 'Anchor viral hook to peak engagement node at 4.2s', action: 'Apply', color: 'text-indigo-400' },
-                  { icon: TrendingUp, text: 'Boost pacing in mid-section — cut average clip length by 0.8s', action: 'Plan', color: 'text-amber-400' },
-                  { icon: Eye, text: 'Add lower-third CTA at 80% — high save-rate zone', action: 'Add', color: 'text-emerald-400' },
+                  { icon: Target, text: 'Anchor viral hook to peak engagement node at 4.2s', action: 'Apply', color: 'text-[var(--tint-indigo-fg)]' },
+                  { icon: TrendingUp, text: 'Boost pacing in mid-section — cut average clip length by 0.8s', action: 'Plan', color: 'text-[var(--tint-amber-fg)]' },
+                  { icon: Eye, text: 'Add lower-third CTA at 80% — high save-rate zone', action: 'Add', color: 'text-[var(--tint-emerald-fg)]' },
                 ].map(({ icon: Icon, text, action, color }, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <Icon className={`w-3 h-3 ${color} mt-0.5 shrink-0`} />

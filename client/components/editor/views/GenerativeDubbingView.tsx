@@ -148,7 +148,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
     >
       {/* Header */}
       <div className="space-y-4">
-        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-black uppercase tracking-[0.5em]">
+        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] text-[var(--tint-violet-fg)] text-[10px] font-black uppercase tracking-[0.5em]">
           <Globe className="w-3.5 h-3.5 animate-pulse" />
           Generative Dubbing Suite — 2026
         </div>
@@ -156,7 +156,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           Dub<br />Studio
         </h1>
         <p className="text-slate-500 text-sm max-w-lg leading-relaxed">
-          Clone your voice into <span className="text-white font-black">10 languages</span> with emotion preserved. Optional <span className="text-violet-400 font-black">visual lip-sync</span> warps mouth movements to match foreign phonemes.
+          Clone your voice into <span className="text-white font-black">10 languages</span> with emotion preserved. Optional <span className="text-[var(--tint-violet-fg)] font-black">visual lip-sync</span> warps mouth movements to match foreign phonemes.
         </p>
       </div>
 
@@ -167,7 +167,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           {/* Language Selector */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-5`}>
             <div className="flex items-center gap-3">
-              <Languages className="w-4 h-4 text-violet-400" />
+              <Languages className="w-4 h-4 text-[var(--tint-violet-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">Target Languages</span>
               <span className="ml-auto text-[9px] font-black text-slate-600">
                 {selectedLangs.size} selected
@@ -186,7 +186,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                     disabled={isRunning}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all disabled:opacity-40 ${
                       selected
-                        ? 'bg-violet-500/15 border-violet-500/30'
+                        ? 'bg-[var(--tint-violet-bg)] border-[var(--tint-violet-edge)]'
                         : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.05]'
                     }`}
                   >
@@ -195,7 +195,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                       <p className={`text-[10px] font-black ${selected ? 'text-white' : 'text-slate-400'}`}>{lang.name}</p>
                       <p className="text-[8px] text-slate-600">{lang.speakers} speakers</p>
                     </div>
-                    {selected && <CheckCircle2 className="w-3 h-3 text-violet-400 ml-auto shrink-0" />}
+                    {selected && <CheckCircle2 className="w-3 h-3 text-[var(--tint-violet-fg)] ml-auto shrink-0" />}
                   </motion.button>
                 )
               })}
@@ -205,15 +205,15 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           {/* Options */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-4`}>
             <div className="flex items-center gap-3 mb-2">
-              <Sparkles className="w-4 h-4 text-fuchsia-400" />
+              <Sparkles className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">Dubbing Options</span>
             </div>
 
             {/* Voice Clone toggle */}
             <div className="flex items-center justify-between px-4 py-4 rounded-2xl bg-white/[0.02] border border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                  <Mic className="w-4 h-4 text-indigo-400" />
+                <div className="w-8 h-8 rounded-xl bg-[var(--tint-indigo-bg)] flex items-center justify-center">
+                  <Mic className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-white uppercase">Clone My Voice</p>
@@ -240,14 +240,14 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
             {/* Lip Sync toggle */}
             <div className="flex items-center justify-between px-4 py-4 rounded-2xl bg-white/[0.02] border border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-fuchsia-500/20 flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-fuchsia-400" />
+                <div className="w-8 h-8 rounded-xl bg-[var(--tint-fuchsia-bg)] flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-white uppercase">Visual Lip-Sync</p>
                   <p className="text-[9px] text-slate-600">Warps mouth pixels to match foreign phonemes</p>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[8px] font-black text-amber-400">Elite</span>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-[8px] font-black text-[var(--tint-amber-fg)]">Elite</span>
               </div>
               <button
                 onClick={() => setLipSyncEnabled(v => !v)}
@@ -272,7 +272,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 animate={{ opacity: 1, height: 'auto' }}
                 className="flex items-start gap-3 p-4 rounded-2xl bg-fuchsia-500/5 border border-fuchsia-500/10"
               >
-                <Info className="w-4 h-4 text-fuchsia-400 shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-[var(--tint-fuchsia-fg)] shrink-0 mt-0.5" />
                 <p className="text-[10px] text-slate-500 leading-relaxed">
                   Visual lip-sync applies <strong className="text-white">frame-by-frame phoneme warping</strong> using computer vision. Processing time increases by ~3× but the result eliminates the &ldquo;dubbed movie&rdquo; effect entirely.
                 </p>
@@ -290,7 +290,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
               step === 'done'
                 ? 'bg-white/5 border border-white/10 text-slate-400 hover:text-white'
                 : isRunning
-                ? 'bg-violet-900/40 border border-violet-500/20 text-violet-400 cursor-not-allowed'
+                ? 'bg-violet-900/40 border border-[var(--tint-violet-edge)] text-[var(--tint-violet-fg)] cursor-not-allowed'
                 : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-violet-500/20'
             }`}
           >
@@ -317,13 +317,13 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
               >
                 <div className="flex items-center gap-3">
                   {step === 'done'
-                    ? <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    : <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
+                    ? <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
+                    : <Loader2 className="w-4 h-4 text-[var(--tint-violet-fg)] animate-spin" />
                   }
                   <span className="text-sm font-black text-white uppercase tracking-wider">
                     {step === 'done' ? 'Dubbing Complete' : 'Processing…'}
                   </span>
-                  <span className="ml-auto text-[11px] font-mono font-black text-violet-400">{progress}%</span>
+                  <span className="ml-auto text-[11px] font-mono font-black text-[var(--tint-violet-fg)]">{progress}%</span>
                 </div>
 
                 <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
@@ -355,7 +355,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                     ))}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
-                      className="w-full mt-2 py-3 rounded-2xl bg-violet-600/20 border border-violet-500/20 text-violet-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                      className="w-full mt-2 py-3 rounded-2xl bg-violet-600/20 border border-[var(--tint-violet-edge)] text-[var(--tint-violet-fg)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
                       onClick={() => showToast('Export with dubbing tracks enabled', 'info')}
                     >
                       <Download className="w-4 h-4" /> Export with Dubbed Audio
@@ -370,9 +370,9 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-3`}>
             <div className="text-[9px] font-black uppercase tracking-widest text-slate-600 mb-3">Powered by</div>
             {[
-              { name: 'ElevenLabs Dubbing API', desc: 'Voice cloning & multilingual TTS', color: 'text-indigo-400' },
-              { name: 'Whisper v3', desc: 'Ultra-accurate word-level transcription', color: 'text-emerald-400' },
-              { name: 'Phoneme Warp Engine', desc: 'Real-time lip-sync via computer vision', color: 'text-fuchsia-400' },
+              { name: 'ElevenLabs Dubbing API', desc: 'Voice cloning & multilingual TTS', color: 'text-[var(--tint-indigo-fg)]' },
+              { name: 'Whisper v3', desc: 'Ultra-accurate word-level transcription', color: 'text-[var(--tint-emerald-fg)]' },
+              { name: 'Phoneme Warp Engine', desc: 'Real-time lip-sync via computer vision', color: 'text-[var(--tint-fuchsia-fg)]' },
             ].map(api => (
               <div key={api.name} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/5">
                 <div className="w-1.5 h-1.5 rounded-full bg-current" />

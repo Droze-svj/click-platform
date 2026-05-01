@@ -14,7 +14,7 @@ import { useAuth } from '../../../hooks/useAuth'
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
 
 const glass = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
-const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
+const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-[var(--tint-indigo-edge)] transition-all duration-500'
 
 type Panel = 'trends' | 'retention' | 'creativity' | 'engagement' | 'optimizer'
 
@@ -79,11 +79,11 @@ export default function MarketingOraclePage() {
   }
 
   const panels: { id: Panel; label: string; icon: any; color: string; bg: string }[] = [
-    { id: 'trends',     label: 'Global Trend Radar',   icon: Globe,       color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-    { id: 'retention',  label: 'Retention Engine',      icon: RefreshCw,   color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { id: 'creativity', label: 'Creativity Pulse',      icon: Sparkles,    color: 'text-amber-400',  bg: 'bg-amber-500/10' },
-    { id: 'engagement', label: 'Engagement Lab',        icon: MessageCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-    { id: 'optimizer',  label: 'Pre-Publish Analyzer',  icon: Target,      color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+    { id: 'trends',     label: 'Global Trend Radar',   icon: Globe,       color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)]' },
+    { id: 'retention',  label: 'Retention Engine',      icon: RefreshCw,   color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-[var(--tint-emerald-bg)]' },
+    { id: 'creativity', label: 'Creativity Pulse',      icon: Sparkles,    color: 'text-[var(--tint-amber-fg)]',  bg: 'bg-[var(--tint-amber-bg)]' },
+    { id: 'engagement', label: 'Engagement Lab',        icon: MessageCircle, color: 'text-[var(--tint-rose-fg)]', bg: 'bg-[var(--tint-rose-bg)]' },
+    { id: 'optimizer',  label: 'Pre-Publish Analyzer',  icon: Target,      color: 'text-[var(--tint-fuchsia-fg)]', bg: 'bg-[var(--tint-fuchsia-bg)]' },
   ]
 
   return (
@@ -104,7 +104,7 @@ export default function MarketingOraclePage() {
             </Link>
             <Link
               href="/dashboard/forge"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 hover:bg-fuchsia-500/20 hover:border-fuchsia-500/50 transition-all text-[10px] font-black uppercase tracking-[0.18em]"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-fuchsia-300 hover:bg-[var(--tint-fuchsia-bg)] hover:border-fuchsia-500/50 transition-all text-[10px] font-black uppercase tracking-[0.18em]"
             >
               <Sparkles size={11} /> Apply in editor →
             </Link>
@@ -114,7 +114,7 @@ export default function MarketingOraclePage() {
               <Brain size={36} className="text-white" />
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.8em] text-indigo-400 mb-1">Marketing Oracle · 2026</p>
+              <p className="text-xs font-black uppercase tracking-[0.8em] text-[var(--tint-indigo-fg)] mb-1">Marketing Oracle · 2026</p>
               <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">AI Marketing Expert</h1>
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function MarketingOraclePage() {
                 value={niche}
                 onChange={(e) => setNiche(e.target.value)}
                 placeholder="e.g. fitness, finance..."
-                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-900 font-black italic focus:outline-none focus:border-indigo-500/40 uppercase transition-all"
+                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-slate-900 font-black italic focus:outline-none focus:border-[var(--tint-indigo-edge)] uppercase transition-all"
               />
             </div>
             <div className="space-y-3 flex-1">
@@ -142,7 +142,7 @@ export default function MarketingOraclePage() {
                 onChange={(e) => setPlatform(e.target.value)}
                 title="Select platform"
                 aria-label="Select platform"
-                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white font-black italic focus:outline-none focus:border-indigo-500/40 uppercase transition-all"
+                className="w-full bg-black/60 border-2 border-white/5 rounded-2xl px-5 py-4 text-sm text-white font-black italic focus:outline-none focus:border-[var(--tint-indigo-edge)] uppercase transition-all"
               >
                 {['instagram','tiktok','linkedin','twitter','youtube','facebook'].map((p) => (
                   <option key={p} value={p} className="bg-black">{p.toUpperCase()}</option>
@@ -179,10 +179,10 @@ export default function MarketingOraclePage() {
       {/* ── Operational Indicators ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
         {[
-          { label: 'Neural_Fidelity', value: '99.9%', sub: 'ACTIVE_LINK', color: 'text-indigo-400' },
-          { label: 'Signal_Sync', value: syncStatus ? 'CALIBRATED' : 'STABLE', sub: syncStatus ? syncStatus.timestamp.split('T')[1].slice(0,5) : 'CORE_ONLY', color: 'text-emerald-400' },
-          { label: 'Matrix_Drift', value: '0.002', sub: 'MILLIRADIANS', color: 'text-amber-400' },
-          { label: 'Quantum_Load', value: 'MINIMAL', sub: '42.1_PFLOPS', color: 'text-rose-400' },
+          { label: 'Neural_Fidelity', value: '99.9%', sub: 'ACTIVE_LINK', color: 'text-[var(--tint-indigo-fg)]' },
+          { label: 'Signal_Sync', value: syncStatus ? 'CALIBRATED' : 'STABLE', sub: syncStatus ? syncStatus.timestamp.split('T')[1].slice(0,5) : 'CORE_ONLY', color: 'text-[var(--tint-emerald-fg)]' },
+          { label: 'Matrix_Drift', value: '0.002', sub: 'MILLIRADIANS', color: 'text-[var(--tint-amber-fg)]' },
+          { label: 'Quantum_Load', value: 'MINIMAL', sub: '42.1_PFLOPS', color: 'text-[var(--tint-rose-fg)]' },
         ].map((stat, i) => (
           <div key={i} className={`${glass} p-8 rounded-[2.5rem] border-white/5 space-y-3 group hover:border-white/20 transition-all`}>
              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
@@ -252,7 +252,7 @@ function Spinner() {
 
 function ErrorBlock({ msg }: { msg: string }) {
   return (
-    <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-bold">
+    <div className="flex items-center gap-3 p-4 rounded-2xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] text-sm font-bold">
       <AlertTriangle size={16} /> {msg}
     </div>
   )
@@ -283,8 +283,8 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-4 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                <Globe size={20} className="text-indigo-400" />
+              <div className="w-10 h-10 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+                <Globe size={20} className="text-[var(--tint-indigo-fg)]" />
               </div>
               <h2 className="text-2xl font-black italic uppercase tracking-tighter">Global Trend Radar</h2>
             </div>
@@ -307,7 +307,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
                   className="h-full bg-gradient-to-r from-indigo-600 to-violet-500 rounded-full"
                 />
               </div>
-              <span className="text-2xl font-black text-indigo-400 tabular-nums">{report.confidenceScore || 80}%</span>
+              <span className="text-2xl font-black text-[var(--tint-indigo-fg)] tabular-nums">{report.confidenceScore || 80}%</span>
               <span className="text-xs font-black uppercase tracking-widest text-slate-600">Confidence</span>
             </div>
 
@@ -317,7 +317,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
                 <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Niche Opportunities</p>
                 {report.niching.slice(0, 4).map((opp: any, i: number) => (
                   <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                    className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-indigo-500/30 transition-all">
+                    className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="font-black text-white text-sm mb-1">{opp.title || opp}</p>
@@ -325,9 +325,9 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
                       </div>
                       {opp.urgency && (
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shrink-0 ${
-                          opp.urgency === 'high' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                          opp.urgency === 'medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                          'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          opp.urgency === 'high' ? 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border border-[var(--tint-rose-edge)]' :
+                          opp.urgency === 'medium' ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)]' :
+                          'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]'
                         }`}>{opp.urgency}</span>
                       )}
                     </div>
@@ -342,7 +342,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
                 <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Actionable Insights</p>
                 {report.actionableInsights.slice(0, 3).map((insight: string, i: number) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
-                    <Zap size={14} className="text-indigo-400 mt-0.5 shrink-0" />
+                    <Zap size={14} className="text-[var(--tint-indigo-fg)] mt-0.5 shrink-0" />
                     <p className="text-sm text-slate-300 font-bold">{insight}</p>
                   </div>
                 ))}
@@ -365,7 +365,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
 
         {!report && !loading.trendReport && (
           <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
-            <Globe size={48} className="text-indigo-400/30" />
+            <Globe size={48} className="text-[var(--tint-indigo-fg)]/30" />
             <p className="text-slate-600 font-bold">Set your niche and click Scan Now to see live global trends</p>
           </div>
         )}
@@ -374,12 +374,12 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
       {/* Knowledge Base */}
       <div className={`${glass} rounded-[2.5rem] p-8 space-y-6`}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <BookOpen size={20} className="text-amber-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center">
+            <BookOpen size={20} className="text-[var(--tint-amber-fg)]" />
           </div>
           <h3 className="text-lg font-black italic uppercase tracking-tighter">Knowledge Base</h3>
         </div>
-        <ActionButton label="Get Insights" icon={Lightbulb} loading={loading.knowledge} color="bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+        <ActionButton label="Get Insights" icon={Lightbulb} loading={loading.knowledge} color="bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)] hover:bg-amber-500/30"
           onClick={() => load('knowledge', `/knowledge-insights?niche=${niche}&format=video`)} />
 
         {knowledge && (
@@ -388,11 +388,11 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
               <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600 mb-3">Recommended Frameworks</p>
               {knowledge.recommendedFrameworks?.map((f: any, i: number) => (
                 <div key={i} className="p-4 rounded-2xl bg-black/40 border border-white/5 mb-3 space-y-1">
-                  <p className="font-black text-amber-400 text-sm">{f.name}</p>
+                  <p className="font-black text-[var(--tint-amber-fg)] text-sm">{f.name}</p>
                   <p className="text-xs text-slate-500 leading-relaxed">{f.description}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {f.bestFor?.map((tag: string) => (
-                      <span key={tag} className="px-2 py-0.5 rounded-full bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400 font-bold">{tag}</span>
+                      <span key={tag} className="px-2 py-0.5 rounded-full bg-amber-500/5 border border-amber-500/10 text-[10px] text-[var(--tint-amber-fg)] font-bold">{tag}</span>
                     ))}
                   </div>
                 </div>
@@ -402,7 +402,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
               <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600 mb-3">Quick Wins</p>
               {knowledge.quickWins?.map((win: string, i: number) => (
                 <div key={i} className="flex items-start gap-2 mb-2">
-                  <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 shrink-0" />
+                  <CheckCircle2 size={14} className="text-[var(--tint-emerald-fg)] mt-0.5 shrink-0" />
                   <p className="text-xs text-slate-400 font-bold">{win}</p>
                 </div>
               ))}
@@ -425,8 +425,8 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
       {/* Score Card */}
       <div className={`${glass} rounded-[2.5rem] p-10 space-y-8`}>
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-            <Activity size={20} className="text-emerald-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center">
+            <Activity size={20} className="text-[var(--tint-emerald-fg)]" />
           </div>
           <div>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Retention Health</h2>
@@ -435,7 +435,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
         </div>
 
         <ActionButton label="Calculate Score" icon={Target} loading={loading.retentionScore}
-          color="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
+          color="bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)] hover:bg-emerald-500/30"
           onClick={() => load('retentionScore', '/retention-score')} />
 
         {error.retentionScore && <ErrorBlock msg={error.retentionScore} />}
@@ -446,13 +446,13 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
             <div className="relative flex items-center justify-center py-8">
               <div className="w-40 h-40 rounded-full border-8 border-white/5 flex items-center justify-center relative shadow-[0_0_80px_rgba(16,185,129,0.2)]">
                 <motion.div 
-                  className="absolute inset-0 rounded-full border-8 border-emerald-500/40" 
+                  className="absolute inset-0 rounded-full border-8 border-[var(--tint-emerald-edge)]" 
                   initial={false}
                   animate={{ clipPath: `inset(${100 - score.score}% 0 0 0)` }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
                 />
                 <div className="text-center">
-                  <p className="text-5xl font-black text-emerald-400 tabular-nums leading-none">{score.score}</p>
+                  <p className="text-5xl font-black text-[var(--tint-emerald-fg)] tabular-nums leading-none">{score.score}</p>
                   <p className="text-xs font-black uppercase tracking-widest text-slate-600 mt-1">/100</p>
                 </div>
               </div>
@@ -461,10 +461,10 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
 
             {/* Risk badge */}
             <div className={`px-5 py-3 rounded-2xl text-center text-sm font-black uppercase tracking-widest border ${
-              score.riskLevel === 'critical' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-              score.riskLevel === 'high'     ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+              score.riskLevel === 'critical' ? 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)]' :
+              score.riskLevel === 'high'     ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]' :
               score.riskLevel === 'medium'   ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-              'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+              'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]'
             }`}>
               Risk Level: {score.riskLevel?.toUpperCase()}
             </div>
@@ -475,7 +475,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
                 <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Improvement Steps</p>
                 {score.improvements.map((imp: string, i: number) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-black/40 border border-white/5">
-                    <ArrowRight size={14} className="text-emerald-400 mt-0.5 shrink-0" />
+                    <ArrowRight size={14} className="text-[var(--tint-emerald-fg)] mt-0.5 shrink-0" />
                     <p className="text-xs text-slate-300 font-bold">{imp}</p>
                   </div>
                 ))}
@@ -488,8 +488,8 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
       {/* Re-engagement Sequence */}
       <div className={`${glass} rounded-[2.5rem] p-10 space-y-6`}>
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-            <RefreshCw size={20} className="text-violet-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] flex items-center justify-center">
+            <RefreshCw size={20} className="text-[var(--tint-violet-fg)]" />
           </div>
           <div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter">Re-engagement Sequence</h2>
@@ -499,7 +499,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
 
         <div className="flex gap-3 flex-wrap">
           <ActionButton label="Generate Sequence" icon={Rocket} loading={loading.retentionSequence}
-            color="bg-violet-500/20 text-violet-400 border border-violet-500/30"
+            color="bg-[var(--tint-violet-bg)] text-[var(--tint-violet-fg)] border border-[var(--tint-violet-edge)]"
             onClick={() => load('retentionSequence', `/retention-sequence?niche=${niche}&platform=${platform}`)} />
           <ActionButton label="Build Campaign" icon={Star} loading={loading.retentionCampaign}
             color="bg-white text-black"
@@ -517,8 +517,8 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
               <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
                 className="p-4 rounded-2xl bg-black/60 border border-white/5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-violet-400 uppercase tracking-widest">Post {post.postNumber} · Day {post.dayOffset}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black text-violet-400 uppercase">{post.psychTrigger}</span>
+                  <span className="text-xs font-black text-[var(--tint-violet-fg)] uppercase tracking-widest">Post {post.postNumber} · Day {post.dayOffset}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] text-[10px] font-black text-[var(--tint-violet-fg)] uppercase">{post.psychTrigger}</span>
                 </div>
                 <p className="text-sm text-white font-bold leading-relaxed">{post.hook}</p>
                 <p className="text-xs text-slate-500">{post.cta}</p>
@@ -528,11 +528,11 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
         )}
 
         {campaign && (
-          <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-2">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-emerald-400">Campaign Plan Generated</p>
+          <div className="p-5 rounded-2xl bg-emerald-500/5 border border-[var(--tint-emerald-edge)] space-y-2">
+            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--tint-emerald-fg)]">Campaign Plan Generated</p>
             <p className="text-sm font-black text-white">{campaign.campaignName}</p>
             <p className="text-xs text-slate-500">{campaign.totalPosts} posts scheduled · {campaign.campaignDurationDays} days</p>
-            <p className="text-xs text-emerald-400 font-bold">{campaign.expectedOutcome}</p>
+            <p className="text-xs text-[var(--tint-emerald-fg)] font-bold">{campaign.expectedOutcome}</p>
           </div>
         )}
       </div>
@@ -549,8 +549,8 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
       <div className={`${glass} rounded-[2.5rem] p-10 space-y-8`}>
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <Sparkles size={20} className="text-amber-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center">
+            <Sparkles size={20} className="text-[var(--tint-amber-fg)]" />
           </div>
           <div>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Fresh Angles Generator</h2>
@@ -578,9 +578,9 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
             <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Your 10 Novel Angles</p>
             {freshAngles.angles.map((angle: any, i: number) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                className="p-5 rounded-2xl bg-black/60 border border-amber-500/10 hover:border-amber-500/30 transition-all group">
+                className="p-5 rounded-2xl bg-black/60 border border-amber-500/10 hover:border-[var(--tint-amber-edge)] transition-all group">
                 <div className="flex items-start justify-between gap-4 mb-2">
-                  <span className="text-xs font-black text-amber-400 uppercase tracking-widest">Angle {i + 1} · {angle.format}</span>
+                  <span className="text-xs font-black text-[var(--tint-amber-fg)] uppercase tracking-widest">Angle {i + 1} · {angle.format}</span>
                   {angle.originalityScore && (
                     <span className="text-xs font-black text-slate-500">{angle.originalityScore}/100 originality</span>
                   )}
@@ -596,8 +596,8 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
       {/* Inspiration Drop */}
       <div className={`${glass} rounded-[2.5rem] p-10 space-y-6`}>
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-            <Flame size={20} className="text-rose-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center">
+            <Flame size={20} className="text-[var(--tint-rose-fg)]" />
           </div>
           <div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter">Inspiration Drop</h2>
@@ -606,7 +606,7 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
         </div>
 
         <ActionButton label="Get New Drop" icon={Compass} loading={loading.inspiration}
-          color="bg-rose-500/20 text-rose-400 border border-rose-500/30"
+          color="bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border border-[var(--tint-rose-edge)]"
           onClick={() => load('inspiration', `/inspiration-drop?niche=${niche}&format=video`)} />
 
         {(inspiration || data.dashboard?.inspirationDrop) && (() => {
@@ -614,7 +614,7 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
           return (
             <div className="space-y-5">
               <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-500/10 to-violet-500/10 border border-white/10 space-y-4">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-rose-400">Framework</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--tint-rose-fg)]">Framework</p>
                 <p className="text-xl font-black text-white">{drop.framework}</p>
                 <p className="text-sm text-slate-400 italic leading-relaxed">&ldquo;{drop.principle}&rdquo;</p>
               </div>
@@ -626,8 +626,8 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
                 <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Example</p>
                 <p className="text-sm text-slate-400 leading-relaxed">{drop.example}</p>
               </div>
-              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-amber-400 mb-2">Your Challenge Today</p>
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-[var(--tint-amber-edge)]">
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--tint-amber-fg)] mb-2">Your Challenge Today</p>
                 <p className="text-sm text-white font-bold">{drop.challengeForToday}</p>
               </div>
             </div>
@@ -647,8 +647,8 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
       <div className={`${glass} rounded-[2.5rem] p-10 space-y-8`}>
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-            <MessageCircle size={20} className="text-rose-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center">
+            <MessageCircle size={20} className="text-[var(--tint-rose-fg)]" />
           </div>
           <div>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Engagement Prompts</h2>
@@ -667,16 +667,16 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
             <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Ready-to-Use Prompts</p>
             {prompts.prompts.map((p: any, i: number) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                className="p-5 rounded-2xl bg-black/60 border border-rose-500/10 hover:border-rose-500/30 transition-all group">
+                className="p-5 rounded-2xl bg-black/60 border border-rose-500/10 hover:border-[var(--tint-rose-edge)] transition-all group">
                 <div className="flex items-center justify-between mb-2">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                    p.type === 'question' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                    p.type === 'poll' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                    p.type === 'challenge' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                    'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                    p.type === 'question' ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]' :
+                    p.type === 'poll' ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]' :
+                    p.type === 'challenge' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' :
+                    'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)]'
                   }`}>{p.type || 'cta'}</span>
                   {(p.estimatedLift || p.estimated_engagement_lift) && (
-                    <span className="text-xs font-black text-emerald-400">↑ {p.estimatedLift || p.estimated_engagement_lift}</span>
+                    <span className="text-xs font-black text-[var(--tint-emerald-fg)]">↑ {p.estimatedLift || p.estimated_engagement_lift}</span>
                   )}
                 </div>
                 <p className="text-sm text-white font-bold leading-relaxed">{p.text || p.prompt}</p>
@@ -690,8 +690,8 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
       {/* Benchmarks */}
       <div className={`${glass} rounded-[2.5rem] p-10 space-y-6`}>
         <div className="flex items-center gap-4 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-            <BarChart3 size={20} className="text-indigo-400" />
+          <div className="w-10 h-10 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+            <BarChart3 size={20} className="text-[var(--tint-indigo-fg)]" />
           </div>
           <div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter">2026 Benchmarks</h2>
@@ -700,17 +700,17 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
         </div>
 
         <ActionButton label="Load Benchmarks" icon={Target} loading={loading.benchmarks}
-          color="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+          color="bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)]"
           onClick={() => load('benchmarks', `/benchmarks?platform=${platform}`)} />
 
         {(benchmarks) && (() => {
           const b = benchmarks.benchmarks || (benchmarks.data?.benchmarks)
           if (!b) return null
           const tiers = [
-            { label: 'Excellent', value: b.excellent, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-            { label: 'Good', value: b.good, color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/20' },
-            { label: 'Average', value: b.average, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-            { label: 'Poor', value: b.poor, color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' },
+            { label: 'Excellent', value: b.excellent, color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]' },
+            { label: 'Good', value: b.good, color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]' },
+            { label: 'Average', value: b.average, color: 'text-[var(--tint-amber-fg)]', bg: 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]' },
+            { label: 'Poor', value: b.poor, color: 'text-[var(--tint-rose-fg)]', bg: 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]' },
           ]
           return (
             <div className="space-y-4">
@@ -730,9 +730,9 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
         <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
           <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Activate Your Audience</p>
           {[
-            { icon: Heart, text: 'Add specific questions to every post — not "what do you think?" but "which of these two strategies matches your experience?"', color: 'text-rose-400' },
-            { icon: Users, text: 'Reply to every comment in the first 60 minutes — algorithms reward early engagement velocity', color: 'text-indigo-400' },
-            { icon: Shield, text: 'Pin your best comment to model the ideal response you want more of', color: 'text-emerald-400' },
+            { icon: Heart, text: 'Add specific questions to every post — not "what do you think?" but "which of these two strategies matches your experience?"', color: 'text-[var(--tint-rose-fg)]' },
+            { icon: Users, text: 'Reply to every comment in the first 60 minutes — algorithms reward early engagement velocity', color: 'text-[var(--tint-indigo-fg)]' },
+            { icon: Shield, text: 'Pin your best comment to model the ideal response you want more of', color: 'text-[var(--tint-emerald-fg)]' },
           ].map((tip, i) => (
             <div key={i} className="flex items-start gap-3">
               <tip.icon size={14} className={`${tip.color} mt-0.5 shrink-0`} />
@@ -756,8 +756,8 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
     <div className="space-y-6">
       <div className={`${glass} rounded-3xl p-8`}>
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/20 flex items-center justify-center">
-            <Target className="text-fuchsia-400" size={24} />
+          <div className="w-12 h-12 rounded-2xl bg-[var(--tint-fuchsia-bg)] flex items-center justify-center">
+            <Target className="text-[var(--tint-fuchsia-fg)]" size={24} />
           </div>
           <div>
             <h2 className="text-3xl font-black uppercase tracking-wide">Pre-Publish Content Analyzer</h2>
@@ -790,14 +790,14 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
         {report && (
           <div className="mt-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Verdict Header */}
-            <div className={`p-6 rounded-2xl border ${report.overallScore >= 75 ? 'bg-emerald-500/10 border-emerald-500/30' : report.overallScore >= 55 ? 'bg-amber-500/10 border-amber-500/30' : 'bg-rose-500/10 border-rose-500/30'} flex items-center justify-between`}>
+            <div className={`p-6 rounded-2xl border ${report.overallScore >= 75 ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]' : report.overallScore >= 55 ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]' : 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]'} flex items-center justify-between`}>
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Pre-Flight Verdict</p>
                 <h3 className="text-2xl font-black mt-1">{report.verdict}</h3>
               </div>
               <div className="text-right">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Score</p>
-                <div className={`text-4xl font-black ${report.overallScore >= 75 ? 'text-emerald-400' : report.overallScore >= 55 ? 'text-amber-400' : 'text-rose-400'}`}>
+                <div className={`text-4xl font-black ${report.overallScore >= 75 ? 'text-[var(--tint-emerald-fg)]' : report.overallScore >= 55 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'}`}>
                   {report.overallScore}/100
                 </div>
               </div>
@@ -807,17 +807,17 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
               {/* Hook Strength */}
               <div className="bg-black/40 border border-white/5 p-6 rounded-2xl space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-black uppercase tracking-wide flex items-center gap-2"><Flame size={18} className="text-orange-400"/> Hook Analysis</h4>
-                  <span className="text-orange-400 font-bold">{report.hookAnalysis.score}/100</span>
+                  <h4 className="font-black uppercase tracking-wide flex items-center gap-2"><Flame size={18} className="text-[var(--tint-orange-fg)]"/> Hook Analysis</h4>
+                  <span className="text-[var(--tint-orange-fg)] font-bold">{report.hookAnalysis.score}/100</span>
                 </div>
                 <div className="space-y-2">
                   {report.hookAnalysis.signals.map((s: any, i: number) => (
-                    <div key={i} className="flex gap-2 text-sm text-emerald-400 bg-emerald-500/5 p-2 rounded-lg">
+                    <div key={i} className="flex gap-2 text-sm text-[var(--tint-emerald-fg)] bg-emerald-500/5 p-2 rounded-lg">
                       <CheckCircle2 size={16} className="shrink-0 mt-0.5" /> <span>{s.signal}</span>
                     </div>
                   ))}
                   {report.hookAnalysis.weaknesses.map((w: string, i: number) => (
-                    <div key={i} className="flex gap-2 text-sm text-rose-400 bg-rose-500/5 p-2 rounded-lg">
+                    <div key={i} className="flex gap-2 text-sm text-[var(--tint-rose-fg)] bg-rose-500/5 p-2 rounded-lg">
                       <AlertTriangle size={16} className="shrink-0 mt-0.5" /> <span>{w}</span>
                     </div>
                   ))}
@@ -828,7 +828,7 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
                     <div className="space-y-3">
                       {report.hookAnalysis.rewrites.map((r: any, i: number) => (
                         <div key={i} className="bg-white/5 p-3 rounded-xl border border-white/5">
-                          <p className="text-xs text-orange-400 font-bold mb-1">{r.label}</p>
+                          <p className="text-xs text-[var(--tint-orange-fg)] font-bold mb-1">{r.label}</p>
                           <p className="text-sm">&quot;{r.text}&quot;</p>
                         </div>
                       ))}
@@ -844,13 +844,13 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
                   <div className="space-y-2">
                     {report.platformFit.risksDetected.length > 0 ? (
                       report.platformFit.risksDetected.map((r: any, i: number) => (
-                        <div key={i} className="text-sm bg-rose-500/10 border border-rose-500/20 text-rose-300 p-3 rounded-xl">
+                        <div key={i} className="text-sm bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-rose-300 p-3 rounded-xl">
                           <strong>Risk:</strong> {r.issue} <br/>
                           <span className="text-white">Fix: {r.fix}</span>
                         </div>
                       ))
                     ) : (
-                      <div className="text-sm bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl flex items-center gap-2">
+                      <div className="text-sm bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] p-3 rounded-xl flex items-center gap-2">
                         <CheckCircle2 size={16} /> Content is cleanly aligned with top signals
                       </div>
                     )}
@@ -876,10 +876,10 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
 
             {/* Timings */}
             <div className="bg-black/40 border border-white/5 p-6 rounded-2xl">
-              <h4 className="font-black uppercase tracking-wide mb-4 flex items-center gap-2"><Clock size={18} className="text-indigo-400"/> Optimal Posting Windows</h4>
+              <h4 className="font-black uppercase tracking-wide mb-4 flex items-center gap-2"><Clock size={18} className="text-[var(--tint-indigo-fg)]"/> Optimal Posting Windows</h4>
               <div className="flex flex-wrap gap-3">
                 {report.optimalPostingTimes.optimalWindows.map((tw: any, i: number) => (
-                  <div key={i} className="px-4 py-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-sm">
+                  <div key={i} className="px-4 py-3 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-xl text-sm">
                     <strong className="text-indigo-300">{tw.day}</strong> <span className="text-slate-400">@ {tw.time}</span>
                   </div>
                 ))}

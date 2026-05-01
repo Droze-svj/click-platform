@@ -25,7 +25,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/15 border border-indigo-500/35 text-indigo-300 text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-indigo-500/15 hover:bg-indigo-500/25 transition-all cursor-default group"
+          className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-indigo-500/35 text-indigo-300 text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-indigo-500/15 hover:bg-[var(--tint-indigo-bg)] transition-all cursor-default group"
         >
           <Sparkles className="w-3 h-3 text-indigo-300 animate-pulse" />
           <span>Click AI v4.0 — Neural Forge is Live</span>

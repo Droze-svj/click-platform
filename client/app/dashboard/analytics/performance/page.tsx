@@ -99,18 +99,18 @@ export default function FluxForecastingMatrixPage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
                 <ArrowLeft size={32} />
               </button>
-              <div className="w-20 h-20 bg-emerald-500/5 border border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-20 h-20 bg-emerald-500/5 border border-[var(--tint-emerald-edge)] rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-100" />
-                <TrendingUp size={40} className="text-emerald-400 relative z-10 group-hover:scale-125 transition-transform duration-700" />
+                <TrendingUp size={40} className="text-[var(--tint-emerald-fg)] relative z-10 group-hover:scale-125 transition-transform duration-700" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Gauge size={14} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-emerald-400 italic leading-none">Flux Matrix v9.4.0</span>
+                      <Gauge size={14} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[var(--tint-emerald-fg)] italic leading-none">Flux Matrix v9.4.0</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <Activity size={12} className="text-emerald-400 animate-pulse" />
+                       <Activity size={12} className="text-[var(--tint-emerald-fg)] animate-pulse" />
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
                    </div>
                  </div>
@@ -129,7 +129,7 @@ export default function FluxForecastingMatrixPage() {
                       onClick={() => setPulseMode(!pulseMode)}
                       title={pulseMode ? "Disable Pulse Sync" : "Enable Pulse Sync"}
                       aria-label="Toggle Spectral Pulse Mode"
-                      className={`w-10 h-5 rounded-full p-1 transition-colors duration-500 ${pulseMode ? 'bg-emerald-500/20 border border-emerald-500/50' : 'bg-black/40 border border-white/5'}`}
+                      className={`w-10 h-5 rounded-full p-1 transition-colors duration-500 ${pulseMode ? 'bg-[var(--tint-emerald-bg)] border border-emerald-500/50' : 'bg-black/40 border border-white/5'}`}
                     >
                        <div className={`w-3 h-3 rounded-full transition-transform duration-500 ${pulseMode ? 'translate-x-5 bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]' : 'translate-x-0 bg-slate-700'}`} />
                     </button>
@@ -165,17 +165,17 @@ export default function FluxForecastingMatrixPage() {
 
         {/* Summary Kinetic HUD */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
-           <KineticCard label="Total Saturation" value={formatFmt(stats.views)} icon={Eye} color="text-emerald-400" trend="SPECTRAL_REACH" />
-           <KineticCard label="Total Resonance" value={formatFmt(stats.engage)} icon={Zap} color="text-amber-400" trend="SIGNAL_AFFINITY" />
-           <KineticCard label="Node Density" value={(stats.posts / parseInt(period)).toFixed(1)} icon={Boxes} color="text-indigo-400" trend="DAILY_PHANTOMS" />
-           <KineticCard label="Kinetic Rate" value={`${engageRate}%`} icon={Activity} color="text-rose-400" trend="MOMENTUM_HZ" />
+           <KineticCard label="Total Saturation" value={formatFmt(stats.views)} icon={Eye} color="text-[var(--tint-emerald-fg)]" trend="SPECTRAL_REACH" />
+           <KineticCard label="Total Resonance" value={formatFmt(stats.engage)} icon={Zap} color="text-[var(--tint-amber-fg)]" trend="SIGNAL_AFFINITY" />
+           <KineticCard label="Node Density" value={(stats.posts / parseInt(period)).toFixed(1)} icon={Boxes} color="text-[var(--tint-indigo-fg)]" trend="DAILY_PHANTOMS" />
+           <KineticCard label="Kinetic Rate" value={`${engageRate}%`} icon={Activity} color="text-[var(--tint-rose-fg)]" trend="MOMENTUM_HZ" />
         </div>
 
         {/* Temporal Velocity Matrix */}
         <div className={`${glassStyle} rounded-[6rem] p-24 relative overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]`}>
            <div className="absolute top-0 right-0 p-32 opacity-[0.015] pointer-events-none"><Terminal size={600} className="text-white" /></div>
            <div className="flex items-center gap-8 mb-20 relative z-10">
-              <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
+              <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-[var(--tint-emerald-edge)] shadow-2xl"><ActivitySquare size={40} className="text-[var(--tint-emerald-fg)]" /></div>
               <div>
                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
                  <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
@@ -196,7 +196,7 @@ export default function FluxForecastingMatrixPage() {
                        <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
                          key={day.date} className="flex items-center gap-12 group"
                        >
-                          <div className="w-48 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none group-hover:text-emerald-400 transition-colors">
+                          <div className="w-48 text-[12px] font-black text-slate-400 uppercase tracking-widest italic leading-none group-hover:text-[var(--tint-emerald-fg)] transition-colors">
                              {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
                           </div>
                           <div className="flex-1 space-y-3">
@@ -231,7 +231,7 @@ export default function FluxForecastingMatrixPage() {
         <div className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 border-white/5 shadow-2xl`}>
            <div className="px-20 py-12 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
               <div className="flex items-center gap-6">
-                 <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><Monitor size={20} className="text-emerald-400" /></div>
+                 <div className="w-12 h-12 rounded-[1.5rem] bg-[var(--tint-emerald-bg)] flex items-center justify-center border border-[var(--tint-emerald-edge)]"><Monitor size={20} className="text-[var(--tint-emerald-fg)]" /></div>
                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
               </div>
               <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
@@ -259,14 +259,14 @@ export default function FluxForecastingMatrixPage() {
                             <td className="px-12 py-8 whitespace-nowrap text-[14px] text-white italic font-black uppercase tracking-widest">
                                {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
                             </td>
-                            <td className="px-12 py-8 text-emerald-400 font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(day.views)}</td>
-                            <td className="px-12 py-8 text-amber-400 font-black italic tracking-widest text-[14px]">
+                            <td className="px-12 py-8 text-[var(--tint-emerald-fg)] font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(day.views)}</td>
+                            <td className="px-12 py-8 text-[var(--tint-amber-fg)] font-black italic tracking-widest text-[14px]">
                                {formatFmt(day.likes)} L / {formatFmt(day.shares)} S
                             </td>
                             <td className="px-12 py-8 text-white font-black italic tracking-tighter text-xl tabular-nums">{formatFmt(engage)}</td>
-                            <td className="px-12 py-8 text-indigo-400 font-black italic tracking-widest text-[14px]">{day.posts_count} PHANTOMS</td>
+                            <td className="px-12 py-8 text-[var(--tint-indigo-fg)] font-black italic tracking-widest text-[14px]">{day.posts_count} PHANTOMS</td>
                             <td className="px-12 py-8">
-                               <span className="px-6 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xl font-black italic tabular-nums tracking-tighter">
+                               <span className="px-6 py-2 rounded-lg bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] text-xl font-black italic tabular-nums tracking-tighter">
                                   {rate}%
                                </span>
                             </td>
@@ -301,7 +301,7 @@ function KineticCard({ label, value, icon: Icon, color, trend }: { label: string
        </div>
        <div className="text-7xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-6 drop-shadow-2xl">{value}</div>
        <div className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{label}</div>
-       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-emerald-400 transition-colors">
+       <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5 group-hover:text-[var(--tint-emerald-fg)] transition-colors">
           {trend}
        </div>
     </motion.div>

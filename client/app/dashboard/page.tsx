@@ -131,12 +131,12 @@ function DropZoneOverlay() {
             <motion.div 
               animate={{ y: [0, -20, 0], scale: [1, 1.1, 1] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="w-48 h-48 rounded-[3rem] bg-indigo-500/20 border-2 border-indigo-500/40 flex items-center justify-center mx-auto mb-10 shadow-[0_0_100px_rgba(99,102,241,0.4)]"
+              className="w-48 h-48 rounded-[3rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center mx-auto mb-10 shadow-[0_0_100px_rgba(99,102,241,0.4)]"
             >
               <Box className="w-20 h-20 text-white" />
             </motion.div>
             <h2 className="text-5xl font-black text-white tracking-tighter mb-4">Initialize Import</h2>
-            <p className="text-lg text-indigo-400 font-bold uppercase tracking-[0.3em] opacity-80">Drop video to start neural processing</p>
+            <p className="text-lg text-[var(--tint-indigo-fg)] font-bold uppercase tracking-[0.3em] opacity-80">Drop video to start neural processing</p>
           </div>
         </motion.div>
       )}

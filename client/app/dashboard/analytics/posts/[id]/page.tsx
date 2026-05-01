@@ -20,7 +20,7 @@ import SpectralLoader from '../../../../../components/SpectralLoader'
 import { ErrorBoundary } from '../../../../../components/ErrorBoundary'
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
-const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
+const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[4rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-[var(--tint-indigo-edge)] transition-all duration-500'
 
 const PLATFORM_ICONS: Record<string, string> = {
   twitter: '𝕏',
@@ -109,18 +109,18 @@ export default function SovereignPostDiagnosticHub() {
               >
                 <ArrowLeft size={32} />
               </button>
-              <div className="w-20 h-20 bg-indigo-500/5 border border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-20 h-20 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Terminal size={40} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
+                <Terminal size={40} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:rotate-90 transition-transform duration-300" />
               </div>
               <div className="max-w-2xl">
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Gauge size={14} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Diagnostic Node v9.2.1</span>
+                      <Gauge size={14} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Diagnostic Node v9.2.1</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <Shield size={12} className="text-violet-400 animate-pulse" />
+                       <Shield size={12} className="text-[var(--tint-violet-fg)] animate-pulse" />
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{data.post.id?.slice(0, 8).toUpperCase() || 'EXTERNAL'}_NODE</span>
                    </div>
                  </div>
@@ -146,7 +146,7 @@ export default function SovereignPostDiagnosticHub() {
               <div className={`${premiumCard} p-20 relative overflow-hidden h-full flex flex-col`}>
                  <div className="absolute top-0 right-0 p-32 opacity-[0.015] pointer-events-none"><Waves size={600} className="text-white" /></div>
                  <div className="flex items-center gap-8 mb-16 relative z-10 px-8">
-                    <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Activity size={40} className="text-indigo-400" /></div>
+                    <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-[var(--tint-indigo-edge)] shadow-2xl"><Activity size={40} className="text-[var(--tint-indigo-fg)]" /></div>
                     <div>
                        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Kinetic Path</h2>
                        <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Chronological engagement gravity mapped across the 30-day kinetic window.</p>
@@ -192,10 +192,10 @@ export default function SovereignPostDiagnosticHub() {
                  </div>
 
                  <div className="grid grid-cols-4 gap-8 px-8 mt-8">
-                    <DiagnosticParam label="Views" value={mainStat.views || 0} color="text-rose-400" />
-                    <DiagnosticParam label="Likes" value={mainStat.likes || 0} color="text-amber-400" />
-                    <DiagnosticParam label="Shares" value={mainStat.shares || 0} color="text-indigo-400" />
-                    <DiagnosticParam label="Eng Rate" value={`${mainStat.engagement_rate || 0}%`} color="text-emerald-400" />
+                    <DiagnosticParam label="Views" value={mainStat.views || 0} color="text-[var(--tint-rose-fg)]" />
+                    <DiagnosticParam label="Likes" value={mainStat.likes || 0} color="text-[var(--tint-amber-fg)]" />
+                    <DiagnosticParam label="Shares" value={mainStat.shares || 0} color="text-[var(--tint-indigo-fg)]" />
+                    <DiagnosticParam label="Eng Rate" value={`${mainStat.engagement_rate || 0}%`} color="text-[var(--tint-emerald-fg)]" />
                  </div>
               </div>
            </div>
@@ -206,15 +206,15 @@ export default function SovereignPostDiagnosticHub() {
                  <div className="absolute top-0 right-0 p-24 opacity-[0.02] pointer-events-none"><Cpu size={400} className="text-white" /></div>
                  
                  <div className="flex items-center gap-6 mb-16 relative z-10">
-                    <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center drop-shadow-2xl animate-pulse shadow-emerald-500/20"><Zap size={32} className="text-emerald-400" /></div>
+                    <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center drop-shadow-2xl animate-pulse shadow-emerald-500/20"><Zap size={32} className="text-[var(--tint-emerald-fg)]" /></div>
                     <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Diagnostic Matrix</h3>
                  </div>
 
                  <AnimatePresence mode="wait">
                     {data.insights ? (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 relative z-10 flex-1">
-                         <div className="bg-black/40 border border-white/5 rounded-[4rem] p-12 text-center shadow-inner group/score hover:border-emerald-500/40 transition-all duration-300">
-                            <div className="text-[10rem] font-black italic tracking-tighter text-emerald-400 leading-none drop-shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                         <div className="bg-black/40 border border-white/5 rounded-[4rem] p-12 text-center shadow-inner group/score hover:border-[var(--tint-emerald-edge)] transition-all duration-300">
+                            <div className="text-[10rem] font-black italic tracking-tighter text-[var(--tint-emerald-fg)] leading-none drop-shadow-2xl group-hover:scale-110 transition-transform duration-300">
                                {data.insights.performance_score}
                             </div>
                             <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic border-t border-white/5 pt-8 mt-4 leading-none">SIGNAL_INTEGRITY</div>
@@ -233,7 +233,7 @@ export default function SovereignPostDiagnosticHub() {
                                 <label className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic pl-6">SIGNAL_GAPS_DETECTED</label>
                                 <div className="flex flex-wrap gap-3 pl-4">
                                   {data.insights.metadata.signalGaps.map((gap: string, i: number) => (
-                                    <span key={i} className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-full text-[10px] font-black text-rose-400 uppercase tracking-widest italic">
+                                    <span key={i} className="px-4 py-2 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-full text-[10px] font-black text-[var(--tint-rose-fg)] uppercase tracking-widest italic">
                                       {gap}
                                     </span>
                                   ))}
@@ -246,7 +246,7 @@ export default function SovereignPostDiagnosticHub() {
                                <div className="space-y-4">
                                   {data.insights.metadata?.platformAdvice ? Object.entries(data.insights.metadata.platformAdvice).map(([plat, advice], i) => (
                                     <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.01] border border-white/5 group/advice hover:bg-violet-500/5 transition-all">
-                                       <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-[10px] font-bold border border-white/10 group-advice:border-violet-500/30">
+                                       <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center text-[10px] font-bold border border-white/10 group-advice:border-[var(--tint-violet-edge)]">
                                           {PLATFORM_ICONS[plat.toLowerCase()] || plat[0].toUpperCase()}
                                        </div>
                                        <p className="text-[12px] text-slate-400 italic leading-relaxed font-medium">
@@ -262,10 +262,10 @@ export default function SovereignPostDiagnosticHub() {
                                    <div className="space-y-5">
                                       {data.insights.content_improvements?.map((imp: string, i: number) => (
                                         <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: i * 0.1 }}
-                                          key={i} className="flex items-start gap-6 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 group/div hover:bg-emerald-500/5 hover:border-emerald-500/20 transition-all duration-700 shadow-2xl"
+                                          key={i} className="flex items-start gap-6 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 group/div hover:bg-emerald-500/5 hover:border-[var(--tint-emerald-edge)] transition-all duration-700 shadow-2xl"
                                         >
-                                           <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 group-hover/div:rotate-45 transition-transform">
-                                              <Activity size={16} className="text-violet-400" />
+                                           <div className="w-10 h-10 rounded-xl bg-[var(--tint-violet-bg)] border border-[var(--tint-violet-edge)] flex items-center justify-center shrink-0 group-hover/div:rotate-45 transition-transform">
+                                              <Activity size={16} className="text-[var(--tint-violet-fg)]" />
                                            </div>
                                            <span className="text-[14px] text-white font-medium italic leading-snug uppercase tracking-tight opacity-80 group-hover/div:opacity-100 transition-opacity">
                                               {imp}
@@ -306,21 +306,21 @@ export default function SovereignPostDiagnosticHub() {
               {/* High-Intervention Control Matrix */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 relative z-10 mt-12">
                  <div className={`${premiumCard} p-10 flex items-center gap-8`}>
-                    <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center"><Target size={32} className="text-indigo-400" /></div>
+                    <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-indigo-bg)] flex items-center justify-center"><Target size={32} className="text-[var(--tint-indigo-fg)]" /></div>
                     <div>
                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Potency Score</span>
                        <div className="text-4xl font-black text-white italic tracking-tighter">{data.insights?.performance_score || 0}%</div>
                     </div>
                  </div>
                  <div className={`${premiumCard} p-10 flex items-center gap-8`}>
-                    <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 flex items-center justify-center"><TrendingUp size={32} className="text-emerald-400" /></div>
+                    <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-emerald-bg)] flex items-center justify-center"><TrendingUp size={32} className="text-[var(--tint-emerald-fg)]" /></div>
                     <div>
                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Predictive ROI</span>
-                       <div className="text-4xl font-black text-emerald-400 italic tracking-tighter">+{data.insights?.metadata?.predictiveROI || 85}%</div>
+                       <div className="text-4xl font-black text-[var(--tint-emerald-fg)] italic tracking-tighter">+{data.insights?.metadata?.predictiveROI || 85}%</div>
                     </div>
                  </div>
                  <div className={`${premiumCard} md:col-span-2 p-10 flex items-center gap-8 group`}>
-                    <div className="w-16 h-16 rounded-[2rem] bg-violet-500/10 flex items-center justify-center shrink-0"><Cpu size={32} className="text-violet-400 group-hover:scale-110 transition-transform" /></div>
+                    <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-violet-bg)] flex items-center justify-center shrink-0"><Cpu size={32} className="text-[var(--tint-violet-fg)] group-hover:scale-110 transition-transform" /></div>
                     <div>
                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Strategic Intervention</span>
                        <div className="text-[14px] font-black text-white italic uppercase tracking-tight leading-tight opacity-90">

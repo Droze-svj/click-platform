@@ -113,9 +113,9 @@ export default function SupportTicketSystem() {
     switch (status) {
       case 'resolved':
       case 'closed':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        return <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
       case 'open':
-        return <Activity className="w-4 h-4 text-amber-400 animate-pulse" />
+        return <Activity className="w-4 h-4 text-[var(--tint-amber-fg)] animate-pulse" />
       default:
         return <Clock className="w-4 h-4 text-slate-400" />
     }
@@ -130,14 +130,14 @@ export default function SupportTicketSystem() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-8">
           <div>
             <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-                <ShieldAlert className="w-8 h-8 text-indigo-400" />
+              <div className="p-3 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-xl">
+                <ShieldAlert className="w-8 h-8 text-[var(--tint-indigo-fg)]" />
               </div>
               <div>
                 <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">
                   Support Nexus
                 </h1>
-                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] block italic">
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] block italic">
                   Elite Customer Operations Protocol
                 </span>
               </div>
@@ -153,7 +153,7 @@ export default function SupportTicketSystem() {
               <div className="w-px h-6 bg-white/10" />
               <div className="flex items-center gap-3">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest italic">AI Agent Ready</span>
+                <span className="text-[10px] font-black text-[var(--tint-amber-fg)] uppercase tracking-widest italic">AI Agent Ready</span>
               </div>
             </div>
 
@@ -207,12 +207,12 @@ export default function SupportTicketSystem() {
                     key={ticket._id}
                     onClick={() => setSelectedTicket(ticket)}
                     className={`w-full p-6 text-left rounded-[2rem] border transition-all ${selectedTicket?._id === ticket._id
-                      ? 'border-indigo-500/50 bg-indigo-500/10 shadow-[0_0_30px_rgba(79,70,229,0.1)]'
+                      ? 'border-indigo-500/50 bg-[var(--tint-indigo-bg)] shadow-[0_0_30px_rgba(79,70,229,0.1)]'
                       : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'
                       }`}
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <h3 className={`font-black uppercase tracking-tight text-sm italic ${selectedTicket?._id === ticket._id ? 'text-indigo-400' : 'text-slate-300'}`}>
+                      <h3 className={`font-black uppercase tracking-tight text-sm italic ${selectedTicket?._id === ticket._id ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-300'}`}>
                         {ticket.subject}
                       </h3>
                       {getStatusIcon(ticket.status)}
@@ -222,9 +222,9 @@ export default function SupportTicketSystem() {
                     </p>
                     <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
                       <div className="flex items-center gap-3 border border-white/10 rounded-full px-3 py-1 bg-black/40">
-                        <span className={ticket.status === 'open' ? 'text-amber-400' : 'text-slate-400'}>{ticket.status}</span>
+                        <span className={ticket.status === 'open' ? 'text-[var(--tint-amber-fg)]' : 'text-slate-400'}>{ticket.status}</span>
                         <div className="w-1 h-1 rounded-full bg-white/20" />
-                        <span className={ticket.priority === 'high' || ticket.priority === 'urgent' ? 'text-rose-400' : 'text-indigo-400'}>{ticket.priority}</span>
+                        <span className={ticket.priority === 'high' || ticket.priority === 'urgent' ? 'text-[var(--tint-rose-fg)]' : 'text-[var(--tint-indigo-fg)]'}>{ticket.priority}</span>
                       </div>
                       <span className="text-slate-600">ID: {ticket._id.slice(-6)}</span>
                     </div>
@@ -254,8 +254,8 @@ export default function SupportTicketSystem() {
                       <span className="flex items-center gap-2"><Fingerprint className="w-3 h-3" /> Kernel: {selectedTicket.category}</span>
                     </div>
                   </div>
-                  <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex flex-col items-end">
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic mb-1">Status</span>
+                  <div className="p-4 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-2xl flex flex-col items-end">
+                    <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic mb-1">Status</span>
                     <span className="text-sm font-black text-white uppercase italic">{selectedTicket.status}</span>
                   </div>
                 </div>
@@ -278,10 +278,10 @@ export default function SupportTicketSystem() {
                     const isSystem = msg.userId === 'system' || msg.userId.includes('agent');
                     return (
                       <div key={index} className={`flex gap-4 ${isSystem ? 'flex-row-reverse' : ''}`}>
-                        <div className={`w-10 h-10 rounded-xl border flex flex-shrink-0 items-center justify-center ${isSystem ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-400' : 'bg-white/10 border-white/20'}`}>
+                        <div className={`w-10 h-10 rounded-xl border flex flex-shrink-0 items-center justify-center ${isSystem ? 'bg-indigo-600/20 border-indigo-500/50 text-[var(--tint-indigo-fg)]' : 'bg-white/10 border-white/20'}`}>
                           {isSystem ? <Sparkles className="w-5 h-5" /> : <span className="text-xs font-black">U</span>}
                         </div>
-                        <div className={`flex-1 p-6 rounded-3xl ${isSystem ? 'bg-indigo-600/10 border border-indigo-500/20 rounded-tr-none' : 'bg-white/5 border border-white/10 rounded-tl-none'}`}>
+                        <div className={`flex-1 p-6 rounded-3xl ${isSystem ? 'bg-indigo-600/10 border border-[var(--tint-indigo-edge)] rounded-tr-none' : 'bg-white/5 border border-white/10 rounded-tl-none'}`}>
                           <p className={`text-sm leading-relaxed ${isSystem ? 'text-indigo-100' : 'text-slate-300'}`}>
                             {msg.message}
                           </p>
@@ -300,11 +300,11 @@ export default function SupportTicketSystem() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       className="flex gap-4 flex-row-reverse"
                     >
-                      <div className="w-10 h-10 rounded-xl border flex flex-shrink-0 items-center justify-center bg-indigo-600/20 border-indigo-500/50 text-indigo-400">
+                      <div className="w-10 h-10 rounded-xl border flex flex-shrink-0 items-center justify-center bg-indigo-600/20 border-indigo-500/50 text-[var(--tint-indigo-fg)]">
                         <Sparkles className="w-5 h-5 animate-pulse" />
                       </div>
-                      <div className="p-4 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 rounded-tr-none flex items-center justify-center gap-3">
-                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Nexus Routing</span>
+                      <div className="p-4 rounded-3xl bg-indigo-600/10 border border-[var(--tint-indigo-edge)] rounded-tr-none flex items-center justify-center gap-3">
+                        <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">Nexus Routing</span>
                         <span className="flex gap-1.5">
                           <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
                           <motion.span animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
@@ -324,7 +324,7 @@ export default function SupportTicketSystem() {
                       <button
                         key={i}
                         onClick={() => setNewMessage(draft)}
-                        className="px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[9px] font-black text-indigo-300 uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-colors italic shadow-[0_0_10px_rgba(79,70,229,0.1)]"
+                        className="px-4 py-1.5 rounded-full border border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)] text-[9px] font-black text-indigo-300 uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-colors italic shadow-[0_0_10px_rgba(79,70,229,0.1)]"
                       >
                         {draft}
                       </button>
@@ -395,15 +395,15 @@ function CreateTicketForm({
   }
 
   return (
-    <div className={`mb-12 p-10 rounded-[3rem] border border-indigo-500/30 shadow-[0_0_50px_rgba(79,70,229,0.1)] relative overflow-hidden ${glassStyle}`}>
+    <div className={`mb-12 p-10 rounded-[3rem] border border-[var(--tint-indigo-edge)] shadow-[0_0_50px_rgba(79,70,229,0.1)] relative overflow-hidden ${glassStyle}`}>
       <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none text-indigo-500 mix-blend-screen">
         <Activity className="w-64 h-64" />
       </div>
 
       <div className="relative z-10 flex flex-col md:flex-row gap-12">
         <div className="w-full md:w-1/3 space-y-6">
-          <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl w-max">
-            <Plus className="w-8 h-8 text-indigo-400" />
+          <div className="p-4 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-2xl w-max">
+            <Plus className="w-8 h-8 text-[var(--tint-indigo-fg)]" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">

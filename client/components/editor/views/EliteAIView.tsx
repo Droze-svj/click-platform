@@ -383,7 +383,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       <motion.div variants={itemVariants} className="space-y-10">
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-12">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-[10px] font-bold uppercase tracking-[0.3em] shadow-lg">
+            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-[var(--tint-fuchsia-fg)] text-[10px] font-bold uppercase tracking-[0.3em] shadow-lg">
               <Radio className="w-3.5 h-3.5 animate-pulse" />
               Elite AI · {String(activeEngine || 'idle')}
             </div>
@@ -402,18 +402,18 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
               <button
                 onClick={() => setView('variant-factory')}
-                className="px-6 py-3 rounded-2xl bg-fuchsia-600/10 border border-fuchsia-500/20 hover:bg-fuchsia-600/20 transition-all flex items-center gap-3 group"
+                className="px-6 py-3 rounded-2xl bg-fuchsia-600/10 border border-[var(--tint-fuchsia-edge)] hover:bg-fuchsia-600/20 transition-all flex items-center gap-3 group"
               >
-                <Target className="w-4 h-4 text-fuchsia-400 group-hover:scale-125 transition-transform" />
-                <span className="text-xs font-black text-fuchsia-400 uppercase tracking-widest italic">Variant Factory</span>
+                <Target className="w-4 h-4 text-[var(--tint-fuchsia-fg)] group-hover:scale-125 transition-transform" />
+                <span className="text-xs font-black text-[var(--tint-fuchsia-fg)] uppercase tracking-widest italic">Variant Factory</span>
               </button>
 
               <button
                 onClick={onBeatSync}
-                className="px-6 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 transition-all flex items-center gap-3 group"
+                className="px-6 py-3 rounded-2xl bg-emerald-600/10 border border-[var(--tint-emerald-edge)] hover:bg-emerald-600/20 transition-all flex items-center gap-3 group"
               >
-                <Radio className="w-4 h-4 text-emerald-400 group-hover:animate-ping" />
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-widest italic">Beat-Sync</span>
+                <Radio className="w-4 h-4 text-[var(--tint-emerald-fg)] group-hover:animate-ping" />
+                <span className="text-xs font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic">Beat-Sync</span>
               </button>
             </div>
 
@@ -554,17 +554,17 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all group/asset shadow-xl relative overflow-hidden"
+                  className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all group/asset shadow-xl relative overflow-hidden"
                 >
                   {asset.thumbnail && (
                     <img src={asset.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 group-hover:scale-110 transition-transform duration-1000" />
                   )}
                   <div className="relative z-10 space-y-6">
                     <div className="flex items-center justify-between">
-                      <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                        {asset.type === 'music' ? <Radio className="w-4 h-4 text-indigo-400" /> : <Layers className="w-4 h-4 text-indigo-400" />}
+                      <div className="p-3 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                        {asset.type === 'music' ? <Radio className="w-4 h-4 text-[var(--tint-indigo-fg)]" /> : <Layers className="w-4 h-4 text-[var(--tint-indigo-fg)]" />}
                       </div>
-                      <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic bg-indigo-500/10 px-3 py-1 rounded-full">MATCHED</span>
+                      <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic bg-[var(--tint-indigo-bg)] px-3 py-1 rounded-full">MATCHED</span>
                     </div>
                     <div>
                       <h5 className="text-lg font-black text-white italic truncate uppercase">{asset.title}</h5>
@@ -603,11 +603,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               className="flex gap-10 p-10 rounded-[3rem] bg-amber-500/5 border border-amber-500/10 shadow-inner backdrop-blur-3xl"
             >
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--tint-amber-bg)] flex items-center justify-center border border-[var(--tint-amber-edge)]">
                 <AlertCircle className="w-7 h-7 text-amber-500" />
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-black text-amber-400 uppercase tracking-widest italic">NEURAL READINESS FAULT</p>
+                <p className="text-xs font-black text-[var(--tint-amber-fg)] uppercase tracking-widest italic">NEURAL READINESS FAULT</p>
                 <p className="text-xl text-slate-400 font-medium italic">{requirementsMessage || 'Verify OPENAI_API_KEY in repository configuration.'}</p>
               </div>
             </motion.div>
@@ -622,7 +622,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               className="flex-1 p-10 bg-white shadow-2xl rounded-[3rem] border border-white/20 flex flex-col items-center justify-center gap-6 group/btn relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
-              <div className="w-16 h-16 rounded-[1.4rem] bg-indigo-500/10 flex items-center justify-center group-hover/btn:bg-indigo-500 transition-colors duration-500 relative z-10">
+              <div className="w-16 h-16 rounded-[1.4rem] bg-[var(--tint-indigo-bg)] flex items-center justify-center group-hover/btn:bg-indigo-500 transition-colors duration-500 relative z-10">
                 <Type className="w-8 h-8 text-indigo-500 group-hover/btn:text-white transition-colors duration-500" />
               </div>
               <div className="text-center space-y-2 relative z-10">
@@ -678,9 +678,9 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             {isTranscribing ? 'Digitizing Neural Stream...' : requirementsReady === false ? 'Core Offline' : 'Initialize Semantic Extraction'}
           </motion.button>
 
-          <div className="p-10 rounded-[3.5rem] bg-white/[0.02] border border-white/5 flex flex-col xl:flex-row items-center justify-between gap-10 hover:bg-white/[0.04] hover:border-fuchsia-500/20 transition-all shadow-inner group/exec">
+          <div className="p-10 rounded-[3.5rem] bg-white/[0.02] border border-white/5 flex flex-col xl:flex-row items-center justify-between gap-10 hover:bg-white/[0.04] hover:border-[var(--tint-fuchsia-edge)] transition-all shadow-inner group/exec">
             <div className="flex items-center gap-10">
-              <div className="w-20 h-20 rounded-[2rem] bg-fuchsia-500/10 flex items-center justify-center border border-fuchsia-500/20 shadow-2xl group-hover/exec:scale-110 group-hover/exec:rotate-6 transition-all duration-700">
+              <div className="w-20 h-20 rounded-[2rem] bg-[var(--tint-fuchsia-bg)] flex items-center justify-center border border-[var(--tint-fuchsia-edge)] shadow-2xl group-hover/exec:scale-110 group-hover/exec:rotate-6 transition-all duration-700">
                 <Zap className="w-10 h-10 text-fuchsia-500 animate-pulse" />
               </div>
               <div className="space-y-1 text-center xl:text-left">
@@ -729,8 +729,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
           <div className="pt-12 border-t border-white/5 space-y-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-xl">
-                  <Layers className="w-7 h-7 text-indigo-400" />
+                <div className="w-14 h-14 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-xl">
+                  <Layers className="w-7 h-7 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <div>
                   <h4 className="text-2xl font-black text-white tracking-tight leading-tight">Auto-edit clips</h4>
@@ -743,7 +743,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 onClick={onGenerateClips}
                 className="px-7 py-3 bg-white/5 border border-white/10 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] text-white hover:bg-white/10 transition-colors flex items-center gap-2.5"
               >
-                <Sparkles className="w-3.5 h-3.5 text-fuchsia-400" />
+                <Sparkles className="w-3.5 h-3.5 text-[var(--tint-fuchsia-fg)]" />
                 Generate clips
               </motion.button>
             </div>
@@ -756,11 +756,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 transition-all group/clip shadow-2xl"
+                    className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-indigo-edge)] transition-all group/clip shadow-2xl"
                   >
                     <div className="flex items-center justify-between mb-6">
                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 italic">Variation 0{i+1}</span>
-                      <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">
+                      <div className="px-3 py-1 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] text-[9px] font-bold">
                         {clip.engagementScore.overall}% RANK
                       </div>
                     </div>
@@ -777,7 +777,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     </div>
                     <button
                       onClick={() => onApplyClip?.(clip)}
-                      className="w-full py-4 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all italic"
+                      className="w-full py-4 rounded-xl bg-indigo-600/20 border border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-widest text-[var(--tint-indigo-fg)] hover:bg-indigo-600 hover:text-white transition-all italic"
                     >
                       Apply To Timeline
                     </button>
@@ -872,7 +872,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
                         whileHover={{ y: -12, scale: 1.02 }}
-                        className="bg-white/[0.02] hover:bg-white/[0.04] rounded-[3.5rem] p-12 border border-white/5 hover:border-orange-500/30 transition-all group/quote relative shadow-3xl backdrop-blur-3xl"
+                        className="bg-white/[0.02] hover:bg-white/[0.04] rounded-[3.5rem] p-12 border border-white/5 hover:border-[var(--tint-orange-edge)] transition-all group/quote relative shadow-3xl backdrop-blur-3xl"
                       >
                         <div className="flex items-start justify-between gap-8 mb-10">
                           <div className="flex flex-col gap-3">
@@ -881,12 +881,12 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                                 STRATEGIC WEIGHT: {quote.strategicWeight || (quote.score * 100).toFixed(0)}%
                               </div>
                               {quote.strategicWeight > 70 && (
-                                <div className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-full text-[8px] font-black border border-emerald-500/20 italic">
+                                <div className="px-3 py-1 bg-[var(--tint-emerald-bg)] text-emerald-500 rounded-full text-[8px] font-black border border-[var(--tint-emerald-edge)] italic">
                                   GROWTH NODE
                                 </div>
                               )}
                               {quote.integrityVerified && (
-                                <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[8px] font-black border border-indigo-500/20 flex items-center gap-1.5 italic">
+                                <div className="px-3 py-1 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] rounded-full text-[8px] font-black border border-[var(--tint-indigo-edge)] flex items-center gap-1.5 italic">
                                   <ShieldCheck className="w-3 h-3" />
                                   INTEGRITY VERIFIED
                                 </div>
@@ -916,7 +916,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                                   }])
                                   showToast('Node projected to workspace', 'success')
                                 }}
-                                className="w-14 h-14 bg-orange-500/20 text-orange-400 rounded-[1.2rem] flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all border border-orange-500/20 shadow-2xl"
+                                className="w-14 h-14 bg-[var(--tint-orange-bg)] text-[var(--tint-orange-fg)] rounded-[1.2rem] flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all border border-[var(--tint-orange-edge)] shadow-2xl"
                               >
                                 <ArrowUpRight className="w-6 h-6" />
                               </motion.button>
@@ -933,7 +933,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                         <p className="text-3xl font-black text-white italic leading-[1.1] tracking-tighter uppercase mb-10 group-hover/quote:scale-[1.02] transition-transform origin-left">&quot;{quote.text}&quot;</p>
                         <div className="space-y-4">
                           {quote.reason && (
-                            <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 group-hover/quote:border-orange-500/20 transition-all">
+                            <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 group-hover/quote:border-[var(--tint-orange-edge)] transition-all">
                               <Target className="w-6 h-6 text-orange-500 shrink-0 mt-0.5" />
                               <p className="text-[13px] text-slate-500 font-medium italic leading-relaxed group-hover/quote:text-slate-300">
                                 {quote.reason}
@@ -941,10 +941,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                             </div>
                           )}
                           {quote.nicheRelevance && (
-                            <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group-hover/quote:border-indigo-500/30 transition-all">
-                              <Brain className="w-6 h-6 text-indigo-400 shrink-0 mt-0.5" />
+                            <div className="flex items-start gap-5 p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group-hover/quote:border-[var(--tint-indigo-edge)] transition-all">
+                              <Brain className="w-6 h-6 text-[var(--tint-indigo-fg)] shrink-0 mt-0.5" />
                               <div className="space-y-1">
-                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Niche Relevance</span>
+                                <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">Niche Relevance</span>
                                 <p className="text-[12px] text-indigo-200 font-medium italic leading-relaxed">
                                   {quote.nicheRelevance}
                                 </p>

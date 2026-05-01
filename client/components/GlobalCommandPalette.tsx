@@ -287,11 +287,11 @@ const GlobalCommandPalette: React.FC = () => {
                           onClick={() => run(cmd)}
                           onMouseEnter={() => setActiveIdx(idx)}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                            active ? 'bg-fuchsia-500/15 text-white' : 'text-slate-300 hover:bg-white/[0.04]'
+                            active ? 'bg-[var(--tint-fuchsia-bg)] text-white' : 'text-slate-300 hover:bg-white/[0.04]'
                           }`}
                         >
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            active ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'bg-white/5 text-slate-400'
+                            active ? 'bg-[var(--tint-fuchsia-bg)] text-fuchsia-300' : 'bg-white/5 text-slate-400'
                           }`}>
                             <Icon className="w-4 h-4" />
                           </div>
@@ -299,7 +299,7 @@ const GlobalCommandPalette: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-[13px] font-semibold truncate">{cmd.label}</span>
                               {cmd.kind === 'create' && (
-                                <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">Create</span>
+                                <span className="text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] text-emerald-300 border border-[var(--tint-emerald-edge)]">Create</span>
                               )}
                             </div>
                             {cmd.hint && <div className="text-[11px] text-slate-500 truncate">{cmd.hint}</div>}

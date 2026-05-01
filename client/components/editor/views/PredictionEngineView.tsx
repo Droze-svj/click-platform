@@ -123,7 +123,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
       {/* Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400">
+          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)]">
             <Cpu className="w-4 h-4" />
             VPO Core v1.0
           </div>
@@ -155,16 +155,16 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
                  <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Viral Potential Score</h3>
                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Predictive Alignment for {selectedPersona}</p>
               </div>
-              <div className="text-8xl font-black text-emerald-400 tracking-tighter italic tabular-nums shadow-emerald-500/20 drop-shadow-2xl">
+              <div className="text-8xl font-black text-[var(--tint-emerald-fg)] tracking-tighter italic tabular-nums shadow-emerald-500/20 drop-shadow-2xl">
                 {viralScore}<span className="text-2xl not-italic ml-1 opacity-40">%</span>
               </div>
            </div>
 
            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
               {[
-                { label: 'Pacing Density', val: metrics.cutsPerMinute > 12 ? 'HIGH' : 'MED', color: 'text-indigo-400' },
-                { label: 'Hook Velocity', val: metrics.highRetentionWordsFound > 1 ? 'ELITE' : 'AVG', color: 'text-orange-400' },
-                { label: 'Retention Alpha', val: viralScore > 85 ? 'TOP 1%' : 'TOP 10%', color: 'text-emerald-400' },
+                { label: 'Pacing Density', val: metrics.cutsPerMinute > 12 ? 'HIGH' : 'MED', color: 'text-[var(--tint-indigo-fg)]' },
+                { label: 'Hook Velocity', val: metrics.highRetentionWordsFound > 1 ? 'ELITE' : 'AVG', color: 'text-[var(--tint-orange-fg)]' },
+                { label: 'Retention Alpha', val: viralScore > 85 ? 'TOP 1%' : 'TOP 10%', color: 'text-[var(--tint-emerald-fg)]' },
                 { label: 'Semantic Power', val: `${metrics.semanticIntensity.toFixed(0)}%`, color: 'text-blue-400' }
               ].map((m, i) => (
                 <div key={i} className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-2">
@@ -178,7 +178,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
         {/* Persona Selector */}
         <div className={`${glassStyle} rounded-[3.5rem] p-12 space-y-8 flex flex-col`}>
            <div className="flex items-center gap-6">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 text-indigo-400">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 text-[var(--tint-indigo-fg)]">
                  <Users className="w-6 h-6" />
               </div>
               <h4 className="text-[11px] font-black uppercase text-slate-500 tracking-widest italic">Audience Persona</h4>
@@ -204,11 +204,11 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
         <div className="flex items-center justify-between">
            <div className="space-y-2">
               <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mr-2 inline-flex items-center gap-3">
-                 <Activity className="w-6 h-6 text-emerald-400" /> Continuous Retention Heatmap
+                 <Activity className="w-6 h-6 text-[var(--tint-emerald-fg)]" /> Continuous Retention Heatmap
               </h3>
               <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic">Predictive audience drop-off mapped against script stimulus</p>
            </div>
-           <span className="px-4 py-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px] font-black tracking-[0.2em] uppercase">Visual Stimulus Synced</span>
+           <span className="px-4 py-2 rounded-full border border-[var(--tint-emerald-edge)] bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] text-[10px] font-black tracking-[0.2em] uppercase">Visual Stimulus Synced</span>
         </div>
 
         <div className="h-40 rounded-3xl bg-black/40 border border-white/5 p-6 flex flex-col justify-end relative overflow-hidden group">
@@ -288,11 +288,11 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
         </div>
 
         {hookTestState === 'generating' && (
-           <div className="h-48 rounded-[3rem] border border-indigo-500/20 bg-indigo-500/5 flex flex-col items-center justify-center gap-6">
-              <Sparkles className="w-8 h-8 text-indigo-400 animate-spin" />
+           <div className="h-48 rounded-[3rem] border border-[var(--tint-indigo-edge)] bg-indigo-500/5 flex flex-col items-center justify-center gap-6">
+              <Sparkles className="w-8 h-8 text-[var(--tint-indigo-fg)] animate-spin" />
               <div className="text-center space-y-2">
                  <p className="text-sm font-black text-white uppercase tracking-widest">Synthesizing Variants...</p>
-                 <p className="text-[10px] text-indigo-400 italic">Extracting tokens, analyzing scroll-stop probability.</p>
+                 <p className="text-[10px] text-[var(--tint-indigo-fg)] italic">Extracting tokens, analyzing scroll-stop probability.</p>
               </div>
            </div>
         )}
@@ -300,8 +300,8 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
         {hookTestState === 'results' && (
            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                 { name: 'Variant A: High Energy', ctr: '12.4%', lift: '+4.2%', color: 'from-rose-500/20 to-orange-500/5', border: 'border-rose-500/30', badge: 'text-rose-400' },
-                 { name: 'Variant B: Curiosity Gap', ctr: '18.9%', lift: '+10.7%', color: 'from-emerald-500/20 to-teal-500/5', border: 'border-emerald-500/50', badge: 'text-emerald-400', winner: true },
+                 { name: 'Variant A: High Energy', ctr: '12.4%', lift: '+4.2%', color: 'from-rose-500/20 to-orange-500/5', border: 'border-[var(--tint-rose-edge)]', badge: 'text-[var(--tint-rose-fg)]' },
+                 { name: 'Variant B: Curiosity Gap', ctr: '18.9%', lift: '+10.7%', color: 'from-emerald-500/20 to-teal-500/5', border: 'border-emerald-500/50', badge: 'text-[var(--tint-emerald-fg)]', winner: true },
                  { name: 'Variant C: Minimalist', ctr: '8.1%', lift: '-0.1%', color: 'from-slate-500/20 to-slate-800/10', border: 'border-slate-500/30', badge: 'text-slate-400' }
               ].map((v, i) => (
                  <motion.div
@@ -321,7 +321,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
                     <div className="space-y-1">
                        <span className="text-[10px] text-slate-400 uppercase tracking-widest">Predicted CTR</span>
                        <div className="text-5xl font-black text-white tabular-nums tracking-tighter">{v.ctr}</div>
-                       <span className={`text-[10px] font-bold ${v.lift.startsWith('+') ? 'text-emerald-400' : 'text-rose-400'}`}>{v.lift} baseline</span>
+                       <span className={`text-[10px] font-bold ${v.lift.startsWith('+') ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'}`}>{v.lift} baseline</span>
                     </div>
 
                     <button className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black text-white uppercase tracking-widest transition-colors">
@@ -347,11 +347,11 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
               <div key={i} className="space-y-6 group cursor-default">
                  <div className="flex items-center gap-6">
                     <span className="text-4xl font-black text-white/5 group-hover:text-indigo-500/20 transition-colors duration-500 tabular-nums">0{i+1}</span>
-                    <div className="h-[2px] flex-1 bg-white/5 group-hover:bg-indigo-500/20 transition-colors duration-500" />
+                    <div className="h-[2px] flex-1 bg-white/5 group-hover:bg-[var(--tint-indigo-bg)] transition-colors duration-500" />
                  </div>
                  <div className="space-y-4 px-2">
                     <div className="flex items-center gap-4">
-                       <step.icon className="w-5 h-5 text-indigo-400" />
+                       <step.icon className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                        <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-widest">{step.title}</h4>
                     </div>
                     <p className="text-slate-500 italic font-medium leading-relaxed group-hover:text-slate-200 transition-colors">{step.desc}</p>

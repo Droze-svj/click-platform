@@ -51,7 +51,7 @@ export default function RevenueOracle() {
       <div className={`w-full h-[600px] ${glassStyle} rounded-[4rem] flex flex-col items-center justify-center space-y-8 relative overflow-hidden`}>
          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5" />
          <Orbit className="animate-spin text-indigo-500 opacity-20" size={120} />
-         <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] animate-pulse italic">Synchronizing_Oracle_Lattice...</p>
+         <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] animate-pulse italic">Synchronizing_Oracle_Lattice...</p>
       </div>
     )
   }
@@ -65,17 +65,17 @@ export default function RevenueOracle() {
 
       <header className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8 relative z-10">
         <div className="flex items-center gap-8">
-          <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-[2.2rem] flex items-center justify-center shadow-2xl overflow-hidden relative">
+          <div className="w-20 h-20 bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] rounded-[2.2rem] flex items-center justify-center shadow-2xl overflow-hidden relative">
              <motion.div 
                animate={{ rotate: 360 }} 
                transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
                className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent"
              />
-             <TrendingUp className="text-emerald-400 relative z-10" size={36} />
+             <TrendingUp className="text-[var(--tint-emerald-fg)] relative z-10" size={36} />
           </div>
           <div>
             <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">Revenue Oracle_v6.1</h1>
-            <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] italic leading-none border-l-2 border-emerald-500/20 pl-4 ml-1">Economic Foresight // Deep ROI Predictor</p>
+            <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] italic leading-none border-l-2 border-[var(--tint-emerald-edge)] pl-4 ml-1">Economic Foresight // Deep ROI Predictor</p>
           </div>
         </div>
         
@@ -86,7 +86,7 @@ export default function RevenueOracle() {
            </div>
            <div className="w-[1px] h-12 bg-white/10" />
            <div className="flex flex-col items-end">
-              <span className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest italic">
+              <span className="flex items-center gap-2 text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic">
                  <ArrowUpRight size={14} />
                  +24.2% Lift
               </span>
@@ -101,7 +101,7 @@ export default function RevenueOracle() {
            <div className="p-8 rounded-[2.8rem] bg-white/[0.03] border border-white/10 group/stat hover:bg-emerald-500/5 transition-all duration-700">
               <div className="flex items-center justify-between mb-8">
                  <div className="flex items-center gap-4">
-                    <Zap className="text-amber-400" size={18} />
+                    <Zap className="text-[var(--tint-amber-fg)]" size={18} />
                     <span className="text-[11px] font-black text-white uppercase tracking-widest italic">Sales Resonance</span>
                  </div>
                  <span className="text-2xl font-black text-white italic tabular-nums">94%</span>
@@ -120,7 +120,7 @@ export default function RevenueOracle() {
            <div className="p-8 rounded-[2.8rem] bg-white/[0.03] border border-white/10 group/stat hover:bg-indigo-500/5 transition-all duration-700">
               <div className="flex items-center justify-between mb-8">
                  <div className="flex items-center gap-4">
-                    <BarChart3 className="text-indigo-400" size={18} />
+                    <BarChart3 className="text-[var(--tint-indigo-fg)]" size={18} />
                     <span className="text-[11px] font-black text-white uppercase tracking-widest italic">Neural Pacing</span>
                  </div>
                  <span className="text-2xl font-black text-white italic tabular-nums">1.4s</span>
@@ -139,13 +139,13 @@ export default function RevenueOracle() {
               <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">BPM_Sync: 128Hz // {data.pacingVelocity}s Cut_Frequency</p>
            </div>
 
-           <div className="p-8 rounded-[2.8rem] bg-emerald-500/10 border border-emerald-500/20">
+           <div className="p-8 rounded-[2.8rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
               <div className="flex items-center gap-4 mb-4">
-                 <ShieldCheck className="text-emerald-400" size={20} />
-                 <h3 className="text-[12px] font-black text-emerald-400 uppercase tracking-widest leading-none italic">Oracle Insights</h3>
+                 <ShieldCheck className="text-[var(--tint-emerald-fg)]" size={20} />
+                 <h3 className="text-[12px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest leading-none italic">Oracle Insights</h3>
               </div>
               <p className="text-[11px] font-black text-white leading-relaxed uppercase italic opacity-80">
-                Lattice consensus confirms <span className="text-emerald-400">High Product Resonance</span>. Recommend shifting budget +15% to high-velocity segments to capture early-adopter surge.
+                Lattice consensus confirms <span className="text-[var(--tint-emerald-fg)]">High Product Resonance</span>. Recommend shifting budget +15% to high-velocity segments to capture early-adopter surge.
               </p>
            </div>
         </div>
@@ -153,7 +153,7 @@ export default function RevenueOracle() {
         {/* Center Trajectory Visualization */}
         <div className="col-span-12 lg:col-span-8 flex flex-col justify-end p-12 rounded-[3.5rem] bg-black/60 border border-white/5 relative group/viz overflow-hidden">
            <div className="absolute top-12 left-12 flex items-center gap-4">
-              <Activity className="text-emerald-400 animate-pulse" size={20} />
+              <Activity className="text-[var(--tint-emerald-fg)] animate-pulse" size={20} />
               <div>
                  <h3 className="text-[12px] font-black text-white uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">ROI Trajectory Lattice</h3>
                  <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Real-Time Forecast // $ +{(data.predictedROI * 0.1).toFixed(2)} Volatility Index</p>

@@ -59,7 +59,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-12 relative z-10">
         <div className="flex items-center gap-6">
-          <div className="p-4 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+          <div className="p-4 rounded-[2rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]">
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
@@ -104,7 +104,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="group p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-emerald-500/30 transition-all relative overflow-hidden"
+                className="group p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-emerald-edge)] transition-all relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                    <Fingerprint className="w-24 h-24 text-white" />
@@ -112,7 +112,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
 
                 <div className="flex items-start gap-8">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--tint-emerald-fg)]">
                       <Gavel className="w-6 h-6" />
                     </div>
                     <span className="text-[8px] font-mono text-slate-600 uppercase tracking-tighter">ID: {proposal.id.slice(0, 8)}</span>
@@ -128,9 +128,9 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
                     </h4>
 
                     <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]">
                         <TrendingUp className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400/80">Est. Revenue: +${proposal.fiscalImpact.toLocaleString()}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--tint-emerald-fg)]/80">Est. Revenue: +${proposal.fiscalImpact.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-500">
                         <Lock className="w-3.5 h-3.5" />
@@ -170,7 +170,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
         <div className="col-span-4 flex flex-col gap-6">
            <div className="p-8 rounded-[3rem] bg-emerald-500/5 border border-emerald-500/10 flex flex-col gap-6">
               <div className="flex items-center gap-4">
-                 <UserCheck className="w-5 h-5 text-emerald-400" />
+                 <UserCheck className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                  <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Operator Integrity</h3>
               </div>
 

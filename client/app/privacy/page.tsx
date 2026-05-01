@@ -41,7 +41,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-black mb-4 tracking-tight">Your rights</h2>
             <p className="text-slate-300 leading-relaxed">
               Export everything, delete everything, correct anything — we honor it within 30 days. Email{' '}
-              <a href="mailto:privacy@click.example" className="text-indigo-400 hover:text-indigo-300 underline">
+              <a href="mailto:privacy@click.example" className="text-[var(--tint-indigo-fg)] hover:text-indigo-300 underline">
                 privacy@click.example
               </a>
               .

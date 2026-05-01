@@ -31,7 +31,7 @@ export default function PerformanceRail({
   if (!loaded) {
     return (
       <div className={`rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex items-center gap-2 ${className}`}>
-        <Loader2 size={12} className="text-fuchsia-400 animate-spin" />
+        <Loader2 size={12} className="text-[var(--tint-fuchsia-fg)] animate-spin" />
         <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Reading what's working for you…</span>
       </div>
     )
@@ -45,7 +45,7 @@ export default function PerformanceRail({
     return (
       <div className={`rounded-2xl border border-white/10 bg-white/[0.02] p-4 ${className}`}>
         <div className="flex items-center gap-2 mb-2">
-          <TrendingUp size={12} className="text-fuchsia-400" />
+          <TrendingUp size={12} className="text-[var(--tint-fuchsia-fg)]" />
           <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">What's working for you</span>
         </div>
         <p className="text-[10px] text-slate-500 leading-relaxed">
@@ -81,12 +81,12 @@ export default function PerformanceRail({
                   disabled={!onApply}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all ${
                     onApply
-                      ? 'bg-white/[0.02] border border-white/10 hover:border-fuchsia-500/30 hover:bg-fuchsia-500/[0.06]'
+                      ? 'bg-white/[0.02] border border-white/10 hover:border-[var(--tint-fuchsia-edge)] hover:bg-fuchsia-500/[0.06]'
                       : 'bg-white/[0.01] border border-white/5'
                   }`}
                 >
                   <span className="text-[10px] text-slate-200 font-bold truncate flex-1">{prettyKey(item.key)}</span>
-                  <span className={`text-[9px] font-mono tabular-nums ${pct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>{lift}</span>
+                  <span className={`text-[9px] font-mono tabular-nums ${pct > 0 ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'}`}>{lift}</span>
                   <span className="text-[8px] text-slate-600 font-mono">n={item.sampleSize}</span>
                   {onApply && <ChevronRight size={10} className="text-slate-500 flex-shrink-0" />}
                 </button>
@@ -99,7 +99,7 @@ export default function PerformanceRail({
   }
 
   return (
-    <div className={`rounded-2xl border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04] p-4 ${className}`}>
+    <div className={`rounded-2xl border border-[var(--tint-fuchsia-edge)] bg-gradient-to-br from-fuchsia-500/[0.04] to-violet-500/[0.04] p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp size={12} className="text-fuchsia-300" />

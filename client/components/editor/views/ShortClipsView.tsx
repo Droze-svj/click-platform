@@ -162,8 +162,8 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
         </div>
 
         <div className="flex flex-col md:flex-row items-center gap-10 mb-8 relative z-10">
-          <div className="p-5 bg-rose-500/10 border border-rose-500/20 rounded-[1.8rem] shadow-2xl">
-            <Film className="w-10 h-10 text-rose-400 group-hover:rotate-12 transition-transform" />
+          <div className="p-5 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-[1.8rem] shadow-2xl">
+            <Film className="w-10 h-10 text-[var(--tint-rose-fg)] group-hover:rotate-12 transition-transform" />
           </div>
           <div className="space-y-4">
             <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
@@ -182,10 +182,10 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
         <div className="mt-12 space-y-6 relative z-10">
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                 <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
+                 <Activity className="w-4 h-4 text-[var(--tint-emerald-fg)] animate-pulse" />
                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Neural Retention Heatmap</span>
               </div>
-              <span className="text-[10px] font-black uppercase text-emerald-400">92% Alpha Peak Detected</span>
+              <span className="text-[10px] font-black uppercase text-[var(--tint-emerald-fg)]">92% Alpha Peak Detected</span>
            </div>
 
            <div className="h-16 w-full bg-black/40 rounded-2xl border border-white/5 p-2 flex items-end gap-1 overflow-hidden relative">
@@ -226,8 +226,8 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
 
           <div className="flex items-center justify-between mb-10 relative z-10">
             <div className="flex items-center gap-6">
-              <div className="p-4 rounded-[1.2rem] bg-rose-500/10 border border-rose-500/20 shadow-2xl">
-                <Target className="w-6 h-6 text-rose-400 animate-pulse" />
+              <div className="p-4 rounded-[1.2rem] bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] shadow-2xl">
+                <Target className="w-6 h-6 text-[var(--tint-rose-fg)] animate-pulse" />
               </div>
               <div>
                 <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Hook Intelligence</h3>
@@ -243,10 +243,10 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-rose-500/30 hover:bg-white/[0.05] transition-all flex flex-col gap-6 shadow-inner"
+                className="group p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-rose-edge)] hover:bg-white/[0.05] transition-all flex flex-col gap-6 shadow-inner"
               >
                 <div className="flex items-center justify-between">
-                  <div className="px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-[9px] font-black text-rose-400 uppercase tracking-widest italic">
+                  <div className="px-4 py-1.5 rounded-full bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[9px] font-black text-[var(--tint-rose-fg)] uppercase tracking-widest italic">
                     {(hook.confidence * 100).toFixed(0)}% Retention Peak
                   </div>
                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest tabular-nums italic">@{hook.startTime.toFixed(1)}s</span>
@@ -277,8 +277,8 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
       >
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-6">
-            <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl">
-              <Zap className="w-6 h-6 text-rose-400 animate-pulse" />
+            <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-2xl">
+              <Zap className="w-6 h-6 text-[var(--tint-rose-fg)] animate-pulse" />
             </div>
             <div>
               <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">FORMAT MATRIX</h3>
@@ -297,7 +297,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                 whileHover={{ scale: 1.05, y: -4 }}
                 className={`group relative rounded-[2.5rem] border-2 transition-all p-8 flex flex-col items-center gap-6 ${isSelected
                   ? 'border-rose-500 bg-white/[0.05] shadow-3xl shadow-rose-600/10'
-                  : 'border-white/5 bg-white/[0.02] hover:border-rose-500/40'
+                  : 'border-white/5 bg-white/[0.02] hover:border-[var(--tint-rose-edge)]'
                   }`}
               >
                 <motion.button
@@ -321,7 +321,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                   whileHover={{ x: 4 }}
                   onClick={() => goToExportWithPreset(preset.exportPreset)}
                   title={`Export as ${preset.label}`}
-                  className="w-full flex items-center justify-center gap-2 py-4 text-[10px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-300 bg-rose-500/5 hover:bg-rose-500/10 rounded-2xl transition-all italic border border-rose-500/20"
+                  className="w-full flex items-center justify-center gap-2 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--tint-rose-fg)] hover:text-rose-300 bg-rose-500/5 hover:bg-[var(--tint-rose-bg)] rounded-2xl transition-all italic border border-[var(--tint-rose-edge)]"
                 >
                   Bridge to Export <ArrowUpRight className="w-4 h-4" />
                 </motion.button>
@@ -342,8 +342,8 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
 
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-6">
-            <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl">
-              <Scissors className="w-6 h-6 text-rose-400" />
+            <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-2xl">
+              <Scissors className="w-6 h-6 text-[var(--tint-rose-fg)]" />
             </div>
             <div>
               <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">TEMPORAL SYNTHESIS</h3>
@@ -360,7 +360,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                 Playhead calibrated at: <span className="text-white font-black tabular-nums">@{currentTime.toFixed(1)}s</span>
               </p>
             </div>
-            <div className="px-6 py-2 bg-rose-500/10 rounded-full border border-rose-500/20 text-[10px] font-black text-rose-400 uppercase italic tracking-widest leading-none">
+            <div className="px-6 py-2 bg-[var(--tint-rose-bg)] rounded-full border border-[var(--tint-rose-edge)] text-[10px] font-black text-[var(--tint-rose-fg)] uppercase italic tracking-widest leading-none">
               Auto-Matrix: 9:16 Sync
             </div>
           </div>
@@ -380,12 +380,12 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                   title={valid ? `Create ${sec}s clip from playhead` : 'Timeline end reached'}
                   className="flex items-center justify-center gap-4 py-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 hover:border-rose-500/50 hover:bg-white/[0.05] transition-all disabled:opacity-30 disabled:grayscale group/clip shadow-inner"
                 >
-                  <div className="p-4 rounded-full bg-rose-500/10 border border-rose-500/20 group-hover/clip:scale-110 transition-transform">
-                    <Clock className="w-6 h-6 text-rose-400" />
+                  <div className="p-4 rounded-full bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] group-hover/clip:scale-110 transition-transform">
+                    <Clock className="w-6 h-6 text-[var(--tint-rose-fg)]" />
                   </div>
                   <div className="text-left">
                     <span className="text-3xl font-black text-white italic tracking-tighter tabular-nums leading-none">{sec}s</span>
-                    <span className="block text-[11px] font-black text-slate-700 uppercase tracking-widest italic mt-1 group-hover/clip:text-rose-400 transition-colors">Burst Node</span>
+                    <span className="block text-[11px] font-black text-slate-700 uppercase tracking-widest italic mt-1 group-hover/clip:text-[var(--tint-rose-fg)] transition-colors">Burst Node</span>
                   </div>
                 </motion.button>
               )
@@ -400,17 +400,17 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
         className="p-10 bg-indigo-600/5 rounded-[3rem] border border-indigo-500/10 relative overflow-hidden group shadow-3xl"
       >
         <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000 rotate-12">
-          <Sparkles className="w-24 h-24 text-indigo-400" />
+          <Sparkles className="w-24 h-24 text-[var(--tint-indigo-fg)]" />
         </div>
 
         <div className="flex items-start gap-10 relative z-10">
-          <div className="p-5 rounded-[1.8rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl">
-            <Target className="w-10 h-10 text-indigo-400" />
+          <div className="p-5 rounded-[1.8rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-2xl">
+            <Target className="w-10 h-10 text-[var(--tint-indigo-fg)]" />
           </div>
           <div className="space-y-4">
             <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">STRATEGIC PRO ADVISORY</h4>
             <p className="text-lg text-slate-400 font-medium italic leading-relaxed pr-20">
-              Bridge to <span onClick={() => setActiveCategory('ai-edit')} className="text-white font-black underline decoration-indigo-500/30 underline-offset-8 cursor-pointer hover:text-indigo-400 transition-colors">ELITE AI Hub</span> to find viral moments—choose segments by <span className="text-white font-black">mission strategy</span>. Calibrate cuts, captions, and B-roll clusters in the Forge. Test hook variations and preserve Alpha-tier nodes.
+              Bridge to <span onClick={() => setActiveCategory('ai-edit')} className="text-white font-black underline decoration-indigo-500/30 underline-offset-8 cursor-pointer hover:text-[var(--tint-indigo-fg)] transition-colors">ELITE AI Hub</span> to find viral moments—choose segments by <span className="text-white font-black">mission strategy</span>. Calibrate cuts, captions, and B-roll clusters in the Forge. Test hook variations and preserve Alpha-tier nodes.
             </p>
           </div>
         </div>

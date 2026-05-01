@@ -188,9 +188,9 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
   ]
 
   const wheels = [
-    { id: 'lift', label: 'LIFT', desc: 'Shadow Control', color: 'text-indigo-400' },
-    { id: 'gamma', label: 'GAMMA', desc: 'Midtone Control', color: 'text-amber-400' },
-    { id: 'gain', label: 'GAIN', desc: 'Highlight Control', color: 'text-rose-400' }
+    { id: 'lift', label: 'LIFT', desc: 'Shadow Control', color: 'text-[var(--tint-indigo-fg)]' },
+    { id: 'gamma', label: 'GAMMA', desc: 'Midtone Control', color: 'text-[var(--tint-amber-fg)]' },
+    { id: 'gain', label: 'GAIN', desc: 'Highlight Control', color: 'text-[var(--tint-rose-fg)]' }
   ]
 
   return (
@@ -203,8 +203,8 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
 
         <div className="flex items-center justify-between mb-12 relative z-10">
           <div className="flex items-center gap-6">
-            <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20 shadow-xl">
-              <Sparkles className="w-6 h-6 text-indigo-400" />
+            <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-xl">
+              <Sparkles className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
             </div>
             <div>
               <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">Chroma Key</h2>
@@ -220,7 +220,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                <RefreshCw className={`w-3 h-3 ${isComparing ? 'animate-spin' : ''}`} />
                {isComparing ? 'Original Active' : 'Before / After'}
             </button>
-            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 italic">Validated</span>
+            <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest bg-[var(--tint-emerald-bg)] px-3 py-1 rounded-full border border-[var(--tint-emerald-edge)] italic">Validated</span>
           </div>
         </div>
 
@@ -233,7 +233,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
               transition={{ delay: idx * 0.05 }}
               onClick={() => applyPreset(p)}
               title={`Apply ${p.label} Color Preset`}
-              className="group relative flex flex-col items-start p-6 rounded-[1.8rem] bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:bg-white/[0.05] transition-all duration-500 text-left overflow-hidden"
+              className="group relative flex flex-col items-start p-6 rounded-[1.8rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-indigo-edge)] hover:bg-white/[0.05] transition-all duration-500 text-left overflow-hidden"
             >
               {p.swatch && (
                 <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${p.swatch} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
@@ -242,7 +242,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{p.group}</span>
                 <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${p.swatch} shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
               </div>
-              <span className="block font-black text-xl text-white italic tracking-tight group-hover:text-indigo-400 transition-colors uppercase">{p.label}</span>
+              <span className="block font-black text-xl text-white italic tracking-tight group-hover:text-[var(--tint-indigo-fg)] transition-colors uppercase">{p.label}</span>
               <span className="block text-[10px] text-slate-500 font-medium mt-1 uppercase tracking-widest opacity-60 italic">{p.desc}</span>
             </motion.button>
           ))}
@@ -252,8 +252,8 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
       {/* Manual Synthesis Controls */}
       <div className={`${glassStyle} rounded-[2.5rem] p-10 overflow-hidden relative`}>
         <div className="flex items-center gap-6 mb-12">
-          <div className="p-4 rounded-[1.2rem] bg-fuchsia-500/10 border border-fuchsia-500/20 shadow-xl">
-            <Activity className="w-6 h-6 text-fuchsia-400" />
+          <div className="p-4 rounded-[1.2rem] bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] shadow-xl">
+            <Activity className="w-6 h-6 text-[var(--tint-fuchsia-fg)]" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">GENERATE</h2>
@@ -273,7 +273,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                   <span className="text-white font-black text-xs italic tabular-nums bg-white/5 px-3 py-1 rounded-lg border border-white/5">{(videoFilters as any)[key] ?? reset}</span>
                   <button
                     onClick={() => setVideoFilters((prev: any) => ({ ...prev, [key]: reset }))}
-                    className="p-1.5 rounded-lg bg-white/5 hover:bg-fuchsia-500/20 text-slate-600 hover:text-fuchsia-400 transition-all border border-transparent hover:border-fuchsia-500/20"
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-[var(--tint-fuchsia-bg)] text-slate-600 hover:text-[var(--tint-fuchsia-fg)] transition-all border border-transparent hover:border-[var(--tint-fuchsia-edge)]"
                     title="Reset to default"
                   >
                     <RefreshCw className="w-3 h-3" />
@@ -320,8 +320,8 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
       {/* Pro Color Wheels (Lift, Gamma, Gain) */}
       <div className={`${glassStyle} rounded-[2.5rem] p-10 overflow-hidden relative`}>
         <div className="flex items-center gap-6 mb-12">
-          <div className="p-4 rounded-[1.2rem] bg-amber-500/10 border border-amber-500/20 shadow-xl">
-            <CircleDot className="w-6 h-6 text-amber-400" />
+          <div className="p-4 rounded-[1.2rem] bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] shadow-xl">
+            <CircleDot className="w-6 h-6 text-[var(--tint-amber-fg)]" />
           </div>
           <div>
             <h2 className="text-3xl font-black text-white tracking-tighter italic leading-none">Color Wheels</h2>

@@ -204,8 +204,8 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
           >
             <div className="bg-black/60 dark:bg-black/40 backdrop-blur-3xl border border-white/10 p-8 rounded-[3rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden group">
               {/* Dynamic Neural Glow */}
-              <div className="absolute -top-32 -right-32 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700" />
-              <div className="absolute -bottom-32 -left-32 w-48 h-48 bg-fuchsia-500/10 blur-[80px] rounded-full group-hover:bg-fuchsia-500/20 transition-all duration-700" />
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-[var(--tint-indigo-bg)] blur-[100px] rounded-full group-hover:bg-[var(--tint-indigo-bg)] transition-all duration-700" />
+              <div className="absolute -bottom-32 -left-32 w-48 h-48 bg-[var(--tint-fuchsia-bg)] blur-[80px] rounded-full group-hover:bg-[var(--tint-fuchsia-bg)] transition-all duration-700" />
 
               <button
                 onClick={dismissPrompt}
@@ -247,11 +247,11 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
 
               {/* Strategic Advantage Tags */}
               <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-indigo-500/30 transition-colors">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-[var(--tint-indigo-edge)] transition-colors">
                   <Zap className="w-3 h-3 text-amber-500" />
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Instant</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-emerald-500/30 transition-colors">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 group-hover:border-[var(--tint-emerald-edge)] transition-colors">
                   <Wifi className="w-3 h-3 text-emerald-500" />
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Edge</span>
                 </div>

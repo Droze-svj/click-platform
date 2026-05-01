@@ -123,7 +123,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
       {/* Header with Niche Selector */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-2">
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 italic">
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-[0.3em] text-[var(--tint-indigo-fg)] italic">
                 <Globe className="w-3.5 h-3.5 animate-pulse" />
                 Click Network Active
             </div>
@@ -155,8 +155,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
         <div className="xl:col-span-1 space-y-6">
             <div className={`${glassStyle} rounded-[3rem] p-8 space-y-8`}>
                 <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
-                        <BrainCircuit className="w-6 h-6 text-indigo-400" />
+                    <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                        <BrainCircuit className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                     </div>
                     <div>
                         <h4 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Network Signals</h4>
@@ -166,18 +166,18 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
 
                 <div className="space-y-4">
                     {pulse?.trendingSignals.map((signal: any, idx: number) => (
-                        <div key={idx} className="p-5 bg-black/40 border border-white/5 rounded-2xl space-y-3 group hover:border-indigo-500/30 transition-all">
+                        <div key={idx} className="p-5 bg-black/40 border border-white/5 rounded-2xl space-y-3 group hover:border-[var(--tint-indigo-edge)] transition-all">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-black text-white italic uppercase tracking-widest">{signal.tactic}</span>
                                 <button 
                                     onClick={() => broadcastS2SPulse(signal.tactic)}
-                                    className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors"
+                                    className="p-1.5 rounded-lg bg-[var(--tint-indigo-bg)] hover:bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] transition-colors"
                                     title="Broadcast S2S Pulse"
                                 >
                                     <Zap className="w-3 h-3" />
                                 </button>
                                 <span className={`text-[8px] font-black px-3 py-1 rounded-full ${
-                                    signal.status === 'DOMINANT' ? 'bg-indigo-500 text-white' : 'bg-indigo-500/10 text-indigo-400'
+                                    signal.status === 'DOMINANT' ? 'bg-indigo-500 text-white' : 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]'
                                 } uppercase tracking-widest`}>
                                     {signal.status}
                                 </span>
@@ -190,7 +190,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                         style={{ width: `${signal.viralScore * 100}%` }} 
                                     />
                                 </div>
-                                <span className="text-[10px] font-black text-indigo-400">{(signal.viralScore * 100).toFixed(0)}%</span>
+                                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)]">{(signal.viralScore * 100).toFixed(0)}%</span>
                             </div>
                         </div>
                     ))}
@@ -249,7 +249,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                </div>
                                <div className="space-y-1">
                                   <span className="text-[8px] font-black text-slate-500 uppercase">Status</span>
-                                  <p className="text-[10px] font-black text-indigo-400 uppercase italic leading-none">{dep.status}</p>
+                                  <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase italic leading-none">{dep.status}</p>
                                </div>
                                <div className="flex items-center gap-2">
                                   <Clock className="w-3 h-3 text-slate-700" />
@@ -273,8 +273,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
             <div className={`${glassStyle} rounded-[3rem] p-10 space-y-10`}>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
-                            <AiIcon className="w-6 h-6 text-indigo-400" />
+                        <div className="p-4 rounded-[1.2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                            <AiIcon className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
                         </div>
                         <div>
                         <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Agent Approvals</h4>
@@ -307,9 +307,9 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
 
                                 <div className="p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Agent Suggestion</span>
+                                        <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">Agent Suggestion</span>
                                         <div className="flex items-center gap-2">
-                                            <Sparkles className="w-3 h-3 text-indigo-400" />
+                                            <Sparkles className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                                             <span className="text-[9px] font-black text-white italic">{(draft.sentimentAtTime * 100).toFixed(0)}% Vibe Sync</span>
                                         </div>
                                     </div>
@@ -349,13 +349,13 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
       </div>
 
       {/* Marquee (Background element) */}
-      <div className="fixed bottom-0 left-0 right-0 h-10 bg-indigo-600/10 backdrop-blur-3xl border-t border-indigo-500/20 flex items-center overflow-hidden z-[100]">
+      <div className="fixed bottom-0 left-0 right-0 h-10 bg-indigo-600/10 backdrop-blur-3xl border-t border-[var(--tint-indigo-edge)] flex items-center overflow-hidden z-[100]">
           <div className="flex gap-20 animate-marquee whitespace-nowrap px-10">
               {[1,2,3,4].map(i => (
                   <div key={i} className="flex items-center gap-6">
-                      <span className="text-[10px] font-black text-indigo-400 italic uppercase">Pulse Alpha: 94.2% Stability</span>
+                      <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] italic uppercase">Pulse Alpha: 94.2% Stability</span>
                       <span className="text-[10px] font-black text-white italic uppercase tracking-widest">Tactic: Zero-Click Metadata [Rising]</span>
-                      <span className="text-[10px] font-black text-indigo-400 italic uppercase">Network Nodes: 162 Active</span>
+                      <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] italic uppercase">Network Nodes: 162 Active</span>
                       <span className="text-[10px] font-black text-white italic uppercase tracking-widest">Chrono Shift: +14% Hook Retention</span>
                   </div>
               ))}

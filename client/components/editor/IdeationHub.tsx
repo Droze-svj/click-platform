@@ -60,7 +60,7 @@ export default function IdeationHub() {
       {/* Header Area */}
       <div className="flex items-end justify-between px-2">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[9px] font-black uppercase tracking-widest">
             <Brain size={12} />
             Strategic Nerve Center
           </div>
@@ -101,8 +101,8 @@ export default function IdeationHub() {
                 </div>
                 
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                  <div className="w-10 h-10 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                   </div>
                   <h2 className="text-2xl font-black italic text-white uppercase">Content Gap Analysis</h2>
                 </div>
@@ -113,7 +113,7 @@ export default function IdeationHub() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-black italic text-white uppercase">{gap.niche}</span>
-                          <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10">
+                          <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest px-3 py-1 rounded-full bg-[var(--tint-emerald-bg)]">
                             +{(gap.demand - gap.supply)}% Potential
                           </span>
                         </div>
@@ -139,7 +139,7 @@ export default function IdeationHub() {
                            </div>
                         </div>
                       </div>
-                      <button className="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all group-hover:scale-105">
+                      <button className="w-12 h-12 rounded-2xl bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center text-[var(--tint-indigo-fg)] hover:bg-indigo-600 hover:text-white transition-all group-hover:scale-105">
                         <ArrowRight size={20} />
                       </button>
                     </div>
@@ -151,7 +151,7 @@ export default function IdeationHub() {
             <div className="lg:col-span-4 space-y-6">
                <div className={`${glassStyle} p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent`}>
                   <div className="flex items-center gap-3 mb-6">
-                    <Activity className="w-5 h-5 text-indigo-400" />
+                    <Activity className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                     <h3 className="text-lg font-black text-white italic uppercase">Market Heat</h3>
                   </div>
                   <div className="space-y-4">
@@ -161,7 +161,7 @@ export default function IdeationHub() {
                     </div>
                     <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
                       <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Saturation Index</div>
-                      <div className="text-2xl font-black text-rose-400 italic">LOW</div>
+                      <div className="text-2xl font-black text-[var(--tint-rose-fg)] italic">LOW</div>
                     </div>
                   </div>
                </div>
@@ -198,7 +198,7 @@ export default function IdeationHub() {
                 </p>
                 <button 
                   title={`Apply ${framework.name} framework`}
-                  className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-all"
+                  className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-[var(--tint-indigo-fg)] group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-all"
                 >
                   Apply Framework
                 </button>
@@ -216,8 +216,8 @@ export default function IdeationHub() {
             className="space-y-8"
           >
             <div className={`${glassStyle} p-12 rounded-[3rem] flex flex-col items-center text-center max-w-4xl mx-auto`}>
-               <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-8">
-                  <SearchCode className="w-10 h-10 text-indigo-400" />
+               <div className="w-20 h-20 rounded-[2.5rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center mb-8">
+                  <SearchCode className="w-10 h-10 text-[var(--tint-indigo-fg)]" />
                </div>
                <h2 className="text-3xl font-black italic text-white uppercase mb-4">Competitor Autopsy</h2>
                <p className="text-slate-400 text-sm font-medium mb-10 max-w-lg">
@@ -245,10 +245,10 @@ export default function IdeationHub() {
             {autopsyData && (
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Hook DNA', val: autopsyData.hook, icon: Zap, color: 'text-orange-400' },
-                  { label: 'Pacing Ratios', val: autopsyData.pacing, icon: Activity, color: 'text-indigo-400' },
+                  { label: 'Hook DNA', val: autopsyData.hook, icon: Zap, color: 'text-[var(--tint-orange-fg)]' },
+                  { label: 'Pacing Ratios', val: autopsyData.pacing, icon: Activity, color: 'text-[var(--tint-indigo-fg)]' },
                   { label: 'Psych Trigger', val: autopsyData.psychology, icon: Brain, color: 'text-purple-400' },
-                  { label: 'Viral Score', val: autopsyData.score + '%', icon: Target, color: 'text-emerald-400' },
+                  { label: 'Viral Score', val: autopsyData.score + '%', icon: Target, color: 'text-[var(--tint-emerald-fg)]' },
                 ].map((stat, i) => (
                   <div key={i} className={`${glassStyle} p-6 rounded-3xl border border-white/5 flex flex-col gap-2`}>
                     <stat.icon className={`w-5 h-5 ${stat.color} mb-2`} />

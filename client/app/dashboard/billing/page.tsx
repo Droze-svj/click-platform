@@ -111,12 +111,12 @@ export default function BillingPage() {
   }
 
   const meters = [
-    { label: 'Videos Processed',  used: usage.videosProcessed,  cap: limits.videosProcessed,  icon: Video,    color: 'text-rose-400',    bar: 'bg-rose-500' },
-    { label: 'AI Generations',    used: usage.contentGenerated, cap: limits.contentGenerated, icon: Sparkles, color: 'text-indigo-400',  bar: 'bg-indigo-500' },
-    { label: 'Posts Scheduled',   used: usage.postsScheduled,   cap: limits.postsScheduled,   icon: Calendar, color: 'text-amber-400',   bar: 'bg-amber-500' },
-    { label: 'Quote Cards',       used: usage.quotesCreated,    cap: limits.quotesCreated,    icon: FileText, color: 'text-emerald-400', bar: 'bg-emerald-500' },
-    { label: 'Storage (MB)',      used: usage.storageUsedMb,    cap: limits.storageUsedMb,    icon: Database, color: 'text-violet-400',  bar: 'bg-violet-500' },
-    { label: 'AI Credits',        used: usage.aiCreditsUsed,    cap: limits.aiCreditsUsed,    icon: Zap,      color: 'text-cyan-400',    bar: 'bg-cyan-500' },
+    { label: 'Videos Processed',  used: usage.videosProcessed,  cap: limits.videosProcessed,  icon: Video,    color: 'text-[var(--tint-rose-fg)]',    bar: 'bg-rose-500' },
+    { label: 'AI Generations',    used: usage.contentGenerated, cap: limits.contentGenerated, icon: Sparkles, color: 'text-[var(--tint-indigo-fg)]',  bar: 'bg-indigo-500' },
+    { label: 'Posts Scheduled',   used: usage.postsScheduled,   cap: limits.postsScheduled,   icon: Calendar, color: 'text-[var(--tint-amber-fg)]',   bar: 'bg-amber-500' },
+    { label: 'Quote Cards',       used: usage.quotesCreated,    cap: limits.quotesCreated,    icon: FileText, color: 'text-[var(--tint-emerald-fg)]', bar: 'bg-emerald-500' },
+    { label: 'Storage (MB)',      used: usage.storageUsedMb,    cap: limits.storageUsedMb,    icon: Database, color: 'text-[var(--tint-violet-fg)]',  bar: 'bg-violet-500' },
+    { label: 'AI Credits',        used: usage.aiCreditsUsed,    cap: limits.aiCreditsUsed,    icon: Zap,      color: 'text-[var(--tint-cyan-fg)]',    bar: 'bg-cyan-500' },
   ]
 
   if (loading) return (
@@ -125,7 +125,7 @@ export default function BillingPage() {
         <div className="absolute inset-0 bg-amber-500 blur-3xl opacity-20 animate-pulse" />
         <Gem size={80} className="text-amber-500 animate-spin relative z-10" />
       </div>
-      <p className="text-[12px] font-black text-amber-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Resolving Ledger Vector...</p>
+      <p className="text-[12px] font-black text-[var(--tint-amber-fg)] uppercase tracking-[0.8em] animate-pulse italic leading-none">Resolving Ledger Vector...</p>
     </div>
   )
 
@@ -140,23 +140,23 @@ export default function BillingPage() {
             <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
-            <div className="w-20 h-20 bg-amber-500/10 border-2 border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Gem size={40} className="text-amber-400" />
+            <div className="w-20 h-20 bg-[var(--tint-amber-bg)] border-2 border-[var(--tint-amber-edge)] rounded-[2.5rem] flex items-center justify-center shadow-3xl">
+              <Gem size={40} className="text-[var(--tint-amber-fg)]" />
             </div>
             <div>
               <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-amber-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-400 italic leading-none">Sovereign Ledger</span>
+                <Activity size={14} className="text-[var(--tint-amber-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-[var(--tint-amber-fg)] italic leading-none">Sovereign Ledger</span>
               </div>
               <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
             </div>
           </div>
-          <div className={`${glassStyle} px-8 py-5 rounded-[2.5rem] flex items-center gap-5 border-amber-500/20`}>
+          <div className={`${glassStyle} px-8 py-5 rounded-[2.5rem] flex items-center gap-5 border-[var(--tint-amber-edge)]`}>
             <div className={`w-3 h-3 rounded-full ${subStatus === 'active' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : subStatus === 'trial' ? 'bg-amber-500 animate-pulse' : 'bg-slate-500'}`} />
             <div>
               <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none mb-1">CURRENT_TIER</p>
-              <p className="text-xl font-black text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-emerald-400' : subStatus === 'trial' ? 'text-amber-400' : 'text-slate-400'}>{subStatus}</span></p>
+              <p className="text-xl font-black text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-[var(--tint-emerald-fg)]' : subStatus === 'trial' ? 'text-[var(--tint-amber-fg)]' : 'text-slate-400'}>{subStatus}</span></p>
             </div>
           </div>
         </div>
@@ -164,8 +164,8 @@ export default function BillingPage() {
         {/* Usage meters */}
         <div className={`${glassStyle} rounded-[3rem] overflow-hidden`}>
           <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-white/5">
-            <div className="w-14 h-14 rounded-[1.4rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-              <TrendingUp size={26} className="text-indigo-400" />
+            <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center">
+              <TrendingUp size={26} className="text-[var(--tint-indigo-fg)]" />
             </div>
             <div>
               <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
@@ -177,7 +177,7 @@ export default function BillingPage() {
               const pct = m.cap && m.cap > 0 ? Math.min(100, Math.round(((m.used || 0) / m.cap) * 100)) : 0
               const overage = m.cap != null && (m.used || 0) > m.cap
               return (
-                <div key={m.label} className={`${glassStyle} rounded-[2rem] p-7 flex flex-col gap-4 ${overage ? 'border-rose-500/30' : ''}`}>
+                <div key={m.label} className={`${glassStyle} rounded-[2rem] p-7 flex flex-col gap-4 ${overage ? 'border-[var(--tint-rose-edge)]' : ''}`}>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-[1rem] bg-white/[0.03] border border-white/10 flex items-center justify-center">
                       <m.icon size={22} className={m.color} />
@@ -185,7 +185,7 @@ export default function BillingPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">{m.label}</p>
                     </div>
-                    {overage && <span className="text-[8px] font-black text-rose-400 uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> OVER</span>}
+                    {overage && <span className="text-[8px] font-black text-[var(--tint-rose-fg)] uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> OVER</span>}
                   </div>
                   <div className="flex items-end gap-3">
                     <p className={`text-4xl font-black italic tabular-nums tracking-tighter leading-none ${m.color}`}>{fmtNumber(m.used)}</p>
@@ -205,8 +205,8 @@ export default function BillingPage() {
         {/* Plans */}
         <div className={`${glassStyle} rounded-[3rem] overflow-hidden`}>
           <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-white/5">
-            <div className="w-14 h-14 rounded-[1.4rem] bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Crown size={26} className="text-amber-400" />
+            <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center">
+              <Crown size={26} className="text-[var(--tint-amber-fg)]" />
             </div>
             <div>
               <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Tier Selector</h2>
@@ -220,7 +220,7 @@ export default function BillingPage() {
               const includedFeatures = plan.features.filter(f => f.included)
               const PlanIcon = plan.icon
               return (
-                <div key={plan.id} className={`${glassStyle} rounded-[2.5rem] p-8 flex flex-col gap-6 relative ${plan.featured ? 'border-indigo-500/40 shadow-[0_0_80px_rgba(99,102,241,0.15)]' : ''} ${isCurrent ? 'ring-2 ring-emerald-500/40' : ''}`}>
+                <div key={plan.id} className={`${glassStyle} rounded-[2.5rem] p-8 flex flex-col gap-6 relative ${plan.featured ? 'border-[var(--tint-indigo-edge)] shadow-[0_0_80px_rgba(99,102,241,0.15)]' : ''} ${isCurrent ? 'ring-2 ring-emerald-500/40' : ''}`}>
                   {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic shadow-[0_10px_30px_rgba(99,102,241,0.4)]">RECOMMENDED</span>}
                   {isCurrent && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic">CURRENT_TIER</span>}
                   <div className="flex items-center gap-4">
@@ -239,12 +239,12 @@ export default function BillingPage() {
                   <ul className="space-y-3 flex-1">
                     {includedFeatures.map(f => (
                       <li key={f.label} className="flex items-start gap-3 text-[11px] text-slate-300 leading-relaxed">
-                        <CheckCircle size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                        <CheckCircle size={14} className="text-[var(--tint-emerald-fg)] mt-0.5 flex-shrink-0" />
                         <span>{f.label}</span>
                       </li>
                     ))}
                   </ul>
-                  <button type="button" disabled={isCurrent || isUpgrading} onClick={() => handleUpgrade(plan)} className={`mt-auto py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic transition-colors flex items-center justify-center gap-3 ${isCurrent ? 'bg-emerald-500/10 text-emerald-400 border-2 border-emerald-500/30 cursor-default' : plan.featured ? 'bg-white text-black hover:bg-indigo-500 hover:text-white' : 'bg-white/5 border-2 border-white/10 text-slate-300 hover:text-white hover:border-white/30'} disabled:opacity-60`}>
+                  <button type="button" disabled={isCurrent || isUpgrading} onClick={() => handleUpgrade(plan)} className={`mt-auto py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic transition-colors flex items-center justify-center gap-3 ${isCurrent ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-2 border-[var(--tint-emerald-edge)] cursor-default' : plan.featured ? 'bg-white text-black hover:bg-indigo-500 hover:text-white' : 'bg-white/5 border-2 border-white/10 text-slate-300 hover:text-white hover:border-white/30'} disabled:opacity-60`}>
                     {isCurrent ? 'ACTIVE_TIER' : isUpgrading ? <><RefreshCw size={14} className="animate-spin" /> ROUTING...</> : <>{plan.cta.label.toUpperCase().replace(/ /g, '_')} <ArrowRight size={14} /></>}
                   </button>
                 </div>
@@ -256,8 +256,8 @@ export default function BillingPage() {
         {/* History */}
         <div className={`${glassStyle} rounded-[3rem] overflow-hidden`}>
           <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-white/5">
-            <div className="w-14 h-14 rounded-[1.4rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <Receipt size={26} className="text-emerald-400" />
+            <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center">
+              <Receipt size={26} className="text-[var(--tint-emerald-fg)]" />
             </div>
             <div>
               <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Ledger History</h2>
@@ -282,7 +282,7 @@ export default function BillingPage() {
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic leading-none">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}</p>
                   </div>
                   <p className="text-2xl font-black text-white italic tabular-nums tracking-tight">{fmtCurrency(inv.amount, inv.currency || 'USD')}</p>
-                  <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] italic border ${inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : inv.status === 'failed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
+                  <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] italic border ${inv.status === 'paid' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' : inv.status === 'failed' ? 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)]' : 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]'}`}>
                     {(inv.status || 'PENDING').toUpperCase()}
                   </span>
                   <button type="button" title="Download invoice" className="w-10 h-10 rounded-[1rem] bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors">

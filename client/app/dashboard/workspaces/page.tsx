@@ -36,9 +36,9 @@ function seedWorkspaces(userName?: string): Workspace[] {
 }
 
 const ROLE_CFG: Record<string, { label: string; color: string }> = {
-  owner:  { label: 'OWNER',  color: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
-  admin:  { label: 'ADMIN',  color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' },
-  editor: { label: 'EDITOR', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
+  owner:  { label: 'OWNER',  color: 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]' },
+  admin:  { label: 'ADMIN',  color: 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]' },
+  editor: { label: 'EDITOR', color: 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' },
   viewer: { label: 'VIEWER', color: 'bg-slate-500/10 text-slate-400 border-slate-500/30' },
 }
 
@@ -108,13 +108,13 @@ export default function WorkspacesPage() {
             <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
-            <div className="w-20 h-20 bg-violet-500/10 border-2 border-violet-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Boxes size={40} className="text-violet-400" />
+            <div className="w-20 h-20 bg-[var(--tint-violet-bg)] border-2 border-[var(--tint-violet-edge)] rounded-[2.5rem] flex items-center justify-center shadow-3xl">
+              <Boxes size={40} className="text-[var(--tint-violet-fg)]" />
             </div>
             <div>
               <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-violet-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-violet-400 italic leading-none">Multi-Brand Lattice</span>
+                <Activity size={14} className="text-[var(--tint-violet-fg)] animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-[var(--tint-violet-fg)] italic leading-none">Multi-Brand Lattice</span>
               </div>
               <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Workspaces</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Switch between sovereign brand instances. Each carries isolated assets, schedules, and analytics.</p>
@@ -127,21 +127,21 @@ export default function WorkspacesPage() {
 
         {/* Active Workspace Banner */}
         {activeWs && (
-          <div className={`${glassStyle} rounded-[3rem] p-10 border-violet-500/20 relative overflow-hidden`}>
+          <div className={`${glassStyle} rounded-[3rem] p-10 border-[var(--tint-violet-edge)] relative overflow-hidden`}>
             <div className={`absolute inset-0 bg-gradient-to-br ${activeWs.color} opacity-[0.05] pointer-events-none`} />
             <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8">
               <div className={`w-24 h-24 rounded-[2rem] bg-gradient-to-br ${activeWs.color} flex items-center justify-center text-white font-black text-5xl italic shadow-[0_30px_80px_rgba(0,0,0,0.4)] flex-shrink-0`}>
                 {activeWs.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0 text-center lg:text-left">
-                <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">ACTIVE_INSTANCE</p>
+                <p className="text-[10px] font-black text-[var(--tint-violet-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">ACTIVE_INSTANCE</p>
                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-tight mb-3 truncate">{activeWs.name}</h2>
                 <div className="flex flex-wrap items-center gap-3 justify-center lg:justify-start">
                   <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">{activeWs.handle}</span>
                   <span className="opacity-30 text-slate-500">·</span>
                   <span className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.4em] italic ${ROLE_CFG[activeWs.role].color}`}>{ROLE_CFG[activeWs.role].label}</span>
                   <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Users size={11} /> {activeWs.members}</span>
-                  <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Crown size={11} /> {activeWs.plan}</span>
+                  <span className="px-3 py-1 rounded-full bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)] text-[9px] font-black uppercase tracking-[0.4em] italic flex items-center gap-2"><Crown size={11} /> {activeWs.plan}</span>
                 </div>
               </div>
             </div>
@@ -152,9 +152,9 @@ export default function WorkspacesPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: 'Total Workspaces', value: workspaces.length, icon: Layers, color: 'text-white' },
-            { label: 'Owned',            value: workspaces.filter(w => w.role === 'owner').length, icon: Crown, color: 'text-amber-400' },
-            { label: 'Joined',           value: workspaces.filter(w => w.role !== 'owner').length, icon: Users, color: 'text-indigo-400' },
-            { label: 'Total Members',    value: workspaces.reduce((s, w) => s + w.members, 0), icon: Database, color: 'text-violet-400' },
+            { label: 'Owned',            value: workspaces.filter(w => w.role === 'owner').length, icon: Crown, color: 'text-[var(--tint-amber-fg)]' },
+            { label: 'Joined',           value: workspaces.filter(w => w.role !== 'owner').length, icon: Users, color: 'text-[var(--tint-indigo-fg)]' },
+            { label: 'Total Members',    value: workspaces.reduce((s, w) => s + w.members, 0), icon: Database, color: 'text-[var(--tint-violet-fg)]' },
           ].map(s => (
             <div key={s.label} className={`${glassStyle} rounded-[2.5rem] p-8 flex items-center gap-6`}>
               <div className="w-14 h-14 rounded-[1.4rem] bg-white/[0.03] border border-white/10 flex items-center justify-center">
@@ -186,7 +186,7 @@ export default function WorkspacesPage() {
                 type="button"
                 whileHover={{ y: -6 }}
                 onClick={() => handleSwitch(ws.id)}
-                className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col gap-5 text-left relative overflow-hidden ${ws.active ? 'border-violet-500/40 ring-2 ring-violet-500/20 shadow-[0_0_80px_rgba(139,92,246,0.15)]' : 'hover:border-white/20'}`}
+                className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col gap-5 text-left relative overflow-hidden ${ws.active ? 'border-[var(--tint-violet-edge)] ring-2 ring-violet-500/20 shadow-[0_0_80px_rgba(139,92,246,0.15)]' : 'hover:border-white/20'}`}
               >
                 <div className={`absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br ${ws.color} opacity-[0.06] blur-2xl pointer-events-none`} />
                 <div className="flex items-start justify-between relative z-10">
@@ -207,8 +207,8 @@ export default function WorkspacesPage() {
                 </div>
               </motion.button>
             ))}
-            <button type="button" onClick={() => setShowCreate(true)} className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col items-center justify-center gap-4 text-center border-dashed border-2 border-white/10 hover:border-violet-500/40 hover:bg-violet-500/[0.02] min-h-[280px]`}>
-              <div className="w-16 h-16 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/20 flex items-center justify-center text-violet-400">
+            <button type="button" onClick={() => setShowCreate(true)} className={`${glassStyle} rounded-[2.5rem] p-7 flex flex-col items-center justify-center gap-4 text-center border-dashed border-2 border-white/10 hover:border-[var(--tint-violet-edge)] hover:bg-violet-500/[0.02] min-h-[280px]`}>
+              <div className="w-16 h-16 rounded-[1.4rem] bg-[var(--tint-violet-bg)] border-2 border-[var(--tint-violet-edge)] flex items-center justify-center text-[var(--tint-violet-fg)]">
                 <Plus size={28} />
               </div>
               <p className="text-xl font-black text-white italic uppercase tracking-tight">Spawn Instance</p>
@@ -222,11 +222,11 @@ export default function WorkspacesPage() {
       <AnimatePresence>
         {showCreate && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-8 bg-[#020205]/90 backdrop-blur-2xl" onClick={() => !creating && setShowCreate(false)}>
-            <motion.div initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 24 }} transition={{ type: 'spring', damping: 22, stiffness: 240 }} onClick={e => e.stopPropagation()} className={`${glassStyle} rounded-[3rem] p-12 max-w-2xl w-full border-violet-500/20`}>
+            <motion.div initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 24 }} transition={{ type: 'spring', damping: 22, stiffness: 240 }} onClick={e => e.stopPropagation()} className={`${glassStyle} rounded-[3rem] p-12 max-w-2xl w-full border-[var(--tint-violet-edge)]`}>
               <div className="flex items-center gap-6 mb-10">
-                <div className="w-14 h-14 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/30 flex items-center justify-center"><Sparkles size={26} className="text-violet-400" /></div>
+                <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-violet-bg)] border-2 border-[var(--tint-violet-edge)] flex items-center justify-center"><Sparkles size={26} className="text-[var(--tint-violet-fg)]" /></div>
                 <div>
-                  <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">SPAWN_PROTOCOL</p>
+                  <p className="text-[10px] font-black text-[var(--tint-violet-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">SPAWN_PROTOCOL</p>
                   <h3 className="text-3xl font-black text-white italic uppercase tracking-tight leading-tight">New Workspace</h3>
                 </div>
               </div>

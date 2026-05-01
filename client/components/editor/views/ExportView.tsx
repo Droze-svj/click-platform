@@ -285,12 +285,12 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
 
         {/* Agency Batch Mode Toggle */}
         <div className="flex items-center justify-center gap-6 mb-16">
-           <div className={`px-6 py-3 rounded-full border flex items-center gap-4 transition-all cursor-pointer ${isBatchMode ? 'bg-fuchsia-500/20 border-fuchsia-500 shadow-[0_0_30px_rgba(217,70,239,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`} onClick={() => setIsBatchMode(!isBatchMode)}>
+           <div className={`px-6 py-3 rounded-full border flex items-center gap-4 transition-all cursor-pointer ${isBatchMode ? 'bg-[var(--tint-fuchsia-bg)] border-fuchsia-500 shadow-[0_0_30px_rgba(217,70,239,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10'}`} onClick={() => setIsBatchMode(!isBatchMode)}>
               <div className={`w-10 h-5 rounded-full relative transition-colors ${isBatchMode ? 'bg-fuchsia-500' : 'bg-slate-700'}`}>
                  <motion.div animate={{ x: isBatchMode ? 20 : 2 }} className="w-4 h-4 rounded-full bg-white absolute top-0.5 shadow-md" />
               </div>
               <div className="flex flex-col text-left">
-                 <span className={`text-[11px] font-black uppercase tracking-widest italic transition-colors ${isBatchMode ? 'text-fuchsia-400' : 'text-slate-400'}`}>Agency Batch Mode</span>
+                 <span className={`text-[11px] font-black uppercase tracking-widest italic transition-colors ${isBatchMode ? 'text-[var(--tint-fuchsia-fg)]' : 'text-slate-400'}`}>Agency Batch Mode</span>
                  <span className="text-[9px] text-slate-500 italic">Omni-channel parallel synthesis</span>
               </div>
            </div>
@@ -302,7 +302,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
           <div className="space-y-10 p-10 bg-white/[0.02] border border-white/5 rounded-[3rem] shadow-inner">
             <div className="space-y-4">
               <div className="flex items-center gap-4 mb-2">
-                <Target className="w-5 h-5 text-indigo-400" />
+                <Target className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">Output Spectrum</h3>
               </div>
               <div className="relative flex p-1.5 bg-black/40 border border-white/5 rounded-3xl overflow-hidden w-fit shadow-inner">
@@ -332,12 +332,12 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               </div>
               <div className="space-y-2">
                 <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest italic">Target bitrate</span>
-                <p className="text-3xl font-black text-indigo-400 italic tracking-tighter">~{effectiveBitrateMbps} <span className="text-sm opacity-40">Mbps</span></p>
+                <p className="text-3xl font-black text-[var(--tint-indigo-fg)] italic tracking-tighter">~{effectiveBitrateMbps} <span className="text-sm opacity-40">Mbps</span></p>
               </div>
             </div>
 
             <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
-              <div className="flex items-center gap-4 text-emerald-400">
+              <div className="flex items-center gap-4 text-[var(--tint-emerald-fg)]">
                 <Activity className="w-4 h-4 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] italic">Projection Stable</span>
               </div>
@@ -349,7 +349,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
           <div className="space-y-10 p-10 bg-white/[0.02] border border-white/5 rounded-[3rem] shadow-inner">
             <div className="space-y-4">
               <div className="flex items-center gap-4 mb-2">
-                <Cpu className="w-5 h-5 text-orange-400" />
+                <Cpu className="w-5 h-5 text-[var(--tint-orange-fg)]" />
                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">NEURAL CODEC</h3>
               </div>
               <div className="relative flex p-1.5 bg-black/40 border border-white/5 rounded-3xl overflow-hidden w-fit shadow-inner">
@@ -374,7 +374,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
 
             <div className="space-y-6">
               <div className="flex items-center gap-4 mb-2">
-                <Layers className="w-5 h-5 text-indigo-400" />
+                <Layers className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">Audio Synthesis</h3>
               </div>
               <label className="flex items-center gap-4 cursor-pointer group/audio">
@@ -433,7 +433,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               </div>
               <div className="text-center space-y-1">
                 <span className={`block text-lg font-black uppercase italic tracking-tighter ${selectedPreset === p.id ? 'text-white' : 'text-slate-500'}`}>{p.label}</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest block ${selectedPreset === p.id ? 'text-indigo-400' : 'text-slate-800'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest block ${selectedPreset === p.id ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-800'}`}>
                   {p.res}
                 </span>
               </div>
@@ -456,7 +456,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                        whileHover={{ scale: 1.05 }}
                        whileTap={{ scale: 0.95 }}
                        onClick={() => setBatchFormats(prev => prev.map(f => f.id === fmt.id ? { ...f, selected: !f.selected } : f))}
-                       className={`px-8 py-6 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all min-w-[180px] ${fmt.selected ? 'bg-fuchsia-500/10 border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.2)]' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+                       className={`px-8 py-6 rounded-[2rem] border-2 flex flex-col items-center gap-2 transition-all min-w-[180px] ${fmt.selected ? 'bg-[var(--tint-fuchsia-bg)] border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.2)]' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
                     >
                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${fmt.selected ? 'bg-fuchsia-500 border-fuchsia-400 text-white' : 'border-white/20'}`}>
                           {fmt.selected && <CheckCircle2 className="w-4 h-4" />}
@@ -584,15 +584,15 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                        <div className="flex items-center justify-center gap-10">
                           <div className="flex flex-col items-center gap-2">
                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
-                             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest italic">Core Alpha</span>
+                             <span className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">Core Alpha</span>
                           </div>
                           <div className="flex flex-col items-center gap-2 opacity-50">
                              <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
-                             <span className="text-[8px] font-black text-violet-400 uppercase tracking-widest italic">Core Beta</span>
+                             <span className="text-[8px] font-black text-[var(--tint-violet-fg)] uppercase tracking-widest italic">Core Beta</span>
                           </div>
                           <div className="flex flex-col items-center gap-2">
                              <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-ping" />
-                             <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-widest italic">Core Gamma</span>
+                             <span className="text-[8px] font-black text-[var(--tint-fuchsia-fg)] uppercase tracking-widest italic">Core Gamma</span>
                           </div>
                        </div>
 
@@ -605,7 +605,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                                </span>
                                {Object.entries(batchProgress).map(([format, prog]) => (
                                   <div key={format} className="flex items-center gap-4 px-10">
-                                     <span className="text-[10px] font-black uppercase tracking-widest text-fuchsia-400 w-16 text-right">{format}</span>
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-[var(--tint-fuchsia-fg)] w-16 text-right">{format}</span>
                                      <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/5">
                                          <motion.div
                                            className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500 rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)]"
@@ -725,8 +725,8 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
 
           <div className="flex items-center justify-between mb-12 relative z-10">
             <div className="flex items-center gap-8">
-              <div className="p-5 rounded-[1.8rem] bg-indigo-500/10 border border-indigo-500/20 shadow-2xl">
-                <FolderDown className="w-8 h-8 text-indigo-400" />
+              <div className="p-5 rounded-[1.8rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] shadow-2xl">
+                <FolderDown className="w-8 h-8 text-[var(--tint-indigo-fg)]" />
               </div>
               <div>
                 <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">NEURAL REPOSITORY</h3>
@@ -769,7 +769,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                         title="Copy Uplink"
                         className="p-3 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all border border-white/10 shadow-lg"
                       >
-                        {copySuccessId === s._id ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Link2 className="w-4 h-4" />}
+                        {copySuccessId === s._id ? <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" /> : <Link2 className="w-4 h-4" />}
                       </motion.button>
 
                       <a
@@ -777,7 +777,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Download Source"
-                        className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:text-white hover:bg-indigo-500/40 transition-all border border-indigo-500/20 shadow-lg"
+                        className="p-3 rounded-xl bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] hover:text-white hover:bg-indigo-500/40 transition-all border border-[var(--tint-indigo-edge)] shadow-lg"
                       >
                         <FolderDown className="w-4 h-4" />
                       </a>
@@ -787,25 +787,25 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                   <div className="flex items-center justify-between pt-6 border-t border-white/5">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${s.isExpired ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
-                      <span className={`text-[9px] font-black uppercase tracking-widest italic ${s.isExpired ? 'text-rose-500/50' : 'text-emerald-500/50 group-hover:text-emerald-400 transition-colors'}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-widest italic ${s.isExpired ? 'text-rose-500/50' : 'text-emerald-500/50 group-hover:text-[var(--tint-emerald-fg)] transition-colors'}`}>
                         {s.isExpired ? 'EXPIRED' : 'ACTIVE UPLINK'}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       {!s.isExpired && (
-                        <div className="flex items-center gap-4 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+                        <div className="flex items-center gap-4 px-4 py-2 bg-[var(--tint-indigo-bg)] rounded-xl border border-[var(--tint-indigo-edge)]">
                           <select
                             title="Extend Archive Duration"
                             value={extendDays}
                             onChange={(e) => setExtendDays(Number(e.target.value))}
-                            className="bg-transparent text-indigo-400 font-black text-[10px] uppercase italic border-none focus:ring-0 p-0 w-12 cursor-pointer"
+                            className="bg-transparent text-[var(--tint-indigo-fg)] font-black text-[10px] uppercase italic border-none focus:ring-0 p-0 w-12 cursor-pointer"
                           >
                             <option value={7} className="text-black">7D</option>
                             <option value={10} className="text-black">10D</option>
                             <option value={30} className="text-black">30D</option>
                           </select>
-                          <div className="w-px h-4 bg-indigo-500/20" />
+                          <div className="w-px h-4 bg-[var(--tint-indigo-bg)]" />
                           <button
                             disabled={extendingId === s._id}
                             title="Confirm Extension"
@@ -822,7 +822,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                                 setExtendingId(null)
                               }
                             }}
-                            className="text-indigo-400 hover:text-white transition-colors"
+                            className="text-[var(--tint-indigo-fg)] hover:text-white transition-colors"
                           >
                             {extendingId === s._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpRight className="w-4 h-4" />}
                           </button>
@@ -846,8 +846,8 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-16 relative z-10">
           <div className="space-y-4">
              <div className="flex items-center gap-6">
-                <div className="p-4 rounded-[1.2rem] bg-emerald-500/10 border border-emerald-500/20 shadow-xl">
-                   <Globe className="w-8 h-8 text-emerald-400 animate-pulse-slow" />
+                <div className="p-4 rounded-[1.2rem] bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-xl">
+                   <Globe className="w-8 h-8 text-[var(--tint-emerald-fg)] animate-pulse-slow" />
                 </div>
                 <div>
                    <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">DISTRIBUTION Hub</h2>
@@ -855,10 +855,10 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 </div>
              </div>
             <p className="text-slate-500 text-xl font-medium tracking-tight italic">
-              Cross-cluster broadcasting initialized for <span className="text-emerald-400 font-black">{PLATFORMS.filter(p => p.connected).length} Identity Nodes</span>.
+              Cross-cluster broadcasting initialized for <span className="text-[var(--tint-emerald-fg)] font-black">{PLATFORMS.filter(p => p.connected).length} Identity Nodes</span>.
             </p>
           </div>
-          <div className="px-10 py-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] italic shadow-2xl">
+          <div className="px-10 py-4 bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)] rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] italic shadow-2xl">
             LINK_STABILITY: 100%
           </div>
         </div>
@@ -881,7 +881,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                     ? 'bg-black/40 border-white/5 grayscale opacity-30 cursor-not-allowed'
                     : selectedPlatforms.includes(platform.id)
                       ? 'bg-gradient-to-br ' + platform.color + ' border-white/30 text-white shadow-[0_0_50px_rgba(16,185,129,0.3)] scale-[1.02] z-10'
-                      : 'bg-white/[0.03] border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/10'
+                      : 'bg-white/[0.03] border-white/10 hover:border-emerald-500/50 hover:bg-[var(--tint-emerald-bg)]'
                     }`}
                 >
                   {selectedPlatforms.includes(platform.id) && (
@@ -929,7 +929,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                     >
                       {isPublishing ? (
                         <>
-                          <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+                          <Loader2 className="w-6 h-6 animate-spin text-[var(--tint-emerald-fg)]" />
                           DISPATCHING...
                         </>
                       ) : (
@@ -945,9 +945,9 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             </AnimatePresence>
 
             {!connectedAccounts.tiktok && !connectedAccounts.youtube && !connectedAccounts.instagram && (
-              <div className="p-10 rounded-[3rem] bg-orange-500/5 border border-orange-500/20 text-center space-y-4">
-                <div className="w-16 h-16 rounded-[1.5rem] bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
-                  <ZapOff className="w-8 h-8 text-orange-400" />
+              <div className="p-10 rounded-[3rem] bg-orange-500/5 border border-[var(--tint-orange-edge)] text-center space-y-4">
+                <div className="w-16 h-16 rounded-[1.5rem] bg-[var(--tint-orange-bg)] flex items-center justify-center mx-auto mb-4">
+                  <ZapOff className="w-8 h-8 text-[var(--tint-orange-fg)]" />
                 </div>
                 <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">ZERO NODES CONNECTED</h4>
                 <p className="text-slate-500 font-medium italic">Link your identity clusters in the <span className="text-white font-black underline decoration-white/20 underline-offset-4 cursor-pointer" onClick={() => setActiveCategory?.('accounts')}>Social Vault</span> to unlock the Distribution Matrix.</p>

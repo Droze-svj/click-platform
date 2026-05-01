@@ -26,7 +26,7 @@ export function PricingToggle({ period, onChange, yearlyDiscount = 20 }: Props) 
           >
             {p === 'monthly' ? 'Monthly' : 'Yearly'}
             {p === 'yearly' && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] text-emerald-300 text-[9px] font-bold">
                 −{yearlyDiscount}%
               </span>
             )}

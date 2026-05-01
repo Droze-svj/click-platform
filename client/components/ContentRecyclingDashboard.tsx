@@ -143,7 +143,7 @@ export default function EntropyReversalNode() {
       <div className="py-32 flex flex-col items-center justify-center gap-10 bg-[#020205] rounded-[5rem] border-2 border-white/5 shadow-2xl backdrop-blur-3xl">
         <RefreshCw size={64} className="text-indigo-500 animate-spin" />
         <div className="space-y-4 text-center">
-           <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Entropy Reversal Matrix...</p>
+           <p className="text-[12px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Entropy Reversal Matrix...</p>
            <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] leading-none">LATTICE_RECONSTITUTION_IN_PROGRESS</p>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function EntropyReversalNode() {
 
   return (
     <div className="space-y-12 font-inter pt-10">
-      <div className={`${glassStyle} rounded-[6rem] p-24 overflow-hidden relative group border-indigo-500/20 shadow-[0_100px_250px_rgba(0,0,0,1)]`}>
+      <div className={`${glassStyle} rounded-[6rem] p-24 overflow-hidden relative group border-[var(--tint-indigo-edge)] shadow-[0_100px_250px_rgba(0,0,0,1)]`}>
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-0 right-0 p-24 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-[3s]">
            <RefreshCw size={300} className="text-white animate-spin-slow" />
@@ -160,13 +160,13 @@ export default function EntropyReversalNode() {
         
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 mb-20 relative z-10">
           <div className="flex items-center gap-10">
-             <div className="w-24 h-24 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-all duration-1000">
-                <Shield className="text-indigo-400" size={48} />
+             <div className="w-24 h-24 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-all duration-1000">
+                <Shield className="text-[var(--tint-indigo-fg)]" size={48} />
              </div>
              <div>
                 <div className="flex items-center gap-4 mb-4">
-                  <Fingerprint className="text-indigo-400 animate-pulse" size={16} />
-                  <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic leading-none">Entropy Reversal Protocol v9.4.2</span>
+                  <Fingerprint className="text-[var(--tint-indigo-fg)] animate-pulse" size={16} />
+                  <span className="text-[12px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.6em] italic leading-none">Entropy Reversal Protocol v9.4.2</span>
                 </div>
                 <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Reversal Matrix</h2>
                 <p className="text-slate-800 text-[13px] uppercase font-black tracking-[0.6em] mt-6 italic leading-none">Autonomous cascading flux for eternal sovereign content trajectories.</p>
@@ -198,7 +198,7 @@ export default function EntropyReversalNode() {
           <div className="relative z-10 pt-10">
             <div className="flex items-center justify-between mb-12 border-b-2 border-white/5 pb-8">
                <div className="flex items-center gap-6">
-                  <div className="w-12 h-12 bg-amber-500/10 border-2 border-amber-500/20 rounded-2xl flex items-center justify-center shadow-3xl"><Zap size={24} className="text-amber-400 animate-pulse" /></div>
+                  <div className="w-12 h-12 bg-[var(--tint-amber-bg)] border-2 border-[var(--tint-amber-edge)] rounded-2xl flex items-center justify-center shadow-3xl"><Zap size={24} className="text-[var(--tint-amber-fg)] animate-pulse" /></div>
                   <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">High-Resonance Particles Detected</h3>
                </div>
                <span className="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">SECTOR_SCAN_COMPLETE</span>
@@ -213,36 +213,36 @@ export default function EntropyReversalNode() {
                 {suggestions.map((item) => (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                     key={item.postId}
-                    className={`${glassStyle} rounded-[4rem] p-12 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col`}
+                    className={`${glassStyle} rounded-[4rem] p-12 hover:border-[var(--tint-indigo-edge)] transition-all group relative overflow-hidden flex flex-col`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                     <div className="flex flex-col h-full relative z-10">
                       <div className="flex items-center gap-5 mb-8">
-                        <span className="px-6 py-2 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-indigo-500/20 italic">NODE_{item.platform.toUpperCase()}</span>
+                        <span className="px-6 py-2 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-[var(--tint-indigo-edge)] italic">NODE_{item.platform.toUpperCase()}</span>
                         {item.isEvergreen && (
-                          <span className="px-6 py-2 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-emerald-500/20 flex items-center gap-3 italic">
+                          <span className="px-6 py-2 bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-[var(--tint-emerald-edge)] flex items-center gap-3 italic">
                             <CheckCircle className="w-4 h-4" /> ETERNAL_PULSE
                           </span>
                         )}
                       </div>
                       
-                      <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-6 group-hover:text-indigo-400 transition-colors duration-700 leading-tight line-clamp-2">{item.title}</h3>
+                      <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-6 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700 leading-tight line-clamp-2">{item.title}</h3>
                       
                       <div className="grid grid-cols-2 gap-8 mb-10">
-                         <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-indigo-500/20 transition-all">
+                         <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-[var(--tint-indigo-edge)] transition-all">
                             <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] mb-3 italic leading-none">Saturation</p>
                             <p className="text-4xl font-black text-white italic tabular-nums leading-none tracking-tighter">{formatNumber(item.engagement)}</p>
                          </div>
-                         <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-emerald-500/20 transition-all">
+                         <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-[var(--tint-emerald-edge)] transition-all">
                             <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] mb-3 italic leading-none">Resonance</p>
-                            <p className="text-4xl font-black text-emerald-400 italic tabular-nums leading-none tracking-tighter">{item.engagementRate.toFixed(2)}%</p>
+                            <p className="text-4xl font-black text-[var(--tint-emerald-fg)] italic tabular-nums leading-none tracking-tighter">{item.engagementRate.toFixed(2)}%</p>
                          </div>
                       </div>
 
                       {item.recommendation && (
                         <div className="mb-12 p-6 rounded-3xl bg-indigo-500/[0.03] border-2 border-indigo-500/10 flex-1">
                           <p className="text-[12px] text-slate-700 font-black uppercase tracking-tight italic leading-relaxed">
-                            <span className="text-indigo-400 mr-2">PROTOCOL_ADVISORY:</span> {item.recommendation.toUpperCase()}
+                            <span className="text-[var(--tint-indigo-fg)] mr-2">PROTOCOL_ADVISORY:</span> {item.recommendation.toUpperCase()}
                           </p>
                         </div>
                       )}
@@ -275,21 +275,21 @@ export default function EntropyReversalNode() {
                 {plans.map((plan) => (
                   <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}
                     key={plan._id}
-                    className={`${glassStyle} rounded-[5rem] p-16 flex flex-col lg:flex-row items-center gap-16 hover:border-indigo-500/30 group relative overflow-hidden transition-all duration-1000`}
+                    className={`${glassStyle} rounded-[5rem] p-16 flex flex-col lg:flex-row items-center gap-16 hover:border-[var(--tint-indigo-edge)] group relative overflow-hidden transition-all duration-1000`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                     <div className="flex-1 min-w-0 relative z-10">
                       <div className="flex flex-wrap items-center gap-6 mb-8">
-                        <span className="px-6 py-2 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-indigo-500/20 italic">NODE_{plan.platform.toUpperCase()}</span>
+                        <span className="px-6 py-2 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-[var(--tint-indigo-edge)] italic">NODE_{plan.platform.toUpperCase()}</span>
                         {plan.isEvergreen && (
-                          <span className="px-6 py-2 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-emerald-500/20 italic">ETERNAL_PULSE ({plan.evergreenScore}%)</span>
+                          <span className="px-6 py-2 bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-[var(--tint-emerald-edge)] italic">ETERNAL_PULSE ({plan.evergreenScore}%)</span>
                         )}
-                        <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border-2 transition-all italic flex items-center gap-3 ${plan.repostSchedule.isActive ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-slate-900 text-slate-900 border-slate-900'}`}>
+                        <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border-2 transition-all italic flex items-center gap-3 ${plan.repostSchedule.isActive ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)] shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-slate-900 text-slate-900 border-slate-900'}`}>
                            <div className={`w-3 h-3 rounded-full ${plan.repostSchedule.isActive ? 'bg-amber-400 animate-ping' : 'bg-slate-800'}`} />
                            {plan.repostSchedule.isActive ? 'CASCADING' : 'DORMANT'}
                         </div>
                       </div>
-                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-12 truncate leading-none group-hover:text-indigo-400 transition-colors duration-700">{plan.originalContentId?.title || 'SPECTRAL NODE UNNAMED'}</h3>
+                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-12 truncate leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700">{plan.originalContentId?.title || 'SPECTRAL NODE UNNAMED'}</h3>
                       
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                         <div className="space-y-4">
@@ -300,7 +300,7 @@ export default function EntropyReversalNode() {
                         </div>
                         <div className="space-y-4">
                           <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">Flux Frequency</p>
-                          <p className="text-3xl font-black text-indigo-400 italic uppercase leading-none tracking-tighter">{plan.repostSchedule.frequency}</p>
+                          <p className="text-3xl font-black text-[var(--tint-indigo-fg)] italic uppercase leading-none tracking-tighter">{plan.repostSchedule.frequency}</p>
                         </div>
                         <div className="space-y-4">
                           <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">Next Pulse</p>
@@ -310,7 +310,7 @@ export default function EntropyReversalNode() {
                         </div>
                         <div className="space-y-4">
                           <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">Signal Gain</p>
-                          <p className="text-4xl font-black text-emerald-400 italic tabular-nums leading-none tracking-tighter">
+                          <p className="text-4xl font-black text-[var(--tint-emerald-fg)] italic tabular-nums leading-none tracking-tighter">
                             {plan.repostPerformance ? formatNumber(plan.repostPerformance.engagement) : formatNumber(plan.originalPerformance.engagement)}
                           </p>
                         </div>
@@ -322,8 +322,8 @@ export default function EntropyReversalNode() {
                       title={plan.repostSchedule.isActive ? "Pause Cascade" : "Resume Cascade"}
                       className={`w-32 h-32 rounded-[3rem] flex items-center justify-center transition-all duration-1000 shadow-3xl border-4 relative overflow-hidden group/ctl active:scale-90 ${
                         plan.repostSchedule.isActive
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-white'
-                          : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white'
+                          ? 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)] hover:bg-amber-500 hover:text-white'
+                          : 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] hover:bg-emerald-500 hover:text-white'
                       }`}
                     >
                       <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/ctl:opacity-100 transition-opacity duration-1000" />
@@ -343,9 +343,9 @@ export default function EntropyReversalNode() {
               <div className="space-y-16">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
                   {[
-                    { label: 'Particles Multiplexed', val: stats.totalRecycled, icon: Cpu, color: 'text-indigo-400' },
-                    { label: 'Active Cascades', val: stats.active, icon: Activity, color: 'text-emerald-400' },
-                    { label: 'Cumulative Flux', val: stats.totalReposts, icon: Zap, color: 'text-amber-400' },
+                    { label: 'Particles Multiplexed', val: stats.totalRecycled, icon: Cpu, color: 'text-[var(--tint-indigo-fg)]' },
+                    { label: 'Active Cascades', val: stats.active, icon: Activity, color: 'text-[var(--tint-emerald-fg)]' },
+                    { label: 'Cumulative Flux', val: stats.totalReposts, icon: Zap, color: 'text-[var(--tint-amber-fg)]' },
                     { label: 'Signal Velocity', val: `${(stats.averagePerformanceChange || 0) > 0 ? '+' : ''}${stats.averagePerformanceChange.toFixed(1)}%`, icon: TrendingUp, color: 'text-purple-400' }
                   ].map(s => (
                     <div key={s.label} className={`${glassStyle} rounded-[4rem] p-12 flex flex-col items-center text-center group hover:scale-110 transition-transform duration-1000`}>
@@ -362,18 +362,18 @@ export default function EntropyReversalNode() {
                   <div className={`${glassStyle} rounded-[5rem] p-16 relative overflow-hidden`}>
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.03] to-transparent pointer-events-none" />
                     <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-12 flex items-center gap-6">
-                       <Target size={32} className="text-indigo-400 animate-pulse" /> High-Intensity Reposts
+                       <Target size={32} className="text-[var(--tint-indigo-fg)] animate-pulse" /> High-Intensity Reposts
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                       {stats.topPerformers.map((performer, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-8 bg-black/60 rounded-[2.5rem] border-2 border-white/5 group hover:border-indigo-500/40 transition-all duration-700 shadow-inner">
+                        <div key={idx} className="flex items-center justify-between p-8 bg-black/60 rounded-[2.5rem] border-2 border-white/5 group hover:border-[var(--tint-indigo-edge)] transition-all duration-700 shadow-inner">
                           <div className="flex items-center gap-6">
-                            <span className="w-14 h-14 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center font-black text-xl tabular-nums italic border-2 border-indigo-500/30">
+                            <span className="w-14 h-14 bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] rounded-2xl flex items-center justify-center font-black text-xl tabular-nums italic border-2 border-[var(--tint-indigo-edge)]">
                               #{idx + 1}
                             </span>
                             <div>
                               <p className="text-[12px] font-black text-white uppercase italic truncate w-40 leading-none">NODE_{performer.platform.toUpperCase()}</p>
-                              <p className="text-[14px] font-black text-emerald-400 italic tabular-nums mt-3 leading-none">{formatNumber(performer.engagement)} SIGNAL</p>
+                              <p className="text-[14px] font-black text-[var(--tint-emerald-fg)] italic tabular-nums mt-3 leading-none">{formatNumber(performer.engagement)} SIGNAL</p>
                             </div>
                           </div>
                           <TrendingUp className="w-6 h-6 text-emerald-500/20 group-hover:text-emerald-500 group-hover:translate-x-2 group-hover:-translate-y-2 transition-all duration-700" />
@@ -392,7 +392,7 @@ export default function EntropyReversalNode() {
 
             <div className="mt-20">
                <div className="flex items-center gap-6 mb-12 border-l-8 border-indigo-500 pl-8">
-                  <Activity size={32} className="text-indigo-400 animate-pulse" />
+                  <Activity size={32} className="text-[var(--tint-indigo-fg)] animate-pulse" />
                   <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Deep Spectral Analytics</h3>
                </div>
                <div className={`${glassStyle} rounded-[5rem] overflow-hidden`}>
@@ -413,7 +413,7 @@ export default function EntropyReversalNode() {
             >
               <div className="flex justify-between items-center mb-16 px-4">
                 <div className="flex items-center gap-6">
-                   <div className="w-16 h-16 bg-indigo-500/10 border-2 border-indigo-500/30 rounded-[2rem] flex items-center justify-center rotate-12"><RefreshCw size={32} className="text-indigo-400" /></div>
+                   <div className="w-16 h-16 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-[2rem] flex items-center justify-center rotate-12"><RefreshCw size={32} className="text-[var(--tint-indigo-fg)]" /></div>
                    <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Reversal Calibrations</h3>
                 </div>
                 <button 
@@ -425,14 +425,14 @@ export default function EntropyReversalNode() {
                 </button>
               </div>
 
-              <div className="mb-16 p-12 bg-indigo-500/5 border-4 border-indigo-500/20 rounded-[4rem] shadow-inner relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:rotate-12 transition-transform duration-1000"><Target size={120} className="text-indigo-400" /></div>
-                <p className="text-4xl font-black text-white italic uppercase tracking-tighter mb-6 leading-tight group-hover:text-indigo-400 transition-colors duration-700">
+              <div className="mb-16 p-12 bg-indigo-500/5 border-4 border-[var(--tint-indigo-edge)] rounded-[4rem] shadow-inner relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:rotate-12 transition-transform duration-1000"><Target size={120} className="text-[var(--tint-indigo-fg)]" /></div>
+                <p className="text-4xl font-black text-white italic uppercase tracking-tighter mb-6 leading-tight group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700">
                   {selectedContent.title}
                 </p>
                 <div className="flex flex-wrap gap-6 pt-6 border-t-2 border-white/5">
-                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] italic border-2 border-indigo-500/20 shadow-3xl">NODE_{selectedContent.platform.toUpperCase()}</span>
-                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] italic border-2 border-emerald-500/20 shadow-3xl">{formatNumber(selectedContent.engagement)} PARTICLES</span>
+                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] italic border-2 border-[var(--tint-indigo-edge)] shadow-3xl">NODE_{selectedContent.platform.toUpperCase()}</span>
+                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.4em] italic border-2 border-[var(--tint-emerald-edge)] shadow-3xl">{formatNumber(selectedContent.engagement)} PARTICLES</span>
                   <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] italic border-2 border-purple-500/20 shadow-3xl">{selectedContent.engagementRate.toFixed(2)}% RESONANCE</span>
                 </div>
               </div>
@@ -481,7 +481,7 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
               const intervals: any = { daily: 1, weekly: 7, monthly: 30, quarterly: 90 }
               if (intervals[e.target.value]) setInterval(intervals[e.target.value])
             }}
-            className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-6 text-[14px] font-black text-white uppercase tracking-[0.2em] focus:outline-none focus:border-indigo-500/40 transition-all italic shadow-inner"
+            className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-6 text-[14px] font-black text-white uppercase tracking-[0.2em] focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all italic shadow-inner"
           >
             <option value="daily">Every 24h (Aggressive)</option>
             <option value="weekly">Every 168h (Cyclic)</option>
@@ -499,7 +499,7 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
             type="number" 
             value={maxReposts} 
             onChange={(e) => setMaxReposts(parseInt(e.target.value) || 5)}
-            className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-6 text-[14px] font-black text-white uppercase tracking-[0.2em] focus:outline-none focus:border-indigo-500/40 transition-all italic shadow-inner"
+            className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-6 text-[14px] font-black text-white uppercase tracking-[0.2em] focus:outline-none focus:border-[var(--tint-indigo-edge)] transition-all italic shadow-inner"
           />
         </div>
       </div>
@@ -515,10 +515,10 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
           ].map(opt => (
             <button key={opt.label} onClick={() => opt.set(!opt.state)}
               title={opt.label}
-              className={`flex items-center justify-between p-8 rounded-[2.5rem] border-2 transition-all duration-700 italic group/opt shadow-3xl ${opt.state ? 'bg-indigo-600 border-indigo-400 text-white translate-y-[-4px]' : 'bg-black/60 border-white/5 text-slate-800 hover:border-indigo-500/30'}`}
+              className={`flex items-center justify-between p-8 rounded-[2.5rem] border-2 transition-all duration-700 italic group/opt shadow-3xl ${opt.state ? 'bg-indigo-600 border-indigo-400 text-white translate-y-[-4px]' : 'bg-black/60 border-white/5 text-slate-800 hover:border-[var(--tint-indigo-edge)]'}`}
             >
               <span className="text-[12px] font-black uppercase tracking-[0.4em]">{opt.label}</span>
-              <div className={`w-6 h-6 rounded-full border-4 transition-all duration-700 ${opt.state ? 'bg-white border-white shadow-[0_0_20px_rgba(255,255,255,1)] scale-110' : 'border-slate-900 group-hover/opt:border-indigo-500/30'}`} />
+              <div className={`w-6 h-6 rounded-full border-4 transition-all duration-700 ${opt.state ? 'bg-white border-white shadow-[0_0_20px_rgba(255,255,255,1)] scale-110' : 'border-slate-900 group-hover/opt:border-[var(--tint-indigo-edge)]'}`} />
             </button>
           ))}
         </div>

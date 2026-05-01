@@ -19,10 +19,10 @@ const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-
 
 const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }: any) => {
   const colors: Record<string, string> = {
-    indigo: 'text-indigo-400 border-indigo-500/20 bg-indigo-500/10',
-    emerald: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10',
-    amber: 'text-amber-400 border-amber-500/20 bg-amber-500/10',
-    rose: 'text-rose-400 border-rose-500/20 bg-rose-500/10',
+    indigo: 'text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)]',
+    emerald: 'text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)] bg-[var(--tint-emerald-bg)]',
+    amber: 'text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)] bg-[var(--tint-amber-bg)]',
+    rose: 'text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)] bg-[var(--tint-rose-bg)]',
     purple: 'text-purple-400 border-purple-500/20 bg-purple-500/10'
   }
 
@@ -78,8 +78,8 @@ const OmniModelPanel = () => {
   const modelColorMap: Record<string, string> = {
     'runway-gen4': 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     'kling-v2': 'text-purple-400 bg-purple-500/10 border-purple-500/20',
-    'elevenlabs-v3': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    'sora-v2': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    'elevenlabs-v3': 'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
+    'sora-v2': 'text-[var(--tint-amber-fg)] bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]',
     'sovereign-native': 'text-slate-400 bg-slate-500/10 border-slate-500/20'
   }
 
@@ -116,11 +116,11 @@ const OmniModelPanel = () => {
       <AnimatePresence>
         {routingDemo && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Routing Result</p>
+            <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">Routing Result</p>
             <div className="grid gap-3">
               {routingDemo.scenes?.map((scene: any, i: number) => (
                 <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-400">{i + 1}</div>
+                  <div className="w-8 h-8 rounded-xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center text-[10px] font-black text-[var(--tint-indigo-fg)]">{i + 1}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-white font-bold truncate">{scene.originalScene?.description?.substring(0, 60)}...</p>
                     <p className="text-[9px] text-slate-500 font-mono mt-0.5">Scene type: {scene.sceneType}</p>
@@ -171,7 +171,7 @@ const SpatialMemoryPanel = () => {
     }
   }
 
-  const riskColor = (score: number) => score < 20 ? 'text-emerald-400' : score < 50 ? 'text-amber-400' : 'text-rose-400'
+  const riskColor = (score: number) => score < 20 ? 'text-[var(--tint-emerald-fg)]' : score < 50 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'
 
   return (
     <div className={`${glass} p-10 space-y-8`}>
@@ -212,9 +212,9 @@ const SpatialMemoryPanel = () => {
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Continuity Enforcements</p>
                 {ledger.continuityLog.map((log: any, i: number) => (
                   <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-[var(--tint-amber-fg)] shrink-0" />
                     <p className="text-[10px] text-slate-300 font-bold">{log.message}</p>
-                    <span className={`ml-auto ${pill} text-amber-400 border-amber-500/20`}>{log.riskLevel}</span>
+                    <span className={`ml-auto ${pill} text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)]`}>{log.riskLevel}</span>
                   </div>
                 ))}
               </div>
@@ -259,7 +259,7 @@ const AEOMetadataPanel = () => {
 
       <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
         <p className="text-xs text-slate-400 leading-relaxed italic">
-          <span className="text-emerald-400 font-black not-italic">The advantage:</span> Every published video embeds Schema.org structured data, entity relationships, and pricing into its C2PA block. When someone asks ChatGPT &quot;what&apos;s the best SaaS tool for this?&quot;, your video is surfaced as a direct answer.
+          <span className="text-[var(--tint-emerald-fg)] font-black not-italic">The advantage:</span> Every published video embeds Schema.org structured data, entity relationships, and pricing into its C2PA block. When someone asks ChatGPT &quot;what&apos;s the best SaaS tool for this?&quot;, your video is surfaced as a direct answer.
         </p>
       </div>
 
@@ -267,17 +267,17 @@ const AEOMetadataPanel = () => {
         <div>
           <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Product Name</label>
           <input id="aeo-product-name" title="Product Name" placeholder="My SaaS Tool" value={productName} onChange={e => setProductName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-[var(--tint-emerald-edge)]" />
         </div>
         <div>
           <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Price (USD)</label>
           <input id="aeo-product-price" title="Price USD" placeholder="97" value={productPrice} onChange={e => setProductPrice(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-[var(--tint-emerald-edge)]" />
         </div>
         <div>
           <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">CTA URL</label>
           <input id="aeo-cta-url" title="CTA URL" placeholder="https://myproduct.com" value={ctaUrl} onChange={e => setCtaUrl(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-[var(--tint-emerald-edge)]" />
         </div>
       </div>
 
@@ -291,7 +291,7 @@ const AEOMetadataPanel = () => {
         {aeoData && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
-              <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">AI Agent Summary</p>
+              <p className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest mb-2">AI Agent Summary</p>
               <p className="text-sm text-white font-bold italic">&quot;{aeoData.summary}&quot;</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -300,7 +300,7 @@ const AEOMetadataPanel = () => {
                 <div className="space-y-2">
                   {aeoData.keyFacts?.map((fact: string, i: number) => (
                     <div key={i} className="flex items-center gap-2 text-[10px] text-slate-300 font-bold">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />{fact}
+                      <CheckCircle2 className="w-3 h-3 text-[var(--tint-emerald-fg)] shrink-0" />{fact}
                     </div>
                   ))}
                 </div>
@@ -364,7 +364,7 @@ const UGCRawPanel = () => {
           <div className="space-y-2">
             {profiles.map(p => (
               <button key={p.id} onClick={() => setSelectedProfile(p.id)}
-                className={`w-full text-left p-4 rounded-xl transition-all ${selectedProfile === p.id ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' : 'bg-white/[0.02] border border-white/5 text-slate-400'}`}>
+                className={`w-full text-left p-4 rounded-xl transition-all ${selectedProfile === p.id ? 'bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)]' : 'bg-white/[0.02] border border-white/5 text-slate-400'}`}>
                 <p className="text-[11px] font-black uppercase">{p.label}</p>
                 <p className="text-[9px] mt-0.5 opacity-70">{p.description}</p>
               </button>
@@ -398,8 +398,8 @@ const UGCRawPanel = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/15">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Humanized Voiceover (SSML)</p>
-                <span className={`${pill} text-emerald-400 border-emerald-500/20`}>
+                <p className="text-[9px] font-black text-[var(--tint-amber-fg)] uppercase tracking-widest">Humanized Voiceover (SSML)</p>
+                <span className={`${pill} text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]`}>
                   Auth Score: {demoResult.manifest?.authenticityScore}%
                 </span>
               </div>
@@ -458,11 +458,11 @@ const ZeroPartyDataPanel = () => {
   }
 
   const typeColorMap: Record<string, string> = {
-    POLL: 'text-indigo-400 border-indigo-500/20 bg-indigo-500/5',
+    POLL: 'text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)] bg-indigo-500/5',
     SWIPE_CHOICE: 'text-pink-400 border-pink-500/20 bg-pink-500/5',
-    HOTSPOT: 'text-amber-400 border-amber-500/20 bg-amber-500/5',
+    HOTSPOT: 'text-[var(--tint-amber-fg)] border-[var(--tint-amber-edge)] bg-amber-500/5',
     RATING: 'text-yellow-400 border-yellow-500/20 bg-yellow-500/5',
-    QUIZ: 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5'
+    QUIZ: 'text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)] bg-emerald-500/5'
   }
 
   return (
@@ -500,8 +500,8 @@ const ZeroPartyDataPanel = () => {
         {manifest && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{manifest.overlays?.length} Overlays Generated</p>
-              <span className={`${pill} text-emerald-400 border-emerald-500/20`}>Proj. Capture: {manifest.projectedCaptureRate}</span>
+              <p className="text-[10px] font-black text-[var(--tint-rose-fg)] uppercase tracking-widest">{manifest.overlays?.length} Overlays Generated</p>
+              <span className={`${pill} text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]`}>Proj. Capture: {manifest.projectedCaptureRate}</span>
             </div>
             {manifest.overlays?.map((overlay: any, i: number) => (
               <div key={i} className={`p-6 rounded-2xl border ${typeColorMap[overlay.type] || 'border-white/5'}`}>
@@ -521,10 +521,10 @@ const ZeroPartyDataPanel = () => {
                 )}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {overlay.captureConfig?.feedToRevenueOracle && (
-                    <span className="text-[8px] text-emerald-400 font-bold uppercase">→ Revenue Oracle Sync</span>
+                    <span className="text-[8px] text-[var(--tint-emerald-fg)] font-bold uppercase">→ Revenue Oracle Sync</span>
                   )}
                   {overlay.captureConfig?.updateSwarmConsensus && (
-                    <span className="text-[8px] text-indigo-400 font-bold uppercase">→ Swarm Consensus Update</span>
+                    <span className="text-[8px] text-[var(--tint-indigo-fg)] font-bold uppercase">→ Swarm Consensus Update</span>
                   )}
                 </div>
               </div>
@@ -559,7 +559,7 @@ export default function Phase8Dashboard() {
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`${pill} text-indigo-400 border-indigo-500/20`}>Phase 8 — Market Domination</span>
+              <span className={`${pill} text-[var(--tint-indigo-fg)] border-[var(--tint-indigo-edge)]`}>Phase 8 — Market Domination</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
             <h1 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Sovereign 2026</h1>

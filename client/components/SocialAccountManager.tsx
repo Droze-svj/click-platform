@@ -100,7 +100,7 @@ export default function SocialAccountManager() {
                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">Connected Account Intelligence</p>
                     </div>
                 </div>
-                <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center gap-2 px-4 border border-emerald-500/20">
+                <div className="p-2 bg-[var(--tint-emerald-bg)] text-emerald-500 rounded-full flex items-center gap-2 px-4 border border-[var(--tint-emerald-edge)]">
                     <Zap className="w-3 h-3 fill-emerald-500" />
                     <span className="text-[8px] font-black uppercase tracking-widest letter-spacing-2">Live Cloud Sync</span>
                 </div>

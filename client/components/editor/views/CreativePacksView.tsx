@@ -300,7 +300,7 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400">Click · Creative Packs</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-amber-fg)]">Click · Creative Packs</span>
             </div>
             <h2 className="text-3xl font-black text-white tracking-tight leading-tight">One-click style bundles</h2>
             <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
@@ -309,8 +309,8 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
           </div>
         </div>
         {appliedId && (
-          <div className={`${glassStyle} rounded-2xl px-4 py-2.5 flex items-center gap-3 border-emerald-500/30`}>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className={`${glassStyle} rounded-2xl px-4 py-2.5 flex items-center gap-3 border-[var(--tint-emerald-edge)]`}>
+            <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
             <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-[0.2em]">{PACKS.find(p => p.id === appliedId)?.name} applied</span>
           </div>
         )}
@@ -419,8 +419,8 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
       </div>
 
       {/* Footer */}
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4 flex items-start gap-3">
-        <Wand className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-[var(--tint-amber-edge)] bg-amber-500/[0.04] p-4 flex items-start gap-3">
+        <Wand className="w-4 h-4 text-[var(--tint-amber-fg)] flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-[11px] font-bold text-amber-300 leading-snug">Packs apply locally; backend pipeline is forward-compatible.</p>
           <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">

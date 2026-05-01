@@ -67,9 +67,9 @@ export default function MonetizationOverlay({
         {/* Product Details */}
         <div className="flex flex-col gap-2 min-w-[140px]">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <DollarSign className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">Verified SKU</span>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
+              <DollarSign className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
+              <span className="text-[10px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-tighter">Verified SKU</span>
             </div>
           </div>
           

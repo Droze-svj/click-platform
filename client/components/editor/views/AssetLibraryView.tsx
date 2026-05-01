@@ -352,7 +352,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
           {isMusic ? (
             <div className={`absolute inset-0 flex items-center justify-center bg-${accent}-500/5`}>
               <div className={`w-16 h-16 rounded-full bg-${accent}-500/20 flex items-center justify-center shadow-3xl`}>
-                {asset.type === 'sfx' ? <Zap className="w-8 h-8 text-orange-400" /> : <Music className="w-8 h-8 text-emerald-400" />}
+                {asset.type === 'sfx' ? <Zap className="w-8 h-8 text-[var(--tint-orange-fg)]" /> : <Music className="w-8 h-8 text-[var(--tint-emerald-fg)]" />}
               </div>
             </div>
           ) : (
@@ -405,7 +405,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
     <div className="space-y-10 h-full flex flex-col max-w-[1400px] mx-auto py-4">
       <div className="flex flex-col xl:flex-row items-center justify-between gap-8">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl">
+          <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] shadow-xl">
             <Cpu className="w-4 h-4 animate-pulse" />
             Resource Repository
           </div>
@@ -426,7 +426,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
             onClick={() => setFilter(f)}
             className={`p-6 rounded-[2.2rem] border transition-all text-center flex flex-col items-center gap-4 ${filter === f ? 'bg-white/[0.08] border-indigo-500 shadow-3xl' : 'bg-white/[0.02] border-white/5 hover:border-white/10'}`}
           >
-            <div className={`p-4 rounded-2xl bg-white/5 ${filter === f ? 'text-indigo-400' : 'text-slate-700'}`}>
+            <div className={`p-4 rounded-2xl bg-white/5 ${filter === f ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-700'}`}>
               {f === 'music' ? <Music className="w-6 h-6" /> : f === 'images' ? <ImageIcon className="w-6 h-6" /> : f === 'broll' ? <Film className="w-6 h-6" /> : f === 'sfx' ? <Zap className="w-6 h-6" /> : <Layers className="w-6 h-6" />}
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest italic">{f === 'broll' ? 'Vision Flux' : f === 'sfx' ? 'Zap Node' : f}</span>
@@ -536,8 +536,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
 
               <div className="aspect-video w-full rounded-[3rem] bg-black/40 border border-white/5 overflow-hidden flex items-center justify-center">
                 {(previewAsset.type === 'music' || previewAsset.type === 'sfx') ? (
-                  <div className="p-20 rounded-full bg-indigo-500/10 border border-indigo-500/20 animate-pulse-slow">
-                    <Music className="w-24 h-24 text-indigo-400" />
+                  <div className="p-20 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] animate-pulse-slow">
+                    <Music className="w-24 h-24 text-[var(--tint-indigo-fg)]" />
                   </div>
                 ) : (
                   <img src={previewAsset.url} alt={previewAsset.title || 'Preview Asset'} className="w-full h-full object-contain" title={previewAsset.title || 'Preview Asset'} />

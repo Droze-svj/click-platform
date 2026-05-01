@@ -140,8 +140,8 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
         <div className="flex items-center justify-between mb-8">
           <div className="space-y-1">
              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-indigo-400" />
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Phase 10 Engine</span>
+                <Zap className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--tint-indigo-fg)]">Phase 10 Engine</span>
              </div>
              <h3 className="text-3xl font-black italic text-white uppercase tracking-tighter">
                Neural Distribution
@@ -174,9 +174,9 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                       title={`Toggle ${platform.name}${isPublished ? ' (Published)' : ''}`}
                       className={`w-full flex items-center justify-between p-4 rounded-3xl border-2 transition-all group ${
                         isPublished
-                          ? 'border-emerald-500/50 bg-emerald-500/10'
+                          ? 'border-emerald-500/50 bg-[var(--tint-emerald-bg)]'
                           : isSelected
-                          ? 'border-indigo-500 bg-indigo-500/10'
+                          ? 'border-indigo-500 bg-[var(--tint-indigo-bg)]'
                           : 'border-white/5 bg-white/5 hover:border-white/10'
                       }`}
                     >
@@ -188,7 +188,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                       </div>
                       <div className="flex items-center gap-2">
                         {isPublished ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                          <CheckCircle2 className="w-5 h-5 text-[var(--tint-emerald-fg)]" />
                         ) : isSelected ? (
                           <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] text-white">✓</div>
                         ) : null}
@@ -225,7 +225,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                  <div className="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
                     <div className="flex items-center justify-between">
                        <div className="text-[11px] font-black text-white uppercase italic">Tone Modulation</div>
-                       <div className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{toneModulation}</div>
+                       <div className="text-[8px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest">{toneModulation}</div>
                     </div>
                     <div className="flex gap-2">
                        {['casual', 'professional'].map(t => (
@@ -271,12 +271,12 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                className="absolute inset-0 bg-indigo-950/80 backdrop-blur-md flex items-center justify-center p-12 z-[101]"
              >
                 <div className="flex flex-col items-center text-center space-y-6 max-w-sm">
-                   <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/20 border border-rose-500/40 flex items-center justify-center">
+                   <div className="w-20 h-20 rounded-[2.5rem] bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] flex items-center justify-center">
                       <ShieldAlert className="w-10 h-10 text-rose-500 animate-pulse" />
                    </div>
                    <h4 className="text-2xl font-black italic text-white uppercase">Critical Under-Performance</h4>
                    <p className="text-sm text-slate-300 font-medium">
-                      Initial retention data for <span className="text-white font-black italic">TIKTOK</span> is below baseline. Salvage Protocol suggests swapping to <span className="text-indigo-400 font-bold uppercase tracking-widest">Variant B</span> (High Friction Hook).
+                      Initial retention data for <span className="text-white font-black italic">TIKTOK</span> is below baseline. Salvage Protocol suggests swapping to <span className="text-[var(--tint-indigo-fg)] font-bold uppercase tracking-widest">Variant B</span> (High Friction Hook).
                    </p>
                    <div className="flex gap-4 w-full">
                       <button 

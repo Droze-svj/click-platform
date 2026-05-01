@@ -122,14 +122,14 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
         initial={{ opacity: 0, y: -8, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -8, scale: 0.98 }}
-        className="mt-2 rounded-2xl border border-fuchsia-500/20 bg-fuchsia-500/5 backdrop-blur-sm overflow-hidden"
+        className="mt-2 rounded-2xl border border-[var(--tint-fuchsia-edge)] bg-fuchsia-500/5 backdrop-blur-sm overflow-hidden"
       >
         <div className="flex items-start gap-3 p-4">
           {/* AI Badge */}
-          <div className="w-8 h-8 rounded-xl bg-fuchsia-500/20 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-[var(--tint-fuchsia-bg)] flex items-center justify-center shrink-0">
             {parsing
-              ? <Loader2 className="w-4 h-4 text-fuchsia-400 animate-spin" />
-              : <Bot className="w-4 h-4 text-fuchsia-400" />
+              ? <Loader2 className="w-4 h-4 text-[var(--tint-fuchsia-fg)] animate-spin" />
+              : <Bot className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
             }
           </div>
 
@@ -139,7 +139,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[10px] font-black text-fuchsia-400 uppercase tracking-wider">
+                  <p className="text-[10px] font-black text-[var(--tint-fuchsia-fg)] uppercase tracking-wider">
                     🤖 AI Draft Ready
                   </p>
                   <span className="text-[8px] text-slate-600">from {authorName}&apos;s comment</span>
@@ -152,7 +152,7 @@ const ClientFeedbackAgent: React.FC<ClientFeedbackAgentProps> = ({
 
                 {/* Proposed action */}
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 mb-3">
-                  <Zap className="w-3 h-3 text-fuchsia-400 shrink-0" />
+                  <Zap className="w-3 h-3 text-[var(--tint-fuchsia-fg)] shrink-0" />
                   <div>
                     <p className="text-[10px] font-black text-white">{actionLabel}</p>
                     <p className="text-[9px] text-slate-600">

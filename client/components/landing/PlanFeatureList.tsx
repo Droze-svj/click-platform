@@ -20,7 +20,7 @@ export function PlanFeatureList({ features, featured = false }: Props) {
         >
           {f.included ? (
             <CheckCircle2
-              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${featured ? 'text-fuchsia-300' : 'text-indigo-400'}`}
+              className={`w-4 h-4 mt-0.5 flex-shrink-0 ${featured ? 'text-fuchsia-300' : 'text-[var(--tint-indigo-fg)]'}`}
               aria-hidden="true"
             />
           ) : (

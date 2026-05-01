@@ -216,19 +216,19 @@ export default function SovereignCalibrationNodePage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Settings size={48} className="text-indigo-400 relative z-10 group-hover:rotate-180 transition-transform duration-300 animate-pulse" />
+                <Settings size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:rotate-180 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Calibration Node v16.4.2</span>
+                      <Fingerprint size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Calibration Node v16.4.2</span>
                    </div>
-                   <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                       <Activity size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SOVEREIGN_LATTICE_SYNC:ACTIVE</span>
+                   <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                       <Activity size={12} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                       <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">SOVEREIGN_LATTICE_SYNC:ACTIVE</span>
                    </div>
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Settings</h1>
@@ -236,14 +236,14 @@ export default function SovereignCalibrationNodePage() {
               </div>
            </div>
 
-           <Link href="/dashboard/settings/profile" className="group flex items-center gap-10 p-6 pr-16 rounded-[4.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 hover:border-indigo-500/40 transition-all duration-300 shadow-[0_60px_150px_rgba(0,0,0,0.8)] bg-black/40">
+           <Link href="/dashboard/settings/profile" className="group flex items-center gap-10 p-6 pr-16 rounded-[4.5rem] bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] hover:border-[var(--tint-indigo-edge)] transition-all duration-300 shadow-[0_60px_150px_rgba(0,0,0,0.8)] bg-black/40">
               <div className="w-24 h-24 rounded-[3.5rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-700 flex items-center justify-center font-black text-5xl border-8 border-black/40 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-2xl text-white italic">
                 {user?.name?.[0] || 'U'}
               </div>
               <div className="text-left">
-                <p className="text-[24px] font-black uppercase tracking-[0.2em] text-white italic leading-none mb-4 group-hover:text-indigo-400 transition-colors">{user?.name || 'Sovereign_Node'}</p>
+                <p className="text-[24px] font-black uppercase tracking-[0.2em] text-white italic leading-none mb-4 group-hover:text-[var(--tint-indigo-fg)] transition-colors">{user?.name || 'Sovereign_Node'}</p>
                 <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5">
-                   <ShieldCheck size={16} className="text-indigo-400" />
+                   <ShieldCheck size={16} className="text-[var(--tint-indigo-fg)]" />
                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">CORE_IDENTITY_DNA_LOCKED</span>
                 </div>
               </div>
@@ -269,7 +269,7 @@ export default function SovereignCalibrationNodePage() {
                   >
                     <div className="flex items-center gap-8 relative z-10 text-left">
                       <div className={`w-20 h-20 rounded-[2rem] border-2 flex items-center justify-center transition-all duration-300 ${
-                        activeTab === tab.id ? 'bg-black text-white border-black rotate-12 scale-110' : 'bg-black/60 border-white/10 text-slate-500 group-hover:text-indigo-400 group-hover:rotate-12 group-hover:bg-white/5 shadow-inner'
+                        activeTab === tab.id ? 'bg-black text-white border-black rotate-12 scale-110' : 'bg-black/60 border-white/10 text-slate-500 group-hover:text-[var(--tint-indigo-fg)] group-hover:rotate-12 group-hover:bg-white/5 shadow-inner'
                       }`}>
                         {tab.icon}
                       </div>
@@ -311,7 +311,7 @@ export default function SovereignCalibrationNodePage() {
                         <div className="space-y-32">
                           <header className="space-y-10">
                             <div className="flex items-center gap-12">
-                               <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><CpuIcon className="text-indigo-400" size={56} /></div>
+                               <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><CpuIcon className="text-[var(--tint-indigo-fg)]" size={56} /></div>
                                <div>
                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Neural Core</h2>
                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Global OS fundamentals and spectral localization</p>
@@ -341,7 +341,7 @@ export default function SovereignCalibrationNodePage() {
                         <div className="space-y-32">
                           <header className="space-y-10">
                             <div className="flex items-center gap-12">
-                               <div className="w-24 h-24 rounded-[3.5rem] bg-amber-500/5 border-2 border-amber-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(245,158,11,0.2)] animate-pulse"><Zap className="text-amber-400" size={56} /></div>
+                               <div className="w-24 h-24 rounded-[3.5rem] bg-amber-500/5 border-2 border-[var(--tint-amber-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(245,158,11,0.2)] animate-pulse"><Zap className="text-[var(--tint-amber-fg)]" size={56} /></div>
                                <div>
                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Heuristic Matrix</h2>
                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none">Autonomous swarm and synthetic avatar orchestration</p>
@@ -359,13 +359,13 @@ export default function SovereignCalibrationNodePage() {
                               </ConfigGroup>
 
                               <ConfigGroup title="Logic Consensus Threshold">
-                                <div className="p-20 rounded-[6rem] bg-indigo-500/[0.04] border-2 border-indigo-500/20 space-y-20 shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
+                                <div className="p-20 rounded-[6rem] bg-indigo-500/[0.04] border-2 border-[var(--tint-indigo-edge)] space-y-20 shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
                                   <div className="flex justify-between items-center px-6">
                                      <div className="space-y-4 text-left">
                                         <p className="text-[20px] font-black uppercase tracking-[0.5em] text-white italic leading-none">Heuristic Consensus Seed</p>
                                         <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-tight max-w-sm">Minimum confidence threshold for autonomous deployment protocols_v14</p>
                                      </div>
-                                     <span className="text-6xl font-black text-indigo-400 italic tabular-nums tracking-tighter leading-none drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]">{settings.agentic.predictiveThreshold}%</span>
+                                     <span className="text-6xl font-black text-[var(--tint-indigo-fg)] italic tabular-nums tracking-tighter leading-none drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]">{settings.agentic.predictiveThreshold}%</span>
                                   </div>
                                   <div className="px-6 pb-4">
                                      <input type="range" min="0" max="100" value={settings.agentic.predictiveThreshold} title="Heuristic Seed" aria-label="Heuristic Seed" 
@@ -383,7 +383,7 @@ export default function SovereignCalibrationNodePage() {
 
                             <div className="space-y-32">
                               <ConfigGroup title="Synthetic Avatars // Pulse Engines">
-                                <div className={`${glassStyle} p-20 rounded-[6rem] space-y-20 border-violet-500/30 shadow-[inset_0_0_100px_rgba(139,92,246,0.1)] bg-violet-600/5`}>
+                                <div className={`${glassStyle} p-20 rounded-[6rem] space-y-20 border-[var(--tint-violet-edge)] shadow-[inset_0_0_100px_rgba(139,92,246,0.1)] bg-violet-600/5`}>
                                   <DropdownControl label="Neural Render Seed" description="Preferred engine for high-fidelity avatar generation" 
                                     value={settings.agentic.digitalTwinProvider}
                                     options={[{id: 'heygen', label:'HEYGEN_RENDER_ULTRA'}, {id:'sora', label:'SORA_CORE_KINETIC_V2'}, {id:'both', label:'HYBRID_SWARM_RENDER'}]}
@@ -406,7 +406,7 @@ export default function SovereignCalibrationNodePage() {
                         <div className="space-y-32">
                           <header className="space-y-10">
                              <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 rounded-[3.5rem] bg-fuchsia-500/5 border-2 border-fuchsia-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(217,70,239,0.2)] animate-pulse"><Palette className="text-fuchsia-400" size={56} /></div>
+                                <div className="w-24 h-24 rounded-[3.5rem] bg-fuchsia-500/5 border-2 border-[var(--tint-fuchsia-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(217,70,239,0.2)] animate-pulse"><Palette className="text-[var(--tint-fuchsia-fg)]" size={56} /></div>
                                 <div>
                                    <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Identity DNA</h2>
                                    <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none">Synthetic DNA constraints for autonomous AI payloads</p>
@@ -463,7 +463,7 @@ export default function SovereignCalibrationNodePage() {
                                         <label className="text-[20px] font-black uppercase tracking-[0.5em] text-white italic leading-none pl-6 text-left">Identifier Saturation</label>
                                         <div className="flex items-center gap-10">
                                            <input type="range" min="0" max="100" value={brandKit.logoOpacity || 100} title="Saturation" aria-label="Saturation" onChange={(e) => updateBrandKitField('logoOpacity', parseInt(e.target.value))} className="flex-1 h-6 bg-black/80 rounded-full appearance-none cursor-pointer accent-white border-2 border-white/5 shadow-inner" />
-                                           <span className="text-5xl font-black font-mono text-indigo-400 italic w-32 text-right tabular-nums">{brandKit.logoOpacity || 100}%</span>
+                                           <span className="text-5xl font-black font-mono text-[var(--tint-indigo-fg)] italic w-32 text-right tabular-nums">{brandKit.logoOpacity || 100}%</span>
                                         </div>
                                      </div>
                                   </div>
@@ -489,7 +489,7 @@ export default function SovereignCalibrationNodePage() {
                         <div className="space-y-32">
                           <header className="space-y-10">
                              <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 rounded-[3.5rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(244,63,94,0.2)] animate-pulse"><Bell className="text-rose-400" size={56} /></div>
+                                <div className="w-24 h-24 rounded-[3.5rem] bg-rose-500/5 border-2 border-[var(--tint-rose-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(244,63,94,0.2)] animate-pulse"><Bell className="text-[var(--tint-rose-fg)]" size={56} /></div>
                                 <div>
                                    <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Resonance Routing</h2>
                                    <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-rose-500/30">Signal protocols and urgency thresholds</p>
@@ -540,7 +540,7 @@ export default function SovereignCalibrationNodePage() {
                         <div className="space-y-32">
                           <header className="space-y-10">
                              <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><Shield size={56} className="text-indigo-400" /></div>
+                                <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><Shield size={56} className="text-[var(--tint-indigo-fg)]" /></div>
                                 <div>
                                    <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Shielding Protocols</h2>
                                    <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Authentication matrices and cross-node encryption</p>
@@ -552,11 +552,11 @@ export default function SovereignCalibrationNodePage() {
                                  <ChangePasswordForm />
                               </ConfigGroup>
                               <ConfigGroup title="Terminal Dissolution Horizon">
-                                 <div className="p-24 rounded-[7rem] bg-rose-600/[0.04] border-4 border-rose-500/20 flex flex-col gap-16 shadow-[inset_0_0_150px_rgba(244,63,94,0.15)] relative overflow-hidden group/dang">
+                                 <div className="p-24 rounded-[7rem] bg-rose-600/[0.04] border-4 border-[var(--tint-rose-edge)] flex flex-col gap-16 shadow-[inset_0_0_150px_rgba(244,63,94,0.15)] relative overflow-hidden group/dang">
                                     <div className="absolute top-0 right-0 p-16 opacity-[0.05] group-hover:opacity-[0.2] transition-opacity duration-300 rotate-12 scale-150 pointer-events-none"><ZapOff size={600} /></div>
                                     <div className="space-y-12 relative z-10">
                                        <div className="flex items-center gap-10">
-                                          <div className="w-16 h-16 rounded-[2rem] bg-rose-500/20 border-2 border-rose-500/40 flex items-center justify-center animate-bounce shadow-2xl"><ShieldAlert size={36} className="text-rose-500" /></div>
+                                          <div className="w-16 h-16 rounded-[2rem] bg-[var(--tint-rose-bg)] border-2 border-[var(--tint-rose-edge)] flex items-center justify-center animate-bounce shadow-2xl"><ShieldAlert size={36} className="text-rose-500" /></div>
                                           <p className="text-[28px] text-rose-500 font-black uppercase tracking-[0.4em] italic leading-none underline decoration-rose-500/40">LATTICE_DISSOLUTION_PROTOCOL</p>
                                        </div>
                                        <div className="p-12 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner">
@@ -611,8 +611,8 @@ export default function SovereignCalibrationNodePage() {
 function ConfigGroup({ title, children, fullWidth = false }: { title: string; children: React.ReactNode; fullWidth?: boolean }) {
   return (
     <div className={`flex flex-col gap-20 ${fullWidth ? 'col-span-full' : ''} group/group`}>
-      <div className="flex items-center gap-12 border-b-2 border-white/10 pb-12 transition-all group-hover/group:border-indigo-500/30">
-        <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center"><Sliders size={20} className="text-slate-500 group-hover/group:text-indigo-400 transition-colors" /></div>
+      <div className="flex items-center gap-12 border-b-2 border-white/10 pb-12 transition-all group-hover/group:border-[var(--tint-indigo-edge)]">
+        <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center"><Sliders size={20} className="text-slate-500 group-hover/group:text-[var(--tint-indigo-fg)] transition-colors" /></div>
         <h3 className="text-[18px] font-black uppercase tracking-[1em] text-slate-500 italic leading-none group-hover/group:text-slate-700 transition-colors">{title}</h3>
       </div>
       <div className="flex flex-col gap-12">{children}</div>
@@ -624,7 +624,7 @@ function ToggleControl({ label, description, value, onChange }: { label: string;
   return (
     <div className="flex items-center justify-between p-14 rounded-[5.5rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
       <div className="flex flex-col gap-6 text-left pl-8">
-        <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-indigo-400 transition-colors leading-none mb-2">{label}</span>
+        <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-[var(--tint-indigo-fg)] transition-colors leading-none mb-2">{label}</span>
         <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest italic leading-tight max-w-xl opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
       </div>
       <button onClick={() => onChange(!value)} title={value ? 'OFF' : 'ON'} aria-label={value ? 'OFF' : 'ON'}
@@ -644,7 +644,7 @@ function DropdownControl({ label, description, value, options, onChange }: { lab
   return (
     <div className="flex flex-col gap-16 p-14 rounded-[5.5rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
       <div className="flex flex-col gap-6 text-left pl-8">
-        <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-indigo-400 transition-colors leading-none mb-2">{label}</span>
+        <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-[var(--tint-indigo-fg)] transition-colors leading-none mb-2">{label}</span>
         <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest italic leading-tight opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
       </div>
       <div className="relative group/sel">
@@ -653,7 +653,7 @@ function DropdownControl({ label, description, value, options, onChange }: { lab
          >
            {options.map(o => <option key={o.id} value={o.id} className="bg-[#020205] text-white py-10">{o.label}</option>)}
          </select>
-         <div className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover/sel:text-indigo-400 transition-colors duration-300 group-hover/sel:rotate-180">
+         <div className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover/sel:text-[var(--tint-indigo-fg)] transition-colors duration-300 group-hover/sel:rotate-180">
             <ChevronRight size={44} className="rotate-90" />
          </div>
       </div>
@@ -665,11 +665,11 @@ function InputControl({ label, type = 'text', placeholder, value, onChange }: { 
   return (
     <div className="flex flex-col gap-12 p-14 rounded-[6rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
       <div className="flex items-center gap-6 pl-8">
-         <Key size={24} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
-         <span className="text-[22px] font-black uppercase tracking-[0.5em] text-white italic group-hover:text-indigo-400 transition-colors leading-none text-left">{label}</span>
+         <Key size={24} className="text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors" />
+         <span className="text-[22px] font-black uppercase tracking-[0.5em] text-white italic group-hover:text-[var(--tint-indigo-fg)] transition-colors leading-none text-left">{label}</span>
       </div>
       <input type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/95 border-2 border-white/10 px-16 py-10 rounded-[4rem] text-[24px] font-mono font-black text-indigo-400 focus:outline-none focus:border-indigo-500 transition-all duration-300 placeholder:text-slate-600 italic shadow-[0_0_40px_rgba(0,0,0,0.8)]"
+        className="w-full bg-black/95 border-2 border-white/10 px-16 py-10 rounded-[4rem] text-[24px] font-mono font-black text-[var(--tint-indigo-fg)] focus:outline-none focus:border-indigo-500 transition-all duration-300 placeholder:text-slate-600 italic shadow-[0_0_40px_rgba(0,0,0,0.8)]"
         title={label}
       />
     </div>

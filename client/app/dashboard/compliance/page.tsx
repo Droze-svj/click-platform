@@ -14,7 +14,7 @@ export default function CompliancePage() {
     >
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+          <div className="p-3 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]">
             <Shield size={24} />
           </div>
           <div>

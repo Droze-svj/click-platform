@@ -335,7 +335,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
                       <button
                         type="button"
                         onClick={() => applyOptimalTime(id)}
-                        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all"
+                        className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[11px] bg-[var(--tint-emerald-bg)] hover:bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-emerald-300 transition-all"
                       >
                         <span className="flex items-center gap-1.5 font-bold">
                           <Sparkles className="w-3 h-3" />
@@ -384,7 +384,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
                       </p>
                     )}
                     {state.success && (
-                      <p className="text-[11px] text-emerald-400 flex items-center gap-1.5">
+                      <p className="text-[11px] text-[var(--tint-emerald-fg)] flex items-center gap-1.5">
                         <CheckCircle2 className="w-3 h-3" /> Scheduled.
                       </p>
                     )}

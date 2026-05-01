@@ -53,16 +53,16 @@ const PIPELINE_STEPS: Omit<AgentTask, 'status'>[] = [
 
 const STATUS_COLORS: Record<AgentTaskStatus, string> = {
   queued: 'text-slate-500',
-  running: 'text-fuchsia-400',
-  done: 'text-emerald-400',
-  error: 'text-rose-400',
+  running: 'text-[var(--tint-fuchsia-fg)]',
+  done: 'text-[var(--tint-emerald-fg)]',
+  error: 'text-[var(--tint-rose-fg)]',
 }
 
 const STATUS_BG: Record<AgentTaskStatus, string> = {
   queued: 'bg-white/5',
-  running: 'bg-fuchsia-500/10 border-fuchsia-500/20',
-  done: 'bg-emerald-500/10 border-emerald-500/20',
-  error: 'bg-rose-500/10 border-rose-500/20',
+  running: 'bg-[var(--tint-fuchsia-bg)] border-[var(--tint-fuchsia-edge)]',
+  done: 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
+  error: 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]',
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -169,7 +169,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
     >
       {/* Header */}
       <div className="space-y-4">
-        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-[10px] font-black uppercase tracking-[0.5em]">
+        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-[var(--tint-fuchsia-fg)] text-[10px] font-black uppercase tracking-[0.5em]">
           <Bot className="w-3.5 h-3.5 animate-pulse" />
           Autonomous Content Agent — 2026
         </div>
@@ -188,7 +188,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
           {/* Goal Selector */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-5`}>
             <div className="flex items-center gap-3">
-              <Sparkles className="w-4 h-4 text-fuchsia-400" />
+              <Sparkles className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">Agent Goals</span>
               <span className="ml-auto text-[9px] font-black text-slate-600 uppercase tracking-widest">Select what the agent should do</span>
             </div>
@@ -206,20 +206,20 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                     disabled={isRunning}
                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all disabled:opacity-40 ${
                       selected
-                        ? 'bg-fuchsia-500/10 border-fuchsia-500/30'
+                        ? 'bg-[var(--tint-fuchsia-bg)] border-[var(--tint-fuchsia-edge)]'
                         : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      selected ? 'bg-fuchsia-500/20' : 'bg-white/5'
+                      selected ? 'bg-[var(--tint-fuchsia-bg)]' : 'bg-white/5'
                     }`}>
-                      <Icon className={`w-4 h-4 ${selected ? 'text-fuchsia-400' : 'text-slate-500'}`} />
+                      <Icon className={`w-4 h-4 ${selected ? 'text-[var(--tint-fuchsia-fg)]' : 'text-slate-500'}`} />
                     </div>
                     <div>
                       <p className={`text-[10px] font-black uppercase tracking-wider ${selected ? 'text-white' : 'text-slate-400'}`}>{goal.label}</p>
                       <p className="text-[9px] text-slate-600">{goal.desc}</p>
                     </div>
-                    {selected && <CheckCircle2 className="w-4 h-4 text-fuchsia-400 ml-auto shrink-0" />}
+                    {selected && <CheckCircle2 className="w-4 h-4 text-[var(--tint-fuchsia-fg)] ml-auto shrink-0" />}
                   </motion.button>
                 )
               })}
@@ -233,7 +233,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
               disabled={selectedGoals.size === 0}
               className={`w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg transition-all disabled:opacity-40 ${
                 isRunning
-                  ? 'bg-fuchsia-900/40 border border-fuchsia-500/20 text-fuchsia-400 cursor-not-allowed'
+                  ? 'bg-fuchsia-900/40 border border-[var(--tint-fuchsia-edge)] text-[var(--tint-fuchsia-fg)] cursor-not-allowed'
                   : tasks.length > 0
                   ? 'bg-white/5 border border-white/10 text-slate-400 hover:text-white'
                   : 'bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white shadow-fuchsia-500/20'
@@ -259,10 +259,10 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Bot className={`w-4 h-4 ${isRunning ? 'text-fuchsia-400 animate-pulse' : 'text-emerald-400'}`} />
+                    <Bot className={`w-4 h-4 ${isRunning ? 'text-[var(--tint-fuchsia-fg)] animate-pulse' : 'text-[var(--tint-emerald-fg)]'}`} />
                     <span className="text-sm font-black text-white uppercase tracking-wider">Pipeline Progress</span>
                   </div>
-                  <span className="text-[11px] font-black font-mono text-fuchsia-400">{progress}%</span>
+                  <span className="text-[11px] font-black font-mono text-[var(--tint-fuchsia-fg)]">{progress}%</span>
                 </div>
 
                 {/* Progress bar */}
@@ -288,15 +288,15 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                         className={`flex items-center gap-4 px-4 py-3 rounded-2xl border transition-all ${STATUS_BG[task.status]}`}
                       >
                         <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                          task.status === 'running' ? 'bg-fuchsia-500/20' :
-                          task.status === 'done' ? 'bg-emerald-500/20' : 'bg-white/5'
+                          task.status === 'running' ? 'bg-[var(--tint-fuchsia-bg)]' :
+                          task.status === 'done' ? 'bg-[var(--tint-emerald-bg)]' : 'bg-white/5'
                         }`}>
                           {task.status === 'running' ? (
-                            <Loader2 className="w-3.5 h-3.5 text-fuchsia-400 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 text-[var(--tint-fuchsia-fg)] animate-spin" />
                           ) : task.status === 'done' ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--tint-emerald-fg)]" />
                           ) : task.status === 'error' ? (
-                            <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
+                            <AlertCircle className="w-3.5 h-3.5 text-[var(--tint-rose-fg)]" />
                           ) : (
                             <Clock className="w-3.5 h-3.5 text-slate-600" />
                           )}
@@ -337,9 +337,9 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                 className={`${glassStyle} rounded-[2.5rem] p-6 space-y-5`}
               >
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                   <span className="text-sm font-black text-white uppercase tracking-wider">Draft Clips Ready</span>
-                  <span className="ml-auto px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-400">
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[9px] font-black text-[var(--tint-emerald-fg)]">
                     {draftClips.length} clips
                   </span>
                 </div>
@@ -350,17 +350,17 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex items-center gap-4 px-5 py-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/10 transition-all cursor-pointer"
+                    className="flex items-center gap-4 px-5 py-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 hover:bg-[var(--tint-emerald-bg)] transition-all cursor-pointer"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                      <Film className="w-4 h-4 text-emerald-400" />
+                    <div className="w-9 h-9 rounded-xl bg-[var(--tint-emerald-bg)] flex items-center justify-center shrink-0">
+                      <Film className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-white uppercase truncate">{clip.title}</p>
                       <p className="text-[9px] text-slate-600">{clip.duration}s · Score {clip.score}%</p>
                     </div>
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20">
-                      <span className="text-[9px] font-black text-emerald-400">{clip.score}%</span>
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--tint-emerald-bg)]">
+                      <span className="text-[9px] font-black text-[var(--tint-emerald-fg)]">{clip.score}%</span>
                     </div>
                   </motion.div>
                 ))}

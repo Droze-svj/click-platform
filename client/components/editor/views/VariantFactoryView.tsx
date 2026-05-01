@@ -72,7 +72,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
     <div className="h-full flex flex-col space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Target className="w-5 h-5 text-fuchsia-400" />
+          <Target className="w-5 h-5 text-[var(--tint-fuchsia-fg)]" />
           <h2 className="text-lg font-black tracking-tight text-white italic uppercase">Viral Variant Factory</h2>
         </div>
         <button
@@ -84,7 +84,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
         </button>
       </div>
 
-      <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic border-l-2 border-fuchsia-500/30 pl-4">
+      <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic border-l-2 border-[var(--tint-fuchsia-edge)] pl-4">
         Synthesize multiple &quot;Hook&quot; variations. Our Engine predicts which opening will achieve
         <span className="text-white"> maximum conversion</span> based on trending social patterns.
       </p>
@@ -106,7 +106,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
         <div className="flex-1 flex flex-col items-center justify-center space-y-8 py-12">
            <div className="relative">
               <div className="w-20 h-20 rounded-full border-4 border-fuchsia-500/10 flex items-center justify-center">
-                 <Target className="w-8 h-8 text-fuchsia-400 animate-spin" />
+                 <Target className="w-8 h-8 text-[var(--tint-fuchsia-fg)] animate-spin" />
               </div>
               <div className="absolute inset-x-0 -bottom-12 text-center">
                  <span className="text-[10px] font-black text-white uppercase tracking-widest animate-pulse">Running Viral Simulator...</span>
@@ -121,7 +121,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: i * 0.1 }}
-               className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-fuchsia-500/30 transition-all group relative overflow-hidden"
+               className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:border-[var(--tint-fuchsia-edge)] transition-all group relative overflow-hidden"
              >
                <div className="flex items-start justify-between relative z-10">
                  <div className="space-y-3">
@@ -132,7 +132,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                         {variant.type}
                       </span>
                       {i === 0 && (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-amber-500 text-[8px] font-black uppercase tracking-widest">
                           <Star className="w-2.5 h-2.5 fill-amber-500" />
                           Recommended
                         </div>
@@ -142,7 +142,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                      &quot;{variant.text}&quot;
                    </h3>
                    <p className="text-[10px] font-medium text-slate-500 leading-relaxed pr-8">
-                      <span className="text-fuchsia-400/80 uppercase font-black mr-2 italic">Why?</span>
+                      <span className="text-[var(--tint-fuchsia-fg)]/80 uppercase font-black mr-2 italic">Why?</span>
                       {variant.justification}
                    </p>
                  </div>

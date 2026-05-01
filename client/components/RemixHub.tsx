@@ -122,7 +122,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                             {/* Content */}
                             <div className="p-5">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <img src={project.avatar} alt={project.author} className="w-5 h-5 rounded-full border border-fuchsia-500/30" />
+                                    <img src={project.avatar} alt={project.author} className="w-5 h-5 rounded-full border border-[var(--tint-fuchsia-edge)]" />
                                     <span className="text-[10px] font-bold text-gray-400 group-hover:text-fuchsia-500 transition-colors">@{project.author}</span>
                                 </div>
                                 <h4 className="font-black text-gray-900 dark:text-white mb-4 group-hover:translate-x-1 transition-transform">{project.title}</h4>

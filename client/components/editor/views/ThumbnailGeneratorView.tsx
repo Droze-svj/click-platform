@@ -70,8 +70,8 @@ const STYLE_PRESETS: StylePreset[] = [
     desc: 'Clean negative space, large serif headline, luxury/educational feel',
     icon: Type,
     color: 'from-indigo-500 to-violet-600',
-    textColor: 'text-indigo-400',
-    overlay: 'bg-indigo-500/20 border-indigo-500/30',
+    textColor: 'text-[var(--tint-indigo-fg)]',
+    overlay: 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]',
     emoji: '✦',
   },
 ]
@@ -160,7 +160,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
     >
       {/* Header */}
       <div className="space-y-3">
-        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-black uppercase tracking-[0.5em]">
+        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[var(--tint-orange-bg)] border border-[var(--tint-orange-edge)] text-[var(--tint-orange-fg)] text-[10px] font-black uppercase tracking-[0.5em]">
           <ImageDown className="w-3.5 h-3.5 animate-pulse" />
           AI Thumbnail Generator
         </div>
@@ -169,7 +169,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
         </h1>
         <p className="text-slate-500 text-sm max-w-lg leading-relaxed">
           Scrub to the <span className="text-white font-black">perfect frame</span>, choose an AI style preset, and generate a
-          <span className="text-orange-400 font-black"> click-magnetically enhanced</span> thumbnail in one click.
+          <span className="text-[var(--tint-orange-fg)] font-black"> click-magnetically enhanced</span> thumbnail in one click.
         </p>
       </div>
 
@@ -189,7 +189,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
           {/* Frame preview card */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-5`}>
             <div className="flex items-center gap-3">
-              <Camera className="w-4 h-4 text-orange-400" />
+              <Camera className="w-4 h-4 text-[var(--tint-orange-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">Frame Picker</span>
             </div>
 
@@ -218,7 +218,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Scrub to frame</span>
-                  <span className="text-[9px] font-mono font-black text-indigo-400">
+                  <span className="text-[9px] font-mono font-black text-[var(--tint-indigo-fg)]">
                     {Math.floor(scrubTime / 60)}:{String(Math.floor(scrubTime % 60)).padStart(2, '0')}
                   </span>
                 </div>
@@ -260,7 +260,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
           {/* Style presets */}
           <div className={`${glassStyle} rounded-[2.5rem] p-6 space-y-4`}>
             <div className="flex items-center gap-3">
-              <Palette className="w-4 h-4 text-fuchsia-400" />
+              <Palette className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" />
               <span className="text-sm font-black text-white uppercase tracking-wider">AI Style Preset</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -303,7 +303,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
             disabled={!capturedFrame || generating}
             className={`w-full py-6 rounded-[2rem] font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl transition-all disabled:opacity-40 ${
               generating
-                ? 'bg-orange-900/30 border border-orange-500/20 text-orange-400'
+                ? 'bg-orange-900/30 border border-[var(--tint-orange-edge)] text-[var(--tint-orange-fg)]'
                 : 'bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-orange-500/20'
             }`}
           >
@@ -324,7 +324,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
                 className={`${glassStyle} rounded-[2.5rem] p-6 space-y-5`}
               >
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                   <span className="text-sm font-black text-white uppercase tracking-wider">Generated</span>
                   <span className={`ml-auto text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${preset.overlay} ${preset.textColor}`}>
                     {preset.emoji} {preset.label}
@@ -346,7 +346,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     onClick={downloadThumbnail}
-                    className="flex-1 py-3 rounded-2xl bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-2xl bg-emerald-600/20 border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
                   >
                     <Download className="w-4 h-4" /> Download
                   </motion.button>

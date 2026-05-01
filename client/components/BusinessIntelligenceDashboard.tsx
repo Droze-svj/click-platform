@@ -209,7 +209,7 @@ export default function BusinessIntelligenceDashboard() {
         {/* Growth */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            <TrendingUp className="w-5 h-5 text-orange-600 dark:text-[var(--tint-orange-fg)]" />
             <p className="text-sm text-gray-600 dark:text-gray-400">Growth</p>
           </div>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">

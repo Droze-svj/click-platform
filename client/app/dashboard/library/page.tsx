@@ -187,19 +187,19 @@ export default function AxiomRepositoryPage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-indigo-500/5 border border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Archive size={48} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
+                <Archive size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-110 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <CircuitBoard size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Axiom Repository v12.4.8</span>
+                      <CircuitBoard size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-indigo-fg)] italic leading-none">Axiom Repository v12.4.8</span>
                    </div>
-                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <Radio size={14} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">REPOSITORY_SYNC_STABLE</span>
+                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] shadow-inner">
+                       <Radio size={14} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                       <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">REPOSITORY_SYNC_STABLE</span>
                    </div>
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Library</h1>
@@ -228,7 +228,7 @@ export default function AxiomRepositoryPage() {
                 {/* Search Index */}
                 <div className="relative group/search">
                    <div className="absolute inset-y-0 left-10 flex items-center pointer-events-none">
-                      <Search size={28} className="text-slate-500 group-focus-within/search:text-indigo-400 transition-colors" />
+                      <Search size={28} className="text-slate-500 group-focus-within/search:text-[var(--tint-indigo-fg)] transition-colors" />
                    </div>
                    <input type="text" placeholder="SCAN_REPOSITORY_INDEX..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                      className="w-full bg-black/60 border-2 border-white/5 rounded-[3.5rem] pl-24 pr-10 py-8 text-[16px] font-black text-white uppercase tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all italic shadow-inner" 
@@ -237,8 +237,8 @@ export default function AxiomRepositoryPage() {
 
                 {/* Lattice Index */}
                 <div className="space-y-12">
-                   <div className="flex items-center gap-6 mb-4 border-l-8 border-indigo-500/20 pl-6">
-                      <Target size={24} className="text-indigo-400" />
+                   <div className="flex items-center gap-6 mb-4 border-l-8 border-[var(--tint-indigo-edge)] pl-6">
+                      <Target size={24} className="text-[var(--tint-indigo-fg)]" />
                       <h3 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Lattice_Structure</h3>
                    </div>
                    <div className="space-y-6">
@@ -246,7 +246,7 @@ export default function AxiomRepositoryPage() {
                        className={`w-full group text-left px-10 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-300 flex items-center justify-between italic ${selectedFolder === null ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}
                      >
                        FULL_MATRIX_GRID
-                       <Globe size={24} className={selectedFolder === null ? 'text-black' : 'text-slate-500 group-hover:text-indigo-400 transition-colors'} />
+                       <Globe size={24} className={selectedFolder === null ? 'text-black' : 'text-slate-500 group-hover:text-[var(--tint-indigo-fg)] transition-colors'} />
                      </button>
                      {folders.map((folder) => (
                        <button key={folder._id} onClick={() => setSelectedFolder(folder._id)}
@@ -262,8 +262,8 @@ export default function AxiomRepositoryPage() {
 
                 {/* Metadata Keys */}
                 <div className="space-y-10">
-                   <div className="flex items-center gap-6 mb-4 border-l-8 border-indigo-500/20 pl-6">
-                      <Tag size={24} className="text-indigo-400" />
+                   <div className="flex items-center gap-6 mb-4 border-l-8 border-[var(--tint-indigo-edge)] pl-6">
+                      <Tag size={24} className="text-[var(--tint-indigo-fg)]" />
                       <h3 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Metadata_Axioms</h3>
                    </div>
                    <div className="flex flex-wrap gap-4">
@@ -279,14 +279,14 @@ export default function AxiomRepositoryPage() {
 
                 {/* Archetype Filter */}
                 <div className="space-y-10">
-                   <div className="flex items-center gap-6 mb-4 border-l-8 border-indigo-500/20 pl-6">
-                      <Layers size={24} className="text-indigo-400" />
+                   <div className="flex items-center gap-6 mb-4 border-l-8 border-[var(--tint-indigo-edge)] pl-6">
+                      <Layers size={24} className="text-[var(--tint-indigo-fg)]" />
                       <h3 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Logic_Archetypes</h3>
                    </div>
                    <div className="space-y-6">
                      {categories.map((category) => (
                        <button key={category} onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
-                         className={`w-full text-left px-10 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic ${selectedCategory === category ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-2xl' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}
+                         className={`w-full text-left px-10 py-6 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-300 italic ${selectedCategory === category ? 'bg-indigo-600/10 text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] shadow-2xl' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'}`}
                        >
                          {category.toUpperCase().replace('_', ' ')}_TYPE
                        </button>
@@ -312,9 +312,9 @@ export default function AxiomRepositoryPage() {
                 
                 <header className="flex flex-col md:flex-row items-center justify-between mb-24 relative z-10 border-b border-white/5 pb-16 gap-12">
                    <div className="flex items-center gap-12">
-                      <div className="w-24 h-24 rounded-[3rem] bg-indigo-500/5 border border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative overflow-hidden group/box">
+                      <div className="w-24 h-24 rounded-[3rem] bg-indigo-500/5 border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative overflow-hidden group/box">
                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                         <Boxes size={48} className="text-indigo-400 relative z-10 group-hover/box:scale-125 transition-transform duration-300" />
+                         <Boxes size={48} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover/box:scale-125 transition-transform duration-300" />
                       </div>
                       <div>
                         <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Axiom Node Buffer</h2>
@@ -331,7 +331,7 @@ export default function AxiomRepositoryPage() {
                   <AnimatePresence mode="popLayout">
                     {content.map((item, idx) => (
                       <motion.article layout key={item._id} initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: idx * 0.05, duration: 1 }}
-                        className={`relative p-12 rounded-[5.5rem] border-2 transition-all duration-300 group flex flex-col justify-between min-h-[500px] shadow-[0_60px_150px_rgba(0,0,0,0.6)] bg-black/60 ${selectMode && selectedItems.includes(item._id) ? 'border-indigo-500 shadow-[0_0_120px_rgba(99,102,241,0.4)] ring-8 ring-indigo-500/20' : 'border-white/[0.03] hover:border-indigo-500/40 hover:bg-white/[0.04]'}`}
+                        className={`relative p-12 rounded-[5.5rem] border-2 transition-all duration-300 group flex flex-col justify-between min-h-[500px] shadow-[0_60px_150px_rgba(0,0,0,0.6)] bg-black/60 ${selectMode && selectedItems.includes(item._id) ? 'border-indigo-500 shadow-[0_0_120px_rgba(99,102,241,0.4)] ring-8 ring-indigo-500/20' : 'border-white/[0.03] hover:border-[var(--tint-indigo-edge)] hover:bg-white/[0.04]'}`}
                       >
                         {selectMode && (
                           <div className="absolute top-12 left-12 z-20">
@@ -344,21 +344,21 @@ export default function AxiomRepositoryPage() {
                         <div className="p-4">
                           <header className="flex justify-between items-start mb-12 relative z-10">
                              <div className="flex-1 min-w-0 pr-8">
-                                <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter truncate group-hover:text-indigo-400 transition-all duration-300 mb-6 leading-none drop-shadow-2xl">{item.title || 'NULL_PAYLOAD'}</h3>
+                                <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter truncate group-hover:text-[var(--tint-indigo-fg)] transition-all duration-300 mb-6 leading-none drop-shadow-2xl">{item.title || 'NULL_PAYLOAD'}</h3>
                                 <div className="flex items-center gap-4">
-                                  <Cpu size={18} className="text-indigo-400/40" />
+                                  <Cpu size={18} className="text-[var(--tint-indigo-fg)]/40" />
                                   <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">{item.type.toUpperCase()}_LOGIC_CORE</span>
                                 </div>
                              </div>
                              <button onClick={(e) => { e.stopPropagation(); handleToggleAxiom(item._id, item.isFavorite) }}
-                               className={`w-16 h-16 flex items-center justify-center rounded-[2rem] transition-all duration-300 shadow-[0_30px_60px_rgba(0,0,0,0.8)] ${item.isFavorite ? 'text-amber-500 bg-amber-500/10 border-2 border-amber-500/30 shadow-[0_0_50px_rgba(245,158,11,0.4)] scale-125' : 'text-slate-500 hover:text-white hover:bg-white/10 border border-white/5'}`}>
+                               className={`w-16 h-16 flex items-center justify-center rounded-[2rem] transition-all duration-300 shadow-[0_30px_60px_rgba(0,0,0,0.8)] ${item.isFavorite ? 'text-amber-500 bg-[var(--tint-amber-bg)] border-2 border-[var(--tint-amber-edge)] shadow-[0_0_50px_rgba(245,158,11,0.4)] scale-125' : 'text-slate-500 hover:text-white hover:bg-white/10 border border-white/5'}`}>
                                <Star size={32} fill={item.isFavorite ? 'currentColor' : 'none'} className={item.isFavorite ? 'animate-pulse' : ''} />
                              </button>
                           </header>
 
                           <div className="space-y-10 mb-20 relative z-10">
                              {item.folderId && (
-                               <div className="flex items-center gap-6 px-8 py-4 bg-white/[0.02] rounded-[2.2rem] border-2 border-white/5 w-fit shadow-2xl group-hover:border-indigo-500/20 transition-all duration-300 group-hover:translate-x-4">
+                               <div className="flex items-center gap-6 px-8 py-4 bg-white/[0.02] rounded-[2.2rem] border-2 border-white/5 w-fit shadow-2xl group-hover:border-[var(--tint-indigo-edge)] transition-all duration-300 group-hover:translate-x-4">
                                   <div className="w-4 h-4 rounded-full border-2 border-white/20 shadow-2xl" style={{ backgroundColor: item.folderId.color || '#4f46e5', boxShadow: `0 0 25px ${item.folderId.color || '#4f46e5'}` }} />
                                   <span className="text-[12px] font-black text-slate-500 uppercase tracking-[0.5em] italic truncate max-w-[180px]">{item.folderId.name.toUpperCase()}</span>
                                </div>
@@ -366,9 +366,9 @@ export default function AxiomRepositoryPage() {
 
                              <div className="flex flex-wrap gap-5">
                                 {item.tags.slice(0, 3).map((t) => (
-                                  <span key={t} className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none group-hover:text-indigo-400 transition-colors duration-300">#{t.toUpperCase()}</span>
+                                  <span key={t} className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-300">#{t.toUpperCase()}</span>
                                 ))}
-                                {item.tags.length > 3 && <span className="text-[10px] font-black text-white bg-indigo-500/20 px-5 py-2 rounded-full border border-indigo-500/20 shadow-2xl">+{item.tags.length - 3} ARCHE_KEYS</span>}
+                                {item.tags.length > 3 && <span className="text-[10px] font-black text-white bg-[var(--tint-indigo-bg)] px-5 py-2 rounded-full border border-[var(--tint-indigo-edge)] shadow-2xl">+{item.tags.length - 3} ARCHE_KEYS</span>}
                              </div>
                           </div>
                         </div>
@@ -421,7 +421,7 @@ export default function AxiomRepositoryPage() {
                          <p className="text-[18px] font-black text-white uppercase tracking-[0.6em] leading-none">NODES_ARRAYED</p>
                          <div className="flex items-center gap-4">
                             <span className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse" />
-                            <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[1em] italic leading-none">LATTICE_BUFFER_READY</p>
+                            <p className="text-[12px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[1em] italic leading-none">LATTICE_BUFFER_READY</p>
                          </div>
                       </div>
                    </div>
@@ -456,7 +456,7 @@ export default function AxiomRepositoryPage() {
                         PURGE_IMMUTABLE_NODES
                       </button>
                    </div>
-                   <button onClick={() => setSelectedItems([])} className="w-20 h-20 bg-white/5 border-2 border-white/10 text-slate-500 hover:text-white rounded-[3rem] transition-all mr-12 hover:scale-110 shadow-2xl hover:bg-rose-500/20 active:scale-90 flex items-center justify-center border-none"><X size={44}/></button>
+                   <button onClick={() => setSelectedItems([])} className="w-20 h-20 bg-white/5 border-2 border-white/10 text-slate-500 hover:text-white rounded-[3rem] transition-all mr-12 hover:scale-110 shadow-2xl hover:bg-[var(--tint-rose-bg)] active:scale-90 flex items-center justify-center border-none"><X size={44}/></button>
                 </div>
              </motion.div>
            )}
@@ -467,7 +467,7 @@ export default function AxiomRepositoryPage() {
                 <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-[0_0_500px_rgba(0,0,0,1)] ring-2 ring-white/10`} onClick={e => e.stopPropagation()}>
                    <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none rotate-12 scale-150"><Folder size={800} className="text-white" /></div>
                    <div className="flex items-center gap-16 mb-32 relative z-10 border-b border-white/5 pb-20">
-                      <div className="w-32 h-32 rounded-[5rem] bg-indigo-500/10 border-2 border-indigo-500/30 flex items-center justify-center shadow-[0_0_100px_rgba(99,102,241,0.5)]"><Plus size={64} className="text-indigo-400 animate-pulse" /></div>
+                      <div className="w-32 h-32 rounded-[5rem] bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-[0_0_100px_rgba(99,102,241,0.5)]"><Plus size={64} className="text-[var(--tint-indigo-fg)] animate-pulse" /></div>
                       <div>
                          <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-6">Initialize Capsule</h2>
                          <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none">Establishing isolated archival sector v12.8.4_PRIME</p>
@@ -497,7 +497,7 @@ export default function AxiomRepositoryPage() {
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-12 bg-black/98 backdrop-blur-3xl" onClick={() => setTagModalIds(null)}>
                   <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
                      <div className="flex items-center gap-12 mb-20 border-b border-white/5 pb-16">
-                        <Tag size={64} className="text-indigo-400" />
+                        <Tag size={64} className="text-[var(--tint-indigo-fg)]" />
                         <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">Metadata Array Injection</h2>
                      </div>
                      <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="ENTER_METADATA_SEQUENCE..."
@@ -517,7 +517,7 @@ export default function AxiomRepositoryPage() {
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-12 bg-black/98 backdrop-blur-3xl" onClick={() => setMoveModalIds(null)}>
                   <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
                      <div className="flex items-center gap-12 mb-20 border-b border-white/5 pb-16">
-                        <Network size={64} className="text-indigo-400" />
+                        <Network size={64} className="text-[var(--tint-indigo-fg)]" />
                         <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">Lattice Re-Indexing</h2>
                      </div>
                      <div className="relative mb-32">
@@ -543,7 +543,7 @@ export default function AxiomRepositoryPage() {
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-12 bg-black/98 backdrop-blur-3xl" onClick={() => setExportModalIds(null)}>
                   <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
                      <div className="flex items-center gap-12 mb-20 border-b border-white/5 pb-16">
-                        <Download size={64} className="text-indigo-400" />
+                        <Download size={64} className="text-[var(--tint-indigo-fg)]" />
                         <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">Logic Extraction Matrix</h2>
                      </div>
                      <div className="relative mb-32">

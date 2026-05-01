@@ -25,7 +25,7 @@ export default function Loading() {
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-0 rounded-3xl bg-indigo-500/10 blur-xl"
+            className="absolute inset-0 rounded-3xl bg-[var(--tint-indigo-bg)] blur-xl"
           />
           <ClickLogo size={40} className="z-10" />
         </motion.div>

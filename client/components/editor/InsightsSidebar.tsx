@@ -138,12 +138,12 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
   return (
     <div className="flex flex-col h-full bg-black/40 backdrop-blur-3xl border-l border-white/5 w-80 p-6 overflow-y-auto custom-scrollbar">
       {/* Universal Expert HUD (Phase 11) */}
-      <div className="mb-6 p-4 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 relative group overflow-hidden">
+      <div className="mb-6 p-4 rounded-3xl bg-indigo-600/10 border border-[var(--tint-indigo-edge)] relative group overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="flex items-center gap-3 mb-2 relative z-10">
-          <Brain className="w-5 h-5 text-indigo-400 animate-pulse" />
+          <Brain className="w-5 h-5 text-[var(--tint-indigo-fg)] animate-pulse" />
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic leading-tight">Universal Expert Active</span>
+            <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest italic leading-tight">Universal Expert Active</span>
             <span className="text-sm font-black text-white uppercase tracking-tighter italic">Niche: {niche.toUpperCase()}</span>
           </div>
         </div>
@@ -192,7 +192,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
       {/* Neural Forecast Ticker */}
       <div className="mb-6 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 overflow-hidden relative">
-         <div className="flex items-center justify-between mb-3 text-[9px] font-black uppercase text-indigo-400 tracking-widest italic relative z-10">
+         <div className="flex items-center justify-between mb-3 text-[9px] font-black uppercase text-[var(--tint-indigo-fg)] tracking-widest italic relative z-10">
             <span>Neural Forecast</span>
             <div className="flex items-center gap-2">
                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
@@ -216,7 +216,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-indigo-400" />
+            <TrendingUp className="w-5 h-5 text-[var(--tint-indigo-fg)]" />
             <h3 className="text-xs font-black uppercase tracking-widest text-white italic">Viral Potential</h3>
           </div>
           <div className={`w-3 h-3 rounded-full ${getStatusColor(currentScore.viralPotential)} animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]`} />
@@ -258,9 +258,9 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
              key={`advice-${activePlatform}`}
              initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
-             className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 flex gap-3 text-[11px] leading-relaxed font-medium text-indigo-200"
+             className="bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-xl p-3 flex gap-3 text-[11px] leading-relaxed font-medium text-indigo-200"
            >
-             <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+             <Sparkles className="w-4 h-4 text-[var(--tint-indigo-fg)] shrink-0 mt-0.5" />
              {advice}
            </motion.div>
         )}
@@ -280,7 +280,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                   key={m.val}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className={`text-[8px] font-black uppercase ${m.val > 70 ? 'text-emerald-400' : 'text-slate-400'}`}
+                  className={`text-[8px] font-black uppercase ${m.val > 70 ? 'text-[var(--tint-emerald-fg)]' : 'text-slate-400'}`}
                 >
                   {m.val}%
                 </motion.span>
@@ -326,12 +326,12 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         {/* CTA Placement Optimizer (New Phase 10) */}
         <div className="space-y-4">
            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-emerald-400" />
+              <Target className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">CTA Placement</h3>
            </div>
            <div className="p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Optimal SyncPoint</span>
+                <span className="text-[9px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-widest">Optimal SyncPoint</span>
                 <span className="text-[9px] font-black text-white italic">00:42s</span>
               </div>
               <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
@@ -345,7 +345,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         {/* Readability HUD (New Phase 10) */}
         <div className="space-y-4">
            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-amber-400" />
+              <BookOpen className="w-4 h-4 text-[var(--tint-amber-fg)]" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Readability Center</h3>
            </div>
            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all cursor-default">
@@ -353,7 +353,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                  <div className="text-xl font-black text-white italic uppercase">{currentScore.psychology?.readability || '8th Grade'}</div>
                  <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Complexity Level</div>
               </div>
-              <button className="px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black uppercase hover:bg-amber-500 hover:text-black transition-all">
+              <button className="px-3 py-1.5 rounded-lg bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] text-[var(--tint-amber-fg)] text-[8px] font-black uppercase hover:bg-amber-500 hover:text-black transition-all">
                  Simplify
               </button>
            </div>
@@ -364,7 +364,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         {/* Niche Recalibration */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-indigo-400" />
+            <Target className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Audience Niche</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -390,10 +390,10 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-sky-400" />
+              <Globe className="w-4 h-4 text-[var(--tint-sky-fg)]" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Output Language</h3>
             </div>
-            <span className="text-[8px] font-black text-sky-400 uppercase bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">Cultural Sync</span>
+            <span className="text-[8px] font-black text-[var(--tint-sky-fg)] uppercase bg-[var(--tint-sky-bg)] px-2 py-0.5 rounded-full border border-[var(--tint-sky-edge)]">Cultural Sync</span>
           </div>
           <div className="relative group">
             <select
@@ -421,7 +421,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         {/* Caption Mood-Switcher */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400" />
+            <Zap className="w-4 h-4 text-[var(--tint-amber-fg)]" />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Caption Style</h3>
           </div>
           <div className="relative group">
@@ -443,7 +443,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         {/* Manual Override */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-indigo-400" />
+            <MessageSquare className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Manual Neural Override</h3>
           </div>
           <div className="relative">

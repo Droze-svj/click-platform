@@ -121,18 +121,18 @@ export default function AscensionLedgerPage() {
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={32} />
               </button>
-              <div className="w-24 h-24 bg-amber-500/5 border border-amber-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
+              <div className="w-24 h-24 bg-amber-500/5 border border-[var(--tint-amber-edge)] rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent opacity-100" />
-                <Trophy size={44} className="text-amber-400 relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                <Trophy size={44} className="text-[var(--tint-amber-fg)] relative z-10 group-hover:scale-125 transition-transform duration-300" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-3">
                    <div className="flex items-center gap-3">
-                      <Shield size={16} className="text-amber-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-amber-400 italic leading-none">Ascension Registry v10.4</span>
+                      <Shield size={16} className="text-[var(--tint-amber-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-[var(--tint-amber-fg)] italic leading-none">Ascension Registry v10.4</span>
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <ActivitySquare size={12} className="text-amber-400 animate-pulse" />
+                       <ActivitySquare size={12} className="text-[var(--tint-amber-fg)] animate-pulse" />
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">LEVEL_{stats?.level}_ASYNC</span>
                    </div>
                  </div>
@@ -156,8 +156,8 @@ export default function AscensionLedgerPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative z-10">
             <AscensionStatCard icon={Layers} label="Evolutionary Tier" value={`TIER_${stats.level}`} sub={`${(stats.level % 10) * 10}% TO_ASCENSION`} color="text-purple-400" />
             <AscensionStatCard icon={Award} label="Decrypted Milestones" value={stats.achievements.total} sub="VECTORS_VERIFIED" color="text-blue-400" />
-            <AscensionStatCard icon={Zap} label="Coherence Streak" value={stats.streak.currentStreak} sub={`PEAK_RESONANCE: ${stats.streak.longestStreak}`} color="text-amber-400" pulse />
-            <AscensionStatCard icon={TrendingUp} label="Synthesis Volume" value={stats.stats.totalContent} sub="TOTAL_PAYLOADS_SYNTHESIZED" color="text-emerald-400" />
+            <AscensionStatCard icon={Zap} label="Coherence Streak" value={stats.streak.currentStreak} sub={`PEAK_RESONANCE: ${stats.streak.longestStreak}`} color="text-[var(--tint-amber-fg)]" pulse />
+            <AscensionStatCard icon={TrendingUp} label="Synthesis Volume" value={stats.stats.totalContent} sub="TOTAL_PAYLOADS_SYNTHESIZED" color="text-[var(--tint-emerald-fg)]" />
           </div>
         )}
 
@@ -165,11 +165,11 @@ export default function AscensionLedgerPage() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
           className={`${glassStyle} rounded-[6rem] p-20 relative overflow-hidden group border-indigo-500/10 shadow-[0_60px_150px_rgba(0,0,0,0.6)]`}
         >
-           <div className="absolute top-0 right-0 p-24 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-all duration-300"><Activity size={400} className="text-indigo-400" /></div>
+           <div className="absolute top-0 right-0 p-24 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-all duration-300"><Activity size={400} className="text-[var(--tint-indigo-fg)]" /></div>
            <div className="flex flex-col lg:flex-row items-center justify-between gap-24 relative z-10">
               <div className="text-center lg:text-left space-y-8 max-w-2xl">
                  <div className="flex items-center gap-6 mb-2">
-                   <Monitor size={32} className="text-indigo-400" />
+                   <Monitor size={32} className="text-[var(--tint-indigo-fg)]" />
                    <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Neural Progression</h3>
                  </div>
                  <p className="text-[16px] text-slate-400 font-black uppercase italic tracking-[0.4em] leading-relaxed">
@@ -177,11 +177,11 @@ export default function AscensionLedgerPage() {
                  </p>
                  <div className="pt-8 border-t border-white/5 flex items-center gap-6">
                     <div className="w-4 h-4 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[12px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">TELEMETRY_STREAM_ACTIVE</span>
+                    <span className="text-[12px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic leading-none">TELEMETRY_STREAM_ACTIVE</span>
                  </div>
               </div>
               <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-10 w-full">
-                 <DetailProgCard icon={Video} label="Spectral Renditions" value={stats?.stats.totalVideos || 0} color="text-rose-400" />
+                 <DetailProgCard icon={Video} label="Spectral Renditions" value={stats?.stats.totalVideos || 0} color="text-[var(--tint-rose-fg)]" />
                  <DetailProgCard icon={Sparkles} label="Logic Payloads" value={stats?.stats.totalContent || 0} color="text-blue-400" />
                  <DetailProgCard icon={Terminal} label="Neural Scripts" value={stats?.stats.totalScripts || 0} color="text-purple-400" />
               </div>
@@ -206,8 +206,8 @@ export default function AscensionLedgerPage() {
                       >
                          <div className="text-7xl group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300 drop-shadow-2xl">{data?.emoji || '🏆'}</div>
                          <div>
-                            <p className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 group-hover:text-amber-400 transition-colors">{data?.name || a.achievementType.toUpperCase()}</p>
-                            <p className="text-[11px] font-black text-amber-400/60 uppercase italic tracking-[0.3em] leading-none mb-4">DECRYPTED {new Date(a.unlockedAt).toLocaleDateString()}</p>
+                            <p className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 group-hover:text-[var(--tint-amber-fg)] transition-colors">{data?.name || a.achievementType.toUpperCase()}</p>
+                            <p className="text-[11px] font-black text-[var(--tint-amber-fg)]/60 uppercase italic tracking-[0.3em] leading-none mb-4">DECRYPTED {new Date(a.unlockedAt).toLocaleDateString()}</p>
                             <div className="flex items-center gap-3">
                                <div className="w-2 h-2 rounded-full bg-amber-500" />
                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">ASCENSION_VERIFIED</span>
@@ -234,7 +234,7 @@ export default function AscensionLedgerPage() {
 
                 return (
                   <motion.div key={m.type} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
-                    className={`relative p-12 rounded-[4.5rem] border-2 transition-all duration-300 group hover:shadow-[0_60px_100px_rgba(0,0,0,0.6)] ${isDecrypted ? 'bg-indigo-500/[0.05] border-indigo-500/30' : 'bg-black/40 border-white/5 opacity-30 hover:opacity-100 hover:border-white/20'}`}>
+                    className={`relative p-12 rounded-[4.5rem] border-2 transition-all duration-300 group hover:shadow-[0_60px_100px_rgba(0,0,0,0.6)] ${isDecrypted ? 'bg-indigo-500/[0.05] border-[var(--tint-indigo-edge)]' : 'bg-black/40 border-white/5 opacity-30 hover:opacity-100 hover:border-white/20'}`}>
                      
                      {isDecrypted && (
                        <div className="absolute -top-4 -right-4 w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center border-4 border-[#020205] shadow-2xl z-20">
@@ -245,14 +245,14 @@ export default function AscensionLedgerPage() {
                      <div className="flex flex-col items-center text-center gap-10">
                         <div className={`text-6xl transition-all duration-300 drop-shadow-2xl ${isDecrypted ? 'group-hover:scale-125 group-hover:rotate-12' : 'grayscale group-hover:grayscale-0'}`}>{m.emoji}</div>
                         <div className="space-y-4">
-                           <h4 className={`text-2xl font-black italic uppercase tracking-tighter leading-none ${isDecrypted ? 'text-white group-hover:text-indigo-400' : 'text-slate-400'}`}>{m.name}</h4>
+                           <h4 className={`text-2xl font-black italic uppercase tracking-tighter leading-none ${isDecrypted ? 'text-white group-hover:text-[var(--tint-indigo-fg)]' : 'text-slate-400'}`}>{m.name}</h4>
                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] leading-relaxed italic px-4">{m.description}</p>
                         </div>
                         
                         <div className="w-full pt-8 border-t border-white/5 relative">
                            {isDecrypted && unlocked ? (
                              <div className="flex flex-col items-center gap-2">
-                                <p className="text-[10px] font-black text-indigo-400 uppercase italic tracking-[0.3em] leading-none mb-1">DECRYPTED</p>
+                                <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase italic tracking-[0.3em] leading-none mb-1">DECRYPTED</p>
                                 <p className="text-[12px] font-black text-white italic tracking-tighter leading-none">{new Date(unlocked.unlockedAt).toLocaleDateString()}</p>
                              </div>
                            ) : (
@@ -291,7 +291,7 @@ function AscensionStatCard({ icon: Icon, label, value, sub, color, pulse }: { ic
           <Icon size={36} className={`${color} relative z-10 ${pulse ? 'animate-pulse' : ''}`} />
        </div>
        <h4 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] italic mb-4 leading-none opacity-60">{label}</h4>
-       <div className="text-6xl font-black text-white italic tabular-nums leading-none tracking-tighter mb-6 group-hover:text-indigo-400 transition-colors duration-700 drop-shadow-2xl">{typeof value === 'number' ? value.toLocaleString() : value}</div>
+       <div className="text-6xl font-black text-white italic tabular-nums leading-none tracking-tighter mb-6 group-hover:text-[var(--tint-indigo-fg)] transition-colors duration-700 drop-shadow-2xl">{typeof value === 'number' ? value.toLocaleString() : value}</div>
        <div className="px-6 py-2 rounded-full bg-white/5 border border-white/5">
          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">{sub}</p>
        </div>

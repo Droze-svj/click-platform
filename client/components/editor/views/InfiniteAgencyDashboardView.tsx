@@ -40,11 +40,11 @@ interface SLASummary {
 type DashboardView = 'pipeline' | 'strategic' | 'monetization' | 'distribution' | 'ab_test' | 'surge_ledger'
 
 const colorMap = {
-  emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400', bar: 'bg-emerald-500' },
-  violet:  { bg: 'bg-violet-500/10',  border: 'border-violet-500/20',  text: 'text-violet-400',  bar: 'bg-violet-500' },
+  emerald: { bg: 'bg-[var(--tint-emerald-bg)]', border: 'border-[var(--tint-emerald-edge)]', text: 'text-[var(--tint-emerald-fg)]', bar: 'bg-emerald-500' },
+  violet:  { bg: 'bg-[var(--tint-violet-bg)]',  border: 'border-[var(--tint-violet-edge)]',  text: 'text-[var(--tint-violet-fg)]',  bar: 'bg-violet-500' },
   blue:    { bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    text: 'text-blue-400',    bar: 'bg-blue-500' },
-  orange:  { bg: 'bg-orange-500/10',  border: 'border-orange-500/20',  text: 'text-orange-400',  bar: 'bg-orange-500' },
-  amber:   { bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   text: 'text-amber-400',   bar: 'bg-amber-500' }
+  orange:  { bg: 'bg-[var(--tint-orange-bg)]',  border: 'border-[var(--tint-orange-edge)]',  text: 'text-[var(--tint-orange-fg)]',  bar: 'bg-orange-500' },
+  amber:   { bg: 'bg-[var(--tint-amber-bg)]',   border: 'border-[var(--tint-amber-edge)]',   text: 'text-[var(--tint-amber-fg)]',   bar: 'bg-amber-500' }
 }
 
 const chartData = [
@@ -177,18 +177,18 @@ const InfiniteAgencyDashboardView: React.FC = () => {
       {/* Global Agency Header HUD */}
       <header className="flex justify-between items-end relative z-10">
         <div className="flex items-center gap-12">
-           <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.4)] relative group overflow-hidden">
+           <div className="w-24 h-24 bg-indigo-500/5 border-2 border-[var(--tint-indigo-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.4)] relative group overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/30 to-transparent opacity-100" />
-              <Network size={48} className="text-indigo-400 relative z-10 animate-spin-slow group-hover:scale-125 transition-transform duration-1000" />
+              <Network size={48} className="text-[var(--tint-indigo-fg)] relative z-10 animate-spin-slow group-hover:scale-125 transition-transform duration-1000" />
            </div>
            <div>
               <div className="flex items-center gap-6 mb-4">
                  <div className="flex items-center gap-3">
-                    <Activity size={16} className="text-indigo-400 animate-pulse" />
-                    <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Neural Command Terminal v14.2.0</span>
+                    <Activity size={16} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+                    <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-indigo-fg)] italic leading-none">Neural Command Terminal v14.2.0</span>
                  </div>
                  <div className="px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
-                    <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">STABLE</span>
+                    <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] tracking-widest uppercase italic leading-none">STABLE</span>
                  </div>
               </div>
               <h1 className="text-6xl font-black text-white tracking-tighter leading-none drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">Agency Console</h1>
@@ -199,8 +199,8 @@ const InfiniteAgencyDashboardView: React.FC = () => {
         <div className="flex items-center gap-12">
            <nav className="flex gap-6 p-4 rounded-[4rem] bg-white/[0.02] border border-white/10 shadow-[0_60px_200px_rgba(0,0,0,0.8)] backdrop-blur-3xl">
               {[
-                { id: 'strategic', label: 'INTENT', icon: Lightbulb, color: 'text-indigo-400' },
-                { id: 'monetization', label: 'ASSETS', icon: ShoppingCart, color: 'text-emerald-400' },
+                { id: 'strategic', label: 'INTENT', icon: Lightbulb, color: 'text-[var(--tint-indigo-fg)]' },
+                { id: 'monetization', label: 'ASSETS', icon: ShoppingCart, color: 'text-[var(--tint-emerald-fg)]' },
                 { id: 'distribution', label: 'PRESENCE', icon: Globe, color: 'text-blue-400' },
                 { id: 'ab_test', label: 'PATTERN', icon: Split, color: 'text-purple-400' }
               ].map(v => (
@@ -214,8 +214,8 @@ const InfiniteAgencyDashboardView: React.FC = () => {
            
            <div className="flex flex-col items-end gap-4 pl-12 border-l-2 border-white/10">
               <div className="flex items-center gap-4">
-                 <span className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.6em] italic">COHERENCE</span>
-                 <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 text-[10px] font-black text-emerald-400 italic shadow-2xl">OPTIMIZED_v18</div>
+                 <span className="text-[11px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.6em] italic">COHERENCE</span>
+                 <div className="px-4 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] text-[10px] font-black text-[var(--tint-emerald-fg)] italic shadow-2xl">OPTIMIZED_v18</div>
               </div>
               <div className="flex items-center gap-6">
                  <div className="w-56 h-3 bg-black/80 rounded-full overflow-hidden border-2 border-white/5 shadow-inner p-0.5">
@@ -242,9 +242,9 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                        <div className="flex items-center justify-between relative z-10 px-8">
                           <div>
                              <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Orchestration Matrix</h3>
-                             <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Autonomous operational relay for distributed cognitive labor units.</p>
+                             <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none border-l-4 border-[var(--tint-indigo-edge)] pl-8 ml-4">Autonomous operational relay for distributed cognitive labor units.</p>
                           </div>
-                          <div className="px-12 py-5 rounded-[3rem] bg-indigo-500/[0.02] border-2 border-indigo-500/20 text-indigo-400 text-[13px] font-black uppercase tracking-[0.4em] italic flex items-center gap-6 shadow-3xl animate-pulse">
+                          <div className="px-12 py-5 rounded-[3rem] bg-indigo-500/[0.02] border-2 border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[13px] font-black uppercase tracking-[0.4em] italic flex items-center gap-6 shadow-3xl animate-pulse">
                              <Terminal size={24} /> <span className="opacity-40">NODE_AUTH:</span> 0x882_ROOT_ALPHA
                           </div>
                        </div>
@@ -259,8 +259,8 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                className="relative flex flex-col items-center gap-10 cursor-pointer group/step z-10"
                              >
                                 <div className={`w-32 h-32 rounded-[3.5rem] flex items-center justify-center border-4 transition-all duration-1000 shadow-3xl relative ${
-                                  step.status === 'completed' ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' :
-                                  step.status === 'active' ? 'bg-indigo-500/10 border-indigo-500/60 text-indigo-400 shadow-[0_0_100px_rgba(99,102,241,0.4)]' :
+                                  step.status === 'completed' ? 'bg-emerald-500/5 border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]' :
+                                  step.status === 'active' ? 'bg-[var(--tint-indigo-bg)] border-indigo-500/60 text-[var(--tint-indigo-fg)] shadow-[0_0_100px_rgba(99,102,241,0.4)]' :
                                   'bg-white/5 border-white/10 text-slate-950'
                                 }`}>
                                    <step.icon size={56} className={`${step.status === 'active' ? 'animate-pulse' : ''} group-hover/step:rotate-12 transition-transform duration-1000`} />
@@ -269,7 +269,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                    )}
                                 </div>
                                 <div className="text-center space-y-4">
-                                   <p className={`text-[17px] font-black uppercase tracking-[0.4em] leading-none italic ${step.status === 'active' ? 'text-indigo-400' : 'text-slate-800'} transition-colors duration-1000`}>{step.label}</p>
+                                   <p className={`text-[17px] font-black uppercase tracking-[0.4em] leading-none italic ${step.status === 'active' ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-800'} transition-colors duration-1000`}>{step.label}</p>
                                    <div className="px-6 py-1.5 rounded-full bg-black/60 border-2 border-white/5 shadow-inner inline-block">
                                       <p className="text-[10px] font-black text-white/40 italic uppercase tracking-widest">{step.metric}</p>
                                    </div>
@@ -277,11 +277,11 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
                                 <AnimatePresence>
                                    {hoveredStep === step.id && (
-                                     <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.9 }} className="absolute -bottom-48 w-96 p-10 rounded-[4rem] bg-[#050505] border-2 border-indigo-500/30 shadow-[0_80px_200px_rgba(0,0,0,1)] z-[100] pointer-events-none">
+                                     <motion.div initial={{ opacity: 0, y: 30, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.9 }} className="absolute -bottom-48 w-96 p-10 rounded-[4rem] bg-[#050505] border-2 border-[var(--tint-indigo-edge)] shadow-[0_80px_200px_rgba(0,0,0,1)] z-[100] pointer-events-none">
                                         <div className="space-y-6">
                                            <div className="flex justify-between items-center border-b-2 border-white/5 pb-5 px-4">
                                               <p className="text-[14px] font-black text-white uppercase italic tracking-widest">{step.desc}</p>
-                                              <Zap size={20} className="text-indigo-400 animate-pulse" />
+                                              <Zap size={20} className="text-[var(--tint-indigo-fg)] animate-pulse" />
                                            </div>
                                            <div className="space-y-4 px-4">
                                               {['Neural Pattern Extraction', 'Sector Calibration', 'Validation Logic'].map(n => (
@@ -307,13 +307,13 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              </div>
                              <div className="space-y-3">
                                 <p className="text-[12px] font-black text-emerald-500/40 uppercase tracking-[0.8em] italic border-l-2 border-emerald-500/10 pl-6">roi_projection_v14</p>
-                                <p className="text-5xl font-black italic text-emerald-400 leading-none uppercase tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">8.42X</p>
+                                <p className="text-5xl font-black italic text-[var(--tint-emerald-fg)] leading-none uppercase tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">8.42X</p>
                              </div>
                           </div>
                           <button onClick={loadAll} className="flex flex-col items-end group">
                              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3 group-hover:text-white transition-colors">Top Performing Region</span>
                              <div className="flex items-center gap-6">
-                                <span className="text-3xl font-black text-white tracking-tighter group-hover:text-indigo-400 transition-colors leading-tight">Global · TikTok</span>
+                                <span className="text-3xl font-black text-white tracking-tighter group-hover:text-[var(--tint-indigo-fg)] transition-colors leading-tight">Global · TikTok</span>
                                 <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border-2 border-white/5 flex items-center justify-center text-slate-400 group-hover:text-white group-hover:border-indigo-500/50 transition-colors">
                                    <ArrowRight size={36} className="group-hover:translate-x-4 transition-transform duration-1000" />
                                 </div>
@@ -331,14 +331,14 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 <h4 className="text-[14px] font-black text-white uppercase tracking-[0.5em] leading-none mb-3 italic">Retention Stream</h4>
                                 <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic opacity-60">Sequence: Chronos_045</p>
                              </div>
-                             <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shadow-3xl"><Target size={28} className="text-indigo-400 animate-pulse" /></div>
+                             <div className="w-12 h-12 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-3xl"><Target size={28} className="text-[var(--tint-indigo-fg)] animate-pulse" /></div>
                           </div>
                           <div className="flex-1 flex items-end gap-3 relative z-10 px-4 pb-4">
                               {heatmapData.map((d, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
                                    <div className="w-full h-full relative flex flex-col justify-end">
                                       <motion.div initial={{ height: 0 }} animate={{ height: `${d.score}%` }} transition={{ duration: 2.5, delay: i * 0.1, ease: "circOut" }}
-                                        className={`w-full rounded-t-2xl transition-all duration-[2s] relative overflow-hidden ${d.level === 'high' ? 'bg-indigo-500/50 shadow-[0_0_40px_rgba(99,102,241,0.4)]' : d.level === 'medium' ? 'bg-indigo-500/20' : 'bg-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.3)]'}`}
+                                        className={`w-full rounded-t-2xl transition-all duration-[2s] relative overflow-hidden ${d.level === 'high' ? 'bg-indigo-500/50 shadow-[0_0_40px_rgba(99,102,241,0.4)]' : d.level === 'medium' ? 'bg-[var(--tint-indigo-bg)]' : 'bg-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.3)]'}`}
                                       >
                                          <div className="absolute inset-0 bg-white/10 animate-shimmer" />
                                       </motion.div>
@@ -354,9 +354,9 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           <div className="flex items-center justify-between mb-10 relative z-10 px-4 pt-2">
                              <div>
                                 <h4 className="text-[14px] font-black text-white uppercase tracking-[0.5em] leading-none mb-3 italic">Market Trajectory</h4>
-                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic opacity-60">Sector Alpha Surging</p>
+                                <p className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic opacity-60">Sector Alpha Surging</p>
                              </div>
-                             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-3xl"><TrendingUp size={28} className="text-emerald-400 animate-pulse" /></div>
+                             <div className="w-12 h-12 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-3xl"><TrendingUp size={28} className="text-[var(--tint-emerald-fg)] animate-pulse" /></div>
                           </div>
                           <div className="flex-1 relative z-10 px-4">
                              <ResponsiveContainer width="100%" height="100%">
@@ -372,8 +372,8 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              </ResponsiveContainer>
                              <div className="absolute top-4 right-8 flex flex-col items-end gap-3 text-right">
                                 <span className="text-6xl font-black italic text-white tracking-tighter drop-shadow-2xl">92.4 <span className="text-2xl text-emerald-500">ND</span></span>
-                                <div className="px-5 py-1.5 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 shadow-3xl">
-                                   <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest italic leading-none">GROWTH</span>
+                                <div className="px-5 py-1.5 rounded-full bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] shadow-3xl">
+                                   <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic leading-none">GROWTH</span>
                                 </div>
                              </div>
                           </div>
@@ -386,16 +386,16 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 <h4 className="text-[14px] font-black text-white uppercase tracking-[0.5em] leading-none mb-3 italic">Latent Ingestion</h4>
                                 <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic opacity-60">Sora-Core Scalar Sync</p>
                              </div>
-                             <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shadow-3xl"><Cpu size={28} className="text-indigo-400 animate-spin-slow" /></div>
+                             <div className="w-12 h-12 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex items-center justify-center shadow-3xl"><Cpu size={28} className="text-[var(--tint-indigo-fg)] animate-spin-slow" /></div>
                           </div>
                           <div className="flex-1 flex flex-col justify-center gap-10 relative z-10 px-4">
                              <div className="flex justify-between items-center group/seed border-b-2 border-white/5 pb-4">
                                 <span className="text-[11px] font-black text-slate-950 uppercase tracking-[0.4em] italic leading-none">Neural_Seed</span>
-                                <span className="text-[12px] font-mono font-black text-indigo-400 truncate w-40 text-right italic group-hover:text-white transition-colors">0x_882_ROOT_SOURCE</span>
+                                <span className="text-[12px] font-mono font-black text-[var(--tint-indigo-fg)] truncate w-40 text-right italic group-hover:text-white transition-colors">0x_882_ROOT_SOURCE</span>
                              </div>
                              <div className="grid grid-cols-4 gap-4">
                                 {Array.from({ length: 4 }).map((_, i) => (
-                                   <div key={i} className="bg-black/60 rounded-[1.5rem] p-5 border-2 border-white/5 flex flex-col items-center gap-3 shadow-inner hover:border-indigo-500/30 transition-all duration-700">
+                                   <div key={i} className="bg-black/60 rounded-[1.5rem] p-5 border-2 border-white/5 flex flex-col items-center gap-3 shadow-inner hover:border-[var(--tint-indigo-edge)] transition-all duration-700">
                                       <p className="text-[8px] font-black text-slate-950 uppercase italic group-hover:text-white transition-colors">DIM_{i}</p>
                                       <motion.p animate={{ opacity: [1, 0.3, 1], scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }} className="text-[14px] font-black text-white italic tabular-nums">{(Math.random()).toFixed(3)}</motion.p>
                                    </div>
@@ -408,7 +408,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 </div>
                                 <div className="flex items-baseline gap-2">
                                    <span className="text-[9px] font-black text-slate-900 uppercase italic">FIDELITY:</span>
-                                   <span className="text-[15px] font-black text-indigo-400 italic tabular-nums drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]">0.984</span>
+                                   <span className="text-[15px] font-black text-[var(--tint-indigo-fg)] italic tabular-nums drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]">0.984</span>
                                 </div>
                              </div>
                           </div>
@@ -431,7 +431,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
               <div className="flex items-center justify-between mb-16 relative z-10 px-6 pt-4">
                  <div>
                     <h3 className="text-[17px] font-black text-white tracking-tight mb-2 leading-tight">AI Agent Pool</h3>
-                    <p className="text-[11px] font-medium text-slate-400 leading-tight border-l-2 border-indigo-500/20 pl-4 ml-1">Autonomous workers handling content tasks</p>
+                    <p className="text-[11px] font-medium text-slate-400 leading-tight border-l-2 border-[var(--tint-indigo-edge)] pl-4 ml-1">Autonomous workers handling content tasks</p>
                  </div>
                  <div className="flex items-center gap-8">
                     <button onClick={() => setDebateMode(!debateMode)} className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] border-2 transition-all duration-1000 italic active:scale-90 ${debateMode ? 'bg-indigo-600 border-indigo-400 text-white animate-pulse shadow-[0_0_50px_rgba(99,102,241,0.6)]' : 'bg-white/5 border-white/10 text-slate-800 hover:text-white hover:bg-white/10 hover:border-white/20'}`}>
@@ -470,7 +470,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 <p className="text-[12px] font-black uppercase tracking-tight italic truncate max-w-[280px]">{agent.task}</p>
                              </div>
                              {debateMode && agent.critique && (
-                                <motion.div initial={{ opacity: 0, height: 0, y: 20 }} animate={{ opacity: 1, height: 'auto', y: 0 }} className="p-8 rounded-[2.5rem] bg-indigo-500/5 border-2 border-indigo-500/10 shadow-inner group-hover/node:bg-indigo-500/10 transition-all duration-1000">
+                                <motion.div initial={{ opacity: 0, height: 0, y: 20 }} animate={{ opacity: 1, height: 'auto', y: 0 }} className="p-8 rounded-[2.5rem] bg-indigo-500/5 border-2 border-indigo-500/10 shadow-inner group-hover/node:bg-[var(--tint-indigo-bg)] transition-all duration-1000">
                                    <div className="flex gap-4">
                                       <div className="text-amber-500 mt-1 flex-shrink-0"><Sparkle size={16} className="animate-pulse" /></div>
                                       <p className="text-[13px] font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter group-hover:text-white/80 transition-colors">"{agent.critique}"</p>
@@ -485,12 +485,12 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
               <div className="mt-12 relative z-10 space-y-12">
                  {/* Auto-Publish Bridge HUD */}
-                 <div className={`p-12 rounded-[5rem] border-4 transition-all duration-1000 relative overflow-hidden group shadow-[0_80px_200px_rgba(0,0,0,1)] ${autoSurgeActive ? 'bg-indigo-500/10 border-indigo-500/30 shadow-[0_40px_100px_rgba(99,102,241,0.2)]' : 'bg-black/60 border-white/5'}`}>
+                 <div className={`p-12 rounded-[5rem] border-4 transition-all duration-1000 relative overflow-hidden group shadow-[0_80px_200px_rgba(0,0,0,1)] ${autoSurgeActive ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] shadow-[0_40px_100px_rgba(99,102,241,0.2)]' : 'bg-black/60 border-white/5'}`}>
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                     
                     <div className="flex justify-between items-center mb-8 relative z-10 px-4">
                        <div className="flex items-center gap-10">
-                          <div className={`w-20 h-20 rounded-[2.5rem] flex items-center justify-center shadow-3xl transition-all duration-1000 ${autoSurgeActive ? 'bg-indigo-500/20 text-indigo-400 border-2 border-indigo-500/40' : 'bg-white/5 text-slate-950 border-2 border-white/5'}`}>
+                          <div className={`w-20 h-20 rounded-[2.5rem] flex items-center justify-center shadow-3xl transition-all duration-1000 ${autoSurgeActive ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border-2 border-[var(--tint-indigo-edge)]' : 'bg-white/5 text-slate-950 border-2 border-white/5'}`}>
                              <Zap size={40} className={autoSurgeActive ? 'animate-pulse' : ''} />
                           </div>
                           <div>
@@ -508,7 +508,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     
                     <div className="grid grid-cols-2 gap-8 relative z-10 px-2">
                        <button onClick={() => setActiveView('surge_ledger')} className="py-6 rounded-[2.5rem] bg-black/80 border-2 border-white/5 text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic hover:bg-white hover:text-black hover:scale-105 active:scale-90 transition-all duration-700 shadow-2xl">View ledger</button>
-                       <div className="px-8 py-6 rounded-[2.5rem] bg-black/40 border-2 border-white/5 flex flex-col justify-center shadow-inner group-hover:border-indigo-500/20 transition-all duration-1000">
+                       <div className="px-8 py-6 rounded-[2.5rem] bg-black/40 border-2 border-white/5 flex flex-col justify-center shadow-inner group-hover:border-[var(--tint-indigo-edge)] transition-all duration-1000">
                           <span className="text-[10px] font-black text-slate-950 uppercase italic leading-none mb-2 tracking-[0.2em] opacity-40">THRESHOLD</span>
                           <span className="text-[17px] font-black text-white leading-none italic uppercase tracking-widest drop-shadow-2xl">{">"} 90% PROB</span>
                        </div>
@@ -516,17 +516,17 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                  </div>
 
                  {/* Revenue HUD */}
-                 <div className="p-12 rounded-[5rem] bg-emerald-500/5 border-4 border-emerald-500/10 flex flex-col gap-8 shadow-[0_80px_200px_rgba(0,0,0,1)] group hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all duration-1000 relative overflow-hidden">
+                 <div className="p-12 rounded-[5rem] bg-emerald-500/5 border-4 border-emerald-500/10 flex flex-col gap-8 shadow-[0_80px_200px_rgba(0,0,0,1)] group hover:bg-[var(--tint-emerald-bg)] hover:border-[var(--tint-emerald-edge)] transition-all duration-1000 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                     <div className="flex justify-between items-center relative z-10 px-4">
                        <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-transform duration-1000"><ShoppingCart size={32} className="text-emerald-500" /></div>
+                          <div className="w-14 h-14 rounded-2xl bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-transform duration-1000"><ShoppingCart size={32} className="text-emerald-500" /></div>
                           <p className="text-[15px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none group-hover:text-white transition-colors">Settled Revenue</p>
                        </div>
-                       <div className="px-6 py-2 rounded-full bg-emerald-500/10 border-2 border-emerald-500/20 text-[11px] font-black text-emerald-400 italic shadow-3xl animate-pulse">VERIFIED</div>
+                       <div className="px-6 py-2 rounded-full bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] text-[11px] font-black text-[var(--tint-emerald-fg)] italic shadow-3xl animate-pulse">VERIFIED</div>
                     </div>
                     <div className="flex items-baseline gap-6 px-4 pb-2 relative z-10">
-                       <span className="text-7xl font-black text-white italic tabular-nums leading-none tracking-tighter drop-shadow-[0_10px_40px_rgba(0,0,0,0.5)] group-hover:text-emerald-400 transition-colors duration-1000">${(financials.totalSettledUSD || 4284).toLocaleString()}</span>
+                       <span className="text-7xl font-black text-white italic tabular-nums leading-none tracking-tighter drop-shadow-[0_10px_40px_rgba(0,0,0,0.5)] group-hover:text-[var(--tint-emerald-fg)] transition-colors duration-1000">${(financials.totalSettledUSD || 4284).toLocaleString()}</span>
                        <span className="text-[13px] font-black text-emerald-500/40 uppercase italic tracking-[0.6em] mb-1">Settled</span>
                     </div>
                  </div>
@@ -543,14 +543,14 @@ const InfiniteAgencyDashboardView: React.FC = () => {
            </div>
 
            {/* Cryptographic Decision Ledger */}
-           <section className={`${glassStyle} h-96 rounded-[6rem] p-16 flex flex-col group overflow-hidden relative border-emerald-500/20 bg-black/40 shadow-[0_100px_300px_rgba(0,0,0,1)]`}>
+           <section className={`${glassStyle} h-96 rounded-[6rem] p-16 flex flex-col group overflow-hidden relative border-[var(--tint-emerald-edge)] bg-black/40 shadow-[0_100px_300px_rgba(0,0,0,1)]`}>
               <div className="absolute bottom-0 right-0 w-80 h-80 bg-emerald-500/[0.04] blur-[100px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-emerald-500/[0.08] transition-all duration-[3s]" />
               <div className="flex items-center justify-between relative z-10 mb-12 px-8 pt-4">
                  <div className="flex items-center gap-10">
-                    <div className="w-20 h-20 rounded-[3rem] bg-emerald-500/5 border-2 border-emerald-500/20 flex items-center justify-center shadow-3xl group-hover:rotate-[30deg] transition-transform duration-1000"><Shield size={40} className="text-emerald-500 animate-pulse" /></div>
+                    <div className="w-20 h-20 rounded-[3rem] bg-emerald-500/5 border-2 border-[var(--tint-emerald-edge)] flex items-center justify-center shadow-3xl group-hover:rotate-[30deg] transition-transform duration-1000"><Shield size={40} className="text-emerald-500 animate-pulse" /></div>
                     <div>
                        <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-2 leading-none italic drop-shadow-2xl">Decision Ledger</h3>
-                       <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none border-l-4 border-emerald-500/20 pl-8 ml-4">Cryptographic Decision Entropy Logs</p>
+                       <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none border-l-4 border-[var(--tint-emerald-edge)] pl-8 ml-4">Cryptographic Decision Entropy Logs</p>
                     </div>
                  </div>
                  <button onClick={() => setGovernanceOpen(true)} className="px-12 py-5 bg-emerald-600 text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic hover:bg-white hover:scale-110 active:scale-75 transition-all duration-700 shadow-[0_40px_100px_rgba(16,185,129,0.3)]">Review</button>
@@ -558,8 +558,8 @@ const InfiniteAgencyDashboardView: React.FC = () => {
 
               <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-8 relative z-10 px-8">
                  {thoughts.slice(0, 15).map((t, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1 - (i * 0.08), x: 0 }} transition={{ duration: 1, delay: i * 0.05 }} className="flex items-start gap-10 p-6 rounded-[2.5rem] bg-white/[0.01] border-2 border-white/[0.03] group/log hover:bg-white/5 hover:border-emerald-500/20 transition-all duration-700">
-                       <span className="text-[12px] font-mono font-black text-emerald-500/60 mt-1 tabular-nums italic group-hover:text-emerald-400 transition-colors">BLOCK_0x_{1240 - i}</span>
+                    <motion.div key={i} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1 - (i * 0.08), x: 0 }} transition={{ duration: 1, delay: i * 0.05 }} className="flex items-start gap-10 p-6 rounded-[2.5rem] bg-white/[0.01] border-2 border-white/[0.03] group/log hover:bg-white/5 hover:border-[var(--tint-emerald-edge)] transition-all duration-700">
+                       <span className="text-[12px] font-mono font-black text-emerald-500/60 mt-1 tabular-nums italic group-hover:text-[var(--tint-emerald-fg)] transition-colors">BLOCK_0x_{1240 - i}</span>
                        <p className="text-[14px] font-black text-slate-600 italic uppercase tracking-tighter leading-relaxed group-hover:text-white transition-colors duration-700">{t}</p>
                     </motion.div>
                  ))}
@@ -571,7 +571,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     <span className="opacity-40">TX_TOTAL_CONSENSUS: {ledgerState.transactions}</span>
                  </div>
                  <div className="text-right flex flex-col items-end gap-6">
-                    <div className="px-8 py-3 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-black border-2 border-emerald-500/20 shadow-[0_0_50px_rgba(16,185,129,0.2)]">VERIFIED</div>
+                    <div className="px-8 py-3 rounded-full bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] text-[11px] font-black border-2 border-[var(--tint-emerald-edge)] shadow-[0_0_50px_rgba(16,185,129,0.2)]">VERIFIED</div>
                     <div className="flex items-center gap-4 text-[10px] font-mono opacity-20 uppercase">
                        <Scan size={14} />
                        <span className="truncate w-48 text-right">HASH_ROOT: {ledgerState.lastHash}_SOVEREIGN</span>

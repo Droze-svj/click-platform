@@ -41,7 +41,7 @@ export function FAQ() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">
-            QUESTIONS <span className="text-indigo-400">ANSWERED</span>
+            QUESTIONS <span className="text-[var(--tint-indigo-fg)]">ANSWERED</span>
           </h2>
           <p className="text-slate-400 text-base font-medium">Common objections, answered honestly.</p>
         </div>
@@ -51,13 +51,13 @@ export function FAQ() {
             <details
               key={f.q}
               {...(i === 0 ? { open: true } : {})}
-              className={`${glass} rounded-2xl overflow-hidden transition-colors group [&[open]]:border-indigo-500/30`}
+              className={`${glass} rounded-2xl overflow-hidden transition-colors group [&[open]]:border-[var(--tint-indigo-edge)]`}
             >
               <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-6 py-5 hover:bg-white/[0.03] transition-colors select-none">
                 <span className="font-bold text-base md:text-lg">{f.q}</span>
                 <span
                   aria-hidden="true"
-                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 text-slate-400 group-[&[open]]:bg-indigo-500/20 group-[&[open]]:text-indigo-300 transition-colors"
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white/5 text-slate-400 group-[&[open]]:bg-[var(--tint-indigo-bg)] group-[&[open]]:text-indigo-300 transition-colors"
                 >
                   <Plus className="w-4 h-4 motion-safe:transition-transform group-[&[open]]:rotate-45" />
                 </span>

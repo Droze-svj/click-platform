@@ -88,9 +88,9 @@ const DirectorLog: React.FC<DirectorLogProps> = ({ persona, metrics, currentTime
               exit={{ opacity: 0, x: 10 }}
               className={`p-4 rounded-xl border text-[10px] font-bold leading-relaxed flex gap-3 ${
                 log.type === 'alert'
-                  ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                  ? 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)]'
                   : log.type === 'praise'
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
                   : 'bg-white/5 border-white/10 text-slate-300'
               }`}
             >

@@ -93,12 +93,12 @@ export const SyndicateConsensusView: React.FC = () => {
                 <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 flex flex-col`}>
                     <div className="flex items-center justify-between">
                         <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Draft Proposal</h5>
-                        <Gavel className="w-5 h-5 text-violet-400" />
+                        <Gavel className="w-5 h-5 text-[var(--tint-violet-fg)]" />
                     </div>
 
                     <div className="space-y-6 flex-1">
                         <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
-                            <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest leading-none block">Objective</span>
+                            <span className="text-[10px] font-black text-[var(--tint-violet-fg)] uppercase tracking-widest leading-none block">Objective</span>
                             <h6 className="text-sm font-black text-white italic uppercase leading-tight tracking-tight">{proposal.title}</h6>
                             <p className="text-[11px] text-slate-400 font-bold leading-relaxed italic">{proposal.description}</p>
                         </div>
@@ -114,15 +114,15 @@ export const SyndicateConsensusView: React.FC = () => {
                             <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
                                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">Budget Delta</span>
                                 <div className="flex items-center gap-2">
-                                    <TrendingUp className="w-3 h-3 text-emerald-400" />
+                                    <TrendingUp className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
                                     <span className="text-[10px] font-black text-white uppercase italic">${proposal.budgetDelta}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-6 bg-violet-600/10 border border-violet-500/20 rounded-3xl space-y-2">
-                        <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest">Syndicate Tip</span>
+                    <div className="p-6 bg-violet-600/10 border border-[var(--tint-violet-edge)] rounded-3xl space-y-2">
+                        <span className="text-[9px] font-black text-[var(--tint-violet-fg)] uppercase tracking-widest">Syndicate Tip</span>
                         <p className="text-[10px] text-white font-bold italic leading-tight">
                             Consensus requires a 3/4 supermajority from the specialize personas.
                         </p>
@@ -150,7 +150,7 @@ export const SyndicateConsensusView: React.FC = () => {
                                         <div className="flex items-center gap-4">
                                             <div className="p-2.5 rounded-xl bg-white/5 text-slate-400">
                                                 {typeof vote === 'object' ? (
-                                                    vote.vote === 'APPROVE' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-rose-400" />
+                                                    vote.vote === 'APPROVE' ? <CheckCircle2 className="w-4 h-4 text-[var(--tint-emerald-fg)]" /> : <XCircle className="w-4 h-4 text-[var(--tint-rose-fg)]" />
                                                 ) : <MessageSquare className="w-4 h-4 animate-pulse" />}
                                             </div>
                                             <h6 className="text-[11px] font-black text-white uppercase tracking-widest italic leading-none">
@@ -158,7 +158,7 @@ export const SyndicateConsensusView: React.FC = () => {
                                             </h6>
                                         </div>
                                         {typeof vote === 'object' && (
-                                            <span className={`text-[9px] font-black uppercase italic ${vote.vote === 'APPROVE' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            <span className={`text-[9px] font-black uppercase italic ${vote.vote === 'APPROVE' ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'}`}>
                                                 {vote.vote}
                                             </span>
                                         )}
@@ -202,7 +202,7 @@ export const SyndicateConsensusView: React.FC = () => {
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 className={`p-8 rounded-[2rem] border relative overflow-hidden ${
-                                    result.consensus ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'
+                                    result.consensus ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]' : 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]'
                                 }`}
                             >
                                 <div className="flex items-center justify-between relative z-10">
@@ -222,12 +222,12 @@ export const SyndicateConsensusView: React.FC = () => {
 
                                     <div className="flex items-center gap-4">
                                         {result.isBudgetImpacting ? (
-                                            <div className="px-5 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center gap-3">
+                                            <div className="px-5 py-3 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] flex items-center gap-3">
                                                 <Lock className="w-4 h-4" />
                                                 <span className="text-[10px] font-black uppercase tracking-widest italic">User Override Required</span>
                                             </div>
                                         ) : (
-                                            <div className="px-5 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-3">
+                                            <div className="px-5 py-3 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] flex items-center gap-3">
                                                 <Zap className="w-4 h-4" />
                                                 <span className="text-[10px] font-black uppercase tracking-widest italic">Autonomous Locking</span>
                                             </div>

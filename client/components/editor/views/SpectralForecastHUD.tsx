@@ -66,8 +66,8 @@ export const SpectralForecastHUD: React.FC = () => {
 
     const getStatusColor = (state: string) => {
         switch (state) {
-            case 'CRITICAL': return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-            case 'GROWTH': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+            case 'CRITICAL': return 'text-[var(--tint-rose-fg)] bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]'
+            case 'GROWTH': return 'text-[var(--tint-emerald-fg)] bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]'
             default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20'
         }
     }
@@ -108,13 +108,13 @@ export const SpectralForecastHUD: React.FC = () => {
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Total Projected (7d)</span>
-                         <DollarSign className="w-4 h-4 text-emerald-400" />
+                         <DollarSign className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
                     </div>
                     <div className="flex items-end gap-3">
                         <h3 className="text-4xl font-black text-white italic tracking-tighter leading-none uppercase">
                             ${data?.totals.revenue.toLocaleString() ?? '0'}
                         </h3>
-                        <span className="text-[10px] font-black text-emerald-400 uppercase italic pb-1">Forecast</span>
+                        <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase italic pb-1">Forecast</span>
                     </div>
                 </div>
 
@@ -134,11 +134,11 @@ export const SpectralForecastHUD: React.FC = () => {
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Sentiment Drift</span>
-                         <Activity className="w-4 h-4 text-amber-400" />
+                         <Activity className="w-4 h-4 text-[var(--tint-amber-fg)]" />
                     </div>
                     <div className="flex items-end gap-3">
                         <h3 className={`text-4xl font-black italic tracking-tighter leading-none uppercase ${
-                            (data?.spectralAnalysis.sentimentDrift ?? 0) < 0 ? 'text-rose-400' : 'text-emerald-400'
+                            (data?.spectralAnalysis.sentimentDrift ?? 0) < 0 ? 'text-[var(--tint-rose-fg)]' : 'text-[var(--tint-emerald-fg)]'
                         }`}>
                             {(data?.spectralAnalysis.sentimentDrift ?? 0) * 100}%
                         </h3>
@@ -149,13 +149,13 @@ export const SpectralForecastHUD: React.FC = () => {
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
                          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Market Alignment</span>
-                         <Sparkles className="w-4 h-4 text-violet-400" />
+                         <Sparkles className="w-4 h-4 text-[var(--tint-violet-fg)]" />
                     </div>
                     <div className="flex items-end gap-3">
                         <h3 className="text-4xl font-black text-white italic tracking-tighter leading-none uppercase">
                             {data?.spectralAnalysis.marketAlignment ?? 'N/A'}
                         </h3>
-                        <span className="text-[10px] font-black text-violet-400 uppercase italic pb-1">Trend</span>
+                        <span className="text-[10px] font-black text-[var(--tint-violet-fg)] uppercase italic pb-1">Trend</span>
                     </div>
                 </div>
             </div>
@@ -191,7 +191,7 @@ export const SpectralForecastHUD: React.FC = () => {
                                         animate={{ height: `${(day.revenue / (data.totals.revenue / 4)) * 100}%` }}
                                         transition={{ delay: i * 0.1, type: 'spring' }}
                                         className={`w-full rounded-t-2xl relative transition-all group-hover/bar:brightness-110 ${
-                                            day.spectralIndicators.isElastic ? 'bg-amber-500/40 border border-amber-500/30' : 'bg-blue-600'
+                                            day.spectralIndicators.isElastic ? 'bg-amber-500/40 border border-[var(--tint-amber-edge)]' : 'bg-blue-600'
                                         }`}
                                     >
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pb-2 opacity-0 group-hover/bar:opacity-100 transition-opacity">
@@ -225,7 +225,7 @@ export const SpectralForecastHUD: React.FC = () => {
                          <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
                              <div className="flex items-center justify-between">
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sentiment</span>
-                                <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Optimized</span>
+                                <span className="text-[9px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest">Optimized</span>
                              </div>
                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                                 <motion.div 
@@ -253,7 +253,7 @@ export const SpectralForecastHUD: React.FC = () => {
                          <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
                              <div className="flex items-center justify-between">
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Decay Risk</span>
-                                <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Low</span>
+                                <span className="text-[9px] font-black text-[var(--tint-rose-fg)] uppercase tracking-widest">Low</span>
                              </div>
                              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                                 <motion.div 

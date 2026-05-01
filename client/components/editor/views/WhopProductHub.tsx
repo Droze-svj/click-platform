@@ -28,7 +28,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
     >
       <div className="flex items-center justify-between px-2">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-emerald-400 flex items-center gap-4">
+          <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-[var(--tint-emerald-fg)] flex items-center gap-4">
             <ShoppingCart className="w-6 h-6" />
             Whop Monetization Bridge
           </h2>
@@ -48,13 +48,13 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
         {/* Left: Financial HUD */}
         <div className="col-span-4 flex flex-col gap-6">
            <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col justify-between h-56 group overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--tint-emerald-bg)] blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="relative z-10 flex justify-between items-start">
                  <div className="flex flex-col">
                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Total Ad-Assisted Revenue</span>
                     <span className="text-4xl font-black italic mt-2 text-white">$42,892.12</span>
                  </div>
-                 <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                 <div className="p-2 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]">
                     <TrendingUp className="w-4 h-4" />
                  </div>
               </div>
@@ -70,14 +70,14 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                     </div>
                  </div>
                  <div className="text-right">
-                    <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">+12% vs last 7d</span>
+                    <span className="text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest">+12% vs last 7d</span>
                  </div>
               </div>
            </div>
 
            <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex-1 flex flex-col gap-6">
               <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                 <Package className="w-4 h-4 text-violet-400" />
+                 <Package className="w-4 h-4 text-[var(--tint-violet-fg)]" />
                  Bridge Health Node
               </h3>
 
@@ -97,10 +97,10 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                  ))}
               </div>
 
-              <div className="p-4 rounded-2xl bg-orange-500/5 border border-orange-500/20 flex gap-4">
-                 <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
+              <div className="p-4 rounded-2xl bg-orange-500/5 border border-[var(--tint-orange-edge)] flex gap-4">
+                 <AlertCircle className="w-5 h-5 text-[var(--tint-orange-fg)] flex-shrink-0" />
                  <div>
-                    <p className="text-[9px] font-black text-orange-400 uppercase">Optimization Alert</p>
+                    <p className="text-[9px] font-black text-[var(--tint-orange-fg)] uppercase">Optimization Alert</p>
                     <p className="text-[8px] text-slate-400 uppercase italic mt-1 leading-relaxed">Consider increasing checkout duration on high-velocity clips to increase conversion by ~14%.</p>
                  </div>
               </div>
@@ -111,8 +111,8 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
         <div className="col-span-8 bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col overflow-hidden">
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Storefront SKUs</h3>
-              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                 <span className="text-[8px] font-black text-emerald-400 uppercase">Whop Verified</span>
+              <div className="flex items-center gap-2 px-3 py-1 bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] rounded-full">
+                 <span className="text-[8px] font-black text-[var(--tint-emerald-fg)] uppercase">Whop Verified</span>
               </div>
            </div>
 
@@ -125,7 +125,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-white/10 group-hover:bg-emerald-500 transition-colors">
-                       <DollarSign className="w-6 h-6 text-emerald-400 group-hover:text-white transition-colors" />
+                       <DollarSign className="w-6 h-6 text-[var(--tint-emerald-fg)] group-hover:text-white transition-colors" />
                     </div>
                     <div className="flex gap-2">
                        <button
@@ -139,7 +139,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                   </div>
 
                   <h4 className="text-[14px] font-black text-white uppercase tracking-wider mb-1 truncate">{product.name}</h4>
-                  <p className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mb-6">
+                  <p className="text-[10px] font-mono text-[var(--tint-emerald-fg)] flex items-center gap-1 mb-6">
                     {product.currency.toUpperCase()} ${product.price}
                     <span className="text-[8px] text-slate-600 uppercase ml-2">Per Checkout</span>
                   </p>

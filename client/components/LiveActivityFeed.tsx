@@ -8,9 +8,9 @@ import {
 } from 'lucide-react'
 
 const SIGNAL_TYPES = [
-  { label: 'Neural Transcription', icon: Cpu, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  { label: 'Hook Optimization', icon: Flame, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-  { label: 'Trend Migration', icon: Globe, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  { label: 'Neural Transcription', icon: Cpu, color: 'text-[var(--tint-indigo-fg)]', bg: 'bg-[var(--tint-indigo-bg)]' },
+  { label: 'Hook Optimization', icon: Flame, color: 'text-[var(--tint-orange-fg)]', bg: 'bg-[var(--tint-orange-bg)]' },
+  { label: 'Trend Migration', icon: Globe, color: 'text-[var(--tint-emerald-fg)]', bg: 'bg-[var(--tint-emerald-bg)]' },
   { label: 'Cluster Sync', icon: Database, color: 'text-blue-400', bg: 'bg-blue-500/10' },
   { label: 'Agent Strategy', icon: Binary, color: 'text-purple-400', bg: 'bg-purple-500/10' },
   { label: 'Sentiment Logic', icon: MessageSquare, color: 'text-pink-400', bg: 'bg-pink-500/10' },
@@ -57,12 +57,12 @@ export default function LiveActivityFeed() {
     <div className="space-y-4">
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 text-indigo-400" />
+          <Terminal className="w-3.5 h-3.5 text-[var(--tint-indigo-fg)]" />
           <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 italic">Neural Signal Feed</h3>
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
           <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[7.5px] font-black text-emerald-400 uppercase tracking-widest">Live Encryption</span>
+          <span className="text-[7.5px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest">Live Encryption</span>
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export default function LiveActivityFeed() {
       </div>
 
       <div className="flex items-center justify-center pt-2">
-        <button className="text-[9px] font-black text-slate-600 hover:text-indigo-400 uppercase tracking-widest flex items-center gap-2 transition-colors">
+        <button className="text-[9px] font-black text-slate-600 hover:text-[var(--tint-indigo-fg)] uppercase tracking-widest flex items-center gap-2 transition-colors">
           <Activity size={10} /> Calibrate Neural Core
         </button>
       </div>

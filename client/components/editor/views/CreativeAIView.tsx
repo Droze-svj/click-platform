@@ -268,7 +268,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
             <Icon className="w-8 h-8" />
           </div>
           {isActive && (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)] text-[9px] font-bold">
               <CheckCircle2 className="w-3 h-3" /> ACTIVE
             </div>
           )}
@@ -312,7 +312,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
       {/* Header */}
       <div className="space-y-6">
-        <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] shadow-lg">
+        <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[10px] font-black uppercase tracking-[0.4em] shadow-lg">
           <Sparkles className="w-4 h-4" />
           GENERATIVE AI ENGINE
         </div>
@@ -331,7 +331,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleAutoReframe}
           isActive={isReframed}
           isProcessing={processing === 'reframe'}
-          colorClass="text-indigo-400"
+          colorClass="text-[var(--tint-indigo-fg)]"
         />
 
         <ToolCard
@@ -353,7 +353,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleDepthLayering}
           isActive={depthLayeringActive}
           isProcessing={processing === 'depthLayer' || isDepthProcessing}
-          colorClass="text-cyan-400"
+          colorClass="text-[var(--tint-cyan-fg)]"
         />
 
         <ToolCard
@@ -364,7 +364,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleEyeContact}
           isActive={eyeContactFixed}
           isProcessing={processing === 'eyecontact'}
-          colorClass="text-emerald-400"
+          colorClass="text-[var(--tint-emerald-fg)]"
         />
 
         <ToolCard
@@ -375,7 +375,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleBackgroundSwap}
           isActive={false}
           isProcessing={processing === 'bgswap'}
-          colorClass="text-amber-400"
+          colorClass="text-[var(--tint-amber-fg)]"
         />
 
         <ToolCard
@@ -386,7 +386,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleSpeedRamp}
           isActive={speedRamped}
           isProcessing={processing === 'speedramp'}
-          colorClass="text-cyan-400"
+          colorClass="text-[var(--tint-cyan-fg)]"
         />
 
         <ToolCard
@@ -408,7 +408,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleLocalization}
           isActive={localized}
           isProcessing={processing === 'localization'}
-          colorClass="text-emerald-400"
+          colorClass="text-[var(--tint-emerald-fg)]"
         />
 
         <ToolCard
@@ -419,7 +419,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           action={handleOutpainting}
           isActive={outpainted}
           isProcessing={processing === 'outpainting'}
-          colorClass="text-sky-400"
+          colorClass="text-[var(--tint-sky-fg)]"
         />
       </div>
 

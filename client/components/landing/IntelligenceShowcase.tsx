@@ -18,11 +18,11 @@ export function IntelligenceShowcase() {
 
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300 text-[10px] font-bold uppercase tracking-widest mb-6">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] text-fuchsia-300 text-[10px] font-bold uppercase tracking-widest mb-6">
             INTELLIGENCE LAYER
           </span>
           <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">
-            EVERY OUTPUT, <span className="text-fuchsia-400">SHAPED.</span>
+            EVERY OUTPUT, <span className="text-[var(--tint-fuchsia-fg)]">SHAPED.</span>
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto text-lg md:text-xl font-medium">
             Four AI systems quietly shape every clip you ship. None of them are toys you click — they’re the editor’s default.
@@ -35,12 +35,12 @@ export function IntelligenceShowcase() {
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            className={`${glass} rounded-3xl p-8 md:row-span-2 md:col-span-2 group hover:border-fuchsia-500/30 transition-colors relative overflow-hidden`}
+            className={`${glass} rounded-3xl p-8 md:row-span-2 md:col-span-2 group hover:border-[var(--tint-fuchsia-edge)] transition-colors relative overflow-hidden`}
           >
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-fuchsia-500/20 blur-3xl rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-[var(--tint-fuchsia-bg)] blur-3xl rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
               <div className="flex items-center justify-between mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-fuchsia-500/15 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-300">
+                <div className="w-14 h-14 rounded-2xl bg-[var(--tint-fuchsia-bg)] border border-[var(--tint-fuchsia-edge)] flex items-center justify-center text-fuchsia-300">
                   <Brain className="w-7 h-7" aria-hidden="true" />
                 </div>
                 <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-white group-hover:rotate-12 transition-all" aria-hidden="true" />
@@ -91,12 +91,12 @@ export function IntelligenceShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ delay: 0.2 }}
-            className={`${glass} rounded-3xl p-7 group hover:border-emerald-500/30 transition-colors relative overflow-hidden`}
+            className={`${glass} rounded-3xl p-7 group hover:border-[var(--tint-emerald-edge)] transition-colors relative overflow-hidden`}
           >
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/15 blur-3xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-[var(--tint-emerald-bg)] blur-3xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300">
+                <div className="w-12 h-12 rounded-xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)] flex items-center justify-center text-emerald-300">
                   <RefreshCw className="w-6 h-6" aria-hidden="true" />
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">Always-on</span>
@@ -114,12 +114,12 @@ export function IntelligenceShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ delay: 0.3 }}
-            className={`${glass} rounded-3xl p-7 md:col-span-3 group hover:border-amber-500/30 transition-colors relative overflow-hidden`}
+            className={`${glass} rounded-3xl p-7 md:col-span-3 group hover:border-[var(--tint-amber-edge)] transition-colors relative overflow-hidden`}
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-fuchsia-500/10 blur-3xl opacity-30 group-hover:opacity-60 transition-opacity" aria-hidden="true" />
             <div className="relative flex flex-col md:flex-row md:items-center gap-6">
               <div className="flex items-center gap-4 md:flex-1">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300 flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-[var(--tint-amber-bg)] border border-[var(--tint-amber-edge)] flex items-center justify-center text-amber-300 flex-shrink-0">
                   <Clock className="w-6 h-6" aria-hidden="true" />
                 </div>
                 <div>

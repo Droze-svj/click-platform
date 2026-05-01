@@ -183,12 +183,12 @@ const ALL_DATA: Record<StockCategory, StockItem[]> = {
 }
 
 const CATEGORY_META: Record<StockCategory, { label: string; icon: any; color: string; accent: string; total: number }> = {
-  broll:      { label: 'B-Roll',      icon: Film,      color: 'from-rose-500 to-orange-500',     accent: 'text-rose-400',     total: BROLL.length },
-  music:      { label: 'Music',       icon: Music,     color: 'from-fuchsia-500 to-purple-600',  accent: 'text-fuchsia-400',  total: MUSIC.length },
-  sfx:        { label: 'Sound FX',    icon: Volume2,   color: 'from-amber-500 to-orange-600',    accent: 'text-amber-400',    total: SFX.length },
-  gif:        { label: 'GIFs',        icon: ImageIcon, color: 'from-cyan-500 to-blue-600',       accent: 'text-cyan-400',     total: GIFS.length },
-  sticker:    { label: 'Stickers',    icon: Sticker,   color: 'from-emerald-500 to-teal-600',    accent: 'text-emerald-400',  total: STICKERS.length },
-  transition: { label: 'Transitions', icon: Wand2,     color: 'from-violet-500 to-indigo-600',   accent: 'text-violet-400',   total: TRANSITIONS.length },
+  broll:      { label: 'B-Roll',      icon: Film,      color: 'from-rose-500 to-orange-500',     accent: 'text-[var(--tint-rose-fg)]',     total: BROLL.length },
+  music:      { label: 'Music',       icon: Music,     color: 'from-fuchsia-500 to-purple-600',  accent: 'text-[var(--tint-fuchsia-fg)]',  total: MUSIC.length },
+  sfx:        { label: 'Sound FX',    icon: Volume2,   color: 'from-amber-500 to-orange-600',    accent: 'text-[var(--tint-amber-fg)]',    total: SFX.length },
+  gif:        { label: 'GIFs',        icon: ImageIcon, color: 'from-cyan-500 to-blue-600',       accent: 'text-[var(--tint-cyan-fg)]',     total: GIFS.length },
+  sticker:    { label: 'Stickers',    icon: Sticker,   color: 'from-emerald-500 to-teal-600',    accent: 'text-[var(--tint-emerald-fg)]',  total: STICKERS.length },
+  transition: { label: 'Transitions', icon: Wand2,     color: 'from-violet-500 to-indigo-600',   accent: 'text-[var(--tint-violet-fg)]',   total: TRANSITIONS.length },
 }
 
 const MOOD_ICONS: Record<string, any> = {
@@ -308,7 +308,7 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Click · Stock Library</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--tint-fuchsia-fg)]">Click · Stock Library</span>
           </div>
           <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Stock & Creative Assets</h2>
           <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
@@ -317,7 +317,7 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
         </div>
         {favorites.size > 0 && (
           <div className={`${glassStyle} rounded-2xl px-5 py-3 flex items-center gap-3`}>
-            <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
+            <Heart className="w-4 h-4 text-[var(--tint-rose-fg)] fill-rose-400" />
             <span className="text-[11px] font-bold text-slate-300 uppercase tracking-[0.2em]">{favorites.size} saved</span>
           </div>
         )}
@@ -421,8 +421,8 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
       )}
 
       {/* Footer note */}
-      <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
-        <Sparkles className="w-4 h-4 text-fuchsia-400 flex-shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-[var(--tint-fuchsia-edge)] bg-fuchsia-500/[0.04] p-4 flex items-start gap-3">
+        <Sparkles className="w-4 h-4 text-[var(--tint-fuchsia-fg)] flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-[11px] font-bold text-fuchsia-300 leading-snug">Curated stock library — hand-picked for short-form content.</p>
           <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
@@ -460,7 +460,7 @@ function StockTile({
         whileTap={{ scale: 0.95 }}
         onClick={onAdd}
         title={`${item.title} · ${item.mood}`}
-        className="aspect-square rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.06] flex items-center justify-center text-4xl transition-colors relative group"
+        className="aspect-square rounded-2xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-emerald-edge)] hover:bg-white/[0.06] flex items-center justify-center text-4xl transition-colors relative group"
       >
         <span>{item.url}</span>
         <span className="absolute bottom-1 left-0 right-0 text-center text-[8px] font-bold text-slate-400 truncate px-1 opacity-0 group-hover:opacity-100 transition-opacity">{item.title.slice(2)}</span>
@@ -475,7 +475,7 @@ function StockTile({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-violet-500/40 transition-colors overflow-hidden group"
+        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-violet-edge)] transition-colors overflow-hidden group"
       >
         <div className="aspect-video bg-gradient-to-br from-violet-600/30 to-indigo-700/40 relative flex items-center justify-center">
           <Wand2 className="w-8 h-8 text-violet-300/60 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
@@ -484,7 +484,7 @@ function StockTile({
         <div className="p-3">
           <p className="text-[12px] font-bold text-white truncate mb-1">{item.title}</p>
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-violet-400 flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--tint-violet-fg)] flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
             <button type="button" onClick={onAdd} title="Add to timeline" className="text-[10px] font-bold text-white px-2.5 py-1 rounded-full bg-violet-600 hover:bg-violet-500 transition-colors uppercase tracking-wider">Add</button>
           </div>
         </div>
@@ -499,7 +499,7 @@ function StockTile({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-cyan-500/40 transition-colors overflow-hidden group cursor-pointer"
+        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-cyan-edge)] transition-colors overflow-hidden group cursor-pointer"
         onClick={onAdd}
       >
         <div className="aspect-square bg-black relative">
@@ -534,7 +534,7 @@ function StockTile({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-rose-500/40 transition-colors overflow-hidden group"
+        className="rounded-2xl bg-white/[0.03] border border-white/10 hover:border-[var(--tint-rose-edge)] transition-colors overflow-hidden group"
       >
         <div className="aspect-video bg-black relative">
           {item.thumb && (
@@ -578,7 +578,7 @@ function StockTile({
         <div className="p-3">
           <p className="text-[13px] font-bold text-white truncate">{item.title}</p>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-rose-400 flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--tint-rose-fg)] flex items-center gap-1.5"><Icon className="w-2.5 h-2.5" />{item.mood}</span>
             {item.tags.slice(0, 2).map(t => (
               <span key={t} className="text-[9px] font-mono text-slate-500">#{t}</span>
             ))}
@@ -597,7 +597,7 @@ function StockTile({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className={`rounded-2xl bg-white/[0.03] border transition-colors p-3 flex items-center gap-3 group ${
-        isMusic ? 'border-white/10 hover:border-fuchsia-500/40' : 'border-white/10 hover:border-amber-500/40'
+        isMusic ? 'border-white/10 hover:border-[var(--tint-fuchsia-edge)]' : 'border-white/10 hover:border-[var(--tint-amber-edge)]'
       }`}
     >
       <button
@@ -613,10 +613,10 @@ function StockTile({
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-bold text-white truncate flex items-center gap-2">
           {item.title}
-          {item.premium && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Pro</span>}
+          {item.premium && <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[var(--tint-amber-bg)] text-amber-300 border border-[var(--tint-amber-edge)]">Pro</span>}
         </p>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className={`text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${isMusic ? 'text-fuchsia-400' : 'text-amber-400'}`}>
+          <span className={`text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${isMusic ? 'text-[var(--tint-fuchsia-fg)]' : 'text-[var(--tint-amber-fg)]'}`}>
             <Icon className="w-2.5 h-2.5" />{item.mood}
           </span>
           {item.duration && (
@@ -630,7 +630,7 @@ function StockTile({
           type="button"
           onClick={onFav}
           title={isFav ? 'Unfavorite' : 'Favorite'}
-          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'}`}
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isFav ? 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border border-[var(--tint-rose-edge)]' : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'}`}
         >
           <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-rose-400' : ''}`} />
         </button>

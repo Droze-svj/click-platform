@@ -36,8 +36,8 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
       {/* Header Section */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-            <Fingerprint className="w-8 h-8 text-emerald-400" />
+          <div className="p-3 rounded-2xl bg-[var(--tint-emerald-bg)] border border-[var(--tint-emerald-edge)]">
+            <Fingerprint className="w-8 h-8 text-[var(--tint-emerald-fg)]" />
           </div>
           <div>
             <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Creator Style DNA</h1>
@@ -58,7 +58,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
           </div>
           
           <div className="space-y-2">
-             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Style Snapshot: <span className="text-emerald-400">{dna.theme || 'Vlog'}</span></h3>
+             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Style Snapshot: <span className="text-[var(--tint-emerald-fg)]">{dna.theme || 'Vlog'}</span></h3>
              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">Identity Lock: 99.8% // Sentiment Drift: {dna.sentimentDrift}%</span>
           </div>
 
@@ -90,7 +90,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
 
           <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
             <p className="text-[10px] text-slate-400 font-medium italic leading-relaxed">
-              AI has identified a preference for <span className="text-emerald-400 font-bold">rapid-fire jump cuts</span> and <span className="text-emerald-400 font-bold">minimalist graphics</span>. Suggestions are being tailored to your specific timing signature.
+              AI has identified a preference for <span className="text-[var(--tint-emerald-fg)] font-bold">rapid-fire jump cuts</span> and <span className="text-[var(--tint-emerald-fg)] font-bold">minimalist graphics</span>. Suggestions are being tailored to your specific timing signature.
             </p>
           </div>
         </motion.div>
@@ -104,15 +104,15 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
         >
           <div className="col-span-2 border-b border-white/5 pb-4 flex items-center justify-between">
              <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Agentic Performance Ledger</h3>
-             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-                <ShieldCheck className="w-3 h-3 text-indigo-400" />
-                <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic">Verified AI Agency</span>
+             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                <ShieldCheck className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
+                <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] tracking-widest uppercase italic">Verified AI Agency</span>
              </div>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <Zap className="w-4 h-4 text-amber-400" />
+              <Zap className="w-4 h-4 text-[var(--tint-amber-fg)]" />
               <span className="text-xs font-black text-slate-500 uppercase italic">Acceptance Rate (AAR)</span>
             </div>
             <div className="text-4xl font-black text-white tracking-tighter italic">{kpis.agenticAcceptanceRate}%</div>
@@ -130,7 +130,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
 
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <Undo2 className="w-4 h-4 text-rose-400" />
+              <Undo2 className="w-4 h-4 text-[var(--tint-rose-fg)]" />
               <span className="text-xs font-black text-slate-500 uppercase italic">Reversion Rate (Undo)</span>
             </div>
             <div className="text-4xl font-black text-white tracking-tighter italic">{kpis.reversionRate}%</div>
@@ -139,10 +139,10 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
 
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <Target className="w-4 h-4 text-emerald-400" />
+              <Target className="w-4 h-4 text-[var(--tint-emerald-fg)]" />
               <span className="text-xs font-black text-slate-500 uppercase italic">Utility Score</span>
             </div>
-            <div className="text-4xl font-black text-emerald-400 tracking-tighter italic">{kpis.sessionUtilityScore}/100</div>
+            <div className="text-4xl font-black text-[var(--tint-emerald-fg)] tracking-tighter italic">{kpis.sessionUtilityScore}/100</div>
             <p className="text-[9px] text-slate-500 font-medium italic">Net efficiency gain for this session.</p>
           </div>
         </motion.div>
@@ -157,8 +157,8 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
           <div className="space-y-4 max-w-2xl">
             <div className="flex items-center gap-6">
-               <div className="p-4 rounded-3xl bg-indigo-500/10 border border-indigo-500/20">
-                  <BrainCircuit className="w-10 h-10 text-indigo-400 animate-pulse-slow" />
+               <div className="p-4 rounded-3xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)]">
+                  <BrainCircuit className="w-10 h-10 text-[var(--tint-indigo-fg)] animate-pulse-slow" />
                </div>
                <div>
                   <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Algorithmic Correlation</h2>
@@ -171,18 +171,18 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
           </div>
 
           <div className="flex flex-col gap-4 min-w-[300px]">
-             <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group-hover:bg-indigo-500/10 transition-all">
+             <div className="p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 group-hover:bg-[var(--tint-indigo-bg)] transition-all">
                 <div className="flex items-center justify-between mb-2">
-                   <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest italic">Retention Winner</span>
-                   <TrendingUp className="w-3 h-3 text-indigo-400" />
+                   <span className="text-[9px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-widest italic">Retention Winner</span>
+                   <TrendingUp className="w-3 h-3 text-[var(--tint-indigo-fg)]" />
                 </div>
                 <p className="text-xs text-white font-black italic">&quot;120% zoom at 0:02 improves retention by 14%&quot;</p>
              </div>
              
-             <div className="p-6 rounded-[2rem] bg-rose-500/5 border border-rose-500/10 group-hover:bg-rose-500/10 transition-all">
+             <div className="p-6 rounded-[2rem] bg-rose-500/5 border border-rose-500/10 group-hover:bg-[var(--tint-rose-bg)] transition-all">
                 <div className="flex items-center justify-between mb-2">
-                   <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest italic">Drop-off Risk</span>
-                   <BarChart3 className="w-3 h-3 text-rose-400" />
+                   <span className="text-[9px] font-bold text-[var(--tint-rose-fg)] uppercase tracking-widest italic">Drop-off Risk</span>
+                   <BarChart3 className="w-3 h-3 text-[var(--tint-rose-fg)]" />
                 </div>
                 <p className="text-xs text-white font-black italic">&quot;Semantic keyword &apos;Algorithm&apos; causing 8% drop-off.&quot;</p>
              </div>
@@ -193,7 +193,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
            {['TikTok Hook', 'YouTube Pacing', 'IG Visual Density', 'Shorts Synergy'].map((insight) => (
               <div key={insight} className="px-6 py-4 rounded-full bg-white/5 border border-white/5 flex items-center justify-between hover:bg-white/10 transition-all cursor-pointer">
                  <span className="text-[10px] font-black text-slate-400 uppercase italic tracking-widest">{insight}</span>
-                 <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                 <ArrowUpRight className="w-3 h-3 text-[var(--tint-emerald-fg)]" />
               </div>
            ))}
         </div>

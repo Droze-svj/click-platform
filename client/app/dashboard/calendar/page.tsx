@@ -38,9 +38,9 @@ const PC: Record<string, { label: string; gradient: string; icon: string }> = {
 }
 
 const SC: Record<string, { label: string; bg: string; text: string; icon: any }> = {
-  scheduled: { label: 'Scheduled', bg: 'bg-amber-500/10 border-amber-500/20',   text: 'text-amber-400', icon: Timer },
-  posted:    { label: 'Published', bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400', icon: CheckCircle },
-  failed:    { label: 'Failed',    bg: 'bg-rose-500/10 border-rose-500/20',        text: 'text-rose-400', icon: AlertCircle },
+  scheduled: { label: 'Scheduled', bg: 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]',   text: 'text-[var(--tint-amber-fg)]', icon: Timer },
+  posted:    { label: 'Published', bg: 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]', text: 'text-[var(--tint-emerald-fg)]', icon: CheckCircle },
+  failed:    { label: 'Failed',    bg: 'bg-[var(--tint-rose-bg)] border-[var(--tint-rose-edge)]',        text: 'text-[var(--tint-rose-fg)]', icon: AlertCircle },
   draft:     { label: 'Draft',     bg: 'bg-slate-500/10 border-slate-500/20',         text: 'text-slate-400', icon: Focus },
 }
 
@@ -132,8 +132,8 @@ export default function ContentCalendarPage() {
           <button onClick={() => router.push('/dashboard')} className="w-14 h-14 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl hover:border-white/20 backdrop-blur-3xl group">
             <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
           </button>
-          <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden group">
-             <CalendarIcon size={32} className="text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
+          <div className="w-16 h-16 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden group">
+             <CalendarIcon size={32} className="text-[var(--tint-indigo-fg)] group-hover:scale-110 transition-transform duration-300" />
           </div>
           <div>
             <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-md">Content Calendar</h1>
@@ -143,7 +143,7 @@ export default function ContentCalendarPage() {
 
         <div className="flex items-center gap-6">
             <button onClick={() => loadCalendar(true)} className={`${glassStyle} w-14 h-14 rounded-full flex items-center justify-center group active:scale-95 hover:bg-white/[0.05]`}>
-               <RefreshCw size={24} className={`text-slate-400 group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
+               <RefreshCw size={24} className={`text-slate-400 group-hover:text-[var(--tint-indigo-fg)] transition-colors ${refreshing ? 'animate-spin' : ''}`} />
             </button>
             <button 
               onClick={() => router.push('/dashboard/scheduler')}
@@ -156,10 +156,10 @@ export default function ContentCalendarPage() {
       {/* Stats */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
          {[
-           { label: 'Total Scheduled', val: posts.length, icon: LayoutGrid, color: 'text-indigo-400' },
-           { label: 'Upcoming', val: posts.filter(p => p.status === 'scheduled').length, icon: Timer, color: 'text-amber-400' },
-           { label: 'Published', val: posts.filter(p => p.status === 'posted').length, icon: CheckCircle, color: 'text-emerald-400' },
-           { label: 'Errors', val: posts.filter(p => p.status === 'failed').length, icon: AlertCircle, color: 'text-rose-400' },
+           { label: 'Total Scheduled', val: posts.length, icon: LayoutGrid, color: 'text-[var(--tint-indigo-fg)]' },
+           { label: 'Upcoming', val: posts.filter(p => p.status === 'scheduled').length, icon: Timer, color: 'text-[var(--tint-amber-fg)]' },
+           { label: 'Published', val: posts.filter(p => p.status === 'posted').length, icon: CheckCircle, color: 'text-[var(--tint-emerald-fg)]' },
+           { label: 'Errors', val: posts.filter(p => p.status === 'failed').length, icon: AlertCircle, color: 'text-[var(--tint-rose-fg)]' },
          ].map((s, i) => (
            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={i} className={`${glassStyle} rounded-3xl p-6 flex items-center gap-6 hover:bg-white/[0.04]`}>
               <div className="w-14 h-14 rounded-xl bg-white/[0.02] flex items-center justify-center border border-white/5">
@@ -178,7 +178,7 @@ export default function ContentCalendarPage() {
          <div className="p-8 border-b border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 bg-white/[0.01]">
             <div className="flex items-center gap-6 bg-black/40 p-2 rounded-full border border-white/5">
                <button onClick={() => navigateTime(-1)} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-300 transition-colors"><ChevronLeft size={24} /></button>
-               <button onClick={() => setCurrentDate(new Date())} className="px-4 text-sm font-bold text-white hover:text-indigo-400 transition-colors">Today</button>
+               <button onClick={() => setCurrentDate(new Date())} className="px-4 text-sm font-bold text-white hover:text-[var(--tint-indigo-fg)] transition-colors">Today</button>
                <button onClick={() => navigateTime(1)} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-300 transition-colors"><ChevronRight size={24} /></button>
             </div>
             
@@ -188,7 +188,7 @@ export default function ContentCalendarPage() {
 
             <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-full border border-white/5">
                {['month','week','day'].map(v => (
-                 <button key={v} onClick={() => setView(v as any)} className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${view === v ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                 <button key={v} onClick={() => setView(v as any)} className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${view === v ? 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                    {v.charAt(0).toUpperCase() + v.slice(1)}
                  </button>
                ))}
@@ -222,10 +222,10 @@ export default function ContentCalendarPage() {
 
                          return (
                            <motion.div key={i} onDragOver={e => { e.preventDefault(); setDragOverDate(date) }} onDragLeave={() => setDragOverDate(null)} onDrop={e => handleDrop(e, date)}
-                             className={`min-h-[140px] rounded-2xl p-4 border transition-all duration-200 relative group ${isTarget ? 'border-indigo-400 bg-indigo-500/10 z-10' : isToday ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-white/5 bg-white/[0.01] hover:border-white/10 hover:bg-white/[0.03]'} ${isPast && !isToday ? 'opacity-50' : ''}`}
+                             className={`min-h-[140px] rounded-2xl p-4 border transition-all duration-200 relative group ${isTarget ? 'border-indigo-400 bg-[var(--tint-indigo-bg)] z-10' : isToday ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-white/5 bg-white/[0.01] hover:border-white/10 hover:bg-white/[0.03]'} ${isPast && !isToday ? 'opacity-50' : ''}`}
                            >
                               <div className="flex justify-between items-center mb-3">
-                                 <span className={`text-lg font-bold ${isToday ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`}>{date.getDate()}</span>
+                                 <span className={`text-lg font-bold ${isToday ? 'text-[var(--tint-indigo-fg)]' : 'text-slate-400 group-hover:text-white'}`}>{date.getDate()}</span>
                                  {dp.length > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white">{dp.length} items</span>}
                               </div>
                               <div className="space-y-2">
@@ -255,7 +255,7 @@ export default function ContentCalendarPage() {
               <div className="flex items-center justify-center py-40 flex-col opacity-60">
                  <LayoutGrid size={48} className="text-slate-500 mb-6" />
                  <p className="text-lg text-slate-400 font-medium">{view === 'week' ? 'Week' : 'Day'} view is under optimization.</p>
-                 <button onClick={() => setView('month')} className="mt-4 text-indigo-400 hover:text-white transition-colors font-medium">Return to Month View</button>
+                 <button onClick={() => setView('month')} className="mt-4 text-[var(--tint-indigo-fg)] hover:text-white transition-colors font-medium">Return to Month View</button>
               </div>
             )}
          </div>
@@ -294,14 +294,14 @@ export default function ContentCalendarPage() {
                       {selectedPost.content.hashtags && selectedPost.content.hashtags.length > 0 && (
                          <div className="flex flex-wrap gap-2 mt-4">
                             {selectedPost.content.hashtags.map(h => (
-                               <span key={h} className="text-xs font-medium text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full">#{h}</span>
+                               <span key={h} className="text-xs font-medium text-[var(--tint-indigo-fg)] bg-[var(--tint-indigo-bg)] px-3 py-1 rounded-full">#{h}</span>
                             ))}
                          </div>
                       )}
                    </div>
 
                    <div className="flex justify-between items-center">
-                      <button onClick={() => handleDelete(selectedPost._id)} className="px-6 py-3 text-sm font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors flex items-center gap-2">
+                      <button onClick={() => handleDelete(selectedPost._id)} className="px-6 py-3 text-sm font-bold text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] rounded-xl transition-colors flex items-center gap-2">
                          <Trash2 size={18} /> Delete Post
                       </button>
                       <button onClick={() => router.push('/dashboard/scheduler')} className="px-8 py-3 text-sm font-bold bg-white text-black hover:bg-indigo-600 hover:text-white rounded-xl transition-colors shadow-md">

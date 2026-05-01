@@ -91,13 +91,13 @@ const GlobalABSynthesisHub: React.FC<{
       {/* Header */}
       <div className="flex items-center justify-between relative z-10">
         <div className="flex items-center gap-6">
-          <div className="p-4 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+          <div className="p-4 rounded-[2rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]">
             <Split className="w-8 h-8" />
           </div>
           <div>
             <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white flex items-center gap-4">
               A/B Synthesis Hub
-              <span className="text-[10px] px-3 py-1 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 non-italic tracking-widest">LAB_NODE_0X</span>
+              <span className="text-[10px] px-3 py-1 rounded bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)] non-italic tracking-widest">LAB_NODE_0X</span>
             </h2>
             <div className="flex items-center gap-4 mt-1">
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">
@@ -172,8 +172,8 @@ const GlobalABSynthesisHub: React.FC<{
         />
 
         {/* Comparison HUD Overlay */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-black border border-indigo-500/40 backdrop-blur-3xl flex flex-col items-center justify-center gap-2 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
-           <Zap className="w-6 h-6 text-indigo-400" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-black border border-[var(--tint-indigo-edge)] backdrop-blur-3xl flex flex-col items-center justify-center gap-2 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
+           <Zap className="w-6 h-6 text-[var(--tint-indigo-fg)]" />
            <div className="flex flex-col items-center">
               <span className="text-[10px] font-black text-white uppercase tracking-widest">VS</span>
               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Aesthetic Conflict</span>
@@ -213,7 +213,7 @@ const Viewport: React.FC<{
 
   return (
     <div className="flex flex-col gap-6 group">
-      <div className="relative aspect-video rounded-[3rem] bg-white/[0.02] border border-white/5 overflow-hidden shadow-2xl transition-all duration-700 group-hover:border-indigo-500/30">
+      <div className="relative aspect-video rounded-[3rem] bg-white/[0.02] border border-white/5 overflow-hidden shadow-2xl transition-all duration-700 group-hover:border-[var(--tint-indigo-edge)]">
         {/* Background Grid */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
             <div className="w-full h-full bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]" />
@@ -256,7 +256,7 @@ const Viewport: React.FC<{
                         <Globe className="w-4 h-4 text-slate-400" />
                         <span className="text-[12px] font-black text-white uppercase tracking-widest italic">{metadata.region}</span>
                       </div>
-                      <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">{metadata.style} DNA</span>
+                      <span className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.2em]">{metadata.style} DNA</span>
                   </div>
                   <div className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black text-slate-500 uppercase">
                       Seed: 0x{metadata.region.slice(0, 2).toUpperCase()}
@@ -390,7 +390,7 @@ const Viewport: React.FC<{
                           >
                               <div className="flex justify-between items-center mb-1">
                                 <div className="flex items-center gap-2">
-                                    <Fingerprint className="w-2 h-2 text-indigo-400" />
+                                    <Fingerprint className="w-2 h-2 text-[var(--tint-indigo-fg)]" />
                                     <span className="text-[8px] font-black text-white uppercase tracking-widest">Demographic Heatmap</span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ const Viewport: React.FC<{
                                         FIXED
                                       </span>
                                     )}
-                                    <span className="text-[8px] font-mono text-indigo-400 uppercase">Attention Score</span>
+                                    <span className="text-[8px] font-mono text-[var(--tint-indigo-fg)] uppercase">Attention Score</span>
                                 </div>
                               </div>
                               <div className="flex items-end gap-1 h-12">
@@ -473,7 +473,7 @@ const Viewport: React.FC<{
 
 const Stat: React.FC<{ label: string, value: string, sub: string, icon: any }> = ({ label, value, sub, icon: Icon }) => (
   <div className="flex items-center gap-4">
-    <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-indigo-400">
+    <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--tint-indigo-fg)]">
       <Icon className="w-5 h-5" />
     </div>
     <div className="flex flex-col">

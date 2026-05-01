@@ -186,7 +186,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
 
   const percentile = benchmark?.industry.percentile ?? 0
   const percentileLabel = percentile >= 90 ? 'TOP 10%' : percentile >= 75 ? 'TOP 25%' : percentile >= 50 ? 'TOP 50%' : 'BELOW MEDIAN'
-  const percentileColor = percentile >= 75 ? 'text-emerald-400' : percentile >= 50 ? 'text-amber-400' : 'text-indigo-400'
+  const percentileColor = percentile >= 75 ? 'text-[var(--tint-emerald-fg)]' : percentile >= 50 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-indigo-fg)]'
 
   return (
     <div className="space-y-6 h-full flex flex-col pb-10">
@@ -233,7 +233,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
       </div>
 
       {error && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px]">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] text-[11px]">
           <AlertCircle className="w-4 h-4 shrink-0" /> {error} — showing defaults
         </div>
       )}
@@ -251,7 +251,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                 </div>
                 <div className="flex -space-x-3">
                    {['ORA', 'DNA', 'MON'].map(a => (
-                     <div key={a} className="w-8 h-8 rounded-full border-2 border-black bg-indigo-500/20 text-[10px] flex items-center justify-center font-black text-indigo-400">
+                     <div key={a} className="w-8 h-8 rounded-full border-2 border-black bg-[var(--tint-indigo-bg)] text-[10px] flex items-center justify-center font-black text-[var(--tint-indigo-fg)]">
                         {a[0]}
                      </div>
                    ))}
@@ -302,14 +302,14 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       initial={{ opacity: 0, scale: 0.9, y: 10 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="flex-1 min-w-[300px] p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col gap-3"
+                      className="flex-1 min-w-[300px] p-4 rounded-2xl bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] flex flex-col gap-3"
                     >
-                      <div className="flex justify-between items-center border-b border-indigo-500/20 pb-2">
-                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                      <div className="flex justify-between items-center border-b border-[var(--tint-indigo-edge)] pb-2">
+                        <span className="text-[9px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-widest flex items-center gap-2">
                           <TrendingUp className="w-3 h-3" />
                           Analysis: {trackResult.handle}
                         </span>
-                        <button title="Dismiss" onClick={() => setTrackResult(null)} className="text-indigo-400 hover:text-white transition-colors text-[9px]">✕</button>
+                        <button title="Dismiss" onClick={() => setTrackResult(null)} className="text-[var(--tint-indigo-fg)] hover:text-white transition-colors text-[9px]">✕</button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-1">
@@ -318,7 +318,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                          </div>
                          <div className="space-y-1">
                             <p className="text-[8px] font-black text-slate-500 uppercase">Opportunity</p>
-                            <p className="text-[10px] text-indigo-400 font-bold">Hook timing gap (0:15)</p>
+                            <p className="text-[10px] text-[var(--tint-indigo-fg)] font-bold">Hook timing gap (0:15)</p>
                          </div>
                       </div>
                     </motion.div>
@@ -342,7 +342,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                         <div className="flex items-center justify-between">
                           <div>
                             <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
-                              <TrendingUp className="w-5 h-5 text-emerald-400" /> Engagement Standing
+                              <TrendingUp className="w-5 h-5 text-[var(--tint-emerald-fg)]" /> Engagement Standing
                             </h3>
                             <span className="text-[9px] text-slate-600 font-black uppercase tracking-widest">{platform} · Last 30 days</span>
                           </div>
@@ -352,17 +352,17 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                         </div>
                         <PercentileBar value={percentile} />
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                          percentile >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : percentile >= 50 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                          percentile >= 75 ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border border-[var(--tint-emerald-edge)]'
+                          : percentile >= 50 ? 'bg-[var(--tint-amber-bg)] text-[var(--tint-amber-fg)] border border-[var(--tint-amber-edge)]'
+                          : 'bg-[var(--tint-indigo-bg)] text-[var(--tint-indigo-fg)] border border-[var(--tint-indigo-edge)]'
                         }`}>
                           <Trophy className="w-3 h-3" /> {percentileLabel}
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <Stat label="Avg Engagement" value={benchmark?.user.avgEngagement ?? 0} sub={`Median: ${benchmark?.industry.median ?? 0}`} color={percentile >= 50 ? 'text-emerald-400' : 'text-rose-400'} />
-                          <Stat label="Originality Score" value="98.2%" sub="No clichés detected" color="text-amber-400" />
+                          <Stat label="Avg Engagement" value={benchmark?.user.avgEngagement ?? 0} sub={`Median: ${benchmark?.industry.median ?? 0}`} color={percentile >= 50 ? 'text-[var(--tint-emerald-fg)]' : 'text-[var(--tint-rose-fg)]'} />
+                          <Stat label="Originality Score" value="98.2%" sub="No clichés detected" color="text-[var(--tint-amber-fg)]" />
                           <Stat label="Posts Analysed" value={benchmark?.user.postCount ?? 0} sub="30-day window" />
-                          <Stat label="Avg Reach" value={(benchmark?.user.avgReach ?? 0).toLocaleString()} sub="Per post" color="text-indigo-400" />
+                          <Stat label="Avg Reach" value={(benchmark?.user.avgReach ?? 0).toLocaleString()} sub="Per post" color="text-[var(--tint-indigo-fg)]" />
                         </div>
                       </motion.div>
                     )}
@@ -371,12 +371,12 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
 
               {/* Gap chart */}
               <div className={`${glassStyle} rounded-[2.5rem] p-8 relative overflow-hidden`}>
-                <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-full z-20">
+                <div className="absolute top-6 right-6 flex items-center gap-2 px-3 py-1.5 bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] rounded-full z-20">
                   <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-rose-500 animate-ping' : 'bg-rose-500/40'}`} />
-                  <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Live Viral Delta</span>
+                  <span className="text-[8px] font-black text-[var(--tint-rose-fg)] uppercase tracking-widest">Live Viral Delta</span>
                 </div>
                 <h3 className="text-xs font-black uppercase text-slate-500 tracking-widest mb-6 flex items-center gap-3">
-                  <ChartIcon className="w-4 h-4 text-indigo-400" /> Engagement vs Industry
+                  <ChartIcon className="w-4 h-4 text-[var(--tint-indigo-fg)]" /> Engagement vs Industry
                 </h3>
                 <div className="h-[180px]">
                   {loading
@@ -423,18 +423,18 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className={`${glassStyle} rounded-[2.5rem] p-6`}>
                   <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-indigo-400" /> Best Posting Windows
+                    <Clock className="w-4 h-4 text-[var(--tint-indigo-fg)]" /> Best Posting Windows
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {benchmark.competitors.bestPostingTimes.map(t => (
-                      <span key={t} className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black rounded-xl">{t}</span>
+                      <span key={t} className="px-3 py-1.5 bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] text-[10px] font-black rounded-xl">{t}</span>
                     ))}
                   </div>
                   <p className="text-[9px] text-slate-700 mt-3">Top performers on {platform} · Competitor analysis</p>
                 </div>
                 <div className={`${glassStyle} rounded-[2.5rem] p-6`}>
                   <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-fuchsia-400" /> Priority Actions
+                    <Sparkles className="w-4 h-4 text-[var(--tint-fuchsia-fg)]" /> Priority Actions
                   </h3>
                   <div className="space-y-2">
                     {benchmark.recommendations.slice(0, 3).map((rec, i) => (
@@ -458,7 +458,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
         {activeTab === 'nextweek' && (
           <motion.div key="nextweek" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
             {weekError && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px]">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--tint-rose-bg)] border border-[var(--tint-rose-edge)] text-[var(--tint-rose-fg)] text-[11px]">
                 <AlertCircle className="w-4 h-4 shrink-0" /> {weekError}
               </div>
             )}
@@ -480,10 +480,10 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
               <>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-indigo-400" /> 7-Day Content Calendar
+                    <CalendarDays className="w-5 h-5 text-[var(--tint-indigo-fg)]" /> 7-Day Content Calendar
                   </h3>
                   <div className="flex items-center gap-3">
-                    <span className="text-[9px] text-emerald-400 font-black uppercase tracking-widest border border-emerald-500/20 px-2 py-0.5 rounded-full bg-emerald-500/5">12 Regional Twins Synthetic</span>
+                    <span className="text-[9px] text-[var(--tint-emerald-fg)] font-black uppercase tracking-widest border border-[var(--tint-emerald-edge)] px-2 py-0.5 rounded-full bg-emerald-500/5">12 Regional Twins Synthetic</span>
                     <span className="text-[9px] text-slate-600 font-black uppercase tracking-widest">Platform: {platform}</span>
                   </div>
                 </div>
@@ -521,8 +521,8 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       {day.hook && <p className="text-[9px] text-slate-500 leading-snug italic">&quot;{day.hook}&quot;</p>}
                       {day.estimatedReach != null && (
                         <div className="mt-3 flex items-center gap-1.5">
-                          <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
-                          <span className="text-[8px] font-black text-emerald-400">{day.estimatedReach.toLocaleString()} est. reach</span>
+                          <TrendingUp className="w-2.5 h-2.5 text-[var(--tint-emerald-fg)]" />
+                          <span className="text-[8px] font-black text-[var(--tint-emerald-fg)]">{day.estimatedReach.toLocaleString()} est. reach</span>
                         </div>
                       )}
                     </motion.div>

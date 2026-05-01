@@ -123,18 +123,18 @@ export default function FiscalProposalMatrixPage() {
               >
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
-              <div className="w-24 h-24 bg-emerald-500/5 border-2 border-emerald-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(16,185,129,0.3)] relative group overflow-hidden">
+              <div className="w-24 h-24 bg-emerald-500/5 border-2 border-[var(--tint-emerald-edge)] rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(16,185,129,0.3)] relative group overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent opacity-100" />
-                <Quote size={48} className="text-emerald-400 relative z-10 group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-300 animate-pulse" />
+                <Quote size={48} className="text-[var(--tint-emerald-fg)] relative z-10 group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-300 animate-pulse" />
               </div>
               <div>
                  <div className="flex items-center gap-6 mb-4">
                    <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-emerald-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-emerald-400 italic leading-none">Fiscal Engine v8.2.1</span>
+                      <Fingerprint size={16} className="text-[var(--tint-emerald-fg)] animate-pulse" />
+                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-[var(--tint-emerald-fg)] italic leading-none">Fiscal Engine v8.2.1</span>
                    </div>
                    <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
-                       <Radio size={14} className="text-emerald-400 animate-pulse" />
+                       <Radio size={14} className="text-[var(--tint-emerald-fg)] animate-pulse" />
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">MARKET_SYMPATHY_STABLE</span>
                    </div>
                  </div>
@@ -146,12 +146,12 @@ export default function FiscalProposalMatrixPage() {
 
         {/* Proposal Ingress Terminal */}
         <div className="max-w-5xl mx-auto relative z-10 w-full pt-10">
-           <div className={`${glassStyle} rounded-[6rem] overflow-hidden group border-emerald-500/20 shadow-[0_100px_250px_rgba(0,0,0,1)] backdrop-blur-3xl relative`}>
+           <div className={`${glassStyle} rounded-[6rem] overflow-hidden group border-[var(--tint-emerald-edge)] shadow-[0_100px_250px_rgba(0,0,0,1)] backdrop-blur-3xl relative`}>
               <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/[0.02] to-transparent pointer-events-none" />
               <div className="px-16 py-12 border-b-2 border-white/5 flex items-center justify-between bg-white/[0.01] relative overflow-hidden">
                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-30" />
                  <div className="flex items-center gap-8 relative z-10">
-                    <div className="w-16 h-16 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center border-2 border-emerald-500/20 shadow-3xl group-hover:scale-110 transition-transform duration-300"><Terminal size={32} className="text-emerald-400" /></div>
+                    <div className="w-16 h-16 bg-[var(--tint-emerald-bg)] rounded-[2rem] flex items-center justify-center border-2 border-[var(--tint-emerald-edge)] shadow-3xl group-hover:scale-110 transition-transform duration-300"><Terminal size={32} className="text-[var(--tint-emerald-fg)]" /></div>
                     <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Economic Ingress</h2>
                  </div>
                  <div className="flex items-center gap-5 relative z-10">
@@ -188,10 +188,10 @@ export default function FiscalProposalMatrixPage() {
                                key={s.value}
                                onClick={() => setSpectralPolarity(s.value)}
                                disabled={loading}
-                               className={`px-16 py-8 rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] border-2 transition-all duration-300 italic shadow-3xl relative overflow-hidden group/pol ${spectralPolarity === s.value ? 'bg-white text-black border-transparent scale-110 shadow-emerald-500/40' : 'bg-white/[0.02] border-white/5 text-slate-400 hover:text-white hover:border-emerald-500/30'}`}
+                               className={`px-16 py-8 rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] border-2 transition-all duration-300 italic shadow-3xl relative overflow-hidden group/pol ${spectralPolarity === s.value ? 'bg-white text-black border-transparent scale-110 shadow-emerald-500/40' : 'bg-white/[0.02] border-white/5 text-slate-400 hover:text-white hover:border-[var(--tint-emerald-edge)]'}`}
                              >
                                 <span className="relative z-10">{s.label}</span>
-                                <div className={`absolute inset-0 bg-emerald-500/10 opacity-0 group-hover/pol:opacity-100 transition-opacity duration-300 ${spectralPolarity === s.value ? 'hidden' : ''}`} />
+                                <div className={`absolute inset-0 bg-[var(--tint-emerald-bg)] opacity-0 group-hover/pol:opacity-100 transition-opacity duration-300 ${spectralPolarity === s.value ? 'hidden' : ''}`} />
                              </button>
                           ))}
                        </div>
@@ -201,7 +201,7 @@ export default function FiscalProposalMatrixPage() {
                        <button
                          onClick={handleWisdomSynthesis}
                          disabled={loading || !wisdomPayload.trim()}
-                         className="w-full h-24 flex items-center justify-center gap-10 bg-white border-8 border-transparent hover:border-emerald-500/30 text-black rounded-[4rem] font-black text-[22px] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:shadow-emerald-500/50 transition-all duration-300 active:scale-95 italic uppercase tracking-[0.8em] group/forge disabled:opacity-20"
+                         className="w-full h-24 flex items-center justify-center gap-10 bg-white border-8 border-transparent hover:border-[var(--tint-emerald-edge)] text-black rounded-[4rem] font-black text-[22px] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:shadow-emerald-500/50 transition-all duration-300 active:scale-95 italic uppercase tracking-[0.8em] group/forge disabled:opacity-20"
                        >
                          {loading ? <RefreshCw className="w-10 h-10 animate-spin" /> : <Sparkles size={40} className="group-hover:rotate-12 transition-transform duration-300 fill-current" />}
                          {loading ? 'SYNTHESIZING...' : 'INSTANTIATE_PROPOSAL'}
@@ -218,7 +218,7 @@ export default function FiscalProposalMatrixPage() {
             <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 relative z-10 pt-10">
                <div className="flex items-center justify-between border-b-2 border-white/5 pb-8">
                   <div className="flex items-center gap-10">
-                     <div className="w-16 h-16 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2rem] flex items-center justify-center shadow-3xl"><Layers size={32} className="text-emerald-400" /></div>
+                     <div className="w-16 h-16 bg-[var(--tint-emerald-bg)] border-2 border-[var(--tint-emerald-edge)] rounded-[2rem] flex items-center justify-center shadow-3xl"><Layers size={32} className="text-[var(--tint-emerald-fg)]" /></div>
                      <div>
                         <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Fiscal Manifests</h2>
                         <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">Synthesized economic directives calibrated for high- resonance output.</p>
@@ -239,7 +239,7 @@ export default function FiscalProposalMatrixPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1, duration: 1, ease: [0.22, 1, 0.36, 1] }}
                       key={idx}
-                      className={`${glassStyle} rounded-[5rem] overflow-hidden group hover:border-emerald-500/40 hover:bg-white/[0.04] shadow-[0_80px_200px_rgba(0,0,0,0.8)] flex flex-col relative`}
+                      className={`${glassStyle} rounded-[5rem] overflow-hidden group hover:border-[var(--tint-emerald-edge)] hover:bg-white/[0.04] shadow-[0_80px_200px_rgba(0,0,0,0.8)] flex flex-col relative`}
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <div className="aspect-[4/5] relative overflow-hidden bg-black border-b-2 border-white/5">
@@ -251,9 +251,9 @@ export default function FiscalProposalMatrixPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90 group-hover:opacity-60 transition-opacity duration-300" />
                         
                         <div className="absolute top-10 right-10 p-6 rounded-[2.5rem] bg-black/80 backdrop-blur-3xl border-2 border-white/10 opacity-0 group-hover:opacity-100 transition-all translate-y-6 group-hover:translate-y-0 duration-300 shadow-3xl">
-                           <Target size={36} className="text-emerald-400 group-hover:rotate-[360deg] transition-transform duration-500" />
+                           <Target size={36} className="text-[var(--tint-emerald-fg)] group-hover:rotate-[360deg] transition-transform duration-500" />
                         </div>
-                        <div className="absolute bottom-10 left-10 p-6 rounded-[2.5rem] bg-emerald-600/20 backdrop-blur-3xl border-2 border-emerald-500/20 opacity-0 group-hover:opacity-100 transition-all -translate-x-6 group-hover:translate-x-0 duration-300 shadow-3xl">
+                        <div className="absolute bottom-10 left-10 p-6 rounded-[2.5rem] bg-emerald-600/20 backdrop-blur-3xl border-2 border-[var(--tint-emerald-edge)] opacity-0 group-hover:opacity-100 transition-all -translate-x-6 group-hover:translate-x-0 duration-300 shadow-3xl">
                            <Boxes size={36} className="text-white animate-pulse" />
                         </div>
                       </div>
@@ -262,9 +262,9 @@ export default function FiscalProposalMatrixPage() {
                          <div className="space-y-8">
                             <div className="flex items-center gap-5">
                                <div className="w-2 h-12 bg-emerald-500 rounded-full shadow-[0_0_30px_rgba(16,185,129,1)]" />
-                               <p className="text-[13px] font-black text-emerald-400 uppercase tracking-[0.8em] italic leading-none">ECON_DIRECTIVE_ALPHA</p>
+                               <p className="text-[13px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-[0.8em] italic leading-none">ECON_DIRECTIVE_ALPHA</p>
                             </div>
-                            <p className="text-3xl font-black text-white italic leading-tight tracking-tighter uppercase group-hover:text-emerald-400 transition-colors duration-300 line-clamp-4">
+                            <p className="text-3xl font-black text-white italic leading-tight tracking-tighter uppercase group-hover:text-[var(--tint-emerald-fg)] transition-colors duration-300 line-clamp-4">
                              &ldquo;{fractal.quote.toUpperCase()}&rdquo;
                             </p>
                             <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none border-t-2 border-white/5 pt-8">— AUTH_ID: {fractal.author.toUpperCase() || 'ANONYMOUS_AGENT'}</p>

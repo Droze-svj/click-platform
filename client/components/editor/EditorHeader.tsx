@@ -111,7 +111,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
 
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center gap-4">
-            <div className="inline-flex items-center gap-3 px-4 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl">
+            <div className="inline-flex items-center gap-3 px-4 py-1 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[9px] font-black uppercase tracking-[0.4em] italic text-[var(--tint-indigo-fg)] shadow-xl">
               <Activity className="w-3.5 h-3.5 animate-pulse" />
               Neural Workspace Hub
             </div>
@@ -121,7 +121,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center gap-2 text-[9px] font-black text-amber-400 uppercase tracking-widest italic"
+                  className="flex items-center gap-2 text-[9px] font-black text-[var(--tint-amber-fg)] uppercase tracking-widest italic"
                 >
                   <RefreshCw className="w-3 h-3 animate-spin" />
                   Syncing Nodes
@@ -134,12 +134,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
               contentEditable
               onBlur={(e) => setProjectName(e.currentTarget.textContent || 'UNTITLED MASTERPIECE')}
               suppressContentEditableWarning
-              className="text-3xl font-black text-white italic tracking-tighter truncate outline-none focus:text-indigo-400 transition-colors cursor-text leading-none uppercase"
+              className="text-3xl font-black text-white italic tracking-tighter truncate outline-none focus:text-[var(--tint-indigo-fg)] transition-colors cursor-text leading-none uppercase"
             >
               {projectName}
             </h1>
             {activeCategoryLabel && (
-              <div className="px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-300 uppercase tracking-[0.3em] italic shadow-2xl">
+              <div className="px-6 py-2 rounded-full bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[10px] font-black text-indigo-300 uppercase tracking-[0.3em] italic shadow-2xl">
                 {activeCategoryLabel.toUpperCase()}
               </div>
             )}
@@ -157,7 +157,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <Cpu className="w-4 h-4 text-indigo-400" />
+              <Cpu className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
               <span className="text-[10px] font-black text-white italic uppercase tracking-[0.3em]">{featuresCount} STRANDS ACTIVE</span>
             </div>
             <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic leading-none">Load: 12.4% Neural</span>
@@ -165,19 +165,19 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           {/* Live AI Viral Score Badge */}
           <div className="flex flex-col items-center gap-1 pl-6 border-l border-white/5">
             <div className={`w-14 h-14 rounded-full border-2 flex flex-col items-center justify-center ${
-              viralScore >= 85 ? 'border-emerald-500 bg-emerald-500/10' :
-              viralScore >= 65 ? 'border-amber-500 bg-amber-500/10' :
-                                 'border-rose-500 bg-rose-500/10'
+              viralScore >= 85 ? 'border-emerald-500 bg-[var(--tint-emerald-bg)]' :
+              viralScore >= 65 ? 'border-amber-500 bg-[var(--tint-amber-bg)]' :
+                                 'border-rose-500 bg-[var(--tint-rose-bg)]'
             } ${scoreTrend === 'up' ? 'shadow-[0_0_20px_rgba(16,185,129,0.25)]' : ''}`}>
               <span className={`text-lg font-black italic ${
-                viralScore >= 85 ? 'text-emerald-400' : viralScore >= 65 ? 'text-amber-400' : 'text-rose-400'
+                viralScore >= 85 ? 'text-[var(--tint-emerald-fg)]' : viralScore >= 65 ? 'text-[var(--tint-amber-fg)]' : 'text-[var(--tint-rose-fg)]'
               }`}>{viralScore}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Brain className="w-2.5 h-2.5 text-indigo-400" />
+              <Brain className="w-2.5 h-2.5 text-[var(--tint-indigo-fg)]" />
               <span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">Neural</span>
-              {scoreTrend === 'up' && <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />}
-              {scoreTrend === 'down' && <Flame className="w-2.5 h-2.5 text-rose-400" />}
+              {scoreTrend === 'up' && <TrendingUp className="w-2.5 h-2.5 text-[var(--tint-emerald-fg)]" />}
+              {scoreTrend === 'down' && <Flame className="w-2.5 h-2.5 text-[var(--tint-rose-fg)]" />}
             </div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                   <div className="space-y-8">
                     <div>
                       <div className="flex items-center gap-3 px-4 py-3">
-                        <Target className="w-4 h-4 text-indigo-400" />
+                        <Target className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                         <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 italic">Projection Scale</span>
                       </div>
                       <div className="space-y-1 mt-2">
@@ -250,7 +250,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
 
                     <div className="pt-6 border-t border-white/5">
                       <div className="flex items-center gap-3 px-4 py-3">
-                        <Radio className="w-4 h-4 text-indigo-400" />
+                        <Radio className="w-4 h-4 text-[var(--tint-indigo-fg)]" />
                         <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 italic">Neural Focus</span>
                       </div>
                       <div className="space-y-1 mt-2">
