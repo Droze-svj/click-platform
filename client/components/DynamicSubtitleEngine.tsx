@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Palette, Zap, Layout, Eye, Shield, Mic,
@@ -160,7 +160,37 @@ export default function DynamicSubtitleEngine({
   }, [smartDodgeActive, sampleFrame, avoidanceZones.length, videoRef])
 
   // ── Derived values ──────────────────────────────────────────────────────────
-  const activeWordIndex = words.findIndex(w => currentTime >= w.start && currentTime <= w.end)
+
+  // Pre-compute a sorted starts array once per `words` prop so the
+  // per-frame lookup can binary-search instead of linear-scan. The
+  // editor preview re-renders on every requestAnimationFrame tick, so
+  // for a 5-minute transcript (~750 words) this is the difference
+  // between O(n) every frame (~750 comparisons × 60fps = 45k/s) and
+  // O(log n) every frame (~10 × 60fps = 600/s). Eliminates the jank
+  // creators saw on long transcripts.
+  const sortedStarts = useMemo(() => words.map(w => w.start), [words])
+
+  const activeWordIndex = useMemo(() => {
+    if (sortedStarts.length === 0) return -1
+    // Find the rightmost word whose start <= currentTime, then verify
+    // currentTime falls within its [start, end].
+    let lo = 0
+    let hi = sortedStarts.length - 1
+    let candidate = -1
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1
+      if (sortedStarts[mid] <= currentTime) {
+        candidate = mid
+        lo = mid + 1
+      } else {
+        hi = mid - 1
+      }
+    }
+    if (candidate === -1) return -1
+    const w = words[candidate]
+    return currentTime <= w.end ? candidate : -1
+  }, [currentTime, sortedStarts, words])
+
   const currentChunk = activeWordIndex !== -1
     ? words.slice(Math.max(0, activeWordIndex - 2), activeWordIndex + 3)
     : []
