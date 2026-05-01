@@ -4,6 +4,13 @@ const Content = require('../models/Content');
 const ContentVersion = require('../models/ContentVersion');
 const logger = require('../utils/logger');
 const { trackEvent } = require('./analyticsService');
+const {
+  smartSentenceSplit,
+  distributeSentencesByCharCount,
+  dedupeAdjacentCues,
+  formatSRTTime: formatSRTTimeShared,
+  formatVTTTime: formatVTTTimeShared,
+} = require('../utils/subtitleUtils');
 
 /**
  * Update transcript for content
@@ -66,13 +73,16 @@ async function exportTranscript(contentId, userId, format = 'txt') {
       break;
       
     case 'srt':
-      // Convert to SRT subtitle format
-      exported = convertToSRT(content.transcript);
+      // Convert to SRT subtitle format. Pass the audio duration so the
+      // converter distributes cues proportionally (long sentence → long
+      // span) instead of the prior bug where every sentence got a fixed
+      // 3-second window regardless of how long it actually was.
+      exported = convertToSRT(content.transcript, content.originalFile?.duration);
       break;
-      
+
     case 'vtt':
       // Convert to WebVTT format
-      exported = convertToVTT(content.transcript);
+      exported = convertToVTT(content.transcript, content.originalFile?.duration);
       break;
       
     case 'docx':
@@ -170,43 +180,51 @@ async function getTranscriptWithTimestamps(contentId, userId) {
 }
 
 /**
- * Convert transcript to SRT format
+ * Convert transcript to SRT format.
+ *
+ * Two upgrades over the previous version:
+ *   1. Sentence split survives abbreviations (Dr., U.S.A., etc.) +
+ *      decimals (3.14) + multilingual punctuation. The old `/[.!?]+/`
+ *      regex broke these and produced false sub-cue boundaries.
+ *   2. Cue durations are proportional to character count of the source
+ *      audio's duration — so a 50-char sentence gets ~5x the screen
+ *      time of a 10-char sentence — instead of every sentence getting
+ *      a fixed 3 seconds (which was off-by-minutes for long content).
+ *
+ * @param {string} transcript
+ * @param {number} [audioDurationSec]  — total duration in seconds
+ *                                       from the source video.
+ *                                       Falls back to a 4s/sentence
+ *                                       estimate when missing.
  */
-function convertToSRT(transcript) {
-  // Simple conversion - split by sentences and add timestamps
-  const sentences = transcript.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  let srt = '';
-  let startTime = 0;
-  const sentenceDuration = 3; // 3 seconds per sentence (simplified)
-
-  sentences.forEach((sentence, index) => {
-    const endTime = startTime + sentenceDuration;
-    srt += `${index + 1}\n`;
-    srt += `${formatSRTTime(startTime)} --> ${formatSRTTime(endTime)}\n`;
-    srt += `${sentence.trim()}\n\n`;
-    startTime = endTime;
-  });
-
-  return srt;
+function convertToSRT(transcript, audioDurationSec) {
+  if (!transcript || typeof transcript !== 'string') return '';
+  const sentences = smartSentenceSplit(transcript);
+  if (sentences.length === 0) return '';
+  const totalDuration = Number(audioDurationSec) > 0
+    ? Number(audioDurationSec)
+    : sentences.length * 4;
+  const cues = dedupeAdjacentCues(distributeSentencesByCharCount(sentences, totalDuration));
+  return cues.map((c, i) => {
+    return `${i + 1}\n${formatSRTTimeShared(c.start)} --> ${formatSRTTimeShared(c.end)}\n${c.text}\n`;
+  }).join('\n');
 }
 
 /**
- * Convert transcript to WebVTT format
+ * Convert transcript to WebVTT format. Same proportional + smart-split
+ * logic as convertToSRT — see its JSDoc.
  */
-function convertToVTT(transcript) {
-  let vtt = 'WEBVTT\n\n';
-  const sentences = transcript.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  let startTime = 0;
-  const sentenceDuration = 3;
-
-  sentences.forEach((sentence, index) => {
-    const endTime = startTime + sentenceDuration;
-    vtt += `${formatVTTTime(startTime)} --> ${formatVTTTime(endTime)}\n`;
-    vtt += `${sentence.trim()}\n\n`;
-    startTime = endTime;
-  });
-
-  return vtt;
+function convertToVTT(transcript, audioDurationSec) {
+  if (!transcript || typeof transcript !== 'string') return 'WEBVTT\n\n';
+  const sentences = smartSentenceSplit(transcript);
+  if (sentences.length === 0) return 'WEBVTT\n\n';
+  const totalDuration = Number(audioDurationSec) > 0
+    ? Number(audioDurationSec)
+    : sentences.length * 4;
+  const cues = dedupeAdjacentCues(distributeSentencesByCharCount(sentences, totalDuration));
+  return 'WEBVTT\n\n' + cues.map(c => {
+    return `${formatVTTTimeShared(c.start)} --> ${formatVTTTimeShared(c.end)}\n${c.text}\n`;
+  }).join('\n');
 }
 
 /**
