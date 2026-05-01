@@ -2406,6 +2406,7 @@ async function getAccurateAnalysisContext(videoId, videoMetadata = {}) {
     resolution: null,
     hasLocalFile: false,
     content: null,
+    energyProfile: [],
   };
 
   if (!videoId) return ctx;
@@ -2463,12 +2464,14 @@ async function getAccurateAnalysisContext(videoId, videoMetadata = {}) {
         Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
       try {
-        const [silence, scenes] = await Promise.all([
+        const [silence, scenes, energy] = await Promise.all([
           withTimeout(detectSilencePeriods(inputPath, -30, 0.5), ANALYSIS_DETECTION_TIMEOUT_MS).catch(() => []),
           withTimeout(detectSceneChanges(inputPath, 0.3), ANALYSIS_DETECTION_TIMEOUT_MS).catch(() => []),
+          withTimeout(getAudioService().getAudioEnergyProfile(inputPath), ANALYSIS_DETECTION_TIMEOUT_MS).catch(() => []),
         ]);
         ctx.silenceSegments = Array.isArray(silence) ? silence : [];
         ctx.sceneTimes = Array.isArray(scenes) ? scenes : [];
+        ctx.energyProfile = Array.isArray(energy) ? energy : [];
       } catch (e) {
         logger.warn('Silence/scene detection during analysis failed', { videoId, error: e.message });
       }
@@ -2647,6 +2650,7 @@ Return valid JSON with ALL these fields: recommendedCuts, transitions, audioAdju
     analysis.profileInsights = profileInsights;
     analysis.editStyles = editStyles;
     analysis.baseScore = Math.round(baseScore);
+    analysis.energyProfile = ctx.energyProfile;
     // Ensure all viral intelligence fields are present
     if (!analysis.hookScore && analysis.hookScore !== 0) analysis.hookScore = null;
     if (!analysis.hookText) analysis.hookText = null;
@@ -3033,11 +3037,32 @@ async function applyAllAiSuggestions(videoId, suggestions = []) {
 
     logger.info('Applying bulk AI suggestions', { videoId, suggestionCount: suggestions.length });
 
-    const transitionStyles = ['zoom', 'crossfade', 'none', 'glitch'];
-    let transitionIdx = 0;
+    // Fetch energy profile if available to drive dynamic transitions
+    let energyProfile = content.metadata?.energyProfile || [];
+    if (energyProfile.length === 0 && content.originalFile?.url) {
+      const inputPath = content.originalFile.url.startsWith('/')
+        ? path.join(__dirname, '../..', content.originalFile.url)
+        : null;
+      if (inputPath && fs.existsSync(inputPath)) {
+        energyProfile = await getAudioService().getAudioEnergyProfile(inputPath).catch(() => []);
+      }
+    }
 
     const timelineData = suggestions.map((s, idx) => {
-      const style = transitionStyles[transitionIdx % transitionStyles.length];
+      // Find energy level at this timestamp
+      const time = s.time || s.startTime || 0;
+      const energySample = energyProfile.find(p => p.time >= time - 0.2 && p.time <= time + 0.2) || { energy: 0.5 };
+      const energy = energySample.energy;
+
+      let style = 'none';
+      if (energy > 0.8) {
+        style = Math.random() > 0.5 ? 'glitch' : 'zoom';
+      } else if (energy > 0.4) {
+        style = Math.random() > 0.5 ? 'crossfade' : 'slide';
+      } else {
+        style = 'none';
+      }
+
       transitionIdx++;
 
       return {

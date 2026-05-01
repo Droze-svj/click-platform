@@ -6,6 +6,8 @@ const auth = require('../middleware/auth')
 const asyncHandler = require('../middleware/asyncHandler')
 const { sendSuccess, sendError } = require('../utils/response')
 const stockAssetsService = require('../services/stockAssetsService')
+const { tagMedia } = require('../services/mediaTaggingService')
+const { generateSmartFolders } = require('../services/smartFolderService')
 
 const router = express.Router()
 
@@ -17,8 +19,8 @@ const router = express.Router()
 router.get('/stock', auth, asyncHandler(async (req, res) => {
   const { type = 'images', page = 1, limit = 24, q = '' } = req.query
 
-  if (!['images', 'music', 'broll', 'sfx'].includes(type)) {
-    return sendError(res, 'Invalid type. Use images, music, broll, or sfx', 400)
+  if (!['images', 'music', 'broll', 'sfx', 'gifs', 'all'].includes(type)) {
+    return sendError(res, 'Invalid type. Use images, music, broll, sfx, gifs, or all', 400)
   }
 
   try {
@@ -33,6 +35,35 @@ router.get('/stock', auth, asyncHandler(async (req, res) => {
   } catch (error) {
     sendError(res, error.message || 'Failed to fetch stock assets', 500)
   }
+}))
+
+/**
+ * POST /api/assets/smart-organize
+ * Automatically tags and organizes the provided assets into smart folders via CLIP semantic analysis
+ */
+router.post('/smart-organize', auth, asyncHandler(async (req, res) => {
+  const { assets = [] } = req.body
+  
+  // 1. Semantic Tagging (Parallel process)
+  const taggedAssets = await Promise.all(assets.map(async (asset) => {
+    const hasTags = asset.metadata?.tags && asset.metadata.tags.length > 0
+    if (!hasTags && asset.url) {
+      const taggingResult = await tagMedia(asset.url, asset.type || 'image')
+      return { 
+        ...asset, 
+        metadata: { ...(asset.metadata || {}), tags: taggingResult.tags } 
+      }
+    }
+    return asset
+  }))
+
+  // 2. Smart Folder Grouping
+  const folders = await generateSmartFolders(taggedAssets)
+
+  sendSuccess(res, 'Assets organized into smart folders', 200, {
+    folders,
+    totalAssets: taggedAssets.length
+  })
 }))
 
 module.exports = router

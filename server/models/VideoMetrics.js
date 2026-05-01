@@ -22,7 +22,7 @@ const videoMetricsSchema = new mongoose.Schema({
   },
   platform: {
     type: String,
-    enum: ['youtube', 'tiktok', 'instagram', 'facebook', 'linkedin'],
+    enum: ['youtube', 'tiktok', 'instagram', 'facebook', 'linkedin', 'twitter'],
     required: true,
     index: true
   },

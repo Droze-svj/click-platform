@@ -52,10 +52,18 @@ const BUILTIN_SFX = [
   { id: 'sfx-success', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3', title: 'Success', tags: ['confirm', 'done'], duration: 1 },
 ]
 
+const BUILTIN_GIFS = [
+  { id: 'gif-reaction-1', url: 'https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif', title: 'Thumbs Up', tags: ['reaction', 'yes'], duration: 2 },
+  { id: 'gif-reaction-2', url: 'https://media.giphy.com/media/3o7TKWpu2WClyyq3q8/giphy.gif', title: 'Mind Blown', tags: ['reaction', 'wow'], duration: 3 },
+  { id: 'gif-reaction-3', url: 'https://media.giphy.com/media/l0HlOBZcl7mbj52gC/giphy.gif', title: 'Waiting', tags: ['reaction', 'time'], duration: 2 },
+  { id: 'gif-sticker-1', url: 'https://media.giphy.com/media/xT0xezQGU5xCDJuCPe/giphy.gif', title: 'Sparkles', tags: ['sticker', 'effect'], duration: 1 },
+]
+
 const IMAGES_PER_PAGE = 30
 const MUSIC_PER_PAGE = 24
 const BROLL_PER_PAGE = 24
 const SFX_PER_PAGE = 24
+const GIFS_PER_PAGE = 24
 
 function fetchJson(url) {
   return new Promise((resolve, reject) => {
@@ -242,6 +250,100 @@ function fetchStockSfx(page = 1, limit = 24, search = '') {
 }
 
 /**
+ * Fetch stock GIFs (built-in + optional GIPHY API)
+ */
+async function fetchStockGifs(page = 1, limit = 24, search = '') {
+  const giphyKey = process.env.GIPHY_API_KEY
+  if (giphyKey && search.trim()) {
+    try {
+      const q = encodeURIComponent(search.trim())
+      const offset = (page - 1) * limit
+      const url = `https://api.giphy.com/v1/gifs/search?api_key=${giphyKey}&q=${q}&limit=${limit}&offset=${offset}`
+      const res = await fetchJson(url)
+      
+      const items = (res.data || []).map(g => ({
+        id: `giphy-${g.id}`,
+        url: g.images.original.url,
+        thumbnail: g.images.fixed_height_small.url,
+        title: g.title,
+        type: 'gif',
+        source: 'click',
+        tags: [search.trim()],
+      }))
+      
+      return {
+        items,
+        hasMore: (offset + limit) < (res.pagination?.total_count || 0),
+        total: res.pagination?.total_count || items.length,
+      }
+    } catch (err) {
+      logger.warn('Giphy API fetch failed', { error: err.message })
+    }
+  }
+
+  // Fallback
+  const q = search.trim().toLowerCase()
+  let filtered = BUILTIN_GIFS
+  if (q) {
+    filtered = BUILTIN_GIFS.filter(
+      (g) =>
+        (g.title || '').toLowerCase().includes(q) ||
+        (g.tags || []).some((t) => t.toLowerCase().includes(q))
+    )
+  }
+  const start = (page - 1) * limit
+  const slice = filtered.slice(start, start + limit)
+  const items = slice.map((g) => ({
+    id: g.id,
+    url: g.url,
+    title: g.title,
+    type: 'gif',
+    duration: g.duration,
+    source: 'click',
+    thumbnail: g.url,
+  }))
+  return {
+    items,
+    hasMore: start + slice.length < filtered.length,
+    total: filtered.length,
+  }
+}
+
+/**
+ * Unified Semantic Search Bin - Fetch concurrently across all sources
+ */
+async function fetchAllStock(page = 1, limit = 24, search = '') {
+  // Distribute the limit across sources (e.g. 24 limit = 6 per source)
+  const limitPerSource = Math.max(1, Math.floor(limit / 4))
+  
+  const [images, broll, music, sfx, gifs] = await Promise.all([
+    fetchStockImages(page, limitPerSource, search),
+    fetchStockBroll(page, limitPerSource, search),
+    fetchStockMusic(page, limitPerSource, search),
+    fetchStockSfx(page, limitPerSource, search),
+    fetchStockGifs(page, limitPerSource, search)
+  ])
+
+  // Interleave results for a mixed masonry layout effect
+  const interleaved = []
+  const maxLen = Math.max(images.items.length, broll.items.length, music.items.length, sfx.items.length, gifs.items.length)
+  
+  for (let i = 0; i < maxLen; i++) {
+    if (images.items[i]) interleaved.push(images.items[i])
+    if (broll.items[i]) interleaved.push(broll.items[i])
+    if (music.items[i]) interleaved.push(music.items[i])
+    if (sfx.items[i]) interleaved.push(sfx.items[i])
+    if (gifs.items[i]) interleaved.push(gifs.items[i])
+  }
+
+  return {
+    items: interleaved,
+    hasMore: images.hasMore || broll.hasMore || music.hasMore || sfx.hasMore || gifs.hasMore,
+    total: images.total + broll.total + music.total + sfx.total + gifs.total,
+  }
+}
+
+/**
  * Main: fetch stock assets by type
  */
 async function fetchStockAssets(type, page = 1, limit = 24, search = '') {
@@ -258,6 +360,10 @@ async function fetchStockAssets(type, page = 1, limit = 24, search = '') {
     return fetchStockBroll(p, l, s)
   case 'sfx':
     return fetchStockSfx(p, l, s)
+  case 'gifs':
+    return fetchStockGifs(p, l, s)
+  case 'all':
+    return fetchAllStock(p, l, s)
   default:
     return { items: [], hasMore: false, total: 0 }
   }
@@ -265,8 +371,10 @@ async function fetchStockAssets(type, page = 1, limit = 24, search = '') {
 
 module.exports = {
   fetchStockAssets,
+  fetchAllStock,
   fetchStockImages,
   fetchStockMusic,
   fetchStockBroll,
   fetchStockSfx,
+  fetchStockGifs,
 }

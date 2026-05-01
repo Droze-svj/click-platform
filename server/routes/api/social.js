@@ -14,7 +14,9 @@ router.post('/generate-metadata', async (req, res) => {
     const { transcript, niche, tone } = req.body;
     if (!transcript) return res.status(400).json({ error: 'Transcript missing for neural synthesis' });
 
-    const metadata = await socialAiService.generateUniversalMetadata(transcript, niche, tone);
+    const metadata = await socialAiService.generateUniversalMetadata(transcript, niche, tone, {
+      userId: req.user?._id || req.user?.id || null,
+    });
     res.json({ success: true, metadata });
   } catch (error) {
     logger.error('Social Metadata Generation Failure', { error: error.message });

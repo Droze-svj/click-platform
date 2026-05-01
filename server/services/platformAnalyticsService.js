@@ -219,32 +219,183 @@ async function syncFacebookAnalytics(userId, postId, platformPostId) {
 }
 
 /**
+ * Sync analytics from Instagram (Graph API - media insights)
+ * Requires an Instagram Business or Creator account linked via Meta OAuth.
+ * Endpoint: GET /{ig-media-id}?fields=...&access_token=...
+ *           GET /{ig-media-id}/insights?metric=...
+ */
+async function syncInstagramAnalytics(userId, postId, platformPostId) {
+  try {
+    const accessToken = await getValidAccessToken(userId, 'instagram');
+
+    // Fetch the public counts and media type in one call
+    const mediaRes = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}`, {
+      params: {
+        fields: 'media_type,like_count,comments_count,media_product_type',
+        access_token: accessToken,
+      },
+    });
+
+    const media = mediaRes.data || {};
+    const mediaType = (media.media_type || '').toUpperCase();
+    const mediaProductType = (media.media_product_type || '').toUpperCase();
+    const likes = parseInt(media.like_count || 0, 10);
+    const comments = parseInt(media.comments_count || 0, 10);
+
+    // Insights metric set differs by media type. Use the smallest valid intersection
+    // and rely on the API to surface only what's available.
+    let metricSet;
+    if (mediaProductType === 'REELS') {
+      metricSet = 'plays,reach,saved,shares,total_interactions';
+    } else if (mediaType === 'VIDEO') {
+      metricSet = 'video_views,reach,impressions,saved';
+    } else {
+      metricSet = 'reach,impressions,saved';
+    }
+
+    let impressions = 0;
+    let reach = 0;
+    let videoViews = 0;
+    let saves = 0;
+    let shares = 0;
+
+    try {
+      const insightsRes = await axios.get(
+        `https://graph.facebook.com/v18.0/${platformPostId}/insights`,
+        { params: { metric: metricSet, access_token: accessToken } }
+      );
+      const items = insightsRes.data?.data || [];
+      for (const item of items) {
+        const value = parseInt(item.values?.[0]?.value || 0, 10);
+        switch (item.name) {
+        case 'impressions': impressions = value; break;
+        case 'reach': reach = value; break;
+        case 'video_views':
+        case 'plays': videoViews = value; break;
+        case 'saved': saves = value; break;
+        case 'shares': shares = value; break;
+        default: break;
+        }
+      }
+    } catch (insightsErr) {
+      // Insights require the Business/Creator account + ig_insights permission.
+      // If the call fails, return only the public counts rather than fabricate values.
+      logger.warn('Instagram insights unavailable; returning public counts only', {
+        platformPostId,
+        error: insightsErr.response?.data?.error?.message || insightsErr.message,
+      });
+    }
+
+    const engagement = likes + comments + shares + saves;
+    const views = videoViews || impressions;
+
+    return {
+      views,
+      likes,
+      comments,
+      shares,
+      engagement,
+      impressions,
+      reach: reach || impressions,
+      uniqueReach: reach || impressions,
+      engagementBreakdown: {
+        likes,
+        comments,
+        shares,
+        retweets: 0,
+        saves,
+        clicks: 0,
+        reactions: likes,
+        views,
+      },
+      syncedAt: new Date(),
+    };
+  } catch (error) {
+    logger.error('Instagram analytics sync error', { error: error.message, userId, postId });
+    captureException(error, { tags: { platform: 'instagram', operation: 'analytics_sync' } });
+    throw error;
+  }
+}
+
+/**
  * Sync analytics from YouTube (Data API v3 - videos.list statistics)
  */
 async function syncYouTubeAnalytics(userId, postId, platformPostId) {
   try {
     const accessToken = await getAccessTokenForPlatform(userId, 'youtube');
 
-    const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
-      params: {
-        part: 'statistics',
-        id: platformPostId,
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    // 1) Public counts + duration via Data API v3
+    const dataRes = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+      params: { part: 'statistics,contentDetails', id: platformPostId },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    const items = response.data?.items || [];
-    if (items.length === 0) {
+    const item = dataRes.data?.items?.[0];
+    if (!item) {
       throw new Error(`YouTube video ${platformPostId} not found`);
     }
 
-    const stats = items[0].statistics || {};
+    const stats = item.statistics || {};
     const views = parseInt(stats.viewCount || 0, 10);
     const likes = parseInt(stats.likeCount || 0, 10);
     const comments = parseInt(stats.commentCount || 0, 10);
     const engagement = likes + comments;
+    const durationSeconds = parseIso8601Duration(item.contentDetails?.duration);
+
+    // 2) Watch time + retention via Analytics API v2 (requires yt-analytics.readonly).
+    // Fail soft: keep the Data API counts, omit retention if scope/permission missing.
+    let watchTime = null;
+    let retentionCurve = null;
+    try {
+      const today = new Date();
+      const start = new Date(today.getTime() - 30 * 86400000);
+      const fmt = (d) => d.toISOString().slice(0, 10);
+
+      const wtRes = await axios.get('https://youtubeanalytics.googleapis.com/v2/reports', {
+        params: {
+          ids: 'channel==MINE',
+          startDate: fmt(start),
+          endDate: fmt(today),
+          metrics: 'estimatedMinutesWatched,averageViewDuration,averageViewPercentage',
+          filters: `video==${platformPostId}`,
+        },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const row = wtRes.data?.rows?.[0];
+      if (row) {
+        watchTime = {
+          totalMinutes: row[0],
+          averageSeconds: row[1],
+          averagePercentage: row[2],
+        };
+      }
+
+      // Retention curve: percentage of viewers still watching at each elapsed ratio.
+      const retRes = await axios.get('https://youtubeanalytics.googleapis.com/v2/reports', {
+        params: {
+          ids: 'channel==MINE',
+          startDate: fmt(start),
+          endDate: fmt(today),
+          metrics: 'audienceWatchRatio',
+          dimensions: 'elapsedVideoTimeRatio',
+          filters: `video==${platformPostId}`,
+          sort: 'elapsedVideoTimeRatio',
+        },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const rows = retRes.data?.rows || [];
+      if (rows.length && durationSeconds > 0) {
+        retentionCurve = rows.map(([ratio, watchRatio]) => ({
+          second: Math.round(ratio * durationSeconds),
+          percentage: Math.round(watchRatio * 100),
+        }));
+      }
+    } catch (analyticsErr) {
+      logger.warn('YouTube Analytics API unavailable; counts-only sync', {
+        platformPostId,
+        error: analyticsErr.response?.data?.error?.message || analyticsErr.message,
+      });
+    }
 
     return {
       views,
@@ -254,6 +405,9 @@ async function syncYouTubeAnalytics(userId, postId, platformPostId) {
       impressions: views,
       reach: views,
       uniqueReach: views,
+      durationSeconds,
+      watchTime,
+      retentionCurve,
       engagementBreakdown: {
         likes,
         comments,
@@ -270,6 +424,14 @@ async function syncYouTubeAnalytics(userId, postId, platformPostId) {
     captureException(error, { tags: { platform: 'youtube', operation: 'analytics_sync' } });
     throw error;
   }
+}
+
+function parseIso8601Duration(iso) {
+  if (!iso || typeof iso !== 'string') return 0;
+  const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  const [, h, m, s] = match;
+  return (parseInt(h || 0, 10) * 3600) + (parseInt(m || 0, 10) * 60) + parseInt(s || 0, 10);
 }
 
 /**
@@ -327,23 +489,11 @@ async function syncTikTokAnalytics(userId, postId, platformPostId) {
       if (apiErr.response?.status === 401 || apiErr.response?.data?.error?.code === 40101) {
         throw apiErr;
       }
-      logger.warn('TikTok video/list API not available, using placeholder', {
+      logger.warn('TikTok video/list API unavailable; skipping sync (no fabricated data)', {
         error: apiErr.message,
         platformPostId,
       });
-      return {
-        views: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        engagement: 0,
-        impressions: 0,
-        reach: 0,
-        uniqueReach: 0,
-        engagementBreakdown: { likes: 0, comments: 0, shares: 0, retweets: 0, saves: 0, clicks: 0, reactions: 0 },
-        syncedAt: new Date(),
-        _note: 'TikTok analytics require video.list scope; sync when API is configured',
-      };
+      return null;
     }
   } catch (error) {
     logger.error('TikTok analytics sync error', { error: error.message, userId, postId });
@@ -375,8 +525,10 @@ async function syncPostAnalytics(userId, postId) {
       analytics = await syncLinkedInAnalytics(userId, postId, post.platformPostId);
       break;
     case 'facebook':
-    case 'instagram':
       analytics = await syncFacebookAnalytics(userId, postId, post.platformPostId);
+      break;
+    case 'instagram':
+      analytics = await syncInstagramAnalytics(userId, postId, post.platformPostId);
       break;
     case 'youtube':
       analytics = await syncYouTubeAnalytics(userId, postId, post.platformPostId);
@@ -388,6 +540,11 @@ async function syncPostAnalytics(userId, postId) {
       throw new Error(`Analytics sync not supported for platform: ${post.platform}`);
     }
 
+    if (!analytics) {
+      logger.info('Analytics sync produced no data; skipping update', { postId, platform: post.platform });
+      return null;
+    }
+
     // Update post with synced analytics
     post.analytics = {
       ...post.analytics,
@@ -395,6 +552,45 @@ async function syncPostAnalytics(userId, postId) {
     };
     post.lastAnalyticsSync = new Date();
     await post.save();
+
+    // Bridge into the VideoMetrics collection for video posts.
+    // Use the platform-reported duration when available, or fall back to the content's known duration.
+    try {
+      const isVideo = analytics.views !== undefined || analytics.videoViews !== undefined || analytics.durationSeconds;
+      if (isVideo) {
+        const { updateVideoMetrics } = require('./videoMetricsService');
+        await updateVideoMetrics(post._id, {
+          views: {
+            total: analytics.views || 0,
+            unique: analytics.uniqueReach || analytics.reach || analytics.views || 0,
+            organic: analytics.views || 0,
+            paid: 0,
+          },
+          watchTime: analytics.watchTime ? {
+            total: (analytics.watchTime.totalMinutes || 0) * 60,
+            average: analytics.watchTime.averageSeconds || 0,
+          } : undefined,
+          completion: analytics.watchTime?.averagePercentage >= 95 ? {
+            count: Math.round((analytics.views || 0) * (analytics.watchTime.averagePercentage / 100)),
+            averageTime: analytics.watchTime.averageSeconds || 0,
+          } : undefined,
+          retention: analytics.retentionCurve ? { curve: analytics.retentionCurve } : undefined,
+          engagement: {
+            likes: analytics.likes || 0,
+            comments: analytics.comments || 0,
+            shares: analytics.shares || analytics.engagementBreakdown?.retweets || 0,
+            saves: analytics.engagementBreakdown?.saves || 0,
+          },
+          duration: analytics.durationSeconds || undefined,
+        });
+      }
+    } catch (bridgeErr) {
+      logger.warn('Failed to bridge analytics to VideoMetrics', {
+        postId,
+        platform: post.platform,
+        error: bridgeErr.message,
+      });
+    }
 
     // Update content performance
     try {
@@ -570,6 +766,7 @@ module.exports = {
   syncTwitterAnalytics,
   syncLinkedInAnalytics,
   syncFacebookAnalytics,
+  syncInstagramAnalytics,
   syncYouTubeAnalytics,
   syncTikTokAnalytics,
 };

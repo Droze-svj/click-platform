@@ -26,7 +26,7 @@ const { transcribeVideo: transcribeVideoService, isTranscriptionConfigured } = r
 logger.debug('📦 aiTranscriptionService loaded');
 const { applyVideoEffect, addTextOverlay, addWatermark } = require('../services/videoEffects');
 logger.debug('📦 videoEffects loaded');
-const { generateThumbnail } = require('../services/thumbnailService');
+const { generateNeuralThumbnail } = require('../services/thumbnailService');
 logger.debug('📦 thumbnailService loaded');
 const { cleanupFailedContent } = require('../utils/fileCleanup');
 logger.debug('📦 fileCleanup loaded');
@@ -555,10 +555,14 @@ async function processVideo(contentId, videoPath, user) {
       if (!fs.existsSync(thumbnailsDir)) {
         fs.mkdirSync(thumbnailsDir, { recursive: true });
       }
-      await generateThumbnail(finalClipPath, thumbnailPath, {
+      // Neural variant: heatmap-driven frame selection when a postId is known,
+      // otherwise an ffprobe midpoint (a real frame, not the second-0 black frame).
+      // This clip hasn't been published yet, so no postId is available — but the
+      // midpoint fallback alone already beats the previous fixed time=00:00:01.
+      await generateNeuralThumbnail(finalClipPath, thumbnailPath, {}, {
         width: 1280,
         height: 720,
-        quality: 90
+        quality: 90,
       });
 
       // Optimize thumbnail image (in background, don't block)

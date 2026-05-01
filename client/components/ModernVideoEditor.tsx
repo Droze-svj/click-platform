@@ -43,8 +43,8 @@ import { useMultiplayerTimeline } from '../hooks/useMultiplayerTimeline'
 import { PropertiesPanel } from './editor/PropertiesPanel'
 import RealTimeVideoPreview from './editor/RealTimeVideoPreview'
 import ResizableTimeline from './editor/ResizableTimeline'
-import CommandK from './editor/CommandK'
 import AiAssistant from './editor/AiAssistant'
+import AiTimelineChat from './editor/AiTimelineChat'
 import EngagementHeatMap from './editor/EngagementHeatMap'
 import HealthDeltaOverlay from './editor/HealthDeltaOverlay'
 
@@ -2237,39 +2237,52 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   </div>
                 </div>
               </div>
-              <div className="flex-1 min-h-0 relative">
-                <div className="absolute inset-0 bg-black/20 rounded-[1.5rem] border border-white/5" />
-                <div className="relative h-full">
-                  <ResizableTimeline
-                    duration={videoState.duration}
-                    currentTime={videoState.currentTime}
-                    isPlaying={videoState.isPlaying}
-                    onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
-                    density={layoutPrefs.timelineDensity}
-                    segments={timelineSegments}
-                    onTimeUpdate={handleTimeUpdate}
-                    onSegmentsChange={setTimelineSegments}
-                    markers={timelineMarkers}
-                    onMarkersChange={setTimelineMarkers}
-                    selectedSegmentId={selectedSegmentId}
-                    selectedSegmentIds={selectedSegmentIds}
-                    onSegmentSelect={handleSegmentSelect}
-                    onSegmentDeleted={() => showToast('Segment purged', 'info')}
-                    trackVisibility={trackVisibility}
-                    onTrackVisibilityChange={(trackIndex, visible) => setTrackVisibility((prev) => ({ ...prev, [trackIndex]: visible }))}
-                    effects={timelineEffects}
-                    onEffectsChange={setTimelineEffects}
-                    selectedEffectId={selectedEffectId}
-                    onEffectSelect={setSelectedEffectId}
-                    onEffectDeleted={() => showToast('Effect purged', 'info')}
-                    textOverlays={textOverlays}
-                    imageOverlays={imageOverlays}
-                    onAssetDrop={handleAssetDrop}
-                    transcript={transcript}
-                    aiDirectorSuggestions={aiDirectorSuggestions}
-                    engagementScore={engagementScore}
-                  />
+              <div className="flex-1 min-h-0 relative flex gap-2">
+                <div className="flex-1 relative min-w-0">
+                  <div className="absolute inset-0 bg-black/20 rounded-[1.5rem] border border-white/5" />
+                  <div className="relative h-full">
+                    <ResizableTimeline
+                      duration={videoState.duration}
+                      currentTime={videoState.currentTime}
+                      isPlaying={videoState.isPlaying}
+                      onPlayPause={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
+                      density={layoutPrefs.timelineDensity}
+                      segments={timelineSegments}
+                      onTimeUpdate={handleTimeUpdate}
+                      onSegmentsChange={setTimelineSegments}
+                      markers={timelineMarkers}
+                      onMarkersChange={setTimelineMarkers}
+                      selectedSegmentId={selectedSegmentId}
+                      selectedSegmentIds={selectedSegmentIds}
+                      onSegmentSelect={handleSegmentSelect}
+                      onSegmentDeleted={() => showToast('Segment purged', 'info')}
+                      trackVisibility={trackVisibility}
+                      onTrackVisibilityChange={(trackIndex, visible) => setTrackVisibility((prev) => ({ ...prev, [trackIndex]: visible }))}
+                      effects={timelineEffects}
+                      onEffectsChange={setTimelineEffects}
+                      selectedEffectId={selectedEffectId}
+                      onEffectSelect={setSelectedEffectId}
+                      onEffectDeleted={() => showToast('Effect purged', 'info')}
+                      textOverlays={textOverlays}
+                      imageOverlays={imageOverlays}
+                      onAssetDrop={handleAssetDrop}
+                      transcript={transcript}
+                      aiDirectorSuggestions={aiDirectorSuggestions}
+                      engagementScore={engagementScore}
+                    />
+                  </div>
                 </div>
+                {/* Prompt-Based Timeline Chat Docked to Timeline */}
+                {assistantOpen && (
+                  <AiTimelineChat 
+                    onApplyLUT={(name) => setVideoFilters(prev => ({...prev, contrast: 120, saturation: 110, temperature: 95, vignette: 20}))}
+                    onChangeAspectRatio={() => showToast('Aspect ratio updated to 9:16 vertical', 'success')}
+                    onAddText={(text) => setTextOverlays(prev => [...prev, {
+                      id: `ai-text-${Date.now()}`,
+                      text, x: 50, y: 50, fontSize: 64, color: '#ffffff', fontFamily: 'Inter, sans-serif', startTime: videoState.currentTime, endTime: videoState.currentTime + 3, style: 'bold-kinetic', shadowColor: 'rgba(0,0,0,0.5)', animationIn: 'pop', animationOut: 'fade', animationInDuration: 0.15, animationOutDuration: 0.2, layer: 10
+                    }])}
+                  />
+                )}
               </div>
             </div>
           </div>
