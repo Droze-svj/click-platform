@@ -8,17 +8,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight,
   // Studio
-  LayoutDashboard, Video, Sparkles, FileText, Quote, BookOpen, Wand2, Hammer, Palette,
+  LayoutDashboard, Video, Sparkles, FileText, BookOpen, Hammer,
   // Publish
-  Send, CalendarDays, Workflow, RefreshCw,
+  Send, CalendarDays, Workflow,
   // Grow
-  BarChart3, TrendingUp, Target, Flame, Brain, Activity, Megaphone,
+  BarChart3, Flame, Brain,
   // Manage
-  FolderKanban, Users, CheckSquare, ThumbsUp, Gem, Trophy, Boxes, Plug, Compass,
+  FolderKanban, Users, Gem, Boxes, Plug, Compass,
   // Settings
-  Settings, Bell, LogOut, HelpCircle, Sun, Moon, Monitor, Search,
+  Settings, LogOut, Sun, Moon,
 } from 'lucide-react'
-import ThemeToggle from './DarkModeToggle'
 import { useTheme } from './ThemeProvider'
 import ClickLogo from './ClickLogo'
 
@@ -29,8 +28,8 @@ const ZONES = [
     label: 'Studio',
     emoji: '🎬',
     gradient: 'from-violet-600 to-purple-600',
-    accent: 'text-indigo-400',
-    activeBg: 'bg-indigo-500/10 border-indigo-500/20',
+    accent: 'text-[var(--tint-indigo-fg)]',
+    activeBg: 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]',
     items: [
       { path: '/dashboard',             label: 'Home',         icon: LayoutDashboard, badge: null },
       { path: '/dashboard/onboarding',  label: 'Get Started',  icon: Compass,         badge: 'Start' },
@@ -46,8 +45,8 @@ const ZONES = [
     label: 'Publish',
     emoji: '🚀',
     gradient: 'from-amber-500 to-orange-500',
-    accent: 'text-amber-400',
-    activeBg: 'bg-amber-600/15 border-amber-500/30',
+    accent: 'text-[var(--tint-amber-fg)]',
+    activeBg: 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]',
     items: [
       { path: '/dashboard/scheduler',     label: 'Scheduler',    icon: Send,         badge: null },
       { path: '/dashboard/calendar',      label: 'Calendar',     icon: CalendarDays, badge: null },
@@ -60,8 +59,8 @@ const ZONES = [
     label: 'Grow',
     emoji: '📈',
     gradient: 'from-emerald-500 to-teal-500',
-    accent: 'text-emerald-400',
-    activeBg: 'bg-emerald-600/15 border-emerald-500/30',
+    accent: 'text-[var(--tint-emerald-fg)]',
+    activeBg: 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
     items: [
       { path: '/dashboard/analytics',            label: 'Analytics',         icon: BarChart3,  badge: null },
       { path: '/dashboard/analytics/creator',    label: 'Creator Stats',     icon: Flame,      badge: 'AI' },
@@ -74,8 +73,8 @@ const ZONES = [
     label: 'Manage',
     emoji: '⚙️',
     gradient: 'from-sky-500 to-blue-600',
-    accent: 'text-sky-400',
-    activeBg: 'bg-sky-600/15 border-sky-500/30',
+    accent: 'text-[var(--tint-sky-fg)]',
+    activeBg: 'bg-[var(--tint-sky-bg)] border-[var(--tint-sky-edge)]',
     items: [
       { path: '/dashboard/workspaces',   label: 'Workspaces',    icon: Boxes,        badge: 'New' },
       { path: '/dashboard/projects',     label: 'Projects',      icon: FolderKanban, badge: null },
@@ -83,10 +82,6 @@ const ZONES = [
       { path: '/dashboard/billing',      label: 'Billing',       icon: Gem,          badge: null },
     ],
   },
-]
-
-const BOTTOM_ITEMS = [
-  { path: '/dashboard/settings',      label: 'Settings', icon: Settings,    badge: null },
 ]
 
 export default function SidebarNav() {
@@ -173,8 +168,8 @@ export default function SidebarNav() {
                     {zone.items.map(item => {
                       const active = isActive(item.path)
                       return (
-                        <Link key={item.path} href={item.path} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border ${active ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-main)] hover:bg-[var(--glass-surface)]'}`}>
-                          <item.icon size={14} className={active ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-400'} />
+                        <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border ${active ? `${zone.activeBg} ${zone.accent}` : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-main)] hover:bg-[var(--glass-surface)]'}`}>
+                          <item.icon size={14} className={active ? zone.accent : 'text-[var(--text-dim)] group-hover:text-[var(--text-main)]'} />
                           <span className="flex-1">{item.label}</span>
                         </Link>
                       )
@@ -199,11 +194,11 @@ export default function SidebarNav() {
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-[var(--text-main)] truncate leading-none mb-1">{user?.name || 'Creator'}</p>
-              <p className="text-[8px] font-bold text-emerald-400 truncate uppercase tracking-widest">Active Plan</p>
+              <p className="text-[8px] font-bold text-[var(--tint-emerald-fg)] truncate uppercase tracking-widest">Active Plan</p>
             </div>
           )}
           {!collapsed && (
-            <button onClick={logout} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"><LogOut size={14} /></button>
+            <button onClick={logout} aria-label="Log out" className="p-2 text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] rounded-lg transition-all"><LogOut size={14} /></button>
           )}
         </div>
       </div>
@@ -213,7 +208,7 @@ export default function SidebarNav() {
       {MOBILE_TABS.map(item => {
         const active = isActive(item.path)
         return (
-          <Link key={item.path} href={item.path} className={`flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl transition-all ${active ? 'text-indigo-400' : 'text-[var(--text-dim)]'}`}>
+          <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} className={`flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl transition-all ${active ? 'text-[var(--tint-indigo-fg)]' : 'text-[var(--text-dim)]'}`}>
             <item.icon size={20} />
             <span className="text-[8px] font-black uppercase tracking-widest">{item.label}</span>
           </Link>

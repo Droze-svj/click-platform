@@ -27,7 +27,7 @@ export default function ClickLogo({
 }: ClickLogoProps) {
   const id = React.useId()
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+    <span className={`inline-flex items-center gap-2.5 text-[var(--text-main)] ${className}`}>
       <svg
         width={size}
         height={size}
@@ -59,13 +59,16 @@ export default function ClickLogo({
           fill="none"
         />
 
-        {/* Cursor arrow piercing the C opening */}
+        {/* Cursor arrow piercing the C opening — stroke uses currentColor
+            so it stays legible in both light and dark themes (parent sets
+            color via text-[var(--text-main)] on the wrapping span). */}
         <path
           d="M38 30 L57 30 L48 39 L52 49 L46 51 L42 41 L33 47 Z"
           fill={`url(#click-arrow-${id})`}
-          stroke="#0f172a"
+          stroke="currentColor"
           strokeWidth="1.2"
           strokeLinejoin="round"
+          opacity="0.85"
         />
       </svg>
       {showWordmark && (

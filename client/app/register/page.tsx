@@ -416,7 +416,7 @@ export default function Register() {
           {formProgress > 0 && formProgress < 100 && (
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Synchronization Matrix</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Synchronization Matrix</span>
                 <span className="text-[10px] font-mono text-indigo-400">{formProgress}%</span>
               </div>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
@@ -626,7 +626,7 @@ export default function Register() {
           <div className="mt-10 pt-8 border-t border-white/5 relative z-10">
             <div className="flex items-center justify-center gap-4 mb-6">
               <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Secondary Nodes</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">Secondary Nodes</span>
               <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -640,7 +640,7 @@ export default function Register() {
           </div>
 
           <div className="mt-10 text-center relative z-10 border-t border-white/5 pt-8">
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+            <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">
               {t('auth.hasAccount')}{' '}
               <Link
                 href="/login"
