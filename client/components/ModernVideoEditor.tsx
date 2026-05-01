@@ -317,9 +317,14 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [selectedOverlayId, setSelectedOverlayId] = useState<string | null>(null)
   const [trackVisibility, setTrackVisibility] = useState<Record<number, boolean>>({})
 
-  // Intelligence & Style DNA
-  const styleDNA = useStyleDNA(timelineSegments, [...textOverlays, ...shapeOverlays, ...imageOverlays, ...svgOverlays, ...gradientOverlays]); // Initialized useStyleDNA
+  // Intelligence & Style DNA — order matters: styleProfile must initialize before
+  // styleDNA so the DNA derivation can read the user's persisted picks.
   const styleProfile = useStyleProfile()
+  const styleDNA = useStyleDNA(
+    timelineSegments,
+    [...textOverlays, ...shapeOverlays, ...imageOverlays, ...svgOverlays, ...gradientOverlays],
+    styleProfile.profile,
+  );
   const creatorPipeline = useCreatorPipeline()
   const [aiProposalSnapshot, setAiProposalSnapshot] = useState<any>(null); // Added
   const [telemetryHistory, setTelemetryHistory] = useState<any[]>([]); // Added

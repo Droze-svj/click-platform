@@ -5,6 +5,7 @@ import LogEmitter from '../../utils/logEmitter'
 import SidebarNav from '../../components/SidebarNav'
 import GlobalCommandPalette from '../../components/GlobalCommandPalette'
 import WorkflowRail from '../../components/WorkflowRail'
+import OnboardingNudge from '../../components/OnboardingNudge'
 import { LayoutPreferencesProvider } from '../../contexts/LayoutPreferencesContext'
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -29,6 +30,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <SidebarNav />
                 <main className="flex-1 min-w-0 pb-24 lg:pb-0 flex flex-col overflow-x-hidden">
                     <WorkflowRail />
+                    <OnboardingNudge />
                     <div className="flex-1 min-w-0 overflow-x-hidden">
                         {children}
                     </div>

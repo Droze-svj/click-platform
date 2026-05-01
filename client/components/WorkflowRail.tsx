@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Check, ArrowRight, Sparkles, Upload, FileText, Video, Send, BarChart3, type LucideIcon } from 'lucide-react'
@@ -22,8 +22,27 @@ const STAGE_ICONS: Record<WorkflowStage, LucideIcon> = {
 export default function WorkflowRail() {
   const pathname = usePathname()
   const router = useRouter()
-  const { state, setStage, setPlatform } = useWorkflow()
+  const { state, setStage, setPlatform, completeStage } = useWorkflow()
   const { t } = useTranslation()
+
+  // Auto-advance: when the user navigates forward into a later stage's
+  // route (e.g. moves from /dashboard/forge → /dashboard/scripts), mark
+  // every stage they crossed over as completed. We only advance forward —
+  // navigating backward shouldn't reset progress.
+  useEffect(() => {
+    if (!pathname) return
+    const route = stageFromPath(pathname)
+    if (!route) return
+    const newIdx = STAGE_ORDER.indexOf(route)
+    const curIdx = STAGE_ORDER.indexOf(state.stage)
+    if (newIdx > curIdx) {
+      // Mark every stage between (curIdx, newIdx) inclusive of curIdx as done.
+      for (let i = curIdx; i < newIdx; i++) {
+        if (!state.completed[STAGE_ORDER[i]]) completeStage(STAGE_ORDER[i])
+      }
+      setStage(route)
+    }
+  }, [pathname, state.stage, state.completed, completeStage, setStage])
 
   const stageLabel = (s: WorkflowStage) => {
     const k = `workflow.stages.${s}.label`
