@@ -93,6 +93,7 @@ import { useToast } from '../contexts/ToastContext'
 import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 import { InsightsSidebar } from './editor/InsightsSidebar'
 import EditorHUD from './editor/EditorHUD'
+import CommandK from './editor/CommandK'
 import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
@@ -207,7 +208,7 @@ function loadLayoutPreferences(): EditorLayoutPreferences {
   }
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700 hover:bg-white/[0.05]"
+const glassStyle = "backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_0_50px_rgba(79,70,229,0.15)] hover:shadow-[0_0_80px_rgba(79,70,229,0.25)] transition-all duration-500 rounded-[2rem]"
 
 const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; videoId?: string; initialState?: any }> = ({ videoUrl, videoPath, videoId, initialState }) => {
   const { showToast } = useToast()
@@ -325,6 +326,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
   // ── Consolidated AI & Strategy State ──
   const [contentNiche, setContentNiche] = useState<ContentNiche>('educational')
+  const [targetLanguage, setTargetLanguage] = useState<string>('English')
   const [engagementScore, setEngagementScore] = useState<EngagementScore>({
     overall: 85, viralPotential: 78, hookStrength: 92, sentimentDensity: 70, trendAlignment: 82, retentionHeatmap: Array(20).fill(80).map((v, i) => v - i * 2)
   })
@@ -335,6 +337,42 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     { id: 'suggest-2', time: 8.5, type: 'broll', label: 'B-Roll Suggestion', description: 'Context: "creative flow". Overlay whiteboard animation?', confidence: 0.88, impact: 'medium' },
     { id: 'suggest-3', time: 4.2, type: 'cut', label: 'Silence Detected', description: '0.7s gap. Auto-cut to improve pacing?', confidence: 0.92, impact: 'medium' }
   ])
+
+  // Fetch Advanced Analytics Insights
+  useEffect(() => {
+    const fetchEditorInsights = async () => {
+      try {
+        const res = await apiGet('/analytics/content/editor-insights')
+        const insights = (res as any)?.data || res
+        
+        if (insights) {
+          // Update Engagement Score Based on Real Analytics
+          setEngagementScore(prev => ({
+            ...prev,
+            hookStrength: insights.editing.cutFrequencySeconds < 2 ? 95 : 85,
+            viralPotential: insights.scheduling.accuracyScore > 0.9 ? 92 : 78
+          }))
+
+          // Push data-driven AI suggestions into the pipeline
+          setAiDirectorSuggestions(prev => [
+            {
+              id: 'analytics-pacing',
+              time: 0.5,
+              type: 'hook',
+              label: 'Data-Driven Pacing',
+              description: `Analytics show ${insights.editing.recommendedPace} pacing retains ${insights.captions.reason}. Recommend cut frequency: ${insights.editing.cutFrequencySeconds}s.`,
+              confidence: 0.98,
+              impact: 'high'
+            },
+            ...prev
+          ])
+        }
+      } catch (err) {
+        console.error('Failed to load advanced editor insights:', err)
+      }
+    }
+    fetchEditorInsights()
+  }, [])
 
   const [isMakingViral, setIsMakingViral] = useState(false)
 
@@ -348,10 +386,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     if (isMakingViral) return
     setIsMakingViral(true)
     try {
-      showToast('Composing your viral edit recipe…', 'info')
+      showToast(`Composing your viral edit recipe in ${targetLanguage}…`, 'info')
       const res = await apiPost<{ data: { suggestions: AIDirectorSuggestion[]; stages: any[] } }>(
         '/video/viral/one-click',
-        { contentId: videoId, niche: contentNiche, platform: 'tiktok' },
+        { contentId: videoId, niche: contentNiche, platform: 'tiktok', targetLanguage },
       )
       const suggestions = (res as any)?.data?.suggestions || (res as any)?.suggestions || []
       if (!Array.isArray(suggestions) || suggestions.length === 0) {
@@ -2042,17 +2080,35 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 </div>
               )}
               <div className={`glass-neural overflow-hidden flex flex-col h-full border-white/5 shadow-2xl ${viewportWidth < 768 ? 'rounded-none border-none bg-transparent shadow-none' : 'rounded-[2.5rem]'}`}>
-                <div className="flex-shrink-0 px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex-shrink-0 px-6 py-4 border-b border-white/5 bg-black/40 backdrop-blur-md">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
+                      <button 
+                        onClick={() => setActiveCategory('edit')}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory !== 'ai' && activeCategory !== 'predict' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-500 hover:text-white'}`}
+                      >
+                        MANUAL OVERRIDE
+                      </button>
+                      <button 
+                        onClick={() => setActiveCategory('ai')}
+                        className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'ai' || activeCategory === 'predict' ? 'bg-fuchsia-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.4)]' : 'text-slate-500 hover:text-white'}`}
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        AUTONOMOUS AI
+                      </button>
+                    </div>
+                  </div>
+                  
                   <div className={`flex items-center gap-2 ${viewportWidth < 768 ? 'flex-nowrap overflow-x-auto custom-scrollbar pb-1' : 'flex-wrap'}`}>
-                    {WORKFLOW_STEPS.map((step) => (
+                    {WORKFLOW_STEPS.filter(step => (activeCategory === 'ai' || activeCategory === 'predict') ? ['ai', 'predict', 'intelligence', 'export'].includes(step.id) : !['ai', 'predict'].includes(step.id)).map((step) => (
                       <button
                         key={step.id}
                         onClick={() => setActiveCategory(step.id)}
                         title={`Navigate to ${step.label} section`}
-                        className={`px-4 py-2 rounded-xl text-[10px] whitespace-nowrap font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${
+                        className={`px-4 py-2 rounded-xl text-[9px] whitespace-nowrap font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${
                           activeCategory === step.id
-                            ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20'
-                            : 'text-slate-500 hover:text-white hover:bg-white/5'
+                            ? 'bg-white/10 text-white border border-white/20 shadow-lg'
+                            : 'text-slate-500 border border-transparent hover:text-white hover:bg-white/5'
                         }`}
                       >
                         {visitedWorkflowSteps.has(step.id) && <div className="w-1 h-1 rounded-full bg-current" />}
@@ -2393,6 +2449,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             niche={contentNiche}
             onNicheChange={setContentNiche}
             onCaptionStyleChange={(style) => setCaptionStyle(prev => prev ? { ...prev, textStyle: style } : prev)}
+            onLanguageChange={setTargetLanguage}
             onManualOverride={handleManualOverride}
             onScheduleUpload={handleScheduleUpload}
           />

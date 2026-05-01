@@ -1,54 +1,77 @@
 'use client';
 
 import Link from 'next/link';
-import { Zap } from 'lucide-react';
+import { Zap, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 transition-all duration-300 ${
-        scrolled ? 'backdrop-blur-2xl bg-[#050505]/60 border-b border-white/5' : ''
+      className={`fixed top-0 left-0 right-0 z-[100] px-6 lg:px-12 py-6 transition-all duration-500 ${
+        scrolled ? 'backdrop-blur-3xl bg-[#050505]/80 border-b border-white/5 py-4' : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-            <Zap className="w-5 h-5 text-white" />
+      <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-4 group cursor-pointer">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-2xl shadow-indigo-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+            <Zap className="w-6 h-6 text-white" />
           </div>
-          <span className="text-2xl font-black tracking-tighter">CLICK</span>
+          <span className="text-3xl font-black tracking-tighter text-white italic">CLICK</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-slate-400">
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">
           <a href="#features" className="hover:text-indigo-400 transition-colors">Features</a>
           <a href="#workflow" className="hover:text-indigo-400 transition-colors">Workflow</a>
           <a href="#pricing" className="hover:text-indigo-400 transition-colors">Pricing</a>
-          <a href="#faq" className="hover:text-indigo-400 transition-colors">FAQ</a>
+          <div className="w-1 h-1 rounded-full bg-white/10" />
+          <Link href="/login" className="hover:text-white transition-colors">Log In</Link>
         </div>
 
         <div className="flex items-center gap-4">
           <Link
-            href="/login"
-            className="hidden sm:block px-6 py-2.5 rounded-xl text-sm font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors"
-          >
-            Log In
-          </Link>
-          <Link
             href="/register"
-            className="px-6 py-2.5 sm:px-8 sm:py-2.5 rounded-xl bg-white text-black text-sm font-bold uppercase tracking-widest hover:bg-slate-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] active:scale-95"
+            className="px-8 py-3.5 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-indigo-500 hover:text-white transition-all shadow-xl active:scale-95"
           >
-            Get Click
+            Get Started
           </Link>
+          
+          <button 
+            className="md:hidden w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-full left-0 right-0 bg-[#050505] border-b border-white/5 p-8 flex flex-col gap-6 md:hidden backdrop-blur-3xl"
+          >
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-black uppercase tracking-widest text-slate-400 hover:text-white">Features</a>
+            <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-black uppercase tracking-widest text-slate-400 hover:text-white">Workflow</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-sm font-black uppercase tracking-widest text-slate-400 hover:text-white">Pricing</a>
+            <hr className="border-white/5" />
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-sm font-black uppercase tracking-widest text-slate-400 hover:text-white">Log In</Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

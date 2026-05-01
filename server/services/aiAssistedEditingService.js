@@ -310,13 +310,15 @@ Be SPECIFIC, DATA-DRIVEN, and CREATIVE. Every suggestion should have a concrete 
 
 /**
  * AI CAPTIONS — Gemini generates semantically-styled captions with animations
+ * Supports high-accuracy multi-language translation and timing sync.
  */
-async function generateAICaptions(videoId, transcript, metadata, style = 'hormozi-punchline') {
+async function generateAICaptions(videoId, transcript, metadata, style = 'hormozi-punchline', targetLanguage = 'English') {
   try {
     if (!geminiConfigured || !transcript) return { captions: [], videoId };
 
     const duration = metadata?.duration || 0;
     const result = await callGemini(`You are Click AI Caption Engine — generate viral, engagement-maximizing captions.
+CRITICAL INSTRUCTION: You MUST translate and output the captions in the following target language: **${targetLanguage}**. Ensure the translation is culturally accurate, not just a literal word-for-word translation, while maintaining the exact timing and punchiness of the original transcript.
 
 STYLE: ${style}
 TRANSCRIPT (${Math.round(duration)}s): "${transcript.substring(0, 3000)}"
@@ -350,6 +352,7 @@ Rules:
 - CTA caption is always last 3 seconds
 - Generate 8-15 captions for a typical 60s video
 - Match the style: ${style === 'hormozi-punchline' ? 'Bold, simple, one-line punchlines' : style === 'mrbeast-energy' ? 'Excited, colorful, fast-paced' : style === 'clean-minimal' ? 'Elegant, lowercase, subtle' : 'Standard clear captions'}
+- TRANSLATION MANDATE: All output text inside the JSON MUST be accurately written in ${targetLanguage}.
 
 Return ONLY valid JSON.`,
     { temperature: 0.6, maxTokens: 2000 });

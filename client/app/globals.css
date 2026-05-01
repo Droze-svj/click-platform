@@ -637,9 +637,14 @@ body {
 }
 
 .glass-neural {
-  @apply backdrop-blur-2xl bg-white/[0.03] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+  @apply backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_0_50px_rgba(79,70,229,0.15)] rounded-[2rem];
   position: relative;
   overflow: hidden;
+  transition: all 0.5s ease;
+}
+
+.glass-neural:hover {
+  @apply shadow-[0_0_80px_rgba(79,70,229,0.25)];
 }
 
 .glass-neural::after {

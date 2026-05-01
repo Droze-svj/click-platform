@@ -20,7 +20,8 @@ import {
   UserCheck,
   Headphones,
   BookOpen,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Globe
 } from 'lucide-react'
 import { EngagementScore, ContentNiche, CaptionTextStyle, PlatformNiche } from '../../types/editor'
 
@@ -31,6 +32,7 @@ interface InsightsSidebarProps {
   onCaptionStyleChange: (style: CaptionTextStyle) => void
   onManualOverride: (instruction: string) => void
   onScheduleUpload: () => void
+  onLanguageChange?: (language: string) => void
 }
 
 const nicheOptions: { id: ContentNiche; label: string }[] = [
@@ -61,10 +63,12 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
   onNicheChange,
   onCaptionStyleChange,
   onManualOverride,
-  onScheduleUpload
+  onScheduleUpload,
+  onLanguageChange
 }) => {
   const [overrideText, setOverrideText] = useState('')
   const [activePlatform, setActivePlatform] = useState<PlatformNiche>('tiktok')
+  const [targetLanguage, setTargetLanguage] = useState('English')
   const [currentScore, setCurrentScore] = useState<EngagementScore>(initialScore)
   const [advice, setAdvice] = useState('')
 
@@ -377,6 +381,38 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
                 {opt.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="h-px bg-white/5" />
+
+        {/* High-Accuracy Neural Translation */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-sky-400" />
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Output Language</h3>
+            </div>
+            <span className="text-[8px] font-black text-sky-400 uppercase bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">Cultural Sync</span>
+          </div>
+          <div className="relative group">
+            <select
+              value={targetLanguage}
+              onChange={(e) => {
+                setTargetLanguage(e.target.value)
+                if (onLanguageChange) onLanguageChange(e.target.value)
+              }}
+              title="Select Target Language"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-[11px] font-bold text-white appearance-none focus:outline-none focus:border-sky-500 transition-all cursor-pointer"
+            >
+              <option value="English" className="bg-[#0a0a0a]">English</option>
+              <option value="Spanish" className="bg-[#0a0a0a]">Spanish (Español)</option>
+              <option value="French" className="bg-[#0a0a0a]">French (Français)</option>
+              <option value="German" className="bg-[#0a0a0a]">German (Deutsch)</option>
+              <option value="Japanese" className="bg-[#0a0a0a]">Japanese (日本語)</option>
+              <option value="Portuguese" className="bg-[#0a0a0a]">Portuguese (Português)</option>
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-hover:text-white transition-colors" />
           </div>
         </div>
 

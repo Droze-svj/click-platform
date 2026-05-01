@@ -2,73 +2,100 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, Play } from 'lucide-react';
-import { glass } from './_styles';
+import { Sparkles, ArrowRight, Play, Zap, ShieldCheck, Globe } from 'lucide-react';
+
+const glass = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl';
 
 export function Hero() {
   return (
-    <section className="relative pt-40 md:pt-48 pb-20 md:pb-32 px-6 flex flex-col items-center">
-      {/* Animated mesh-gradient background — purely decorative */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[55%] h-[55%] bg-indigo-600/25 blur-[140px] rounded-full motion-safe:animate-pulse" />
-        <div className="absolute top-[20%] right-[-10%] w-[45%] h-[55%] bg-fuchsia-600/20 blur-[160px] rounded-full motion-safe:animate-pulse motion-safe:[animation-delay:700ms]" />
-        <div className="absolute bottom-[-15%] left-[25%] w-[55%] h-[45%] bg-blue-600/15 blur-[150px] rounded-full" />
+    <section className="relative pt-40 md:pt-56 pb-20 md:pb-40 px-6 flex flex-col items-center overflow-hidden">
+      
+      {/* Animated Atmosphere */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] bg-indigo-600/20 blur-[140px] rounded-full animate-pulse" />
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[60%] bg-fuchsia-600/15 blur-[160px] rounded-full animate-pulse [animation-delay:1000ms]" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] bg-blue-600/10 blur-[150px] rounded-full" />
       </div>
 
-      <div className="max-w-7xl mx-auto text-center space-y-10">
+      <div className="max-w-[1400px] mx-auto text-center space-y-12">
+        
+        {/* Release Pill */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-500/5 hover:bg-indigo-500/20 transition-colors cursor-default"
+          className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-indigo-500/10 hover:bg-indigo-500/20 transition-all cursor-default group"
         >
-          <Sparkles className="w-3 h-3 text-indigo-400" />
-          Click AI 3.0 — niche-aware editor is live
+          <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse" />
+          <span>Click AI v4.0 — Neural Forge is Live</span>
         </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] text-white"
-        >
-          CONTENT <br />
-          <span className="font-[var(--font-playfair)] bg-gradient-to-r from-indigo-400 via-white to-fuchsia-400 bg-clip-text text-transparent italic">
-            INTELLIGENCE
-          </span>
-          .
-        </motion.h1>
+        {/* Cinematic Headline */}
+        <div className="space-y-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-7xl md:text-[10rem] lg:text-[12rem] font-black tracking-tighter leading-[0.8] text-white"
+          >
+            CONTENT <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-white to-fuchsia-400 italic">
+              INTELLIGENCE
+            </span>
+          </motion.h1>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="flex items-center justify-center gap-8 pt-4"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={14} className="text-emerald-500/60" />
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">Consensus Refined</span>
+            </div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+            <div className="flex items-center gap-3">
+              <Globe size={14} className="text-indigo-500/60" />
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">Omni-Channel Mesh</span>
+            </div>
+          </motion.div>
+        </div>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-slate-400 text-base md:text-2xl font-medium max-w-2xl mx-auto leading-relaxed"
+          transition={{ delay: 0.3 }}
+          className="text-slate-400 text-lg md:text-2xl font-medium max-w-3xl mx-auto leading-relaxed opacity-80"
         >
-          The premium command center for high-velocity creators. Niche-aware AI auto-edits, predicts retention, and lands every clip on every platform — automatically.
+          The premium command center for high-velocity creators. Our niche-aware neural model auto-edits, predicts retention, and lands every clip on every platform — automatically.
         </motion.p>
 
+        {/* Primary Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-6"
+          transition={{ delay: 0.4 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10"
         >
           <Link
             href="/register?plan=free"
-            className="group w-full sm:w-auto px-10 py-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-base font-black uppercase tracking-widest transition-all shadow-[0_0_40px_rgba(79,70,229,0.3)] hover:shadow-[0_0_60px_rgba(79,70,229,0.5)] flex items-center justify-center gap-3 active:scale-95"
+            className="group w-full sm:w-auto px-12 py-6 rounded-2xl bg-white text-black text-sm font-black uppercase tracking-widest transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)] hover:bg-indigo-500 hover:text-white flex items-center justify-center gap-4 active:scale-95"
           >
-            Start Free
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+            Get Started Free
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <a
             href="#workflow"
-            className={`${glass} group w-full sm:w-auto px-10 py-5 rounded-2xl text-white text-base font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-3 active:scale-95`}
+            className={`${glass} group w-full sm:w-auto px-12 py-6 rounded-2xl text-white text-sm font-black uppercase tracking-widest hover:bg-white/5 transition-all flex items-center justify-center gap-4 active:scale-95`}
           >
-            <Play className="w-5 h-5 fill-white" aria-hidden="true" />
-            See It Work
+            <Play className="w-5 h-5 fill-white group-hover:scale-110 transition-transform" />
+            See Neural Forge
           </a>
         </motion.div>
       </div>
+
+      {/* Decorative Grid */}
+      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#050505] to-transparent z-10 pointer-events-none" />
     </section>
   );
 }
