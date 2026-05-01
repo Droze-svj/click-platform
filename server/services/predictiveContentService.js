@@ -76,33 +76,48 @@ async function predictContentPerformance(contentData, userId) {
 
     const heuristic = estimateFromText(text, platform);
 
+    // Optional creator style profile — biases the prediction toward
+    // what's already worked for THIS creator, not just the niche average.
+    let styleProfile = null;
+    try {
+      const UserStyleProfile = require('../models/UserStyleProfile');
+      styleProfile = userId ? await UserStyleProfile.findOne({ userId }).lean().catch(() => null) : null;
+    } catch { /* model not available */ }
+
     const systemPrompt = buildSystemPrompt({
       persona: 'marketing-coach',
       niche,
       platform,
       stage: 'analyze',
       language: contentData?.language || 'en',
-      extra: 'Predict performance using the niche playbook + platform retention curve. Return strict JSON only.',
+      styleProfile,
+      extra: 'Predict performance using the niche playbook + platform retention curve. Surface 3 forecast scenarios (conservative / realistic / optimistic) so the creator sees the range of outcomes, not a false-precision single number. Return strict JSON only.',
     });
     const userPrompt = [
       `── Task ──`,
-      `Predict the performance of this post and surface the single highest-leverage fix.`,
+      `Predict the performance of this post and surface 3 scenarios + the single highest-leverage fix.`,
       ``,
       `Content (truncated to 400 chars):`,
       `"${text.substring(0, 400)}"`,
       ``,
       `Return JSON with keys exactly:`,
-      `  performanceScore        (0-100)`,
-      `  expectedEngagementRate  (decimal % e.g. 4.2)`,
-      `  forecastedViews         { min: number, max: number }`,
-      `  topStrength             (short phrase)`,
-      `  criticalFix             (single most impactful change)`,
+      `  performanceScore        (0-100, the realistic scenario)`,
+      `  scenarios               array of 3 in this exact order:`,
+      `    [`,
+      `      { "label": "conservative", "performanceScore": int, "expectedEngagementRate": decimal, "forecastedViews": { "min": int, "max": int } },`,
+      `      { "label": "realistic",   ...same shape... },`,
+      `      { "label": "optimistic",  ...same shape... }`,
+      `    ]`,
+      `  expectedEngagementRate  decimal % (matches realistic scenario)`,
+      `  forecastedViews         { min, max } (matches realistic scenario)`,
+      `  topStrength             short phrase`,
+      `  criticalFix             single most impactful change`,
     ].join('\n');
 
     const aiData = await aiCallJson(userPrompt, null, {
       systemPrompt,
       taskType: 'content-performance-prediction',
-      maxTokens: 600,
+      maxTokens: 900,
       temperature: 0.3,
     });
     if (!aiData) {
@@ -115,6 +130,10 @@ async function predictContentPerformance(contentData, userId) {
       performanceScore: aiData.performanceScore || heuristic.performanceScore,
       expectedEngagementRate: aiData.expectedEngagementRate || heuristic.expectedEngagementRate,
       forecastedViews: aiData.forecastedViews,
+      // NEW: 3-scenario forecast — realistic is the headline, conservative
+      // + optimistic give the creator a range. UI can render this as
+      // a fan chart instead of false-precision single number.
+      scenarios: Array.isArray(aiData.scenarios) ? aiData.scenarios : null,
       aiInsight: { topStrength: aiData.topStrength, criticalFix: aiData.criticalFix },
       source: 'ai-enhanced',
     };

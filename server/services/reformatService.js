@@ -40,18 +40,29 @@ async function reformatForPlatform(content, platform, niche, language) {
     logger.warn('[Reformat] autoReframe failed', { platform, error: err.message });
   }
 
-  // Per-platform copy regen via aiRouter + buildSystemPrompt.
+  // Per-platform copy regen via aiRouter + buildSystemPrompt. Fetch
+  // creator's style profile so the captions bias toward what's already
+  // worked for them.
+  let styleProfile = null;
+  try {
+    const UserStyleProfile = require('../models/UserStyleProfile');
+    const userId = content.userId || content.user?._id;
+    styleProfile = userId ? await UserStyleProfile.findOne({ userId }).lean().catch(() => null) : null;
+  } catch { /* model not available in some envs */ }
+
   const systemPrompt = buildSystemPrompt({
-    persona: 'caption-writer',
+    persona: 'creative-director',
     niche,
     platform,
     stage: 'repurpose',
     language,
-    extra: `Return strict JSON only. Match the ${platform} CTA library and 3-second retention curve. Do not just shorten the source — rewrite for platform fit.`,
+    styleProfile,
+    extra: `Return strict JSON only. Match the ${platform} CTA library and 3-second retention curve. Produce THREE distinct caption variants the creator can A/B — different angles, NOT three rewordings of the same idea.`,
   });
   const userPrompt = [
     `── Task ──`,
-    `Adapt this post for ${platform}. Original niche: ${niche}.`,
+    `Adapt this post for ${platform} as THREE distinct caption variants. Original niche: ${niche}.`,
+    `Variants must pursue different angles: curiosity-gap, value-led, contrarian (or other distinct frameworks if more fitting).`,
     ``,
     `Title: ${content.title || ''}`,
     `Body / transcript (truncated 1500 chars):`,
@@ -59,36 +70,51 @@ async function reformatForPlatform(content, platform, niche, language) {
     ``,
     `Return JSON exactly:`,
     `{`,
-    `  "title": "platform-fit title",`,
-    `  "hook": "3-second opener tuned to ${platform}",`,
-    `  "caption": "full caption rewritten for ${platform}",`,
-    `  "hashtags": ["#tag1", "#tag2"],`,
-    `  "cta": "platform-tuned CTA",`,
-    `  "format": "post|carousel|video|thread"`,
+    `  "variants": [`,
+    `    {`,
+    `      "angle": "curiosity-gap|value|contrarian|...",`,
+    `      "title": "platform-fit title",`,
+    `      "hook": "3-second opener tuned to ${platform}",`,
+    `      "caption": "full caption rewritten for ${platform}",`,
+    `      "hashtags": ["#tag1"],`,
+    `      "cta": "platform-tuned CTA",`,
+    `      "format": "post|carousel|video|thread",`,
+    `      "whyThis": "one-line distinct reason"`,
+    `    },`,
+    `    ...two more variants...`,
+    `  ]`,
     `}`,
   ].join('\n');
 
   const fallback = {
-    title: content.title || `Adapted for ${platform}`,
-    hook: 'Watch this',
-    caption: (content.body || '').slice(0, 280),
-    hashtags: [],
-    cta: platform === 'linkedin' ? 'What\'s your take?' : 'Save this for later',
-    format: 'post',
+    variants: [{
+      angle: 'value',
+      title: content.title || `Adapted for ${platform}`,
+      hook: 'Watch this',
+      caption: (content.body || '').slice(0, 280),
+      hashtags: [],
+      cta: platform === 'linkedin' ? "What's your take?" : 'Save this for later',
+      format: 'post',
+      whyThis: 'Fallback variant (AI unavailable)',
+    }],
   };
 
-  const copy = await aiCallJson(userPrompt, fallback, {
+  const result = await aiCallJson(userPrompt, fallback, {
     systemPrompt,
-    taskType: 'reformat-platform-copy',
-    maxTokens: 1200,
-    temperature: 0.6,
+    taskType: 'reformat-platform-variants',
+    maxTokens: 2000,
+    temperature: 0.7,
   });
+  const variants = Array.isArray(result?.variants) && result.variants.length > 0 ? result.variants : fallback.variants;
 
   return {
     platform,
     aspect,
     cropPlan,
-    copy: copy || fallback,
+    // Back-compat: surface first variant at .copy so existing callers
+    // that expect a single object keep working. New callers read .variants.
+    copy: variants[0],
+    variants,
   };
 }
 

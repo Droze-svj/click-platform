@@ -47,17 +47,27 @@ async function repurposeContent(contentId, userId, targetPlatform) {
     const guidelines = platformGuidelines[targetPlatform] || platformGuidelines.instagram;
 
     const niche = content.niche || content.metadata?.niche || 'business';
+    // Optional creator style profile (best-effort fetch — repurpose works
+    // without it for new users with no taste signal yet).
+    let styleProfile = null;
+    try {
+      const UserStyleProfile = require('../models/UserStyleProfile');
+      styleProfile = userId ? await UserStyleProfile.findOne({ userId }).lean().catch(() => null) : null;
+    } catch { /* model not available in some envs */ }
+
     const systemPrompt = buildSystemPrompt({
-      persona: 'caption-writer',
+      persona: 'creative-director',
       niche,
       platform: targetPlatform,
       stage: 'repurpose',
       language: content.language || 'en',
-      extra: `Adapt content for ${targetPlatform} using its retention curve + the niche's voice. Max ${guidelines.maxLength} chars. Return strict JSON only.`,
+      styleProfile,
+      extra: `Adapt content for ${targetPlatform}. Return THREE distinct creative variants the creator can choose between — not three near-duplicates. Max ${guidelines.maxLength} chars per body. Strict JSON only.`,
     });
     const userPrompt = [
       `── Task ──`,
-      `Repurpose this post for ${targetPlatform}.`,
+      `Repurpose this post for ${targetPlatform} as THREE distinct variants.`,
+      `Each variant should pursue a different angle: edgy/contrarian, safe/value-led, data/proof-led.`,
       `Style cue: ${guidelines.style}`,
       `Format cue: ${guidelines.format}`,
       ``,
@@ -65,26 +75,39 @@ async function repurposeContent(contentId, userId, targetPlatform) {
       `Title: ${content.title}`,
       `Body: ${content.body}`,
       ``,
-      `Return JSON with these keys exactly:`,
-      `  title       (platform-appropriate, niche voice)`,
-      `  body        (rewritten — not just trimmed)`,
-      `  hashtags    (array, niche + platform tuned)`,
-      `  format      (post/carousel/video/thread)`,
-      `  changes     (array of key modifications you made)`,
+      `Return JSON with this exact shape:`,
+      `{`,
+      `  "variants": [`,
+      `    { "angle": "edgy",  "title": "...", "body": "...", "hashtags": ["..."], "format": "post|carousel|video|thread", "whyThis": "one-line distinct reason", "changes": ["..."] },`,
+      `    { "angle": "safe",  ...same fields... },`,
+      `    { "angle": "data",  ...same fields... }`,
+      `  ]`,
+      `}`,
     ].join('\n');
 
-    const repurposed = await aiCallJson(userPrompt, null, {
+    const result = await aiCallJson(userPrompt, null, {
       systemPrompt,
-      taskType: 'content-repurpose',
-      maxTokens: 2000,
-      temperature: 0.7,
+      taskType: 'content-repurpose-variants',
+      maxTokens: 3000,
+      temperature: 0.75,
     });
-    if (!repurposed) {
+    if (!result || !Array.isArray(result.variants) || result.variants.length === 0) {
       throw new Error('All AI providers failed and no fallback configured for repurpose');
     }
 
-    logger.info('Content repurposed', { contentId, userId, targetPlatform, niche });
-    return repurposed;
+    logger.info('Content repurposed (variants)', {
+      contentId, userId, targetPlatform, niche,
+      variantCount: result.variants.length,
+      hadStyleProfile: !!styleProfile,
+    });
+    // Back-compat: surface the first variant as the top-level fields so
+    // existing callers that expect {title, body, hashtags, format} keep
+    // working. New callers read .variants[].
+    const primary = result.variants[0];
+    return {
+      ...primary,
+      variants: result.variants,
+    };
   } catch (error) {
     logger.error('Repurpose content error', { error: error.message, contentId });
     throw error;
