@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './MarketingStrategistChat.css';
 import AgentAvatar from './AgentAvatar';
+import { apiGet, apiPost } from '../lib/api';
 
 interface Message {
   id: string;
@@ -47,10 +48,14 @@ export default function MarketingStrategistChat({
 
   const fetchQuickTips = useCallback(async () => {
     try {
-      const res = await fetch(`/api/intelligence/strategist/tips?niche=${niche || ''}&platform=${platforms[0]}&count=3`);
-      const data = await res.json();
-      if (data.success) setQuickTips(data.tips);
-    } catch { /* silent fail */ }
+      const params = new URLSearchParams({
+        niche: niche || '',
+        platform: platforms[0] || '',
+        count: '3',
+      });
+      const data: any = await apiGet(`/intelligence/strategist/tips?${params.toString()}`);
+      if (data?.success && Array.isArray(data.tips)) setQuickTips(data.tips);
+    } catch { /* silent fail — strategist tips are decorative */ }
   }, [niche, platforms]);
 
   useEffect(() => {
@@ -86,20 +91,17 @@ export default function MarketingStrategistChat({
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/intelligence/strategist/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, niche, platforms })
-      });
-      const data = await res.json();
+      const data: any = await apiPost('/intelligence/strategist/ask', { question, niche, platforms });
 
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.answer || data.error || 'I couldn\'t generate a response. Try rephrasing your question.',
+        content: data?.answer || data?.error || 'I couldn\'t generate a response. Try rephrasing your question.',
         timestamp: new Date(),
-        followUps: data.followUpQuestions,
-        relatedPlaybooks: data.relatedPlaybooks
+        // Server returns followUps; older copies of the UI expected followUpQuestions.
+        // Accept either so a response shape change doesn't strand existing chats.
+        followUps: data?.followUps || data?.followUpQuestions,
+        relatedPlaybooks: data?.relatedPlaybooks,
       };
 
       setMessages(prev => [...prev, assistantMsg]);

@@ -66,6 +66,7 @@ const ZONES = [
       { path: '/dashboard/analytics',            label: 'Analytics',         icon: BarChart3,  badge: null },
       { path: '/dashboard/analytics/creator',    label: 'Creator Stats',     icon: Flame,      badge: 'AI' },
       { path: '/dashboard/trends',               label: 'Discover',          icon: Flame,      badge: 'New' },
+      { path: '/dashboard/strategist',           label: 'Strategist',        icon: Compass,    badge: 'AI' },
       { path: '/dashboard/insights',             label: 'AI Insights',       icon: Brain,      badge: null },
     ],
   },
@@ -194,7 +195,8 @@ export default function SidebarNav() {
         <button
           type="button"
           onClick={toggleFocusMode}
-          aria-pressed={focusMode ? 'true' : 'false'}
+          // eslint-disable-next-line jsx-a11y/aria-proptypes -- jsx-a11y can't statically verify the runtime expression; React serialises the boolean to "true"/"false" correctly.
+          aria-pressed={focusMode}
           aria-label={focusMode ? 'Disable focus mode' : 'Enable focus mode'}
           title={focusMode ? 'Focus mode on — calmer animations, secondary panels hidden' : 'Focus mode off — full animation density'}
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${collapsed ? 'justify-center' : ''} ${focusMode ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)]'}`}

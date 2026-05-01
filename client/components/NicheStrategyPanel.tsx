@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { apiGet } from '../lib/api';
 
 interface NicheInfo {
   niche: string;
@@ -47,10 +48,9 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
 
   const fetchHookTypes = useCallback(async () => {
     try {
-      const res = await fetch(`/api/intelligence/niche/${currentNiche}/hooks?count=5`);
-      const data = await res.json();
-      if (data.hookTypes) setHookTypes(data.hookTypes);
-    } catch { /* silent */ }
+      const data: any = await apiGet(`/intelligence/niche/${encodeURIComponent(currentNiche)}/hooks?count=5`);
+      if (data?.hookTypes) setHookTypes(data.hookTypes);
+    } catch { /* silent — empty hook list degrades gracefully */ }
   }, [currentNiche]);
 
   useEffect(() => {
@@ -65,18 +65,16 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
 
   const fetchNiches = async () => {
     try {
-      const res = await fetch('/api/intelligence/niches');
-      const data = await res.json();
-      if (data.success) setAllNiches(data.niches);
+      const data: any = await apiGet('/intelligence/niches');
+      if (data?.success && Array.isArray(data.niches)) setAllNiches(data.niches);
     } catch { /* silent */ }
   };
 
   const fetchNicheIntel = async (niche: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/intelligence/niche/${niche}`);
-      const data = await res.json();
-      if (data.success) setNicheInfo(data.intel);
+      const data: any = await apiGet(`/intelligence/niche/${encodeURIComponent(niche)}`);
+      if (data?.success && data.intel) setNicheInfo(data.intel);
     } catch { /* silent */ } finally {
       setLoading(false);
     }
