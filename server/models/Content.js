@@ -281,7 +281,23 @@ const contentSchema = new mongoose.Schema({
   syncVersion: {
     type: Number,
     default: 1
-  }
+  },
+  // Captions live as a structured sub-doc so source captions, formatted
+  // SRT/VTT, and per-language translations all persist via Mongoose.
+  // Previously the field was undeclared, which meant `findByIdAndUpdate
+  // ({ $set: { captions: {...} } })` was silently a no-op under strict mode.
+  // Translations is mongoose.Mixed so we can key it by arbitrary ISO code
+  // (en, es, zh-Hans, etc.) without locking the model into a specific list.
+  captions: {
+    text: String,
+    language: String,
+    format: String,
+    segments: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    words: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    formatted: String,
+    generatedAt: Date,
+    translations: { type: mongoose.Schema.Types.Mixed, default: {} },
+  },
 });
 
 // Indexes for better query performance

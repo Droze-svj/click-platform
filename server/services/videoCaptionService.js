@@ -285,6 +285,112 @@ async function translateCaptions(text, targetLanguage) {
 }
 
 /**
+ * Translate per-segment captions while preserving timestamps. Whisper returns
+ * { start, end, text } segments — we keep the timing untouched and replace
+ * each `text` with its translation. Batches all segments into a single Gemini
+ * call so the model can keep tone consistent across the script and we save
+ * 90%+ on API calls vs. translating segment-by-segment.
+ *
+ * Returns a new array of segments; never mutates the input. Falls back to
+ * the original segments if Gemini fails so the caller never crashes the
+ * caption pipeline because of a translation hiccup.
+ */
+async function translateSegments(segments, targetLanguage) {
+  if (!Array.isArray(segments) || segments.length === 0) return segments || [];
+  const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+  if (!geminiConfigured) {
+    logger.warn('[caption-translate] Google AI not configured; returning source segments');
+    return segments;
+  }
+
+  // Pack segments into a JSON array Gemini can return verbatim. Numbered
+  // markers help the model keep the order if it accidentally reflows.
+  const lines = segments.map((s, i) => `[${i}] ${s.text || ''}`).join('\n');
+  const prompt = [
+    `You are a professional video-caption translator. Translate the following`,
+    `numbered caption lines to ${targetLanguage}. Keep the [N] markers exactly.`,
+    `Maintain tone, slang register, and rhythm. Do not merge lines. Do not add`,
+    `commentary. Return ONLY the translated lines in the same numbered format.`,
+    ``,
+    lines,
+  ].join('\n');
+
+  try {
+    const raw = await geminiGenerate(prompt, { temperature: 0.3, maxTokens: 3000 });
+    const lookup = new Map();
+    for (const line of (raw || '').split('\n')) {
+      const m = line.match(/^\s*\[(\d+)\]\s*(.*)$/);
+      if (m) lookup.set(Number(m[1]), m[2].trim());
+    }
+    return segments.map((s, i) => ({ ...s, text: lookup.get(i) || s.text }));
+  } catch (err) {
+    logger.error('[caption-translate] segment batch translation failed', { error: err.message, targetLanguage });
+    return segments;
+  }
+}
+
+/**
+ * Ensure a content's captions exist in `targetLanguage`. Idempotent: if the
+ * source captions are already in that language, returns immediately. If a
+ * translation already exists in `captions.translations[targetLanguage]`,
+ * returns it. Otherwise generates the translation, persists it, and returns.
+ *
+ * Returns the captions in the requested language as
+ * { language, text, segments, formatted } so the caller can hand them
+ * directly to a video player or burn-in pipeline.
+ */
+async function ensureCaptionsInLanguage(contentId, targetLanguage, format = 'srt') {
+  const content = await Content.findById(contentId);
+  if (!content) throw new Error('Content not found');
+  if (!content.captions?.text) {
+    throw new Error('Captions have not been generated yet. Generate base captions first.');
+  }
+  const target = String(targetLanguage || '').toLowerCase();
+  if (!target) throw new Error('targetLanguage required');
+
+  const sourceLang = String(content.captions.language || 'en').toLowerCase();
+  // Already in the right language → no-op.
+  if (sourceLang === target || sourceLang.split('-')[0] === target.split('-')[0]) {
+    return {
+      language: sourceLang,
+      text: content.captions.text,
+      segments: content.captions.segments || [],
+      formatted: content.captions.formatted || formatCaptions({ text: content.captions.text, segments: content.captions.segments || [] }, format),
+      cached: true,
+    };
+  }
+  // Cached translation exists → return it.
+  const cached = content.captions.translations?.[target];
+  if (cached?.text && Array.isArray(cached.segments)) {
+    return {
+      language: target,
+      text: cached.text,
+      segments: cached.segments,
+      formatted: cached.formatted || formatCaptions({ text: cached.text, segments: cached.segments }, format),
+      cached: true,
+    };
+  }
+
+  // Generate the translation, preserving per-segment timing.
+  const translatedSegments = await translateSegments(content.captions.segments || [], target);
+  const translatedText = translatedSegments.map(s => s.text).join(' ').trim();
+  const formatted = formatCaptions({ text: translatedText, segments: translatedSegments }, format);
+
+  // Persist into captions.translations[target].
+  const update = {};
+  update[`captions.translations.${target}`] = {
+    text: translatedText,
+    segments: translatedSegments,
+    formatted,
+    format,
+    translatedAt: new Date(),
+  };
+  await Content.findByIdAndUpdate(contentId, { $set: update });
+
+  return { language: target, text: translatedText, segments: translatedSegments, formatted, cached: false };
+}
+
+/**
  * Generate auto-captions from transcript with Cognitive features (Phase 11).
  * Includes: Object-Aware Positioning, Emotion-Sync, and Auto-Highlighting.
  */
@@ -534,6 +640,8 @@ module.exports = {
   generateCaptionsForContent,
   formatCaptions,
   translateCaptions,
+  translateSegments,
+  ensureCaptionsInLanguage,
   getCaptions,
   generateAutoCaptions,
   styleCaptions,
