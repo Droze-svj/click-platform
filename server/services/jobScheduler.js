@@ -30,9 +30,19 @@ async function scheduleJob(queueName, jobData, scheduleTime, options = {}) {
 async function processScheduledPosts() {
   try {
     const now = new Date();
+    // Safety hold: skip posts whose holdUntil hasn't passed yet. Users get
+    // a guaranteed cancel window between schedule-time and the cron pickup.
+    // null/missing holdUntil means "no hold needed" — usually because the
+    // post was created with a long enough lead time that the safety window
+    // has already elapsed by the time the scheduledTime arrives.
     const upcomingPosts = await ScheduledPost.find({
       status: 'scheduled',
       scheduledTime: { $lte: now },
+      $or: [
+        { holdUntil: null },
+        { holdUntil: { $exists: false } },
+        { holdUntil: { $lte: now } },
+      ],
     })
       .limit(100)
       .maxTimeMS(5000)
@@ -42,7 +52,8 @@ async function processScheduledPosts() {
 
     for (const post of upcomingPosts) {
       try {
-        // Add to social posting queue (ScheduledPost has platform singular, not platforms)
+        // Add to social posting queue. Pass through dryRun so the worker
+        // can simulate the publish without hitting real platform APIs.
         await addJob(QUEUE_NAMES.SOCIAL_POSTING, {
           name: 'scheduled-post',
           data: {
@@ -51,13 +62,14 @@ async function processScheduledPosts() {
             platform: post.platform,
             content: post.content,
             scheduledPostId: post._id,
+            dryRun: post.dryRun === true,
             options: post.options || {},
           },
         }, {
           priority: JOB_PRIORITY.HIGH,
         });
 
-        logger.info('Scheduled post queued', { postId: post._id });
+        logger.info('Scheduled post queued', { postId: post._id, dryRun: post.dryRun === true });
       } catch (error) {
         logger.error('Failed to queue scheduled post', {
           postId: post._id,

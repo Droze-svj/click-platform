@@ -21,13 +21,29 @@ router.get('/optimal-times', auth, asyncHandler(async (req, res) => {
 }));
 
 // Schedule a post
+// Safety hold defaults — configurable via env so production can shorten or
+// disable them once the user is comfortable. Two minutes is the sweet spot
+// for testing: long enough to undo a click, short enough to stay snappy.
+const SAFETY_HOLD_MINUTES = Math.max(0, Number(process.env.SAFETY_HOLD_MINUTES ?? 2));
+const DEFAULT_DRY_RUN = process.env.DRY_RUN_PUBLISH === 'true';
+
 router.post('/schedule', auth, async (req, res) => {
   try {
-    const { contentId, platform, content, scheduledTime, mediaUrl, hashtags } = req.body;
+    const { contentId, platform, content, scheduledTime, mediaUrl, hashtags, dryRun } = req.body;
 
     if (!platform || !scheduledTime) {
       return res.status(400).json({ error: 'Platform and scheduled time are required' });
     }
+
+    const when = new Date(scheduledTime);
+    // Compute the cancel-window cutoff. The cron picks up posts only after
+    // both `scheduledTime` AND `holdUntil` have passed. Posts scheduled
+    // far in the future already have ample cancel time, so we only set the
+    // hold when the gap from now is less than the safety window.
+    const now = new Date();
+    const holdMs = SAFETY_HOLD_MINUTES * 60 * 1000;
+    const minPickup = new Date(Math.max(when.getTime(), now.getTime() + holdMs));
+    const holdUntil = SAFETY_HOLD_MINUTES > 0 ? minPickup : null;
 
     const scheduledPost = new ScheduledPost({
       userId: req.user._id,
@@ -38,7 +54,9 @@ router.post('/schedule', auth, async (req, res) => {
         mediaUrl: mediaUrl || '',
         hashtags: hashtags || []
       },
-      scheduledTime: new Date(scheduledTime),
+      scheduledTime: when,
+      holdUntil,
+      dryRun: typeof dryRun === 'boolean' ? dryRun : DEFAULT_DRY_RUN,
       status: 'scheduled'
     });
 
@@ -55,15 +73,77 @@ router.post('/schedule', auth, async (req, res) => {
       postId: scheduledPost._id,
       contentId: contentId || null,
       platform,
-      scheduledTime: scheduledPost.scheduledTime
+      scheduledTime: scheduledPost.scheduledTime,
+      holdUntil: scheduledPost.holdUntil,
+      dryRun: scheduledPost.dryRun,
     }).catch(err => logger.error('Webhook trigger failed', { error: err.message }));
 
     res.json({
       message: 'Post scheduled successfully',
-      post: scheduledPost
+      post: scheduledPost,
+      // Surface the cancel window explicitly so the UI can show a
+      // countdown and a Cancel button without hitting another endpoint.
+      cancellableUntil: scheduledPost.holdUntil,
+      dryRun: scheduledPost.dryRun,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/scheduler/:postId/cancel
+ * Hard-stop a post before it leaves the cancel window.
+ * - Returns 409 if the post is already past its holdUntil (the worker may
+ *   have already picked it up).
+ * - Returns 410 if the post is already published / failed / cancelled.
+ * - On success the post status flips to 'cancelled' and the worker query
+ *   in jobScheduler.processScheduledPosts will skip it forever.
+ */
+router.post('/:postId/cancel', auth, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await ScheduledPost.findOne({ _id: postId, userId: req.user._id });
+    if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+
+    if (['posted', 'failed', 'cancelled'].includes(post.status)) {
+      return res.status(410).json({
+        success: false,
+        error: `Post is already ${post.status}; cannot cancel.`,
+        status: post.status,
+      });
+    }
+
+    const now = new Date();
+    const pastHold = post.holdUntil && post.holdUntil <= now;
+    const pastSchedule = post.scheduledTime <= now;
+    if (pastHold && pastSchedule) {
+      // The post may already be in the worker queue. We still mark it
+      // cancelled — the worker will see the status flip and abort — but
+      // we warn the caller that the worker may win the race.
+      post.status = 'cancelled';
+      await post.save();
+      return res.status(409).json({
+        success: true,
+        warning: 'Cancel window has passed. Marked cancelled but the worker may have already published.',
+        post,
+      });
+    }
+
+    post.status = 'cancelled';
+    await post.save();
+
+    const { triggerWebhook } = require('../services/webhookService');
+    await triggerWebhook(req.user._id, 'post.cancelled', {
+      postId: post._id,
+      contentId: post.contentId,
+      platform: post.platform,
+    }).catch(err => logger.warn('Webhook trigger failed', { error: err.message }));
+
+    res.json({ success: true, post });
+  } catch (error) {
+    logger.error('[scheduler] cancel failed', { error: error.message, postId: req.params.postId });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

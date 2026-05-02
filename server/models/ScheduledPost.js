@@ -52,6 +52,24 @@ const scheduledPostSchema = new mongoose.Schema({
     enum: ['scheduled', 'pending', 'posted', 'failed', 'cancelled'],
     default: 'scheduled'
   },
+  // Safety hold: posts in `scheduled` state are NOT picked up by the cron
+  // until `holdUntil` has passed. Lets users cancel within a configurable
+  // grace window before anything irreversible hits a real platform.
+  // Set to null when no hold is needed; defaults to scheduledTime - SAFETY
+  // HOLD_MINUTES at create time.
+  holdUntil: {
+    type: Date,
+    default: null,
+    index: true,
+  },
+  // When true, the worker logs the publish intent but skips the real API
+  // call. Lets users walk the entire flow against real OAuth tokens
+  // without anything actually appearing on their public profile.
+  // Server-wide default can also be set via DRY_RUN_PUBLISH=true env var.
+  dryRun: {
+    type: Boolean,
+    default: false,
+  },
   recurringScheduleId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'RecurringSchedule',

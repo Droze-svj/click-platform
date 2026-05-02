@@ -61,6 +61,32 @@ router.get('/', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * GET /api/integrations/setup-status
+ * Per-platform OAuth credential status. Public-info only — does not return
+ * any secret values. Defined BEFORE the /:id route so 'setup-status' is
+ * not matched as an integration id.
+ */
+router.get('/setup-status', (req, res) => {
+  const has = (...keys) => keys.every(k => Boolean(process.env[k] && String(process.env[k]).trim().length > 0));
+  const platforms = [
+    { platform: 'twitter',   configured: has('TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET') || has('TWITTER_API_KEY'), requiredEnv: ['TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET'], docs: 'https://developer.twitter.com/en/portal/projects-and-apps' },
+    { platform: 'youtube',   configured: has('YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET') || has('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'), requiredEnv: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'], docs: 'https://console.cloud.google.com/apis/credentials' },
+    { platform: 'linkedin',  configured: has('LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'), requiredEnv: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'], docs: 'https://www.linkedin.com/developers/apps' },
+    { platform: 'facebook',  configured: has('FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'), requiredEnv: ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'], docs: 'https://developers.facebook.com/apps' },
+    { platform: 'instagram', configured: has('INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET') || has('FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'), requiredEnv: ['INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'], docs: 'https://developers.facebook.com/docs/instagram-api/getting-started' },
+    { platform: 'tiktok',    configured: has('TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET'), requiredEnv: ['TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET'], docs: 'https://developers.tiktok.com/apps/' },
+  ];
+  res.json({
+    success: true,
+    platforms,
+    notes: {
+      dryRun: process.env.DRY_RUN_PUBLISH === 'true',
+      safetyHoldMinutes: Math.max(0, Number(process.env.SAFETY_HOLD_MINUTES ?? 2)),
+    },
+  });
+});
+
+/**
  * GET /api/integrations/:id
  * Get integration
  */

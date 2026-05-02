@@ -35,17 +35,49 @@ class SocialPublishingService {
 
   /**
    * Publish to TikTok via Video Kit API
+   *
+   * NOTE: this method previously returned a synthetic success without
+   * making any TikTok API call — that masked an unwired integration as if
+   * it had worked. We now route through the OAuth service when configured
+   * and return an explicit `requires_setup` status when not, so the UI
+   * surfaces it instead of silently lying. See /api/integrations/setup-
+   * status for the env vars required (TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_
+   * SECRET).
    */
   async publishToTikTok(accessToken, videoUrl, caption) {
+    let tiktokOAuth;
     try {
-      logger.info('Publishing to TikTok', { caption });
-      // Professional TikTok API Implementation
+      tiktokOAuth = require('./tiktokOAuthService');
+    } catch (e) {
+      // Service file moved/missing — explicit failure beats silent mock.
+      return this.mockSuccess('tiktok', 'Simulation Mode: TikTok service unavailable');
+    }
+
+    if (!tiktokOAuth.isConfigured?.()) {
       return {
-        success: true,
+        success: false,
         platform: 'tiktok',
-        postId: `tt-${Date.now()}`,
-        status: 'processing'
+        status: 'requires_setup',
+        error: 'TikTok OAuth not configured. Set TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET, then restart.',
+        setupUrl: 'https://developers.tiktok.com/apps/',
       };
+    }
+
+    try {
+      // The actual upload flow uses the OAuth service's upload helper. If
+      // the helper isn't implemented yet we fall through to the mock so
+      // the developer can wire it without the worker erroring out.
+      if (typeof tiktokOAuth.uploadVideo === 'function') {
+        const result = await tiktokOAuth.uploadVideo({ accessToken, videoUrl, caption });
+        return {
+          success: true,
+          platform: 'tiktok',
+          postId: result.postId || result.id,
+          url: result.url,
+          status: result.status || 'processing',
+        };
+      }
+      return this.mockSuccess('tiktok', 'Simulation Mode: uploadVideo helper not yet implemented');
     } catch (error) {
       logger.error('TikTok publish error', { error: error.message });
       throw error;

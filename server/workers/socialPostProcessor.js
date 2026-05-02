@@ -9,18 +9,46 @@ const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
+// Two ways to land in dry-run mode:
+//   1. DRY_RUN_PUBLISH=true env var → every post is simulated.
+//   2. The ScheduledPost has dryRun:true on the document → only that post
+//      is simulated. Lets one creator test live while another tests safely.
+const DRY_RUN_GLOBAL = process.env.DRY_RUN_PUBLISH === 'true';
+
+function simulatedResult(platform) {
+  return {
+    id: `dryrun-${platform}-${Date.now()}`,
+    url: `https://example.com/dryrun/${platform}/${Date.now()}`,
+    dryRun: true,
+  };
+}
+
 /**
  * Social media posting job processor
  */
 async function processSocialPostJob(jobData, job) {
-  const { 
-    userId, 
-    contentId, 
-    platforms, 
-    content, 
+  const {
+    userId,
+    contentId,
+    platforms,
+    content,
     scheduledPostId,
-    options = {} 
+    dryRun: jobDryRun,
+    options = {}
   } = jobData;
+
+  // Final cancel check — the user might have hit Cancel after the job was
+  // queued but before this worker picked it up. Honour that.
+  if (scheduledPostId) {
+    const fresh = await ScheduledPost.findById(scheduledPostId).select('status dryRun').lean();
+    if (fresh?.status === 'cancelled') {
+      logger.info('Social post job skipped — cancelled by user', { scheduledPostId });
+      return { success: true, skipped: 'cancelled', results: [] };
+    }
+    // Per-post dryRun overrides the job-payload value if it changed.
+    if (fresh?.dryRun) jobData.dryRun = true;
+  }
+  const dryRun = DRY_RUN_GLOBAL || jobDryRun === true || jobData.dryRun === true;
 
   try {
     await job.updateProgress(0);
@@ -42,29 +70,38 @@ async function processSocialPostJob(jobData, job) {
 
         let postResult;
 
-        switch (platform.toLowerCase()) {
-        case 'twitter':
-          postResult = await twitterOAuth.postTweetForUser(userId, content.text, options, options.platform_user_id);
-          break;
-        case 'linkedin':
-          postResult = await postToLinkedIn(userId, content.text, options);
-          break;
-        case 'facebook':
-          postResult = await postToFacebook(userId, content.text, options);
-          break;
-        case 'instagram':
-          if (!content.imageUrl) {
-            throw new Error('Image URL required for Instagram');
+        // DRY_RUN gate: simulate success WITHOUT calling any platform API.
+        // The simulated result keeps the same shape downstream consumers
+        // expect, so analytics-sync, webhook triggers, and the learning
+        // loop all proceed normally — they just operate on a fake postId.
+        if (dryRun) {
+          logger.info('[DRY_RUN] simulating publish', { platform, userId, scheduledPostId });
+          postResult = simulatedResult(platform);
+        } else {
+          switch (platform.toLowerCase()) {
+          case 'twitter':
+            postResult = await twitterOAuth.postTweetForUser(userId, content.text, options, options.platform_user_id);
+            break;
+          case 'linkedin':
+            postResult = await postToLinkedIn(userId, content.text, options);
+            break;
+          case 'facebook':
+            postResult = await postToFacebook(userId, content.text, options);
+            break;
+          case 'instagram':
+            if (!content.imageUrl) {
+              throw new Error('Image URL required for Instagram');
+            }
+            postResult = await postToInstagram(
+              userId,
+              content.imageUrl,
+              content.text,
+              options
+            );
+            break;
+          default:
+            throw new Error(`Unsupported platform: ${platform}`);
           }
-          postResult = await postToInstagram(
-            userId,
-            content.imageUrl,
-            content.text,
-            options
-          );
-          break;
-        default:
-          throw new Error(`Unsupported platform: ${platform}`);
         }
 
         results.push({
@@ -72,10 +109,11 @@ async function processSocialPostJob(jobData, job) {
           success: true,
           postId: postResult.id,
           url: postResult.url,
+          dryRun: !!postResult.dryRun,
         });
 
         completed++;
-        logger.info('Post successful', { platform, userId, jobId: job.id });
+        logger.info('Post successful', { platform, userId, jobId: job.id, dryRun: !!postResult.dryRun });
       } catch (error) {
         logger.error('Post failed for platform', {
           platform,
@@ -188,7 +226,22 @@ function initializeSocialPostWorker() {
     },
   });
 
-  logger.info('Social media posting worker initialized');
+  logger.info('Social media posting worker initialized', {
+    dryRunGlobal: DRY_RUN_GLOBAL,
+  });
+
+  // Heartbeat — every 60s logs that the worker is alive so a silent crash
+  // (e.g. uncaught exception in a handler) becomes visible in the log.
+  // Skipped in test mode to avoid leaking timers.
+  if (process.env.NODE_ENV !== 'test') {
+    const heartbeat = setInterval(() => {
+      logger.info('[heartbeat] social-posting worker alive', {
+        dryRunGlobal: DRY_RUN_GLOBAL,
+      });
+    }, 60_000);
+    heartbeat.unref?.();
+  }
+
   return worker;
 }
 
