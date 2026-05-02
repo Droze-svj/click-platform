@@ -10,11 +10,9 @@ import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
 import { apiGet } from '../../../lib/api'
 import {
-  Video, Upload, Edit, Play, Loader2, CheckCircle, AlertCircle,
-  RefreshCw, Layers, Clock, ArrowLeft, ArrowRight, ChevronRight,
-  Scissors, Zap, Sparkles, Activity, Fingerprint, Terminal, Cpu,
-  Globe, Target, Radio, Hexagon, X, ZapOff, Film, Gauge, ActivitySquare,
-  Monitor, Sun, Moon
+  Video, Upload, Play, Loader2, CheckCircle, AlertCircle,
+  RefreshCw, Layers, Clock, ArrowLeft,
+  Search, Target, FileVideo, ActivitySquare, Sparkles, Filter, MoreVertical
 } from 'lucide-react'
 import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,20 +28,17 @@ interface VideoItem {
   createdAt: string
 }
 
-const STATUS_CFG: Record<string, { label: string; dot: string; badge: string; icon: any; color: string }> = {
-  completed:  { label: 'COMPLETED',    dot: 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: CheckCircle, color: 'text-emerald-400' },
-  processing: { label: 'PROCESSING',     dot: 'bg-indigo-500 animate-pulse shadow-[0_0_20px_rgba(99,102,241,0.5)]', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', icon: Loader2, color: 'text-indigo-400' },
-  pending:    { label: 'QUEUED',      dot: 'bg-amber-500 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.5)]', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: Clock, color: 'text-amber-400' },
-  failed:     { label: 'FAILED',      dot: 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.5)]', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20', icon: AlertCircle, color: 'text-rose-400' },
+const STATUS_CFG: Record<string, { label: string; bg: string; text: string; icon: any }> = {
+  completed:  { label: 'Completed',  bg: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-400', icon: CheckCircle },
+  processing: { label: 'Processing', bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-400', icon: Loader2 },
+  pending:    { label: 'Queued',     bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-400', icon: Clock },
+  failed:     { label: 'Failed',     bg: 'bg-rose-100 dark:bg-rose-900/40', text: 'text-rose-700 dark:text-rose-400', icon: AlertCircle },
 }
 
-const glassStyle = 'backdrop-blur-[var(--glass-blur)] bg-[var(--glass-surface)] border border-[var(--glass-border)] shadow-[var(--glass-glow)] transition-all duration-300'
-
-export default function KineticSynthesisHubPage() {
+export default function VideoStudioPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
-  const { resolvedTheme, toggle } = useTheme()
   const [videos, setVideos] = useState<VideoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -53,7 +48,7 @@ export default function KineticSynthesisHubPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'processing' | 'pending' | 'failed'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const loadSpectralInventory = useCallback(async () => {
+  const loadVideos = useCallback(async () => {
     try {
       const res = await apiGet<any>('/video')
       const body = res?.data ?? res
@@ -71,34 +66,34 @@ export default function KineticSynthesisHubPage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) { router.push('/login'); return }
-    loadSpectralInventory()
-  }, [user, authLoading, loadSpectralInventory, router])
+    loadVideos()
+  }, [user, authLoading, loadVideos, router])
 
   useEffect(() => {
     if (!socket || !connected) return
     const handler = (data: any) => {
-      if (data.status === 'completed') { setSuccess(`AXIOM_MANIFEST_COMPLETE: ${data.clips || 0} SPECTRAL_FRAGMENTS`); setTimeout(loadSpectralInventory, 500) }
-      else if (data.status === 'failed') { setError('Video processing failed'); setTimeout(loadSpectralInventory, 500) }
+      if (data.status === 'completed') { setSuccess(`Analysis Complete: ${data.clips || 0} clips generated`); setTimeout(loadVideos, 500) }
+      else if (data.status === 'failed') { setError('Video processing failed'); setTimeout(loadVideos, 500) }
     }
     on('video-processed', handler)
     return () => off('video-processed', handler)
-  }, [socket, connected, on, off, loadSpectralInventory])
+  }, [socket, connected, on, off, loadVideos])
 
   const [pageDragOver, setPageDragOver] = useState(false)
   const [pageDropProgress, setPageDropProgress] = useState<number | null>(null)
 
-  const handleForgePayload = useCallback(async (_file: File, uploadResponse?: any) => {
+  const handleUploadResponse = useCallback(async (_file: File, uploadResponse?: any) => {
     setError(''); setSuccess('')
     if (!uploadResponse) { setError('Upload failed — empty response'); return }
     const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
     if (!contentId) { setError('Upload failed — missing video ID'); return }
-    setSuccess('Upload received — processing your video…')
-    await loadSpectralInventory()
+    setSuccess('Upload successful — analyzing your video...')
+    await loadVideos()
     router.push(`/dashboard/video/edit/${contentId}`)
-  }, [loadSpectralInventory, router])
+  }, [loadVideos, router])
 
   const uploadFromPageDrop = useCallback(async (file: File) => {
-    if (!/^video\//.test(file.type)) { setError('Drop a video file (.mp4 / .mov / .webm)'); return }
+    if (!/^video\//.test(file.type)) { setError('Please upload a valid video file (.mp4, .mov, .webm)'); return }
     setError('')
     setPageDropProgress(0)
     try {
@@ -123,13 +118,13 @@ export default function KineticSynthesisHubPage() {
         xhr.onerror = () => reject(new Error('Network error during upload'))
         xhr.send(fd)
       })
-      await handleForgePayload(file, result)
+      await handleUploadResponse(file, result)
     } catch (e: any) {
       setError(e?.message || 'Upload failed')
     } finally {
       setPageDropProgress(null)
     }
-  }, [handleForgePayload])
+  }, [handleUploadResponse])
 
   useEffect(() => {
     let dragDepth = 0
@@ -166,7 +161,6 @@ export default function KineticSynthesisHubPage() {
 
   const completedCount = videos.filter(v => v.status === 'completed').length
   const processingCount = videos.filter(v => v.status === 'processing' || v.status === 'pending').length
-  const failedCount = videos.filter(v => v.status === 'failed').length
   const totalClips = videos.reduce((sum, v) => sum + (v.generatedContent?.shortVideos?.length || 0), 0)
 
   const visibleVideos = videos.filter(v => {
@@ -180,20 +174,15 @@ export default function KineticSynthesisHubPage() {
   })
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-12 transition-colors duration-500">
-       <div className="relative">
-          <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
-          <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
-       </div>
-       <div className="space-y-4 text-center">
-          <p className="text-[14px] font-bold text-indigo-400 uppercase tracking-[0.4em] animate-pulse leading-none">Loading videos…</p>
-       </div>
+    <div className="flex flex-col items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen">
+       <Loader2 size={40} className="text-primary-500 animate-spin mb-6" />
+       <p className="text-sm font-bold text-surface-500 uppercase tracking-widest animate-pulse">Loading Video Studio...</p>
     </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-4 sm:px-8 pt-12 max-w-[1700px] mx-auto space-y-20 bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500">
+      <div className="min-h-screen relative z-10 pb-24 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-8 bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 transition-colors duration-500">
         <ToastContainer />
 
         <AnimatePresence>
@@ -202,148 +191,149 @@ export default function KineticSynthesisHubPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center"
+              className="fixed inset-0 z-[9999] bg-surface-900/80 backdrop-blur-sm flex items-center justify-center border-[12px] border-dashed border-primary-500/50"
             >
-              <div className="absolute inset-0 bg-indigo-950/85 backdrop-blur-sm" />
-              <motion.div
-                initial={{ scale: 0.92 }}
-                animate={{ scale: 1 }}
-                className="relative z-10 px-8 sm:px-12 py-12 sm:py-16 rounded-[2rem] sm:rounded-[3rem] border-2 border-dashed border-indigo-400/60 bg-indigo-500/10 max-w-xl mx-auto text-center"
-              >
-                <Upload className="w-12 h-12 sm:w-16 sm:h-16 text-indigo-300 mx-auto mb-6" />
-                <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] tracking-tight mb-3">
-                  {pageDropProgress !== null ? 'Uploading…' : 'Drop your video to start'}
+              <div className="bg-white dark:bg-surface-900 p-12 rounded-[3rem] shadow-2xl border border-surface-200 dark:border-surface-800 text-center">
+                <Upload className="w-16 h-16 text-primary-500 mx-auto mb-6" />
+                <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-3">
+                  {pageDropProgress !== null ? 'Uploading Video...' : 'Drop video here'}
                 </h2>
                 {pageDropProgress !== null && (
-                  <div className="mt-6 h-2 w-full rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-indigo-400 to-fuchsia-400 transition-all duration-200" style={{ width: `${pageDropProgress}%` }} />
+                  <div className="mt-6 h-2 w-full max-w-sm mx-auto rounded-full bg-surface-100 dark:bg-surface-800 overflow-hidden">
+                    <div className="h-full bg-primary-500 transition-all duration-200" style={{ width: `${pageDropProgress}%` }} />
                   </div>
                 )}
-              </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <Video size={800} className="text-[var(--text-main)] absolute -bottom-40 -left-40 rotate-12" />
-        </div>
-
         <SwarmConsensusHUD isVisible={showSwarmHUD} taskName={swarmHUDTask} onComplete={() => setShowSwarmHUD(false)} />
 
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
-           <div className="flex items-center gap-4 sm:gap-8 w-full md:w-auto">
-              <button type="button" onClick={() => router.push('/dashboard')} className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl sm:rounded-[1.8rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors active:scale-95">
-                <ArrowLeft size={24} />
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-surface-200 dark:border-surface-800">
+           <div className="flex items-center gap-5 w-full md:w-auto">
+              <button type="button" onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                <ArrowLeft size={20} />
               </button>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-2xl sm:rounded-[2.5rem] flex items-center justify-center shadow-xl">
-                <Film size={32} className="text-indigo-400" />
+              <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
+                <FileVideo size={32} className="text-primary-600 dark:text-primary-400" />
               </div>
               <div className="flex-1">
-                 <div className="flex items-center gap-3 mb-2 flex-wrap">
-                   <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                   <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400">Click · Video Studio</span>
+                 <div className="flex items-center gap-2 mb-1">
+                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
+                     Advanced Editor
+                   </span>
                  </div>
-                 <h1 className="text-[clamp(1.5rem,6vw,4rem)] font-black text-[var(--text-main)] tracking-tighter leading-none mb-2">Video Library</h1>
+                 <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-2">Video Studio</h1>
               </div>
            </div>
 
-           <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto justify-end">
-             <button onClick={toggle} className="w-12 h-12 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-main)] hover:scale-105 transition-all shadow-xl">
-               {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-             </button>
-             <button type="button" onClick={() => { setSwarmHUDTask('Refreshing video inventory'); setShowSwarmHUD(true); loadSpectralInventory() }} className="px-5 sm:px-7 py-3 bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] rounded-2xl text-[10px] sm:text-[12px] font-bold uppercase tracking-[0.2em] shadow-lg transition-colors flex items-center gap-3">
+           <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+             <button type="button" onClick={() => { setSwarmHUDTask('Refreshing inventory'); setShowSwarmHUD(true); loadVideos() }} className="px-5 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-colors flex items-center gap-2">
                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                <span>Refresh</span>
              </button>
            </div>
-        </div>
+        </header>
 
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10">
           {[
-            { label: 'Videos',          value: videos.length,    icon: Layers,          color: 'text-indigo-400',  bg: 'bg-indigo-500/5' },
-            { label: 'Completed',       value: completedCount,   icon: ActivitySquare,  color: 'text-emerald-400', bg: 'bg-emerald-500/5' },
-            { label: 'Total Clips',     value: totalClips,       icon: Sparkles,        color: 'text-rose-400',    bg: 'bg-rose-500/5' },
+            { label: 'Total Videos', value: videos.length, icon: Layers, colors: 'bg-primary-50 text-primary-600 border-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50' },
+            { label: 'Processed', value: completedCount, icon: ActivitySquare, colors: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50' },
+            { label: 'Generated Clips', value: totalClips, icon: Sparkles, colors: 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50' },
           ].map(s => (
-            <div key={s.label} className={`${glassStyle} rounded-[2rem] p-6 sm:p-7 flex items-center gap-5 group hover:bg-[var(--glass-surface-heavy)]`}>
-               <div className={`w-12 h-12 sm:w-14 sm:h-14 ${s.bg} rounded-2xl flex items-center justify-center border border-[var(--glass-border)]`}>
-                  <s.icon size={22} className={s.color} />
+            <div key={s.label} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 shadow-sm flex items-center gap-4">
+               <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${s.colors}`}>
+                  <s.icon size={20} />
                </div>
                <div>
-                 <div className={`text-3xl sm:text-4xl font-black tabular-nums leading-none tracking-tighter mb-2 ${s.color}`}>{s.value}</div>
-                 <div className="text-[10px] text-[var(--text-dim)] font-bold uppercase tracking-[0.3em] leading-none">{s.label}</div>
+                 <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-1">{s.label}</p>
+                 <h4 className="text-2xl font-black text-surface-900 dark:text-surface-50 tracking-tight">{s.value}</h4>
                </div>
             </div>
           ))}
         </div>
 
-        <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] overflow-hidden relative z-10 group`}>
-          <div className="bg-indigo-600 p-8 sm:p-20 relative overflow-hidden">
-             <div className="absolute -top-40 -right-40 opacity-[0.05] pointer-events-none group-hover:rotate-180 transition-transform duration-700"><Upload size={600} /></div>
-             <div className="relative flex flex-col xl:flex-row items-center justify-between gap-8 z-10 text-center xl:text-left">
-                <div className="flex flex-col xl:flex-row items-center gap-6">
-                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-2xl sm:rounded-[2rem] flex items-center justify-center shadow-lg border-2 border-[var(--glass-border-strong)]"><Upload size={32} className="text-white" /></div>
-                   <div>
-                      <h2 className="text-[var(--text-main)] font-black tracking-tighter text-3xl sm:text-4xl leading-tight mb-2">Drop a video to get started</h2>
-                      <p className="text-white/70 text-[13px] font-medium leading-relaxed">Synthesize viral fragments automatically.</p>
-                   </div>
-                </div>
-             </div>
+        {/* Upload Zone */}
+        <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl overflow-hidden relative z-10 shadow-sm flex flex-col xl:flex-row">
+          <div className="bg-primary-50 dark:bg-primary-900/10 p-8 sm:p-12 xl:w-1/3 border-b xl:border-b-0 xl:border-r border-surface-200 dark:border-surface-800 flex flex-col justify-center">
+            <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/40 rounded-2xl flex items-center justify-center border border-primary-200 dark:border-primary-800 mb-6">
+              <Upload size={28} className="text-primary-600 dark:text-primary-400" />
+            </div>
+            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Upload Raw Footage</h2>
+            <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+              Drop your long-form video or raw clips here. Our AI will automatically analyze the content, identify key moments, and prepare it for advanced editing.
+            </p>
           </div>
-          <div className="p-6 sm:p-10 bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)]">
-            <FileUpload onUpload={(file, res) => { setSwarmHUDTask('Analyzing your video'); setShowSwarmHUD(true); handleForgePayload(file, res) }} uploadUrl="/api/video/upload" />
+          <div className="p-8 sm:p-12 xl:w-2/3 flex items-center justify-center bg-surface-50 dark:bg-surface-950">
+            <div className="w-full max-w-2xl">
+              <FileUpload onUpload={(file, res) => { setSwarmHUDTask('Analyzing your video'); setShowSwarmHUD(true); handleUploadResponse(file, res) }} uploadUrl="/api/video/upload" />
+            </div>
           </div>
         </div>
 
+        {/* Library */}
         {videos.length > 0 && (
-          <div className="space-y-10 relative z-10">
-            <div className="flex flex-col md:flex-row items-stretch lg:items-center gap-6">
-               <div className="relative flex-1">
-                  <Target size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
-                  <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="SCAN_INVENTORY..." className="w-full bg-[var(--glass-surface)] border border-[var(--glass-border)] rounded-full pl-14 pr-6 py-4 text-[13px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic focus:outline-none focus:border-indigo-500/50" />
-               </div>
-               <div className="flex items-center gap-2 flex-wrap">
-                  {['all', 'completed', 'processing', 'failed'].map(opt => (
-                    <button key={opt} onClick={() => setStatusFilter(opt as any)} className={`px-4 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] italic border transition-all ${statusFilter === opt ? 'bg-[var(--text-main)] text-[var(--page-bg)]' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)]'}`}>
-                      {opt.toUpperCase()}
-                    </button>
-                  ))}
+          <div className="space-y-6 relative z-10">
+            <div className="flex flex-col md:flex-row items-stretch lg:items-center gap-4 justify-between">
+               <h3 className="text-lg font-black text-surface-900 dark:text-white">Recent Projects</h3>
+               <div className="flex flex-col sm:flex-row items-center gap-4">
+                 <div className="relative w-full sm:w-64">
+                    <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                    <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+                 </div>
+                 <div className="flex items-center gap-2 w-full sm:w-auto bg-white dark:bg-surface-900 p-1 rounded-xl border border-surface-200 dark:border-surface-800 overflow-x-auto">
+                    {['all', 'completed', 'processing', 'failed'].map(opt => (
+                      <button key={opt} onClick={() => setStatusFilter(opt as any)} className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors whitespace-nowrap ${statusFilter === opt ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'}`}>
+                        {opt}
+                      </button>
+                    ))}
+                 </div>
                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {visibleVideos.map(video => {
                 const cfg = getStatusCfg(video.status)
-                const clips = video.generatedContent?.shortVideos || []
                 return (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} key={video._id} className={`${glassStyle} rounded-[3rem] sm:rounded-[5rem] overflow-hidden group flex flex-col hover:border-indigo-500/30`}>
-                    <div className="aspect-video relative bg-black/60 overflow-hidden border-b border-[var(--glass-border)]">
-                      <video src={video.originalFile?.url} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
-                      <div className="absolute top-6 left-6 flex items-center gap-3 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-black text-white">
-                        <div className={`w-2 h-2 rounded-full ${cfg.dot}`} /> {cfg.label}
+                  <div key={video._id} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl overflow-hidden group flex flex-col hover:border-primary-300 dark:hover:border-primary-700 transition-colors shadow-sm">
+                    <div className="aspect-video relative bg-surface-100 dark:bg-surface-950 overflow-hidden border-b border-surface-200 dark:border-surface-800">
+                      <video src={video.originalFile?.url} className="w-full h-full object-cover" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button onClick={() => router.push(`/dashboard/video/edit/${video._id}`)} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all">
+                          <Play size={20} className="ml-1" />
+                        </button>
+                      </div>
+                      <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md bg-white/90 dark:bg-surface-900/90 shadow-sm">
+                        <div className={`w-1.5 h-1.5 rounded-full ${cfg.bg} border border-current ${cfg.text}`} /> 
+                        <span className="text-surface-900 dark:text-white">{cfg.label}</span>
                       </div>
                     </div>
-                    <div className="p-8 sm:p-12 space-y-8 flex-1 flex flex-col justify-between">
+                    <div className="p-5 flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter truncate mb-4">{video.title}</h3>
-                        <div className="flex items-center justify-between text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">
-                          <span className="flex items-center gap-2"><Clock size={14} /> {new Date(video.createdAt).toLocaleDateString()}</span>
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <h3 className="text-lg font-black text-surface-900 dark:text-white truncate" title={video.title}>{video.title}</h3>
+                          <button className="text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors shrink-0">
+                            <MoreVertical size={18} />
+                          </button>
+                        </div>
+                        <div className="flex items-center text-[11px] font-medium text-surface-500 gap-4">
+                          <span className="flex items-center gap-1.5"><Clock size={12} /> {new Date(video.createdAt).toLocaleDateString()}</span>
+                          <span className="flex items-center gap-1.5"><Sparkles size={12} /> {video.generatedContent?.shortVideos?.length || 0} Clips</span>
                         </div>
                       </div>
-                      <button onClick={() => router.push(`/dashboard/video/edit/${video._id}`)} className="w-full py-5 sm:py-6 bg-[var(--text-main)] text-[var(--page-bg)] rounded-[2rem] text-sm font-black uppercase tracking-[0.4em] italic hover:opacity-90 transition-all flex items-center justify-center gap-4 group/btn">
-                        <Terminal size={20} className="group-hover/btn:translate-x-1 transition-transform" /> OPEN_FORGE
+                      <button onClick={() => router.push(`/dashboard/video/edit/${video._id}`)} className="w-full mt-6 py-2.5 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-surface-800 dark:hover:bg-surface-100 transition-colors shadow-sm">
+                        Open Editor
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 )
               })}
             </div>
           </div>
         )}
-
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-          body { font-family: 'Outfit', sans-serif; transition: background 0.5s; }
-        `}</style>
       </div>
     </ErrorBoundary>
   )

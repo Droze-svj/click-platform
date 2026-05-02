@@ -75,7 +75,6 @@ export default function Toast({ id, message, type, title, duration = 5000, onClo
           ? 'translate-x-full opacity-0'
           : 'translate-x-full opacity-0'
         }
-        backdrop-blur-sm
       `}
       role="alert"
       aria-live="polite"

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useSocket } from '../../../../../hooks/useSocket'
-import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun } from 'lucide-react'
+import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun, Wand2, Scissors } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
@@ -188,93 +188,91 @@ export default function VideoEditPage({ params }: PageProps) {
     }
   }
 
-  if (loading) return null
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen">
+      <Loader2 size={40} className="text-primary-500 animate-spin mb-6" />
+      <p className="text-sm font-bold text-surface-500 uppercase tracking-widest animate-pulse">Loading Video...</p>
+    </div>
+  )
 
   const videoUrl = video?.originalFile?.url
   const editorVideoUrl = (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl) || videoUrl
 
   const selectionUI = (
-    <div className="min-h-screen w-full bg-[var(--page-bg)] text-[var(--text-main)] selection:bg-indigo-500/30 overflow-x-hidden font-inter relative pb-24 transition-colors duration-500">
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 blur-[160px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-600/10 blur-[160px] rounded-full animate-pulse" />
-        <Fingerprint size={1000} className="text-[var(--text-main)] opacity-[0.02] absolute -bottom-40 -left-40 rotate-12" />
-      </div>
-
-      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12 py-12 relative z-10">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-          <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-3xl flex items-center justify-center shadow-2xl relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Edit3 size={40} className="text-indigo-400 relative z-10" />
+    <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
+        
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-surface-200 dark:border-surface-800 pb-8">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl flex items-center justify-center shadow-sm">
+              <Edit3 size={32} className="text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Workflow Orchestrator</span>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
+                  Workflow Selection
+                </span>
               </div>
-              <h1 className="text-[clamp(2.5rem,8vw,5rem)] font-black text-[var(--text-main)] tracking-tighter leading-none italic uppercase">Studio Selection</h1>
-              <p className="text-[var(--text-dim)] text-sm mt-2 font-medium max-w-lg italic">{video?.title || 'Untitled Manifest'}</p>
+              <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Select Edit Mode</h1>
+              <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg truncate">{video?.title || 'Untitled Project'}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button onClick={toggle} className="w-14 h-14 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-main)] hover:scale-105 transition-all shadow-xl">
+          <div className="flex items-center gap-3">
+            <button onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
               {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button onClick={() => router.push('/dashboard/video')} className="px-8 py-4 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all flex items-center gap-4 shadow-xl backdrop-blur-[var(--glass-blur)] group">
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-[11px] font-black uppercase tracking-widest italic">Return to Vault</span>
+            <button onClick={() => router.push('/dashboard/video')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+              <ChevronLeft size={16} />
+              Return
             </button>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
-            <div className="relative w-full aspect-video bg-black/60 rounded-[3rem] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-[var(--glass-border)] ring-1 ring-white/5 group">
-              <video src={videoUrl} controls className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-1000" />
-              <div className="absolute inset-0 pointer-events-none border-[min(20px,4vw)] border-[var(--page-bg)] rounded-[3rem]" />
-              <div className="absolute top-8 left-8 flex items-center gap-3 px-4 py-2 rounded-full bg-black/60 border border-white/10 backdrop-blur-md">
+            <div className="relative w-full aspect-video bg-surface-100 dark:bg-surface-950 rounded-3xl overflow-hidden shadow-sm border border-surface-200 dark:border-surface-800 flex items-center justify-center">
+              <video src={videoUrl} controls className="w-full h-full object-contain" />
+              <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 border border-white/10 backdrop-blur-md">
                  <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                 <span className="text-[9px] font-black text-white uppercase tracking-widest italic">Live_Preview_Manifest</span>
+                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">Preview</span>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-5 flex flex-col gap-8">
+          <div className="lg:col-span-5 flex flex-col gap-6">
             <div className="flex items-center gap-4">
-               <span className="flex h-[2px] flex-1 bg-gradient-to-r from-transparent to-[var(--glass-border)]" />
-               <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.5em] italic">Protocol_Inference</span>
-               <span className="flex h-[2px] flex-1 bg-gradient-to-l from-transparent to-[var(--glass-border)]" />
+               <span className="flex h-px flex-1 bg-surface-200 dark:bg-surface-800" />
+               <span className="text-xs font-bold text-surface-500 uppercase tracking-widest">Choose Option</span>
+               <span className="flex h-px flex-1 bg-surface-200 dark:bg-surface-800" />
             </div>
 
-            <div className="space-y-6">
-              <button onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-8 p-10 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:bg-[var(--glass-surface-heavy)] hover:border-indigo-500/30 transition-all duration-500 text-left shadow-2xl overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[60px] opacity-0 group-hover:opacity-40 transition-opacity" />
-                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:scale-110 transition-all shadow-inner">
-                  <Sparkles className="w-8 h-8 text-indigo-400" />
+            <div className="space-y-4">
+              <button onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all text-left overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 dark:bg-primary-900/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Wand2 className="w-7 h-7 text-primary-600 dark:text-primary-400" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                     <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Neural Forge</h2>
-                     <span className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[8px] font-black text-indigo-400 uppercase italic">RECOMMENDED</span>
+                <div className="flex-1 relative z-10">
+                  <div className="flex items-center gap-3 mb-1">
+                     <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">AI Auto Edit</h2>
+                     <span className="px-2 py-0.5 rounded-md bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 text-[9px] font-bold uppercase tracking-wider border border-primary-200 dark:border-primary-800">RECOMMENDED</span>
                   </div>
-                  <p className="text-sm text-[var(--text-dim)] font-medium italic opacity-70">Initialize the AI engine to synthesize rough clips and viral hooks automatically.</p>
-                  <div className="mt-6 flex items-center gap-3 text-indigo-400 font-black text-[11px] uppercase tracking-widest italic group-hover:gap-5 transition-all">
-                    Initialize Forge <ArrowRight className="w-4 h-4" />
+                  <p className="text-sm text-surface-500 leading-relaxed font-medium">Use AI to automatically find hooks, remove silence, and generate high-retention clips.</p>
+                  <div className="mt-4 flex items-center gap-2 text-primary-600 dark:text-primary-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
+                    Start Auto Edit <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </button>
 
-              <button onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-8 p-10 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:bg-[var(--glass-surface-heavy)] hover:border-rose-500/30 transition-all duration-500 text-left shadow-2xl overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[60px] opacity-0 group-hover:opacity-40 transition-opacity" />
-                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center group-hover:scale-110 transition-all shadow-inner">
-                  <Video className="w-8 h-8 text-rose-400" />
+              <button onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:shadow-md transition-all text-left overflow-hidden">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Scissors className="w-7 h-7 text-surface-600 dark:text-surface-400" />
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight mb-2">Spectral Studio</h2>
-                  <p className="text-sm text-[var(--text-dim)] font-medium italic opacity-70">Access the full kinetic calibration matrix for manual timeline mastery.</p>
-                  <div className="mt-6 flex items-center gap-3 text-rose-400 font-black text-[11px] uppercase tracking-widest italic group-hover:gap-5 transition-all">
-                    Access Studio <ArrowRight className="w-4 h-4" />
+                <div className="flex-1 relative z-10">
+                  <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">Advanced Manual Editor</h2>
+                  <p className="text-sm text-surface-500 leading-relaxed font-medium">Access the full timeline editor for precise manual cuts, transitions, and audio mixing.</p>
+                  <div className="mt-4 flex items-center gap-2 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider group-hover:gap-3 transition-all">
+                    Open Editor <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </button>
@@ -291,9 +289,9 @@ export default function VideoEditPage({ params }: PageProps) {
     const urlForEditor = editorVideoUrl || videoUrl
     if (!urlForEditor) return null
     return (
-      <div className="fixed inset-0 bg-[var(--page-bg)] overflow-hidden transition-colors duration-500">
-        <button type="button" onClick={() => setEditMode('selection')} className="absolute top-[5px] left-[67px] z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-main)] text-sm font-medium shadow-xl backdrop-blur-[var(--glass-blur)] hover:bg-[var(--glass-surface-heavy)] transition-colors">
-          <ChevronLeft className="w-4 h-4" /> Back to Workflow
+      <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
+        <button type="button" onClick={() => setEditMode('selection')} className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+          <ChevronLeft size={16} /> Workflow Selection
         </button>
         <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} />
       </div>
@@ -301,107 +299,104 @@ export default function VideoEditPage({ params }: PageProps) {
   }
 
   if (editMode === 'ai-auto') {
-    const enabledCount = Object.values(editingOptions).filter(Boolean).length
     return (
-      <div className="min-h-screen w-full bg-[var(--page-bg)] text-[var(--text-main)] selection:bg-indigo-500/30 overflow-x-hidden font-inter relative pb-32 transition-colors duration-500">
-        <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[160px] rounded-full animate-pulse" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[160px] rounded-full animate-pulse" />
-        </div>
-
-        <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12 py-12 relative z-10">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-            <div className="flex items-center gap-8">
-              <div className="w-20 h-20 bg-blue-500/10 border-2 border-blue-500/20 rounded-3xl flex items-center justify-center shadow-2xl relative">
-                <Sparkles size={40} className="text-blue-400" />
+      <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-32 transition-colors duration-500">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
+          
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-surface-200 dark:border-surface-800 pb-8">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
+                <Sparkles size={32} className="text-primary-600 dark:text-primary-400" />
               </div>
               <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <Cpu size={14} className="text-blue-400 animate-pulse" />
-                  <span className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-400/80 italic">Neural Forge Controller</span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
+                    AI Auto Edit
+                  </span>
                 </div>
-                <h1 className="text-[clamp(2rem,6vw,4rem)] font-black text-[var(--text-main)] tracking-tighter leading-none italic uppercase">Forge Configuration</h1>
-                <p className="text-[var(--text-dim)] text-sm mt-2 font-medium max-w-lg italic">{video?.title || 'Untitled Manifest'}</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Configure AI Rules</h1>
+                <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg truncate">{video?.title || 'Untitled Project'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <button onClick={toggle} className="w-14 h-14 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-main)] hover:scale-105 transition-all shadow-xl">
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <button onClick={() => handleAnalyzeVideo()} disabled={analyzing} className="px-8 py-4 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all flex items-center gap-4 shadow-xl backdrop-blur-[var(--glass-blur)] disabled:opacity-40">
-                {analyzing ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Eye className="w-5 h-5" />}
-                <span className="text-[11px] font-black uppercase tracking-widest italic">{analyzing ? 'DIAGNOSING...' : 'DIAGNOSE_MANIFEST'}</span>
+              <button onClick={() => handleAnalyzeVideo()} disabled={analyzing} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
+                {analyzing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                {analyzing ? 'Analyzing...' : 'Analyze Video'}
               </button>
-              <button onClick={() => setEditMode('selection')} className="px-8 py-4 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all flex items-center gap-4 shadow-xl backdrop-blur-[var(--glass-blur)]">
-                <ChevronLeft className="w-5 h-5" />
-                <span className="text-[11px] font-black uppercase tracking-widest italic">Switch Protocol</span>
+              <button onClick={() => setEditMode('selection')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+                <ChevronLeft size={16} /> Return
               </button>
             </div>
           </header>
 
           <AnimatePresence mode="wait">
             {processing ? (
-              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] rounded-[3rem] border border-[var(--glass-border)] p-16 text-center shadow-2xl overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-12 opacity-5 animate-spin-slow"><RefreshCw size={200} /></div>
-                <div className="relative z-10 max-w-lg mx-auto">
-                  <div className="w-24 h-24 rounded-[2rem] bg-blue-500/10 border-2 border-blue-500/20 flex items-center justify-center mx-auto mb-8 shadow-xl">
-                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-                  </div>
-                  <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4">Synthesizing Manifest</h2>
-                  <p className="text-[var(--text-dim)] font-medium italic mb-10 text-xs opacity-60 uppercase tracking-tight">Establishing neural uplink... Processing creative vectors...</p>
-                  {editJobId ? (
-                    <div className="p-8 rounded-[2.5rem] bg-[var(--glass-surface)] border border-[var(--glass-border)]">
-                       <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); }} onError={() => { setProcessing(false); }} />
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="flex justify-between items-end mb-2">
-                         <span className="text-xs font-black text-blue-400 uppercase tracking-[0.4em] italic">{liveProgress?.stage || 'INITIALIZING'}</span>
-                         <span className="text-xl font-black text-[var(--text-main)] italic tabular-nums">{liveProgress?.percent || 0}%</span>
-                      </div>
-                      <div className="h-4 bg-[var(--glass-surface)] rounded-full overflow-hidden border border-[var(--glass-border)] shadow-inner">
-                        <motion.div className="h-full bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.8)]" initial={{ width: 0 }} animate={{ width: `${liveProgress?.percent || 0}%` }} />
-                      </div>
-                    </div>
-                  )}
+              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-800 p-12 sm:p-20 text-center shadow-sm max-w-3xl mx-auto">
+                <div className="w-20 h-20 rounded-2xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center mx-auto mb-8 shadow-sm">
+                  <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
                 </div>
+                <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-4">Processing Video</h2>
+                <p className="text-surface-500 font-medium mb-10 text-sm">Our AI is currently analyzing, cutting, and optimizing your video...</p>
+                {editJobId ? (
+                  <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
+                     <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); }} onError={() => { setProcessing(false); }} />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-end mb-2">
+                       <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">{liveProgress?.stage || 'Initializing'}</span>
+                       <span className="text-lg font-black text-surface-900 dark:text-white">{liveProgress?.percent || 0}%</span>
+                    </div>
+                    <div className="h-3 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
+                      <motion.div className="h-full bg-primary-500" initial={{ width: 0 }} animate={{ width: `${liveProgress?.percent || 0}%` }} />
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ) : aiEditResult ? (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                <div className="bg-emerald-500/5 border-2 border-emerald-500/20 rounded-[4rem] p-12 flex flex-col md:flex-row items-center gap-12 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity rotate-12"><CheckCircle2 size={300} className="text-emerald-400" /></div>
-                  <div className="w-24 h-24 rounded-[3rem] bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-3xl relative z-10"><CheckCircle2 size={48} className="text-emerald-400" /></div>
-                  <div className="flex-1 text-center md:text-left relative z-10">
-                    <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2">Manifest Stable</h2>
-                    <p className="text-[var(--text-dim)] font-medium italic uppercase tracking-widest text-[11px] opacity-60">Neural forge synthesis complete. Temporal blueprint ready.</p>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-4xl mx-auto">
+                <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-10 flex flex-col md:flex-row items-center gap-10 shadow-sm relative overflow-hidden">
+                  <div className="w-20 h-20 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
+                    <CheckCircle2 size={36} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-6 relative z-10 w-full md:w-auto">
-                    <button onClick={() => handleEditModeSelect('manual')} className="px-12 py-6 rounded-[2.5rem] bg-[var(--text-main)] text-[var(--page-bg)] font-black text-sm uppercase tracking-[0.5em] hover:opacity-90 transition-all flex items-center justify-center gap-6 italic">Open Studio <ArrowRight className="w-6 h-6" /></button>
-                    <button onClick={() => { setAiEditResult(null); setEditMode('selection'); }} className="px-10 py-6 rounded-[2.5rem] bg-[var(--glass-surface)] border-2 border-[var(--glass-border)] text-[var(--text-main)] font-black text-xs uppercase tracking-widest italic hover:bg-[var(--glass-surface-heavy)] transition-all">Dismiss</button>
+                  <div className="flex-1 text-center md:text-left">
+                    <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Processing Complete</h2>
+                    <p className="text-surface-500 font-medium text-sm">Your video has been successfully processed and edited by AI.</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <button onClick={() => handleEditModeSelect('manual')} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
+                      Open in Editor <ArrowRight size={16} />
+                    </button>
+                    <button onClick={() => { setAiEditResult(null); setEditMode('selection'); }} className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                      Dismiss
+                    </button>
                   </div>
                 </div>
+
                 {newVideoScore && (
-                  <div className="bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] p-12 rounded-[5rem] relative overflow-hidden group min-h-[500px] flex flex-col">
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.03] rotate-6"><TrendingUp size={400} className="text-blue-400" /></div>
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 relative z-10 gap-8">
+                  <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-10 rounded-3xl shadow-sm">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
                       <div>
-                        <div className="flex items-center gap-3 mb-1">
-                           <Activity size={14} className="text-blue-400" />
-                           <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.4em] italic">Predictive_Engagement_Matrix</span>
+                        <div className="flex items-center gap-2 mb-2">
+                           <TrendingUp size={16} className="text-primary-600 dark:text-primary-400" />
+                           <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">Engagement Prediction</span>
                         </div>
-                        <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Resonance Score</h3>
+                        <h3 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">Predicted Score</h3>
                       </div>
-                      <div className="text-[clamp(4rem,12vw,8rem)] font-black text-blue-500 italic tabular-nums drop-shadow-[0_0_40px_rgba(59,130,246,0.3)] leading-none">{newVideoScore.score}%</div>
+                      <div className="text-6xl font-black text-primary-500 tabular-nums leading-none tracking-tighter">{newVideoScore.score}%</div>
                     </div>
                     {newVideoScore.factors && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 flex-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {newVideoScore.factors.map((f, i) => (
-                          <div key={i} className="p-8 rounded-[3rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] flex justify-between items-center group/factor hover:border-blue-500/30 transition-all">
-                            <div className="space-y-1">
-                               <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic group-hover/factor:text-blue-400 transition-colors">{f.name}</p>
-                               <p className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{f.value}</p>
+                          <div key={i} className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex justify-between items-center">
+                            <div>
+                               <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-1">{f.name}</p>
+                               <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight">{f.value}</p>
                             </div>
-                            <div className={`px-4 py-2 rounded-full text-[11px] font-black italic tracking-widest ${f.impact.startsWith('+') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                            <div className={`px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider ${f.impact.startsWith('+') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50'}`}>
                                {f.impact}
                             </div>
                           </div>
@@ -412,88 +407,125 @@ export default function VideoEditPage({ params }: PageProps) {
                 )}
               </motion.div>
             ) : (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                <div className="lg:col-span-4 space-y-8">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* Left Col: Analysis Results */}
+                <div className="lg:col-span-4 space-y-6">
                   {showAnalysis && aiAnalysis && (
-                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] p-10 rounded-[4rem] space-y-8 relative overflow-hidden">
-                       <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none rotate-12"><Activity size={180} className="text-emerald-400" /></div>
-                       <div className="flex items-center gap-6">
-                          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"><CheckCircle2 size={28} className="text-emerald-400" /></div>
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm">
+                       <div className="flex items-center gap-4 mb-6">
+                          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
+                            <Activity size={24} className="text-emerald-600 dark:text-emerald-400" />
+                          </div>
                           <div>
-                             <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">Diagnostics</h3>
-                             <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic mt-1">UPLINK_SUCCESSFUL</p>
+                             <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">Diagnostics</h3>
+                             <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-1">Analysis Complete</p>
                           </div>
                        </div>
-                       <div className="space-y-4 relative z-10">
-                          <div className="p-6 rounded-[2.5rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] flex justify-between items-center"><p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">OPTIMAL_DURATION</p><p className="text-3xl font-black text-[var(--text-main)] italic tabular-nums">{Math.round(aiAnalysis.suggestedLength || 0)}S</p></div>
+                       <div className="p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex justify-between items-center">
+                         <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">Suggested Length</p>
+                         <p className="text-2xl font-black text-surface-900 dark:text-white tabular-nums">{Math.round(aiAnalysis.suggestedLength || 0)}s</p>
                        </div>
                     </motion.div>
                   )}
-                  <div className="bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] p-10 rounded-[4rem] space-y-8 relative overflow-hidden">
-                     <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none -rotate-12"><Brain size={180} className="text-blue-400" /></div>
-                     <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border-blue-500/20 flex items-center justify-center"><Terminal size={28} className="text-blue-400" /></div>
+                  
+                  <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 rounded-3xl shadow-sm">
+                     <div className="flex items-center gap-4 mb-6">
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center justify-center">
+                          <Brain size={24} className="text-blue-600 dark:text-blue-400" />
+                        </div>
                         <div>
-                           <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">Strategy Matrix</h3>
-                           <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest italic mt-1">SOVEREIGN_VECTORS</p>
+                           <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">Content Strategy</h3>
+                           <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mt-1">AI Recommendations</p>
                         </div>
                      </div>
-                     <div className="space-y-4 relative z-10">
-                        {[{ label: 'HOOK_FOCUS', val: 'FIRST 3S' }, { label: 'RETENTION_BPM', val: 'AUTO_SYNC' }].map((s, i) => (
-                          <div key={i} className="flex justify-between items-center p-6 rounded-[2.5rem] bg-[var(--glass-surface)] border border-[var(--glass-border)] group/row"><span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">{s.label}</span><span className="text-sm font-black text-[var(--text-main)] italic uppercase tracking-widest tabular-nums">{s.val}</span></div>
+                     <div className="space-y-3">
+                        {[{ label: 'Hook Focus', val: 'First 3s' }, { label: 'Pacing Target', val: 'Dynamic' }].map((s, i) => (
+                          <div key={i} className="flex justify-between items-center p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
+                            <span className="text-xs font-bold text-surface-500">{s.label}</span>
+                            <span className="text-sm font-black text-surface-900 dark:text-white">{s.val}</span>
+                          </div>
                         ))}
                      </div>
                   </div>
                 </div>
 
-                <div className="lg:col-span-8 flex flex-col gap-8">
-                   <div className="bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] border border-[var(--glass-border)] p-12 rounded-[5rem] relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-24 opacity-[0.02] pointer-events-none rotate-45"><Settings size={500} className="text-[var(--text-main)]" /></div>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 mb-16 relative z-10">
-                         <div className="w-16 h-16 rounded-[2rem] bg-[var(--glass-surface)] border-2 border-[var(--glass-border)] flex items-center justify-center"><Cpu size={32} className="text-blue-400" /></div>
+                {/* Right Col: Edit Config */}
+                <div className="lg:col-span-8">
+                   <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 sm:p-12 rounded-3xl shadow-sm">
+                      <div className="flex items-center gap-5 mb-10 pb-8 border-b border-surface-200 dark:border-surface-800">
+                         <div className="w-14 h-14 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center">
+                           <Settings size={28} className="text-surface-600 dark:text-surface-400" />
+                         </div>
                          <div>
-                            <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Neural Parameters</h2>
-                            <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.5em] italic mt-3 opacity-60">CALIBRATE_FORGE_SEQUENCE_V4.2</p>
+                            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">Processing Rules</h2>
+                            <p className="text-sm font-medium text-surface-500 mt-1">Configure how the AI will edit your video.</p>
                          </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
-                        <div className="space-y-8">
-                           <div className="flex items-center justify-between px-4"><label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic flex items-center gap-4"><Zap size={16} className="text-blue-400" /> SYNTHESIS_NODES</label></div>
-                           <div className="space-y-4">
-                              {[{ id: 'removeSilence', label: 'SILENCE_REMOVAL', desc: 'Auto-cut dead air & filler words.' }, { id: 'optimizePacing', label: 'PACING_SYNC', desc: 'Tighten kinetic flow.' }, { id: 'enhanceAudio', label: 'SPECTRAL_AUDIO', desc: 'Neural noise reduction.' }, { id: 'generateClips', label: 'SWARM_CLIPPING', desc: 'Synthesize viral nodes.' }, { id: 'addCaptions', label: 'DYNAMIC_CAPTIONS', desc: 'Burn-in high-fidelity captions.' }, { id: 'enhanceColor', label: 'COLOR_RESONANCE', desc: 'AI-driven color grading.' }].map(node => (
-                                <button key={node.id} onClick={() => setEditingOptions(prev => ({ ...prev, [node.id]: !prev[node.id as keyof typeof prev] }))} className={`w-full p-6 rounded-[3rem] border-2 transition-all duration-500 flex items-center justify-between group/opt relative overflow-hidden ${editingOptions[node.id as keyof typeof editingOptions] ? 'bg-blue-500/10 border-blue-500/40 text-[var(--text-main)] shadow-xl' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:border-white/20'}`}>
-                                  <div className="text-left relative z-10"><p className="text-lg font-black italic uppercase tracking-tight leading-none mb-1.5">{node.label}</p><p className="text-[10px] font-bold text-[var(--text-dim)] italic uppercase tracking-widest">{node.desc}</p></div>
-                                  <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center relative z-10 ${editingOptions[node.id as keyof typeof editingOptions] ? 'bg-blue-500 border-blue-400 text-white scale-110' : 'bg-black/40 border-white/10'}`}>{editingOptions[node.id as keyof typeof editingOptions] && <CheckCircle2 size={16} />}</div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div className="space-y-6">
+                           <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
+                             <Scissors size={14} className="text-primary-500" /> 
+                             AI Tasks
+                           </label>
+                           <div className="space-y-3">
+                              {[
+                                { id: 'removeSilence', label: 'Remove Silence', desc: 'Auto-cut dead air & pauses' }, 
+                                { id: 'optimizePacing', label: 'Optimize Pacing', desc: 'Improve flow and retention' }, 
+                                { id: 'enhanceAudio', label: 'Enhance Audio', desc: 'Reduce background noise' }, 
+                                { id: 'generateClips', label: 'Generate Short Clips', desc: 'Extract viral moments' }, 
+                                { id: 'addCaptions', label: 'Add Captions', desc: 'Burn-in dynamic text' }, 
+                                { id: 'enhanceColor', label: 'Color Correction', desc: 'AI-driven color grading' }
+                              ].map(node => (
+                                <button key={node.id} onClick={() => setEditingOptions(prev => ({ ...prev, [node.id]: !prev[node.id as keyof typeof prev] }))} className={`w-full p-5 rounded-2xl border transition-all flex items-center justify-between text-left ${editingOptions[node.id as keyof typeof editingOptions] ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700 shadow-sm' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
+                                  <div>
+                                    <p className={`text-sm font-bold mb-1 ${editingOptions[node.id as keyof typeof editingOptions] ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>{node.label}</p>
+                                    <p className={`text-xs font-medium ${editingOptions[node.id as keyof typeof editingOptions] ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>{node.desc}</p>
+                                  </div>
+                                  <div className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 ${editingOptions[node.id as keyof typeof editingOptions] ? 'bg-primary-500 border-primary-500 text-white' : 'bg-white dark:bg-surface-900 border-surface-300 dark:border-surface-700 text-transparent'}`}>
+                                    <CheckCircle2 size={14} />
+                                  </div>
                                 </button>
                               ))}
                            </div>
                         </div>
-                        <div className="space-y-10">
-                           <div className="space-y-8">
-                              <label className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic flex items-center gap-4 px-4"><LayoutGrid size={16} className="text-indigo-400" /> MATRIX_CALIBRATION</label>
-                              <div className="space-y-6">
-                                 <div className="p-8 rounded-[3.5rem] bg-black/40 border-2 border-white/5 space-y-6">
-                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic">TARGET_DOMAIN</p>
-                                    <div className="flex flex-wrap gap-3">{[{ id: 'auto', label: 'AUTO' }, { id: 'vertical', label: '9:16' }, { id: 'square', label: '1:1' }, { id: 'standard', label: '16:9' }].map(f => (<button key={f.id} onClick={() => setOutputFormat(f.id as "auto" | "vertical" | "square" | "standard")} className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest italic transition-all border-2 ${outputFormat === f.id ? 'bg-white text-black border-white shadow-2xl scale-110' : 'bg-white/5 text-slate-500 border-white/5 hover:text-white'}`}>{f.label}</button>)) }</div>
+
+                        <div className="space-y-8">
+                           <div className="space-y-6">
+                              <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
+                                <LayoutGrid size={14} className="text-primary-500" /> 
+                                Format Settings
+                              </label>
+                              <div className="space-y-5">
+                                 <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-4">
+                                    <p className="text-xs font-bold text-surface-900 dark:text-white">Output Aspect Ratio</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[{ id: 'auto', label: 'Auto' }, { id: 'vertical', label: 'Vertical (9:16)' }, { id: 'square', label: 'Square (1:1)' }, { id: 'standard', label: 'Standard (16:9)' }].map(f => (
+                                        <button key={f.id} onClick={() => setOutputFormat(f.id as "auto" | "vertical" | "square" | "standard")} className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors border ${outputFormat === f.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
+                                          {f.label}
+                                        </button>
+                                      ))}
+                                    </div>
                                  </div>
-                                 <div className="p-8 rounded-[3.5rem] bg-black/40 border-2 border-white/5 space-y-6">
-                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic">STYLE_DNA</p>
-                                    <select value={captionStyle} onChange={(e) => setCaptionStyle(e.target.value)} className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-5 text-sm font-black italic uppercase text-white outline-none">
-                                       {['modern', 'bold', 'minimal', 'tiktok', 'youtube', 'neon', 'pill', 'cinematic'].map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+
+                                 <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-4">
+                                    <p className="text-xs font-bold text-surface-900 dark:text-white">Caption Style</p>
+                                    <select value={captionStyle} onChange={(e) => setCaptionStyle(e.target.value)} className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-sm font-bold text-surface-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/50">
+                                       {['modern', 'bold', 'minimal', 'tiktok', 'youtube', 'neon', 'pill', 'cinematic'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                                     </select>
                                  </div>
                               </div>
                            </div>
-                           <div className="pt-12">
-                              <button onClick={handleStartAIEdit} className={`w-full py-14 rounded-[4rem] font-black text-4xl uppercase tracking-[0.8em] transition-all duration-1000 italic active:scale-95 group relative overflow-hidden flex items-center justify-center gap-10 bg-blue-600 text-white hover:bg-blue-500 shadow-2xl`}>
-                                {processing ? <RefreshCw size={48} className="animate-spin text-blue-300" /> : <Zap size={48} />} {processing ? 'SYNTHESIZING...' : 'Initialise Forge'}
+
+                           <div className="pt-8">
+                              <button onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-3 bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50">
+                                {processing ? <RefreshCw size={20} className="animate-spin" /> : <Wand2 size={20} />} 
+                                {processing ? 'Processing...' : 'Start AI Editing'}
                               </button>
                            </div>
                         </div>
                       </div>
-                   </div>
-                   <div className="pt-12 flex justify-center">
-                      <button onClick={() => setEditMode('selection')} className="flex items-center gap-4 text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic hover:text-[var(--text-main)] transition-colors group"><ArrowLeft size={16} className="group-hover:-translate-x-2 transition-transform" /> Back to Selection Matrix</button>
                    </div>
                 </div>
               </motion.div>

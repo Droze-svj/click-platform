@@ -73,15 +73,15 @@ export default function WorkflowRail() {
   ]
 
   return (
-    <div className="sticky top-0 z-30 backdrop-blur-[var(--glass-blur)] bg-[var(--glass-surface)] border-b border-[var(--glass-border)] transition-colors duration-500">
+    <div className="sticky top-0 z-30 bg-white dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 transition-colors duration-500 shadow-sm">
       <div className="px-4 lg:px-8 py-3 flex items-center gap-4 lg:gap-6 overflow-x-auto custom-scrollbar">
         {/* Niche pill */}
         <Link
           href="/dashboard/niche"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:border-[var(--tint-fuchsia-edge)] hover:bg-[var(--tint-fuchsia-bg)] transition-all flex-shrink-0 group"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 transition-all flex-shrink-0 group"
         >
           <Sparkles size={12} className="text-[var(--tint-fuchsia-fg)] group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-main)]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-900 dark:text-white">
             {state.niche || 'SET_NICHE'}
           </span>
         </Link>
@@ -94,10 +94,10 @@ export default function WorkflowRail() {
             const next = PLATFORM_OPTIONS[(idx + 1) % PLATFORM_OPTIONS.length]
             setPlatform(next.id)
           }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--glass-surface)] border border-[var(--glass-border)] hover:border-[var(--tint-indigo-edge)] hover:bg-[var(--tint-indigo-bg)] transition-all flex-shrink-0 group"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 transition-all flex-shrink-0 group"
         >
           <Send size={12} className="text-[var(--tint-indigo-fg)] group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-main)]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-surface-900 dark:text-white">
             {PLATFORM_OPTIONS.find(p => p.id === state.platform)?.label || 'PICK'}
           </span>
         </button>
@@ -118,14 +118,14 @@ export default function WorkflowRail() {
                     type="button"
                     onClick={() => { setStage(s); router.push(meta.route) }}
                     aria-current={isCurrent ? 'step' : undefined}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
                       isCurrent
-                        ? 'bg-indigo-500 text-white border-indigo-400 shadow-lg shadow-indigo-500/30'
+                        ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
                         : isDone
-                          ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400'
                           : isReachable
-                            ? 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)]'
-                            : 'bg-transparent border-transparent text-[var(--text-dim)] opacity-50'
+                            ? 'bg-white dark:bg-surface-900 border-surface-200 dark:border-surface-800 text-surface-500 hover:text-surface-900 dark:hover:text-white'
+                            : 'bg-transparent border-transparent text-surface-400 opacity-50'
                     }`}
                   >
                     {isDone && !isCurrent ? <Check size={12} /> : <Icon size={12} />}
@@ -133,7 +133,7 @@ export default function WorkflowRail() {
                   </button>
                 </li>
                 {i < STAGE_ORDER.length - 1 && (
-                  <li aria-hidden="true" className={`h-px w-4 sm:w-8 flex-shrink-0 ${state.completed[s] ? 'bg-[var(--tint-emerald-edge)]' : 'bg-[var(--glass-border)]'}`} />
+                  <li aria-hidden="true" className={`h-px w-4 sm:w-8 flex-shrink-0 ${state.completed[s] ? 'bg-emerald-500' : 'bg-surface-200 dark:bg-surface-800'}`} />
                 )}
               </React.Fragment>
             )
@@ -145,7 +145,7 @@ export default function WorkflowRail() {
           <Link
             href={next.route}
             onClick={() => setStage(next.stage)}
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/30 hover:bg-indigo-600 transition-all flex-shrink-0"
+            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-primary-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm hover:bg-primary-700 transition-all flex-shrink-0"
           >
             <span>NEXT: {stageLabel(next.stage)}</span>
             <ArrowRight size={12} />

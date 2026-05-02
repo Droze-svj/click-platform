@@ -15,7 +15,6 @@ import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl transition-all duration-300'
 
 interface ScheduledPost {
   _id: string; platform: string;
@@ -25,12 +24,12 @@ interface ScheduledPost {
 }
 
 const PLATFORMS = [
-  { id: 'tiktok',    label: 'TikTok',    gradient: 'from-slate-800 to-black',       charLimit: 2200, icon: '♪' },
+  { id: 'tiktok',    label: 'TikTok',    gradient: 'from-surface-900 to-black',       charLimit: 2200, icon: '♪' },
   { id: 'instagram', label: 'Instagram', gradient: 'from-pink-500 to-purple-600',   charLimit: 2200, icon: '◎' },
-  { id: 'youtube',   label: 'YouTube',   gradient: 'from-red-600 to-red-900',       charLimit: 5000, icon: '▶' },
-  { id: 'twitter',   label: 'X (Twitter)',gradient: 'from-slate-700 to-slate-900',  charLimit: 280,  icon: '𝕏' },
-  { id: 'linkedin',  label: 'LinkedIn',  gradient: 'from-blue-600 to-blue-900',     charLimit: 3000, icon: 'in' },
-  { id: 'facebook',  label: 'Facebook',  gradient: 'from-indigo-600 to-indigo-900', charLimit: 63206, icon: 'f' },
+  { id: 'youtube',   label: 'YouTube',   gradient: 'from-rose-500 to-rose-700',       charLimit: 5000, icon: '▶' },
+  { id: 'twitter',   label: 'X (Twitter)',gradient: 'from-surface-700 to-surface-900',  charLimit: 280,  icon: '𝕏' },
+  { id: 'linkedin',  label: 'LinkedIn',  gradient: 'from-blue-500 to-blue-700',     charLimit: 3000, icon: 'in' },
+  { id: 'facebook',  label: 'Facebook',  gradient: 'from-indigo-500 to-indigo-700', charLimit: 63206, icon: 'f' },
 ]
 
 export default function ContentSchedulerPage() {
@@ -115,142 +114,168 @@ export default function ContentSchedulerPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1500px] mx-auto space-y-16 font-inter">
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter pb-32">
         <ToastContainer />
 
-        {/* Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-50">
-           <div className="flex items-center gap-8">
-              <button onClick={() => router.push('/dashboard')} className="w-14 h-14 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl hover:border-white/20 backdrop-blur-3xl group">
-                <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
-              </button>
-              <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-lg relative">
-                <Send size={32} className="text-emerald-400" />
-              </div>
-              <div>
-                 <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight drop-shadow-md">Multi-Platform Scheduler</h1>
-                 <p className="text-slate-400 text-sm mt-1 font-medium">Compose once, distribute everywhere. Let AI pick the best time to post.</p>
-              </div>
-           </div>
-
-           <div className="flex items-center gap-6">
-              <button onClick={() => loadSchedule(true)} className={`${glassStyle} w-14 h-14 rounded-full flex items-center justify-center group active:scale-95 hover:bg-white/[0.05]`}>
-                <RefreshCw size={24} className={`text-slate-400 group-hover:text-emerald-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
-              <button onClick={() => router.push('/dashboard/calendar')} className="px-8 py-4 bg-white/[0.02] border border-white/5 text-slate-300 hover:text-white hover:bg-white/[0.05] rounded-full text-sm font-bold shadow-lg transition-all flex items-center gap-3">
-                <Calendar size={20} /> View Calendar
-              </button>
-           </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 relative z-10">
-           {/* Composer */}
-           <div className="lg:col-span-3 space-y-8">
-              <div className={`${glassStyle} rounded-3xl p-10 bg-[#050505]`}>
-                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-3"><Layers size={20} className="text-emerald-400" /> Select Platforms</h3>
-                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 mb-10">
-                    {PLATFORMS.map(p => {
-                      const active = selectedPlatforms.includes(p.id)
-                      return (
-                        <button key={p.id} onClick={() => setSelectedPlatforms(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
-                          className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${active ? `border-transparent bg-gradient-to-br ${p.gradient} shadow-lg scale-105` : 'bg-black/40 border-white/5 opacity-50 hover:opacity-100 hover:border-white/20'}`}
-                        >
-                          <span className="text-2xl text-white drop-shadow-md">{p.icon}</span>
-                        </button>
-                      )
-                    })}
-                 </div>
-
-                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-3"><Edit3 size={20} className="text-emerald-400" /> Compose Post</h3>
-                 <div className="relative mb-10">
-                    <textarea
-                      ref={textareaRef}
-                      value={postText}
-                      onChange={e => { setPostText(e.target.value); autoResize() }}
-                      placeholder="Write your caption here..."
-                      className={`w-full bg-black/60 border rounded-2xl p-6 text-lg text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all resize-none min-h-[160px] ${charCount > currentLimit ? 'border-rose-500/50 ring-rose-500/20' : 'border-white/10 focus:ring-emerald-500/20 focus:border-emerald-500/50'}`}
-                    />
-                    <div className={`absolute bottom-4 right-4 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md ${charCount > currentLimit ? 'bg-rose-500/20 text-rose-400' : 'bg-white/10 text-slate-400'}`}>
-                       {charCount} / {currentLimit}
-                    </div>
-                 </div>
-
-                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-3"><Clock size={20} className="text-emerald-400" /> Schedule Time</h3>
-                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    <button onClick={() => setUseOptimalTime(true)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${useOptimalTime ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
-                       <Zap size={28} />
-                       <span className="font-bold">Optimal AI Time</span>
-                       <span className="text-xs opacity-60">Posts when followers are active</span>
-                    </button>
-                    <button onClick={() => setUseOptimalTime(false)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${!useOptimalTime ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
-                       <Calendar size={28} />
-                       <span className="font-bold">Custom Time</span>
-                       <span className="text-xs opacity-60">Select a specific date and time</span>
-                    </button>
-                 </div>
-
-                 {!useOptimalTime && (
-                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-10">
-                      <input type="datetime-local" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)}
-                        className="w-full bg-black/80 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-indigo-500/50 transition-all color-scheme-dark"
-                      />
-                   </motion.div>
-                 )}
-
-                 <button onClick={handleSchedulePost} disabled={submitting || charCount > currentLimit || selectedPlatforms.length === 0}
-                   className="w-full py-5 bg-white text-black rounded-2xl font-bold hover:bg-emerald-500 hover:text-white transition-all shadow-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                 >
-                   {submitting ? <RefreshCw className="animate-spin" size={24} /> : <Send size={24} />}
-                   {submitting ? 'Scheduling...' : 'Schedule to Multiple Platforms'}
-                 </button>
-              </div>
-           </div>
-
-           {/* Queue Sidebar */}
-           <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-2xl font-bold text-[var(--text-main)] mb-2">Upcoming Queue</h3>
-              <p className="text-slate-400 text-sm mb-6">Your next posts scheduled for delivery.</p>
-              
-              {loading ? (
-                <div className="py-20 text-center"><RefreshCw size={40} className="text-indigo-500 animate-spin mx-auto" /></div>
-              ) : upcomingPosts.length === 0 ? (
-                <div className={`${glassStyle} p-12 rounded-3xl text-center border-dashed`}>
-                   <Calendar size={48} className="text-slate-600 mx-auto mb-4" />
-                   <p className="text-slate-400 font-medium">No posts scheduled yet.</p>
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10 space-y-10">
+          
+          {/* Header */}
+          <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
+             <div className="flex items-center gap-6">
+                <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                  <ArrowLeft size={20} />
+                </button>
+                <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
+                  <Send size={32} className="text-primary-600 dark:text-primary-400" />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                   {upcomingPosts.slice(0, 8).map((post) => {
-                     const pl = PLATFORMS.find(p => p.id === post.platform)
-                     return (
-                       <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} key={post._id}
-                         className={`${glassStyle} p-6 rounded-2xl flex gap-4 bg-black/40 hover:bg-white/[0.04] group`}
-                       >
-                          <div className={`w-12 h-12 rounded-xl shrink-0 bg-gradient-to-br ${pl?.gradient || 'from-gray-600 to-black'} flex items-center justify-center text-white text-xl shadow-md`}>
-                            {pl?.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                             <p className="text-white font-medium truncate mb-1">{post.content.text || 'No text content'}</p>
-                             <div className="flex items-center gap-2 text-xs text-amber-400/80 font-medium">
-                                <Clock size={14} /> {new Date(post.scheduledTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                             </div>
-                          </div>
-                          <button onClick={() => handleDelete(post._id)} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors self-center opacity-0 group-hover:opacity-100">
-                             <Trash2 size={18} />
+                <div>
+                   <div className="flex items-center gap-2 mb-1">
+                     <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
+                       Distribution Hub
+                     </span>
+                   </div>
+                   <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Multi-Platform Scheduler</h1>
+                   <p className="text-surface-500 text-sm mt-2 font-medium">Compose once, distribute everywhere. Let AI pick the best time to post.</p>
+                </div>
+             </div>
+
+             <div className="flex items-center gap-4">
+                <button onClick={() => loadSchedule(true)} disabled={refreshing} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm disabled:opacity-50">
+                  <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+                </button>
+                <button onClick={() => router.push('/dashboard/calendar')} className="px-6 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-colors flex items-center gap-2">
+                  <Calendar size={18} /> View Calendar
+                </button>
+             </div>
+          </header>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+             {/* Composer */}
+             <div className="lg:col-span-3 space-y-8">
+                <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 sm:p-10 shadow-sm">
+                   <h3 className="text-sm font-bold text-surface-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider"><Layers size={18} className="text-primary-600 dark:text-primary-400" /> Select Platforms</h3>
+                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
+                      {PLATFORMS.map(p => {
+                        const active = selectedPlatforms.includes(p.id)
+                        return (
+                          <button key={p.id} onClick={() => setSelectedPlatforms(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
+                            className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${active ? `border-transparent bg-gradient-to-br ${p.gradient} shadow-md scale-105` : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 text-surface-400 hover:border-surface-300 dark:hover:border-surface-700'}`}
+                          >
+                            <span className={`text-2xl ${active ? 'text-white drop-shadow-md' : 'opacity-60'}`}>{p.icon}</span>
                           </button>
-                       </motion.div>
-                     )
-                   })}
-                   {upcomingPosts.length > 8 && (
-                     <button onClick={() => router.push('/dashboard/calendar')} className="w-full py-4 text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
-                       View all {upcomingPosts.length} posts in Calendar
-                     </button>
-                   )}
-                </div>
-              )}
-           </div>
-        </div>
+                        )
+                      })}
+                   </div>
 
+                   <h3 className="text-sm font-bold text-surface-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider"><Edit3 size={18} className="text-primary-600 dark:text-primary-400" /> Compose Post</h3>
+                   <div className="relative mb-10">
+                      <textarea
+                        ref={textareaRef}
+                        value={postText}
+                        onChange={e => { setPostText(e.target.value); autoResize() }}
+                        placeholder="Write your caption here..."
+                        className={`w-full bg-surface-50 dark:bg-surface-950 border rounded-2xl p-6 text-base font-medium text-surface-900 dark:text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 transition-all resize-none min-h-[160px] ${charCount > currentLimit ? 'border-rose-300 dark:border-rose-700/50 ring-rose-500/20' : 'border-surface-200 dark:border-surface-800 focus:ring-primary-500/30 focus:border-primary-500/50'}`}
+                      />
+                      <div className={`absolute bottom-4 right-4 text-[10px] font-bold px-3 py-1.5 rounded-lg border ${charCount > currentLimit ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50' : 'bg-white dark:bg-surface-900 text-surface-500 border-surface-200 dark:border-surface-800'}`}>
+                         {charCount} / {currentLimit}
+                      </div>
+                   </div>
+
+                   <h3 className="text-sm font-bold text-surface-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider"><Clock size={18} className="text-primary-600 dark:text-primary-400" /> Schedule Time</h3>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                      <button onClick={() => setUseOptimalTime(true)} className={`p-6 rounded-2xl border-2 flex flex-col items-start gap-2 transition-all text-left ${useOptimalTime ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700 shadow-sm' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
+                         <Zap size={24} className={useOptimalTime ? 'text-primary-600 dark:text-primary-400' : 'text-surface-400'} />
+                         <div>
+                            <span className={`block text-sm font-bold mb-1 ${useOptimalTime ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>Optimal AI Time</span>
+                            <span className={`text-xs font-medium ${useOptimalTime ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>Posts when followers are most active</span>
+                         </div>
+                      </button>
+                      <button onClick={() => setUseOptimalTime(false)} className={`p-6 rounded-2xl border-2 flex flex-col items-start gap-2 transition-all text-left ${!useOptimalTime ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700 shadow-sm' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
+                         <Calendar size={24} className={!useOptimalTime ? 'text-primary-600 dark:text-primary-400' : 'text-surface-400'} />
+                         <div>
+                            <span className={`block text-sm font-bold mb-1 ${!useOptimalTime ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>Custom Time</span>
+                            <span className={`text-xs font-medium ${!useOptimalTime ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>Select a specific date and exact time</span>
+                         </div>
+                      </button>
+                   </div>
+
+                   <AnimatePresence>
+                     {!useOptimalTime && (
+                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-10 overflow-hidden">
+                          <input type="datetime-local" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)}
+                            className="w-full bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl px-6 py-4 text-sm font-bold text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+                          />
+                       </motion.div>
+                     )}
+                   </AnimatePresence>
+
+                   <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
+                     <button onClick={handleSchedulePost} disabled={submitting || charCount > currentLimit || selectedPlatforms.length === 0}
+                       className="w-full py-5 bg-primary-600 text-white rounded-2xl text-sm font-bold uppercase tracking-wider hover:bg-primary-700 transition-colors shadow-sm flex items-center justify-center gap-3 disabled:opacity-50"
+                     >
+                       {submitting ? <RefreshCw className="animate-spin" size={20} /> : <Send size={20} />}
+                       {submitting ? 'Scheduling...' : 'Schedule to Multiple Platforms'}
+                     </button>
+                   </div>
+                </div>
+             </div>
+
+             {/* Queue Sidebar */}
+             <div className="lg:col-span-2 space-y-6">
+                <div className="flex items-center justify-between mb-2">
+                   <h3 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">Upcoming Queue</h3>
+                   <span className="px-3 py-1 bg-surface-100 dark:bg-surface-800 rounded-lg text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider">{upcomingPosts.length} Posts</span>
+                </div>
+                <p className="text-surface-500 text-sm font-medium mb-6">Your next posts scheduled for delivery.</p>
+                
+                {loading ? (
+                  <div className="py-24 flex flex-col items-center justify-center text-center gap-4 bg-white dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-800 shadow-sm">
+                     <RefreshCw size={32} className="text-primary-500 animate-spin" />
+                     <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Loading queue...</p>
+                  </div>
+                ) : upcomingPosts.length === 0 ? (
+                  <div className="bg-white dark:bg-surface-900 p-12 rounded-3xl text-center border border-dashed border-surface-300 dark:border-surface-700 flex flex-col items-center gap-4 shadow-sm">
+                     <div className="w-16 h-16 bg-surface-50 dark:bg-surface-950 rounded-2xl flex items-center justify-center border border-surface-200 dark:border-surface-800">
+                        <Calendar size={32} className="text-surface-400" />
+                     </div>
+                     <div>
+                        <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight mb-1">Queue Empty</p>
+                        <p className="text-sm font-medium text-surface-500">No posts scheduled yet. Use the composer to schedule your first post.</p>
+                     </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                     {upcomingPosts.slice(0, 8).map((post) => {
+                       const pl = PLATFORMS.find(p => p.id === post.platform)
+                       return (
+                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={post._id}
+                           className="bg-white dark:bg-surface-900 p-6 rounded-2xl flex items-start gap-4 border border-surface-200 dark:border-surface-800 shadow-sm group hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
+                         >
+                            <div className={`w-12 h-12 rounded-xl shrink-0 bg-gradient-to-br ${pl?.gradient || 'from-surface-600 to-surface-800'} flex items-center justify-center text-white text-xl shadow-sm border border-black/10`}>
+                              {pl?.icon}
+                            </div>
+                            <div className="flex-1 min-w-0 pt-1">
+                               <p className="text-sm font-bold text-surface-900 dark:text-white truncate mb-2">{post.content.text || 'No text content'}</p>
+                               <div className="flex items-center gap-2 text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
+                                  <Clock size={14} /> {new Date(post.scheduledTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                               </div>
+                            </div>
+                            <button onClick={() => handleDelete(post._id)} className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors self-center md:opacity-0 md:group-hover:opacity-100">
+                               <Trash2 size={16} />
+                            </button>
+                         </motion.div>
+                       )
+                     })}
+                     {upcomingPosts.length > 8 && (
+                       <button onClick={() => router.push('/dashboard/calendar')} className="w-full py-4 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider hover:text-surface-900 dark:hover:text-white transition-colors bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800">
+                         View all {upcomingPosts.length} posts in Calendar
+                       </button>
+                     )}
+                  </div>
+                )}
+             </div>
+          </div>
+        </div>
       </div>
     </ErrorBoundary>
   )

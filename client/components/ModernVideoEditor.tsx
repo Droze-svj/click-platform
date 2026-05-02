@@ -174,16 +174,16 @@ function getSnappedTime(
 }
 
 const WORKFLOW_STEPS: { id: EditorCategory; label: string; icon?: React.ElementType; color?: string }[] = [
-  { id: 'edit', label: 'KINETIC_CALIBRATION', icon: EditToolIcon, color: 'text-white' },
-  { id: 'color', label: 'SPECTRAL_GRADING', icon: Video, color: 'text-blue-400' },
-  { id: 'ai', label: 'NEURAL_SYNTHESIS', icon: AiIcon, color: 'text-purple-400' },
-  { id: 'effects', label: 'VISUAL_FX_MATRIX', icon: LayersIcon, color: 'text-yellow-400' },
-  { id: 'remix', label: 'SWARM_REMIX', icon: Sparkles, color: 'text-fuchsia-400' },
-  { id: 'predict', label: 'RETENTION_FORECAST', icon: BrainCircuit, color: 'text-indigo-400' },
-  { id: 'intelligence', label: 'IDENTITY_DNA_LATTICE', icon: Database, color: 'text-emerald-400' },
-  { id: 'timeline', label: 'TEMPORAL_SEQUENCE', icon: List, color: 'text-gray-400' },
-  { id: 'export', label: 'FINAL_MANIFEST', icon: Send, color: 'text-white' },
-  { id: 'style-vault', label: 'DNA_VAULT_CORE', icon: Orbit, color: 'text-pink-400' },
+  { id: 'edit', label: 'Manual Edit', icon: EditToolIcon, color: 'text-surface-900 dark:text-white' },
+  { id: 'color', label: 'Color Grading', icon: Video, color: 'text-blue-600 dark:text-blue-400' },
+  { id: 'ai', label: 'AI Auto Edit', icon: AiIcon, color: 'text-primary-600 dark:text-primary-400' },
+  { id: 'effects', label: 'Visual Effects', icon: LayersIcon, color: 'text-amber-600 dark:text-amber-400' },
+  { id: 'remix', label: 'Auto Remix', icon: Sparkles, color: 'text-fuchsia-600 dark:text-fuchsia-400' },
+  { id: 'predict', label: 'Performance Forecast', icon: BrainCircuit, color: 'text-indigo-600 dark:text-indigo-400' },
+  { id: 'intelligence', label: 'Brand DNA', icon: Database, color: 'text-emerald-600 dark:text-emerald-400' },
+  { id: 'timeline', label: 'Timeline', icon: List, color: 'text-surface-600 dark:text-surface-400' },
+  { id: 'export', label: 'Export', icon: Send, color: 'text-surface-900 dark:text-white' },
+  { id: 'style-vault', label: 'Asset Library', icon: Orbit, color: 'text-pink-600 dark:text-pink-400' },
 ]
 
 const DEFAULT_LAYOUT: EditorLayoutPreferences = {
@@ -208,7 +208,7 @@ function loadLayoutPreferences(): EditorLayoutPreferences {
   }
 }
 
-const glassStyle = "backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_0_50px_rgba(79,70,229,0.15)] hover:shadow-[0_0_80px_rgba(79,70,229,0.25)] transition-all duration-500 rounded-[2rem]"
+const glassStyle = "bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm transition-all duration-300 rounded-[2rem]"
 
 const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; videoId?: string; initialState?: any }> = ({ videoUrl, videoPath, videoId, initialState }) => {
   const { showToast } = useToast()
@@ -2067,7 +2067,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   : 'opacity-100 translate-y-0'
               } ${
                 viewportWidth < 768
-                  ? 'fixed inset-x-0 bottom-0 z-50 h-[70vh] bg-[#020202]/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]'
+                  ? 'fixed inset-x-0 bottom-0 z-50 h-[70vh] bg-surface-50 dark:bg-surface-950 border-t border-surface-200 dark:border-surface-800 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.1)]'
                   : 'relative'
               }`}
               style={{
@@ -2085,7 +2085,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 </div>
               )}
               <div className={`glass-neural overflow-hidden flex flex-col h-full border-white/5 shadow-2xl ${viewportWidth < 768 ? 'rounded-none border-none bg-transparent shadow-none' : 'rounded-[2.5rem]'}`}>
-                <div className="flex-shrink-0 px-6 py-4 border-b border-white/5 bg-black/40 backdrop-blur-md">
+                <div className="flex-shrink-0 px-6 py-4 border-b border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
                       <button 
@@ -2156,11 +2156,11 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             >
               {/* Header bar - Floating overlay style */}
               <div className="absolute top-6 inset-x-8 z-10 flex items-center justify-between pointer-events-none">
-                <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10">
+                <div className="flex items-center gap-3 px-4 py-2 bg-surface-100 dark:bg-surface-900 rounded-full border border-surface-200 dark:border-surface-800">
                   <Film className="w-3.5 h-3.5 text-amber-500" />
                   <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">Neural Monitoring</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 rounded-full text-emerald-400 text-[9px] font-bold">
+                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/50 rounded-full text-emerald-700 dark:text-emerald-400 text-[9px] font-bold">
                   <Zap className="w-3 h-3 fill-emerald-400 animate-pulse" />
                   REAL-TIME SYNC
                 </div>
@@ -2216,7 +2216,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
               {/* Floating bottom controls inside video preview */}
               <div className="absolute bottom-4 inset-x-4 z-20 flex items-center justify-center gap-3 pointer-events-none">
-                <div className="flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-2xl border border-white/10 pointer-events-auto">
+                <div className="flex items-center gap-3 px-4 py-2 bg-surface-100 dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 pointer-events-auto shadow-sm">
                   {/* Volume */}
                   <button
                     onClick={() => setVideoState(prev => ({ ...prev, isMuted: !prev.isMuted }))}

@@ -8,10 +8,9 @@ import { apiGet } from '../../lib/api'
 import {
   Video, Sparkles, Send, Brain, RefreshCw,
   ArrowRight, Zap, Flame, FileText,
-  Wifi, Globe, Settings,
-  Shield, Cpu, Radio, Terminal, Monitor,
-  Box, ActivitySquare, ActivityIcon, Fingerprint, Gauge, Signal, ShieldCheck,
-  Sparkle, Command, Hammer, Plug, LayoutGrid, BarChart3, Users, Clock, Moon, Sun
+  Globe, Settings, ShieldCheck,
+  ActivitySquare, Plug, BarChart3, Users, Clock, Moon, Sun,
+  Box, Hammer, Signal, ChevronRight, Play, LayoutGrid
 } from 'lucide-react'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import ToastContainer from '../../components/ToastContainer'
@@ -20,8 +19,6 @@ import AILearningIndicator from '../../components/AILearningIndicator'
 import { validateFile } from '../../utils/fileValidator'
 import { useTheme } from '../../components/ThemeProvider'
 
-const glassStyle = 'backdrop-blur-[var(--glass-blur)] bg-[var(--glass-surface)] border border-[var(--glass-border)] shadow-[var(--glass-glow)] transition-all duration-500'
-
 const DASHBOARD_NAV = [
   {
     label: 'One-Click Forge',
@@ -29,9 +26,7 @@ const DASHBOARD_NAV = [
     icon: Hammer,
     href: '/dashboard/forge',
     badge: 'AI ENGINE',
-    color: 'text-[var(--tint-indigo-fg)]',
-    bg: 'bg-[var(--tint-indigo-bg)]',
-    edge: 'border-[var(--tint-indigo-edge)]',
+    colors: 'bg-primary-50 text-primary-600 border-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50'
   },
   {
     label: 'Neural Video Studio',
@@ -39,9 +34,7 @@ const DASHBOARD_NAV = [
     icon: Video,
     href: '/dashboard/video',
     badge: 'ADVANCED',
-    color: 'text-[var(--tint-rose-fg)]',
-    bg: 'bg-[var(--tint-rose-bg)]',
-    edge: 'border-[var(--tint-rose-edge)]',
+    colors: 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
   },
   {
     label: 'Script Architect',
@@ -49,9 +42,7 @@ const DASHBOARD_NAV = [
     icon: FileText,
     href: '/dashboard/scripts',
     badge: 'AI WRITER',
-    color: 'text-[var(--tint-amber-fg)]',
-    bg: 'bg-[var(--tint-amber-bg)]',
-    edge: 'border-[var(--tint-amber-edge)]',
+    colors: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50'
   },
   {
     label: 'Global Scheduler',
@@ -59,9 +50,7 @@ const DASHBOARD_NAV = [
     icon: Send,
     href: '/dashboard/scheduler',
     badge: 'SYNCED',
-    color: 'text-[var(--tint-emerald-fg)]',
-    bg: 'bg-[var(--tint-emerald-bg)]',
-    edge: 'border-[var(--tint-emerald-edge)]',
+    colors: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50'
   },
   {
     label: 'Market Discover',
@@ -69,9 +58,7 @@ const DASHBOARD_NAV = [
     icon: Flame,
     href: '/dashboard/trends',
     badge: 'LIVE',
-    color: 'text-[var(--tint-orange-fg)]',
-    bg: 'bg-[var(--tint-orange-bg)]',
-    edge: 'border-[var(--tint-orange-edge)]',
+    colors: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/50'
   },
   {
     label: 'Platform Vault',
@@ -79,9 +66,7 @@ const DASHBOARD_NAV = [
     icon: Plug,
     href: '/dashboard/integrations',
     badge: 'SECURE',
-    color: 'text-[var(--tint-cyan-fg)]',
-    bg: 'bg-[var(--tint-cyan-bg)]',
-    edge: 'border-[var(--tint-cyan-edge)]',
+    colors: 'bg-cyan-50 text-cyan-600 border-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-400 dark:border-cyan-800/50'
   },
 ]
 
@@ -89,8 +74,7 @@ interface DashboardStat {
   label: string; 
   value: string | number; 
   icon: React.ElementType; 
-  color: string; 
-  bg: string; 
+  colors: string; 
   trend: string;
   desc: string;
 }
@@ -123,21 +107,21 @@ function DropZoneOverlay() {
     <AnimatePresence>
       {dragging && (
         <motion.div 
-          initial={{ opacity: 0, backdropFilter: 'blur(0px)' }} 
-          animate={{ opacity: 1, backdropFilter: 'blur(40px)' }} 
-          exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-          className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center pointer-events-none border-[12px] border-dashed border-white/5"
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] bg-surface-900/80 backdrop-blur-sm flex items-center justify-center pointer-events-none border-[12px] border-dashed border-primary-500/50"
         >
-          <div className="text-center">
+          <div className="text-center bg-white dark:bg-surface-900 p-12 rounded-[3rem] shadow-2xl border border-surface-200 dark:border-surface-800">
             <motion.div 
-              animate={{ y: [0, -20, 0], scale: [1, 1.1, 1] }}
+              animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="w-48 h-48 rounded-[3rem] bg-indigo-500/20 border-2 border-indigo-500/40 flex items-center justify-center mx-auto mb-10 shadow-[0_0_100px_rgba(99,102,241,0.4)]"
+              className="w-32 h-32 rounded-3xl bg-primary-100 dark:bg-primary-900/40 border-2 border-primary-200 dark:border-primary-800 flex items-center justify-center mx-auto mb-8"
             >
-              <Box className="w-20 h-20 text-white" />
+              <Box className="w-16 h-16 text-primary-600 dark:text-primary-400" />
             </motion.div>
-            <h2 className="text-5xl font-black text-[var(--text-main)] tracking-tighter mb-4">Initialize Import</h2>
-            <p className="text-lg text-indigo-400 font-bold uppercase tracking-[0.3em] opacity-80">Drop video to start neural processing</p>
+            <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tight mb-3">Drop to Process</h2>
+            <p className="text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">AI will auto-analyze your media</p>
           </div>
         </motion.div>
       )}
@@ -183,37 +167,33 @@ export default function NeuralDashboard() {
           label: 'Market Reach',
           value: fmt(analytics?.totalViews),
           icon: Globe,
-          color: 'text-[var(--tint-indigo-fg)]',
-          bg: 'bg-[var(--tint-indigo-bg)]',
+          colors: 'bg-primary-50 text-primary-600 border-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
           trend: '+12.5% this week',
-          desc: 'Total impressions across all synchronized platforms.'
+          desc: 'Total impressions across all platforms.'
         },
         {
-          label: 'Engagement Depth',
+          label: 'Engagement',
           value: fmt(analytics?.totalEngagement),
           icon: Zap,
-          color: 'text-[var(--tint-amber-fg)]',
-          bg: 'bg-[var(--tint-amber-bg)]',
+          colors: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
           trend: 'High resonance detected',
-          desc: 'Total likes, comments, and shares across your network.'
+          desc: 'Total likes, comments, and shares.'
         },
         {
           label: 'Active Content',
           value: analytics?.publishedPosts ?? 0,
           icon: Video,
-          color: 'text-[var(--tint-rose-fg)]',
-          bg: 'bg-[var(--tint-rose-bg)]',
+          colors: 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50',
           trend: `${analytics?.totalPosts ?? 0} in pipeline`,
-          desc: 'Live posts currently driving traffic to your brand.'
+          desc: 'Live posts driving traffic.'
         },
         {
-          label: 'Neural Nodes',
+          label: 'Connected Accounts',
           value: integrationCount,
           icon: Signal,
-          color: 'text-[var(--tint-emerald-fg)]',
-          bg: 'bg-[var(--tint-emerald-bg)]',
+          colors: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
           trend: integrationCount === 0 ? 'Action required' : 'Sync stable',
-          desc: 'Number of connected social platforms in your ecosystem.'
+          desc: 'Social platforms actively managed.'
         }
       ])
     } catch (e) {
@@ -233,49 +213,43 @@ export default function NeuralDashboard() {
       <SubscriptionBanner />
       <ToastContainer />
 
-      <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-6 lg:px-12 pt-12 max-w-[1900px] mx-auto space-y-12 overflow-x-hidden font-inter bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500">
+      <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-8 bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 transition-colors duration-500">
         
-        {/* Background Atmosphere */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.04]">
-          <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-500 rounded-full blur-[160px]" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-500 rounded-full blur-[160px]" />
-        </div>
-
-        {/* Header HUD */}
-        <header className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-50">
-          <div className="flex items-center gap-4 sm:gap-8 w-full md:w-auto">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden group">
-              <ShieldCheck size={32} className="text-[var(--tint-indigo-fg)] relative z-10 group-hover:scale-110 transition-transform" />
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-surface-200 dark:border-surface-800">
+          <div className="flex items-center gap-5 w-full md:w-auto">
+            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center shadow-sm">
+              <ShieldCheck size={32} className="text-primary-600 dark:text-primary-400" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-3 sm:gap-4 mb-2 flex-wrap">
-                <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-[0.4em] text-[var(--tint-indigo-fg)] italic">Click Ecosystem v4.0</span>
-                <div className={`px-2 sm:px-3 py-1 rounded-full text-[8px] sm:text-[9px] font-bold border flex items-center gap-2 ${apiStatus === 'online' ? 'bg-[var(--tint-emerald-bg)] text-[var(--tint-emerald-fg)] border-[var(--tint-emerald-edge)]' : 'bg-[var(--tint-rose-bg)] text-[var(--tint-rose-fg)] border-[var(--tint-rose-edge)]'}`}>
-                  <div data-keep-motion className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+              <div className="flex items-center gap-3 mb-1">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
+                  Click Platform
+                </span>
+                <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1.5 ${apiStatus === 'online' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50' : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
                   {apiStatus.toUpperCase()}
                 </div>
               </div>
-              <h1 className="text-[clamp(1.5rem,5vw,3.5rem)] font-black text-[var(--text-main)] tracking-tight leading-tight mb-2">
-                {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--text-main)] via-[var(--text-main)]/80 to-[var(--text-main)]/40">{firstName}</span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-none mt-2">
+                {greeting}, {firstName}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto justify-end">
-            <button onClick={toggle} className="w-12 h-12 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-main)] hover:scale-105 transition-all shadow-xl">
+          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
               {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <Link href="/dashboard/settings" className="w-12 h-12 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] hover:border-[var(--glass-border-strong)] transition-all hover:scale-105">
-              <Settings size={22} />
+            <Link href="/dashboard/settings" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <Settings size={20} />
             </Link>
-            <button onClick={fetchData} className="px-5 sm:px-6 py-3 bg-[var(--text-main)] text-[var(--page-bg)] rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-xl active:scale-95 flex items-center gap-3">
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> <span className="hidden sm:inline">SYNC DATA</span>
+            <button onClick={fetchData} className="px-5 py-3 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-surface-800 dark:hover:bg-surface-100 transition-colors shadow-sm flex items-center gap-2">
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> <span>Sync</span>
             </button>
           </div>
         </header>
 
-        {/* AI Learning Indicator — surfaces what the model has actually learned
-            from the user's recent posts. Hidden in Focus Mode (data-focus-secondary). */}
         <div data-focus-secondary>
           <AILearningIndicator />
         </div>
@@ -289,172 +263,137 @@ export default function NeuralDashboard() {
             {/* Metric Tiles */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {stats.map((s, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 20 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className={`${glassStyle} p-6 rounded-[2.5rem] relative overflow-hidden group`}
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity pointer-events-none group-hover:rotate-12">
-                    <s.icon size={120} />
+                <div key={i} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-6 rounded-2xl shadow-sm">
+                  <div className={`w-10 h-10 rounded-xl ${s.colors} border flex items-center justify-center mb-4`}>
+                    <s.icon size={20} />
                   </div>
-                  <div className={`w-12 h-12 rounded-2xl ${s.bg} flex items-center justify-center mb-4 border border-[var(--glass-border)]`}>
-                    <s.icon className={`${s.color}`} size={24} />
+                  <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-1">{s.label}</p>
+                  <h4 className="text-2xl font-black text-surface-900 dark:text-surface-50 tracking-tight mb-2">{s.value}</h4>
+                  <div className="flex items-center gap-1.5">
+                    <ActivitySquare size={12} className="text-primary-500" />
+                    <span className="text-[10px] font-bold text-surface-500">{s.trend}</span>
                   </div>
-                  <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1 italic">{s.label}</p>
-                  <h4 className="text-3xl font-black text-[var(--text-main)] tracking-tighter mb-2 italic tabular-nums">{s.value}</h4>
-                  <div className="flex items-center gap-2">
-                    <ActivitySquare size={12} className="text-[var(--tint-indigo-fg)]" />
-                    <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider">{s.trend}</span>
-                  </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
-            {/* Performance Nerve Center */}
-            <div className={`${glassStyle} rounded-[3rem] p-6 sm:p-10 relative overflow-hidden min-h-[400px] flex flex-col justify-between group`}>
-              <div className="absolute top-0 right-0 p-12 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none scale-150 rotate-45">
-                <BarChart3 size={400} />
-              </div>
-              
-              <div className="relative z-10">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 sm:mb-12">
-                  <div className="w-14 h-14 rounded-2xl bg-[var(--tint-indigo-bg)] border-2 border-[var(--tint-indigo-edge)] flex items-center justify-center">
-                    <Gauge size={30} className="text-[var(--tint-indigo-fg)] animate-pulse" />
+            {/* Performance Center */}
+            <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center">
+                    <BarChart3 size={24} className="text-primary-600 dark:text-primary-400" />
                   </div>
                   <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] tracking-tight">Performance Nerve Center</h2>
-                    <p className="text-xs font-medium text-[var(--text-dim)] tracking-wide mt-1">Real-time health and growth trajectory analysis.</p>
+                    <h2 className="text-xl font-black text-surface-900 dark:text-surface-50 tracking-tight">Performance Overview</h2>
+                    <p className="text-sm font-medium text-surface-500 mt-1">AI-driven insights for your connected accounts.</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                  <div className="p-6 rounded-3xl bg-[var(--glass-surface)] border border-[var(--glass-border)] space-y-4 hover:bg-[var(--glass-surface-heavy)] transition-colors group/card">
-                    <div className="flex items-center gap-3">
-                      <Brain size={20} className="text-[var(--tint-indigo-fg)]" />
-                      <span className="text-sm font-bold text-[var(--text-main)]">AI Strategy Insight</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Brain size={18} className="text-primary-600 dark:text-primary-400" />
+                      <span className="text-sm font-bold text-surface-900 dark:text-surface-50">Strategy Insight</span>
                     </div>
-                    <p className="text-sm text-[var(--text-dim)] leading-relaxed">
-                      Our neural model predicts a 14% increase in retention if you utilize <span className="text-[var(--text-main)] font-semibold">Pattern-Interrupt</span> hooks in your next 3 videos.
+                    <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+                      Our neural model predicts a 14% increase in retention if you utilize <span className="text-surface-900 dark:text-surface-50 font-semibold">Pattern-Interrupt</span> hooks in your next 3 videos.
                     </p>
-                    <Link href="/dashboard/scripts" className="inline-flex items-center gap-2 text-[11px] font-bold text-[var(--tint-indigo-fg)] uppercase tracking-widest hover:text-[var(--text-main)] transition-colors">
+                    <Link href="/dashboard/scripts" className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline">
                       Optimize Scripts <ArrowRight size={14} />
                     </Link>
                   </div>
 
-                  <div className="p-6 rounded-3xl bg-[var(--glass-surface)] border border-[var(--glass-border)] space-y-4 hover:bg-[var(--glass-surface-heavy)] transition-colors group/card">
-                    <div className="flex items-center gap-3">
-                      <Users size={20} className="text-[var(--tint-emerald-fg)]" />
-                      <span className="text-sm font-bold text-[var(--text-main)]">Audience Sync</span>
+                  <div className="p-5 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Users size={18} className="text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-sm font-bold text-surface-900 dark:text-surface-50">Audience Peak</span>
                     </div>
-                    <p className="text-sm text-[var(--text-dim)] leading-relaxed">
-                      Your synchronized platforms are currently reaching <span className="text-[var(--text-main)] font-semibold">Global Phase 2</span> saturation. Engagement is peak at 19:00 UTC.
+                    <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
+                      Your synchronized platforms are currently reaching peak saturation. Engagement is highest at 19:00 UTC.
                     </p>
-                    <Link href="/dashboard/scheduler" className="inline-flex items-center gap-2 text-[11px] font-bold text-[var(--tint-emerald-fg)] uppercase tracking-widest hover:text-[var(--text-main)] transition-colors">
+                    <Link href="/dashboard/scheduler" className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
                       Open Scheduler <ArrowRight size={14} />
                     </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-[var(--glass-border)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 sm:gap-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[var(--tint-indigo-fg)] animate-ping" />
-                    <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">Core Engine Stable</span>
+              <div className="mt-8 pt-6 border-t border-surface-200 dark:border-surface-800 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+                    <span className="text-xs font-bold text-surface-500 uppercase tracking-wider">Engine Active</span>
                   </div>
-                  <div className="flex items-center gap-3 sm:border-l sm:border-[var(--glass-border)] sm:pl-6">
-                    <Clock size={12} className="text-[var(--text-dim)]" />
-                    <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic">Sync: 2ms ago</span>
-                  </div>
-                </div>
-                <div className="flex -space-x-3 w-full sm:w-auto justify-end">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-[var(--page-bg)] bg-slate-800 flex items-center justify-center overflow-hidden">
-                      <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-indigo-900/40" />
-                    </div>
-                  ))}
-                  <div className="w-8 h-8 rounded-full border-2 border-[var(--page-bg)] bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
-                    +12
+                  <div className="flex items-center gap-2 border-l border-surface-200 dark:border-surface-800 pl-4">
+                    <Clock size={14} className="text-surface-400" />
+                    <span className="text-xs font-bold text-surface-500 uppercase tracking-wider">Synced just now</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Quick Launch & Actions */}
-          <div className="lg:col-span-4 space-y-8">
+          {/* Right Column: Quick Launch */}
+          <div className="lg:col-span-4 space-y-6">
             
-            {/* Quick Launch Hub */}
-            <div className={`${glassStyle} rounded-[3rem] p-6 sm:p-10 relative overflow-hidden group`}>
-              <div className="flex items-center gap-4 mb-8 sm:mb-12">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--tint-amber-bg)] border-2 border-[var(--tint-amber-edge)] flex items-center justify-center">
-                  <Zap size={26} className="text-[var(--tint-amber-fg)]" />
+            <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center">
+                  <LayoutGrid size={20} className="text-primary-600 dark:text-primary-400" />
                 </div>
-                <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Quick Launch Hub</h3>
+                <h3 className="text-lg font-black text-surface-900 dark:text-surface-50 tracking-tight">Quick Actions</h3>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {DASHBOARD_NAV.map((act, i) => (
                   <Link 
                     key={i} 
                     href={act.href} 
-                    className={`${glassStyle} block p-5 rounded-3xl hover:bg-[var(--glass-surface-heavy)] group/nav border-[var(--glass-border)] hover:border-[var(--glass-border-strong)]`}
+                    className="flex items-start gap-4 p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl ${act.bg} border ${act.edge} flex items-center justify-center group-hover/nav:scale-110 transition-transform`}>
-                        <act.icon className={`${act.color}`} size={18} />
-                      </div>
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded-full bg-[var(--glass-surface)] text-[var(--text-dim)] border border-[var(--glass-border)]">
-                        {act.badge}
-                      </span>
+                    <div className={`w-10 h-10 shrink-0 rounded-lg ${act.colors} border flex items-center justify-center`}>
+                      <act.icon size={18} />
                     </div>
-                    <h4 className="text-base font-black text-[var(--text-main)] tracking-tight mb-1 group-hover/nav:translate-x-1 transition-transform">{act.label}</h4>
-                    <p className="text-xs text-[var(--text-dim)] font-medium leading-relaxed group-hover/nav:text-[var(--text-main)] transition-colors">
-                      {act.desc}
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-surface-900 dark:text-surface-50">{act.label}</h4>
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-200 dark:bg-surface-800 text-surface-600 dark:text-surface-400">
+                          {act.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs font-medium text-surface-500 line-clamp-2">
+                        {act.desc}
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>
             </div>
 
-            {/* Platform Status — secondary; hidden when Focus Mode is on. */}
-            <div data-focus-secondary className={`${glassStyle} rounded-[3rem] p-8 bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] shadow-inner group`}>
-              <h3 className="text-lg font-black text-[var(--text-main)] uppercase tracking-widest mb-6 italic">Platform Status</h3>
-              <div className="space-y-6">
+            <div data-focus-secondary className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Connections</h3>
+              <div className="space-y-4">
                 {['tiktok', 'instagram', 'youtube', 'twitter'].map((p, i) => (
                   <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-[var(--glass-surface)] flex items-center justify-center text-[var(--text-dim)] border border-[var(--glass-border)]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-surface-50 dark:bg-surface-950 flex items-center justify-center text-surface-500 border border-surface-200 dark:border-surface-800">
                         {p === 'tiktok' ? '♪' : p === 'instagram' ? '◎' : p === 'youtube' ? '▶' : '𝕏'}
                       </div>
-                      <span className="text-sm font-bold text-[var(--text-main)] capitalize">{p}</span>
+                      <span className="text-sm font-bold text-surface-900 dark:text-surface-50 capitalize">{p}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                      <span className="text-[10px] font-black text-[var(--tint-emerald-fg)] uppercase tracking-widest italic">Stable</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Linked</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <Link href="/dashboard/integrations" aria-label="Manage social platform connections" className="mt-8 block text-center py-4 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.4em] hover:bg-[var(--glass-surface-heavy)] transition-all">
-                MANAGE CONNECTIONS
+              <Link href="/dashboard/integrations" className="mt-6 block text-center py-3 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 text-xs font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                Manage Platforms
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Global Footer Overlay — secondary FAB; hidden when Focus Mode is on. */}
-        <div data-focus-secondary className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[150] hidden sm:block">
-          <Link 
-            href="/dashboard/forge" 
-            className="flex items-center gap-4 px-8 py-5 bg-[var(--text-main)] text-[var(--page-bg)] rounded-full font-black text-sm uppercase tracking-widest shadow-[var(--glass-glow)] hover:scale-105 active:scale-95 transition-all group"
-          >
-            <Hammer size={20} className="group-hover:rotate-12 transition-transform" /> 
-            Open One-Click Forge
-          </Link>
         </div>
 
       </div>

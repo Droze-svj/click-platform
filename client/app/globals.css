@@ -279,62 +279,62 @@
   --focus-ring: 0 0 0 3px rgba(165, 180, 252, 0.55);
 }
 
-/* ── Light-mode overrides (Click-specific semantic tokens) ────────────────── */
+/* ── Light-mode overrides (High-Contrast Solid Theme) ────────────────── */
 :root:not(.dark),
 [data-theme="light"] {
-  --glass-surface: rgba(255, 255, 255, 0.82);
-  --glass-surface-heavy: rgba(255, 255, 255, 0.94);
-  --glass-border: rgba(15, 23, 42, 0.10);
-  --glass-border-strong: rgba(15, 23, 42, 0.18);
-  --glass-blur: blur(25px) saturate(150%);
-  --glass-glow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --glass-surface: #ffffff;
+  --glass-surface-heavy: #ffffff;
+  --glass-border: #e2e8f0;
+  --glass-border-strong: #cbd5e1;
+  --glass-blur: none;
+  --glass-glow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --page-bg: #f8fafc;
   --text-main: #0f172a;
   --text-dim: #475569;
-  --accent-glow: rgba(99, 102, 241, 0.08);
+  --accent-glow: none;
 
-  --click-sidebar-bg: #f0f2f7;
-  --click-sidebar-border: rgba(15, 23, 42, 0.10);
-  --click-panel-bg: rgba(245, 247, 252, 0.98);
-  --click-card-bg: rgba(255, 255, 255, 0.94);
-  --click-card-border: rgba(15, 23, 42, 0.10);
-  --click-input-bg: rgba(15, 23, 42, 0.04);
-  --click-input-border: rgba(15, 23, 42, 0.14);
-  --click-glow-indigo: rgba(99, 102, 241, 0.12);
-  --click-glow-violet: rgba(139, 92, 246, 0.12);
-  --click-glow-rose: rgba(244, 63, 94, 0.12);
-  --click-text-dim: rgba(15, 23, 42, 0.62);
-  --click-text-subtle: rgba(15, 23, 42, 0.32);
-  --click-body-bg: #f4f6fb;
+  --click-sidebar-bg: #ffffff;
+  --click-sidebar-border: #e2e8f0;
+  --click-panel-bg: #f8fafc;
+  --click-card-bg: #ffffff;
+  --click-card-border: #e2e8f0;
+  --click-input-bg: #ffffff;
+  --click-input-border: #cbd5e1;
+  --click-glow-indigo: none;
+  --click-glow-violet: none;
+  --click-glow-rose: none;
+  --click-text-dim: #475569;
+  --click-text-subtle: #64748b;
+  --click-body-bg: #f1f5f9;
 
-  /* WCAG-AA tint tokens — readable foreground on white glass */
-  --tint-indigo-bg:    rgba(99, 102, 241, 0.14);
-  --tint-indigo-fg:    #4338ca;
-  --tint-indigo-edge:  rgba(99, 102, 241, 0.32);
-  --tint-violet-bg:    rgba(139, 92, 246, 0.14);
-  --tint-violet-fg:    #6d28d9;
-  --tint-violet-edge:  rgba(139, 92, 246, 0.32);
-  --tint-amber-bg:     rgba(245, 158, 11, 0.18);
-  --tint-amber-fg:     #b45309;
-  --tint-amber-edge:   rgba(245, 158, 11, 0.34);
-  --tint-emerald-bg:   rgba(16, 185, 129, 0.16);
-  --tint-emerald-fg:   #047857;
-  --tint-emerald-edge: rgba(16, 185, 129, 0.34);
-  --tint-rose-bg:      rgba(244, 63, 94, 0.14);
-  --tint-rose-fg:      #be123c;
-  --tint-rose-edge:    rgba(244, 63, 94, 0.32);
-  --tint-sky-bg:       rgba(14, 165, 233, 0.14);
-  --tint-sky-fg:       #0369a1;
-  --tint-sky-edge:     rgba(14, 165, 233, 0.32);
-  --tint-cyan-bg:      rgba(6, 182, 212, 0.16);
-  --tint-cyan-fg:      #0e7490;
-  --tint-cyan-edge:    rgba(6, 182, 212, 0.34);
-  --tint-orange-bg:    rgba(249, 115, 22, 0.16);
-  --tint-orange-fg:    #c2410c;
-  --tint-orange-edge:  rgba(249, 115, 22, 0.34);
-  --tint-fuchsia-bg:   rgba(217, 70, 239, 0.14);
-  --tint-fuchsia-fg:   #a21caf;
-  --tint-fuchsia-edge: rgba(217, 70, 239, 0.32);
+  /* WCAG-AAA High Contrast Solid Tokens (Replaced washed-out glass) */
+  --tint-indigo-bg:    #e0e7ff;
+  --tint-indigo-fg:    #312e81;
+  --tint-indigo-edge:  #4f46e5;
+  --tint-violet-bg:    #fae8ff;
+  --tint-violet-fg:    #4a044e;
+  --tint-violet-edge:  #c026d3;
+  --tint-amber-bg:     #fef3c7;
+  --tint-amber-fg:     #78350f;
+  --tint-amber-edge:   #d97706;
+  --tint-emerald-bg:   #d1fae5;
+  --tint-emerald-fg:   #064e3b;
+  --tint-emerald-edge: #059669;
+  --tint-rose-bg:      #ffe4e6;
+  --tint-rose-fg:      #881337;
+  --tint-rose-edge:    #e11d48;
+  --tint-sky-bg:       #e0f2fe;
+  --tint-sky-fg:       #0c4a6e;
+  --tint-sky-edge:     #0284c7;
+  --tint-cyan-bg:      #cffafe;
+  --tint-cyan-fg:      #164e63;
+  --tint-cyan-edge:    #0891b2;
+  --tint-orange-bg:    #ffedd5;
+  --tint-orange-fg:    #7c2d12;
+  --tint-orange-edge:  #ea580c;
+  --tint-fuchsia-bg:   #fae8ff;
+  --tint-fuchsia-fg:   #701a75;
+  --tint-fuchsia-edge: #c026d3;
 
   --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.42);
 }
@@ -364,28 +364,9 @@ a:focus-visible,
   box-shadow: var(--focus-ring);
 }
 
-/* ── Tame extreme letter-spacing on narrow viewports ──────────────────────────
- * Many dashboard surfaces use tracking-[0.4em]–[1em] for the "console
- * readout" aesthetic. That looks great at 1400px+ but blows past container
- * edges on tablets and phones. We softly cap the effective spacing on
- * sub-1024px viewports so labels and pills stop being clipped. The desktop
- * look is preserved unchanged. */
-@media (max-width: 1023px) {
-  [class*="tracking-["][class*="0.5em"],
-  [class*="tracking-["][class*="0.6em"],
-  [class*="tracking-["][class*="0.8em"],
-  [class*="tracking-["][class*="1em"] {
-    letter-spacing: 0.2em !important;
-  }
-  [class*="tracking-["][class*="0.4em"],
-  [class*="tracking-["][class*="0.3em"] {
-    letter-spacing: 0.15em !important;
-  }
-}
-@media (max-width: 639px) {
-  [class*="tracking-["][class*="em"] {
-    letter-spacing: 0.1em !important;
-  }
+/* ── Prevent extreme letter-spacing globally to fix overlapping text ────────────────────────── */
+[class*="tracking-["][class*="em"] {
+  letter-spacing: normal !important;
 }
 
 /* ── Respect prefers-reduced-motion ───────────────────────────────────────── */

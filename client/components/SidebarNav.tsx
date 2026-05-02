@@ -29,12 +29,12 @@ const ZONES = [
     label: 'Studio',
     emoji: '🎬',
     gradient: 'from-violet-600 to-purple-600',
-    accent: 'text-[var(--tint-indigo-fg)]',
-    activeBg: 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)]',
+    accent: 'text-primary-700 dark:text-primary-400',
+    activeBg: 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800/50',
     items: [
       { path: '/dashboard',             label: 'Home',         icon: LayoutDashboard, badge: null },
       { path: '/dashboard/onboarding',  label: 'Get Started',  icon: Compass,         badge: 'Start' },
-      { path: '/dashboard/forge',       label: 'One-Click Forge', icon: Hammer,       badge: 'AI' },
+      { path: '/dashboard/forge',       label: 'AI Video Creator', icon: Hammer,       badge: 'AI' },
       { path: '/dashboard/video',       label: 'Video Editor', icon: Video,           badge: 'AI' },
       { path: '/dashboard/content',     label: 'Content AI',   icon: Sparkles,        badge: null },
       { path: '/dashboard/scripts',     label: 'Scripts',      icon: FileText,        badge: null },
@@ -46,8 +46,8 @@ const ZONES = [
     label: 'Publish',
     emoji: '🚀',
     gradient: 'from-amber-500 to-orange-500',
-    accent: 'text-[var(--tint-amber-fg)]',
-    activeBg: 'bg-[var(--tint-amber-bg)] border-[var(--tint-amber-edge)]',
+    accent: 'text-amber-700 dark:text-amber-400',
+    activeBg: 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800/50',
     items: [
       { path: '/dashboard/scheduler',     label: 'Scheduler',    icon: Send,         badge: null },
       { path: '/dashboard/calendar',      label: 'Calendar',     icon: CalendarDays, badge: null },
@@ -60,8 +60,8 @@ const ZONES = [
     label: 'Grow',
     emoji: '📈',
     gradient: 'from-emerald-500 to-teal-500',
-    accent: 'text-[var(--tint-emerald-fg)]',
-    activeBg: 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)]',
+    accent: 'text-emerald-700 dark:text-emerald-400',
+    activeBg: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800/50',
     items: [
       { path: '/dashboard/analytics',            label: 'Analytics',         icon: BarChart3,  badge: null },
       { path: '/dashboard/analytics/creator',    label: 'Creator Stats',     icon: Flame,      badge: 'AI' },
@@ -76,8 +76,8 @@ const ZONES = [
     label: 'Manage',
     emoji: '⚙️',
     gradient: 'from-sky-500 to-blue-600',
-    accent: 'text-[var(--tint-sky-fg)]',
-    activeBg: 'bg-[var(--tint-sky-bg)] border-[var(--tint-sky-edge)]',
+    accent: 'text-sky-700 dark:text-sky-400',
+    activeBg: 'bg-sky-50 dark:bg-sky-900/30 border-sky-200 dark:border-sky-800/50',
     items: [
       { path: '/dashboard/workspaces',   label: 'Workspaces',    icon: Boxes,        badge: 'New' },
       { path: '/dashboard/projects',     label: 'Projects',      icon: FolderKanban, badge: null },
@@ -115,10 +115,10 @@ export default function SidebarNav() {
     <motion.aside
       animate={{ width: collapsed ? 80 : 260 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col backdrop-blur-[var(--glass-blur)] bg-[var(--glass-surface)] border-r border-[var(--glass-border)] overflow-hidden z-40 transition-colors duration-500"
+      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col bg-white dark:bg-surface-900 border-r border-surface-200 dark:border-surface-800 overflow-hidden z-40 transition-colors duration-500 shadow-sm"
     >
       {/* ── Logo + Toggle ── */}
-      <div className="flex items-center justify-between px-6 py-6 border-b border-[var(--glass-border)]">
+      <div className="flex items-center justify-between px-6 py-6 border-b border-surface-200 dark:border-surface-800">
         <AnimatePresence>
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -128,14 +128,14 @@ export default function SidebarNav() {
         </AnimatePresence>
         {collapsed && <div className="mx-auto"><ClickLogo size={32} /></div>}
         {!collapsed && (
-          <button type="button" onClick={() => setCollapsed(true)} aria-label="Collapse sidebar" className="w-8 h-8 rounded-xl bg-[var(--glass-surface)] hover:bg-[var(--glass-surface-heavy)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all ml-auto">
+          <button type="button" onClick={() => setCollapsed(true)} aria-label="Collapse sidebar" className="w-8 h-8 rounded-xl bg-surface-50 dark:bg-surface-950 hover:bg-surface-100 dark:hover:bg-surface-800 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-500 hover:text-surface-900 dark:hover:text-white transition-all ml-auto">
             <ChevronLeft size={16} />
           </button>
         )}
       </div>
 
       {collapsed && (
-        <button type="button" onClick={() => setCollapsed(false)} aria-label="Expand sidebar" className="absolute -right-3 top-20 z-10 w-8 h-8 rounded-full bg-[var(--page-bg)] border border-[var(--glass-border-strong)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] shadow-xl transition-all">
+        <button type="button" onClick={() => setCollapsed(false)} aria-label="Expand sidebar" className="absolute -right-3 top-20 z-10 w-8 h-8 rounded-full bg-white dark:bg-surface-900 border border-surface-300 dark:border-surface-700 flex items-center justify-center text-surface-500 hover:text-surface-900 dark:hover:text-white shadow-md transition-all">
           <ChevronRight size={14} />
         </button>
       )}
@@ -154,13 +154,13 @@ export default function SidebarNav() {
                   else setExpandedZone(isExpanded ? null : zone.id)
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group ${
-                  zoneActive ? 'bg-[var(--glass-surface-heavy)] border border-[var(--glass-border-strong)] text-[var(--text-main)]' : 'text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface)]'
+                  zoneActive ? 'bg-surface-100 dark:bg-surface-800 border border-surface-300 dark:border-surface-700 text-surface-900 dark:text-white' : 'text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-surface-50 dark:hover:bg-surface-950/50'
                 } ${collapsed ? 'justify-center' : ''}`}
               >
                 <span className="text-lg">{zone.emoji}</span>
                 {!collapsed && (
                   <>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] flex-1 text-left">{zone.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider flex-1 text-left">{zone.label}</span>
                     <ChevronRight size={12} className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
                   </>
                 )}
@@ -172,8 +172,8 @@ export default function SidebarNav() {
                     {zone.items.map(item => {
                       const active = isActive(item.path)
                       return (
-                        <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border ${active ? `${zone.activeBg} ${zone.accent}` : 'text-[var(--text-dim)] border-transparent hover:text-[var(--text-main)] hover:bg-[var(--glass-surface)]'}`}>
-                          <item.icon size={14} className={active ? zone.accent : 'text-[var(--text-dim)] group-hover:text-[var(--text-main)]'} />
+                        <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all border ${active ? `${zone.activeBg} ${zone.accent}` : 'text-surface-600 dark:text-surface-400 border-transparent hover:text-surface-900 dark:hover:text-white hover:bg-surface-50 dark:hover:bg-surface-950/50'}`}>
+                          <item.icon size={14} className={active ? zone.accent : 'text-surface-400 group-hover:text-surface-600 dark:group-hover:text-surface-300'} />
                           <span className="flex-1">{item.label}</span>
                         </Link>
                       )
@@ -187,10 +187,10 @@ export default function SidebarNav() {
       </nav>
 
       {/* ── Theme Toggle, Focus Mode & User ── */}
-      <div className="p-4 space-y-3 border-t border-[var(--glass-border)]">
-        <button onClick={toggle} aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--glass-surface)] border border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)] transition-all ${collapsed ? 'justify-center' : ''}`}>
+      <div className="p-4 space-y-3 border-t border-surface-200 dark:border-surface-800">
+        <button onClick={toggle} aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all ${collapsed ? 'justify-center' : ''}`}>
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
-          {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Theme</span>}
+          {!collapsed && <span className="text-[10px] font-bold uppercase tracking-wider flex-1 text-left">Theme</span>}
         </button>
 
         <button
@@ -200,34 +200,34 @@ export default function SidebarNav() {
           aria-pressed={focusMode}
           aria-label={focusMode ? 'Disable focus mode' : 'Enable focus mode'}
           title={focusMode ? 'Focus mode on — calmer animations, secondary panels hidden' : 'Focus mode off — full animation density'}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${collapsed ? 'justify-center' : ''} ${focusMode ? 'bg-[var(--tint-indigo-bg)] border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)]' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)]'}`}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${collapsed ? 'justify-center' : ''} ${focusMode ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-400' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}
         >
           {focusMode ? <Eye size={16} /> : <EyeOff size={16} />}
-          {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest flex-1 text-left">Focus{focusMode ? ' · On' : ''}</span>}
+          {!collapsed && <span className="text-[10px] font-bold uppercase tracking-wider flex-1 text-left">Focus{focusMode ? ' · On' : ''}</span>}
         </button>
 
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--glass-surface-heavy)] border border-[var(--glass-border)] ${collapsed ? 'justify-center' : ''}`}>
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shrink-0">{user?.name?.charAt(0) || 'U'}</div>
+        <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 ${collapsed ? 'justify-center' : ''}`}>
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0">{user?.name?.charAt(0) || 'U'}</div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-[var(--text-main)] truncate leading-none mb-1">{user?.name || 'Creator'}</p>
-              <p className="text-[8px] font-bold text-[var(--tint-emerald-fg)] truncate uppercase tracking-widest">Active Plan</p>
+              <p className="text-[10px] font-black text-surface-900 dark:text-white truncate leading-none mb-1">{user?.name || 'Creator'}</p>
+              <p className="text-[8px] font-semibold text-emerald-600 dark:text-emerald-400 truncate uppercase tracking-wider">Active Plan</p>
             </div>
           )}
           {!collapsed && (
-            <button onClick={logout} aria-label="Log out" className="p-2 text-[var(--tint-rose-fg)] hover:bg-[var(--tint-rose-bg)] rounded-lg transition-all"><LogOut size={14} /></button>
+            <button onClick={logout} aria-label="Log out" className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all"><LogOut size={14} /></button>
           )}
         </div>
       </div>
     </motion.aside>
 
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--glass-surface)] backdrop-blur-[var(--glass-blur)] border-t border-[var(--glass-border)] flex items-center justify-around px-2 py-3 safe-area-pb transition-colors duration-500">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-surface-900 border-t border-surface-200 dark:border-surface-800 flex items-center justify-around px-2 py-3 safe-area-pb transition-colors duration-500 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       {MOBILE_TABS.map(item => {
         const active = isActive(item.path)
         return (
-          <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} className={`flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl transition-all ${active ? 'text-[var(--tint-indigo-fg)]' : 'text-[var(--text-dim)]'}`}>
+          <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined} className={`flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl transition-all ${active ? 'text-primary-600 dark:text-primary-400' : 'text-surface-500 dark:text-surface-400'}`}>
             <item.icon size={20} />
-            <span className="text-[8px] font-black uppercase tracking-widest">{item.label}</span>
+            <span className="text-[8px] font-bold uppercase tracking-wider">{item.label}</span>
           </Link>
         )
       })}

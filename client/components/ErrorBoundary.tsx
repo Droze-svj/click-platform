@@ -49,17 +49,17 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback
       return (
-        <div className="flex flex-col items-center justify-center p-8 m-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-400 max-w-lg mx-auto overflow-hidden">
-          <h2 className="text-xl font-black mb-2 uppercase tracking-widest">Neural UI Exception</h2>
-          <p className="text-sm text-center mb-4 opacity-80">
-            A fatal error occurred in the component tree.
+        <div className="flex flex-col items-center justify-center p-8 m-4 rounded-3xl bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-400 max-w-lg mx-auto overflow-hidden shadow-sm">
+          <h2 className="text-xl font-black mb-2 tracking-tight">Component Error</h2>
+          <p className="text-sm text-center mb-4 text-rose-600 dark:text-rose-300">
+            An unexpected error occurred in this component.
           </p>
-          <pre className="p-4 bg-black/50 rounded-xl text-[10px] w-full overflow-auto whitespace-pre-wrap font-mono text-rose-300 border border-rose-500/10">
+          <pre className="p-4 bg-white dark:bg-black/50 rounded-xl text-xs w-full overflow-auto whitespace-pre-wrap font-mono text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">
             {this.state.error?.message}
           </pre>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="mt-6 px-6 py-2 rounded-xl bg-rose-500 text-white font-bold uppercase tracking-wider text-xs hover:bg-rose-400 transition-colors"
+            className="mt-6 px-6 py-2 rounded-xl bg-rose-600 text-white font-bold uppercase tracking-wider text-xs hover:bg-rose-700 transition-colors shadow-sm"
           >
             Attempt Recovery
           </button>

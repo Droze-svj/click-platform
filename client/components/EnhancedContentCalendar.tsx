@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
-import { Calendar, Clock, AlertCircle, Plus } from 'lucide-react'
+import { Calendar, AlertCircle, Plus, LayoutGrid, Zap } from 'lucide-react'
 import { API_URL } from '../lib/api'
 
 interface ScheduledPost {
@@ -48,8 +48,7 @@ export default function EnhancedContentCalendar() {
 
       const response = await axios.get(
         `${API_URL}/productive/calendar?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
-        {
-        }
+        {}
       )
 
       if (response.data.success) {
@@ -64,21 +63,17 @@ export default function EnhancedContentCalendar() {
   }, [currentDate, view, showToast])
 
   const loadGaps = useCallback(async () => {
-
     try {
       const startDate = getStartDate()
       const endDate = getEndDate()
 
       const response = await axios.get(
         `${API_URL}/productive/calendar/gaps?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
-        {
-        }
+        {}
       )
-
 
       if (response.data.success) {
         let gapsData = response.data.data || []
-        // Handle case where API returns object instead of array
         if (!Array.isArray(gapsData)) {
           gapsData = []
         }
@@ -135,22 +130,24 @@ export default function EnhancedContentCalendar() {
     return days
   }
 
-  const getPlatformColor = (platform: string) => {
-    const colors = {
-      twitter: 'bg-blue-500',
-      linkedin: 'bg-blue-600',
-      facebook: 'bg-blue-700',
-      instagram: 'bg-pink-500'
+  const getPlatformStyle = (platform: string) => {
+    const styles = {
+      twitter: 'bg-surface-800 text-white',
+      linkedin: 'bg-blue-600 text-white',
+      facebook: 'bg-indigo-600 text-white',
+      instagram: 'bg-pink-500 text-white',
+      tiktok: 'bg-black text-white',
+      youtube: 'bg-red-600 text-white'
     }
-    return colors[platform as keyof typeof colors] || 'bg-gray-500'
+    return styles[platform.toLowerCase() as keyof typeof styles] || 'bg-surface-500 text-white'
   }
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-          <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 shadow-sm">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-surface-100 dark:bg-surface-800 rounded-xl w-1/3" />
+          <div className="h-[400px] bg-surface-100 dark:bg-surface-800 rounded-2xl" />
         </div>
       </div>
     )
@@ -159,28 +156,33 @@ export default function EnhancedContentCalendar() {
   const days = getDaysInView()
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <Calendar className="text-purple-600" size={24} />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">Content Calendar</h2>
+    <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-surface-200 dark:border-surface-800 pb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center">
+            <Calendar className="text-primary-600 dark:text-primary-400" size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">Content Calendar</h2>
+            <p className="text-xs font-bold text-surface-500 uppercase tracking-wider mt-1">Schedule & Gaps</p>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex bg-surface-50 dark:bg-surface-950 p-1.5 rounded-xl border border-surface-200 dark:border-surface-800 shadow-sm w-fit">
           <button
             onClick={() => setView('month')}
-            className={`px-3 py-1 rounded text-sm ${view === 'month' ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'month' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
             Month
           </button>
           <button
             onClick={() => setView('week')}
-            className={`px-3 py-1 rounded text-sm ${view === 'week' ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'week' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
             Week
           </button>
           <button
             onClick={() => setView('day')}
-            className={`px-3 py-1 rounded text-sm ${view === 'day' ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'day' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
             Day
           </button>
@@ -189,99 +191,104 @@ export default function EnhancedContentCalendar() {
 
       {/* Content Gaps Alert */}
       {gaps.length > 0 && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="text-yellow-600" size={20} />
-            <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl p-5 mb-8 flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-800/40 flex items-center justify-center shrink-0">
+            <AlertCircle className="text-amber-600 dark:text-amber-400" size={20} />
+          </div>
+          <div>
+            <h3 className="font-black text-amber-900 dark:text-amber-300 tracking-tight">
               {gaps.length} Content Gap{gaps.length !== 1 ? 's' : ''} Detected
             </h3>
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400 mt-1">
+              Consider scheduling content for these dates to maintain consistency across platforms.
+            </p>
           </div>
-          <p className="text-sm text-yellow-700 dark:text-yellow-300">
-            Consider scheduling content for these dates to maintain consistency.
-          </p>
         </div>
       )}
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-2 mb-4">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-center font-semibold text-gray-700 dark:text-gray-300 text-sm py-2">
-            {day}
+      <div className="overflow-x-auto pb-4">
+        <div className="min-w-[700px]">
+          <div className="grid grid-cols-7 gap-3 mb-4">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="text-center font-bold text-surface-500 uppercase tracking-wider text-xs py-2">
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-7 gap-2">
-        {days.map((day, index) => {
-          const dateStr = day.toISOString().split('T')[0]
-          const posts = calendar[dateStr] || []
-          const isToday = dateStr === new Date().toISOString().split('T')[0]
-          const isGap = gaps.some(gap => gap.date === dateStr)
+          <div className="grid grid-cols-7 gap-3">
+            {days.map((day, index) => {
+              const dateStr = day.toISOString().split('T')[0]
+              const posts = calendar[dateStr] || []
+              const isToday = dateStr === new Date().toISOString().split('T')[0]
+              const isGap = gaps.some(gap => gap.date === dateStr)
 
-          return (
-            <div
-              key={index}
-              className={`min-h-24 border rounded-lg p-2 ${
-                isToday
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                  : 'border-gray-200 dark:border-gray-700'
-              } ${isGap ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}`}
-            >
-              <div className="flex justify-between items-center mb-1">
-                <span className={`text-sm font-medium ${isToday ? 'text-purple-600 dark:text-purple-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                  {day.getDate()}
-                </span>
-                {isGap && (
-                  <AlertCircle className="text-yellow-500" size={14} />
-                )}
-              </div>
-              <div className="space-y-1">
-                {posts.slice(0, 2).map((post) => (
-                  <div
-                    key={post._id}
-                    className={`${getPlatformColor(post.platform)} text-white text-xs px-1 py-0.5 rounded truncate`}
-                    title={`${post.platform}: ${post.content.text}`}
-                  >
-                    {post.platform}
+              return (
+                <div
+                  key={index}
+                  className={`min-h-[100px] sm:min-h-[120px] rounded-xl p-3 transition-colors ${
+                    isToday
+                      ? 'border-2 border-primary-400 dark:border-primary-600 bg-primary-50/50 dark:bg-primary-900/10'
+                      : 'border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 hover:border-surface-300 dark:hover:border-surface-700'
+                  } ${isGap ? 'ring-2 ring-amber-400/30 dark:ring-amber-500/30' : ''}`}
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <span className={`text-sm font-bold ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-surface-700 dark:text-surface-300'}`}>
+                      {day.getDate()}
+                    </span>
+                    {isGap && (
+                      <div title="Content Gap">
+                        <AlertCircle className="text-amber-500 animate-pulse" size={14} />
+                      </div>
+                    )}
                   </div>
-                ))}
-                {posts.length > 2 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    +{posts.length - 2} more
+                  <div className="space-y-1.5">
+                    {posts.slice(0, 3).map((post) => (
+                      <div
+                        key={post._id}
+                        className={`${getPlatformStyle(post.platform)} text-[10px] sm:text-xs font-bold px-2 py-1 rounded-md truncate shadow-sm`}
+                        title={`${post.platform}: ${post.content.text}`}
+                      >
+                        {post.platform}
+                      </div>
+                    ))}
+                    {posts.length > 3 && (
+                      <div className="text-[10px] font-bold text-surface-500 text-center mt-2">
+                        +{posts.length - 3} more
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex flex-wrap gap-4 text-sm">
+      <div className="mt-8 flex flex-wrap gap-6 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider pt-6 border-t border-surface-200 dark:border-surface-800">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-500 rounded" />
-          <span className="text-gray-700 dark:text-gray-300">Twitter</span>
+          <div className="w-3 h-3 bg-surface-800 rounded-sm shadow-sm" />
+          <span>X (Twitter)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-600 rounded" />
-          <span className="text-gray-700 dark:text-gray-300">LinkedIn</span>
+          <div className="w-3 h-3 bg-blue-600 rounded-sm shadow-sm" />
+          <span>LinkedIn</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-pink-500 rounded" />
-          <span className="text-gray-700 dark:text-gray-300">Instagram</span>
+          <div className="w-3 h-3 bg-indigo-600 rounded-sm shadow-sm" />
+          <span>Facebook</span>
         </div>
         <div className="flex items-center gap-2">
-          <AlertCircle className="text-yellow-500" size={16} />
-          <span className="text-gray-700 dark:text-gray-300">Content Gap</span>
+          <div className="w-3 h-3 bg-pink-500 rounded-sm shadow-sm" />
+          <span>Instagram</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="text-amber-500" size={16} />
+          <span>Content Gap</span>
         </div>
       </div>
     </div>
   )
 }
-
-
-
-
-
-
-
