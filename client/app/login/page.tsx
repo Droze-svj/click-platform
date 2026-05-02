@@ -186,8 +186,11 @@ export default function Login() {
               <ClickLogo size={44} className="relative z-10" />
             </motion.div>
             <div className="space-y-3">
+              {/* Status pill — the 44px ClickLogo above already establishes
+                  the brand. Removing the size={12} duplicate that was
+                  illegible at that size. */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black uppercase tracking-[0.3em] italic text-indigo-400">
-                <ClickLogo size={12} />
+                <Lock size={11} />
                 Authentication Required
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">

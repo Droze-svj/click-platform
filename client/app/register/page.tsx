@@ -8,7 +8,7 @@ import { getPlan, buildCheckoutTarget, type BillingPeriod, type PlanId } from '@
 import { useTranslation } from '../../hooks/useTranslation'
 import LanguageSwitcher from '../../components/LanguageSwitcher'
 import FormField from '../../components/FormField'
-import { Zap, Fingerprint, UserPlus, ChevronRight, Github, Chrome } from 'lucide-react'
+import { Zap, Fingerprint, UserPlus, ChevronRight, Github, Chrome, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ClickLogo from '../../components/ClickLogo'
 
@@ -402,8 +402,10 @@ export default function Register() {
               <ClickLogo size={44} className="relative z-10" />
             </motion.div>
             <div className="space-y-3">
+              {/* Status pill — primary 44px ClickLogo above carries the
+                  brand. Removing the illegible size={12} duplicate. */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-[9px] font-black uppercase tracking-[0.3em] italic text-fuchsia-400">
-                <ClickLogo size={12} />
+                <Sparkles size={11} />
                 Initialize Profile
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">
