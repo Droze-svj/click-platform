@@ -44,10 +44,40 @@ async function scheduleWithTimezone(userId, contentId, platform, scheduledTime, 
   }
 }
 
+/**
+ * Convert a wall-clock time in `timezone` into the equivalent UTC Date.
+ *
+ * If `time` already carries a timezone designator (Z, +hh:mm, -hh:mm), the
+ * input is treated as a fully-qualified instant and the timezone parameter
+ * is ignored. Otherwise the components are interpreted as wall-clock time
+ * IN THE TARGET TIMEZONE — i.e. "10:00 in America/New_York" returns the
+ * UTC moment when New York wall clocks read 10:00.
+ *
+ * Earlier the function leaked the host machine's local timezone: parsing
+ * a naive ISO string `2026-05-01T10:00:00` produced a Date whose UTC value
+ * depended on where the process was running, so unit tests passed on
+ * UTC-zoned CI machines and failed everywhere else.
+ */
 function convertToUTC(time, timezone) {
-  const date = new Date(time);
-  if (Number.isNaN(date.getTime())) return new Date(time);
-  if (!timezone || timezone === 'UTC') return date;
+  if (!timezone || timezone === 'UTC') {
+    const d = new Date(time);
+    return Number.isNaN(d.getTime()) ? new Date(time) : d;
+  }
+
+  // Detect whether the caller already supplied a TZ designator. If yes the
+  // input is already an absolute moment and we just hand back the Date.
+  const hasTzDesignator = typeof time === 'string'
+    && /(Z|[+-]\d{2}:?\d{2})\s*$/.test(time.trim());
+  if (hasTzDesignator || time instanceof Date) {
+    const d = new Date(time);
+    return Number.isNaN(d.getTime()) ? new Date(time) : d;
+  }
+
+  // Parse the wall-clock string as if it were UTC so the components stay
+  // attached to the moment we're about to shift. Adding `Z` is the standard
+  // host-tz-independent way to do this.
+  const asUtc = new Date(`${String(time).trim()}Z`);
+  if (Number.isNaN(asUtc.getTime())) return new Date(time);
 
   try {
     const fmt = new Intl.DateTimeFormat('en-US', {
@@ -56,8 +86,8 @@ function convertToUTC(time, timezone) {
       hour: '2-digit', minute: '2-digit', second: '2-digit',
       hour12: false,
     });
-    const parts = Object.fromEntries(fmt.formatToParts(date).map(p => [p.type, p.value]));
-    const tzDate = Date.UTC(
+    const parts = Object.fromEntries(fmt.formatToParts(asUtc).map(p => [p.type, p.value]));
+    const tzWallAsUtc = Date.UTC(
       Number(parts.year),
       Number(parts.month) - 1,
       Number(parts.day),
@@ -65,10 +95,13 @@ function convertToUTC(time, timezone) {
       Number(parts.minute),
       Number(parts.second),
     );
-    const offsetMs = tzDate - date.getTime();
-    return new Date(date.getTime() - offsetMs);
+    // tzWallAsUtc - asUtc.getTime() is the timezone offset (positive when
+    // the zone is east of UTC at this date). Subtract that offset from the
+    // intended wall-clock moment to land on the correct UTC instant.
+    const offsetMs = tzWallAsUtc - asUtc.getTime();
+    return new Date(asUtc.getTime() - offsetMs);
   } catch {
-    return date;
+    return asUtc;
   }
 }
 
