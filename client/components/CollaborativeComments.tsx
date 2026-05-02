@@ -102,7 +102,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
       <div className="p-6 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MessageSquare className="w-4 h-4 text-indigo-500" />
-          <h3 className="text-xs font-black uppercase tracking-widest text-white italic">Neural Feedback Thread</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-[var(--text-main)] italic">Neural Feedback Thread</h3>
         </div>
       </div>
 

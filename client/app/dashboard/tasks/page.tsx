@@ -112,7 +112,7 @@ export default function KineticExecutionMatrixPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <CpuIcon size={80} className="text-emerald-500 animate-spin mb-12 drop-shadow-[0_0_40px_rgba(16,185,129,0.5)]" />
         <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Synchronizing Kinetic Directives...</span>
      </div>
@@ -151,7 +151,7 @@ export default function KineticExecutionMatrixPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{connected ? 'MESH_RESONANCE_STABLE' : 'SIGNAL_INTERRUPTED'}</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Tasks</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Tasks</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Track everything you and your team are working on — videos to edit, posts to approve, ideas to follow up. Drag cards between lanes as the work moves forward.</p>
               </div>
            </div>
@@ -218,7 +218,7 @@ export default function KineticExecutionMatrixPage() {
                            <div className="flex items-center justify-between relative z-10">
                               <div className="flex items-center gap-6">
                                  <div className={`w-3 h-3 rounded-full ${s === 'done' ? 'bg-emerald-500' : 'bg-indigo-500'} shadow-[0_0_15px_rgba(99,102,241,1)] animate-pulse`} />
-                                 <h3 className="text-[14px] font-black text-white uppercase tracking-[0.6em] italic leading-none">{STATUS_LABELS[s]}</h3>
+                                 <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] italic leading-none">{STATUS_LABELS[s]}</h3>
                               </div>
                               <span className="px-5 py-2 rounded-2xl bg-black/60 border-2 border-white/10 flex items-center justify-center text-[12px] font-black text-indigo-400 tabular-nums shadow-inner italic">L0{idx + 1}::{byStatus(s).length}</span>
                            </div>
@@ -363,7 +363,7 @@ function DirectiveCard({ task, onSelect, onDragStart }: any) {
       
       <div className="flex justify-between items-start mb-10 relative z-10">
          <div className="space-y-2 flex-1 mr-4">
-            <h4 className="text-[28px] font-black italic uppercase tracking-tighter text-white group-hover:text-emerald-400 transition-colors duration-300 leading-[0.9]">{task.title}</h4>
+            <h4 className="text-[28px] font-black italic uppercase tracking-tighter text-[var(--text-main)] group-hover:text-emerald-400 transition-colors duration-300 leading-[0.9]">{task.title}</h4>
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic font-mono">ID::{task._id.slice(-8).toUpperCase()}</span>
          </div>
          {task.urgencyScore != null && (
@@ -461,7 +461,7 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
                   <Target size={56} className="text-emerald-400 relative z-10" />
                </div>
                <div>
-                  <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Node_Diagnostic</h2>
+                  <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Node_Diagnostic</h2>
                   <div className="flex items-center gap-6">
                      <span className="text-[14px] font-black text-emerald-400 uppercase tracking-[0.8em] italic leading-none bg-emerald-500/5 px-8 py-3 rounded-[2rem] border-2 border-emerald-500/20 shadow-inner">ID::{task._id.toUpperCase()}</span>
                      <div className="flex items-center gap-4 px-6 py-2 rounded-full border-2 border-white/5 shadow-inner">
@@ -519,7 +519,7 @@ function DirectiveModal({ task, onClose, onUpdate, onPurge, onAddSub, getSubtask
                <div className="flex items-center justify-between mb-8 px-10">
                   <div className="flex items-center gap-6">
                      <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center animate-bounce shadow-2xl"><Network size={28} className="text-indigo-400" /></div>
-                     <h3 className="text-[16px] font-black text-white uppercase tracking-[1.2em] italic">SOVEREIGN_MESH_RESONANCE_CHANNEL</h3>
+                     <h3 className="text-[16px] font-black text-[var(--text-main)] uppercase tracking-[1.2em] italic">SOVEREIGN_MESH_RESONANCE_CHANNEL</h3>
                   </div>
                   <div className="flex items-center gap-4 text-[12px] font-black text-indigo-400 uppercase tracking-[0.5em] italic bg-indigo-500/5 px-6 py-2 rounded-full border-2 border-white/5 group relative overflow-hidden">
                      <div className="absolute inset-0 bg-indigo-500/10 animate-pulse pointer-events-none" />

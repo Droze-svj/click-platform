@@ -127,7 +127,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                 <Globe className="w-3.5 h-3.5 animate-pulse" />
                 Click Network Active
             </div>
-            <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">
+            <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
                 OMNIPRESENCE<br />NETWORK
             </h2>
         </div>
@@ -159,7 +159,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                         <BrainCircuit className="w-6 h-6 text-indigo-400" />
                     </div>
                     <div>
-                        <h4 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Network Signals</h4>
+                        <h4 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Network Signals</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Expert Viral Pulse</span>
                     </div>
                 </div>
@@ -225,7 +225,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                             <Radio className={`w-6 h-6 ${isBroadcasting ? 'animate-pulse' : ''}`} />
                         </div>
                         <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Neural Broadcaster</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Neural Broadcaster</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Dispatch Protocol</span>
                         </div>
                     </div>
@@ -277,7 +277,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                             <AiIcon className="w-6 h-6 text-indigo-400" />
                         </div>
                         <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Agent Approvals</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Agent Approvals</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Community Manager</span>
                         </div>
                     </div>

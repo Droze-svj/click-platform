@@ -130,17 +130,17 @@ export default function SovereignOversightTerminalPage() {
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+    <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
        <Fingerprint size={64} className="text-amber-500 animate-pulse mb-8" />
        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Oversight Protocols...</span>
     </div>
   )
 
   if (error || !data) return (
-    <div className="min-h-screen bg-[#020205] flex items-center justify-center p-10">
+    <div className="min-h-screen bg-[var(--page-bg)] flex items-center justify-center p-10">
        <div className={`${glassStyle} p-12 rounded-[3rem] border-rose-500/20 text-center max-w-xl`}>
           <ShieldAlert size={64} className="text-rose-500 mx-auto mb-8 animate-bounce" />
-          <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Oversight Error</h2>
+          <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4">Oversight Error</h2>
           <p className="text-slate-400 text-[13px] font-black uppercase tracking-widest italic mb-10">{error || 'UNAUTHORIZED_ACCESS_DETECTED'}</p>
           <button onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">RETRY_SYNC</button>
        </div>
@@ -175,7 +175,7 @@ export default function SovereignOversightTerminalPage() {
                        <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">AUTHORIZED_ROOT</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Admin</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">Admin</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Operator console — global users, cluster health, system vitals. Visible only to staff with the admin role.</p>
               </div>
            </div>
@@ -206,7 +206,7 @@ export default function SovereignOversightTerminalPage() {
                  <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 mb-8">
                     <div className="flex items-center gap-6">
                        <Scan size={24} className="text-amber-400" />
-                       <h3 className="text-[14px] font-black text-white uppercase tracking-[0.5em] italic">Resonance Feed</h3>
+                       <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">Resonance Feed</h3>
                     </div>
                     <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-white transition-colors italic">VIEW_ALL_LOGS</button>
                  </div>
@@ -270,7 +270,7 @@ export default function SovereignOversightTerminalPage() {
               <div className={`${glassStyle} p-12 rounded-[5rem] border-white/5 shadow-[inset_0_0_80px_rgba(0,0,0,0.5)] bg-black/40`}>
                  <div className="flex items-center gap-6 border-b border-white/5 pb-8 mb-10 px-4">
                     <Database size={20} className="text-amber-400" />
-                    <h3 className="text-[13px] font-black text-white uppercase tracking-[0.5em] italic">Core Vitality</h3>
+                    <h3 className="text-[13px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] italic">Core Vitality</h3>
                  </div>
                  
                  <div className="space-y-10 p-4">
@@ -325,7 +325,7 @@ function VitalityCard({ icon: Icon, label, value, trend, color, bg, isHealthy = 
           <Icon className={color} size={36} />
        </div>
        <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] mb-4 italic leading-none">{label}</p>
-       <h3 className="text-5xl font-black text-white italic tracking-tighter leading-none mb-6">{value}</h3>
+       <h3 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter leading-none mb-6">{value}</h3>
        <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/40 border border-white/5">
           <div className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">{trend}</span>

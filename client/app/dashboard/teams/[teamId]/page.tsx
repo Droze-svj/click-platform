@@ -154,7 +154,7 @@ export default function TeamDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#020205] gap-8">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] gap-8">
         <div className="relative">
            <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
            <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
@@ -166,11 +166,11 @@ export default function TeamDetailsPage() {
 
   if (!team) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#020205] p-12 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] p-12 text-center">
         <div className="w-48 h-48 rounded-[3rem] bg-white/[0.02] border-2 border-white/5 flex items-center justify-center mb-10 shadow-3xl">
            <Users size={80} className="text-rose-500/40" />
         </div>
-        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-6">SWARM_CLUSTER_ABSENT</h2>
+        <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">SWARM_CLUSTER_ABSENT</h2>
         <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested swarm cluster is not registered in the neural lattice.</p>
         <button onClick={() => router.push('/dashboard/teams')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">REVERT_TO_COLLECTIVE</button>
       </div>
@@ -180,7 +180,7 @@ export default function TeamDetailsPage() {
   const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[20px_40px_100px_rgba(0,0,0,0.8)] transition-all duration-700 hover:bg-white/[0.04]'
 
   return (
-    <div className="min-h-screen bg-[#020205] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
+    <div className="min-h-screen bg-[var(--page-bg)] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
          <Users size={800} className="text-white absolute -top-40 -right-40 -rotate-12" />
       </div>
@@ -204,7 +204,7 @@ export default function TeamDetailsPage() {
                 </div>
                 <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">ACTIVE_NODE</div>
              </div>
-             <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">{team.name.toUpperCase()}</h1>
+             <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{team.name.toUpperCase()}</h1>
              {team.description && (
                <p className="text-[18px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed max-w-2xl opacity-60">{team.description.toUpperCase()}</p>
              )}
@@ -223,7 +223,7 @@ export default function TeamDetailsPage() {
                 <div className="px-12 py-10 border-b-2 border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-6">
                      <Users className="w-6 h-6 text-indigo-400" />
-                     <h2 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">CLUSTER_MEMBERS</h2>
+                     <h2 className="text-[18px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">CLUSTER_MEMBERS</h2>
                   </div>
                   <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{team.members.length} UNITS_SYNCED</div>
                 </div>
@@ -261,7 +261,7 @@ export default function TeamDetailsPage() {
                               className="px-6 py-2.5 bg-black/60 border-2 border-white/5 rounded-2xl text-[11px] font-black text-slate-300 uppercase tracking-widest italic focus:border-indigo-500 transition-all custom-scrollbar"
                             >
                               {ROLES.map((r) => (
-                                <option key={r.value} value={r.value} className="bg-[#020205]">
+                                <option key={r.value} value={r.value} className="bg-[var(--page-bg)]">
                                   {r.label.toUpperCase()}
                                 </option>
                               ))}
@@ -291,7 +291,7 @@ export default function TeamDetailsPage() {
                  <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
                     <div className="flex items-center gap-6">
                        <Share2 className="w-6 h-6 text-indigo-400" />
-                       <h3 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">LATTICE_INTEGRATION</h3>
+                       <h3 className="text-[18px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">LATTICE_INTEGRATION</h3>
                     </div>
                     <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">Cross-link modular components with this cluster to synchronize narrative and kinetic assets.</p>
                     <button
@@ -304,7 +304,7 @@ export default function TeamDetailsPage() {
                  <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
                     <div className="flex items-center gap-6">
                        <Zap className="w-6 h-6 text-indigo-400" />
-                       <h3 className="text-[18px] font-black text-white uppercase tracking-[0.4em] italic">SWARM_TELEMETRY</h3>
+                       <h3 className="text-[18px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">SWARM_TELEMETRY</h3>
                     </div>
                     <div className="space-y-4">
                        <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
@@ -326,7 +326,7 @@ export default function TeamDetailsPage() {
                 <div className={`${glassStyle} rounded-[4rem] p-12 space-y-10 shadow-[20px_40px_100px_rgba(0,0,0,0.8)] border-indigo-500/20`}>
                    <div className="flex items-center gap-6">
                       <UserPlus className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-[20px] font-black text-white italic uppercase tracking-tighter">NODE_INDUCTION</h2>
+                      <h2 className="text-[20px] font-black text-[var(--text-main)] italic uppercase tracking-tighter">NODE_INDUCTION</h2>
                    </div>
                    <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">
                      Inject a new unit into the cluster by specifying their neural coordinate (email).
@@ -350,7 +350,7 @@ export default function TeamDetailsPage() {
                         className="w-full px-8 py-5 bg-black/60 border-2 border-white/5 rounded-3xl text-[12px] font-black text-slate-300 uppercase tracking-[0.2em] italic focus:border-indigo-500 transition-all custom-scrollbar"
                       >
                         {ROLES.map((r) => (
-                          <option key={r.value} value={r.value} className="bg-[#020205]">
+                          <option key={r.value} value={r.value} className="bg-[var(--page-bg)]">
                             {r.label.toUpperCase()}_PROTOCOL
                           </option>
                         ))}
@@ -369,7 +369,7 @@ export default function TeamDetailsPage() {
               {/* Cluster Settings */}
               <div className={`${glassStyle} rounded-[5rem] overflow-hidden`}>
                 <div className="px-10 py-8 border-b-2 border-white/5">
-                   <h2 className="text-[16px] font-black text-white uppercase tracking-[0.4em] italic">CLUSTER_INTEGRITY</h2>
+                   <h2 className="text-[16px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">CLUSTER_INTEGRITY</h2>
                 </div>
                 <div className="p-10 space-y-8">
                   <div className="flex items-center justify-between p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">

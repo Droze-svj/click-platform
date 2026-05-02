@@ -64,7 +64,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
             <Sparkles className="w-4 h-4 animate-pulse" />
             Neural Extraction
           </div>
-          <h1 className="text-5xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
+          <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
             CHROMA<br />ENGINE
           </h1>
           <p className="text-slate-500 text-lg font-medium tracking-tight max-w-md">
@@ -90,7 +90,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
             <Pipette className="w-10 h-10 text-white" />
           </div>
           <div>
-            <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">Subject Isolation</h3>
+            <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">Subject Isolation</h3>
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Green Screen Engine</p>
           </div>
         </div>
@@ -124,7 +124,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
         <div className="space-y-10 relative z-10">
           <div className="p-6 bg-black/40 rounded-[2rem] border border-white/5 flex items-center justify-between">
             <div>
-              <h4 className="text-white font-bold text-lg mb-1">Engage Isolation Matrix</h4>
+              <h4 className="text-[var(--text-main)] font-bold text-lg mb-1">Engage Isolation Matrix</h4>
               <p className="text-xs text-slate-500">Activates realtime background extraction on render</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer group" title="Enable Isolation Matrix">
@@ -228,7 +228,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
               <BoxSelect className={`w-6 h-6 ${samMode ? 'animate-pulse' : ''}`} />
             </div>
             <div>
-               <h2 className="text-3xl font-black text-white italic tracking-tighter leading-none uppercase">SAM ENGINE v4</h2>
+               <h2 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">SAM ENGINE v4</h2>
                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic">Neural Subject Isolation (No Green Screen)</span>
             </div>
           </div>

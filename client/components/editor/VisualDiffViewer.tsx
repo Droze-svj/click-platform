@@ -135,7 +135,7 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
                     <Wand2 className="w-7 h-7 text-violet-400" />
                  </div>
                  <div className="flex-1">
-                    <h4 className="text-xl font-black text-white italic uppercase tracking-tight">AI Enhancement Logic</h4>
+                    <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">AI Enhancement Logic</h4>
                     <p className="text-slate-400 text-[11px] mt-2 leading-relaxed italic uppercase font-medium">
                        &quot;{v2Explanation || 'Autonomous structural realignment for maximum engagement velocity.'}&quot;
                     </p>

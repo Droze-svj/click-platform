@@ -186,7 +186,7 @@ export default function SocialPage() {
                 <Cpu size={14} className="text-indigo-400 animate-pulse" />
                 <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Uplink Interface</span>
               </div>
-              <h1 className="text-5xl font-black text-white tracking-tighter leading-none italic uppercase">Social Vault</h1>
+              <h1 className="text-5xl font-black text-[var(--text-main)] tracking-tighter leading-none italic uppercase">Social Vault</h1>
               <p className="text-slate-400 text-sm mt-2 font-medium max-w-lg italic">Manage your platform manifest. Establish neural links to automate content dissemination across the social mesh.</p>
             </div>
           </div>
@@ -230,7 +230,7 @@ export default function SocialPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <h3 className="text-2xl font-black text-white italic uppercase tracking-tight mb-2">{cfg.name}</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight mb-2">{cfg.name}</h3>
                   <p className="text-xs text-slate-400 font-medium italic opacity-70 leading-relaxed">{cfg.desc}</p>
                 </div>
 

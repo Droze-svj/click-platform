@@ -66,7 +66,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                         <RefreshCw className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Autonomous Remediation</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Autonomous Remediation</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-amber-500/70">Self-Correction Loop</span>
                     </div>
                 </div>
@@ -140,7 +140,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                             )}
                         </div>
                         <div className="space-y-4">
-                            <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Trigger Evolution</h3>
+                            <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Trigger Evolution</h3>
                             <p className="text-xs font-bold text-slate-500 max-w-xs mx-auto leading-relaxed">
                                 Analyzes community feedback consensus and executes fully autonomous timeline modifications.
                             </p>

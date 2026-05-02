@@ -81,7 +81,7 @@ export const SpectralForecastHUD: React.FC = () => {
                         <BarChart3 className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Revenue Forecast</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Revenue Forecast</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-blue-500/70">Neural Value Forecasting & Yield Steering</span>
                     </div>
                 </div>
@@ -111,7 +111,7 @@ export const SpectralForecastHUD: React.FC = () => {
                          <DollarSign className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div className="flex items-end gap-3">
-                        <h3 className="text-4xl font-black text-white italic tracking-tighter leading-none uppercase">
+                        <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">
                             ${data?.totals.revenue.toLocaleString() ?? '0'}
                         </h3>
                         <span className="text-[10px] font-black text-emerald-400 uppercase italic pb-1">Forecast</span>
@@ -124,7 +124,7 @@ export const SpectralForecastHUD: React.FC = () => {
                          <Target className="w-4 h-4 text-blue-400" />
                     </div>
                     <div className="flex items-end gap-3">
-                        <h3 className="text-4xl font-black text-white italic tracking-tighter leading-none uppercase">
+                        <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">
                             {data?.totals.conversions.toLocaleString() ?? '0'}
                         </h3>
                         <span className="text-[10px] font-black text-blue-400 uppercase italic pb-1">Projected</span>
@@ -152,7 +152,7 @@ export const SpectralForecastHUD: React.FC = () => {
                          <Sparkles className="w-4 h-4 text-violet-400" />
                     </div>
                     <div className="flex items-end gap-3">
-                        <h3 className="text-4xl font-black text-white italic tracking-tighter leading-none uppercase">
+                        <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">
                             {data?.spectralAnalysis.marketAlignment ?? 'N/A'}
                         </h3>
                         <span className="text-[10px] font-black text-violet-400 uppercase italic pb-1">Trend</span>

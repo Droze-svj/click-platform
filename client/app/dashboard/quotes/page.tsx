@@ -138,7 +138,7 @@ export default function FiscalProposalMatrixPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">MARKET_SYMPATHY_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Quotes</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Quotes</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Generate and send client quotes — line items, deliverables, totals — all niche-templated. Edit, re-send, or accept right from this page.</p>
               </div>
            </div>
@@ -152,7 +152,7 @@ export default function FiscalProposalMatrixPage() {
                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-30" />
                  <div className="flex items-center gap-8 relative z-10">
                     <div className="w-16 h-16 bg-emerald-500/10 rounded-[2rem] flex items-center justify-center border-2 border-emerald-500/20 shadow-3xl group-hover:scale-110 transition-transform duration-300"><Terminal size={32} className="text-emerald-400" /></div>
-                    <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Economic Ingress</h2>
+                    <h2 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Economic Ingress</h2>
                  </div>
                  <div className="flex items-center gap-5 relative z-10">
                     <span className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">SYCHRONIZED_INPUT_STREAM</span>
@@ -220,7 +220,7 @@ export default function FiscalProposalMatrixPage() {
                   <div className="flex items-center gap-10">
                      <div className="w-16 h-16 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2rem] flex items-center justify-center shadow-3xl"><Layers size={32} className="text-emerald-400" /></div>
                      <div>
-                        <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Fiscal Manifests</h2>
+                        <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Fiscal Manifests</h2>
                         <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">Synthesized economic directives calibrated for high- resonance output.</p>
                      </div>
                   </div>

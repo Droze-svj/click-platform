@@ -136,7 +136,7 @@ export default function ContentCalendarPage() {
              <CalendarIcon size={32} className="text-indigo-400 group-hover:scale-110 transition-transform duration-300" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-md">Content Calendar</h1>
+            <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight drop-shadow-md">Content Calendar</h1>
             <p className="text-slate-400 text-sm mt-1 font-medium">Manage and review your cross-platform content schedule.</p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function ContentCalendarPage() {
                <button onClick={() => navigateTime(1)} className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-300 transition-colors"><ChevronRight size={24} /></button>
             </div>
             
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-[var(--text-main)]">
               {view === 'month' ? `${MONTH_NAMES[currentDate.getMonth()]} ${currentDate.getFullYear()}` : view === 'week' ? 'This Week' : currentDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
             </h2>
 
@@ -278,7 +278,7 @@ export default function ContentCalendarPage() {
                       <div className="flex items-center gap-4">
                          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center text-white text-2xl shadow-lg`}>{cfg.icon}</div>
                          <div>
-                            <h3 className="text-2xl font-bold text-white">{cfg.label} Post</h3>
+                            <h3 className="text-2xl font-bold text-[var(--text-main)]">{cfg.label} Post</h3>
                             <div className="flex items-center gap-3 mt-1 text-sm font-medium">
                                <span className={`flex items-center gap-1.5 ${scc.text}`}><StatusIcon size={16} /> {scc.label}</span>
                                <span className="text-slate-500">•</span>

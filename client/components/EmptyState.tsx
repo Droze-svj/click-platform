@@ -44,7 +44,7 @@ export default function EmptyState({
       </div>
 
       {/* Title and Description */}
-      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)] mb-2 text-center">
         {title}
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">

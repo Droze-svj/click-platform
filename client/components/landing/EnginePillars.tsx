@@ -57,7 +57,7 @@ export function EnginePillars() {
              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-indigo-400/80 italic">The Engine Core</span>
           </div>
-          <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none text-white">
+          <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-none text-[var(--text-main)]">
             NEURAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40 italic">ARCHITECTURES</span>
           </h2>
           <p className="text-slate-400 max-w-3xl mx-auto text-lg md:text-xl font-medium opacity-80 leading-relaxed">
@@ -83,7 +83,7 @@ export function EnginePillars() {
                 >
                   <Icon className="w-8 h-8" aria-hidden="true" />
                 </div>
-                <h3 className="text-2xl font-black mb-4 text-white tracking-tight uppercase italic">{p.title}</h3>
+                <h3 className="text-2xl font-black mb-4 text-[var(--text-main)] tracking-tight uppercase italic">{p.title}</h3>
                 <p className="text-slate-400 font-medium leading-relaxed mb-8 opacity-80">{p.desc}</p>
                 <ul className="space-y-4 border-t border-white/5 pt-8">
                   {p.bullets.map((b) => (

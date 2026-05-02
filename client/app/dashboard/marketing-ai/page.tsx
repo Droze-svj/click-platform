@@ -87,7 +87,7 @@ export default function MarketingOraclePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#020205] text-white pb-40 px-8 pt-12 max-w-[1700px] mx-auto space-y-16">
+    <div className="min-h-screen bg-[var(--page-bg)] text-white pb-40 px-8 pt-12 max-w-[1700px] mx-auto space-y-16">
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
         body { font-family: 'Outfit', sans-serif; background: #020205; }

@@ -82,7 +82,7 @@ export default function ContentQuickPreview({ content, children }: ContentQuickP
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                <h3 className="font-semibold text-sm text-gray-900 dark:text-white">
+                <h3 className="font-semibold text-sm text-gray-900 dark:text-[var(--text-main)]">
                   Quick Preview
                 </h3>
               </div>
@@ -109,7 +109,7 @@ export default function ContentQuickPreview({ content, children }: ContentQuickP
                   />
                 )}
                 
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
                   {previewData.title || 'Untitled'}
                 </h4>
                 

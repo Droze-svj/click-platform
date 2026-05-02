@@ -114,7 +114,7 @@ export default function CreatePostPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Post</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">Create New Post</h1>
           <p className="text-gray-600 dark:text-gray-400">Write and schedule your content</p>
         </div>
         <div className="flex gap-2">

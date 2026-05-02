@@ -68,7 +68,7 @@ const DirectorLog: React.FC<DirectorLogProps> = ({ persona, metrics, currentTime
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <div className="flex items-center gap-3">
           <Config.icon className={`w-4 h-4 ${Config.color}`} />
-          <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">
+          <h4 className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-[0.3em] italic">
             Director&apos;s Log // {Config.name}
           </h4>
         </div>

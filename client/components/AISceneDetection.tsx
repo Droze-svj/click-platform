@@ -282,7 +282,7 @@ export default function AISceneDetection({
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <NeuralNetworkIcon className="w-5 h-5" />
               AI Scene Detection & Auto-Editing
             </h3>
@@ -340,7 +340,7 @@ export default function AISceneDetection({
         {scenes.length === 0 ? (
           <div className="text-center py-12">
               <NeuralNetworkIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
               AI-Powered Video Analysis
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
@@ -391,7 +391,7 @@ export default function AISceneDetection({
 
             {/* Scene Timeline */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Detected Scenes</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Detected Scenes</h4>
               <div className="space-y-3">
                 {scenes.map((scene, index) => (
                   <div

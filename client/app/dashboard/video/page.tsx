@@ -211,7 +211,7 @@ export default function KineticSynthesisHubPage() {
                 className="relative z-10 px-8 sm:px-12 py-12 sm:py-16 rounded-[2rem] sm:rounded-[3rem] border-2 border-dashed border-indigo-400/60 bg-indigo-500/10 max-w-xl mx-auto text-center"
               >
                 <Upload className="w-12 h-12 sm:w-16 sm:h-16 text-indigo-300 mx-auto mb-6" />
-                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
+                <h2 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] tracking-tight mb-3">
                   {pageDropProgress !== null ? 'Uploading…' : 'Drop your video to start'}
                 </h2>
                 {pageDropProgress !== null && (
@@ -283,7 +283,7 @@ export default function KineticSynthesisHubPage() {
                 <div className="flex flex-col xl:flex-row items-center gap-6">
                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-2xl sm:rounded-[2rem] flex items-center justify-center shadow-lg border-2 border-[var(--glass-border-strong)]"><Upload size={32} className="text-white" /></div>
                    <div>
-                      <h2 className="text-white font-black tracking-tighter text-3xl sm:text-4xl leading-tight mb-2">Drop a video to get started</h2>
+                      <h2 className="text-[var(--text-main)] font-black tracking-tighter text-3xl sm:text-4xl leading-tight mb-2">Drop a video to get started</h2>
                       <p className="text-white/70 text-[13px] font-medium leading-relaxed">Synthesize viral fragments automatically.</p>
                    </div>
                 </div>

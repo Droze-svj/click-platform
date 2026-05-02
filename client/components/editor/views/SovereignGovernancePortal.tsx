@@ -63,7 +63,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white">Governance</h2>
+            <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-[var(--text-main)]">Governance</h2>
             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em] mt-1 italic">
               User-In-The-Loop Validation // Decision Consensus
             </p>
@@ -123,7 +123,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{proposal.agent}</span>
                        <span className="text-[10px] text-slate-600 font-black italic">PROPOSES: {proposal.type}</span>
                     </div>
-                    <h4 className="text-xl font-black text-white uppercase tracking-tight mb-4 leading-tight italic">
+                    <h4 className="text-xl font-black text-[var(--text-main)] uppercase tracking-tight mb-4 leading-tight italic">
                       "{proposal.decision.highLevelStrategy || 'Adjusting content velocity to maximize Gen-Z retention peaks.'}"
                     </h4>
 
@@ -171,7 +171,7 @@ const SovereignGovernancePortal: React.FC<SovereignGovernancePortalProps> = ({
            <div className="p-8 rounded-[3rem] bg-emerald-500/5 border border-emerald-500/10 flex flex-col gap-6">
               <div className="flex items-center gap-4">
                  <UserCheck className="w-5 h-5 text-emerald-400" />
-                 <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Operator Integrity</h3>
+                 <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest">Operator Integrity</h3>
               </div>
 
               <div className="space-y-4">

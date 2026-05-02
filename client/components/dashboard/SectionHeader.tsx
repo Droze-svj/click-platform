@@ -83,7 +83,7 @@ export function SectionHeader({
                 {kicker}
               </p>
             )}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.05]">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[var(--text-main)] tracking-tight leading-[1.05]">
               {title}
             </h1>
             {subtitle && (

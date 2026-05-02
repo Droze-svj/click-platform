@@ -101,7 +101,7 @@ export default function SignalDiffusionArchivePage() {
   }
 
   if (loading && posts.length === 0) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen font-inter">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <Archive size={64} className="text-indigo-500 animate-spin mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Signal Diffusion Ledger...</span>
      </div>
@@ -147,7 +147,7 @@ export default function SignalDiffusionArchivePage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">STRATUM_UPLINK_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Posts</h1>
+                 <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Posts</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium mt-4 max-w-2xl leading-relaxed">Every clip, draft and scheduled post in one place. Filter by platform, search by topic, and re-edit or republish in two clicks.</p>
               </div>
            </div>
@@ -237,7 +237,7 @@ export default function SignalDiffusionArchivePage() {
                             </div>
                             
                             <div className="p-14 flex-1 space-y-10 relative z-10 bg-gradient-to-br from-white/[0.02] to-transparent">
-                               <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-700 drop-shadow-2xl">{post.title || 'UNNAMED_PHANTOM'}</h3>
+                               <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-700 drop-shadow-2xl">{post.title || 'UNNAMED_PHANTOM'}</h3>
                                {post.excerpt && <p className="text-[15px] text-slate-500 font-extrabold italic uppercase leading-relaxed line-clamp-3 tracking-tighter opacity-80 group-hover:text-white transition-colors">{post.excerpt}</p>}
                                <div className="flex flex-wrap gap-4 pt-6 border-t-2 border-white/5">
                                   {post.tags?.slice(0, 3).map((tag, i) => (

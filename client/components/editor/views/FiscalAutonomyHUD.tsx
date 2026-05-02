@@ -62,7 +62,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                         <Wallet className="w-8 h-8" />
                     </div>
                     <div>
-                        <h4 className="text-3xl font-black text-white italic tracking-tighter leading-none uppercase">Fiscal Autonomy HUD</h4>
+                        <h4 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Fiscal Autonomy HUD</h4>
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic text-indigo-500/70">Revenue Steering</span>
                     </div>
                 </div>

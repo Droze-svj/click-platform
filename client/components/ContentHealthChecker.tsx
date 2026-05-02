@@ -124,7 +124,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
             Content Health Check
           </h3>
         </div>

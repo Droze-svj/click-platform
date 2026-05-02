@@ -96,7 +96,7 @@ export default function ContentPerformanceHeatmap() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Calendar className="w-6 h-6 text-blue-600" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Performance Heatmap
           </h3>
         </div>

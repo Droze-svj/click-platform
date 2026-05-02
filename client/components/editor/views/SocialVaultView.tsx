@@ -111,7 +111,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
             <Globe className="w-4 h-4 animate-pulse" />
             Ecosystem Command
           </div>
-          <h1 className="text-6xl md:text-7xl font-black text-white italic tracking-tighter uppercase leading-none">
+          <h1 className="text-6xl md:text-7xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
             NEURAL<br />FORGE
           </h1>
           <p className="text-slate-500 text-2xl font-medium tracking-tight max-w-xl">
@@ -177,7 +177,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                     <platform.icon className="w-10 h-10 text-white" />
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-4xl font-black text-white italic tracking-tighter uppercase">{platform.label}</h4>
+                    <h4 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{platform.label}</h4>
                     <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">{platform.desc}</p>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
             <Zap className="w-12 h-12 text-white fill-white" />
           </div>
           <div className="space-y-4">
-            <h3 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">UNIFIED DISTRIBUTION</h3>
+            <h3 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">UNIFIED DISTRIBUTION</h3>
             <p className="text-xl text-slate-500 font-medium tracking-tight leading-relaxed">
               Your identity nodes are bridged to Click&apos;s <span className="text-white font-black italic">Neural Distribution Matrix</span>. Full-stack ecosystem broadcasting is initialized.
             </p>

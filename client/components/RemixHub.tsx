@@ -78,7 +78,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
             <div className="p-8 border-b border-gray-100 dark:border-gray-900 bg-gradient-to-r from-fuchsia-500/5 to-purple-500/5">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-[var(--text-main)] flex items-center gap-3">
                             <Users className="w-8 h-8 text-fuchsia-500" />
                             Remix Hub
                         </h2>
@@ -125,7 +125,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                                     <img src={project.avatar} alt={project.author} className="w-5 h-5 rounded-full border border-fuchsia-500/30" />
                                     <span className="text-[10px] font-bold text-gray-400 group-hover:text-fuchsia-500 transition-colors">@{project.author}</span>
                                 </div>
-                                <h4 className="font-black text-gray-900 dark:text-white mb-4 group-hover:translate-x-1 transition-transform">{project.title}</h4>
+                                <h4 className="font-black text-gray-900 dark:text-[var(--text-main)] mb-4 group-hover:translate-x-1 transition-transform">{project.title}</h4>
 
                                 <div className="flex flex-wrap gap-1 mb-6">
                                     {project.tags.map(tag => (

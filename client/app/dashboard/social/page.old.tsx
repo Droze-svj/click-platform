@@ -55,7 +55,7 @@ function ResonanceProtocolAudit() {
       <div className="flex items-center gap-10 mb-16 relative z-10">
         <div className="w-24 h-24 bg-indigo-500/5 rounded-[3rem] flex items-center justify-center border border-indigo-500/20 shadow-2xl"><Fingerprint className="text-indigo-400" size={48} /></div>
         <div>
-           <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Protocol Audit</h2>
+           <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Protocol Audit</h2>
            <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">Autonomous node decryption and presence verification active.</p>
         </div>
       </div>
@@ -210,7 +210,7 @@ function ResonanceHubContent() {
               <Icon size={48} />
             </div>
             <div>
-              <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{meta.label}</h3>
+              <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{meta.label}</h3>
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">{meta.desc}</p>
             </div>
           </div>
@@ -289,7 +289,7 @@ function ResonanceHubContent() {
               <Icon size={48} />
             </div>
             <div>
-              <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{meta.label}</h3>
+              <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{meta.label}</h3>
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] mt-3 italic leading-none">{meta.desc}</p>
             </div>
           </div>
@@ -351,7 +351,7 @@ function ResonanceHubContent() {
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+    <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
       <Activity size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
       <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Synchronizing Mesh Topology...</span>
     </div>
@@ -387,7 +387,7 @@ function ResonanceHubContent() {
                        <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">MESH_SYNC_OPTIMAL</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Resonance Hub</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Resonance Hub</h1>
                  <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Managing autonomous node identity matrices and global grid resonance topology.</p>
               </div>
            </div>
@@ -454,7 +454,7 @@ function ResonanceHubContent() {
                    <a.icon size={48} className={a.color} />
                 </div>
                 <div className="space-y-4">
-                   <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">{a.label}</h4>
+                   <h4 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{a.label}</h4>
                    <p className="text-[13px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{a.desc}</p>
                 </div>
                 <div className="w-16 h-16 rounded-full border-2 border-slate-900 flex items-center justify-center group-hover:border-white transition-all duration-700">
@@ -481,7 +481,7 @@ function ResonanceHubContent() {
 export default function ResonanceHubPage() {
   return (
     <Suspense fallback={
-       <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+       <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
           <Globe size={100} className="text-indigo-500 animate-pulse mb-16 drop-shadow-[0_0_50px_rgba(99,102,241,0.5)]" />
           <span className="text-5xl font-black text-slate-500 uppercase tracking-[1em] animate-pulse italic">CALIBRATING...</span>
        </div>

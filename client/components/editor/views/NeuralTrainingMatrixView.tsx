@@ -110,7 +110,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
                   <Upload className="w-10 h-10 animate-bounce" />
                 </div>
                 <div className="text-center space-y-3">
-                  <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Drop Style DNA</h3>
+                  <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Drop Style DNA</h3>
                   <p className="text-slate-500 text-sm font-medium">Export .xml from Premiere or drop .click project</p>
                 </div>
               </motion.div>
@@ -161,7 +161,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <TerminalIcon className="w-4 h-4" />
            </div>
-           <h4 className="text-[10px] font-black text-white uppercase tracking-widest italic">Extraction Terminal v4.0</h4>
+           <h4 className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-widest italic">Extraction Terminal v4.0</h4>
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-4">

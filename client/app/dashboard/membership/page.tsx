@@ -103,7 +103,7 @@ export default function IdentityDNARegistryPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen font-inter">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <Fingerprint size={64} className="text-indigo-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Access Protocols...</span>
      </div>
@@ -144,7 +144,7 @@ export default function IdentityDNARegistryPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">STRATUM_LOCK_SECURED</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Membership</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Membership</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Manage your subscription, see what each plan unlocks, and upgrade when you outgrow your current tier. Cancel any time — no penalties, no rituals.</p>
               </div>
            </div>
@@ -181,7 +181,7 @@ export default function IdentityDNARegistryPage() {
                        <Database size={20} className="text-indigo-400" /> <span className="opacity-40">PROTOCOL_ID:</span> {currentMembership.subscription?.id?.slice(-16).toUpperCase() || 'ROOT_GENESIS'}
                      </div>
                   </div>
-                  <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">
+                  <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">
                      {currentMembership.package?.name?.toUpperCase() || 'GENERIC_ACCESS'}
                   </h2>
                   <div className="flex items-center justify-center xl:justify-start gap-10 text-[18px] font-black uppercase tracking-[0.6em] italic leading-none">
@@ -225,7 +225,7 @@ export default function IdentityDNARegistryPage() {
                      <span className="text-[14px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none whitespace-nowrap opacity-60">Stratum Tier</span>
                      <div className="w-20 h-[3px] bg-gradient-to-l from-transparent to-indigo-500/20 rounded-full" />
                   </div>
-                  <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none drop-shadow-2xl">{pkg.name.toUpperCase()}</h3>
+                  <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none drop-shadow-2xl">{pkg.name.toUpperCase()}</h3>
                   <p className="text-[16px] text-slate-700 font-bold uppercase italic tracking-widest leading-relaxed mb-16 h-16 line-clamp-2 px-4 shadow-[0_10px_20px_rgba(0,0,0,0.4)]">{pkg.description.toUpperCase()}</p>
                   
                   <div className="py-20 bg-black/60 rounded-[5rem] border-4 border-white/5 mb-16 shadow-inner group-hover:bg-black/80 transition-all duration-300 relative overflow-hidden group/price">

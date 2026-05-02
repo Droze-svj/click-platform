@@ -96,7 +96,7 @@ export default function SocialAccountManager() {
                         <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Social Vault</h2>
+                        <h2 className="text-xl font-black text-gray-900 dark:text-[var(--text-main)] uppercase tracking-tighter">Social Vault</h2>
                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest opacity-60">Connected Account Intelligence</p>
                     </div>
                 </div>
@@ -162,7 +162,7 @@ export default function SocialAccountManager() {
                                 {acc.platform === 'facebook' && <Link2 className="w-6 h-6 text-blue-600" />}
                             </div>
                             <div>
-                                <h4 className="text-sm font-black text-gray-900 dark:text-white leading-none mb-2">{acc.username}</h4>
+                                <h4 className="text-sm font-black text-gray-900 dark:text-[var(--text-main)] leading-none mb-2">{acc.username}</h4>
                                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">API Refresh: {acc.lastSync}</p>
                             </div>
                         </div>

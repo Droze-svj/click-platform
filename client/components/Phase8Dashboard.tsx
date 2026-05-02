@@ -33,7 +33,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
           <Icon className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">{title}</h3>
+          <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{title}</h3>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{subtitle}</p>
         </div>
       </div>
@@ -562,7 +562,7 @@ export default function Phase8Dashboard() {
               <span className={`${pill} text-indigo-400 border-indigo-500/20`}>Phase 8 — Market Domination</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <h1 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Sovereign 2026</h1>
+            <h1 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Sovereign 2026</h1>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">5 Systems That Make CLICK Undisputable</p>
           </div>
         </div>

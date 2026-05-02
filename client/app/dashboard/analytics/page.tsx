@@ -95,7 +95,7 @@ export default function SovereignAnalyticsMatrix() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">RESONANCE_MONITOR_ACTIVE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Analytics</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Analytics</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">See how every post performed across platforms — retention curves, viral lift, top-performing hooks. Click learns what works for your audience and bakes it into the next edit automatically.</p>
               </div>
            </div>
@@ -140,7 +140,7 @@ export default function SovereignAnalyticsMatrix() {
                 <Sparkles size={18} className="text-indigo-400 animate-pulse" />
                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">Engine_Heuristic_Link</span>
               </div>
-              <h2 className="text-4xl font-black italic text-white leading-tight uppercase tracking-tighter max-w-xl">
+              <h2 className="text-4xl font-black italic text-[var(--text-main)] leading-tight uppercase tracking-tighter max-w-xl">
                  &ldquo;Spectral signals are {(data?.avg_engagement_rate ?? 0) > 5 ? 'PEAKING' : 'STABLE'}. Kinetic resonance manifests in frames 0-4.&rdquo;
               </h2>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">

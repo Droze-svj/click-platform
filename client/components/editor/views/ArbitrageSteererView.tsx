@@ -85,7 +85,7 @@ export const ArbitrageSteererView: React.FC = () => {
                         <ArrowRightLeft className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Arbitrage Steering</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Arbitrage Steering</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Monetization Velocity Engine</span>
                     </div>
                 </div>

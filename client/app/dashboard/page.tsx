@@ -136,7 +136,7 @@ function DropZoneOverlay() {
             >
               <Box className="w-20 h-20 text-white" />
             </motion.div>
-            <h2 className="text-5xl font-black text-white tracking-tighter mb-4">Initialize Import</h2>
+            <h2 className="text-5xl font-black text-[var(--text-main)] tracking-tighter mb-4">Initialize Import</h2>
             <p className="text-lg text-indigo-400 font-bold uppercase tracking-[0.3em] opacity-80">Drop video to start neural processing</p>
           </div>
         </motion.div>

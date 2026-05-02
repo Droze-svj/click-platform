@@ -234,7 +234,7 @@ export default function CollaborativeEditing({
         <div className="flex items-center gap-4">
           {/* Session Info */}
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">{session.name}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{session.name}</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {session.participants.length} participant{session.participants.length !== 1 ? 's' : ''} •
               {session.comments.length} comment{session.comments.length !== 1 ? 's' : ''}
@@ -360,7 +360,7 @@ export default function CollaborativeEditing({
         <div className="absolute right-4 top-20 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-30">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-gray-900 dark:text-white">Comments</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Comments</h4>
               <button
                 onClick={() => setShowCommentsPanel(false)}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
@@ -453,7 +453,7 @@ export default function CollaborativeEditing({
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Invite Collaborators</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">Invite Collaborators</h2>
                 <button
                   onClick={() => setShowInviteDialog(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"

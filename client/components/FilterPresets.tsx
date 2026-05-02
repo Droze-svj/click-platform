@@ -349,7 +349,7 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
 
             {/* Name & Description */}
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {preset.name}
               </h4>
               <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">

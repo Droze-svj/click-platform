@@ -261,7 +261,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
             <Compass className="w-4 h-4 text-indigo-400" />
           </div>
           <div>
-            <h3 className="font-black text-white italic uppercase tracking-wide text-[11px]">Advanced Spatial Timeline</h3>
+            <h3 className="font-black text-[var(--text-main)] italic uppercase tracking-wide text-[11px]">Advanced Spatial Timeline</h3>
             <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Konva Hardware Canvas — {timelineSegments.length} segments</span>
           </div>
         </div>

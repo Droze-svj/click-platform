@@ -95,7 +95,7 @@ export default function QuickTemplateAccess() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
             Popular Templates
           </h3>
         </div>
@@ -119,7 +119,7 @@ export default function QuickTemplateAccess() {
                 {getCategoryIcon(template.category)}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm text-gray-900 dark:text-white truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)] truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {template.name}
                 </h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">

@@ -163,7 +163,7 @@ export default function EnhancedContentCalendar() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <Calendar className="text-purple-600" size={24} />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Content Calendar</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">Content Calendar</h2>
         </div>
         <div className="flex gap-2">
           <button

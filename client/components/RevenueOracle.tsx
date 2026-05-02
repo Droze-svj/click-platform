@@ -74,7 +74,7 @@ export default function RevenueOracle() {
              <TrendingUp className="text-emerald-400 relative z-10" size={36} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">Revenue Oracle_v6.1</h1>
+            <h1 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-2">Revenue Oracle_v6.1</h1>
             <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] italic leading-none border-l-2 border-emerald-500/20 pl-4 ml-1">Economic Foresight // Deep ROI Predictor</p>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function RevenueOracle() {
            <div className="absolute top-12 left-12 flex items-center gap-4">
               <Activity className="text-emerald-400 animate-pulse" size={20} />
               <div>
-                 <h3 className="text-[12px] font-black text-white uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">ROI Trajectory Lattice</h3>
+                 <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">ROI Trajectory Lattice</h3>
                  <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Real-Time Forecast // $ +{(data.predictedROI * 0.1).toFixed(2)} Volatility Index</p>
               </div>
            </div>

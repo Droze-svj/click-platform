@@ -168,17 +168,17 @@ export default function ContentDetailPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#020205]">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)]">
       <Activity size={80} className="text-indigo-500 animate-pulse mb-8" />
       <span className="text-[14px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Scanning Neural Patterns...</span>
     </div>
   )
 
   if (!content) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020205]">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--page-bg)]">
       <div className="text-center space-y-8 p-20 rounded-[4rem] border border-white/5 bg-white/[0.02]">
         <AlertCircle size={100} className="text-rose-500 mx-auto" />
-        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter">Node Not Found</h2>
+        <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Node Not Found</h2>
         <button onClick={() => router.push('/dashboard/content')} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest italic hover:bg-indigo-500 transition-all">ABORT_TO_REPOSITORY</button>
       </div>
     </div>
@@ -214,7 +214,7 @@ export default function ContentDetailPage() {
                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">OP_INTEGRITY_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{content.title || 'NULL_NODE'}</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{content.title || 'NULL_NODE'}</h1>
                  <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Analyzing spectral resonance and temporal deployment vectors for asset {content._id}.</p>
               </div>
            </div>
@@ -260,7 +260,7 @@ export default function ContentDetailPage() {
                         <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
                            <div className="flex items-center gap-6 mb-4">
                               <Info size={32} className="text-indigo-400" />
-                              <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Strategic Intent</h2>
+                              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Strategic Intent</h2>
                            </div>
                            <p className="text-2xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity duration-300">{content.description}</p>
                         </div>
@@ -270,7 +270,7 @@ export default function ContentDetailPage() {
                         <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
                            <div className="flex items-center gap-6 mb-4">
                               <CircuitBoard size={32} className="text-emerald-400" />
-                              <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Spectral Transcript</h2>
+                              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Spectral Transcript</h2>
                            </div>
                            <p className="text-xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity duration-300 whitespace-pre-wrap">{content.transcript}</p>
                         </div>
@@ -281,7 +281,7 @@ export default function ContentDetailPage() {
                            <div className="flex items-center justify-between border-b border-white/5 pb-10">
                               <div className="flex items-center gap-8">
                                  <Sparkles size={44} className="text-indigo-400" />
-                                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter">Synthetic Manifests</h2>
+                                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Synthetic Manifests</h2>
                               </div>
                               <div className="px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">NEURAL_SYNC_SUCCESS</div>
                            </div>
@@ -321,7 +321,7 @@ export default function ContentDetailPage() {
                      <div className={`${glassStyle} rounded-[4.5rem] p-10 space-y-6 bg-black/60 shadow-[0_60px_100px_rgba(0,0,0,0.6)] border-indigo-500/10`}>
                         <div className="flex items-center gap-6 mb-4 px-4">
                            <Zap size={32} className="text-amber-400" />
-                           <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">Resonance Injection</h3>
+                           <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Resonance Injection</h3>
                         </div>
                         <div className="flex gap-4">
                            <ContentDuplicator contentId={content._id} onDuplicate={(newId) => router.push(`/dashboard/content/${newId}`)} className="flex-1" />
@@ -354,7 +354,7 @@ export default function ContentDetailPage() {
                      <div className={`${glassStyle} rounded-[5rem] p-16 space-y-12 bg-black/40`}>
                         <div className="flex items-center gap-6 mb-4">
                            <Settings size={32} className="text-slate-400" />
-                           <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Node Diagnostic</h2>
+                           <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Node Diagnostic</h2>
                         </div>
                         <div className="space-y-10">
                            {[
@@ -379,7 +379,7 @@ export default function ContentDetailPage() {
                      <div className={`${glassStyle} rounded-[5rem] p-16 space-y-12 bg-black/40`}>
                         <div className="flex items-center gap-6 mb-4">
                            <Hash size={32} className="text-indigo-400" />
-                           <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">Axiom Mapping</h2>
+                           <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Axiom Mapping</h2>
                         </div>
                         <div className="flex flex-wrap gap-4">
                            {content.tags && content.tags.map((tag, index) => (
@@ -431,7 +431,7 @@ export default function ContentDetailPage() {
                               <Languages size={40} className="text-purple-400 group-hover:rotate-180 transition-transform duration-300" />
                            </div>
                            <div>
-                              <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{t('translation.title')}</h2>
+                              <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{t('translation.title')}</h2>
                               <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">{t('translation.translateTo')} operational nodes.</p>
                            </div>
                         </div>
@@ -475,7 +475,7 @@ export default function ContentDetailPage() {
                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
                               <div className="flex items-center gap-6 mb-12 border-l-8 border-purple-500 pl-8">
                                  <div>
-                                    <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-300">{display.title || 'NULL_TITLE'}</h3>
+                                    <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-300">{display.title || 'NULL_TITLE'}</h3>
                                     {display._lang && <span className="text-[12px] font-black text-purple-500 uppercase tracking-[0.8em] italic leading-none">{t('translation.viewIn')} {display._lang.toUpperCase()}_NODE</span>}
                                  </div>
                               </div>

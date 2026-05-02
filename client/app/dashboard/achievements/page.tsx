@@ -98,7 +98,7 @@ export default function AscensionLedgerPage() {
   }, [user, router, loadMilestoneData, loading])
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Trophy size={64} className="text-amber-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Cataloging Evolutionary Ascension...</span>
      </div>
@@ -136,7 +136,7 @@ export default function AscensionLedgerPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">LEVEL_{stats?.level}_ASYNC</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Ascension Ledger</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Ascension Ledger</h1>
                  <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Global catalog of neural progression and autonomous breakthroughs.</p>
               </div>
            </div>
@@ -170,7 +170,7 @@ export default function AscensionLedgerPage() {
               <div className="text-center lg:text-left space-y-8 max-w-2xl">
                  <div className="flex items-center gap-6 mb-2">
                    <Monitor size={32} className="text-indigo-400" />
-                   <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Neural Progression</h3>
+                   <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Neural Progression</h3>
                  </div>
                  <p className="text-[16px] text-slate-400 font-black uppercase italic tracking-[0.4em] leading-relaxed">
                     Real-time synchronization of autonomous output across all operational sectors. Manifesting high-fidelity evolution.
@@ -194,7 +194,7 @@ export default function AscensionLedgerPage() {
             <div className="space-y-12 relative z-10">
                <div className="flex items-center gap-8">
                   <History size={32} className="text-amber-500" />
-                  <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter">Recent Breakthroughs</h3>
+                  <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Recent Breakthroughs</h3>
                </div>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                   {stats.achievements.recent.slice(0, 3).map((a, i) => {
@@ -225,7 +225,7 @@ export default function AscensionLedgerPage() {
         <div className="space-y-12 relative z-10">
            <div className="flex items-center gap-8">
               <Boxes className="text-indigo-500" size={32} />
-              <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter">Node Ascension Matrix</h3>
+              <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Node Ascension Matrix</h3>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
               {allMilestones.map((m, idx) => {

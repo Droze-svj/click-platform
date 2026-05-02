@@ -73,7 +73,7 @@ export default function MonetizationOverlay({
             </div>
           </div>
           
-          <h4 className="text-lg font-black text-white leading-tight uppercase italic tracking-wider max-w-[200px]">
+          <h4 className="text-lg font-black text-[var(--text-main)] leading-tight uppercase italic tracking-wider max-w-[200px]">
             {text}
           </h4>
           

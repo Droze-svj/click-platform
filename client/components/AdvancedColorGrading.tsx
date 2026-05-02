@@ -232,7 +232,7 @@ export default function AdvancedColorGrading({
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <Palette className="w-5 h-5" />
               Advanced Color Grading
             </h3>
@@ -305,7 +305,7 @@ export default function AdvancedColorGrading({
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {/* Brightness & Contrast */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-white">Brightness & Contrast</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Brightness & Contrast</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Brightness: {settings.brightness}%
@@ -336,7 +336,7 @@ export default function AdvancedColorGrading({
 
             {/* Color */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-white">Color</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Color</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Saturation: {settings.saturation}%
@@ -367,7 +367,7 @@ export default function AdvancedColorGrading({
 
             {/* Temperature */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-white">White Balance</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">White Balance</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Temperature: {settings.temperature}K
@@ -402,7 +402,7 @@ export default function AdvancedColorGrading({
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {/* Tone */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-white">Tone</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Tone</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Highlights: {settings.highlights}
@@ -446,7 +446,7 @@ export default function AdvancedColorGrading({
 
             {/* Detail */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-white">Detail</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Detail</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Dehaze: {settings.dehaze}
@@ -477,7 +477,7 @@ export default function AdvancedColorGrading({
 
             {/* Exposure */}
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900 dark:text-white">Exposure</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">Exposure</h4>
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Exposure: {settings.exposure}
@@ -545,25 +545,25 @@ export default function AdvancedColorGrading({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-white font-medium mb-2">Waveform</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">Waveform</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-end justify-center">
                   <div className="text-gray-500 text-sm">Waveform Monitor</div>
                 </div>
               </div>
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-white font-medium mb-2">Vectorscope</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">Vectorscope</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-center justify-center">
                   <div className="text-gray-500 text-sm">Vectorscope</div>
                 </div>
               </div>
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-white font-medium mb-2">Histogram</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">Histogram</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-end justify-center">
                   <div className="text-gray-500 text-sm">RGB Histogram</div>
                 </div>
               </div>
               <div className="bg-gray-900 rounded-lg p-4">
-                <h4 className="text-white font-medium mb-2">RGB Parade</h4>
+                <h4 className="text-[var(--text-main)] font-medium mb-2">RGB Parade</h4>
                 <div className="h-32 bg-gray-800 rounded flex items-end justify-center">
                   <div className="text-gray-500 text-sm">RGB Parade</div>
                 </div>

@@ -409,7 +409,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
             <Cpu className="w-4 h-4 animate-pulse" />
             Resource Repository
           </div>
-          <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">AI<br />ASSETS</h2>
+          <h2 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">AI<br />ASSETS</h2>
         </div>
 
         <div className="flex items-center gap-4 p-2 bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-3xl">
@@ -530,7 +530,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">{previewAsset.title}</h2>
+                <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{previewAsset.title}</h2>
                 <button onClick={() => setPreviewAsset(null)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all" title="Close Preview"><X className="w-8 h-8" /></button>
               </div>
 

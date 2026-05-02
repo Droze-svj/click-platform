@@ -298,7 +298,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                 <div className="flex justify-between items-end">
                   <div className="space-y-2">
                     <span className="text-[11px] font-black uppercase tracking-[0.5em] text-slate-600 block italic">Neural Transformation Velocity</span>
-                    <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase">{status === 'completed' ? 'Synchronization Complete' : status === 'processing' ? 'Synthesis Active' : 'Idle State'}</h3>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{status === 'completed' ? 'Synchronization Complete' : status === 'processing' ? 'Synthesis Active' : 'Idle State'}</h3>
                   </div>
                   <div className={`text-6xl font-black italic tracking-tighter tabular-nums ${status === 'completed' ? 'text-emerald-400' : `text-${currentTheme.accent}`}`}>
                     {status === 'completed' ? '100' : status === 'processing' ? '65' : '0'}<span className="text-xl not-italic ml-2 opacity-40">%</span>
@@ -411,7 +411,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           <Clock className={`w-10 h-10 ${autoSchedule ? 'animate-pulse' : ''}`} />
                         </div>
                         <div className="flex-1 space-y-2">
-                          <h4 className="text-3xl font-black text-white italic uppercase leading-none">Neural Scheduling</h4>
+                          <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase leading-none">Neural Scheduling</h4>
                           <p className="text-sm text-slate-500 font-medium tracking-tight">Deploy predictive broadcast timing for peak engagement velocity.</p>
                         </div>
                         <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-700 ${autoSchedule ? 'bg-emerald-500' : 'bg-white/5'} flex items-center border border-white/5 shadow-inner`}>
@@ -430,7 +430,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                           <RefreshCw className={`w-10 h-10 ${enableRecycling ? 'animate-spin' : ''}`} />
                         </div>
                         <div className="flex-1 space-y-2">
-                          <h4 className="text-3xl font-black text-white italic uppercase leading-none">Evergreen Synthesis</h4>
+                          <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase leading-none">Evergreen Synthesis</h4>
                           <p className="text-sm text-slate-500 font-medium tracking-tight">Activate self-healing content recycling for infinite repository ROI.</p>
                         </div>
                         <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-700 ${enableRecycling ? `bg-${currentTheme.accent}` : 'bg-white/5'} flex items-center border border-white/5 shadow-inner`}>
@@ -480,7 +480,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                     </div>
 
                     <div className="space-y-6">
-                      <h3 className="text-7xl font-black text-white italic tracking-tighter uppercase leading-none">Synthesis Active</h3>
+                      <h3 className="text-7xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Synthesis Active</h3>
                       <div className="flex items-center justify-center gap-6">
                         <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] italic">Ecosystem Calibration in progress</span>
                         <div className="flex items-center gap-2">
@@ -535,7 +535,7 @@ export default function UnifiedContentPipeline({ contentId, contentType, onCompl
                         <CheckCircle2 className="w-16 h-16 text-white" />
                       </div>
                       <div className="space-y-6">
-                        <h3 className="text-8xl font-black text-white italic tracking-tighter leading-[0.8]">SYNCHRONIZATION<br />VERIFIED</h3>
+                        <h3 className="text-8xl font-black text-[var(--text-main)] italic tracking-tighter leading-[0.8]">SYNCHRONIZATION<br />VERIFIED</h3>
                         <p className="text-slate-500 text-2xl font-medium tracking-tight mt-8 uppercase italic">Ecosystem broadast nodes are <span className="text-white font-black">primed</span> for deployment.</p>
                       </div>
 

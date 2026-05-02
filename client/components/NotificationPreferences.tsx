@@ -135,7 +135,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
 
       <div className="space-y-6">
         <section>
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+          <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2 flex items-center gap-2">
             <Inbox className="w-4 h-4" />
             Channels
           </h4>
@@ -161,7 +161,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         </section>
 
         <section>
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+          <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2 flex items-center gap-2">
             <Filter className="w-4 h-4" />
             Priority
           </h4>
@@ -177,7 +177,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         </section>
 
         <section>
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2">Categories</h4>
+          <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2">Categories</h4>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Choose which types of updates you want.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {CATEGORY_KEYS.map(cat => (

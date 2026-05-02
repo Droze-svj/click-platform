@@ -9,7 +9,7 @@ import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 const ResonanceCommandMatrix = dynamic(
   () => import('../../../../components/EngagementCommandCenter'),
   { ssr: false, loading: () => (
-    <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-[var(--page-bg)] flex flex-col items-center justify-center">
        <Brain size={64} className="text-indigo-500 animate-pulse mb-8" />
        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Manifesting Resonance Interface...</span>
     </div>
@@ -21,7 +21,7 @@ export default function ResonanceCommandMatrixPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#020205] text-white overflow-hidden relative">
+      <div className="min-h-screen bg-[var(--page-bg)] text-white overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-transparent to-rose-900/10 opacity-30 pointer-events-none" />
         
         {/* Sticky Global Nav Overlay (Minimal) */}
@@ -35,7 +35,7 @@ export default function ResonanceCommandMatrixPage() {
                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
                     <Fingerprint size={20} className="text-indigo-400" />
                  </div>
-                 <h1 className="text-2xl font-black italic text-white uppercase tracking-tighter">Resonance_Matrix</h1>
+                 <h1 className="text-2xl font-black italic text-[var(--text-main)] uppercase tracking-tighter">Resonance_Matrix</h1>
               </div>
            </div>
            <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-2xl">

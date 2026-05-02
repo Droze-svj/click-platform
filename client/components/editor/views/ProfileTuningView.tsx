@@ -48,7 +48,7 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
             <Dna className="w-3.5 h-3.5" />
             Parameter DNA Refinement
           </div>
-          <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">
+          <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
             {profile.name}<br />
             <span className="text-indigo-400">Synthesis Optimization</span>
           </h2>

@@ -140,7 +140,7 @@ export default function OnboardingFlow() {
         {/* Header */}
         <div className="flex items-center justify-between p-8 md:p-10 border-b border-white/5">
           <div className="space-y-1">
-            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter">
+            <h2 className="text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tighter">
               {steps[currentStep].title}
             </h2>
             <p className="text-slate-400 text-sm font-medium">
@@ -230,7 +230,7 @@ function WelcomeStep() {
         </motion.div>
       </div>
       <div className="space-y-4">
-        <h3 className="text-4xl font-black text-white tracking-tighter">Click Genesis</h3>
+        <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">Click Genesis</h3>
         <p className="text-slate-400 text-lg font-medium max-w-md mx-auto leading-relaxed">
           The only platform that doesn&apos;t just write—it <span className="text-white">operates</span>. Let&apos;s sync your brand with our autonomous engine.
         </p>
@@ -312,7 +312,7 @@ function CompleteStep({ onComplete }: { onComplete: () => void }) {
         <div className="absolute inset-0 bg-indigo-600/30 blur-3xl -z-10" />
       </div>
       <div className="space-y-4">
-        <h3 className="text-4xl font-black text-white tracking-tighter">System Initialized</h3>
+        <h3 className="text-4xl font-black text-[var(--text-main)] tracking-tighter">System Initialized</h3>
         <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-sm mx-auto">
           Welcome to the new standard of <span className="text-white">Content Operations</span>. The ecosystem is live.
         </p>

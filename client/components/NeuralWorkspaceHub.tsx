@@ -136,7 +136,7 @@ export default function NeuralWorkspaceHub() {
           Sovereign Governance Node
         </div>
         <div className="flex flex-col xl:flex-row items-end justify-between gap-8">
-          <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-white uppercase leading-[0.8]">
+          <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-[var(--text-main)] uppercase leading-[0.8]">
             WORKSPACE<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">CONTROL</span>
           </h1>
@@ -199,7 +199,7 @@ export default function NeuralWorkspaceHub() {
                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">Core Cluster Hub</div>
                 </div>
                 <div className="space-y-6 relative z-10">
-                  <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Cluster Health</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">Cluster Health</h3>
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest leading-none">Sync Status</div>
@@ -236,7 +236,7 @@ export default function NeuralWorkspaceHub() {
                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic tracking-[0.2em]">Clearance Grid</div>
                 </div>
                 <div className="space-y-6 relative z-10">
-                  <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Node Permissions</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">Node Permissions</h3>
                   <div className="grid grid-cols-1 gap-3">
                     {(selectedWorkspace.userPermissions ? Object.entries(selectedWorkspace.userPermissions) : []).slice(0, 6).map(([key, value]: [string, any]) => (
                       <div key={key} className="flex items-center justify-between p-3 px-4 rounded-xl bg-white/[0.02] border border-white/[0.05] transition-all hover:bg-white/[0.05]">
@@ -267,7 +267,7 @@ export default function NeuralWorkspaceHub() {
                     <Activity className="w-5 h-5 text-indigo-400" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Sovereign Ledger</h3>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight uppercase">Sovereign Ledger</h3>
                     <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Autonomous Integrity Audit</p>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export default function NeuralWorkspaceHub() {
                           <Clock className="w-5 h-5" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-black text-white italic tracking-tight uppercase group-hover:text-indigo-400 transition-colors">{log.action}</h4>
+                          <h4 className="text-lg font-black text-[var(--text-main)] italic tracking-tight uppercase group-hover:text-indigo-400 transition-colors">{log.action}</h4>
                           <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest font-mono mt-1 block">{new Date(log.timestamp).toLocaleString()}</span>
                         </div>
                       </div>
@@ -315,7 +315,7 @@ export default function NeuralWorkspaceHub() {
                   <Workflow className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Automation Nodes</h3>
+                  <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Automation Nodes</h3>
                   <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Workflow Repositories</p>
                 </div>
               </div>
@@ -347,7 +347,7 @@ export default function NeuralWorkspaceHub() {
                     <Shield className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Governance Status</h3>
+                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Governance Status</h3>
                     <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Sovereign Compliance</p>
                   </div>
                 </div>
@@ -393,7 +393,7 @@ export default function NeuralWorkspaceHub() {
                     <BarChart3 className="w-5 h-5 text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white italic uppercase tracking-tight">SLA Telemetry</h3>
+                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">SLA Telemetry</h3>
                     <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Real-time Node Uptime</p>
                   </div>
                 </div>
@@ -451,7 +451,7 @@ export default function NeuralWorkspaceHub() {
             <Brain className="w-10 h-10 text-indigo-400" />
           </div>
           <div className="text-center md:text-left">
-            <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter">SWARM ADVISOR</h3>
+            <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">SWARM ADVISOR</h3>
             <p className="text-[11px] text-slate-500 uppercase tracking-[0.4em] font-black mt-1">
               {creatorProfile?.creatorGoal ? `Mission Strategy: ${creatorProfile.creatorGoal.replace('_', ' ')}` : 'AWAITING MISSION CALIBRATION'}
             </p>

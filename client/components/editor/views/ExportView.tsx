@@ -276,7 +276,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
           <Download className="w-12 h-12 text-white animate-bounce" />
         </motion.div>
 
-        <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none mb-4">
+        <h1 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-4">
           NEURAL MASTER
         </h1>
         <p className="text-slate-500 text-2xl font-medium tracking-tight italic mb-10">
@@ -729,7 +729,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 <FolderDown className="w-8 h-8 text-indigo-400" />
               </div>
               <div>
-                <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">NEURAL REPOSITORY</h3>
+                <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">NEURAL REPOSITORY</h3>
                 <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-3 block italic">Production Archives ({savedExports.length})</span>
               </div>
             </div>
@@ -748,7 +748,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-2 flex-1 min-w-0">
-                      <h4 className="text-xl font-black text-white italic tracking-tighter truncate leading-none uppercase">{s.title || 'Export_Sequence'}</h4>
+                      <h4 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter truncate leading-none uppercase">{s.title || 'Export_Sequence'}</h4>
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic group-hover:text-slate-400 transition-colors">{s.quality} Precision // {new Date(s.expiresAt).toLocaleDateString()}</p>
                     </div>
 
@@ -850,7 +850,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                    <Globe className="w-8 h-8 text-emerald-400 animate-pulse-slow" />
                 </div>
                 <div>
-                   <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">DISTRIBUTION Hub</h2>
+                   <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">DISTRIBUTION Hub</h2>
                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-3 block italic">Platform Penetration Matrix</span>
                 </div>
              </div>
@@ -949,7 +949,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 <div className="w-16 h-16 rounded-[1.5rem] bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
                   <ZapOff className="w-8 h-8 text-orange-400" />
                 </div>
-                <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">ZERO NODES CONNECTED</h4>
+                <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">ZERO NODES CONNECTED</h4>
                 <p className="text-slate-500 font-medium italic">Link your identity clusters in the <span className="text-white font-black underline decoration-white/20 underline-offset-4 cursor-pointer" onClick={() => setActiveCategory?.('accounts')}>Social Vault</span> to unlock the Distribution Matrix.</p>
               </div>
             )}

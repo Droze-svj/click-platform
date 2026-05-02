@@ -187,7 +187,7 @@ export default function HeuristicMatrixPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">NODE_DIAGNOSTIC_READY</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Heuristic Matrix</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Heuristic Matrix</h1>
                  <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Autonomous content DNA analysis and temporal resonance forecasting.</p>
               </div>
            </div>
@@ -241,7 +241,7 @@ export default function HeuristicMatrixPage() {
                 <Sparkles className="text-indigo-400 animate-pulse" size={24} />
                 <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">Automatic Engine Synthesis</span>
               </div>
-              <h2 className="text-6xl font-black italic text-white leading-[1.1] uppercase tracking-tighter max-w-3xl">
+              <h2 className="text-6xl font-black italic text-[var(--text-main)] leading-[1.1] uppercase tracking-tighter max-w-3xl">
                 &ldquo;{aiSummary.headline}&rdquo;
               </h2>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
@@ -399,7 +399,7 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none border-none"><Terminal size={300} /></div>
                   <div className="flex items-center gap-6 relative z-10">
                     <Brain className="text-indigo-400" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">Genetic Content DNA</h4>
+                    <h4 className="text-3xl font-black uppercase tracking-tighter text-[var(--text-main)] italic leading-none">Genetic Content DNA</h4>
                   </div>
                   <div className="space-y-10 relative z-10">
                     {CONTENT_DNA.map(({ trait, score }, i) => (
@@ -444,7 +444,7 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none"><Fingerprint size={300} /></div>
                   <div className="flex items-center gap-6 relative z-10">
                     <Flame className="text-rose-400 animate-pulse" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">Signal Pulse Auditor</h4>
+                    <h4 className="text-3xl font-black uppercase tracking-tighter text-[var(--text-main)] italic leading-none">Signal Pulse Auditor</h4>
                   </div>
                   <div className="space-y-6 relative z-10">
                     {[
@@ -481,7 +481,7 @@ export default function HeuristicMatrixPage() {
                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none"><Globe size={300} /></div>
                   <div className="flex items-center gap-6 relative z-10">
                     <Calendar className="text-emerald-400" size={32} />
-                    <h4 className="text-3xl font-black uppercase tracking-tighter text-white italic leading-none">Temporal Matrix Projections</h4>
+                    <h4 className="text-3xl font-black uppercase tracking-tighter text-[var(--text-main)] italic leading-none">Temporal Matrix Projections</h4>
                   </div>
                   <div className="space-y-6 relative z-10">
                     {FORECAST_SLOTS.map(slot => (
@@ -519,7 +519,7 @@ export default function HeuristicMatrixPage() {
                     <Target className="text-indigo-400" size={32} />
                     <span className="text-[14px] font-black uppercase tracking-[0.6em] text-indigo-400 italic">Node Spectrum Detail</span>
                   </div>
-                  <h4 className="text-4xl font-black text-white mb-12 leading-none uppercase italic tracking-tighter drop-shadow-2xl">{selectedVideo.title}</h4>
+                  <h4 className="text-4xl font-black text-[var(--text-main)] mb-12 leading-none uppercase italic tracking-tighter drop-shadow-2xl">{selectedVideo.title}</h4>
 
                   <div className="grid grid-cols-2 gap-8 mb-12">
                     {[

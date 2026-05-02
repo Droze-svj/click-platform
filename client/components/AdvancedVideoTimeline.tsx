@@ -246,7 +246,7 @@ export default function AdvancedVideoTimeline({
       {/* Timeline Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Advanced Timeline</h3>
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">Advanced Timeline</h3>
           <div className="flex items-center gap-2">
             <button onClick={handleZoomOut} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
               <ZoomOut className="w-4 h-4" />

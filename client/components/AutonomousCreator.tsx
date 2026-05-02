@@ -177,7 +177,7 @@ export default function AutonomousCreator() {
                   <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">CORE_SYNC_ACTIVE</span>
               </div>
             </div>
-            <h2 className="text-[clamp(2.5rem,8vw,5.5rem)] font-black text-white italic uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">One-Click Forge</h2>
+            <h2 className="text-[clamp(2.5rem,8vw,5.5rem)] font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">One-Click Forge</h2>
             <p className="text-slate-500 text-[11px] font-black uppercase tracking-[0.6em] italic leading-none opacity-60">Autonomous Creative Synthesis Hub (2026 Sovereign Edition)</p>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function AutonomousCreator() {
               <div className="flex items-center gap-6">
                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center"><Brain size={28} className="text-indigo-400" /></div>
                  <div>
-                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">Strategy Cluster</h3>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Strategy Cluster</h3>
                     <p className="text-[9px] font-black text-slate-800 uppercase tracking-widest italic mt-1 leading-none">ORACLE_VERIFIED_VECTORS</p>
                  </div>
               </div>
@@ -337,7 +337,7 @@ export default function AutonomousCreator() {
               <div className="flex items-center gap-6">
                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center"><Zap size={28} className="text-amber-400" /></div>
                  <div>
-                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">Style Pivots</h3>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Style Pivots</h3>
                     <p className="text-[9px] font-black text-slate-800 uppercase tracking-widest italic mt-1 leading-none">AESTHETIC_STEERING_NODES</p>
                  </div>
               </div>
@@ -448,7 +448,7 @@ export default function AutonomousCreator() {
                   <CheckCircle2 size={56} className="text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="text-5xl md:text-7xl font-black text-white italic uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">Pattern Synthesized</h3>
+                  <h3 className="text-5xl md:text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-[0.85] mb-4 drop-shadow-2xl">Pattern Synthesized</h3>
                   <div className="flex flex-wrap gap-4">
                      <div className="px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase italic tracking-widest leading-none">MANIFEST_STABLE</div>
                      <div className="px-6 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black text-slate-500 uppercase italic tracking-widest leading-none">VARIANT_{activeVariantIndex + 1}</div>

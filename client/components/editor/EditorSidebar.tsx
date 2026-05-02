@@ -243,7 +243,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             <div className="flex items-center gap-3">
               <Orbit className="w-5 h-5 text-indigo-500 animate-spin-slow" />
               <div>
-                <h2 className="text-[11px] font-black text-white italic tracking-tighter uppercase leading-none">NEURAL_CORE</h2>
+                <h2 className="text-[11px] font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">NEURAL_CORE</h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
                   <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest leading-none">LATTICE_SYNCED</span>

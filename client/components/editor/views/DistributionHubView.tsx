@@ -64,7 +64,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 <Globe className="w-3.5 h-3.5 animate-pulse" />
                 Global Uplink Active
             </div>
-            <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">
+            <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
                 DISTRIBUTION<br />HUB
             </h2>
         </div>
@@ -113,7 +113,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                             <Target className="w-6 h-6 text-emerald-400" />
                         </div>
                         <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Social Push Matrix</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Social Push Matrix</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Neural Metadata Injection</span>
                         </div>
                     </div>
@@ -209,7 +209,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                             <Calendar className="w-6 h-6 text-indigo-400" />
                         </div>
                         <div>
-                            <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Neural Matrix</h4>
+                            <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Neural Matrix</h4>
                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic">Chrono Management Cluster</span>
                         </div>
                     </div>
@@ -272,7 +272,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                     <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
                     <Share2 className="w-6 h-6 text-indigo-400" />
                     </div>
-                    <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">IDENTITY<br />CLUSTERS</h4>
+                    <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">IDENTITY<br />CLUSTERS</h4>
                 </div>
 
                 <div className="space-y-4">
@@ -304,7 +304,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                     <div className="p-4 rounded-[1.2rem] bg-emerald-500/10 border border-emerald-500/20">
                         <Zap className="w-6 h-6 text-emerald-400" />
                     </div>
-                    <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">LIVE<br />UPLINK</h4>
+                    <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">LIVE<br />UPLINK</h4>
                 </div>
 
                 <div className="space-y-6">

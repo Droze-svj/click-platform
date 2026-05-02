@@ -111,7 +111,7 @@ export default function ResonanceCommandMatrix() {
   useEffect(() => { fetchResonanceData() }, [fetchResonanceData])
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Brain size={64} className="text-indigo-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Decoding Resonance Matrix...</span>
      </div>
@@ -145,7 +145,7 @@ export default function ResonanceCommandMatrix() {
                        <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">ANOMALY_MONITOR_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Resonance Hub</h1>
+                 <h1 className="text-8xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Resonance Hub</h1>
                  <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Real-time engagement anomaly detection and heuristic advisor protocol.</p>
               </div>
            </div>
@@ -194,7 +194,7 @@ export default function ResonanceCommandMatrix() {
               <div className="space-y-12 relative z-10">
                  <div className="flex items-center gap-6">
                     <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-2xl animate-pulse"><Sparkles size={32} className="text-indigo-400" /></div>
-                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Heuristic Protocol</h3>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Heuristic Protocol</h3>
                  </div>
                  <div className="border-l-4 border-indigo-500/40 pl-10 space-y-6">
                     <p className="text-4xl font-black text-white leading-tight italic tracking-tighter max-w-2xl">
@@ -221,7 +221,7 @@ export default function ResonanceCommandMatrix() {
                   <div className="flex items-center justify-between">
                      <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-[2rem] bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-2xl"><Flame size={32} className="text-orange-400 animate-pulse" /></div>
-                        <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Kinetic Breach</h3>
+                        <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Kinetic Breach</h3>
                      </div>
                      <ArrowUpRight size={40} className="text-orange-400 opacity-20 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                   </div>
@@ -251,7 +251,7 @@ export default function ResonanceCommandMatrix() {
            <div className="flex items-center gap-8 mb-12 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><ActivitySquare size={40} className="text-indigo-400" /></div>
               <div>
-                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Node Integrity Ledger</h2>
+                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Node Integrity Ledger</h2>
                  <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">Diagnostic surveillance of high-cadence content nodes across the global substrate.</p>
               </div>
            </div>
@@ -311,7 +311,7 @@ export default function ResonanceCommandMatrix() {
                           {getAnomalyIcon(selectedPost.anomalyType)}
                        </div>
                        <div>
-                          <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">
+                          <h4 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">
                              {selectedPost.platform.toUpperCase()} Node Diagnostic
                           </h4>
                           <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.5em] italic">Heuristic Depth Scan active...</span>

@@ -68,7 +68,7 @@ export const SyndicateConsensusView: React.FC = () => {
                         <Users className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Syndicate Council</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Syndicate Council</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-violet-500/70">Multi-Agent Strategic Synthesis</span>
                     </div>
                 </div>

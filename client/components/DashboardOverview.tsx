@@ -94,7 +94,7 @@ export default function DashboardOverview() {
         <div className="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
           <ShieldCheck className="w-6 h-6" />
         </div>
-        <h3 className="text-xl font-bold text-white">Connection Interrupted</h3>
+        <h3 className="text-xl font-bold text-[var(--text-main)]">Connection Interrupted</h3>
         <p className="text-rose-200/60 text-sm max-w-sm mx-auto">{error}</p>
         <button onClick={loadDashboardData} className="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold text-sm">Retry Sync</button>
       </div>
@@ -124,7 +124,7 @@ export default function DashboardOverview() {
                   <Sparkles className="w-3 h-3" />
                   Elite Access Active
                 </div>
-                <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white">
+                <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-[var(--text-main)]">
                   Welcome back, <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">{overview.user.name.split(' ')[0]}</span>.
                 </h1>
                 <p className="text-slate-400 text-lg md:text-xl font-medium max-w-xl">
@@ -204,7 +204,7 @@ export default function DashboardOverview() {
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                   <Zap className="w-5 h-5 text-indigo-400" />
-                  <h2 className="text-2xl font-black text-white tracking-tight">Direct Operations</h2>
+                  <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Direct Operations</h2>
                 </div>
                 <button className="p-3 rounded-2xl bg-white/5 text-slate-500">
                   <MoreHorizontal className="w-5 h-5" />
@@ -217,7 +217,7 @@ export default function DashboardOverview() {
                     className="p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/30 transition-all text-left group"
                   >
                     <div className="text-4xl mb-6 group-hover:scale-110 transition-transform origin-left">{action.icon}</div>
-                    <h3 className="text-lg font-black text-white mb-2">{action.title}</h3>
+                    <h3 className="text-lg font-black text-[var(--text-main)] mb-2">{action.title}</h3>
                     <p className="text-sm text-slate-500 font-medium leading-relaxed">{action.description}</p>
                   </button>
                 ))}
@@ -233,7 +233,7 @@ export default function DashboardOverview() {
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-4">
                   <Activity className="w-5 h-5 text-emerald-400" />
-                  <h2 className="text-2xl font-black text-white tracking-tight">Intelligence Log</h2>
+                  <h2 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Intelligence Log</h2>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-3">
@@ -260,7 +260,7 @@ export default function DashboardOverview() {
                             <AlertCircle className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h4 className="font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">{notif.title}</h4>
+                        <h4 className="font-bold text-[var(--text-main)] mb-1 group-hover:text-indigo-400 transition-colors">{notif.title}</h4>
                         <p className="text-sm text-slate-500 font-medium">{notif.message}</p>
                       </div>
                     </div>

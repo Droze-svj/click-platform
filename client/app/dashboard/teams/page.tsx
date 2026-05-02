@@ -91,7 +91,7 @@ export default function SwarmCollectiveNodePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 bg-[#020205] min-h-screen gap-12 backdrop-blur-3xl">
+      <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-12 backdrop-blur-3xl">
         <div className="relative">
           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
           <Network size={80} className="text-indigo-500 animate-spin relative z-10" />
@@ -129,7 +129,7 @@ export default function SwarmCollectiveNodePage() {
               <Activity className="text-indigo-500 animate-pulse" size={14} />
               <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400 leading-none">Click · Teams</span>
             </div>
-            <h1 className="text-6xl font-black text-white tracking-tighter leading-none mb-3">Teams</h1>
+            <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-none mb-3">Teams</h1>
             <p className="text-slate-400 text-[14px] font-medium tracking-wide leading-relaxed">Collaborate with editors, reviewers, and contributors on shared content.</p>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function SwarmCollectiveNodePage() {
                <div className="w-12 h-12 rounded-[1.2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center">
                   <MessageSquare size={22} className="text-indigo-400" />
                </div>
-               <h3 className="text-3xl font-black text-white tracking-tighter leading-tight">Collaboration Hub</h3>
+               <h3 className="text-3xl font-black text-[var(--text-main)] tracking-tighter leading-tight">Collaboration Hub</h3>
             </div>
             <p className="text-[15px] text-slate-300 font-medium leading-relaxed mb-8 max-w-2xl">
               Each team gets <strong className="text-indigo-400">shared assets</strong>, <strong className="text-indigo-400">comment threads</strong>, and an <strong className="text-indigo-400">approval queue</strong>. Manage tasks, briefs, and reviews together.
@@ -170,7 +170,7 @@ export default function SwarmCollectiveNodePage() {
           <div className="w-24 h-24 rounded-[2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center mb-8 relative">
              <Network size={44} className="text-slate-500 group-hover/empty:text-indigo-400 transition-colors" />
           </div>
-          <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover/empty:text-indigo-400 transition-colors">No teams yet</h3>
+          <h3 className="text-3xl font-black text-[var(--text-main)] tracking-tight mb-4 group-hover/empty:text-indigo-400 transition-colors">No teams yet</h3>
           <p className="text-slate-400 text-[14px] font-medium max-w-md mb-8 leading-relaxed">
             Create your first team to invite collaborators, share assets, and run approval workflows.
           </p>
@@ -211,7 +211,7 @@ export default function SwarmCollectiveNodePage() {
           {filteredTeams.length === 0 ? (
             <div className={`${glassStyle} rounded-[2.5rem] p-12 flex flex-col items-center text-center gap-5 z-10 relative`}>
                <Target size={36} className="text-slate-500" />
-               <h3 className="text-2xl font-black text-white tracking-tight">No matches</h3>
+               <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">No matches</h3>
                <p className="text-[13px] font-medium text-slate-400">Adjust your search or clear it to see all teams.</p>
                <button type="button" onClick={() => setSearch('')} className="px-6 py-2.5 bg-white/5 border border-white/10 text-slate-300 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:text-white hover:border-indigo-500/50 transition-colors">
                   Clear search
@@ -244,7 +244,7 @@ export default function SwarmCollectiveNodePage() {
 
               <div className="flex-1 mb-8 relative z-10">
                 <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.3em] mb-2">Team #{String(idx + 1).padStart(2, '0')}</p>
-                <h3 className="text-3xl font-black text-white tracking-tight mb-4 group-hover:text-indigo-400 transition-colors leading-tight line-clamp-2">{team.name}</h3>
+                <h3 className="text-3xl font-black text-[var(--text-main)] tracking-tight mb-4 group-hover:text-indigo-400 transition-colors leading-tight line-clamp-2">{team.name}</h3>
                 {team.description && (
                   <div className="p-4 bg-black/40 rounded-[1.2rem] border border-white/5 shadow-inner mb-4">
                     <p className="text-[13px] text-slate-300 font-medium leading-relaxed line-clamp-3">
@@ -314,7 +314,7 @@ export default function SwarmCollectiveNodePage() {
       {/* Modal: Nexus Initialization */}
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-[#020205]/95 backdrop-blur-3xl" onClick={() => setShowCreateModal(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-[var(--page-bg)]/95 backdrop-blur-3xl" onClick={() => setShowCreateModal(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 50 }}
               className={`${glassStyle} rounded-[7rem] p-12 max-w-4xl w-full border-white/20 relative overflow-hidden shadow-[0_100px_300px_rgba(0,0,0,1)]`}
               onClick={(e) => e.stopPropagation()}
@@ -326,7 +326,7 @@ export default function SwarmCollectiveNodePage() {
                   <UserPlus size={26} className="text-indigo-400" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-black text-white tracking-tighter leading-tight">Create a new team</h2>
+                  <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tighter leading-tight">Create a new team</h2>
                   <p className="text-slate-400 text-[12px] font-medium mt-1 leading-none">Invite members after creating.</p>
                 </div>
               </div>

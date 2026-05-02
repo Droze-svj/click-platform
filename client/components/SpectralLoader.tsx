@@ -14,7 +14,7 @@ export default function SpectralLoader({
   subMessage = "HEURISTIC_SYNC_IN_PROGRESS" 
 }: SpectralLoaderProps) {
   return (
-    <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--page-bg)] flex flex-col items-center justify-center relative overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-rose-500/5 opacity-50" />
       

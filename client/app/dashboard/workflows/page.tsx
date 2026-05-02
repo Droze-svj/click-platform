@@ -177,7 +177,7 @@ export default function OperationalSequenceHubPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen gap-12 backdrop-blur-3xl">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen gap-12 backdrop-blur-3xl">
         <div className="relative">
            <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
            <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
@@ -221,7 +221,7 @@ export default function OperationalSequenceHubPage() {
                        <span className="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase italic leading-none">SEQUENCE_READY</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-4">Workflows</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">Workflows</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Chain ingest → edit → schedule → analyze into one automation. Click runs the steps; you review the output.</p>
               </div>
            </div>
@@ -241,7 +241,7 @@ export default function OperationalSequenceHubPage() {
            {suggestions.length > 0 && (
              <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className={`${glassStyle} rounded-[6rem] p-20 shadow-[0_100px_300px_rgba(0,0,0,0.6)] relative overflow-hidden z-20 group`}>
                 <div className="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none group-hover:rotate-180 transition-transform duration-[4s]"><Sparkles size={600} className="text-indigo-400" /></div>
-                <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter flex items-center gap-8 mb-16">
+                <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter flex items-center gap-8 mb-16">
                    <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center animate-pulse shadow-3xl"><Cpu size={40} className="text-indigo-400" /></div>
                    Autonomous Sequence Induction
                 </h2>
@@ -249,7 +249,7 @@ export default function OperationalSequenceHubPage() {
                    {suggestions.map((s, i) => (
                       <div key={i} className="p-12 rounded-[4.5rem] bg-white/[0.02] border-2 border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.05] transition-all duration-300 group/card shadow-2xl relative overflow-hidden">
                          <div className="absolute top-0 right-0 p-10 opacity-[0.02] group-hover/card:opacity-[0.12] transition-opacity duration-300"><Radio size={180} /></div>
-                         <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-6 group-hover/card:text-indigo-400 transition-colors duration-300">{s.title}</h3>
+                         <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6 group-hover/card:text-indigo-400 transition-colors duration-300">{s.title}</h3>
                          <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest leading-tight mb-12 italic opacity-60 group-hover/card:opacity-100 transition-opacity duration-300">{s.description}</p>
                          {s.workflowId && (
                            <button 
@@ -280,7 +280,7 @@ export default function OperationalSequenceHubPage() {
                 <div className="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.15] transition-opacity duration-300 pointer-events-none group-hover:rotate-180"><Layout size={320} className="text-white" /></div>
                 <div className="flex justify-between items-start mb-12 relative z-10">
                    <div className="space-y-4">
-                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300">{w.name}</h3>
+                      <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300">{w.name}</h3>
                       <p className="text-[13px] font-black text-slate-500 uppercase tracking-[0.4em] font-mono leading-none italic opacity-60 group-hover:opacity-100 transition-opacity duration-300">{w.description || "NULL_DESCRIPTOR"}</p>
                    </div>
                    {w.isTemplate && <span className="px-6 py-2 rounded-2xl bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/20 text-[10px] font-black uppercase tracking-widest italic shadow-3xl">TEMPLATE</span>}
@@ -356,7 +356,7 @@ export default function OperationalSequenceHubPage() {
                       <div className="flex items-center gap-12">
                         <div className="w-24 h-24 rounded-[3rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl animate-pulse"><Layers size={48} className="text-indigo-400" /></div>
                         <div>
-                          <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">{editingWorkflow ? 'Configure Sequence' : 'Initialize Sequence'}</h2>
+                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">{editingWorkflow ? 'Configure Sequence' : 'Initialize Sequence'}</h2>
                           <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.6em] italic leading-none">LOGIC_SEQUENCE_SYNTHESIS</p>
                         </div>
                       </div>

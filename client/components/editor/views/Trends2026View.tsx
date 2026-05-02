@@ -168,7 +168,7 @@ export default function Trends2026View({
               <span className="w-1 h-1 rounded-full bg-fuchsia-500/60" />
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Creative AI Tools</span>
             </div>
-            <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Manual editor — 2026 toolkit</h2>
+            <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-tight">Manual editor — 2026 toolkit</h2>
             <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">Trend-tuned hooks, beat-matched cuts, B-roll suggestions, viral overlays. Apply selectively.</p>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function Trends2026View({
             <Sparkles className="w-4 h-4 text-amber-400" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">AI Hook Detector</h3>
+            <h3 className="text-base font-bold text-[var(--text-main)]">AI Hook Detector</h3>
             <p className="text-[11px] text-slate-400 leading-relaxed">Top 3 candidates ranked by retention signal. Click to lock as opener.</p>
           </div>
         </div>
@@ -304,7 +304,7 @@ export default function Trends2026View({
               <Music className="w-4 h-4 text-cyan-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Beat-Matched Cuts</h3>
+              <h3 className="text-base font-bold text-[var(--text-main)]">Beat-Matched Cuts</h3>
               <p className="text-[11px] text-slate-400">Sync transitions to audio downbeats</p>
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function Trends2026View({
               <Activity className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Engagement Predictor</h3>
+              <h3 className="text-base font-bold text-[var(--text-main)]">Engagement Predictor</h3>
               <p className="text-[11px] text-slate-400">Estimated retention + completion before publish</p>
             </div>
           </div>
@@ -367,7 +367,7 @@ export default function Trends2026View({
             <Layers className="w-4 h-4 text-violet-400" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">B-roll Auto-Insert</h3>
+            <h3 className="text-base font-bold text-[var(--text-main)]">B-roll Auto-Insert</h3>
             <p className="text-[11px] text-slate-400">Contextual stock footage matched to transcript segments</p>
           </div>
         </div>
@@ -399,7 +399,7 @@ export default function Trends2026View({
             <Wand2 className="w-4 h-4 text-rose-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-bold text-white">Pattern-Interrupt FX</h3>
+            <h3 className="text-base font-bold text-[var(--text-main)]">Pattern-Interrupt FX</h3>
             <p className="text-[11px] text-slate-400">{appliedOverlays.size} of {OVERLAY_LIBRARY.length} active</p>
           </div>
         </div>
@@ -431,7 +431,7 @@ export default function Trends2026View({
             <Volume2 className="w-4 h-4 text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">Trending Sound Match</h3>
+            <h3 className="text-base font-bold text-[var(--text-main)]">Trending Sound Match</h3>
             <p className="text-[11px] text-slate-400">Current week&apos;s viral audio · per platform</p>
           </div>
         </div>
@@ -472,7 +472,7 @@ export default function Trends2026View({
             <Mic className="w-4 h-4 text-indigo-400" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">Voice Clone Narration <Lock className="w-3 h-3 text-amber-400" /></h3>
+            <h3 className="text-base font-bold text-[var(--text-main)] flex items-center gap-2">Voice Clone Narration <Lock className="w-3 h-3 text-amber-400" /></h3>
             <p className="text-[11px] text-slate-400">Fill voiceover gaps with your own cloned voice · Pro tier</p>
           </div>
         </div>

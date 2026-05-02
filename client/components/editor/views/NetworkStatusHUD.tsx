@@ -91,7 +91,7 @@ export const NetworkStatusHUD: React.FC = () => {
                         <Globe className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Network Health HUD</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Network Health HUD</h4>
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Omnipresence Bridge Verification</span>
                     </div>
                 </div>

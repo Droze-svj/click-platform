@@ -72,7 +72,7 @@ export default function KeyboardShortcutsHelper() {
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <Keyboard size={24} className="text-purple-600" />
-            <h2 id="shortcuts-title" className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 id="shortcuts-title" className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">
               Keyboard Shortcuts
             </h2>
           </div>

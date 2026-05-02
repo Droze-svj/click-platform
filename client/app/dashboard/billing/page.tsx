@@ -120,7 +120,7 @@ export default function BillingPage() {
   ]
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-[#020205] min-h-screen gap-10 backdrop-blur-3xl">
+    <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-10 backdrop-blur-3xl">
       <div className="relative">
         <div className="absolute inset-0 bg-amber-500 blur-3xl opacity-20 animate-pulse" />
         <Gem size={80} className="text-amber-500 animate-spin relative z-10" />
@@ -131,7 +131,7 @@ export default function BillingPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-[#020205]">
+      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-[var(--page-bg)]">
         <ToastContainer />
 
         {/* Header */}
@@ -148,7 +148,7 @@ export default function BillingPage() {
                 <Activity size={14} className="text-amber-400 animate-pulse" />
                 <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-400 italic leading-none">Sovereign Ledger</span>
               </div>
-              <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
+              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function BillingPage() {
               <TrendingUp size={26} className="text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
+              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">CURRENT_BILLING_CYCLE</p>
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function BillingPage() {
               <Crown size={26} className="text-amber-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Tier Selector</h2>
+              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Tier Selector</h2>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">UPGRADE · DOWNGRADE · COMMIT</p>
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function BillingPage() {
                       <PlanIcon size={26} className="text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">{plan.name}</h3>
+                      <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{plan.name}</h3>
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic mt-2 leading-none">{plan.tagline}</p>
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function BillingPage() {
               <Receipt size={26} className="text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Ledger History</h2>
+              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Ledger History</h2>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{history.length} INVOICES_LOGGED</p>
             </div>
           </div>

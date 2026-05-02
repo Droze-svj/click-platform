@@ -93,7 +93,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
             <BarChart3 className="w-4 h-4 animate-pulse" />
             Chrono Management
           </div>
-          <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
+          <h1 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
             NEURAL<br />MATRIX
           </h1>
           <p className="text-slate-500 text-xl font-medium tracking-tight italic">
@@ -193,7 +193,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-3">
                             <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                            <h4 className="text-xs font-black uppercase text-white tracking-widest italic">{post.title}</h4>
+                            <h4 className="text-xs font-black uppercase text-[var(--text-main)] tracking-widest italic">{post.title}</h4>
                           </div>
                           <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-slate-500">
                             <span className="flex items-center gap-1"><Globe className="w-3 h-3 text-emerald-500" /> {post.platform}</span>
@@ -252,7 +252,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
               <div className="p-4 rounded-[1.2rem] bg-indigo-500/10 border border-indigo-500/20">
                 <MessageSquare className="w-6 h-6 text-indigo-400" />
               </div>
-              <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">STRATEGY<br />FORECAST</h4>
+              <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">STRATEGY<br />FORECAST</h4>
             </div>
             <p className="text-lg text-slate-400 font-medium leading-relaxed italic pr-10">
               Engagement telemetry suggests optimal window: <span className="text-white font-black italic underline decoration-indigo-500/30">18:00 — 20:00</span> for synchronized TikTok nodes.
@@ -284,7 +284,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                     <Target className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
-                   <h2 className="text-3xl font-black text-white italic tracking-tighter leading-none uppercase">Social Push Matrix</h2>
+                   <h2 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Social Push Matrix</h2>
                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic">Neural Metadata Injection</span>
                 </div>
             </div>
@@ -359,7 +359,7 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
               <div className="p-4 rounded-[1.2rem] bg-orange-500/10 border border-orange-500/20">
                 <Activity className="w-6 h-6 text-orange-400" />
               </div>
-              <h4 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">TACTICAL<br />PIPELINE</h4>
+              <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">TACTICAL<br />PIPELINE</h4>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,115,22,1)]" />

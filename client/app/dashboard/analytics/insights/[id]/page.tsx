@@ -61,9 +61,9 @@ export default function StrategicSynthesisHub() {
   if (loading) return <SpectralLoader message="Synthesizing Strategic Blueprint..." subMessage="NEURAL_CORRELATION_IN_PROGRESS" />
 
   if (error) return (
-    <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center p-12 text-center">
+    <div className="min-h-screen bg-[var(--page-bg)] flex flex-col items-center justify-center p-12 text-center">
       <AlertCircle size={80} className="text-rose-500 mb-8 animate-pulse" />
-      <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-6">Link Error</h1>
+      <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">Link Error</h1>
       <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] mb-12">{error}</p>
       <button onClick={() => router.back()} className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all hover:bg-rose-500 hover:text-white">
         Return to Matrix
@@ -73,7 +73,7 @@ export default function StrategicSynthesisHub() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[#020205]">
+      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[var(--page-bg)]">
         <ToastContainer />
         
         {/* Spectral Background Layers */}
@@ -105,7 +105,7 @@ export default function StrategicSynthesisHub() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{matrix?.headline || 'MANIFESTING'}</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
                  <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-scan complete. Heuristic optimization manifest generated.</p>
               </div>
            </div>

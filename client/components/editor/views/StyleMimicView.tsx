@@ -83,7 +83,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Fingerprint className="w-5 h-5 text-indigo-400" />
-          <h2 className="text-lg font-black tracking-tight text-white italic uppercase">The Mimic // Style Mirror</h2>
+          <h2 className="text-lg font-black tracking-tight text-[var(--text-main)] italic uppercase">The Mimic // Style Mirror</h2>
         </div>
         <button
           onClick={onBack}
@@ -163,7 +163,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
               </svg>
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] animate-pulse">Analyzing Visual DNA</h3>
+              <h3 className="text-xs font-black text-[var(--text-main)] uppercase tracking-[0.2em] animate-pulse">Analyzing Visual DNA</h3>
               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic h-4">
                 {progress < 20 && "Processing Frame Buffer..."}
                 {progress >= 20 && progress < 40 && "Identifying Cut Points..."}
@@ -186,7 +186,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
               <div className="flex items-center gap-4">
                 <CheckCircle2 className="w-8 h-8 text-indigo-400" />
                 <div>
-                  <h3 className="text-sm font-black text-white italic">{extractedProfile.name}</h3>
+                  <h3 className="text-sm font-black text-[var(--text-main)] italic">{extractedProfile.name}</h3>
                   <p className="text-[10px] font-bold text-indigo-300/60 uppercase tracking-widest">Visual DNA Extracted Successfully</p>
                 </div>
               </div>

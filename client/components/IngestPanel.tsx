@@ -345,7 +345,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
               <Upload size={22} className="text-fuchsia-300" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white">{tr('ingest.dropTitle', 'Drop a video here')}</h3>
+              <h3 className="text-lg font-black text-[var(--text-main)]">{tr('ingest.dropTitle', 'Drop a video here')}</h3>
               <p className="text-[11px] text-slate-400 mt-1">{tr('ingest.dropHint', 'Or pick a file from your computer. MP4, MOV, WebM up to 500MB.')}</p>
             </div>
             <input

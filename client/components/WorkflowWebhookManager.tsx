@@ -131,7 +131,7 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Webhook className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
             Webhooks
           </h3>
         </div>

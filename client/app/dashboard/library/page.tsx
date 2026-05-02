@@ -166,7 +166,7 @@ export default function AxiomRepositoryPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Database size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
         <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Scanning Axiom Index...</span>
      </div>
@@ -202,7 +202,7 @@ export default function AxiomRepositoryPage() {
                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">REPOSITORY_SYNC_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Library</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Library</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Every clip, B-roll asset, font, and template Click has saved for you. Search, filter, drag any item straight into the editor.</p>
               </div>
            </div>
@@ -317,7 +317,7 @@ export default function AxiomRepositoryPage() {
                          <Boxes size={48} className="text-indigo-400 relative z-10 group-hover/box:scale-125 transition-transform duration-300" />
                       </div>
                       <div>
-                        <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Axiom Node Buffer</h2>
+                        <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Axiom Node Buffer</h2>
                         <p className="text-slate-400 text-[16px] font-black uppercase tracking-[0.6em] italic leading-none">({content.length}_NODES_STABILIZED_IN_CURRENT_LATTICE)</p>
                       </div>
                    </div>
@@ -344,7 +344,7 @@ export default function AxiomRepositoryPage() {
                         <div className="p-4">
                           <header className="flex justify-between items-start mb-12 relative z-10">
                              <div className="flex-1 min-w-0 pr-8">
-                                <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter truncate group-hover:text-indigo-400 transition-all duration-300 mb-6 leading-none drop-shadow-2xl">{item.title || 'NULL_PAYLOAD'}</h3>
+                                <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter truncate group-hover:text-indigo-400 transition-all duration-300 mb-6 leading-none drop-shadow-2xl">{item.title || 'NULL_PAYLOAD'}</h3>
                                 <div className="flex items-center gap-4">
                                   <Cpu size={18} className="text-indigo-400/40" />
                                   <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none">{item.type.toUpperCase()}_LOGIC_CORE</span>
@@ -396,7 +396,7 @@ export default function AxiomRepositoryPage() {
                         <Target size={120} className="text-white opacity-40" />
                      </div>
                      <div className="space-y-10 max-w-4xl">
-                        <h3 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Horizon Quiescent</h3>
+                        <h3 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Horizon Quiescent</h3>
                         <p className="text-2xl font-black text-slate-400 uppercase tracking-[0.8em] italic leading-relaxed">No Payload Matrix detected in current sector.<br/>Initialize an archival capsule to establish permanent storage.</p>
                      </div>
                   </div>
@@ -469,7 +469,7 @@ export default function AxiomRepositoryPage() {
                    <div className="flex items-center gap-16 mb-32 relative z-10 border-b border-white/5 pb-20">
                       <div className="w-32 h-32 rounded-[5rem] bg-indigo-500/10 border-2 border-indigo-500/30 flex items-center justify-center shadow-[0_0_100px_rgba(99,102,241,0.5)]"><Plus size={64} className="text-indigo-400 animate-pulse" /></div>
                       <div>
-                         <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-6">Initialize Capsule</h2>
+                         <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-6">Initialize Capsule</h2>
                          <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none">Establishing isolated archival sector v12.8.4_PRIME</p>
                       </div>
                    </div>
@@ -498,7 +498,7 @@ export default function AxiomRepositoryPage() {
                   <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
                      <div className="flex items-center gap-12 mb-20 border-b border-white/5 pb-16">
                         <Tag size={64} className="text-indigo-400" />
-                        <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">Metadata Array Injection</h2>
+                        <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Metadata Array Injection</h2>
                      </div>
                      <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="ENTER_METADATA_SEQUENCE..."
                        className="w-full bg-black/80 border-4 border-white/5 rounded-[6rem] px-24 py-20 text-6xl font-black text-white uppercase tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all italic shadow-inner mb-32 text-center placeholder:text-slate-600 font-mono" 
@@ -518,14 +518,14 @@ export default function AxiomRepositoryPage() {
                   <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
                      <div className="flex items-center gap-12 mb-20 border-b border-white/5 pb-16">
                         <Network size={64} className="text-indigo-400" />
-                        <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">Lattice Re-Indexing</h2>
+                        <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Lattice Re-Indexing</h2>
                      </div>
                      <div className="relative mb-32">
                         <select value={moveFolderId} onChange={(e) => setMoveFolderId(e.target.value)}
                            className="w-full bg-black/80 border-4 border-white/5 rounded-[6rem] px-24 py-20 text-5xl font-black text-white uppercase tracking-tighter focus:outline-none appearance-none cursor-pointer italic shadow-inner text-center hover:border-indigo-500/50 transition-all font-mono"
                         >
                            <option value="none">NULL_SECTOR_PRIME</option>
-                           {folders.map((f) => <option key={f._id} value={f._id} className="bg-[#020205]">{f.name.toUpperCase()}</option>)}
+                           {folders.map((f) => <option key={f._id} value={f._id} className="bg-[var(--page-bg)]">{f.name.toUpperCase()}</option>)}
                         </select>
                         <ChevronRight size={64} className="absolute right-20 top-1/2 -translate-y-1/2 text-white rotate-90 pointer-events-none opacity-20" />
                      </div>
@@ -544,14 +544,14 @@ export default function AxiomRepositoryPage() {
                   <div className={`${glassStyle} rounded-[10rem] p-32 max-w-5xl w-full border-white/30 relative overflow-hidden shadow-2xl`} onClick={e => e.stopPropagation()}>
                      <div className="flex items-center gap-12 mb-20 border-b border-white/5 pb-16">
                         <Download size={64} className="text-indigo-400" />
-                        <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none">Logic Extraction Matrix</h2>
+                        <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Logic Extraction Matrix</h2>
                      </div>
                      <div className="relative mb-32">
                         <select value={exportFormat} onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv')}
                            className="w-full bg-black/80 border-4 border-white/5 rounded-[6rem] px-24 py-20 text-5xl font-black text-white uppercase tracking-tighter focus:outline-none appearance-none cursor-pointer italic shadow-inner text-center hover:border-indigo-500/50 transition-all font-mono"
                         >
-                           <option value="json" className="bg-[#020205]">ENCRYPTED_JSON_PAYLOAD</option>
-                           <option value="csv" className="bg-[#020205]">RAW_CSV_LATTICE</option>
+                           <option value="json" className="bg-[var(--page-bg)]">ENCRYPTED_JSON_PAYLOAD</option>
+                           <option value="csv" className="bg-[var(--page-bg)]">RAW_CSV_LATTICE</option>
                         </select>
                         <ChevronRight size={64} className="absolute right-20 top-1/2 -translate-y-1/2 text-white rotate-90 pointer-events-none opacity-20" />
                      </div>

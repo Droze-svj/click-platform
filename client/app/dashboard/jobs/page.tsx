@@ -100,7 +100,7 @@ export default function BackgroundFluxTerminalPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Activity size={80} className="text-blue-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(59,130,246,0.5)]" />
         <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Calibrating Flux Receivers...</span>
      </div>
@@ -136,7 +136,7 @@ export default function BackgroundFluxTerminalPage() {
                        <span className="text-[10px] font-black text-blue-400 tracking-widest uppercase italic leading-none">ASYNC_THROTTLE_BYPASS_ACTIVE</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Jobs</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Jobs</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Background tasks Click is running for you — exports, transcriptions, batch posts. Watch progress, retry failed ones, cancel anything stuck.</p>
               </div>
            </div>
@@ -285,7 +285,7 @@ function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: str
        <div className="absolute -left-[6px] top-0 bottom-0 w-[6px] bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)] group-hover:h-full transition-all" />
        <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center shadow-[0_40px_100px_rgba(0,0,0,0.6)] group-hover:rotate-12 transition-transform duration-700">{icon}</div>
        <div>
-          <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{title}</h2>
+          <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{title}</h2>
           <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none">{subtitle}</p>
        </div>
     </div>
@@ -317,7 +317,7 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
                 <span className={`px-8 py-3 rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] italic border-2 relative z-10 ${getStatusStyle(job.state)}`}>{job.state.replace('_', ' ').toUpperCase()}</span>
              </div>
              <div className="space-y-2">
-                <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter group-hover:text-blue-400 transition-colors duration-300 drop-shadow-2xl">{job.name}</h3>
+                <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter group-hover:text-blue-400 transition-colors duration-300 drop-shadow-2xl">{job.name}</h3>
                 <div className="flex items-center gap-4 text-slate-500">
                    <Binary size={14} className="opacity-40" />
                    <span className="text-[10px] font-black uppercase tracking-widest italic font-mono">CYCLE::HID::{job.id.substring(0, 12).toUpperCase()}</span>

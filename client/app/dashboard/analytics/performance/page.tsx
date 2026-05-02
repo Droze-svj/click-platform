@@ -86,7 +86,7 @@ export default function FluxForecastingMatrixPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[#020205]">
+      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[var(--page-bg)]">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Activity size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -114,7 +114,7 @@ export default function FluxForecastingMatrixPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
                  <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Tracking engagement kinetic and resonance growth across temporal segments.</p>
               </div>
            </div>
@@ -177,7 +177,7 @@ export default function FluxForecastingMatrixPage() {
            <div className="flex items-center gap-8 mb-20 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
               <div>
-                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
+                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
                  <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
               </div>
            </div>
@@ -220,7 +220,7 @@ export default function FluxForecastingMatrixPage() {
               ) : (
                 <div className="py-48 flex flex-col items-center justify-center text-center space-y-8 opacity-10">
                    <Target size={120} className="text-white animate-pulse" />
-                   <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">NULL_FLUX_SIGNATURE</h3>
+                   <h3 className="text-4xl font-black text-[var(--text-main)] uppercase italic tracking-tighter">NULL_FLUX_SIGNATURE</h3>
                    <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic">No resonance data manifested in this temporal segment.</p>
                 </div>
               )}
@@ -232,7 +232,7 @@ export default function FluxForecastingMatrixPage() {
            <div className="px-20 py-12 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
               <div className="flex items-center gap-6">
                  <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><Monitor size={20} className="text-emerald-400" /></div>
-                 <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
+                 <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
               </div>
               <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
                  LITERAL_SIGNAL_LOGS_V9

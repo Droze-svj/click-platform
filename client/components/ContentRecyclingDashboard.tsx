@@ -140,7 +140,7 @@ export default function EntropyReversalNode() {
 
   if (loading) {
     return (
-      <div className="py-32 flex flex-col items-center justify-center gap-10 bg-[#020205] rounded-[5rem] border-2 border-white/5 shadow-2xl backdrop-blur-3xl">
+      <div className="py-32 flex flex-col items-center justify-center gap-10 bg-[var(--page-bg)] rounded-[5rem] border-2 border-white/5 shadow-2xl backdrop-blur-3xl">
         <RefreshCw size={64} className="text-indigo-500 animate-spin" />
         <div className="space-y-4 text-center">
            <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Entropy Reversal Matrix...</p>
@@ -168,7 +168,7 @@ export default function EntropyReversalNode() {
                   <Fingerprint className="text-indigo-400 animate-pulse" size={16} />
                   <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic leading-none">Entropy Reversal Protocol v9.4.2</span>
                 </div>
-                <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Reversal Matrix</h2>
+                <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Reversal Matrix</h2>
                 <p className="text-slate-800 text-[13px] uppercase font-black tracking-[0.6em] mt-6 italic leading-none">Autonomous cascading flux for eternal sovereign content trajectories.</p>
              </div>
           </div>
@@ -199,7 +199,7 @@ export default function EntropyReversalNode() {
             <div className="flex items-center justify-between mb-12 border-b-2 border-white/5 pb-8">
                <div className="flex items-center gap-6">
                   <div className="w-12 h-12 bg-amber-500/10 border-2 border-amber-500/20 rounded-2xl flex items-center justify-center shadow-3xl"><Zap size={24} className="text-amber-400 animate-pulse" /></div>
-                  <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">High-Resonance Particles Detected</h3>
+                  <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">High-Resonance Particles Detected</h3>
                </div>
                <span className="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">SECTOR_SCAN_COMPLETE</span>
             </div>
@@ -226,7 +226,7 @@ export default function EntropyReversalNode() {
                         )}
                       </div>
                       
-                      <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-6 group-hover:text-indigo-400 transition-colors duration-700 leading-tight line-clamp-2">{item.title}</h3>
+                      <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6 group-hover:text-indigo-400 transition-colors duration-700 leading-tight line-clamp-2">{item.title}</h3>
                       
                       <div className="grid grid-cols-2 gap-8 mb-10">
                          <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-indigo-500/20 transition-all">
@@ -289,7 +289,7 @@ export default function EntropyReversalNode() {
                            {plan.repostSchedule.isActive ? 'CASCADING' : 'DORMANT'}
                         </div>
                       </div>
-                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-12 truncate leading-none group-hover:text-indigo-400 transition-colors duration-700">{plan.originalContentId?.title || 'SPECTRAL NODE UNNAMED'}</h3>
+                      <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-12 truncate leading-none group-hover:text-indigo-400 transition-colors duration-700">{plan.originalContentId?.title || 'SPECTRAL NODE UNNAMED'}</h3>
                       
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                         <div className="space-y-4">
@@ -361,7 +361,7 @@ export default function EntropyReversalNode() {
                 {stats.topPerformers && stats.topPerformers.length > 0 && (
                   <div className={`${glassStyle} rounded-[5rem] p-16 relative overflow-hidden`}>
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.03] to-transparent pointer-events-none" />
-                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-12 flex items-center gap-6">
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-12 flex items-center gap-6">
                        <Target size={32} className="text-indigo-400 animate-pulse" /> High-Intensity Reposts
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -393,7 +393,7 @@ export default function EntropyReversalNode() {
             <div className="mt-20">
                <div className="flex items-center gap-6 mb-12 border-l-8 border-indigo-500 pl-8">
                   <Activity size={32} className="text-indigo-400 animate-pulse" />
-                  <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Deep Spectral Analytics</h3>
+                  <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Deep Spectral Analytics</h3>
                </div>
                <div className={`${glassStyle} rounded-[5rem] overflow-hidden`}>
                  <AdvancedRecyclingAnalytics period={30} />
@@ -414,7 +414,7 @@ export default function EntropyReversalNode() {
               <div className="flex justify-between items-center mb-16 px-4">
                 <div className="flex items-center gap-6">
                    <div className="w-16 h-16 bg-indigo-500/10 border-2 border-indigo-500/30 rounded-[2rem] flex items-center justify-center rotate-12"><RefreshCw size={32} className="text-indigo-400" /></div>
-                   <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none">Reversal Calibrations</h3>
+                   <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Reversal Calibrations</h3>
                 </div>
                 <button 
                   onClick={() => setSelectedContent(null)} 

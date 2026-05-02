@@ -18,7 +18,7 @@ export default function ContentRemixPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#020205] selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[var(--page-bg)] selection:bg-indigo-500/30">
       <div className="max-w-[1600px] mx-auto px-10 pt-12 pb-32">
         <SectionHeader
           tone="publish"

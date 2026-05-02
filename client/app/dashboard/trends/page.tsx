@@ -112,7 +112,7 @@ export default function TrendsPage() {
                 <Activity size={14} className="text-rose-400 animate-pulse" />
                 <span className="text-[11px] font-black uppercase tracking-[0.5em] text-rose-400 italic leading-none">Trend Radar</span>
               </div>
-              <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Discover</h1>
+              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Discover</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Trending hooks · sounds · formats · hashtags. Tuned to your niche signal.</p>
             </div>
           </div>
@@ -153,10 +153,10 @@ export default function TrendsPage() {
           </div>
           <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
             <select value={niche} onChange={e => setNiche(e.target.value)} title="Filter by niche" className="bg-black/60 border-2 border-white/5 rounded-full px-5 py-3 text-[11px] font-black text-white uppercase tracking-[0.3em] italic focus:outline-none focus:border-rose-500/50 cursor-pointer">
-              {NICHES.map(n => <option key={n} value={n} className="bg-[#020205]">{n}</option>)}
+              {NICHES.map(n => <option key={n} value={n} className="bg-[var(--page-bg)]">{n}</option>)}
             </select>
             <select value={platform} onChange={e => setPlatform(e.target.value)} title="Filter by platform" className="bg-black/60 border-2 border-white/5 rounded-full px-5 py-3 text-[11px] font-black text-white uppercase tracking-[0.3em] italic focus:outline-none focus:border-rose-500/50 cursor-pointer">
-              {PLATFORMS.map(p => <option key={p} value={p} className="bg-[#020205]">{p}</option>)}
+              {PLATFORMS.map(p => <option key={p} value={p} className="bg-[var(--page-bg)]">{p}</option>)}
             </select>
           </div>
         </div>
@@ -165,7 +165,7 @@ export default function TrendsPage() {
         {visible.length === 0 ? (
           <div className={`${glassStyle} rounded-[3rem] p-20 flex flex-col items-center text-center gap-6`}>
             <Target size={48} className="text-slate-500" />
-            <h3 className="text-3xl font-black text-white italic uppercase tracking-tight">No Signals Match</h3>
+            <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight">No Signals Match</h3>
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic max-w-md">Adjust niche, platform, or category. Sample data is small — connect your account for live trends.</p>
             <button type="button" onClick={() => { setActiveCategory('all'); setNiche('All'); setPlatform('All'); setSearch('') }} className="px-7 py-3 bg-white/5 border-2 border-white/10 text-slate-300 rounded-full text-[11px] font-black uppercase tracking-[0.4em] hover:text-white italic">RESET_FILTERS</button>
           </div>

@@ -103,7 +103,7 @@ export default function HeuristicBlueprintNodePage() {
 
   if (loading) {
     return (
-       <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen gap-12 backdrop-blur-3xl">
+       <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen gap-12 backdrop-blur-3xl">
           <div className="relative">
             <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
             <Layers size={80} className="text-indigo-500 animate-spin relative z-10" />
@@ -143,7 +143,7 @@ export default function HeuristicBlueprintNodePage() {
               <Compass className="text-indigo-400 animate-pulse" size={16} />
               <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Heuristic Scaffolding HUD v14.2</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-4">Templates</h1>
+            <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">Templates</h1>
             <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Reusable post structures — captions, edit recipes, schedule patterns. Save what works once and apply it to every new project.</p>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function HeuristicBlueprintNodePage() {
                  <div className="flex items-center gap-10">
                     <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-transform duration-300"><Terminal size={40} className="text-indigo-400" /></div>
                     <div>
-                       <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Blueprint Telemetry Matrix</h2>
+                       <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Blueprint Telemetry Matrix</h2>
                        <p className="text-[14px] text-slate-500 font-black uppercase tracking-[0.6em] italic opacity-40">Surveillance of structural scaffolds and logic patterns</p>
                     </div>
                  </div>
@@ -294,7 +294,7 @@ export default function HeuristicBlueprintNodePage() {
                       <div className="flex justify-between items-start mb-8 relative z-10 px-4">
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.6em] italic">Blueprint_ID: {template._id.slice(-8).toUpperCase()}</p>
-                          <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 line-clamp-1">{template.name.toUpperCase()}</h3>
+                          <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors duration-300 line-clamp-1">{template.name.toUpperCase()}</h3>
                         </div>
                         {template.isPublic && (
                           <span className="shrink-0 px-5 py-2 bg-indigo-500 text-black rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-[0_0_30px_rgba(99,102,241,0.4)] animate-pulse">

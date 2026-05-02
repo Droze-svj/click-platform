@@ -257,7 +257,7 @@ export default function PredictiveAnalyticsDashboard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
                   Performance Prediction
                 </h3>
               </div>
@@ -342,7 +342,7 @@ export default function PredictiveAnalyticsDashboard({
             {/* Recommendations */}
             {prediction.recommendations && prediction.recommendations.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3">
                   Recommendations
                 </h4>
                 <div className="space-y-2">
@@ -387,7 +387,7 @@ export default function PredictiveAnalyticsDashboard({
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
                 Audience Growth Forecast
               </h3>
             </div>
@@ -453,7 +453,7 @@ export default function PredictiveAnalyticsDashboard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Flame className="w-5 h-5 text-orange-500" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
                   Pre-Export Retention Heatmap
                 </h3>
               </div>

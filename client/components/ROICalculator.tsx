@@ -90,7 +90,7 @@ export default function ROICalculator() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Calculator className="w-6 h-6 text-green-600" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             ROI Calculator
           </h3>
         </div>
@@ -192,7 +192,7 @@ export default function ROICalculator() {
       {/* Recommendations */}
       {roiData.recommendations.length > 0 && (
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
+          <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
             Recommendations to Improve ROI
           </h4>
           <div className="space-y-3">

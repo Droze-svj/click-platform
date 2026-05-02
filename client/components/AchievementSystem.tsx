@@ -84,7 +84,7 @@ export default function AchievementSystem() {
 
                                 <div className="flex-1">
                                     <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400 mb-1">Achievement Unlocked</p>
-                                    <h4 className="text-xl font-black text-gray-900 dark:text-white leading-tight mb-1">{unlocked.title}</h4>
+                                    <h4 className="text-xl font-black text-gray-900 dark:text-[var(--text-main)] leading-tight mb-1">{unlocked.title}</h4>
                                     <p className="text-xs text-gray-500 font-medium">{unlocked.description}</p>
                                 </div>
 

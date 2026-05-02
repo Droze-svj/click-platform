@@ -1730,7 +1730,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#020205] text-white overflow-hidden font-['Outfit'] selection:bg-indigo-500/30">
+    <div className="h-screen w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden font-['Outfit'] selection:bg-indigo-500/30">
 
       {/* Background nebula */}
       <motion.div
@@ -1739,7 +1739,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       >
         <div className="absolute top-1/4 left-1/4 w-[800px] h-[800px] bg-indigo-500/[0.08] blur-[160px] rounded-full animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[1000px] h-[1000px] bg-indigo-600/[0.05] blur-[200px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-[#020205]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-[var(--page-bg)]" />
       </motion.div>
 
       <AchievementSystem />

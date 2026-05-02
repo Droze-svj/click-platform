@@ -75,7 +75,7 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Edit3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-gray-900 dark:text-white">
+            <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
               Bulk Edit ({selectedIds.length} items)
             </h3>
           </div>

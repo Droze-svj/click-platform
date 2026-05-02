@@ -300,7 +300,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
             <Zap className="w-3.5 h-3.5 animate-pulse" />
             Neural Automations
           </div>
-          <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">AUTO<br />PILOT</h1>
+          <h1 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">AUTO<br />PILOT</h1>
         </div>
       </div>
 
@@ -309,7 +309,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
           <div className="flex items-center gap-5 flex-1">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg"><Wand2 className="w-7 h-7 text-white" /></div>
             <div>
-              <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">The Viral One-Click</h2>
+              <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">The Viral One-Click</h2>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -450,7 +450,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
         <div className={`${glassStyle} p-8 rounded-[2.5rem] space-y-6`}>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center"><Mic className="w-6 h-6 text-white" /></div>
-            <h3 className="font-black text-white uppercase italic">AI Voiceover</h3>
+            <h3 className="font-black text-[var(--text-main)] uppercase italic">AI Voiceover</h3>
           </div>
           <textarea
             className="w-full h-32 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-white outline-none"
@@ -466,7 +466,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
         <div className={`${glassStyle} p-8 rounded-[2.5rem] space-y-6`}>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center"><Scissors className="w-6 h-6 text-white" /></div>
-            <h3 className="font-black text-white uppercase italic">Auto-Jumpcut</h3>
+            <h3 className="font-black text-[var(--text-main)] uppercase italic">Auto-Jumpcut</h3>
           </div>
           <div className="space-y-4">
             <input
@@ -487,7 +487,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
         <div className={`${glassStyle} p-8 rounded-[2.5rem] space-y-6`}>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center"><Type className="w-6 h-6 text-white" /></div>
-            <h3 className="font-black text-white uppercase italic">Auto-Caps</h3>
+            <h3 className="font-black text-[var(--text-main)] uppercase italic">Auto-Caps</h3>
           </div>
           <p className="text-slate-400 text-sm">Styles & positions available in text tab.</p>
         </div>

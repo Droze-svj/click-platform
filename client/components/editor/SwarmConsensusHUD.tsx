@@ -98,7 +98,7 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-[0.3em]">
                 <Activity className="w-3 h-3" /> SWARM CONSENSUS 2.0
               </div>
-              <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">{taskName}</h3>
+              <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{taskName}</h3>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
               <ShieldCheck className="w-6 h-6 text-emerald-400 animate-pulse" />

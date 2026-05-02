@@ -302,7 +302,7 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400">Click · Creative Packs</span>
             </div>
-            <h2 className="text-3xl font-black text-white tracking-tight leading-tight">One-click style bundles</h2>
+            <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-tight">One-click style bundles</h2>
             <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
               Apply music + transitions + color grade + caption style + pacing in one tap. {PACKS.length} curated packs across niches.
             </p>
@@ -356,7 +356,7 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
 
               {/* Body */}
               <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-xl font-black text-white tracking-tight leading-tight mb-1">{pack.name}</h3>
+                <h3 className="text-xl font-black text-[var(--text-main)] tracking-tight leading-tight mb-1">{pack.name}</h3>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-3">{pack.tagline}</p>
                 <p className="text-[12px] text-slate-300 leading-relaxed mb-4">{pack.description}</p>
 

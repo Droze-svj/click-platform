@@ -202,7 +202,7 @@ export default function ColorScopes({ videoElement, filters }: ColorScopesProps)
   return (
     <div className="bg-gray-800 rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
           <Eye className="w-4 h-4" />
           Color Scopes
         </h4>

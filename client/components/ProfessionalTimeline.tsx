@@ -1194,7 +1194,7 @@ export default function ProfessionalTimeline({
         selectedClipForKeyframes && !selectedClipForProperties && (
           <div className="border-t border-gray-700 bg-gray-800 p-4 max-h-64 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-sm font-semibold text-white">
+              <h4 className="text-sm font-semibold text-[var(--text-main)]">
                 Keyframe Editor - {clips.find(c => c.id === selectedClipForKeyframes)?.name}
               </h4>
               <button

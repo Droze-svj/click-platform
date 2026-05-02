@@ -126,7 +126,7 @@ export default function NeuralStrategyHub() {
             <Sparkles className="w-3.5 h-3.5" />
             Sovereign Strategist Overdrive
           </div>
-          <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-white uppercase leading-[0.8] mb-2">
+          <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-[var(--text-main)] uppercase leading-[0.8] mb-2">
             PREDICTIVE<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">SIGNALS</span>
           </h1>
@@ -172,7 +172,7 @@ export default function NeuralStrategyHub() {
                     <TrendingUp className="w-6 h-6 text-indigo-400" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Signal Ingestion</h2>
+                    <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Signal Ingestion</h2>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Real-time Cross-Platform Ledger</p>
                   </div>
                </div>
@@ -256,7 +256,7 @@ export default function NeuralStrategyHub() {
                       <Target className="w-6 h-6 text-emerald-400" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Viral Forecast</h2>
+                      <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Viral Forecast</h2>
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Cross-Validation Result · Swarm Consensus</p>
                     </div>
                   </div>
@@ -358,7 +358,7 @@ export default function NeuralStrategyHub() {
                   <div className="flex items-center gap-3">
                     <Activity className="w-6 h-6 text-indigo-400" />
                     <div>
-                      <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Swarm Node Reasoning</h3>
+                      <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase tracking-tight">Swarm Node Reasoning</h3>
                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-0.5">Secure AI Consensus Log</p>
                     </div>
                   </div>
@@ -396,7 +396,7 @@ export default function NeuralStrategyHub() {
                 <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
                   <Layers className="w-5 h-5 text-purple-400" />
                 </div>
-                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Active Engine</h3>
+                <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase tracking-tight">Active Engine</h3>
               </div>
               <div className="p-6 rounded-[2rem] bg-[#07070f]/80 border border-white/[0.05] space-y-6 relative overflow-hidden">
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -428,7 +428,7 @@ export default function NeuralStrategyHub() {
                 <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-inner">
                   <ShieldCheck className="w-6 h-6 text-indigo-400" />
                 </div>
-                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Neural Integrity</h3>
+                <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase tracking-tight">Neural Integrity</h3>
              </div>
              <p className="text-sm text-slate-400 font-medium leading-relaxed mb-8 italic">
                Autonomous auditing for voice artifacts, caption collision, and bit-rate integrity checks before final render.
@@ -445,7 +445,7 @@ export default function NeuralStrategyHub() {
                 <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-inner">
                   <Sparkles className="w-6 h-6 text-purple-400" />
                 </div>
-                <h3 className="text-lg font-black text-white italic uppercase tracking-tight">Swarm Gen HUD</h3>
+                <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase tracking-tight">Swarm Gen HUD</h3>
              </div>
              <div className="space-y-4">
                {[

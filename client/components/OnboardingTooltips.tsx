@@ -97,7 +97,7 @@ export default function OnboardingTooltips() {
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
             {tooltip.title}
           </h3>
         </div>

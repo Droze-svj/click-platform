@@ -217,7 +217,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-indigo-400" />
-            <h3 className="text-xs font-black uppercase tracking-widest text-white italic">Viral Potential</h3>
+            <h3 className="text-xs font-black uppercase tracking-widest text-[var(--text-main)] italic">Viral Potential</h3>
           </div>
           <div className={`w-3 h-3 rounded-full ${getStatusColor(currentScore.viralPotential)} animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]`} />
         </div>

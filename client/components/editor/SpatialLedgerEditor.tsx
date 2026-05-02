@@ -113,7 +113,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
             <BoxSelect className="text-indigo-400" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter leading-none">Spatial Memory</h3>
+            <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Spatial Memory</h3>
             <p className="text-[9px] font-black text-slate-800 uppercase tracking-widest mt-2 bg-white/5 px-2 py-0.5 rounded italic">Project: {videoId.slice(-6)}</p>
           </div>
         </div>

@@ -115,7 +115,7 @@ export default function ContentModerationChecker({
       <div className="flex items-start gap-3">
         {getStatusIcon()}
         <div className="flex-1">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+          <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-2">
             {result.approved ? t('moderation.approved') : t('moderation.flagged')}
           </h4>
           

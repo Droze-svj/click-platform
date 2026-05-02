@@ -162,7 +162,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
   ], [trends])
 
   return (
-    <div className="flex-1 h-full overflow-hidden flex flex-col bg-[#020205] text-white p-10 gap-12 font-inter relative">
+    <div className="flex-1 h-full overflow-hidden flex flex-col bg-[var(--page-bg)] text-white p-10 gap-12 font-inter relative">
       {/* Background Matrix Layer */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -191,7 +191,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">STABLE</span>
                  </div>
               </div>
-              <h1 className="text-6xl font-black text-white tracking-tighter leading-none drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">Agency Console</h1>
+              <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-none drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">Agency Console</h1>
               <p className="text-slate-400 text-[13px] font-medium tracking-wide mt-4 leading-relaxed">Manage every brand, campaign, and creator from a single workspace.</p>
            </div>
         </div>
@@ -241,7 +241,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                        
                        <div className="flex items-center justify-between relative z-10 px-8">
                           <div>
-                             <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Orchestration Matrix</h3>
+                             <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Orchestration Matrix</h3>
                              <p className="text-[14px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Autonomous operational relay for distributed cognitive labor units.</p>
                           </div>
                           <div className="px-12 py-5 rounded-[3rem] bg-indigo-500/[0.02] border-2 border-indigo-500/20 text-indigo-400 text-[13px] font-black uppercase tracking-[0.4em] italic flex items-center gap-6 shadow-3xl animate-pulse">
@@ -328,7 +328,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/[0.04] blur-[80px] rounded-full translate-x-1/4 -translate-y-1/4 pointer-events-none" />
                           <div className="flex items-center justify-between mb-10 relative z-10 px-4 pt-2">
                              <div>
-                                <h4 className="text-[14px] font-black text-white uppercase tracking-[0.5em] leading-none mb-3 italic">Retention Stream</h4>
+                                <h4 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] leading-none mb-3 italic">Retention Stream</h4>
                                 <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest italic opacity-60">Sequence: Chronos_045</p>
                              </div>
                              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shadow-3xl"><Target size={28} className="text-indigo-400 animate-pulse" /></div>
@@ -353,7 +353,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/[0.04] blur-[80px] rounded-full -translate-x-1/4 translate-y-1/4 pointer-events-none" />
                           <div className="flex items-center justify-between mb-10 relative z-10 px-4 pt-2">
                              <div>
-                                <h4 className="text-[14px] font-black text-white uppercase tracking-[0.5em] leading-none mb-3 italic">Market Trajectory</h4>
+                                <h4 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] leading-none mb-3 italic">Market Trajectory</h4>
                                 <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic opacity-60">Sector Alpha Surging</p>
                              </div>
                              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-3xl"><TrendingUp size={28} className="text-emerald-400 animate-pulse" /></div>
@@ -383,7 +383,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/[0.04] blur-[100px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
                           <div className="flex items-center justify-between mb-10 relative z-10 px-4 pt-2">
                              <div>
-                                <h4 className="text-[14px] font-black text-white uppercase tracking-[0.5em] leading-none mb-3 italic">Latent Ingestion</h4>
+                                <h4 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.5em] leading-none mb-3 italic">Latent Ingestion</h4>
                                 <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic opacity-60">Sora-Core Scalar Sync</p>
                              </div>
                              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shadow-3xl"><Cpu size={28} className="text-indigo-400 animate-spin-slow" /></div>
@@ -430,7 +430,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
               <div className="absolute inset-0 bg-indigo-500/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-[3s] pointer-events-none" />
               <div className="flex items-center justify-between mb-16 relative z-10 px-6 pt-4">
                  <div>
-                    <h3 className="text-[17px] font-black text-white tracking-tight mb-2 leading-tight">AI Agent Pool</h3>
+                    <h3 className="text-[17px] font-black text-[var(--text-main)] tracking-tight mb-2 leading-tight">AI Agent Pool</h3>
                     <p className="text-[11px] font-medium text-slate-400 leading-tight border-l-2 border-indigo-500/20 pl-4 ml-1">Autonomous workers handling content tasks</p>
                  </div>
                  <div className="flex items-center gap-8">
@@ -449,7 +449,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 <Cpu size={40} className="group-hover:scale-110 transition-transform duration-1000" />
                              </div>
                              <div>
-                                <h4 className="text-2xl font-black text-white uppercase tracking-tighter leading-none mb-3 italic drop-shadow-2xl">{agent.name}</h4>
+                                <h4 className="text-2xl font-black text-[var(--text-main)] uppercase tracking-tighter leading-none mb-3 italic drop-shadow-2xl">{agent.name}</h4>
                                 <div className="flex items-center gap-3">
                                    <div className={`w-2 h-2 rounded-full ${colorMap[agent.color].bar} animate-pulse shadow-2xl`} />
                                    <p className={`text-[11px] font-black uppercase tracking-widest italic ${colorMap[agent.color].text}`}>{agent.status.toUpperCase()}...</p>
@@ -494,7 +494,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              <Zap size={40} className={autoSurgeActive ? 'animate-pulse' : ''} />
                           </div>
                           <div>
-                             <h4 className="text-2xl font-black text-white tracking-tight leading-tight mb-2 drop-shadow-xl">Auto-Publish Bridge</h4>
+                             <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight mb-2 drop-shadow-xl">Auto-Publish Bridge</h4>
                              <div className="flex items-center gap-3">
                                 <div className={`w-2 h-2 rounded-full ${autoSurgeActive ? 'bg-indigo-500' : 'bg-amber-500'} animate-ping`} />
                                 <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic leading-none">{autoSurgeActive ? 'PREDICTION_READY' : 'MANUAL_ONLY'}</p>
@@ -549,7 +549,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                  <div className="flex items-center gap-10">
                     <div className="w-20 h-20 rounded-[3rem] bg-emerald-500/5 border-2 border-emerald-500/20 flex items-center justify-center shadow-3xl group-hover:rotate-[30deg] transition-transform duration-1000"><Shield size={40} className="text-emerald-500 animate-pulse" /></div>
                     <div>
-                       <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-2 leading-none italic drop-shadow-2xl">Decision Ledger</h3>
+                       <h3 className="text-4xl font-black text-[var(--text-main)] uppercase tracking-tighter mb-2 leading-none italic drop-shadow-2xl">Decision Ledger</h3>
                        <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none border-l-4 border-emerald-500/20 pl-8 ml-4">Cryptographic Decision Entropy Logs</p>
                     </div>
                  </div>

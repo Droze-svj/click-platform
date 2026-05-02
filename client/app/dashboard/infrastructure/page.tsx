@@ -56,7 +56,7 @@ export default function SubstrateIntegrityTerminalPage() {
   }, [user, router]);
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen font-inter">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <Server size={64} className="text-indigo-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Substrate Telemetry...</span>
      </div>
@@ -64,7 +64,7 @@ export default function SubstrateIntegrityTerminalPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#020205] flex items-center justify-center p-12 font-inter relative overflow-hidden">
+      <div className="min-h-screen bg-[var(--page-bg)] flex items-center justify-center p-12 font-inter relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
            <Shield size={1200} className="text-white absolute -top-40 -right-40 rotate-[30deg] blur-[2px]" />
         </div>
@@ -74,7 +74,7 @@ export default function SubstrateIntegrityTerminalPage() {
            <div className="w-32 h-32 bg-rose-500/10 rounded-[3.5rem] border-4 border-rose-500/20 flex items-center justify-center mx-auto mb-16 shadow-3xl animate-pulse">
               <ShieldAlert size={80} className="text-rose-500" />
            </div>
-           <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter mb-8 leading-none drop-shadow-2xl">Access Diffracted</h2>
+           <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-8 leading-none drop-shadow-2xl">Access Diffracted</h2>
            <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-relaxed mb-16 max-w-xl mx-auto border-l-4 border-rose-500/20 pl-8">
              Mission critical substrate telemetry is restricted to administrative entities. Your entry vector has been logged into the Sovereign Integrity Ledger.
            </p>
@@ -120,7 +120,7 @@ export default function SubstrateIntegrityTerminalPage() {
                        <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">CORE_STABILITY_SECURED</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Infrastructure</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Infrastructure</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">System status — uptime, queue depth, storage, latency. Useful when something feels slow and you want to know whether it's you or us.</p>
               </div>
            </div>
@@ -152,7 +152,7 @@ export default function SubstrateIntegrityTerminalPage() {
                  <div className="flex items-center gap-10 relative z-10">
                     <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Database size={40} className="text-indigo-400" /></div>
                     <div>
-                       <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Operations Matrix</h2>
+                       <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Operations Matrix</h2>
                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Lattice density: 1.4PB // Neural Flux: 12.8 GHz</p>
                     </div>
                  </div>
@@ -185,7 +185,7 @@ export default function SubstrateIntegrityTerminalPage() {
                     </div>
                   </div>
                   <p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] mb-6 italic leading-none opacity-60 group-hover:text-white transition-colors">{s.label}</p>
-                  <h3 className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-4 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{s.val}</h3>
+                  <h3 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter tabular-nums leading-none mb-4 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{s.val}</h3>
                   <div className="w-48 h-1.5 bg-black/60 rounded-full mt-4 overflow-hidden border border-white/5">
                      <motion.div initial={{ width: 0 }} whileInView={{ width: '80%' }} transition={{ duration: 2, delay: 0.5 }} className={`h-full bg-gradient-to-r from-transparent to-current ${s.color} opacity-40`} />
                   </div>

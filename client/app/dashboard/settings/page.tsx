@@ -195,7 +195,7 @@ export default function SovereignCalibrationNodePage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Fingerprint size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
         <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Deciphering Matrix Topology...</span>
      </div>
@@ -231,7 +231,7 @@ export default function SovereignCalibrationNodePage() {
                        <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SOVEREIGN_LATTICE_SYNC:ACTIVE</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Settings</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Settings</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your account, defaults, integrations, and notifications. Set things once here and Click remembers them across every project.</p>
               </div>
            </div>
@@ -286,7 +286,7 @@ export default function SovereignCalibrationNodePage() {
               <div className="p-20 rounded-[6rem] bg-gradient-to-br from-indigo-900 via-indigo-950 to-black shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden group border-2 border-white/10">
                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                  <Workflow size={300} className="absolute -bottom-20 -right-20 text-white/[0.03] group-hover:rotate-45 group-hover:scale-150 transition-all duration-300" />
-                 <h4 className="text-4xl font-black text-white uppercase italic mb-8 relative z-10 leading-none tracking-tighter">Sovereign_OS</h4>
+                 <h4 className="text-4xl font-black text-[var(--text-main)] uppercase italic mb-8 relative z-10 leading-none tracking-tighter">Sovereign_OS</h4>
                  <p className="text-[14px] text-white/50 font-black uppercase tracking-[0.5em] italic mb-20 relative z-10 leading-relaxed">
                    Scale your agency to infinite horizons with our autonomous hive suite and neural manifest engines.
                  </p>
@@ -313,7 +313,7 @@ export default function SovereignCalibrationNodePage() {
                             <div className="flex items-center gap-12">
                                <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><CpuIcon className="text-indigo-400" size={56} /></div>
                                <div>
-                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Neural Core</h2>
+                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Neural Core</h2>
                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Global OS fundamentals and spectral localization</p>
                                 </div>
                             </div>
@@ -343,7 +343,7 @@ export default function SovereignCalibrationNodePage() {
                             <div className="flex items-center gap-12">
                                <div className="w-24 h-24 rounded-[3.5rem] bg-amber-500/5 border-2 border-amber-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(245,158,11,0.2)] animate-pulse"><Zap className="text-amber-400" size={56} /></div>
                                <div>
-                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Heuristic Matrix</h2>
+                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Heuristic Matrix</h2>
                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none">Autonomous swarm and synthetic avatar orchestration</p>
                                </div>
                             </div>
@@ -408,7 +408,7 @@ export default function SovereignCalibrationNodePage() {
                              <div className="flex items-center gap-12">
                                 <div className="w-24 h-24 rounded-[3.5rem] bg-fuchsia-500/5 border-2 border-fuchsia-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(217,70,239,0.2)] animate-pulse"><Palette className="text-fuchsia-400" size={56} /></div>
                                 <div>
-                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Identity DNA</h2>
+                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Identity DNA</h2>
                                    <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none">Synthetic DNA constraints for autonomous AI payloads</p>
                                 </div>
                              </div>
@@ -491,7 +491,7 @@ export default function SovereignCalibrationNodePage() {
                              <div className="flex items-center gap-12">
                                 <div className="w-24 h-24 rounded-[3.5rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(244,63,94,0.2)] animate-pulse"><Bell className="text-rose-400" size={56} /></div>
                                 <div>
-                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Resonance Routing</h2>
+                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Resonance Routing</h2>
                                    <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-rose-500/30">Signal protocols and urgency thresholds</p>
                                 </div>
                              </div>
@@ -520,7 +520,7 @@ export default function SovereignCalibrationNodePage() {
                             <div className="flex items-center gap-12">
                                <div className="w-24 h-24 rounded-[3.5rem] bg-slate-500/5 border-2 border-slate-500/20 flex items-center justify-center shadow-inner"><EyeOff className="text-slate-400" size={56} /></div>
                                <div>
-                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Logic Sovereignty</h2>
+                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Logic Sovereignty</h2>
                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-white/10">Manifestation consent and neural telemetry analytics</p>
                                </div>
                             </div>
@@ -542,7 +542,7 @@ export default function SovereignCalibrationNodePage() {
                              <div className="flex items-center gap-12">
                                 <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><Shield size={56} className="text-indigo-400" /></div>
                                 <div>
-                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-white leading-none mb-4">Shielding Protocols</h2>
+                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Shielding Protocols</h2>
                                    <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Authentication matrices and cross-node encryption</p>
                                 </div>
                              </div>
@@ -651,7 +651,7 @@ function DropdownControl({ label, description, value, options, onChange }: { lab
          <select value={value} onChange={(e) => onChange(e.target.value)} title={label} aria-label={label}
            className="w-full bg-black/80 border-2 border-white/10 px-16 py-10 rounded-[3.5rem] text-[20px] font-black uppercase tracking-[0.8em] text-white focus:outline-none focus:border-indigo-500 transition-all duration-300 appearance-none cursor-pointer italic shadow-inner"
          >
-           {options.map(o => <option key={o.id} value={o.id} className="bg-[#020205] text-white py-10">{o.label}</option>)}
+           {options.map(o => <option key={o.id} value={o.id} className="bg-[var(--page-bg)] text-white py-10">{o.label}</option>)}
          </select>
          <div className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover/sel:text-indigo-400 transition-colors duration-300 group-hover/sel:rotate-180">
             <ChevronRight size={44} className="rotate-90" />

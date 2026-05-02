@@ -34,7 +34,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
           <Icon className="w-10 h-10" />
         </div>
         <div>
-          <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">{title}</h3>
+          <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">{title}</h3>
           <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic opacity-60 border-l-2 pl-6 ml-1 border-white/10">{subtitle}</p>
         </div>
       </div>
@@ -85,7 +85,7 @@ const ArbitragePanel = () => {
                               <span className="text-[10px] text-orange-400 uppercase font-black tracking-[0.4em] italic px-5 py-2 rounded-full bg-orange-500/5 border border-orange-500/20">{offer.velocity} Velocity Flux</span>
                               <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse shadow-[0_0_10px_rgba(249,115,22,1)]" />
                             </div>
-                            <h4 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-8 leading-tight drop-shadow-2xl">{offer.name}</h4>
+                            <h4 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-8 leading-tight drop-shadow-2xl">{offer.name}</h4>
                             
                             <div className="flex gap-12 mb-12">
                                 <div className="space-y-2">
@@ -203,7 +203,7 @@ const StabilityPanel = () => {
                                 <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest italic">{item.status}</span>
                             </div>
                             <div>
-                                <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">{item.label}</h4>
+                                <h4 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4 leading-none">{item.label}</h4>
                                 <p className="text-[11px] font-bold text-slate-800 uppercase tracking-widest italic opacity-60 leading-relaxed">{item.desc}</p>
                             </div>
                         </div>
@@ -219,7 +219,7 @@ const StabilityPanel = () => {
                 <div className="flex items-center gap-8">
                     <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center animate-pulse"><AlertTriangle className="text-rose-500" size={40} /></div>
                     <div>
-                        <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Emergency Node Killswitch</h4>
+                        <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Emergency Node Killswitch</h4>
                         <p className="text-[12px] font-bold text-slate-800 uppercase tracking-[0.4em] italic opacity-60">Instant lattice disconnect // Zero-Day Protocol</p>
                     </div>
                 </div>
@@ -270,7 +270,7 @@ export default function Click12Dashboard() {
                         <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase italic leading-none">OVERLORD_TERMINAL_SYNCED</span>
                     </div>
                  </div>
-                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                 <h1 className="text-8xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">
                    Click Overlord Terminal
                  </h1>
                  <p className="text-slate-800 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none opacity-80 border-l-4 border-purple-500/40 pl-8 ml-2">Final Market Encirclement Engine & Global Autonomous Control.</p>

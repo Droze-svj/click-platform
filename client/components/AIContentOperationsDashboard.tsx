@@ -396,7 +396,7 @@ export default function AIContentOperationsDashboard() {
                 </div>
               </div>
               <div className="space-y-6">
-                <h3 className="text-6xl font-black text-white uppercase tracking-tighter italic leading-none">Neural Probe <span style={{ color: currentTheme.accentHex }}>Alpha</span></h3>
+                <h3 className="text-6xl font-black text-[var(--text-main)] uppercase tracking-tighter italic leading-none">Neural Probe <span style={{ color: currentTheme.accentHex }}>Alpha</span></h3>
                 <p className="text-slate-500 text-xl font-medium tracking-tight uppercase">Re-calibrating Neural Clusters for <span style={{ color: currentTheme.accentHex }} className="font-black italic">{selectedPlatform}</span> repository...</p>
               </div>
               <div className="space-y-6">
@@ -530,7 +530,7 @@ export default function AIContentOperationsDashboard() {
               <div className="flex-1 space-y-12">
                 <div className="flex items-center gap-6">
                   <TrendingUp className="w-8 h-8 text-emerald-400" />
-                  <h2 className="text-5xl font-black text-white italic uppercase">Apex Flow</h2>
+                  <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase">Apex Flow</h2>
                 </div>
                 <div className="text-8xl font-black text-white italic tabular-nums leading-none">
                   {nextWeek ? `+${nextWeek.gap}%` : '+38.2%'}
@@ -540,7 +540,7 @@ export default function AIContentOperationsDashboard() {
                     {nextWeek.weeklyPlan.slice(0, 4).map((plan, i) => (
                       <div key={i} className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
                         <div className="text-[10px] font-black text-slate-600 uppercase italic mb-4">{plan.day}</div>
-                        <h4 className="text-2xl font-black text-white italic uppercase">{plan.content.title}</h4>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic uppercase">{plan.content.title}</h4>
                       </div>
                     ))}
                   </div>
@@ -553,7 +553,7 @@ export default function AIContentOperationsDashboard() {
         {/* Footer Intelligence */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-white italic uppercase mb-8">Decay Alert</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">Decay Alert</h3>
             <div className="space-y-4">
               {refreshRecs.slice(0, 3).map((rec, i) => (
                 <div key={i} className="text-sm text-slate-400 italic">[{rec.action}] {rec.title}</div>
@@ -561,12 +561,12 @@ export default function AIContentOperationsDashboard() {
             </div>
           </div>
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-white italic uppercase mb-8">Neural Audit</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">Neural Audit</h3>
             <div className="text-6xl font-black text-white italic tabular-nums">99.9%</div>
             <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">Compliance Score</div>
           </div>
           <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-white italic uppercase mb-8">Auto Loop</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">Auto Loop</h3>
             <p className="text-slate-400 text-sm italic mb-6">System is self-optimizing the repository cluster.</p>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                <motion.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="h-full w-1/3 bg-white/20" />

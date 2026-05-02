@@ -89,7 +89,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-2 mb-4">
         <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+        <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
           Best Times to Post
         </h3>
       </div>

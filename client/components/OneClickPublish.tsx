@@ -143,7 +143,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                 <Zap className="w-4 h-4 text-indigo-400" />
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400">Phase 10 Engine</span>
              </div>
-             <h3 className="text-3xl font-black italic text-white uppercase tracking-tighter">
+             <h3 className="text-3xl font-black italic text-[var(--text-main)] uppercase tracking-tighter">
                Neural Distribution
              </h3>
           </div>
@@ -274,7 +274,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                    <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/20 border border-rose-500/40 flex items-center justify-center">
                       <ShieldAlert className="w-10 h-10 text-rose-500 animate-pulse" />
                    </div>
-                   <h4 className="text-2xl font-black italic text-white uppercase">Critical Under-Performance</h4>
+                   <h4 className="text-2xl font-black italic text-[var(--text-main)] uppercase">Critical Under-Performance</h4>
                    <p className="text-sm text-slate-300 font-medium">
                       Initial retention data for <span className="text-white font-black italic">TIKTOK</span> is below baseline. Salvage Protocol suggests swapping to <span className="text-indigo-400 font-bold uppercase tracking-widest">Variant B</span> (High Friction Hook).
                    </p>

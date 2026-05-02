@@ -99,7 +99,7 @@ export default function WorkspacesPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1500px] mx-auto space-y-16 bg-[#020205]">
+      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1500px] mx-auto space-y-16 bg-[var(--page-bg)]">
         <ToastContainer />
 
         {/* Header */}
@@ -116,7 +116,7 @@ export default function WorkspacesPage() {
                 <Activity size={14} className="text-violet-400 animate-pulse" />
                 <span className="text-[11px] font-black uppercase tracking-[0.5em] text-violet-400 italic leading-none">Multi-Brand Lattice</span>
               </div>
-              <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Workspaces</h1>
+              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Workspaces</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Switch between sovereign brand instances. Each carries isolated assets, schedules, and analytics.</p>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function WorkspacesPage() {
               </div>
               <div className="flex-1 min-w-0 text-center lg:text-left">
                 <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">ACTIVE_INSTANCE</p>
-                <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-tight mb-3 truncate">{activeWs.name}</h2>
+                <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3 truncate">{activeWs.name}</h2>
                 <div className="flex flex-wrap items-center gap-3 justify-center lg:justify-start">
                   <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">{activeWs.handle}</span>
                   <span className="opacity-30 text-slate-500">·</span>
@@ -175,7 +175,7 @@ export default function WorkspacesPage() {
               <Globe size={22} className="text-slate-400" />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">All Instances</h3>
+              <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">All Instances</h3>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">CLICK_TO_SWITCH_CONTEXT</p>
             </div>
           </div>
@@ -221,13 +221,13 @@ export default function WorkspacesPage() {
       {/* Create modal */}
       <AnimatePresence>
         {showCreate && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-8 bg-[#020205]/90 backdrop-blur-2xl" onClick={() => !creating && setShowCreate(false)}>
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-8 bg-[var(--page-bg)]/90 backdrop-blur-2xl" onClick={() => !creating && setShowCreate(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 24 }} transition={{ type: 'spring', damping: 22, stiffness: 240 }} onClick={e => e.stopPropagation()} className={`${glassStyle} rounded-[3rem] p-12 max-w-2xl w-full border-violet-500/20`}>
               <div className="flex items-center gap-6 mb-10">
                 <div className="w-14 h-14 rounded-[1.4rem] bg-violet-500/10 border-2 border-violet-500/30 flex items-center justify-center"><Sparkles size={26} className="text-violet-400" /></div>
                 <div>
                   <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.5em] italic mb-2 leading-none">SPAWN_PROTOCOL</p>
-                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tight leading-tight">New Workspace</h3>
+                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-tight">New Workspace</h3>
                 </div>
               </div>
               <div className="space-y-6 mb-10">

@@ -164,7 +164,7 @@ const ThumbnailGeneratorView: React.FC<ThumbnailGeneratorViewProps> = ({
           <ImageDown className="w-3.5 h-3.5 animate-pulse" />
           AI Thumbnail Generator
         </div>
-        <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-[0.9]">
+        <h1 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-[0.9]">
           Thumbnail<br />Studio
         </h1>
         <p className="text-slate-500 text-sm max-w-lg leading-relaxed">

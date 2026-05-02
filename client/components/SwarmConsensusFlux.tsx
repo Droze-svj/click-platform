@@ -61,7 +61,7 @@ export default function SwarmConsensusFlux() {
                <Database className="text-indigo-400" size={28} />
             </div>
             <div>
-               <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none mb-1">Consensus Flux</h2>
+               <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-1">Consensus Flux</h2>
                <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none border-l-2 border-indigo-500/20 pl-4 ml-1">Live Refinery Ledger // 2026.4_SOVEREIGN</p>
             </div>
          </div>

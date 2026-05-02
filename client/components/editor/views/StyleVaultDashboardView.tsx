@@ -136,7 +136,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
             <Plus className="w-12 h-12" />
           </div>
           <div className="text-center space-y-4 relative z-10">
-            <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Train<br />New DNA</h3>
+            <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Train<br />New DNA</h3>
             <p className="text-slate-500 text-sm font-medium tracking-wide uppercase italic opacity-60">Extract parameters from performance winners</p>
           </div>
         </motion.button>
@@ -172,7 +172,7 @@ export const StyleVaultDashboardView: React.FC<StyleVaultDashboardViewProps> = (
 
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase whitespace-nowrap">{profile.name}</h3>
+                  <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase whitespace-nowrap">{profile.name}</h3>
                   <div className={`h-1 flex-1 bg-gradient-to-r ${i % 2 === 0 ? 'from-blue-500 to-transparent' : 'from-purple-500 to-transparent'} opacity-30 rounded-full`} />
                 </div>
                 <p className="text-slate-400 text-sm leading-relaxed line-clamp-2 italic font-medium">

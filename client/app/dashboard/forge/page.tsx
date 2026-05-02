@@ -75,7 +75,7 @@ export default function OneClickForgePage() {
                   <Cpu size={14} className="text-indigo-400/80" />
                   <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400 italic">Neural Forge v4.2</span>
                 </div>
-                <h1 className="text-5xl font-black text-white tracking-tight leading-none uppercase italic">One-Click Forge</h1>
+                <h1 className="text-5xl font-black text-[var(--text-main)] tracking-tight leading-none uppercase italic">One-Click Forge</h1>
                 <p className="text-slate-400 text-sm mt-2 font-medium max-w-xl opacity-80 leading-relaxed">
                   The ultimate AI content synthesizer. Transform a single prompt into a high-retention, platform-ready video object in seconds.
                 </p>
@@ -110,7 +110,7 @@ export default function OneClickForgePage() {
                     <History size={20} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white uppercase italic tracking-tight">1. Source Ingest</h2>
+                    <h2 className="text-2xl font-black text-[var(--text-main)] uppercase italic tracking-tight">1. Source Ingest</h2>
                     <p className="text-xs font-medium text-slate-500 tracking-wide uppercase italic leading-none mt-1">Initialize your neural project by uploading or linking a source.</p>
                   </div>
                 </div>
@@ -124,7 +124,7 @@ export default function OneClickForgePage() {
                     <Sparkles size={20} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-white uppercase italic tracking-tight">2. Neural Synthesis</h2>
+                    <h2 className="text-2xl font-black text-[var(--text-main)] uppercase italic tracking-tight">2. Neural Synthesis</h2>
                     <p className="text-xs font-medium text-slate-500 tracking-wide uppercase italic leading-none mt-1">Configure your AI parameters and ignite the forge.</p>
                   </div>
                 </div>
@@ -144,7 +144,7 @@ export default function OneClickForgePage() {
                     <Network size={24} className="text-indigo-400" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white tracking-tight uppercase leading-none italic">Forge Archive</h3>
+                    <h3 className="text-xl font-black text-[var(--text-main)] tracking-tight uppercase leading-none italic">Forge Archive</h3>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 opacity-60">Past Generations</p>
                   </div>
                 </div>

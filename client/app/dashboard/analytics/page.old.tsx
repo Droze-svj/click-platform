@@ -95,21 +95,21 @@ export default function SpectralIntelligencePage() {
   const fmt = (n: number) => n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + 'M' : n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n)
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Monitor size={64} className="text-indigo-500 animate-spin mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Interpreting Spectral Intelligence...</span>
      </div>
   )
 
   if (error || !data) return (
-     <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-[#020205]">
+     <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-[var(--page-bg)]">
         <header className="flex items-center gap-12">
            <button onClick={() => router.push('/dashboard')} className="w-20 h-20 rounded-[2.2rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl"><ArrowLeft size={36}/></button>
-           <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter">Spectral Void</h1>
+           <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Spectral Void</h1>
         </header>
         <div className={`${glassStyle} p-32 rounded-[5rem] text-center border-rose-500/20 max-w-3xl mx-auto shadow-[0_0_200px_rgba(225,29,72,0.1)]`}>
            <ZapOff size={80} className="text-rose-500 mx-auto mb-10 animate-pulse" />
-           <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-8">Signal Diffraction Detected</h2>
+           <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-8">Signal Diffraction Detected</h2>
            <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed">{error || 'SPECTRAL_STREAM_DISRUPTED'}</p>
            <button onClick={() => loadSpectralMatrix()} className="mt-16 px-20 py-10 bg-rose-600 text-white rounded-[3rem] text-[15px] font-black uppercase tracking-[0.4em] hover:bg-rose-500 transition-all shadow-2xl shadow-rose-600/40 italic active:scale-95">Initiate Re-Sync</button>
         </div>
@@ -152,7 +152,7 @@ export default function SpectralIntelligencePage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">SIGNAL_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Spectral Intel</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Spectral Intel</h1>
                  <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Neural intelligence and cross-node resonance surveillance matrix.</p>
               </div>
            </div>
@@ -187,7 +187,7 @@ export default function SpectralIntelligencePage() {
             <div className="flex items-center gap-10 relative z-10">
                <div className="w-18 h-18 bg-indigo-500/5 border border-indigo-500/20 rounded-[2.2rem] flex items-center justify-center animate-pulse shadow-2xl"><Radio size={36} className="text-indigo-400" /></div>
                <div>
-                  <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Node Velocity Lattice</h2>
+                  <h2 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Node Velocity Lattice</h2>
                   <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.6em] italic mt-3 leading-none">Global spectral signature surveillance and resonance mapping</p>
                </div>
             </div>
@@ -253,7 +253,7 @@ export default function SpectralIntelligencePage() {
             <div className="flex items-center gap-10 relative z-10">
                <div className="w-18 h-18 bg-amber-500/10 border border-amber-500/20 rounded-[2.2rem] flex items-center justify-center animate-bounce shadow-2xl shadow-amber-500/20"><Award size={36} className="text-amber-400" /></div>
                <div>
-                  <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Peak Trajectories</h2>
+                  <h2 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Peak Trajectories</h2>
                   <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.6em] italic mt-3 leading-none">Elite node performance and affinity matrix surveillance</p>
                </div>
             </div>

@@ -64,7 +64,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Content Discovery
           </h2>
         </div>
@@ -116,7 +116,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-1">
                     {rec.content.title || 'Untitled'}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

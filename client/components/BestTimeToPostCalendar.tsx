@@ -91,7 +91,7 @@ export default function BestTimeToPostCalendar() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Clock className="w-6 h-6 text-green-600" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Best Time to Post
           </h3>
         </div>
@@ -115,7 +115,7 @@ export default function BestTimeToPostCalendar() {
         <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-green-600" />
-            <h4 className="font-semibold text-gray-900 dark:text-white">Top 5 Best Times</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Top 5 Best Times</h4>
           </div>
           <div className="space-y-2">
             {topTimes.map((time, idx) => (

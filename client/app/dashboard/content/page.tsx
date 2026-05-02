@@ -140,7 +140,7 @@ export default function NeuralForgePage() {
                        <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">FORGE_CORE_IGNITED</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Content</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Content</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Generate captions, hooks, scripts and AI-written posts. Every output is tuned to your niche and platform — paste an idea, get a draft.</p>
               </div>
            </div>
@@ -185,7 +185,7 @@ export default function NeuralForgePage() {
              <div className="px-16 py-12 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                 <div className="flex items-center gap-8">
                   <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-2xl"><Terminal size={32} className="text-indigo-400" /></div>
-                  <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Logic Injection</h2>
+                  <h2 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Logic Injection</h2>
                 </div>
                 <div className="px-8 py-3 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center gap-4">
                    <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,1)] animate-pulse" />
@@ -261,7 +261,7 @@ export default function NeuralForgePage() {
                      <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500 group-hover/rep:h-full transition-all duration-300 opacity-20" />
                      <Cpu size={32} className="text-emerald-400 relative z-10" />
                   </div>
-                  <h2 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Neural Payloads</h2>
+                  <h2 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Neural Payloads</h2>
                 </div>
                 {manifest && (
                   <button onClick={() => router.push('/dashboard/scheduler')}
@@ -410,7 +410,7 @@ export default function NeuralForgePage() {
                                 <div className="absolute top-0 right-0 p-16 opacity-[0.02] group-hover/v-node:opacity-[0.1] transition-all duration-300 rotate-12 scale-150"><Zap size={150} /></div>
                                 <div className="flex items-start justify-between gap-10 mb-10 relative z-10">
                                   <div className="flex-1 min-w-0">
-                                    <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-[1.1] mb-6 group-hover:text-amber-400 transition-colors duration-300 drop-shadow-2xl">{idea.title.toUpperCase()}</h4>
+                                    <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-[1.1] mb-6 group-hover:text-amber-400 transition-colors duration-300 drop-shadow-2xl">{idea.title.toUpperCase()}</h4>
                                     <div className="inline-flex items-center gap-5 px-6 py-3 rounded-[1.5rem] bg-amber-500/10 border border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,1)]" />
                                        <span className="text-[11px] font-black text-amber-500 uppercase tracking-[0.4em] italic leading-none">{idea.platform.toUpperCase()} NODE</span>
@@ -458,7 +458,7 @@ export default function NeuralForgePage() {
              <div className="px-16 py-12 border-b border-white/5 flex items-center gap-10 bg-white/[0.02]">
                 <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300"><Network size={40} className="text-indigo-400" /></div>
                 <div>
-                   <h3 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none mb-3">Neural Heuristics</h3>
+                   <h3 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none mb-3">Neural Heuristics</h3>
                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">Cognitive logic refinement recommendations and sentiment sync.</p>
                 </div>
              </div>
@@ -472,7 +472,7 @@ export default function NeuralForgePage() {
              <div className="px-16 py-12 border-b border-white/5 flex items-center gap-10 bg-white/[0.02]">
                 <div className="w-20 h-20 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/20 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300"><Gauge size={40} className="text-purple-400" /></div>
                 <div>
-                   <h3 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none mb-3">Predictive Telemetry</h3>
+                   <h3 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none mb-3">Predictive Telemetry</h3>
                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">Spectral trajectory forecasting and global resonance mapping.</p>
                 </div>
              </div>

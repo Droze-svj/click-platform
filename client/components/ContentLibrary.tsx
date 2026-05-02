@@ -117,7 +117,7 @@ export default function ContentLibrary() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <BookOpen className="w-6 h-6 text-blue-600" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Content Library
           </h3>
         </div>
@@ -176,7 +176,7 @@ export default function ContentLibrary() {
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 dark:hover:border-blue-400 transition-all"
             >
               <div className="flex items-start justify-between mb-2">
-                <h4 className="font-semibold text-gray-900 dark:text-white flex-1">
+                <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] flex-1">
                   {item.title}
                 </h4>
                 <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">

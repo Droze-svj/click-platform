@@ -35,7 +35,7 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
       {/* Header */}
       <div className="flex items-center justify-between relative z-10">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-white flex items-center gap-3">
+          <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-[var(--text-main)] flex items-center gap-3">
             <History className="w-6 h-6 text-indigo-400" />
             Surge History Ledger
           </h2>

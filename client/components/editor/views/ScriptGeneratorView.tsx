@@ -302,7 +302,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
             <Activity className="w-4 h-4 animate-pulse" />
             Semantic Synthesis
           </div>
-          <h2 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">AI<br />MASTER SCRIPT</h2>
+          <h2 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">AI<br />MASTER SCRIPT</h2>
         </div>
         <div className="p-4 bg-white/[0.03] border border-white/10 rounded-[2rem] shadow-3xl">
           <Cpu className="w-10 h-10 text-blue-400" />
@@ -650,7 +650,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                 <div className="w-32 h-32 bg-white/5 rounded-full flex items-center justify-center mb-10 animate-pulse-slow border border-white/5 shadow-3xl">
                   <PenTool className="w-12 h-12 text-blue-500/20" />
                 </div>
-                <h4 className="text-3xl font-black text-white/20 uppercase tracking-tighter mb-4 italic">Awaiting Neural Cycle</h4>
+                <h4 className="text-3xl font-black text-[var(--text-main)]/20 uppercase tracking-tighter mb-4 italic">Awaiting Neural Cycle</h4>
                 <p className="text-lg text-slate-700 max-w-md font-medium italic leading-relaxed">
                   Initialize core semantics, tonal matrix, and neural role to forge a high-ROI master script.
                 </p>

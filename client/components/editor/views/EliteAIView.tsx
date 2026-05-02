@@ -387,7 +387,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               <Radio className="w-3.5 h-3.5 animate-pulse" />
               Elite AI · {String(activeEngine || 'idle')}
             </div>
-            <h1 className="text-6xl font-black text-white tracking-tighter leading-[1.05]">
+            <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-[1.05]">
               AI Storyteller
             </h1>
 
@@ -544,7 +544,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
         <motion.div variants={itemVariants} className="space-y-8">
            <div className="flex items-center gap-6">
               <div className="w-10 h-2 bg-indigo-500 rounded-full" />
-              <h3 className="text-xl font-black text-white tracking-tight">Suggested Assets</h3>
+              <h3 className="text-xl font-black text-[var(--text-main)] tracking-tight">Suggested Assets</h3>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {suggestedAssets.map((asset, i) => (
@@ -684,7 +684,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 <Zap className="w-10 h-10 text-fuchsia-500 animate-pulse" />
               </div>
               <div className="space-y-1 text-center xl:text-left">
-                <h4 className="text-2xl font-black text-white tracking-tight leading-tight">Apply all AI suggestions</h4>
+                <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight">Apply all AI suggestions</h4>
                 <p className="text-[12px] text-slate-400 font-medium mt-2">Auto-edit cuts, captions, and pacing in one click.</p>
               </div>
             </div>
@@ -733,7 +733,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                   <Layers className="w-7 h-7 text-indigo-400" />
                 </div>
                 <div>
-                  <h4 className="text-2xl font-black text-white tracking-tight leading-tight">Auto-edit clips</h4>
+                  <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight">Auto-edit clips</h4>
                   <span className="text-[11px] font-medium text-slate-400 mt-1.5 block">Generate short-form variations from your video</span>
                 </div>
               </div>
@@ -821,7 +821,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
                <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16 relative z-10">
                   <div className="space-y-2">
-                     <h3 className="text-2xl font-black text-white tracking-tight">Transcript</h3>
+                     <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Transcript</h3>
                      <p className="text-[12px] font-medium text-slate-400">Click any word to seek the player. Extract quotes for overlays.</p>
                   </div>
                   <motion.button
@@ -859,7 +859,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             <motion.div variants={itemVariants} className="space-y-12">
                <div className="flex items-center gap-8">
                   <div className="w-1.5 h-12 bg-orange-500 rounded-full" />
-                  <h3 className="text-2xl font-black text-white tracking-tight">Viral-worthy quotes</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Viral-worthy quotes</h3>
                </div>
 
               <div className="relative z-10">

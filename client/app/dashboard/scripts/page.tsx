@@ -164,7 +164,7 @@ export default function NarrativeLogicMatrixPage() {
   })
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-[#020205] min-h-screen gap-10 backdrop-blur-3xl">
+    <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-10 backdrop-blur-3xl">
        <div className="relative">
           <div className="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 animate-pulse" />
           <PenTool size={80} className="text-emerald-500 animate-spin relative z-10" />
@@ -208,7 +208,7 @@ export default function NarrativeLogicMatrixPage() {
                        <span className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase leading-none">AI engine ready</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-white tracking-tighter leading-none mb-4">Scripts</h1>
+                 <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-none mb-4">Scripts</h1>
                  <p className="text-slate-400 text-[14px] font-medium tracking-wide mt-3 leading-relaxed">Generate, edit, and export AI scripts for every platform — YouTube, podcast, social, blog, email.</p>
               </div>
            </div>
@@ -263,7 +263,7 @@ export default function NarrativeLogicMatrixPage() {
                    <div className="w-16 h-16 bg-white/10 rounded-[1.6rem] flex items-center justify-center shadow-xl shadow-emerald-500/20 border-2 border-white/20"><Cpu size={28} className="text-emerald-400" /></div>
                    <div>
                       <p className="text-emerald-400 text-[11px] font-bold uppercase tracking-[0.3em] mb-2 leading-none">AI Script Generator</p>
-                      <h2 className="text-white font-black tracking-tighter text-4xl leading-tight">Generate a new script</h2>
+                      <h2 className="text-[var(--text-main)] font-black tracking-tighter text-4xl leading-tight">Generate a new script</h2>
                    </div>
                 </div>
                 <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-emerald-500/15 border border-emerald-500/30">
@@ -475,7 +475,7 @@ export default function NarrativeLogicMatrixPage() {
             <div className="flex items-center gap-6 relative z-10">
                <div className="w-14 h-14 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[1.6rem] flex items-center justify-center shadow-lg"><Network size={26} className="text-indigo-400" /></div>
                <div>
-                  <h2 className="text-3xl font-black text-white tracking-tighter leading-none mb-2">Your scripts</h2>
+                  <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tighter leading-none mb-2">Your scripts</h2>
                   <p className="text-[13px] text-slate-400 font-medium leading-none">Browse, edit, duplicate, and export.</p>
                </div>
             </div>
@@ -613,7 +613,7 @@ export default function NarrativeLogicMatrixPage() {
       {/* Purge Confirmation Modal */}
       <AnimatePresence>
         {purgeTarget && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-12 bg-[#020205]/90 backdrop-blur-2xl" onClick={() => !purging && setPurgeTargetId(null)}>
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-12 bg-[var(--page-bg)]/90 backdrop-blur-2xl" onClick={() => !purging && setPurgeTargetId(null)}>
             <motion.div
                initial={{ opacity: 0, scale: 0.92, y: 24 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -629,7 +629,7 @@ export default function NarrativeLogicMatrixPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                      <p className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.3em] mb-2">Permanent action</p>
-                     <h3 className="text-2xl font-black text-white tracking-tight leading-tight mb-2">Delete this script?</h3>
+                     <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight mb-2">Delete this script?</h3>
                      <p className="text-[13px] font-medium text-slate-400 leading-relaxed">
                         <span className="text-white font-bold">{purgeTarget.topic || purgeTarget.title || 'Untitled script'}</span> will be permanently deleted. This cannot be undone.
                      </p>

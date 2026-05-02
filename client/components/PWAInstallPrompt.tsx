@@ -139,7 +139,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               <Download className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+              <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] text-sm">
                 Install Click
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">

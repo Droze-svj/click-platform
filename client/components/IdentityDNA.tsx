@@ -43,7 +43,7 @@ export default function IdentityDNA() {
             <Fingerprint className="text-indigo-400 group-hover:scale-125 transition-transform duration-700" size={40} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none mb-2">Identity DNA Hub</h1>
+            <h1 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-2">Identity DNA Hub</h1>
             <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.4em] italic leading-none border-l-2 border-indigo-500/20 pl-4 ml-1">Universal Brand Resonance // 2026.5_SOVEREIGN</p>
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function IdentityDNA() {
                     <div className={`${glassStyle} p-10 rounded-[3rem] group`}>
                        <div className="flex items-center gap-4 mb-8">
                           <Sliders className="text-indigo-400" size={20} />
-                          <h3 className="text-[12px] font-black text-white uppercase tracking-widest">Tonal Flux</h3>
+                          <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest">Tonal Flux</h3>
                        </div>
                        <div className="space-y-12">
                           {['Tone_Intensity', 'Pacing_Velocity', 'Vocabulary_Resonance'].map(label => (
@@ -134,7 +134,7 @@ export default function IdentityDNA() {
                     <div className={`${glassStyle} p-10 rounded-[3rem]`}>
                        <div className="flex items-center gap-4 mb-8">
                           <Sparkles className="text-amber-400" size={20} />
-                          <h3 className="text-[12px] font-black text-white uppercase tracking-widest">Voice Archetype</h3>
+                          <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest">Voice Archetype</h3>
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                           {['Educational', 'Authoritative', 'Witty', 'Aggressive', 'Calm', 'Entertaining'].map(arche => (
@@ -157,7 +157,7 @@ export default function IdentityDNA() {
                     <div className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center mb-6">
                        <Zap className="text-indigo-400 animate-pulse" size={24} />
                     </div>
-                    <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-2 leading-none">Voice Cloning Initiated</h3>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2 leading-none">Voice Cloning Initiated</h3>
                     <p className="text-[11px] text-slate-800 font-black uppercase tracking-[0.3em] leading-relaxed mb-8 italic opacity-60 max-w-md">Upload a 30-second audio sample to extract your synchronous vocal DNA.</p>
                     <button className="px-12 py-5 bg-indigo-500 text-white rounded-[2rem] text-[12px] font-black uppercase tracking-[0.5em] shadow-xl hover:bg-indigo-400 transition-all duration-700 italic active:scale-95 group/btn">
                        START_LATTICE_SYNC
@@ -179,7 +179,7 @@ export default function IdentityDNA() {
                        <div>
                           <div className="flex items-center gap-4 mb-8">
                              <Palette className="text-indigo-400" size={20} />
-                             <h3 className="text-[12px] font-black text-white uppercase tracking-widest">Consistency Lock_v2.1</h3>
+                             <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest">Consistency Lock_v2.1</h3>
                           </div>
                           <p className="text-2xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">SEED_FINGERPRINT: {dna.character.faceSeed}</p>
                           <p className="text-[11px] text-slate-900 font-black uppercase tracking-widest leading-relaxed mb-10 italic opacity-40">High-fidelity generative lock for character persistence across all kinetic sequences.</p>
@@ -197,7 +197,7 @@ export default function IdentityDNA() {
                     <div className={`${glassStyle} p-10 rounded-[3rem] flex flex-col justify-between`}>
                        <div className="flex items-center gap-4 mb-8">
                           <Smartphone className="text-indigo-400" size={20} />
-                          <h3 className="text-[12px] font-black text-white uppercase tracking-widest">Archive Style</h3>
+                          <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest">Archive Style</h3>
                        </div>
                        <div className="space-y-4">
                           {['Smart_Tech', 'Cyber_Punk', 'Minimal_Zen', 'Bold_Retro'].map(style => (
@@ -227,7 +227,7 @@ export default function IdentityDNA() {
                              <Activity className="text-indigo-400 animate-pulse" size={24} />
                           </div>
                           <div>
-                             <h3 className="text-[12px] font-black text-white uppercase tracking-widest">Niche Resonance Chart</h3>
+                             <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest">Niche Resonance Chart</h3>
                              <p className="text-[8px] font-black text-slate-800 uppercase tracking-[0.3em] italic opacity-40">Live Global Sync // {dna.content.niche}</p>
                           </div>
                        </div>

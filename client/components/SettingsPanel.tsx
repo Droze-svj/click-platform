@@ -29,7 +29,7 @@ export default function SettingsPanel() {
 
         {/* Header */}
         <div>
-          <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+          <h2 className="text-3xl font-black text-gray-900 dark:text-[var(--text-main)] flex items-center gap-3">
             <Settings className="w-8 h-8 text-blue-500" />
             Global Settings
           </h2>

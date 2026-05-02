@@ -144,7 +144,7 @@ export default function CognitiveForecasterPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">PREDICTION_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Insights</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">Insights</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Predicted performance for upcoming posts plus the patterns Click has noticed in your audience. Use it to decide what to ship next.</p>
               </div>
            </div>
@@ -229,7 +229,7 @@ export default function CognitiveForecasterPage() {
           <div className={`${glassStyle} rounded-[6rem] overflow-hidden group border-indigo-500/10 shadow-[0_60px_150px_rgba(0,0,0,0.6)]`}>
             <div className="px-16 py-12 border-b border-white/5 flex items-center gap-10 bg-white/[0.01]">
               <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-2xl transition-all group-hover:rotate-12 group-hover:scale-110"><Users size={32} className="text-indigo-400" /></div>
-              <h3 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Neural Receptors</h3>
+              <h3 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Neural Receptors</h3>
             </div>
             <div className="p-16 min-h-[600px] flex flex-col justify-center">
               {audienceInsights?.hasData || platformAudience ? (
@@ -278,7 +278,7 @@ export default function CognitiveForecasterPage() {
           <div className={`${glassStyle} rounded-[6rem] overflow-hidden group border-amber-500/10 shadow-[0_60px_150px_rgba(0,0,0,0.6)]`}>
             <div className="px-16 py-12 border-b border-white/5 flex items-center gap-10 bg-white/[0.01]">
               <div className="w-16 h-16 rounded-[2rem] bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-2xl transition-all group-hover:rotate-[-12deg] group-hover:scale-110"><Sparkles size={32} className="text-amber-400" /></div>
-              <h3 className="font-black text-white italic uppercase tracking-tighter text-5xl leading-none">Logic Synthesis</h3>
+              <h3 className="font-black text-[var(--text-main)] italic uppercase tracking-tighter text-5xl leading-none">Logic Synthesis</h3>
             </div>
             <div className="p-16 min-h-[600px] flex flex-col justify-center">
               {audienceInsights?.insights?.recommendations && audienceInsights.insights.recommendations.length > 0 ? (
@@ -328,7 +328,7 @@ export default function CognitiveForecasterPage() {
                 <a.icon size={44} className={a.color} />
               </div>
               <div>
-                <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">{a.label}</h4>
+                <h4 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4 leading-none">{a.label}</h4>
                 <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed px-12">{a.desc}</p>
               </div>
               <div className="mt-8 flex items-center gap-6 text-[12px] font-black text-teal-400 uppercase tracking-[0.6em] italic group-hover:gap-12 transition-all duration-700 shadow-teal-500/20">

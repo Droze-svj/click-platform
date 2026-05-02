@@ -91,7 +91,7 @@ export default function UserPerformanceBenchmark({ period = 30 }: { period?: num
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Target className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Your Performance Benchmark
           </h2>
         </div>
@@ -126,7 +126,7 @@ export default function UserPerformanceBenchmark({ period = 30 }: { period?: num
       {/* Platform Benchmarks */}
       {Object.keys(benchmark.platformBenchmarks).length > 0 && (
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
             Platform Performance
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -136,7 +136,7 @@ export default function UserPerformanceBenchmark({ period = 30 }: { period?: num
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-gray-900 dark:text-white capitalize">
+                  <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] capitalize">
                     {platform}
                   </h4>
                   <span className="text-xs text-gray-500">

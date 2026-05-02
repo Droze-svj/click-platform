@@ -101,7 +101,7 @@ export default function IdentityMatrixInterfacePage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Fingerprint size={64} className="text-indigo-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Deciphering Identity DNA...</span>
      </div>
@@ -137,7 +137,7 @@ export default function IdentityMatrixInterfacePage() {
                        <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SIGNATURE_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-2">Profile</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">Profile</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your name, photo, bio, and the public details that show up on every post you publish through Click.</p>
               </div>
            </div>
@@ -177,7 +177,7 @@ export default function IdentityMatrixInterfacePage() {
                  </div>
                  
                  <div className="space-y-4">
-                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none truncate max-w-xs drop-shadow-2xl">{profile.name || 'Sovereign_Node'}</h3>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none truncate max-w-xs drop-shadow-2xl">{profile.name || 'Sovereign_Node'}</h3>
                     <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{profile.email || 'NULL_SIGNAL_PROTOCOL'}</p>
                     </div>
@@ -231,7 +231,7 @@ export default function IdentityMatrixInterfacePage() {
                  <div className="flex items-center gap-8 mb-20 relative z-10">
                     <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Target size={40} className="text-indigo-400 animate-pulse" /></div>
                     <div>
-                       <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Signature Terminal</h2>
+                       <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Signature Terminal</h2>
                        <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Calibrating neural bio-synthesis, operational parameters and mission hub coordinates.</p>
                     </div>
                  </div>

@@ -43,7 +43,7 @@ const StatCard = ({ icon: Icon, label, value, subValue, color = 'indigo' }: any)
 const SyndicateDebate = ({ debate, onExecute }: any) => (
   <div className={`${glass} p-10 space-y-8`}>
     <div className="flex items-center justify-between">
-      <h3 className="text-2xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+      <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
         <Cpu className="w-6 h-6 text-indigo-400" />
         Syndicate Debate (Neural Council)
       </h3>
@@ -70,7 +70,7 @@ const SyndicateDebate = ({ debate, onExecute }: any) => (
 
 const GovernanceLedger = ({ actions }: any) => (
   <div className={`${glass} p-10 space-y-8`}>
-    <h3 className="text-2xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+    <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
       <Shield className="w-6 h-6 text-emerald-400" />
       Governance Ledger (Immutable)
     </h3>
@@ -227,7 +227,7 @@ export default function OverlordDashboard() {
               <span className={`${pill} text-indigo-400 border-indigo-500/20`}>Overlord Terminal v1.1 [Phase 13 Active]</span>
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white italic uppercase tracking-tighter leading-none">Command Center</h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Command Center</h1>
             <p className="text-slate-500 text-[10px] md:text-sm font-bold uppercase tracking-[0.4em] mt-3">Universal Fleet Orchestration</p>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function OverlordDashboard() {
         <div className={`${glass} p-10 col-span-2 space-y-8`}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">Vision Engine Performance</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Vision Engine Performance</h3>
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Neural Rendering & Auto-Correction Health</p>
             </div>
             <div className="flex gap-4">
@@ -322,7 +322,7 @@ export default function OverlordDashboard() {
         </div>
 
         <div className={`${glass} p-10 space-y-6`}>
-          <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Network Verifier</h3>
+          <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Network Verifier</h3>
           <div className="space-y-4">
             {['LinkedIn', 'Twitter', 'Facebook', 'Instagram'].map((p) => (
               <div key={p} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
@@ -341,7 +341,7 @@ export default function OverlordDashboard() {
       <div className={`${glass} p-10 mt-10 space-y-8`}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">Global Reach Expansion</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Global Reach Expansion</h3>
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Multi-Language Broadcasting & Localized Engagement</p>
           </div>
           <div className="flex -space-x-2">
@@ -399,7 +399,7 @@ export default function OverlordDashboard() {
         <div className={`${glass} p-10 col-span-2 space-y-8`}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">Click Nexus</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Click Nexus</h3>
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Real-Time Team Orchestration & Agency Pulse</p>
             </div>
             <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ export default function OverlordDashboard() {
 
         <div className={`${glass} p-10 space-y-8`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Urgent Review</h3>
+            <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Urgent Review</h3>
             <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-black border border-rose-500/30">4</span>
           </div>
           
@@ -480,7 +480,7 @@ export default function OverlordDashboard() {
         <div className={`${glass} p-10 col-span-3 space-y-8`}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">Revenue Hub</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Revenue Hub</h3>
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Click Monetization Health & Conversion Velocity</p>
             </div>
             <div className="flex items-center gap-4">
@@ -538,7 +538,7 @@ export default function OverlordDashboard() {
         </div>
 
         <div className={`${glass} p-10 space-y-8`}>
-          <h3 className="text-xl font-black text-white italic uppercase tracking-tight">Top Converters</h3>
+          <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Top Converters</h3>
           <div className="space-y-6">
             {[
               { name: 'Elite AI Course', price: '$99', rpv: '$1.42', status: 'Viral' },
@@ -578,7 +578,7 @@ export default function OverlordDashboard() {
               <span className={`${pill} text-purple-400 border-purple-500/20`}>Phase 18: Predictive Strategist ACTIVE</span>
               <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
             </div>
-            <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Click Strategist</h2>
+            <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Click Strategist</h2>
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-3">Autonomous A/B Swarm & Viral Potential Matrix</p>
           </div>
           <div className="text-right">
@@ -648,7 +648,7 @@ export default function OverlordDashboard() {
 
           <div className={`${glass} p-10 space-y-8 flex flex-col justify-between`}>
             <div className="space-y-6">
-              <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+              <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-indigo-400" />
                 Strategic Protocol
               </h3>
@@ -684,7 +684,7 @@ export default function OverlordDashboard() {
           
           <div className="flex items-center justify-between relative z-10">
             <div>
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">Long-Tail Resurrection</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Long-Tail Resurrection</h3>
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Autonomous Asset Recycling & Legacy Neural Bridge</p>
             </div>
             <div className="flex items-center gap-4">
@@ -745,7 +745,7 @@ export default function OverlordDashboard() {
 
         <div className={`${glass} p-10 space-y-8 flex flex-col justify-between relative overflow-hidden`}>
           <div className="space-y-6">
-            <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+            <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
               <Radio className="w-5 h-5 text-emerald-400" />
               Resurrection Queue
             </h3>
@@ -782,7 +782,7 @@ export default function OverlordDashboard() {
               <span className={`${pill} text-emerald-400 border-emerald-500/20`}>Phase 20: Hyper-Sensitive Pulse ACTIVE</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Community Pulse</h2>
+            <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Community Pulse</h2>
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-3">Autonomous Sentiment Drift & Vibe Shift Analysis</p>
           </div>
           <div className="text-right">
@@ -878,7 +878,7 @@ export default function OverlordDashboard() {
           
           <div className="flex items-center justify-between relative z-10">
             <div>
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">Click Econometrics</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Click Econometrics</h3>
               <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Spectral Revenue Forecasting & Yield Optimization</p>
             </div>
             <div className="flex items-center gap-4">
@@ -942,7 +942,7 @@ export default function OverlordDashboard() {
 
         <div className={`${glass} p-10 space-y-8 flex flex-col justify-between relative overflow-hidden`}>
           <div className="space-y-6">
-            <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+            <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
               <BarChart3 className="w-5 h-5 text-indigo-400" />
               Yield Curve
             </h3>
@@ -999,7 +999,7 @@ export default function OverlordDashboard() {
           {/* Autonomous Vision Feed */}
           <div className={`${glass} p-10 space-y-8`}>
              <div className="flex items-center justify-between">
-               <h3 className="text-2xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+               <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
                  <Sparkles className="w-6 h-6 text-purple-400" />
                  Autonomous Vision Feed
                </h3>
@@ -1053,7 +1053,7 @@ export default function OverlordDashboard() {
         <div className={`${glass} lg:col-span-2 p-12 space-y-10`}>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-black text-white italic uppercase tracking-tight">Fleet Manifest</h2>
+              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Fleet Manifest</h2>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Real-time Node Telemetry</p>
             </div>
             <button className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white transition-all">
@@ -1103,7 +1103,7 @@ export default function OverlordDashboard() {
         <div className="flex flex-col gap-10">
           <div className={`${glass} p-10 space-y-8 flex-1`}>
             <div>
-              <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">Arbitrage Steering</h2>
+              <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Arbitrage Steering</h2>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Revenue Engine Priority</p>
             </div>
 
@@ -1158,7 +1158,7 @@ export default function OverlordDashboard() {
             <Database className="w-6 h-6 text-amber-400" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-white italic uppercase tracking-tight">Intelligence Ledger</h2>
+            <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight">Intelligence Ledger</h2>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Cross-Fleet Tactical Shared Memory</p>
           </div>
         </div>
@@ -1170,7 +1170,7 @@ export default function OverlordDashboard() {
                 v.{(item.viralScore * 100).toFixed(0)}
               </div>
               <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">{item.lastSource}</p>
-              <h3 className="text-xl font-black text-white italic leading-tight mb-4">{item.tactic}</h3>
+              <h3 className="text-xl font-black text-[var(--text-main)] italic leading-tight mb-4">{item.tactic}</h3>
               <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/5">
                 <div className="flex items-center gap-1.5">
                   <span className="w-1 h-1 rounded-full bg-emerald-500" />

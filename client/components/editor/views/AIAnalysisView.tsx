@@ -117,7 +117,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
               <Activity className="w-4 h-4 animate-pulse" />
               Neural Analytics
             </div>
-            <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
+            <h2 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
               SCENE<br />SYNTHESIS
             </h2>
             <p className="text-slate-500 text-lg font-medium tracking-tight italic">
@@ -171,7 +171,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
                   <Target className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">OPTIMAL NODE SUGGESTIONS</h3>
+                  <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">OPTIMAL NODE SUGGESTIONS</h3>
                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 block italic">Click to bridge to Chrono Matrix</span>
                 </div>
               </div>
@@ -237,7 +237,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
               <Sparkles className="w-10 h-10 text-fuchsia-400 group-hover:animate-pulse" />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">ELITE AI</h3>
+              <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">ELITE AI</h3>
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic">Semantic Edit Node</span>
             </div>
             <ChevronRight className="w-8 h-8 text-slate-800 group-hover:text-white transition-colors ml-auto" />
@@ -260,7 +260,7 @@ const AIAnalysisView: React.FC<AIAnalysisViewProps> = ({
               <Layers className="w-10 h-10 text-indigo-400" />
             </div>
             <div>
-              <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">MATRIX</h3>
+              <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">MATRIX</h3>
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-2 block italic">Precision Cuts Node</span>
             </div>
             <ChevronRight className="w-8 h-8 text-slate-800 group-hover:text-white transition-colors ml-auto" />

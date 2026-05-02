@@ -107,7 +107,7 @@ export default function ContentAdaptationAssistant({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center gap-3 mb-6">
         <Wand2 className="w-6 h-6 text-purple-600" />
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
           AI Content Adaptation Assistant
         </h3>
       </div>
@@ -129,7 +129,7 @@ export default function ContentAdaptationAssistant({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{platformIcons[adaptation.platform] || '📱'}</span>
-                  <h4 className="font-semibold text-gray-900 dark:text-white capitalize">
+                  <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] capitalize">
                     {adaptation.platform}
                   </h4>
                   {adaptation.optimized && (

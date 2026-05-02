@@ -197,7 +197,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
               <div className="p-8 space-y-6">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
-                    <h2 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter uppercase">
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-[var(--text-main)] italic tracking-tighter uppercase">
                       Quick Content
                     </h2>
                     <div className="flex items-center gap-2">
@@ -301,7 +301,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                         <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
                           {template.icon}
                         </div>
-                        <h3 className="font-black text-xs text-gray-900 dark:text-white uppercase tracking-tighter">
+                        <h3 className="font-black text-xs text-gray-900 dark:text-[var(--text-main)] uppercase tracking-tighter">
                           {template.name}
                         </h3>
                       </div>

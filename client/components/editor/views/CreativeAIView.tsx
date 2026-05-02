@@ -275,7 +275,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
         </div>
 
         <div>
-          <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase">{title}</h3>
+          <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{title}</h3>
           <p className="text-sm font-medium text-slate-400 mt-2">{desc}</p>
         </div>
       </div>

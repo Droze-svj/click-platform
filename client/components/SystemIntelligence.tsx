@@ -91,7 +91,7 @@ export default function SystemIntelligence() {
     <div className="p-8 space-y-8 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-[var(--text-main)] flex items-center gap-3">
             <Zap className="text-amber-500 fill-amber-500 w-8 h-8" />
             System Intelligence
           </h1>

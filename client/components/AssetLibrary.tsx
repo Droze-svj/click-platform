@@ -355,7 +355,7 @@ export default function AssetLibrary({
               <Orbit className="w-3.5 h-3.5 animate-spin-slow" />
               Repository Indexer
             </div>
-            <h3 className="text-4xl font-black text-white italic tracking-tighter flex items-center gap-4">
+            <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter flex items-center gap-4">
               Intelligence Library
             </h3>
           </div>
@@ -452,7 +452,7 @@ export default function AssetLibrary({
               <Sparkles className="w-10 h-10 text-slate-700" />
             </div>
             <div className="space-y-2">
-              <h4 className="text-2xl font-black text-white italic tracking-tight">Repository Empty</h4>
+              <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight">Repository Empty</h4>
               <p className="text-slate-500 text-sm font-medium">Synchronize new neural nodes to populate your library.</p>
             </div>
           </div>
@@ -565,7 +565,7 @@ export default function AssetLibrary({
 
                 {/* Info Area */}
                 <div className="p-6 space-y-3">
-                  <h4 className="text-lg font-black text-white tracking-tight italic truncate group-hover:text-indigo-400 transition-colors">
+                  <h4 className="text-lg font-black text-[var(--text-main)] tracking-tight italic truncate group-hover:text-indigo-400 transition-colors">
                     {asset.title || 'UNTITLED NODE'}
                   </h4>
                   <div className="flex items-center justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
@@ -598,7 +598,7 @@ export default function AssetLibrary({
                   {getAssetIcon(asset.type)}
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="text-2xl font-black text-white italic tracking-tight group-hover:text-indigo-400 transition-colors">
+                  <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight group-hover:text-indigo-400 transition-colors">
                     {asset.title || 'UNTITLED NODE'}
                   </h4>
                   <div className="flex items-center gap-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">
@@ -672,7 +672,7 @@ export default function AssetLibrary({
               {/* Custom Preview UI... */}
               <div className="p-10 space-y-8">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-3xl font-black text-white italic tracking-tighter">{previewAsset.title}</h2>
+                  <h2 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter">{previewAsset.title}</h2>
                   <button onClick={() => setPreviewAsset(null)} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
                 </div>
                 <div className="aspect-video bg-black/50 rounded-[3rem] border border-white/5 flex items-center justify-center relative overflow-hidden shadow-inner">

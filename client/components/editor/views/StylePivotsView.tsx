@@ -52,7 +52,7 @@ const StylePivotsView: React.FC<StylePivotsViewProps> = ({ currentPivot, onSelec
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-black text-white italic tracking-widest uppercase">Select Aesthetic Engine</h3>
+        <h3 className="text-sm font-black text-[var(--text-main)] italic tracking-widest uppercase">Select Aesthetic Engine</h3>
         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black leading-tight">
           2026 Style Pivots — Click to apply a new look.
         </p>

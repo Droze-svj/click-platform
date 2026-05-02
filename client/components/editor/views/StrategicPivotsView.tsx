@@ -76,7 +76,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
               <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                  <Target className="w-4 h-4 text-emerald-400" />
               </div>
-              <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Winning DNA Summary: {selectedNiche}</h3>
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest">Winning DNA Summary: {selectedNiche}</h3>
            </div>
 
            <div className="flex-1 space-y-4">
@@ -103,7 +103,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
         <div className="col-span-8 flex flex-col gap-6 overflow-hidden">
            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 overflow-y-auto custom-scrollbar">
               <div className="flex items-center justify-between mb-8">
-                 <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Autonomous Strategy for {selectedNiche}</h3>
+                 <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest">Autonomous Strategy for {selectedNiche}</h3>
                  <span className="text-[8px] px-2 py-1 rounded bg-violet-500/20 text-violet-400 font-black uppercase">Stress-Test Live</span>
               </div>
 
@@ -125,7 +125,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
                           0{i+1}
                         </div>
                         <div className="flex-1">
-                           <h4 className="text-[13px] font-black text-white uppercase tracking-wider mb-2">{pivot.pivot}</h4>
+                           <h4 className="text-[13px] font-black text-[var(--text-main)] uppercase tracking-wider mb-2">{pivot.pivot}</h4>
                            <p className="text-[10px] text-slate-400 leading-relaxed mb-4 italic">&ldquo;{pivot.reason}&rdquo;</p>
                            <div className="flex items-center justify-between mt-4">
                                <div className="flex items-center gap-2">

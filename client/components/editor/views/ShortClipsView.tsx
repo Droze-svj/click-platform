@@ -166,7 +166,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
             <Film className="w-10 h-10 text-rose-400 group-hover:rotate-12 transition-transform" />
           </div>
           <div className="space-y-4">
-            <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
+            <h2 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
               PRO CLIPS<br />FORGE
             </h2>
             <p className="text-slate-500 text-lg font-medium tracking-tight italic">
@@ -230,7 +230,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                 <Target className="w-6 h-6 text-rose-400 animate-pulse" />
               </div>
               <div>
-                <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Hook Intelligence</h3>
+                <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Hook Intelligence</h3>
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 block italic">Semantic Peak Identification</span>
               </div>
             </div>
@@ -281,7 +281,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
               <Zap className="w-6 h-6 text-rose-400 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">FORMAT MATRIX</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">FORMAT MATRIX</h3>
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 block italic">One-click spatial calibration</span>
             </div>
           </div>
@@ -346,7 +346,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
               <Scissors className="w-6 h-6 text-rose-400" />
             </div>
             <div>
-              <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">TEMPORAL SYNTHESIS</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">TEMPORAL SYNTHESIS</h3>
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mt-2 block italic">Snap clip from current playhead node</span>
             </div>
           </div>
@@ -408,7 +408,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
             <Target className="w-10 h-10 text-indigo-400" />
           </div>
           <div className="space-y-4">
-            <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">STRATEGIC PRO ADVISORY</h4>
+            <h4 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">STRATEGIC PRO ADVISORY</h4>
             <p className="text-lg text-slate-400 font-medium italic leading-relaxed pr-20">
               Bridge to <span onClick={() => setActiveCategory('ai-edit')} className="text-white font-black underline decoration-indigo-500/30 underline-offset-8 cursor-pointer hover:text-indigo-400 transition-colors">ELITE AI Hub</span> to find viral moments—choose segments by <span className="text-white font-black">mission strategy</span>. Calibrate cuts, captions, and B-roll clusters in the Forge. Test hook variations and preserve Alpha-tier nodes.
             </p>

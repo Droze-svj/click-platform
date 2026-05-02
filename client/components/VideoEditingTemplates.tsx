@@ -876,7 +876,7 @@ export default function VideoEditingTemplates({
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <Icon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <h3 className="font-semibold text-gray-900 dark:text-white">{template.name}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{template.name}</h3>
             {isCustom && (
               <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
                 Custom
@@ -1041,7 +1041,7 @@ export default function VideoEditingTemplates({
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12">
           <Sparkles className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
             No templates found
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
@@ -1070,7 +1070,7 @@ export default function VideoEditingTemplates({
                           <Icon className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-white">{template.name}</h2>
+                          <h2 className="text-2xl font-bold text-[var(--text-main)]">{template.name}</h2>
                           <p className="text-white/80">{template.description}</p>
                         </div>
                       </div>
@@ -1091,7 +1091,7 @@ export default function VideoEditingTemplates({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Settings Overview */}
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
                           Template Settings
                         </h3>
                         <div className="space-y-3">
@@ -1120,7 +1120,7 @@ export default function VideoEditingTemplates({
 
                       {/* Text Overlays Preview */}
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
                           Text Overlays
                         </h3>
                         <div className="space-y-3">

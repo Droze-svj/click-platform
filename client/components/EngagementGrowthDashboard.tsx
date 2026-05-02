@@ -102,7 +102,7 @@ export default function EngagementGrowthDashboard() {
     <div className="space-y-6">
       {/* Period Selector */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
           Engagement & Growth Dashboard
         </h2>
         <div className="flex gap-2">
@@ -224,7 +224,7 @@ export default function EngagementGrowthDashboard() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-6 h-6 text-blue-600" />
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
               Growth Insights & Recommendations
             </h3>
           </div>
@@ -244,7 +244,7 @@ export default function EngagementGrowthDashboard() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                      <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
                         {insight.title}
                       </h4>
                       <span className={`text-xs px-2 py-1 rounded ${

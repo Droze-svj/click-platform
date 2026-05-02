@@ -141,7 +141,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Target className="w-6 h-6 text-purple-600" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
               Performance Benchmarking
             </h2>
           </div>
@@ -197,7 +197,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                 {/* Platform Benchmarks */}
                 {Object.keys(benchmark.benchmarks).length > 0 && (
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
                       Platform Performance
                     </h3>
                     <div className="space-y-4">
@@ -207,7 +207,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                           className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
                         >
                           <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white capitalize">
+                            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] capitalize">
                               {platform}
                             </h4>
                             <div className="flex items-center gap-2">
@@ -340,7 +340,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
               </div>
             ) : (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
                   vs Similar Content
                 </h3>
 
@@ -437,7 +437,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
             ) : (
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
                     Performance Prediction
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -468,7 +468,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
                 </div>
 
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Predicted Percentile</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">Predicted Percentile</h4>
                   <p className={`text-2xl font-bold ${getPercentileColor(prediction.predictedPercentile.percentile)}`}>
                     {prediction.predictedPercentile.percentile}th percentile
                   </p>

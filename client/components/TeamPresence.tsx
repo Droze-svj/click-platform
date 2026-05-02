@@ -169,7 +169,7 @@ export default function TeamPresence() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase leading-none">Collaborate</h3>
+                  <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Collaborate</h3>
                   <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Scale your content ecosystem</p>
                 </div>
 

@@ -93,7 +93,7 @@ export default function ViralPredictor({ content, onPrediction }: ViralPredictor
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="text-purple-600" size={24} />
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Viral Potential Predictor</h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">Viral Potential Predictor</h3>
       </div>
 
       <button
@@ -122,7 +122,7 @@ export default function ViralPredictor({ content, onPrediction }: ViralPredictor
           </div>
 
           <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Content Factors</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">Content Factors</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2">
                 {prediction.factors.hashtags >= 3 ? (
@@ -169,7 +169,7 @@ export default function ViralPredictor({ content, onPrediction }: ViralPredictor
 
           {prediction.recommendations.length > 0 && (
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Recommendations</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">Recommendations</h4>
               <ul className="space-y-1">
                 {prediction.recommendations.map((rec, index) => (
                   <li key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">

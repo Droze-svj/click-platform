@@ -88,7 +88,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
             <Radio className="w-8 h-8 text-indigo-400 animate-pulse" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">TREND RADAR <span className="text-indigo-500">2.0</span></h2>
+            <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">TREND RADAR <span className="text-indigo-500">2.0</span></h2>
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic pl-1">Neural Niche Surveillance: {niche}</p>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
               <Target className="w-4 h-4 text-indigo-400" />
-              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">Viral Signal Matrix</h3>
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">Viral Signal Matrix</h3>
             </div>
             
             <div className="space-y-4">
@@ -154,7 +154,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                               'bg-emerald-500 shadow-emerald-500/50'
                            }`} />
                            <div className="space-y-1">
-                              <h4 className="text-sm font-black text-white uppercase italic tracking-tight">{alert.topic}</h4>
+                              <h4 className="text-sm font-black text-[var(--text-main)] uppercase italic tracking-tight">{alert.topic}</h4>
                               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{alert.platform.replace('_', ' ')} · {alert.urgency} URGENCY</p>
                            </div>
                         </div>
@@ -200,7 +200,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-2">
               <TrendingUp className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">Engagement Architecture</h3>
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">Engagement Architecture</h3>
             </div>
 
             <div className="space-y-4">
@@ -213,7 +213,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                   <div className="flex items-center gap-6">
                     <div className="text-2xl font-black text-emerald-500/20 group-hover:text-emerald-500/40 transition-colors uppercase italic tracking-tighter">#{i+1}</div>
                     <div className="space-y-1">
-                      <h4 className="text-xs font-black text-white uppercase tracking-tight">{fmt.format}</h4>
+                      <h4 className="text-xs font-black text-[var(--text-main)] uppercase tracking-tight">{fmt.format}</h4>
                       <p className="text-[10px] font-medium text-slate-500 max-w-[200px]">{fmt.description}</p>
                     </div>
                   </div>

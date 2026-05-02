@@ -76,7 +76,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
             <Cpu className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Adaptive Learning Matrix</h3>
+            <h3 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Adaptive Learning Matrix</h3>
             <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em] mt-1 block">Live Niche Evolution Loop</span>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                       {s.type === 'broll' && <Video className="w-6 h-6" />}
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-white uppercase italic tracking-tighter leading-none mb-2">
+                      <h4 className="text-sm font-black text-[var(--text-main)] uppercase italic tracking-tighter leading-none mb-2">
                         {s.title}
                         <span className="ml-3 px-2 py-0.5 rounded-full bg-emerald-500/20 text-[8px] text-emerald-400 tracking-widest">
                           {Math.round(s.confidence * 100)}% Match
@@ -167,7 +167,7 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
                 <Brain className="w-10 h-10 text-emerald-400 animate-pulse" />
               </div>
               <div>
-                <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">Personal DNA Evolving</h4>
+                <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Personal DNA Evolving</h4>
                 <p className="text-xs text-slate-500 font-medium italic mt-2">CLICK has learned 4 stylistic nuances from your recent revisions.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">

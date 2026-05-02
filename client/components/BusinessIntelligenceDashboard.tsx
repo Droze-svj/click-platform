@@ -124,7 +124,7 @@ export default function BusinessIntelligenceDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Business Intelligence
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -226,7 +226,7 @@ export default function BusinessIntelligenceDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* By Type */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
             Content by Type
           </h3>
           <div className="space-y-2">
@@ -245,7 +245,7 @@ export default function BusinessIntelligenceDashboard() {
 
         {/* By Platform */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
             Scheduled by Platform
           </h3>
           <div className="space-y-2">

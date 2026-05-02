@@ -130,7 +130,7 @@ export default function ConsensusValidationNodePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Shield size={64} className="text-indigo-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Calibrating Consensus Matrix...</span>
       </div>
@@ -170,7 +170,7 @@ export default function ConsensusValidationNodePage() {
                 <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">LATTICE_INTEGRITY_SHIELDED</span>
               </div>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] drop-shadow-2xl">Approvals</h1>
+            <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] drop-shadow-2xl">Approvals</h1>
             <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Posts and edits waiting on someone's review. Approve, reject, or request changes — Click routes the next step automatically.</p>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function ConsensusValidationNodePage() {
                         <Zap className="text-amber-500 animate-pulse" size={48} />
                       </div>
                       <div>
-                        <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Pending Node Gates</h2>
+                        <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Pending Node Gates</h2>
                         <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-amber-500/20 pl-8 ml-4">Operational streams awaiting consensus validation signatures.</p>
                       </div>
                    </div>
@@ -233,7 +233,7 @@ export default function ConsensusValidationNodePage() {
                                </div>
                             </div>
                             <div>
-                               <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 drop-shadow-2xl">{request.requestedBy.name}</h3>
+                               <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4 drop-shadow-2xl">{request.requestedBy.name}</h3>
                                <div className="flex items-center gap-4 py-2 px-6 rounded-2xl bg-black/40 border border-white/5 w-fit shadow-inner">
                                   <Database size={14} className="text-slate-500" />
                                   <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] italic leading-none font-mono">ID: {request.entityId.substring(0, 16)}...</p>
@@ -281,7 +281,7 @@ export default function ConsensusValidationNodePage() {
                     <Database className="text-indigo-400" size={40} />
                   </div>
                   <div>
-                    <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Validation Ledger</h2>
+                    <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Validation Ledger</h2>
                     <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Immutable records of consensus decisions and nodal authorizations.</p>
                   </div>
                </div>
@@ -315,7 +315,7 @@ export default function ConsensusValidationNodePage() {
 
                   return (
                     <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: idx * 0.08 }}
-                      key={request._id} className="group relative bg-[#020205] border-2 border-white/5 rounded-[4rem] p-12 hover:bg-black hover:border-indigo-500/30 transition-all duration-300 flex flex-col lg:flex-row items-center justify-between gap-16 overflow-hidden shadow-2xl"
+                      key={request._id} className="group relative bg-[var(--page-bg)] border-2 border-white/5 rounded-[4rem] p-12 hover:bg-black hover:border-indigo-500/30 transition-all duration-300 flex flex-col lg:flex-row items-center justify-between gap-16 overflow-hidden shadow-2xl"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
@@ -408,7 +408,7 @@ export default function ConsensusValidationNodePage() {
                 <div className="flex items-center gap-12 text-center md:text-left">
                   <div className="w-28 h-28 rounded-[3.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.3)] animate-pulse"><Shield size={56} className="text-indigo-400" /></div>
                   <div>
-                     <h2 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Initialize Gate</h2>
+                     <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Initialize Gate</h2>
                      <p className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Defining consensus parameters for validated mission deployment.</p>
                   </div>
                 </div>

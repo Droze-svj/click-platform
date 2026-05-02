@@ -72,7 +72,7 @@ export default function HelpCenter() {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-[var(--text-main)]">
           Help Center
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
@@ -139,7 +139,7 @@ export default function HelpCenter() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-1">
                     {article.title}
                   </h3>
                   <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
@@ -161,7 +161,7 @@ export default function HelpCenter() {
       <div className="mt-8 p-6 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
         <div className="flex items-center gap-3 mb-4">
           <MessageCircle className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">
             Still need help?
           </h2>
         </div>

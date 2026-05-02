@@ -63,7 +63,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Video Comparison</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Video Comparison</h3>
           {onClose && (
             <button
               onClick={onClose}
@@ -78,7 +78,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Original Video */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 dark:text-white text-center">Original</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] text-center">Original</h4>
               <div className="relative bg-black rounded-lg overflow-hidden">
                 <video
                   ref={originalRef}
@@ -108,7 +108,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
 
             {/* Processed Video */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 dark:text-white text-center">Processed</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] text-center">Processed</h4>
               <div className="relative bg-black rounded-lg overflow-hidden">
                 <video
                   ref={processedRef}

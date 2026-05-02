@@ -76,7 +76,7 @@ export default function AIHelpSearch() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)]">
                     {article.title}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400 capitalize mt-1">

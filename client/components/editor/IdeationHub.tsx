@@ -64,7 +64,7 @@ export default function IdeationHub() {
             <Brain size={12} />
             Strategic Nerve Center
           </div>
-          <h1 className="text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
+          <h1 className="text-5xl font-black italic tracking-tighter text-[var(--text-main)] uppercase leading-none">
             IDEATION HUB
           </h1>
         </div>
@@ -104,7 +104,7 @@ export default function IdeationHub() {
                   <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <h2 className="text-2xl font-black italic text-white uppercase">Content Gap Analysis</h2>
+                  <h2 className="text-2xl font-black italic text-[var(--text-main)] uppercase">Content Gap Analysis</h2>
                 </div>
 
                 <div className="space-y-4">
@@ -152,7 +152,7 @@ export default function IdeationHub() {
                <div className={`${glassStyle} p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent`}>
                   <div className="flex items-center gap-3 mb-6">
                     <Activity className="w-5 h-5 text-indigo-400" />
-                    <h3 className="text-lg font-black text-white italic uppercase">Market Heat</h3>
+                    <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase">Market Heat</h3>
                   </div>
                   <div className="space-y-4">
                     <div className="p-4 rounded-2xl bg-black/40 border border-white/5">
@@ -192,7 +192,7 @@ export default function IdeationHub() {
                 <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${framework.color} shadow-lg mb-6 flex items-center justify-center text-white`}>
                   <Zap size={24} />
                 </div>
-                <h3 className="text-xl font-black italic text-white uppercase mb-4">{framework.name}</h3>
+                <h3 className="text-xl font-black italic text-[var(--text-main)] uppercase mb-4">{framework.name}</h3>
                 <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8 flex-1">
                   {framework.desc}
                 </p>
@@ -219,7 +219,7 @@ export default function IdeationHub() {
                <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-8">
                   <SearchCode className="w-10 h-10 text-indigo-400" />
                </div>
-               <h2 className="text-3xl font-black italic text-white uppercase mb-4">Competitor Autopsy</h2>
+               <h2 className="text-3xl font-black italic text-[var(--text-main)] uppercase mb-4">Competitor Autopsy</h2>
                <p className="text-slate-400 text-sm font-medium mb-10 max-w-lg">
                   Analyze viral videos to strip away the creative and reveal the raw marketing DNA behind their success.
                </p>

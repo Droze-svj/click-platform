@@ -136,7 +136,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
 
       {/* Performance Metrics */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5" />
           Performance Metrics
         </h3>
@@ -208,7 +208,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
 
       {/* Trends */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
           Performance Trends
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -246,7 +246,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
       {/* Platform Breakdown */}
       {Object.keys(analytics.platformBreakdown).length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
             Platform Breakdown
           </h3>
           <div className="space-y-3">
@@ -273,7 +273,7 @@ export default function AdvancedRecyclingAnalytics({ period = 30 }: { period?: n
       {/* Evergreen Stats */}
       {analytics.evergreen.total > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
             Evergreen Content
           </h3>

@@ -246,7 +246,7 @@ export default function ChromaKey({
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <Palette className="w-5 h-5" />
               Chroma Key (Green Screen)
             </h3>
@@ -310,7 +310,7 @@ export default function ChromaKey({
 
             {/* Background Selection */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-3">Background</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">Background</h4>
               <div className="grid grid-cols-4 gap-3 mb-4">
                 {backgroundImages.map((bg, index) => (
                   <button
@@ -374,7 +374,7 @@ export default function ChromaKey({
 
             {/* Key Color Picker */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <Palette className="w-4 h-4" />
                 Key Color
               </h4>
@@ -404,7 +404,7 @@ export default function ChromaKey({
 
             {/* Chroma Key Settings */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <Sliders className="w-4 h-4" />
                 Key Settings
               </h4>
@@ -483,7 +483,7 @@ export default function ChromaKey({
 
             {/* Preset Buttons */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-3">Presets</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">Presets</h4>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onSettingsChange({

@@ -18,7 +18,7 @@ export default function CompliancePage() {
             <Shield size={24} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">Compliance & Safety</h1>
+            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">Compliance & Safety</h1>
             <p className="text-slate-400 font-medium">Protect your brand and ensure platform policy adherence</p>
           </div>
         </div>

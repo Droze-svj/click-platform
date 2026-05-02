@@ -95,7 +95,7 @@ const GlobalABSynthesisHub: React.FC<{
             <Split className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-white flex items-center gap-4">
+            <h2 className="text-3xl font-black uppercase tracking-[0.3em] italic text-[var(--text-main)] flex items-center gap-4">
               A/B Synthesis Hub
               <span className="text-[10px] px-3 py-1 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 non-italic tracking-widest">LAB_NODE_0X</span>
             </h2>

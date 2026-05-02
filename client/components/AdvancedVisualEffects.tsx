@@ -331,7 +331,7 @@ export default function AdvancedVisualEffects({
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               Advanced Visual Effects
             </h3>
@@ -393,7 +393,7 @@ export default function AdvancedVisualEffects({
           <div className="space-y-6">
             {/* Preset Particle Systems */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Particle Presets</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Particle Presets</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
                   { type: 'fire' as const, icon: Flame, color: 'from-red-500 to-orange-500' },
@@ -422,7 +422,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Particle Systems */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Active Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Effects</h4>
               <div className="space-y-3">
                 {particleSystems.map(system => (
                   <div key={system.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -535,7 +535,7 @@ export default function AdvancedVisualEffects({
           <div className="space-y-6">
             {/* Light Effect Types */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Light Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Light Effects</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
                   { type: 'god-rays' as const, name: 'God Rays', color: 'from-yellow-400 to-orange-500' },
@@ -557,7 +557,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Light Effects */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Active Lights</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Lights</h4>
               <div className="space-y-3">
                 {lightEffects.map(light => (
                   <div key={light.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -682,7 +682,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Lens Flares */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Active Lens Flares</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Lens Flares</h4>
               <div className="space-y-3">
                 {lensFlares.map(flare => (
                   <div key={flare.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -794,7 +794,7 @@ export default function AdvancedVisualEffects({
           <div className="space-y-6">
             {/* Motion Effect Types */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Motion Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Motion Effects</h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
                   { type: 'blur' as const, name: 'Motion Blur', color: 'from-blue-500 to-cyan-500' },
@@ -816,7 +816,7 @@ export default function AdvancedVisualEffects({
 
             {/* Active Motion Effects */}
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-4">Active Effects</h4>
+              <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Active Effects</h4>
               <div className="space-y-3">
                 {motionEffects.map(motion => (
                   <div key={motion.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">

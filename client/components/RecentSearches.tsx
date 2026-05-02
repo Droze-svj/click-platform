@@ -59,7 +59,7 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+          <h4 className="text-sm font-medium text-gray-900 dark:text-[var(--text-main)]">
             Recent Searches
           </h4>
         </div>

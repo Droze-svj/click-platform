@@ -194,7 +194,7 @@ export default function KineticWorkspaceHubPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen font-inter">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <GitBranch size={64} className="text-indigo-500 animate-spin mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Cluster Matrix...</span>
      </div>
@@ -233,7 +233,7 @@ export default function KineticWorkspaceHubPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{projects.length} ACTIVE_CLUSTERS</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Projects</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Projects</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Group videos, scripts, and posts under a single brief — campaigns, client work, content series. Click learns the brief once and applies it across every asset inside.</p>
               </div>
            </div>
@@ -299,7 +299,7 @@ export default function KineticWorkspaceHubPage() {
                        <div className="w-48 h-48 bg-black/60 border-2 border-white/10 rounded-[5.5rem] flex items-center justify-center mb-16 shadow-3xl relative overflow-hidden group-hover:border-indigo-500/50 transition-all duration-700">
                           <Terminal size={80} className="text-slate-500 group-hover:text-indigo-400 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
                        </div>
-                       <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-10 leading-none drop-shadow-2xl">Nexus Standby</h3>
+                       <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 leading-none drop-shadow-2xl">Nexus Standby</h3>
                        <p className="text-[18px] text-slate-700 font-black uppercase tracking-[0.8em] max-w-2xl leading-relaxed italic border-t-2 border-white/5 pt-12">Synchronize with an operational cluster node to begin mission coordination and temporal trajectory mapping.</p>
                     </motion.div>
                  ) : loadingDashboard ? (
@@ -327,7 +327,7 @@ export default function KineticWorkspaceHubPage() {
                                       <Database size={18} className="text-indigo-500" /> NODE_ID: {dashboard._id.slice(-16).toUpperCase()}
                                    </div>
                                 </div>
-                                <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none pr-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover/hud:text-indigo-400 transition-colors duration-300">{dashboard.name}</h2>
+                                <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none pr-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover/hud:text-indigo-400 transition-colors duration-300">{dashboard.name}</h2>
                                 <p className="text-[24px] text-slate-500 font-bold uppercase tracking-tight italic leading-relaxed max-w-3xl border-l-8 border-indigo-500/40 pl-12 py-4">{dashboard.description || 'MISSION_BRIEF_UNDEFINED'}</p>
                              </div>
 
@@ -416,7 +416,7 @@ export default function KineticWorkspaceHubPage() {
                              <div className="flex items-center gap-12">
                                 <div className="w-24 h-24 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl group-hover/terminal:scale-110 transition-transform duration-300"><Target size={48} className="text-indigo-400" /></div>
                                 <div>
-                                   <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Objective Terminal</h3>
+                                   <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Objective Terminal</h3>
                                    <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">Stratified mission nodes and temporal trajectory lattices.</p>
                                 </div>
                              </div>
@@ -434,7 +434,7 @@ export default function KineticWorkspaceHubPage() {
                                 <div className="py-72 text-center flex flex-col items-center justify-center opacity-[0.05] gap-20">
                                    <div className="w-64 h-64 rounded-[7rem] bg-white/5 border-2 border-white/10 flex items-center justify-center shadow-inner"><Cpu size={150} className="text-white animate-pulse" /></div>
                                    <div className="space-y-8">
-                                      <h4 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none">Objective Void</h4>
+                                      <h4 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Objective Void</h4>
                                       <p className="text-[22px] font-black text-slate-600 uppercase tracking-[1.2em] italic leading-none">No directive nodes mapped to this cluster cycle.</p>
                                    </div>
                                 </div>
@@ -534,7 +534,7 @@ export default function KineticWorkspaceHubPage() {
                     <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300 shadow-inner"><Zap size={400} className="text-white" /></div>
                     <div className="flex justify-between items-center mb-24 relative z-10">
                        <div>
-                          <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Cluster Initiation</h2>
+                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Cluster Initiation</h2>
                           <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">NODE_MATRIX_UPLINK_INITIALIZATION</p>
                        </div>
                        <button onClick={() => setShowCreate(false)} title="Close Modal" className="w-20 h-20 bg-white/5 border-2 border-white/5 rounded-3xl flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-3xl active:scale-90 hover:border-white/20 hover:rotate-90 duration-700 backdrop-blur-3xl"><X size={40} /></button>
@@ -582,7 +582,7 @@ export default function KineticWorkspaceHubPage() {
                     <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300 shadow-inner"><Target size={400} className="text-white" /></div>
                     <div className="flex justify-between items-center mb-20 relative z-10">
                        <div>
-                          <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Node Injection</h2>
+                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Node Injection</h2>
                           <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">APPENDING_MISSION_CRITICAL_ANCHOR</p>
                        </div>
                        <button onClick={() => setShowAddMilestone(false)} title="Close Modal" className="w-20 h-20 bg-white/5 border-2 border-white/5 rounded-3xl flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-3xl active:scale-90 hover:border-white/20 hover:rotate-90 duration-700 backdrop-blur-3xl"><X size={40} /></button>
@@ -631,7 +631,7 @@ export default function KineticWorkspaceHubPage() {
                     <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-500 shadow-inner"><Pencil size={400} className="text-white" /></div>
                     <div className="flex justify-between items-center mb-20 relative z-10">
                        <div>
-                          <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Calibrate Node</h2>
+                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Calibrate Node</h2>
                           <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">MODIFYING_OBJECTIVE_VECTOR</p>
                        </div>
                        <button onClick={() => setEditingMilestone(null)} title="Close Modal" className="w-20 h-20 bg-white/5 border-2 border-white/5 rounded-3xl flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-3xl active:scale-90 hover:border-white/20 hover:rotate-90 duration-700 backdrop-blur-3xl"><X size={40} /></button>

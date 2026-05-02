@@ -38,7 +38,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
   return (
     <div className="bg-gray-800 border-t border-gray-700 p-4 max-h-80 overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
           <Settings className="w-4 h-4" />
           Clip Properties - {clip.name}
         </h4>

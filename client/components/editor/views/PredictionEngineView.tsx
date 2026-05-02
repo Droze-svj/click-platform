@@ -127,7 +127,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
             <Cpu className="w-4 h-4" />
             VPO Core v1.0
           </div>
-          <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
+          <h1 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
             PREDICTION<br />ENGINE
           </h1>
         </div>
@@ -152,7 +152,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
 
            <div className="flex items-center justify-between mb-12 relative z-10">
               <div className="space-y-2">
-                 <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Viral Potential Score</h3>
+                 <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Viral Potential Score</h3>
                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Predictive Alignment for {selectedPersona}</p>
               </div>
               <div className="text-8xl font-black text-emerald-400 tracking-tighter italic tabular-nums shadow-emerald-500/20 drop-shadow-2xl">
@@ -203,7 +203,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
       <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
         <div className="flex items-center justify-between">
            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mr-2 inline-flex items-center gap-3">
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mr-2 inline-flex items-center gap-3">
                  <Activity className="w-6 h-6 text-emerald-400" /> Continuous Retention Heatmap
               </h3>
               <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic">Predictive audience drop-off mapped against script stimulus</p>
@@ -273,7 +273,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
       <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
         <div className="flex items-center justify-between">
            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Neural A/B Hook Testing</h3>
+              <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Neural A/B Hook Testing</h3>
               <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic">Simulate 3 variants of the first 5 seconds against {selectedPersona} CTR</p>
            </div>
            
@@ -339,7 +339,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
 
          <div className="flex items-center gap-8 mb-12">
             <div className="w-1.5 h-12 bg-indigo-500 rounded-full" />
-            <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Strategic Optimization Roadmap</h3>
+            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Strategic Optimization Roadmap</h3>
          </div>
 
          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">

@@ -68,7 +68,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h4 className="font-medium text-sm text-gray-900 dark:text-white">Quick Insights</h4>
+            <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)]">Quick Insights</h4>
           </div>
           {insights.trend === 'up' ? (
             <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -103,7 +103,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+        <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
           Content Insights
         </h3>
         {insights.trend === 'up' && (

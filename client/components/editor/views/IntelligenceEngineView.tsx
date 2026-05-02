@@ -40,7 +40,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
             <Fingerprint className="w-8 h-8 text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Creator Style DNA</h1>
+            <h1 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Creator Style DNA</h1>
             <p className="text-slate-500 text-sm font-medium tracking-tight italic mt-1">Autonomous creator modeling &amp; agentic accuracy telemetry</p>
           </div>
         </div>
@@ -58,7 +58,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
           </div>
           
           <div className="space-y-2">
-             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Style Snapshot: <span className="text-emerald-400">{dna.theme || 'Vlog'}</span></h3>
+             <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Style Snapshot: <span className="text-emerald-400">{dna.theme || 'Vlog'}</span></h3>
              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">Identity Lock: 99.8% // Sentiment Drift: {dna.sentimentDrift}%</span>
           </div>
 
@@ -103,7 +103,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
           className={`${glassStyle} p-8 rounded-[3rem] col-span-2 grid grid-cols-2 gap-8 relative overflow-hidden group`}
         >
           <div className="col-span-2 border-b border-white/5 pb-4 flex items-center justify-between">
-             <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">Agentic Performance Ledger</h3>
+             <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Agentic Performance Ledger</h3>
              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
                 <ShieldCheck className="w-3 h-3 text-indigo-400" />
                 <span className="text-[10px] font-black text-indigo-400 tracking-widest uppercase italic">Verified AI Agency</span>
@@ -161,7 +161,7 @@ const IntelligenceEngineView: React.FC<IntelligenceEngineViewProps> = ({ dna, hi
                   <BrainCircuit className="w-10 h-10 text-indigo-400 animate-pulse-slow" />
                </div>
                <div>
-                  <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase leading-none">Algorithmic Correlation</h2>
+                  <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Algorithmic Correlation</h2>
                   <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] mt-3 block italic">Cross-Platform Retention Insights</span>
                </div>
             </div>

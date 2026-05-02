@@ -247,7 +247,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Track a Competitor</p>
-                   <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">Neural Competitor Analysis</h4>
+                   <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Neural Competitor Analysis</h4>
                 </div>
                 <div className="flex -space-x-3">
                    {['ORA', 'DNA', 'MON'].map(a => (
@@ -341,7 +341,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       <motion.div key="loaded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 relative z-10">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-xl font-black text-white italic uppercase tracking-tight flex items-center gap-3">
+                            <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tight flex items-center gap-3">
                               <TrendingUp className="w-5 h-5 text-emerald-400" /> Engagement Standing
                             </h3>
                             <span className="text-[9px] text-slate-600 font-black uppercase tracking-widest">{platform} · Last 30 days</span>
@@ -479,7 +479,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-sm font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
                     <CalendarDays className="w-5 h-5 text-indigo-400" /> 7-Day Content Calendar
                   </h3>
                   <div className="flex items-center gap-3">

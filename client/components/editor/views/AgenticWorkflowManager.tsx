@@ -173,7 +173,7 @@ const AgenticWorkflowManager: React.FC<AgenticWorkflowManagerProps> = ({
           <Bot className="w-3.5 h-3.5 animate-pulse" />
           Autonomous Content Agent — 2026
         </div>
-        <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-[0.9]">
+        <h1 className="text-6xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-[0.9]">
           AI Agent<br />Workflow
         </h1>
         <p className="text-slate-500 text-sm max-w-lg leading-relaxed">

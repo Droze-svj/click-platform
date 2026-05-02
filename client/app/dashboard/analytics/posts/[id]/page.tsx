@@ -87,13 +87,13 @@ export default function SovereignPostDiagnosticHub() {
   }, [data?.history])
 
   if (loading) return <SpectralLoader message="EXTRACTING_KINETIC_SIGNAL_DATA..." />;
-  if (!data) return <div className="min-h-screen flex items-center justify-center text-white bg-[#020205]">NODE_NOT_FOUND</div>;
+  if (!data) return <div className="min-h-screen flex items-center justify-center text-white bg-[var(--page-bg)]">NODE_NOT_FOUND</div>;
 
   const mainStat = data.analytics[0] || { views: 0, likes: 0, shares: 0, comments: 0, engagement_rate: 0 }
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[#020205] overflow-x-hidden">
+      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[var(--page-bg)] overflow-x-hidden">
         {/* Spectral Ambience */}
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Activity size={1000} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -124,7 +124,7 @@ export default function SovereignPostDiagnosticHub() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{data.post.id?.slice(0, 8).toUpperCase() || 'EXTERNAL'}_NODE</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-[0.9] mb-4 truncate max-w-4xl">{data.post.title || 'Untitled Node'}</h1>
+                 <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-[0.9] mb-4 truncate max-w-4xl">{data.post.title || 'Untitled Node'}</h1>
                  <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Detailed performance breakdown and heuristic optimization matrix.</p>
               </div>
            </div>
@@ -148,7 +148,7 @@ export default function SovereignPostDiagnosticHub() {
                  <div className="flex items-center gap-8 mb-16 relative z-10 px-8">
                     <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Activity size={40} className="text-indigo-400" /></div>
                     <div>
-                       <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Kinetic Path</h2>
+                       <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Kinetic Path</h2>
                        <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Chronological engagement gravity mapped across the 30-day kinetic window.</p>
                     </div>
                  </div>
@@ -207,7 +207,7 @@ export default function SovereignPostDiagnosticHub() {
                  
                  <div className="flex items-center gap-6 mb-16 relative z-10">
                     <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center drop-shadow-2xl animate-pulse shadow-emerald-500/20"><Zap size={32} className="text-emerald-400" /></div>
-                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Diagnostic Matrix</h3>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Diagnostic Matrix</h3>
                  </div>
 
                  <AnimatePresence mode="wait">
@@ -281,7 +281,7 @@ export default function SovereignPostDiagnosticHub() {
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center space-y-12">
                          <Waves size={100} className="text-violet-500/20 animate-pulse" />
                          <div className="space-y-6">
-                            <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter">GENERATE_HEURISTICS</h4>
+                            <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">GENERATE_HEURISTICS</h4>
                             <p className="text-[13px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed max-w-xs">Initialize AI recursive logic to extract performance signals and optimization nodes.</p>
                          </div>
                          <button onClick={() => router.push(`/dashboard/analytics/insights/${params.id}`)}

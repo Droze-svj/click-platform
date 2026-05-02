@@ -133,7 +133,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Folder className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
             Collections
           </h3>
         </div>
@@ -176,7 +176,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
                   <Folder className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)]">
                     {collection.name}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -201,7 +201,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
               Create Collection
             </h3>
             

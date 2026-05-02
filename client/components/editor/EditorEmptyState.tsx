@@ -40,7 +40,7 @@ export default function EditorEmptyState({
           <Icon className="w-5 h-5 text-fuchsia-300" />
         </div>
       )}
-      <h3 className="text-[12px] font-black text-white uppercase tracking-[0.22em] mb-2">{title}</h3>
+      <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-[0.22em] mb-2">{title}</h3>
       {hint && (
         <p className="text-[11px] text-slate-500 leading-relaxed max-w-[280px]">{hint}</p>
       )}

@@ -179,7 +179,7 @@ export default function BackupManager() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Backup Statistics</h3>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">Backup Statistics</h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
@@ -207,7 +207,7 @@ export default function BackupManager() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
               Backup & Recovery
             </h3>
           </div>
@@ -223,7 +223,7 @@ export default function BackupManager() {
         {/* Create Backup Form */}
         {showCreate && (
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-4">Backup Options</h4>
+            <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-4">Backup Options</h4>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <label className="flex items-center gap-2">

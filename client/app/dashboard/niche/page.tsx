@@ -96,7 +96,7 @@ export default function SectorResonanceMatrixPage() {
   const currentPack = sectorPacks?.[userSector]
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen font-inter">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
         <Target size={64} className="text-amber-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Calibrating Sector Intelligence...</span>
      </div>
@@ -135,7 +135,7 @@ export default function SectorResonanceMatrixPage() {
                        <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase italic leading-none">SECTOR_LOCK_OPTIMAL</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Niche</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3 drop-shadow-2xl">Niche</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Pick or refine the niche Click optimizes for. Every AI output — captions, hooks, schedule, scripts — adapts to the niche playbook you set here.</p>
               </div>
            </div>
@@ -183,7 +183,7 @@ export default function SectorResonanceMatrixPage() {
               <div className="p-16 border-b-2 border-white/5 flex items-center justify-between mb-12 bg-white/[0.02] rounded-t-[6rem]">
                  <div className="flex items-center gap-8">
                     <div className="w-16 h-16 rounded-[1.8rem] bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-3xl"><Terminal size={28} className="text-amber-400" /></div>
-                    <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Lattice Matrix</h2>
+                    <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Lattice Matrix</h2>
                  </div>
                  <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-amber-500 text-[10px] font-black uppercase tracking-[0.5em] italic">HEURISTIC_SECTOR_LOCK</div>
               </div>
@@ -222,7 +222,7 @@ export default function SectorResonanceMatrixPage() {
                          <div className="w-24 h-24 bg-amber-600 text-white rounded-[2.5rem] flex items-center justify-center shadow-3xl border-4 border-white/20 group-hover/pack:rotate-12 transition-transform duration-300"><Layers size={48} /></div>
                          <div>
                             <p className="text-[12px] font-black text-amber-500 uppercase tracking-[1em] italic leading-none mb-3">SECTOR_INTEL_ARCHIVE</p>
-                            <h3 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-2xl">{currentPack.name}</h3>
+                            <h3 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none drop-shadow-2xl">{currentPack.name}</h3>
                          </div>
                       </div>
                       <p className="text-[20px] text-slate-700 font-black uppercase tracking-widest italic leading-relaxed mb-12 relative z-10 px-6 border-l-8 border-amber-500/20">{currentPack.description.toUpperCase()}</p>
@@ -249,7 +249,7 @@ export default function SectorResonanceMatrixPage() {
               <div className="p-16 border-b-2 border-white/5 flex items-center justify-between mb-12 bg-white/[0.02] rounded-t-[6rem]">
                  <div className="flex items-center gap-8">
                     <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-3xl"><Palette size={28} className="text-indigo-400" /></div>
-                    <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Identity Hash</h2>
+                    <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Identity Hash</h2>
                  </div>
                  <div className="px-8 py-3 rounded-full bg-black/60 border-2 border-white/5 text-indigo-500 text-[10px] font-black uppercase tracking-[0.5em] italic">VISUAL_SIGNATURE_SYNC</div>
               </div>
@@ -348,7 +348,7 @@ export default function SectorResonanceMatrixPage() {
                    <a.icon size={48} className={a.color} />
                 </div>
                 <div className="space-y-3">
-                   <h4 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors">{a.label}</h4>
+                   <h4 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none group-hover:text-indigo-400 transition-colors">{a.label}</h4>
                    <p className="text-[13px] text-slate-400 font-black uppercase tracking-widest italic leading-none opacity-40 group-hover:opacity-100 transition-opacity">{a.desc}</p>
                 </div>
                 <div className="w-16 h-16 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-indigo-400 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-4 shadow-3xl">

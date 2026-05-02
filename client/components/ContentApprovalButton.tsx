@@ -99,7 +99,7 @@ export default function ContentApprovalButton({
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
                   Start Approval Process
                 </h3>
                 <button

@@ -168,7 +168,7 @@ export default function IntegrationsPage() {
                 <Cpu size={14} className="text-indigo-400 animate-pulse" />
                 <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Connection Mesh</span>
               </div>
-              <h1 className="text-4xl font-black text-white tracking-tight leading-none">Platform Vault</h1>
+              <h1 className="text-4xl font-black text-[var(--text-main)] tracking-tight leading-none">Platform Vault</h1>
               <p className="text-slate-400 text-sm mt-2 font-medium max-w-lg">Manage your social ecosystems. Connect platforms to automate publishing and track performance data.</p>
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function IntegrationsPage() {
                       <Globe size={28} className="text-indigo-400" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-black text-white tracking-tight leading-none mb-2">Connect New Platforms</h2>
+                      <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-none mb-2">Connect New Platforms</h2>
                       <p className="text-xs font-medium text-slate-400 tracking-wide uppercase italic opacity-60">Browse available social nodes for integration.</p>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export default function IntegrationsPage() {
                               {(m.icon || m.name?.charAt(0) || '?').toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-xl font-black text-white tracking-tight truncate leading-none mb-2">{m.name}</h4>
+                              <h4 className="text-xl font-black text-[var(--text-main)] tracking-tight truncate leading-none mb-2">{m.name}</h4>
                               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">{m.category || 'Social'}</p>
                             </div>
                             {m.popular && <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[8px] font-black uppercase tracking-widest">POPULAR</span>}
@@ -264,7 +264,7 @@ export default function IntegrationsPage() {
                 <Radio size={28} className="text-emerald-400" />
               </div>
               <div>
-                <h2 className="text-3xl font-black text-white tracking-tight leading-none">Active Ecosystem</h2>
+                <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-none">Active Ecosystem</h2>
                 <p className="text-xs font-medium text-slate-400 tracking-wide mt-1 italic opacity-60 uppercase leading-none">Live platform connections and sync status.</p>
               </div>
             </div>
@@ -276,7 +276,7 @@ export default function IntegrationsPage() {
                 <Unlink size={40} className="text-slate-600" />
               </div>
               <div className="space-y-3">
-                <h3 className="text-2xl font-black text-white">No Platforms Linked</h3>
+                <h3 className="text-2xl font-black text-[var(--text-main)]">No Platforms Linked</h3>
                 <p className="text-slate-400 text-sm max-w-sm font-medium leading-relaxed opacity-80">Connect your first platform to start distributing content and tracking cross-platform growth.</p>
               </div>
               <button onClick={() => setShowMarketplace(true)} className="px-8 py-4 bg-white text-black rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl active:scale-95 flex items-center gap-3">
@@ -294,7 +294,7 @@ export default function IntegrationsPage() {
                       {(intg.name?.charAt(0) || '?').toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 text-center md:text-left space-y-2">
-                      <h4 className="text-2xl font-black text-white tracking-tight truncate leading-none uppercase italic">{intg.name}</h4>
+                      <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight truncate leading-none uppercase italic">{intg.name}</h4>
                       <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none opacity-60">
                         <span className="text-white">{intg.provider || intg.type}</span>
                         <div className="w-1 h-1 rounded-full bg-slate-700" />
@@ -336,7 +336,7 @@ export default function IntegrationsPage() {
                   </div>
                   <div>
                     <span className="text-[10px] font-black text-rose-400 uppercase tracking-[0.4em] italic mb-1 block">Termination Protocol</span>
-                    <h3 className="text-2xl font-black text-white tracking-tight uppercase italic leading-none">Disconnect {removeTarget.name}?</h3>
+                    <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight uppercase italic leading-none">Disconnect {removeTarget.name}?</h3>
                   </div>
                 </div>
                 <p className="text-sm text-slate-400 font-medium leading-relaxed mb-10 opacity-80 italic">

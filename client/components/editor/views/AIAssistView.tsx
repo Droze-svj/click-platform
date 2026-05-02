@@ -154,7 +154,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                 <Sparkles className="w-3 h-3" />
                 Director Suggestions
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-black text-[var(--text-main)] tracking-tight">
                 {pendingSuggestions.length > 0
                   ? `${pendingSuggestions.length} suggestion${pendingSuggestions.length === 1 ? '' : 's'} ready to apply`
                   : appliedCount > 0
@@ -257,7 +257,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
               <Activity className="w-4 h-4 animate-pulse" />
               Cognitive Support
             </div>
-            <h2 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">
+            <h2 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
               NEURAL<br />COGNITION
             </h2>
             <p className="text-slate-500 text-lg font-medium tracking-tight italic">
@@ -340,7 +340,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
               Timeline Polish
             </div>
             
-            <h3 className="text-4xl font-black text-white italic tracking-tighter uppercase">
+            <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">
               Semantic Smart Cuts
             </h3>
             <p className="text-slate-400 font-medium italic text-lg pb-6">

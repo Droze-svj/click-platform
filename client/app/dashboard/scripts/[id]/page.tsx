@@ -123,7 +123,7 @@ export default function ScriptDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#020205] gap-8">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] gap-8">
         <div className="relative">
            <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
            <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
@@ -135,11 +135,11 @@ export default function ScriptDetailPage() {
 
   if (!script) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#020205] p-12 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] p-12 text-center">
         <div className="w-48 h-48 rounded-[3rem] bg-white/[0.02] border-2 border-white/5 flex items-center justify-center mb-10 shadow-3xl">
            <X size={80} className="text-rose-500/40" />
         </div>
-        <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-6">NARRATIVE_NODE_ABSENT</h2>
+        <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">NARRATIVE_NODE_ABSENT</h2>
         <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested logic cluster does not exist in the current lattice.</p>
         <button onClick={() => router.push('/dashboard/scripts')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">ABORT_TO_MATRIX</button>
       </div>
@@ -149,7 +149,7 @@ export default function ScriptDetailPage() {
   const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-300'
 
   return (
-    <div className="min-h-screen bg-[#020205] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
+    <div className="min-h-screen bg-[var(--page-bg)] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
       <ToastContainer />
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
          <Layout size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -173,7 +173,7 @@ export default function ScriptDetailPage() {
                   </div>
                   <div className="px-4 py-1.5 rounded-full bg-black/40 border border-white/5 text-[9px] font-black text-slate-500 tracking-widest uppercase italic leading-none">{script.type.toUpperCase()}_PROTOCOL</div>
                </div>
-               <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">{script.title.toUpperCase()}</h1>
+               <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">{script.title.toUpperCase()}</h1>
                <div className="flex items-center gap-10 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none opacity-60">
                  <span className="flex items-center gap-3"><FileText size={16} className="text-indigo-400" /> {script.wordCount} PARTICLES</span>
                  {script.duration && <span className="flex items-center gap-3"><Clock size={16} className="text-indigo-400" /> {script.duration} MIN_SYNC</span>}
@@ -290,7 +290,7 @@ export default function ScriptDetailPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 {script.metadata.timestamps && script.metadata.timestamps.length > 0 && (
                   <div className="p-12 rounded-[4rem] bg-black/40 border-2 border-white/5 space-y-10 shadow-3xl">
-                    <h3 className="text-[14px] font-black text-white uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Clock size={16} className="text-indigo-400" /> TIMESTAMPS</h3>
+                    <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Clock size={16} className="text-indigo-400" /> TIMESTAMPS</h3>
                     <div className="space-y-6">
                       {script.metadata.timestamps.map((ts, index) => (
                         <div key={index} className="flex gap-6 items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5 group/ts transition-all duration-700 hover:bg-white/[0.05]">
@@ -304,7 +304,7 @@ export default function ScriptDetailPage() {
 
                 {script.metadata.keywords && script.metadata.keywords.length > 0 && (
                   <div className="p-12 rounded-[4rem] bg-black/40 border-2 border-white/5 space-y-10 shadow-3xl">
-                    <h3 className="text-[14px] font-black text-white uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Key size={16} className="text-indigo-400" /> LOGIC_KEYS</h3>
+                    <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Key size={16} className="text-indigo-400" /> LOGIC_KEYS</h3>
                     <div className="flex flex-wrap gap-4">
                       {script.metadata.keywords.map((keyword, index) => (
                         <span key={index} className="bg-indigo-500/10 border-2 border-indigo-500/20 text-indigo-400 px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-3xl hover:bg-indigo-500 hover:text-white transition-all cursor-default">
@@ -317,7 +317,7 @@ export default function ScriptDetailPage() {
 
                 {script.metadata.hashtags && script.metadata.hashtags.length > 0 && (
                   <div className="p-12 rounded-[4rem] bg-black/40 border-2 border-white/5 space-y-10 shadow-3xl">
-                    <h3 className="text-[14px] font-black text-white uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Hash size={16} className="text-indigo-400" /> SIGNAL_TAGS</h3>
+                    <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Hash size={16} className="text-indigo-400" /> SIGNAL_TAGS</h3>
                     <div className="flex flex-wrap gap-4">
                       {script.metadata.hashtags.map((hashtag, index) => (
                         <span key={index} className="bg-rose-500/10 border-2 border-rose-500/20 text-rose-400 px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-3xl hover:bg-rose-500 hover:text-white transition-all cursor-default">

@@ -143,7 +143,7 @@ export default function OnboardingPage() {
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-[#020205] min-h-screen gap-10 backdrop-blur-3xl">
+    <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-10 backdrop-blur-3xl">
       <div className="relative">
         <div className="absolute inset-0 bg-emerald-500 blur-3xl opacity-20 animate-pulse" />
         <Compass size={80} className="text-emerald-500 animate-spin relative z-10" />
@@ -154,7 +154,7 @@ export default function OnboardingPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[#020205]">
+      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1400px] mx-auto space-y-16 bg-[var(--page-bg)]">
         <ToastContainer />
 
         {/* Header */}
@@ -171,7 +171,7 @@ export default function OnboardingPage() {
                 <Activity size={14} className="text-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400 italic leading-none">Activation Sequence</span>
               </div>
-              <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Get Started</h1>
+              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Get Started</h1>
               <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Stepwise initialization of your sovereign Click instance.</p>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">STEP_0 · NICHE_CALIBRATION</p>
-                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tight leading-none">Pick your category</h3>
+                  <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tight leading-none">Pick your category</h3>
                   <p className="text-[11px] text-slate-400 mt-2 max-w-xl">The AI tunes hooks, captions, and posting times to your niche. Pick once — change anytime.</p>
                 </div>
               </div>
@@ -282,7 +282,7 @@ export default function OnboardingPage() {
                     <div className={`w-14 h-14 rounded-[1.4rem] flex items-center justify-center shadow-xl ${step.completed ? 'bg-emerald-500 text-black' : isLocked ? 'bg-white/5 text-slate-600 border border-white/10' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'}`}>
                       {step.completed ? <CheckCircle size={26} /> : isLocked ? <Lock size={22} /> : <Icon size={26} />}
                     </div>
-                    <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#020205] border ${step.completed ? 'border-emerald-500/40 text-emerald-400' : 'border-white/10 text-slate-500'} flex items-center justify-center text-[10px] font-black italic tabular-nums`}>{idx + 1}</div>
+                    <div className={`absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[var(--page-bg)] border ${step.completed ? 'border-emerald-500/40 text-emerald-400' : 'border-white/10 text-slate-500'} flex items-center justify-center text-[10px] font-black italic tabular-nums`}>{idx + 1}</div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -317,7 +317,7 @@ export default function OnboardingPage() {
             </div>
             <div>
               <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.5em] italic mb-3 leading-none">SOVEREIGN_INSTANCE_ACTIVATED</p>
-              <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-tight mb-3">You&apos;re fully wired in.</h2>
+              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-tight mb-3">You&apos;re fully wired in.</h2>
               <p className="text-[12px] text-slate-400 uppercase font-black tracking-[0.4em] italic">Click is now operating at full capacity for your account.</p>
             </div>
             <Link href="/dashboard" className="px-10 py-4 bg-white text-black rounded-full text-[12px] font-black uppercase tracking-[0.5em] italic hover:bg-emerald-500 hover:text-white transition-colors flex items-center gap-3">

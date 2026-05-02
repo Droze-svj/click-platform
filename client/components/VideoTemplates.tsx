@@ -669,7 +669,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
     <div className="bg-gradient-to-br from-white to-purple-50/30 dark:from-gray-800 dark:to-purple-900/20 rounded-xl shadow-xl p-6 border border-purple-200/50 dark:border-purple-700/50">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+          <h3 className="font-bold text-xl text-gray-900 dark:text-[var(--text-main)] mb-1 flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-500" />
             Professional Templates
           </h3>
@@ -814,7 +814,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                 {template.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-gray-900 dark:text-white mb-1.5 text-base">
+                <h4 className="font-bold text-gray-900 dark:text-[var(--text-main)] mb-1.5 text-base">
                   {template.name}
                 </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">

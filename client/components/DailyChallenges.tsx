@@ -81,7 +81,7 @@ export default function DailyChallenges() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
             Daily Challenges
           </h3>
         </div>
@@ -113,7 +113,7 @@ export default function DailyChallenges() {
                   <Target className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                  <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)] mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                     {challenge.title}
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">

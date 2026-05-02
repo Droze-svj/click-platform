@@ -66,7 +66,7 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
             <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
           </div>
           <div>
-            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic">Neural Engagement Map</h4>
+            <h4 className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">Neural Engagement Map</h4>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Predictive Retention // 0xRetent</p>
           </div>
         </div>

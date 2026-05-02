@@ -67,7 +67,7 @@ export default function SmartSuggestions() {
     <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg shadow-lg p-6 border border-purple-200 dark:border-purple-800">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+        <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
           Smart Suggestions
         </h3>
       </div>
@@ -95,7 +95,7 @@ export default function SmartSuggestions() {
                 )}
               </div>
               <div className="flex-1">
-                <h4 className="font-medium text-sm text-gray-900 dark:text-white mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)] mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {suggestion.title}
                 </h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400">

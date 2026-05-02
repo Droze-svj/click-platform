@@ -76,7 +76,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
            </div>
 
            <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex-1 flex flex-col gap-6">
-              <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
                  <Package className="w-4 h-4 text-violet-400" />
                  Bridge Health Node
               </h3>
@@ -110,7 +110,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
         {/* Right: Product Grid */}
         <div className="col-span-8 bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col overflow-hidden">
            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-[11px] font-black text-white uppercase tracking-widest">Storefront SKUs</h3>
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest">Storefront SKUs</h3>
               <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
                  <span className="text-[8px] font-black text-emerald-400 uppercase">Whop Verified</span>
               </div>
@@ -138,7 +138,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                     </div>
                   </div>
 
-                  <h4 className="text-[14px] font-black text-white uppercase tracking-wider mb-1 truncate">{product.name}</h4>
+                  <h4 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-wider mb-1 truncate">{product.name}</h4>
                   <p className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mb-6">
                     {product.currency.toUpperCase()} ${product.price}
                     <span className="text-[8px] text-slate-600 uppercase ml-2">Per Checkout</span>

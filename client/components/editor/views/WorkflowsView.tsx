@@ -143,7 +143,7 @@ const WorkflowsView: React.FC = () => {
                             <Settings className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" />
                           </div>
                           
-                          <h3 className="text-lg font-black text-white italic mb-2">{workflow.name}</h3>
+                          <h3 className="text-lg font-black text-[var(--text-main)] italic mb-2">{workflow.name}</h3>
                           <p className="text-[10px] text-slate-500 uppercase tracking-wider line-clamp-2 leading-relaxed">
                             {workflow.description || 'Verified multi-stage approval logic.'}
                           </p>
@@ -187,7 +187,7 @@ const WorkflowsView: React.FC = () => {
 
               <div className="col-span-12 grid grid-cols-2 gap-8">
                  <div className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 flex flex-col gap-6">
-                    <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
                        <Clock className="w-4 h-4 text-emerald-400" />
                        Recent Approval Latency
                     </h3>
@@ -209,7 +209,7 @@ const WorkflowsView: React.FC = () => {
                  </div>
 
                  <div className="p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 flex flex-col gap-6">
-                    <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
                        <Zap className="w-4 h-4 text-amber-400" />
                        System Health
                     </h3>

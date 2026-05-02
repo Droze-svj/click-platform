@@ -77,7 +77,7 @@ export default function SignalInterceptionGridPage() {
   }
 
   if (loading && results.length === 0) return (
-    <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen gap-12 backdrop-blur-3xl">
+    <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen gap-12 backdrop-blur-3xl">
        <div className="relative">
           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
           <Compass size={80} className="text-indigo-500 animate-spin relative z-10" />
@@ -121,7 +121,7 @@ export default function SignalInterceptionGridPage() {
                        <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase italic leading-none">SCANNER_READY</span>
                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-4">Search</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-4">Search</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Find anything across your videos, posts, scripts, and library. Type a keyword, narrow by type, jump straight to the result.</p>
               </div>
            </div>
@@ -214,7 +214,7 @@ export default function SignalInterceptionGridPage() {
                     <Compass size={200} className="text-white animate-pulse relative z-10" />
                  </div>
                  <div className="space-y-8">
-                    <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter">NULL_SIGNATURE</h3>
+                    <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">NULL_SIGNATURE</h3>
                     <p className="text-[24px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none">{query ? `NO_MATCHES_IDENTIFIED_FOR [${query.toUpperCase()}]` : "ENTER_PROBE_PARAMETERS_TO_BEGIN_INTERCEPTION"}</p>
                  </div>
               </div>
@@ -234,7 +234,7 @@ export default function SignalInterceptionGridPage() {
                          <span className="px-6 py-2 rounded-2xl bg-indigo-500/10 text-indigo-400 border-2 border-indigo-500/20 text-[12px] font-black uppercase tracking-widest italic shadow-inner">{item.type.toUpperCase()} // MODALITY</span>
                          <div className={`w-4 h-4 rounded-full ${item.status === 'completed' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,1)]' : 'bg-amber-500 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.5)]'}`} />
                       </div>
-                      <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none truncate">{item.title || 'UNNAMED_NODE'}</h3>
+                      <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 leading-none truncate">{item.title || 'UNNAMED_NODE'}</h3>
                       <div className="flex items-center justify-between pt-10 border-t-2 border-white/5">
                          <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest italic">{item.status.toUpperCase()} // SIG_LOCKED</span>
                          <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-slate-500 group-hover:text-white group-hover:scale-110 transition-all duration-300">

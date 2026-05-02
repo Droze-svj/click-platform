@@ -64,7 +64,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                     <FlaskConical className="w-6 h-6 text-indigo-400" />
                 </div>
                 <div>
-                <h4 className="text-2xl font-black text-white italic tracking-tighter leading-none uppercase">Oracle Sandbox</h4>
+                <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Oracle Sandbox</h4>
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Micro-Budget Variant Testing</span>
                 </div>
             </div>

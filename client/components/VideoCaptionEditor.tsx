@@ -200,7 +200,7 @@ export default function VideoCaptionEditor({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Captions className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
               Video Captions
             </h3>
           </div>

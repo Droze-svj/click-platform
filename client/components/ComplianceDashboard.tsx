@@ -369,7 +369,7 @@ export default function ComplianceDashboard() {
             <Shield className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
               Compliance & Brand Safety
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -521,7 +521,7 @@ export default function ComplianceDashboard() {
                 {/* Issue cards */}
                 {report && report.issues.length > 0 && (
                   <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Issues Found</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Issues Found</h3>
                     <div className="grid gap-2">
                       {report.issues.map((issue, idx) => <IssueCard key={idx} issue={issue} />)}
                     </div>
@@ -550,7 +550,7 @@ export default function ComplianceDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-semibold text-gray-900 dark:text-white">Workspace Rules</h2>
+                    <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Workspace Rules</h2>
                     <p className="text-xs text-gray-500 mt-0.5">Custom keywords, blocked domains, and patterns for your brand</p>
                   </div>
                   <div className="flex gap-2">
@@ -729,7 +729,7 @@ export default function ComplianceDashboard() {
             {activeTab === 'platforms' && (
               <div className="space-y-4">
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-white">Platform Content Policies</h2>
+                  <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Platform Content Policies</h2>
                   <p className="text-xs text-gray-500 mt-0.5">Official limits and guidelines for each platform</p>
                 </div>
 
@@ -741,7 +741,7 @@ export default function ComplianceDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.entries(policies).map(([platform, policy]) => (
                       <div key={platform} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                        <h3 className="font-semibold capitalize text-gray-900 dark:text-white mb-3">{platform}</h3>
+                        <h3 className="font-semibold capitalize text-gray-900 dark:text-[var(--text-main)] mb-3">{platform}</h3>
                         <dl className="space-y-1.5">
                           {policy.maxCharacters && (
                             <div className="flex justify-between text-sm">
@@ -793,7 +793,7 @@ export default function ComplianceDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="font-semibold text-gray-900 dark:text-white">Compliance History</h2>
+                    <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Compliance History</h2>
                     <p className="text-xs text-gray-500 mt-0.5">Past compliance checks across your content library</p>
                   </div>
                   <button

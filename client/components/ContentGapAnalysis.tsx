@@ -85,7 +85,7 @@ export default function ContentGapAnalysis() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-6 h-6 text-blue-600" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Content Gap Analysis
           </h3>
         </div>
@@ -103,7 +103,7 @@ export default function ContentGapAnalysis() {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center gap-2 mb-6">
         <Target className="w-6 h-6 text-blue-600" />
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
           Content Gap Analysis
         </h3>
       </div>
@@ -118,7 +118,7 @@ export default function ContentGapAnalysis() {
               {getImpactIcon(gap.impact)}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                  <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
                     {gap.title}
                   </h4>
                   <span className={`text-xs px-2 py-1 rounded ${

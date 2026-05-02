@@ -73,7 +73,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Target className="w-5 h-5 text-fuchsia-400" />
-          <h2 className="text-lg font-black tracking-tight text-white italic uppercase">Viral Variant Factory</h2>
+          <h2 className="text-lg font-black tracking-tight text-[var(--text-main)] italic uppercase">Viral Variant Factory</h2>
         </div>
         <button
           onClick={onBack}
@@ -138,7 +138,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                         </div>
                       )}
                    </div>
-                   <h3 className="text-lg font-black text-white italic leading-tight pr-12">
+                   <h3 className="text-lg font-black text-[var(--text-main)] italic leading-tight pr-12">
                      &quot;{variant.text}&quot;
                    </h3>
                    <p className="text-[10px] font-medium text-slate-500 leading-relaxed pr-8">

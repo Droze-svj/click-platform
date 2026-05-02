@@ -31,7 +31,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
           <Icon className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">{title}</h3>
+          <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{title}</h3>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{subtitle}</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ const ArbitragePanel = () => {
                     <div key={offer.id} className="p-6 rounded-3xl bg-orange-500/5 border border-orange-500/20 flex flex-col justify-between">
                         <div>
                             <p className="text-[10px] text-orange-400 uppercase font-black tracking-widest mb-1">{offer.velocity} velocity</p>
-                            <h4 className="text-xl font-black text-white italic uppercase mb-4">{offer.name}</h4>
+                            <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase mb-4">{offer.name}</h4>
                             <div className="flex gap-4 mb-6">
                                 <div className="text-center">
                                     <p className="text-[8px] font-bold text-slate-500 uppercase">CVR</p>

@@ -68,7 +68,7 @@ export default function CognitiveLogicMatrixPage() {
                        <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">PARADIGM_STABLE</span>
                    </div>
                  </div>
-                 <h1 className="text-7xl font-black text-white italic uppercase tracking-tighter leading-none mb-2 drop-shadow-2xl">Cognitive</h1>
+                 <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2 drop-shadow-2xl">Cognitive</h1>
                  <p className="text-slate-400 text-[13px] uppercase font-black tracking-[0.4em] italic leading-none mt-4">Advanced neural-logic tools for meta-cognitive content orchestration and temporal forecasting.</p>
               </div>
            </div>
@@ -137,7 +137,7 @@ export default function CognitiveLogicMatrixPage() {
                               <Radio size={40} className="text-violet-500" />
                            </div>
                            <div>
-                              <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Neural Surveillance</h3>
+                              <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Neural Surveillance</h3>
                               <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-violet-500/20 pl-8 ml-4">Real-time inference tracking and cognitive load monitoring.</p>
                            </div>
                         </div>
@@ -229,7 +229,7 @@ function ParadigmCard({ icon: Icon, title, desc, buttonText, onClick, color }: {
           <div className={`w-28 h-28 rounded-[3.5rem] ${colorClasses} border-2 flex items-center justify-center mb-12 shadow-3xl group-hover:rotate-12 transition-all duration-300 scale-110`}>
              <Icon size={48} className="drop-shadow-2xl animate-pulse" />
           </div>
-          <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-6 drop-shadow-2xl">{title}</h2>
+          <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-6 drop-shadow-2xl">{title}</h2>
           <p className="text-[13px] font-black text-slate-400 uppercase tracking-widest italic leading-relaxed opacity-60 group-hover:text-white group-hover:opacity-100 transition-all duration-700">
              {desc}
           </p>

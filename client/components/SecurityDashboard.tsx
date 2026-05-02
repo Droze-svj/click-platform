@@ -117,7 +117,7 @@ export default function SecurityDashboard() {
 
       {/* Recent Events */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">
+        <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)] mb-4">
           Recent Security Events
         </h3>
         {isLoading ? (

@@ -319,7 +319,7 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
         {/* Sidebar Rank/Stats */}
         <div className="col-span-4 flex flex-col gap-6">
            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col gap-6 overflow-hidden">
-              <h3 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">
+              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-[0.3em]">
                 {viewMode === 'revenue' ? 'Region Performance' : viewMode === 'style' ? 'Demographic DNA' : 'Evolution Velocity Rank'}
               </h3>
 

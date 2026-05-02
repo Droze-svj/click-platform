@@ -202,7 +202,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Batch Video Processor</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[var(--text-main)]">Batch Video Processor</h3>
 
         {/* Operation Selection */}
         <div className="mb-4">
@@ -284,7 +284,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
       {/* Job Queue */}
       {jobs.length > 0 && (
         <div>
-          <h4 className="text-md font-medium mb-3 text-gray-900 dark:text-white">
+          <h4 className="text-md font-medium mb-3 text-gray-900 dark:text-[var(--text-main)]">
             Processing Queue ({jobs.length} jobs)
           </h4>
 

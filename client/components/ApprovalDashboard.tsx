@@ -158,7 +158,7 @@ export default function ApprovalDashboard() {
     <div className="space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
             Approval Dashboard
           </h2>
           <button
@@ -204,7 +204,7 @@ export default function ApprovalDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       {getStatusIcon(approval.status)}
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                      <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">
                         {approval.contentId?.title || 'Untitled'}
                       </h3>
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(approval.status)}`}>
@@ -279,7 +279,7 @@ function ApprovalDetailModal({
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
                 Approval Details
               </h3>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -306,7 +306,7 @@ function ApprovalDetailModal({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
               {approval.contentId?.title || 'Untitled'}
             </h3>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -316,7 +316,7 @@ function ApprovalDetailModal({
 
           {/* Current Stage Info */}
           <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-2">
               Current Stage: {currentStage?.stageName}
             </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -450,7 +450,7 @@ function ApprovalDetailModal({
 
           {/* Approval History */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Approval History</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">Approval History</h4>
             <div className="space-y-2">
               {approval.stages.map((stage, idx) => (
                 <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-900 rounded">

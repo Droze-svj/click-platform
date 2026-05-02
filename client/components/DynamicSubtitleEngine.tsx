@@ -208,7 +208,7 @@ export default function DynamicSubtitleEngine({
 
       {/* Preset Selector */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-xl">
-        <h3 className="text-sm font-black text-gray-900 dark:text-white mb-4 uppercase tracking-[2px] flex items-center gap-2">
+        <h3 className="text-sm font-black text-gray-900 dark:text-[var(--text-main)] mb-4 uppercase tracking-[2px] flex items-center gap-2">
           <Palette className="w-4 h-4 text-indigo-500" />
           Aesthetic Presets
         </h3>

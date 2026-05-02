@@ -184,7 +184,7 @@ export default function ApprovalWorkflowBuilder({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
           Approval Workflow Builder
         </h2>
         <button
@@ -239,7 +239,7 @@ export default function ApprovalWorkflowBuilder({
       {/* Stages */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
             Approval Stages
           </h3>
           <button
@@ -428,7 +428,7 @@ export default function ApprovalWorkflowBuilder({
 
       {/* Settings */}
       <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
           Workflow Settings
         </h3>
         <div className="grid grid-cols-2 gap-4">

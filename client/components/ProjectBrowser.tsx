@@ -54,7 +54,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
         <div className="h-full flex flex-col bg-slate-50 dark:bg-black p-6 overflow-hidden">
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)] flex items-center gap-3">
                         <Layout className="w-6 h-6 text-blue-500" />
                         Project Dashboard
                     </h2>
@@ -125,7 +125,7 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
 
                                 <div className={`p-4 ${viewMode === 'list' ? 'flex-1 flex items-center justify-between p-0' : ''}`}>
                                     <div>
-                                        <h3 className="font-bold text-gray-900 dark:text-white truncate mb-1 group-hover:text-blue-500 transition-colors">{project.name}</h3>
+                                        <h3 className="font-bold text-gray-900 dark:text-[var(--text-main)] truncate mb-1 group-hover:text-blue-500 transition-colors">{project.name}</h3>
                                         <div className="flex items-center gap-2 text-[10px] text-gray-400">
                                             <Clock className="w-3 h-3" />
                                             <span>{new Date(project.lastSaved).toLocaleDateString()}</span>

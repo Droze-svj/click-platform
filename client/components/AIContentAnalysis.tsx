@@ -139,7 +139,7 @@ export default function AIContentAnalysis({
       <div className="flex items-center gap-3 mb-6">
         <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
         <div>
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
             AI Content Analysis
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">

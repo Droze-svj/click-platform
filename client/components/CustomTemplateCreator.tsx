@@ -554,7 +554,7 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Adjustments</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Basic Adjustments</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -616,7 +616,7 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Advanced Color</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Advanced Color</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -714,7 +714,7 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Font Selection</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Font Selection</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -768,7 +768,7 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Colors & Sizes</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Colors & Sizes</h3>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -858,7 +858,7 @@ export default function CustomTemplateCreator({
               {/* Text Overlays Section */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Text Overlays</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Text Overlays</h3>
                   <button
                     onClick={addTextOverlay}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -1001,7 +1001,7 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Layout Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Layout Settings</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1055,7 +1055,7 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Background</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Background</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1147,7 +1147,7 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Audio Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Audio Settings</h3>
 
                   <div className="space-y-4">
                     <label className="flex items-center">
@@ -1183,7 +1183,7 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Music Preferences</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Music Preferences</h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1226,7 +1226,7 @@ export default function CustomTemplateCreator({
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Visual Effects</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Visual Effects</h3>
 
                   <div className="space-y-4">
                     <div>
@@ -1313,7 +1313,7 @@ export default function CustomTemplateCreator({
                 </div>
 
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Advanced Effects</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Advanced Effects</h3>
 
                   <div className="space-y-4">
                     <label className="flex items-center justify-between">

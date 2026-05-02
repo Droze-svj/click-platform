@@ -241,7 +241,7 @@ const ApprovalQueueView: React.FC = () => {
           >
             <div className="p-8 flex flex-col gap-8 h-full">
                <div className="flex items-center justify-between">
-                  <h3 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
                      <History className="w-4 h-4 text-violet-400" />
                      Decision Matrix
                   </h3>

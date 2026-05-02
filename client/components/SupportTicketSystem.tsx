@@ -134,7 +134,7 @@ export default function SupportTicketSystem() {
                 <ShieldAlert className="w-8 h-8 text-indigo-400" />
               </div>
               <div>
-                <h1 className="text-4xl font-black text-white italic uppercase tracking-tighter">
+                <h1 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">
                   Support Nexus
                 </h1>
                 <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] block italic">
@@ -246,7 +246,7 @@ export default function SupportTicketSystem() {
                 {/* Header */}
                 <div className="p-8 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-2">
+                    <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2">
                       {selectedTicket.subject}
                     </h2>
                     <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -364,7 +364,7 @@ export default function SupportTicketSystem() {
                 <div className="p-8 rounded-full bg-white/[0.02] border border-white/5 shadow-[0_0_100px_rgba(255,255,255,0.02)] mb-8">
                   <ShieldAlert className="w-20 h-20 text-slate-700" />
                 </div>
-                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-2">No Uplink Selected</h3>
+                <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-2">No Uplink Selected</h3>
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Select an active strand from the index to begin transmission</p>
               </div>
             )}
@@ -406,7 +406,7 @@ function CreateTicketForm({
             <Plus className="w-8 h-8 text-indigo-400" />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-2">
+            <h2 className="text-3xl font-black text-[var(--text-main)] uppercase italic tracking-tighter mb-2">
               New Uplink
             </h2>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic leading-relaxed">

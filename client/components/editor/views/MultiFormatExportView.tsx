@@ -117,7 +117,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
             <Zap className="w-4 h-4 animate-pulse" />
             Social Repurpose Hub
           </div>
-          <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">
+          <h1 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">
             NEURAL_BATCH SYNTHESIS <span className="text-indigo-500">2.0</span>
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl font-medium leading-relaxed">
@@ -155,7 +155,7 @@ export const MultiFormatExportView: React.FC<MultiFormatExportViewProps> = ({ vi
                     <Icon className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter">{profile.label}</h3>
+                    <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{profile.label}</h3>
                     <p className="text-slate-500 text-[11px] font-black uppercase tracking-widest mt-1">Aspect: {profile.aspect}</p>
                   </div>
                   <p className="text-slate-400 text-xs font-medium leading-relaxed">{profile.description}</p>

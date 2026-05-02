@@ -137,7 +137,7 @@ export default function SignalDiffusionLedgerPage() {
   })
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Radio size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
         <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Decoding Signal Spectrum...</span>
      </div>
@@ -175,7 +175,7 @@ export default function SignalDiffusionLedgerPage() {
                       </div>
                    )}
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3">Notifications</h1>
+                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Notifications</h1>
                  <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Posts that went live, approvals waiting on you, jobs that need attention. Click rolls them up so nothing slips.</p>
               </div>
            </div>
@@ -205,7 +205,7 @@ export default function SignalDiffusionLedgerPage() {
                          <ActivitySquare size={48} className="text-indigo-400" />
                       </div>
                       <div>
-                         <h2 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Mission Telemetry</h2>
+                         <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Mission Telemetry</h2>
                          <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">Real-time kinetic execution downlink_v14.2</p>
                       </div>
                    </div>
@@ -300,7 +300,7 @@ export default function SignalDiffusionLedgerPage() {
                       className="appearance-none bg-black/80 border-2 border-white/10 px-20 py-8 rounded-[4rem] text-[14px] font-black uppercase tracking-[0.8em] text-indigo-400 focus:outline-none cursor-pointer italic pr-32 shadow-inner hover:border-indigo-500/50 transition-all"
                     >
                       <option value="">ALL_SIGNAL_SECTORS</option>
-                      {CATEGORIES.map(c => <option key={c} value={c} className="bg-[#020205]">{c}</option>)}
+                      {CATEGORIES.map(c => <option key={c} value={c} className="bg-[var(--page-bg)]">{c}</option>)}
                     </select>
                     <ChevronRight size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-indigo-400 rotate-90 pointer-events-none opacity-40 group-hover/sector:opacity-100 transition-opacity" />
                  </div>
@@ -348,7 +348,7 @@ export default function SignalDiffusionLedgerPage() {
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-[0.05] gap-20 py-80">
                    <div className="w-80 h-80 bg-white/5 rounded-[12rem] border-4 border-white/5 flex items-center justify-center animate-pulse shadow-inner"><Bell size={160} className="text-white opacity-40" /></div>
                    <div className="space-y-10 max-w-4xl">
-                      <h3 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-6">Signal Spectrum Void</h3>
+                      <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-6">Signal Spectrum Void</h3>
                       <p className="text-3xl font-black text-slate-400 uppercase tracking-[1em] italic leading-relaxed">No active resonance triggered in the current temporal resolution.</p>
                    </div>
                 </div>
@@ -388,7 +388,7 @@ export default function SignalDiffusionLedgerPage() {
                               </div>
 
                               <div className="space-y-10">
-                                 <h3 className="text-7xl font-black text-white uppercase italic tracking-tighter leading-none mb-10 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{n.title}</h3>
+                                 <h3 className="text-7xl font-black text-[var(--text-main)] uppercase italic tracking-tighter leading-none mb-10 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{n.title}</h3>
                                  <p className="text-slate-400 font-black text-3xl uppercase tracking-tighter italic leading-tight max-w-5xl opacity-80 group-hover:opacity-100 transition-opacity duration-300 group-hover:text-slate-200">{n.message || n.aiSummary || 'NULL_SIGNAL_PAYLOAD'}</p>
                                  
                                  <AnimatePresence>

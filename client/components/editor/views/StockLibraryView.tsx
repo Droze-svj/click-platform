@@ -310,7 +310,7 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuchsia-400">Click · Stock Library</span>
           </div>
-          <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Stock & Creative Assets</h2>
+          <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-tight">Stock & Creative Assets</h2>
           <p className="text-[12px] text-slate-400 mt-1.5 leading-relaxed">
             {Object.values(CATEGORY_META).reduce((s, m) => s + m.total, 0)} curated assets across {Object.keys(CATEGORY_META).length} categories. Click any item to add to your timeline.
           </p>
@@ -392,7 +392,7 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
       {visible.length === 0 ? (
         <div className={`${glassStyle} rounded-2xl p-12 text-center`}>
           <Search className="w-10 h-10 text-slate-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-black text-white mb-2">No matches</h3>
+          <h3 className="text-2xl font-black text-[var(--text-main)] mb-2">No matches</h3>
           <p className="text-[13px] text-slate-400 mb-5">Try a different search term or mood filter.</p>
           <button type="button" onClick={() => { setSearch(''); setMoodFilter('All') }} className="px-6 py-2.5 bg-white/5 border border-white/10 text-slate-300 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:text-white">Reset filters</button>
         </div>

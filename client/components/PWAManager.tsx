@@ -180,7 +180,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:animate-shimmer" />
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-black text-white italic uppercase tracking-tighter">Click Evolved</h4>
+                <h4 className="text-sm font-black text-[var(--text-main)] italic uppercase tracking-tighter">Click Evolved</h4>
                 <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">New intelligence active.</p>
               </div>
               <button
@@ -221,7 +221,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                      <Download className="w-7 h-7 text-white" />
                    </div>
                    <div>
-                     <h3 className="text-xl font-black text-white italic uppercase tracking-tighter leading-none mb-1">Click Desktop</h3>
+                     <h3 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-1">Click Desktop</h3>
                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Native Edge v4.2</p>
                    </div>
                 </div>

@@ -401,7 +401,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {showFilters && facets && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900 dark:text-white">Filters</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Filters</h3>
             <div className="flex gap-2">
               <button
                 onClick={clearFilters}
@@ -554,7 +554,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {searchHistory.length > 0 && (
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <History className="w-4 h-4" />
                 Recent Searches
               </h3>
@@ -575,7 +575,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
 
           {savedSearches.length > 0 && (
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
                 <Star className="w-4 h-4" />
                 Saved Searches
               </h3>
@@ -599,13 +599,13 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {/* Clustered Results */}
       {clusteredResults && clusteredResults.clusters.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)] mb-4">
             Results by Category
           </h3>
           <div className="space-y-4">
             {clusteredResults.clusters.map((cluster: any) => (
               <div key={cluster.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3">
                   {cluster.label} ({cluster.items.length})
                 </h4>
                 <div className="space-y-2">
@@ -631,7 +631,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {results.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">
               {results.length} {results.length === 1 ? 'result' : 'results'}
             </h3>
             <div className="flex gap-2">
@@ -715,7 +715,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {/* Search Alerts */}
       {searchAlerts.length > 0 && !results.length && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+          <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)] mb-3 flex items-center gap-2">
             <Bell className="w-4 h-4" />
             Active Search Alerts
           </h3>
@@ -750,7 +750,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-[var(--text-main)]">
                   {previewContent.content.title}
                 </h3>
                 <button

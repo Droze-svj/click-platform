@@ -128,7 +128,7 @@ export default function ContentSchedulerPage() {
                 <Send size={32} className="text-emerald-400" />
               </div>
               <div>
-                 <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-md">Multi-Platform Scheduler</h1>
+                 <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight drop-shadow-md">Multi-Platform Scheduler</h1>
                  <p className="text-slate-400 text-sm mt-1 font-medium">Compose once, distribute everywhere. Let AI pick the best time to post.</p>
               </div>
            </div>
@@ -147,7 +147,7 @@ export default function ContentSchedulerPage() {
            {/* Composer */}
            <div className="lg:col-span-3 space-y-8">
               <div className={`${glassStyle} rounded-3xl p-10 bg-[#050505]`}>
-                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Layers size={20} className="text-emerald-400" /> Select Platforms</h3>
+                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-3"><Layers size={20} className="text-emerald-400" /> Select Platforms</h3>
                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 mb-10">
                     {PLATFORMS.map(p => {
                       const active = selectedPlatforms.includes(p.id)
@@ -161,7 +161,7 @@ export default function ContentSchedulerPage() {
                     })}
                  </div>
 
-                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Edit3 size={20} className="text-emerald-400" /> Compose Post</h3>
+                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-3"><Edit3 size={20} className="text-emerald-400" /> Compose Post</h3>
                  <div className="relative mb-10">
                     <textarea
                       ref={textareaRef}
@@ -175,7 +175,7 @@ export default function ContentSchedulerPage() {
                     </div>
                  </div>
 
-                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3"><Clock size={20} className="text-emerald-400" /> Schedule Time</h3>
+                 <h3 className="text-lg font-bold text-[var(--text-main)] mb-6 flex items-center gap-3"><Clock size={20} className="text-emerald-400" /> Schedule Time</h3>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                     <button onClick={() => setUseOptimalTime(true)} className={`p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${useOptimalTime ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/20'}`}>
                        <Zap size={28} />
@@ -208,7 +208,7 @@ export default function ContentSchedulerPage() {
 
            {/* Queue Sidebar */}
            <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-2xl font-bold text-white mb-2">Upcoming Queue</h3>
+              <h3 className="text-2xl font-bold text-[var(--text-main)] mb-2">Upcoming Queue</h3>
               <p className="text-slate-400 text-sm mb-6">Your next posts scheduled for delivery.</p>
               
               {loading ? (
