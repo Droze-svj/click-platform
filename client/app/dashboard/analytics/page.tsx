@@ -68,7 +68,7 @@ export default function SovereignAnalyticsMatrix() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#020205] text-white relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1750px] mx-auto space-y-12 md:space-y-24 overflow-x-hidden">
+      <div className="min-h-screen bg-[var(--page-bg)] text-[var(--text-main)] relative z-10 pb-24 md:pb-48 px-4 md:px-6 lg:px-10 pt-8 md:pt-12 lg:pt-16 max-w-[1750px] mx-auto space-y-12 md:space-y-24 overflow-x-hidden transition-colors duration-500">
         <ToastContainer />
         
         {/* Background Ambience */}
@@ -235,15 +235,19 @@ export default function SovereignAnalyticsMatrix() {
 function ScoreCard({ label, value, icon: Icon, color, trend }: { label: string; value: string | number; icon: any; color: string; trend: string }) {
   return (
     <motion.div whileHover={{ y: -10, scale: 1.02 }}
-      className={`${glass} p-10 rounded-[4rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden shadow-2xl`}
+      className={`${glass} p-6 sm:p-8 lg:p-10 rounded-[2rem] sm:rounded-[3rem] lg:rounded-[4rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden shadow-2xl min-w-0`}
     >
-       <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none"><Activity size={100} className="text-white" /></div>
-       <div className={`w-20 h-20 rounded-[2rem] bg-black/40 border border-white/10 flex items-center justify-center mb-6 shadow-2xl group-hover:rotate-12 transition-all duration-300`}>
-          <Icon size={32} className={color} />
+       <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none"><Activity size={100} className="text-[var(--text-main)]" /></div>
+       <div className={`w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-[1.5rem] lg:rounded-[2rem] bg-black/40 border border-white/10 flex items-center justify-center mb-4 lg:mb-6 shadow-2xl group-hover:rotate-12 transition-all duration-300`}>
+          <Icon size={24} className={`${color} lg:hidden`} />
+          <Icon size={32} className={`${color} hidden lg:block`} />
        </div>
-       <div className="text-6xl font-black text-white italic tracking-tighter tabular-nums leading-none mb-4">{value}</div>
-       <div className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em] italic mb-6 leading-none group-hover:text-white transition-colors">{label}</div>
-       <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest italic bg-white/5 px-6 py-2 rounded-full border border-white/5">
+       {/* Fluid value: clamp keeps long numbers like "1.2M" inside the card on
+           small widths and lets the headline grow on desktop. break-words
+           prevents single-token strings like "MASTER" from overflowing. */}
+       <div className="text-[clamp(1.75rem,5vw,3.5rem)] font-black text-[var(--text-main)] italic tracking-tighter tabular-nums leading-none mb-3 lg:mb-4 break-words max-w-full">{value}</div>
+       <div className="text-[10px] lg:text-[11px] text-[var(--text-dim)] font-black uppercase tracking-[0.2em] lg:tracking-[0.4em] italic mb-4 lg:mb-6 leading-none group-hover:text-[var(--text-main)] transition-colors break-words max-w-full">{label}</div>
+       <div className="text-[9px] text-[var(--text-dim)] font-black uppercase tracking-widest italic bg-white/5 px-4 sm:px-6 py-2 rounded-full border border-white/5">
           {trend}
        </div>
     </motion.div>

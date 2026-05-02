@@ -108,7 +108,7 @@ export default function CognitiveForecasterPage() {
   const connectedCount = accounts ? Object.values(accounts).filter(Boolean).length : 0
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[#020205] min-h-screen">
+     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] text-[var(--text-main)] min-h-screen transition-colors duration-500">
         <Brain size={64} className="text-cyan-500 animate-pulse mb-8" />
         <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Decoding Cognitive Waveforms...</span>
      </div>
@@ -187,16 +187,19 @@ export default function CognitiveForecasterPage() {
         </AnimatePresence>
 
         {/* Global Connection Status */}
-        <div className={`${glassStyle} rounded-[6rem] p-16 relative z-10 group overflow-hidden border-cyan-500/10 hover:border-cyan-500/30 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)]`}>
+        <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-6 sm:p-10 lg:p-16 relative z-10 group overflow-hidden border-cyan-500/10 hover:border-cyan-500/30 shadow-[inset_0_0_100px_rgba(0,0,0,0.4)]`}>
           <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300"><Boxes size={400} /></div>
-          <div className="flex flex-col xl:flex-row items-center justify-between gap-12 relative z-10">
-            <div className="flex items-center gap-12">
-              <div className="w-24 h-24 bg-cyan-600/5 border border-cyan-500/10 rounded-[3rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300">
-                <Link2 className="w-12 h-12 text-cyan-400" />
+          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 lg:gap-12 relative z-10">
+            <div className="flex items-center gap-4 sm:gap-6 lg:gap-12 min-w-0 flex-1">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-cyan-600/5 border border-cyan-500/10 rounded-[2rem] lg:rounded-[3rem] flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-300 flex-shrink-0">
+                <Link2 className="w-8 h-8 lg:w-12 lg:h-12 text-cyan-400" />
               </div>
-              <div>
-                <h3 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-4">Receptor Uplinks</h3>
-                <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">
+              <div className="min-w-0 flex-1">
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2 lg:mb-4">Receptor Uplinks</h3>
+                {/* Letter-spacing tightened (0.4em → 0.2em) and break-words
+                    enabled so the long status string wraps cleanly instead
+                    of overflowing the right edge of the card. */}
+                <p className="text-[10px] sm:text-[12px] text-slate-400 font-black uppercase tracking-[0.2em] italic leading-snug break-words">
                   {connectedCount > 0
                     ? `${connectedCount} ACTIVE_SUBSTRATE_UPLINKS_DETECTED`
                     : 'INITIATE_UPLINK_TO_ACTIVATE_COGNITIVE_SURVEILLANCE'}
@@ -204,10 +207,10 @@ export default function CognitiveForecasterPage() {
               </div>
             </div>
             <button onClick={() => router.push('/dashboard/social')}
-              className="px-16 py-8 bg-cyan-600 text-white rounded-[3rem] text-[16px] font-black uppercase tracking-[0.4em] italic hover:bg-white hover:text-black transition-all shadow-[0_40px_100px_rgba(6,182,212,0.3)] flex items-center gap-8 group"
+              className="w-full xl:w-auto px-6 sm:px-10 lg:px-16 py-4 sm:py-6 lg:py-8 bg-cyan-600 text-white rounded-[2rem] lg:rounded-[3rem] text-[12px] lg:text-[15px] font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all shadow-[0_40px_100px_rgba(6,182,212,0.3)] flex items-center justify-center gap-4 lg:gap-8 group flex-shrink-0"
             >
               {connectedCount > 0 ? 'CALIBRATE_UPLINKS' : 'INITIALIZE_NODES'}
-              <ArrowUpRight className="w-8 h-8 group-hover:translate-x-4 group-hover:-translate-y-4 transition-transform duration-700" />
+              <ArrowUpRight className="w-5 h-5 lg:w-8 lg:h-8 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform duration-700" />
             </button>
           </div>
         </div>

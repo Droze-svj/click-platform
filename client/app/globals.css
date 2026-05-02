@@ -364,6 +364,30 @@ a:focus-visible,
   box-shadow: var(--focus-ring);
 }
 
+/* ── Tame extreme letter-spacing on narrow viewports ──────────────────────────
+ * Many dashboard surfaces use tracking-[0.4em]–[1em] for the "console
+ * readout" aesthetic. That looks great at 1400px+ but blows past container
+ * edges on tablets and phones. We softly cap the effective spacing on
+ * sub-1024px viewports so labels and pills stop being clipped. The desktop
+ * look is preserved unchanged. */
+@media (max-width: 1023px) {
+  [class*="tracking-["][class*="0.5em"],
+  [class*="tracking-["][class*="0.6em"],
+  [class*="tracking-["][class*="0.8em"],
+  [class*="tracking-["][class*="1em"] {
+    letter-spacing: 0.2em !important;
+  }
+  [class*="tracking-["][class*="0.4em"],
+  [class*="tracking-["][class*="0.3em"] {
+    letter-spacing: 0.15em !important;
+  }
+}
+@media (max-width: 639px) {
+  [class*="tracking-["][class*="em"] {
+    letter-spacing: 0.1em !important;
+  }
+}
+
 /* ── Respect prefers-reduced-motion ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,

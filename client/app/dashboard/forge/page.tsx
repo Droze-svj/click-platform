@@ -49,7 +49,7 @@ export default function OneClickForgePage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen p-6 lg:p-12 relative overflow-hidden bg-[#020205] font-inter">
+      <div className="min-h-screen p-4 sm:p-6 lg:p-12 relative overflow-hidden bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500 font-inter">
         <ToastContainer />
 
         {/* Atmosphere */}

@@ -99,13 +99,26 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
   ] as const;
 
   return (
-    <div className={`niche-strategy-panel ${className}`} style={{
-      background: 'linear-gradient(135deg, #0d1a0d 0%, #1a1a0d 100%)',
-      borderRadius: 16,
-      border: '1px solid rgba(0, 200, 100, 0.15)',
-      overflow: 'hidden',
-      fontFamily: '"Outfit", "Inter", sans-serif'
-    }}>
+    // Outer wrapper uses theme tokens so the panel sits cleanly on either
+    // light or dark pages. Inner sections keep their dark "console" look
+    // (intentional — they're tactical-readout style).
+    <div
+      className={`niche-strategy-panel ${className} bg-[var(--click-panel-bg)] border border-[var(--glass-border)] shadow-[var(--glass-glow)]`}
+      style={{
+        borderRadius: 16,
+        overflow: 'hidden',
+        fontFamily: '"Outfit", "Inter", sans-serif',
+      }}
+    >
+      {/* The inner intelligence-console block stays dark for legibility of
+          its existing white-on-dark text. */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0d1a0d 0%, #1a1a0d 100%)',
+        borderRadius: 14,
+        border: '1px solid rgba(0, 200, 100, 0.15)',
+        margin: 4,
+        overflow: 'hidden',
+      }}>
       {/* Header + Niche Picker */}
       <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(0,200,100,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -263,6 +276,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
           )}
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

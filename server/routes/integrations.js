@@ -73,7 +73,7 @@ router.get('/setup-status', (req, res) => {
     { platform: 'youtube',   configured: has('YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET') || has('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'), requiredEnv: ['YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET'], docs: 'https://console.cloud.google.com/apis/credentials' },
     { platform: 'linkedin',  configured: has('LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'), requiredEnv: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'], docs: 'https://www.linkedin.com/developers/apps' },
     { platform: 'facebook',  configured: has('FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'), requiredEnv: ['FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'], docs: 'https://developers.facebook.com/apps' },
-    { platform: 'instagram', configured: has('INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET') || has('FACEBOOK_APP_ID', 'FACEBOOK_APP_SECRET'), requiredEnv: ['INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'], docs: 'https://developers.facebook.com/docs/instagram-api/getting-started' },
+    { platform: 'instagram', configured: has('INSTAGRAM_CLIENT_ID', 'INSTAGRAM_CLIENT_SECRET'), requiredEnv: ['INSTAGRAM_CLIENT_ID', 'INSTAGRAM_CLIENT_SECRET'], docs: 'https://developers.facebook.com/docs/instagram-api/getting-started' },
     { platform: 'tiktok',    configured: has('TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET'), requiredEnv: ['TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_SECRET'], docs: 'https://developers.tiktok.com/apps/' },
   ];
   res.json({

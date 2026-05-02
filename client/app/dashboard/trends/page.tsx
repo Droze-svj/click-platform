@@ -95,7 +95,7 @@ export default function TrendsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-12 bg-[#020205]">
+      <div className="min-h-screen relative z-10 pb-24 px-4 sm:px-6 lg:px-8 pt-12 max-w-[1700px] mx-auto space-y-12 bg-[var(--page-bg)] text-[var(--text-main)] transition-colors duration-500 overflow-x-hidden">
         <ToastContainer />
 
         {/* Header */}
