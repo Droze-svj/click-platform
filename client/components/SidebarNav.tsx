@@ -68,6 +68,7 @@ const ZONES = [
       { path: '/dashboard/trends',               label: 'Discover',          icon: Flame,      badge: 'New' },
       { path: '/dashboard/strategist',           label: 'Strategist',        icon: Compass,    badge: 'AI' },
       { path: '/dashboard/insights',             label: 'AI Insights',       icon: Brain,      badge: null },
+      { path: '/dashboard/roadmap',              label: 'Roadmap',           icon: Sparkles,   badge: null },
     ],
   },
   {

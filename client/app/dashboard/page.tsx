@@ -16,6 +16,7 @@ import {
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import ToastContainer from '../../components/ToastContainer'
 import SubscriptionBanner from '../../components/SubscriptionBanner'
+import AILearningIndicator from '../../components/AILearningIndicator'
 import { validateFile } from '../../utils/fileValidator'
 import { useTheme } from '../../components/ThemeProvider'
 
@@ -272,6 +273,12 @@ export default function NeuralDashboard() {
             </button>
           </div>
         </header>
+
+        {/* AI Learning Indicator — surfaces what the model has actually learned
+            from the user's recent posts. Hidden in Focus Mode (data-focus-secondary). */}
+        <div data-focus-secondary>
+          <AILearningIndicator />
+        </div>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">

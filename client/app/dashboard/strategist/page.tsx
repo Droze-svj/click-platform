@@ -16,6 +16,7 @@
 import { Sparkles, Compass } from 'lucide-react'
 import MarketingStrategistChat from '../../../components/MarketingStrategistChat'
 import NicheStrategyPanel from '../../../components/NicheStrategyPanel'
+import HookVariantsCard from '../../../components/HookVariantsCard'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 
 export default function StrategistPage() {
@@ -55,12 +56,13 @@ export default function StrategistPage() {
       {/* Two-column layout: niche playbook left, chat right.
           Stacks vertically below lg so phones get a usable single column. */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 space-y-6">
           <NicheStrategyPanel
             currentNiche={niche}
             currentPlatform={platform}
             onNicheChange={setNiche}
           />
+          <HookVariantsCard niche={niche} platform={platform} />
         </div>
         <div className="lg:col-span-7 min-h-[600px]">
           <MarketingStrategistChat

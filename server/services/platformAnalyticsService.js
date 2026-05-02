@@ -600,6 +600,44 @@ async function syncPostAnalytics(userId, postId) {
       logger.warn('Error updating content performance', { error: error.message });
     }
 
+    // ── Continuous learning loop ────────────────────────────────────────────
+    // Fold the post's measured retention into the user's UserStyleProfile so
+    // tomorrow's editor suggestions weight by what's actually performing for
+    // this creator. Best-effort — analytics sync should never fail because
+    // the learning loop hiccupped.
+    if (post.contentId) {
+      try {
+        const { ingestPostPerformance } = require('./creatorPerformanceService');
+        const completionRate =
+          analytics.watchTime?.averagePercentage != null
+            ? Number(analytics.watchTime.averagePercentage) / 100
+            : null;
+        const totalEngagement =
+          (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
+        const engagementRate = analytics.views ? totalEngagement / analytics.views : null;
+
+        await ingestPostPerformance({
+          userId,
+          contentId: String(post.contentId),
+          metrics: {
+            retentionRate: completionRate,
+            completionRate,
+            viewCount: analytics.views || 0,
+            likes: analytics.likes || 0,
+            shares: analytics.shares || 0,
+            comments: analytics.comments || 0,
+            engagementRate,
+            // Benchmark omitted — creatorPerformanceService falls back to a
+            // platform-default in computeRetentionDelta when absent.
+          },
+        });
+      } catch (learnErr) {
+        logger.warn('[learning-loop] ingestPostPerformance skipped', {
+          postId, contentId: String(post.contentId), error: learnErr.message,
+        });
+      }
+    }
+
     logger.info('Post analytics synced', { postId, platform: post.platform, userId });
     return analytics;
   } catch (error) {

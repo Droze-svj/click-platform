@@ -414,4 +414,84 @@ router.post('/strategist/ask', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/intelligence/strategist/variants
+ * Body: { baseHook, niche, platform }
+ *
+ * Returns 3 hook variants of the same idea, each anchored to a different
+ * psychological trigger (curiosity / authority / FOMO / social-proof / etc).
+ * The user picks one in the UI; the picked variant gets recorded to their
+ * weightedHooks profile so the model biases toward what they actually use.
+ */
+router.post('/strategist/variants', async (req, res) => {
+  try {
+    const { baseHook, niche: rawNiche, platform: rawPlatform } = req.body || {};
+    if (!baseHook || typeof baseHook !== 'string' || baseHook.length < 4 || baseHook.length > 600) {
+      return res.status(400).json({ success: false, error: 'baseHook is required (4-600 chars).' });
+    }
+    const niche = normaliseNiche(rawNiche);
+    const platform = normalisePlatform(rawPlatform);
+    const userId = req.user?._id || req.user?.id;
+
+    const system = buildSystemPrompt({
+      persona: 'hook-writer',
+      niche, platform, stage: 'script',
+      language: 'en',
+      extra:
+        '\nGenerate exactly 3 hook variants of the same core idea, each rooted in a different ' +
+        'psychological trigger. Allowed triggers: curiosity-gap, authority, FOMO, social-proof, ' +
+        'shock, value-tease, enemy-frame, before-after.\n' +
+        'Constraints: each variant 6-22 words, active voice, no generic clickbait, no emojis. ' +
+        'For each variant include an `id` (slug of the trigger), `framing` (the trigger label), ' +
+        '`text` (the variant itself), and `why` (one sentence explaining why this framing works ' +
+        'for this niche/platform).\n' +
+        'Return ONLY a fenced ```json block with shape: ' +
+        '{ "variants": [{ "id": "...", "framing": "...", "text": "...", "why": "..." }, ...] }',
+    });
+    const prompt = `${system}\n\nBASE HOOK / IDEA:\n${baseHook}\n\nReturn the JSON block only.`;
+
+    const raw = await generateContent(prompt, { temperature: 0.85, maxTokens: 800 });
+    let variants = [];
+    const match = (raw || '').match(/```json\s*([\s\S]+?)```/i);
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[1].trim());
+        if (Array.isArray(parsed?.variants)) variants = parsed.variants;
+      } catch { /* fall through */ }
+    }
+    if (!Array.isArray(variants) || variants.length === 0) {
+      // Fallback — synthesise three deterministic variants from HOOK_FRAMEWORKS so
+      // the UI never sees an empty state when Gemini quota is hit.
+      variants = HOOK_FRAMEWORKS.slice(0, 3).map(h => ({
+        id: h.id,
+        framing: h.id.replace(/-/g, ' '),
+        text: h.example,
+        why: h.pattern,
+      }));
+    }
+    variants = variants.slice(0, 3);
+
+    // Anti-repetition — exclude variants the user has seen recently. We hash on
+    // the framing+text so the same variant text can't ride two different ids.
+    const candidates = variants.map(v => ({
+      id: `${v.id || v.framing}:${(v.text || '').slice(0, 60)}`,
+      ...v,
+    }));
+    const filtered = await filterDuplicates({
+      userId,
+      kind: 'hook-variant',
+      candidates,
+      minSize: 3,
+      windowSize: 25,
+    });
+    const picked = filtered.slice(0, 3);
+    await recordEmissions({ userId, kind: 'hook-variant', candidates: picked });
+
+    res.json({ success: true, niche, platform, variants: picked });
+  } catch (error) {
+    logger.error('[intelligence] /strategist/variants failed', { error: error.message });
+    res.status(500).json({ success: false, error: 'Variant generation failed. Try again in a moment.' });
+  }
+});
+
 module.exports = router;

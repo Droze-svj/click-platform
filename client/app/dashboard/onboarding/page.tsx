@@ -14,6 +14,7 @@ import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
+import { useWorkflow } from '../../../contexts/WorkflowContext'
 
 interface OnboardingStep {
   id: string
@@ -47,15 +48,30 @@ const FALLBACK_STEPS: OnboardingStep[] = [
 
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.6)] transition-all duration-300'
 
+// Niche catalogue — matches NICHE_PLAYBOOKS in server/services/marketingKnowledge.js
+// so the user's pick maps 1:1 to a real Gemini playbook on the strategist endpoint.
+const NICHE_OPTIONS = [
+  { value: 'health',        label: 'Health & Wellness',      icon: '💪', accent: 'emerald' as const },
+  { value: 'finance',       label: 'Finance & Investing',    icon: '📊', accent: 'sky' as const },
+  { value: 'education',     label: 'Education & Learning',   icon: '📚', accent: 'indigo' as const },
+  { value: 'technology',    label: 'Technology & Software',  icon: '⚡', accent: 'cyan' as const },
+  { value: 'lifestyle',     label: 'Lifestyle & Aesthetics', icon: '✨', accent: 'fuchsia' as const },
+  { value: 'business',      label: 'Business & Operators',   icon: '🏛', accent: 'amber' as const },
+  { value: 'entertainment', label: 'Entertainment & Comedy', icon: '🎭', accent: 'rose' as const },
+  { value: 'other',         label: 'Other / Generalist',     icon: '🌐', accent: 'violet' as const },
+]
+
 export default function OnboardingPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
   const { showToast } = useToast()
+  const { state: workflow, setNiche } = useWorkflow()
 
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const [loading, setLoading] = useState(true)
   const [completing, setCompleting] = useState<string | null>(null)
   const [skipping, setSkipping] = useState(false)
+  const [editingNiche, setEditingNiche] = useState(false)
 
   const loadProgress = useCallback(async () => {
     try {
@@ -93,6 +109,26 @@ export default function OnboardingPage() {
     } catch {
       showToast('LOG_FAILED: STATE_NOT_PERSISTED', 'error')
     } finally { setCompleting(null) }
+  }
+
+  // Wire niche picks straight into WorkflowContext (persists to localStorage)
+  // and auto-mark the 'profile' onboarding step complete on the server. The
+  // strategist + every Gemini call downstream reads from the same context, so
+  // a single click here cascades through the whole AI surface.
+  const handlePickNiche = async (value: string) => {
+    setNiche(value)
+    setEditingNiche(false)
+    showToast(`✓ NICHE_LOCKED: ${value.toUpperCase()}`, 'success')
+    const profileStep = steps.find(s => s.id === 'profile')
+    if (profileStep && !profileStep.completed) {
+      try {
+        await apiPost('/onboarding/complete-step', { stepId: 'profile' })
+        setSteps(prev => prev.map(s => s.id === 'profile' ? { ...s, completed: true } : s))
+      } catch {
+        // Silent — local state is the source of truth for niche; the server
+        // marker is a nice-to-have for the progress bar.
+      }
+    }
   }
 
   const handleSkipAll = async () => {
@@ -145,6 +181,68 @@ export default function OnboardingPage() {
             </button>
           )}
         </div>
+
+        {/* Niche Picker — written before the steps because every downstream
+            AI surface reads from WorkflowContext.niche. Without it the
+            strategist defaults to 'general' and Gemini gets no niche playbook. */}
+        {(!workflow.niche || editingNiche) ? (
+          <div className={`${glassStyle} rounded-[3rem] p-10 border-indigo-500/20 shadow-[0_0_120px_rgba(99,102,241,0.10)]`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-[1.4rem] bg-[var(--tint-indigo-bg)] border border-[var(--tint-indigo-edge)] text-[var(--tint-indigo-fg)] flex items-center justify-center shadow-xl">
+                  <Target size={26} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-[var(--tint-indigo-fg)] uppercase tracking-[0.5em] italic mb-2 leading-none">STEP_0 · NICHE_CALIBRATION</p>
+                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tight leading-none">Pick your category</h3>
+                  <p className="text-[11px] text-slate-400 mt-2 max-w-xl">The AI tunes hooks, captions, and posting times to your niche. Pick once — change anytime.</p>
+                </div>
+              </div>
+              {workflow.niche && (
+                <button type="button" onClick={() => setEditingNiche(false)} className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
+                  Cancel
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {NICHE_OPTIONS.map(opt => {
+                const selected = workflow.niche === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handlePickNiche(opt.value)}
+                    // eslint-disable-next-line jsx-a11y/aria-proptypes -- runtime boolean serialises correctly to "true"/"false".
+                    aria-pressed={selected}
+                    className={`group p-5 rounded-2xl border transition-all text-left flex flex-col gap-2 ${
+                      selected
+                        ? `bg-[var(--tint-${opt.accent}-bg)] border-[var(--tint-${opt.accent}-edge)] text-[var(--tint-${opt.accent}-fg)] shadow-lg`
+                        : 'bg-white/[0.02] border-white/10 text-slate-300 hover:border-white/20 hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <span className="text-2xl leading-none">{opt.icon}</span>
+                    <span className="text-[11px] font-black uppercase tracking-widest leading-tight">{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className={`${glassStyle} rounded-[2.5rem] p-6 border-emerald-500/15 flex items-center justify-between gap-6`}>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                <CheckCircle size={18} />
+              </div>
+              <div>
+                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.4em] italic mb-1 leading-none">NICHE_LOCKED</p>
+                <p className="text-lg font-black text-white capitalize leading-none">{workflow.niche}</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setEditingNiche(true)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
+              Change
+            </button>
+          </div>
+        )}
 
         {/* Progress Strip */}
         <div className={`${glassStyle} rounded-[3rem] p-10 ${isComplete ? 'border-emerald-500/30 shadow-[0_0_120px_rgba(16,185,129,0.15)]' : 'border-emerald-500/10'}`}>
