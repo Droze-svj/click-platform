@@ -98,7 +98,7 @@ export default function SwarmCollectiveNodePage() {
         </div>
         <div className="space-y-4 text-center">
           <p className="text-[14px] font-bold text-indigo-400 uppercase tracking-[0.4em] animate-pulse leading-none">Loading teams…</p>
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.3em] leading-none">Please wait</p>
+          <p className="text-[10px] font-medium text-[var(--text-dim)] uppercase tracking-[0.3em] leading-none">Please wait</p>
         </div>
       </div>
     )
@@ -117,7 +117,7 @@ export default function SwarmCollectiveNodePage() {
           <button type="button"
             onClick={() => router.push('/dashboard')}
             title="Back to dashboard"
-            className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors active:scale-95 hover:border-rose-500/50">
+            className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-colors active:scale-95 hover:border-rose-500/50">
             <ArrowLeft size={28} />
           </button>
           <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-xl relative">
@@ -130,7 +130,7 @@ export default function SwarmCollectiveNodePage() {
               <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400 leading-none">Click · Teams</span>
             </div>
             <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-none mb-3">Teams</h1>
-            <p className="text-slate-400 text-[14px] font-medium tracking-wide leading-relaxed">Collaborate with editors, reviewers, and contributors on shared content.</p>
+            <p className="text-[var(--text-dim)] text-[14px] font-medium tracking-wide leading-relaxed">Collaborate with editors, reviewers, and contributors on shared content.</p>
           </div>
         </div>
         <button type="button"
@@ -168,10 +168,10 @@ export default function SwarmCollectiveNodePage() {
       {teams.length === 0 ? (
         <div className={`${glassStyle} rounded-[3rem] p-16 text-center border-dashed border-2 border-white/10 flex flex-col items-center z-10 hover:border-indigo-500/20 group/empty transition-colors`}>
           <div className="w-24 h-24 rounded-[2rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center mb-8 relative">
-             <Network size={44} className="text-slate-500 group-hover/empty:text-indigo-400 transition-colors" />
+             <Network size={44} className="text-[var(--text-dim)] group-hover/empty:text-indigo-400 transition-colors" />
           </div>
           <h3 className="text-3xl font-black text-[var(--text-main)] tracking-tight mb-4 group-hover/empty:text-indigo-400 transition-colors">No teams yet</h3>
-          <p className="text-slate-400 text-[14px] font-medium max-w-md mb-8 leading-relaxed">
+          <p className="text-[var(--text-dim)] text-[14px] font-medium max-w-md mb-8 leading-relaxed">
             Create your first team to invite collaborators, share assets, and run approval workflows.
           </p>
           <button
@@ -189,17 +189,17 @@ export default function SwarmCollectiveNodePage() {
           <div className={`${glassStyle} rounded-[3rem] p-6 flex items-center gap-4 relative z-10 border-white/5`}>
              <div className="flex items-center gap-3 pl-6 pr-2 border-r-2 border-white/5">
                 <Target size={20} className="text-indigo-400" />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic whitespace-nowrap hidden md:inline">SCAN_SWARM</span>
+                <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.5em] italic whitespace-nowrap hidden md:inline">SCAN_SWARM</span>
              </div>
              <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search teams by name or description…"
-                className="flex-1 bg-transparent text-[13px] font-medium text-white focus:outline-none placeholder:text-slate-500 px-3"
+                className="flex-1 bg-transparent text-[13px] font-medium text-white focus:outline-none placeholder:text-[var(--text-dim)] px-3"
              />
              {search && (
-                <button type="button" onClick={() => setSearch('')} title="Clear" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-500/20 transition-colors">
+                <button type="button" onClick={() => setSearch('')} title="Clear" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white hover:bg-rose-500/20 transition-colors">
                    <X size={14} />
                 </button>
              )}
@@ -210,9 +210,9 @@ export default function SwarmCollectiveNodePage() {
 
           {filteredTeams.length === 0 ? (
             <div className={`${glassStyle} rounded-[2.5rem] p-12 flex flex-col items-center text-center gap-5 z-10 relative`}>
-               <Target size={36} className="text-slate-500" />
+               <Target size={36} className="text-[var(--text-dim)]" />
                <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">No matches</h3>
-               <p className="text-[13px] font-medium text-slate-400">Adjust your search or clear it to see all teams.</p>
+               <p className="text-[13px] font-medium text-[var(--text-dim)]">Adjust your search or clear it to see all teams.</p>
                <button type="button" onClick={() => setSearch('')} className="px-6 py-2.5 bg-white/5 border border-white/10 text-slate-300 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:text-white hover:border-indigo-500/50 transition-colors">
                   Clear search
                </button>
@@ -263,7 +263,7 @@ export default function SwarmCollectiveNodePage() {
                   const colorFor = (r: string) =>
                     r.includes('admin') || r.includes('owner') ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                     : r.includes('editor') || r.includes('mod') ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : r.includes('view') ? 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                    : r.includes('view') ? 'bg-slate-500/10 text-[var(--text-dim)] border-slate-500/30'
                     : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
                   return (
                     <div className="flex flex-wrap gap-2">
@@ -292,7 +292,7 @@ export default function SwarmCollectiveNodePage() {
                     )}
                  </div>
                  <div className="text-right flex flex-col items-end gap-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] leading-none">Members</p>
+                    <p className="text-[10px] font-bold text-[var(--text-dim)] uppercase tracking-[0.3em] leading-none">Members</p>
                     <p className="text-2xl font-black text-indigo-400 tabular-nums leading-none tracking-tight">{team.members.length}</p>
                  </div>
               </div>
@@ -327,7 +327,7 @@ export default function SwarmCollectiveNodePage() {
                 </div>
                 <div>
                   <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tighter leading-tight">Create a new team</h2>
-                  <p className="text-slate-400 text-[12px] font-medium mt-1 leading-none">Invite members after creating.</p>
+                  <p className="text-[var(--text-dim)] text-[12px] font-medium mt-1 leading-none">Invite members after creating.</p>
                 </div>
               </div>
 
@@ -339,7 +339,7 @@ export default function SwarmCollectiveNodePage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     title="Team name"
-                    className="w-full px-6 py-4 bg-black/60 border-2 border-white/10 rounded-[1.2rem] text-xl font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500 shadow-inner"
+                    className="w-full px-6 py-4 bg-black/60 border-2 border-white/10 rounded-[1.2rem] text-xl font-bold text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-[var(--text-dim)] shadow-inner"
                     placeholder="e.g. Marketing Crew, Editorial Team" autoFocus
                   />
                 </div>
@@ -350,7 +350,7 @@ export default function SwarmCollectiveNodePage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     title="Description"
-                    className="w-full px-6 py-4 bg-black/60 border-2 border-white/10 rounded-[1.2rem] text-base font-medium text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-500 shadow-inner min-h-[140px] resize-none"
+                    className="w-full px-6 py-4 bg-black/60 border-2 border-white/10 rounded-[1.2rem] text-base font-medium text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder:text-[var(--text-dim)] shadow-inner min-h-[140px] resize-none"
                     placeholder="What does this team do? Who's in it? What's the goal?"
                   />
                 </div>

@@ -41,7 +41,7 @@ const SC: Record<string, { label: string; bg: string; text: string; icon: any }>
   scheduled: { label: 'Scheduled', bg: 'bg-amber-500/10 border-amber-500/20',   text: 'text-amber-400', icon: Timer },
   posted:    { label: 'Published', bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-400', icon: CheckCircle },
   failed:    { label: 'Failed',    bg: 'bg-rose-500/10 border-rose-500/20',        text: 'text-rose-400', icon: AlertCircle },
-  draft:     { label: 'Draft',     bg: 'bg-slate-500/10 border-slate-500/20',         text: 'text-slate-400', icon: Focus },
+  draft:     { label: 'Draft',     bg: 'bg-slate-500/10 border-slate-500/20',         text: 'text-[var(--text-dim)]', icon: Focus },
 }
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -118,7 +118,7 @@ export default function ContentCalendarPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 min-h-screen relative z-10">
         <Timer size={64} className="text-indigo-500 animate-spin mb-8" />
-        <span className="text-sm font-medium text-slate-400">Loading Calendar...</span>
+        <span className="text-sm font-medium text-[var(--text-dim)]">Loading Calendar...</span>
      </div>
   )
 
@@ -129,7 +129,7 @@ export default function ContentCalendarPage() {
       {/* Header */}
       <header className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-50">
         <div className="flex items-center gap-8">
-          <button onClick={() => router.push('/dashboard')} className="w-14 h-14 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl hover:border-white/20 backdrop-blur-3xl group">
+          <button onClick={() => router.push('/dashboard')} className="w-14 h-14 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl hover:border-white/20 backdrop-blur-3xl group">
             <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
           </button>
           <div className="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden group">
@@ -137,13 +137,13 @@ export default function ContentCalendarPage() {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-[var(--text-main)] tracking-tight drop-shadow-md">Content Calendar</h1>
-            <p className="text-slate-400 text-sm mt-1 font-medium">Manage and review your cross-platform content schedule.</p>
+            <p className="text-[var(--text-dim)] text-sm mt-1 font-medium">Manage and review your cross-platform content schedule.</p>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
             <button onClick={() => loadCalendar(true)} className={`${glassStyle} w-14 h-14 rounded-full flex items-center justify-center group active:scale-95 hover:bg-white/[0.05]`}>
-               <RefreshCw size={24} className={`text-slate-400 group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
+               <RefreshCw size={24} className={`text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
             </button>
             <button 
               onClick={() => router.push('/dashboard/scheduler')}
@@ -167,7 +167,7 @@ export default function ContentCalendarPage() {
               </div>
               <div>
                  <p className="text-3xl font-bold text-white leading-none mb-1">{s.val}</p>
-                 <p className="text-sm font-medium text-slate-400">{s.label}</p>
+                 <p className="text-sm font-medium text-[var(--text-dim)]">{s.label}</p>
               </div>
            </motion.div>
          ))}
@@ -188,7 +188,7 @@ export default function ContentCalendarPage() {
 
             <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-full border border-white/5">
                {['month','week','day'].map(v => (
-                 <button key={v} onClick={() => setView(v as any)} className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${view === v ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                 <button key={v} onClick={() => setView(v as any)} className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${view === v ? 'bg-indigo-500/20 text-indigo-400' : 'text-[var(--text-dim)] hover:text-white hover:bg-white/5'}`}>
                    {v.charAt(0).toUpperCase() + v.slice(1)}
                  </button>
                ))}
@@ -200,7 +200,7 @@ export default function ContentCalendarPage() {
               <div>
                  <div className="grid grid-cols-7 gap-4 mb-4">
                     {DAY_SHORT.map(d => (
-                      <div key={d} className="text-center text-sm font-semibold text-slate-500 py-2">{d}</div>
+                      <div key={d} className="text-center text-sm font-semibold text-[var(--text-dim)] py-2">{d}</div>
                     ))}
                  </div>
                  <div className="grid grid-cols-7 gap-4">
@@ -225,7 +225,7 @@ export default function ContentCalendarPage() {
                              className={`min-h-[140px] rounded-2xl p-4 border transition-all duration-200 relative group ${isTarget ? 'border-indigo-400 bg-indigo-500/10 z-10' : isToday ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-white/5 bg-white/[0.01] hover:border-white/10 hover:bg-white/[0.03]'} ${isPast && !isToday ? 'opacity-50' : ''}`}
                            >
                               <div className="flex justify-between items-center mb-3">
-                                 <span className={`text-lg font-bold ${isToday ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`}>{date.getDate()}</span>
+                                 <span className={`text-lg font-bold ${isToday ? 'text-indigo-400' : 'text-[var(--text-dim)] group-hover:text-white'}`}>{date.getDate()}</span>
                                  {dp.length > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white">{dp.length} items</span>}
                               </div>
                               <div className="space-y-2">
@@ -240,7 +240,7 @@ export default function ContentCalendarPage() {
                                      </div>
                                    )
                                  })}
-                                 {dp.length > 3 && <p className="text-xs text-slate-500 font-medium text-center">+{dp.length - 3} more</p>}
+                                 {dp.length > 3 && <p className="text-xs text-[var(--text-dim)] font-medium text-center">+{dp.length - 3} more</p>}
                               </div>
                            </motion.div>
                          )
@@ -253,8 +253,8 @@ export default function ContentCalendarPage() {
             {/* Week & Day views can be expanded similarly if needed, simplifying here for cleanliness */}
             {(view === 'week' || view === 'day') && (
               <div className="flex items-center justify-center py-40 flex-col opacity-60">
-                 <LayoutGrid size={48} className="text-slate-500 mb-6" />
-                 <p className="text-lg text-slate-400 font-medium">{view === 'week' ? 'Week' : 'Day'} view is under optimization.</p>
+                 <LayoutGrid size={48} className="text-[var(--text-dim)] mb-6" />
+                 <p className="text-lg text-[var(--text-dim)] font-medium">{view === 'week' ? 'Week' : 'Day'} view is under optimization.</p>
                  <button onClick={() => setView('month')} className="mt-4 text-indigo-400 hover:text-white transition-colors font-medium">Return to Month View</button>
               </div>
             )}
@@ -281,12 +281,12 @@ export default function ContentCalendarPage() {
                             <h3 className="text-2xl font-bold text-[var(--text-main)]">{cfg.label} Post</h3>
                             <div className="flex items-center gap-3 mt-1 text-sm font-medium">
                                <span className={`flex items-center gap-1.5 ${scc.text}`}><StatusIcon size={16} /> {scc.label}</span>
-                               <span className="text-slate-500">•</span>
-                               <span className="text-slate-400 flex items-center gap-1.5"><Clock size={16} /> {new Date(selectedPost.scheduledTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                               <span className="text-[var(--text-dim)]">•</span>
+                               <span className="text-[var(--text-dim)] flex items-center gap-1.5"><Clock size={16} /> {new Date(selectedPost.scheduledTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                             </div>
                          </div>
                       </div>
-                      <button onClick={() => setSelectedPost(null)} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"><X size={24} /></button>
+                      <button onClick={() => setSelectedPost(null)} className="p-2 text-[var(--text-dim)] hover:text-white hover:bg-white/10 rounded-full transition-colors"><X size={24} /></button>
                    </div>
 
                    <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 mb-8">

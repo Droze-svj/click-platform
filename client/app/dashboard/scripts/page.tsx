@@ -171,7 +171,7 @@ export default function NarrativeLogicMatrixPage() {
        </div>
        <div className="space-y-4 text-center">
           <p className="text-[12px] font-bold text-emerald-400 uppercase tracking-[0.4em] animate-pulse leading-none">Loading scripts…</p>
-          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.3em] leading-none">Please wait</p>
+          <p className="text-[10px] font-medium text-[var(--text-dim)] uppercase tracking-[0.3em] leading-none">Please wait</p>
        </div>
     </div>
   )
@@ -190,7 +190,7 @@ export default function NarrativeLogicMatrixPage() {
               <button 
                 onClick={() => router.push('/dashboard')} 
                 title="Abort Protocol"
-                className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
+                className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
                 <ArrowLeft size={40} />
               </button>
               <div className="w-24 h-24 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl relative group overflow-hidden">
@@ -205,11 +205,11 @@ export default function NarrativeLogicMatrixPage() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/60 border border-white/5 shadow-inner">
                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
-                       <span className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase leading-none">AI engine ready</span>
+                       <span className="text-[10px] font-bold text-[var(--text-dim)] tracking-[0.2em] uppercase leading-none">AI engine ready</span>
                    </div>
                  </div>
                  <h1 className="text-6xl font-black text-[var(--text-main)] tracking-tighter leading-none mb-4">Scripts</h1>
-                 <p className="text-slate-400 text-[14px] font-medium tracking-wide mt-3 leading-relaxed">Generate, edit, and export AI scripts for every platform — YouTube, podcast, social, blog, email.</p>
+                 <p className="text-[var(--text-dim)] text-[14px] font-medium tracking-wide mt-3 leading-relaxed">Generate, edit, and export AI scripts for every platform — YouTube, podcast, social, blog, email.</p>
               </div>
            </div>
 
@@ -242,7 +242,7 @@ export default function NarrativeLogicMatrixPage() {
                   <s.icon size={44} className={s.color} />
                </div>
                <div className={`text-6xl font-black tracking-tighter mb-4 tabular-nums leading-none ${s.color}`}>{s.value}</div>
-               <div className="text-[12px] font-bold text-slate-400 uppercase tracking-[0.3em] leading-none">{s.label}</div>
+               <div className="text-[12px] font-bold text-[var(--text-dim)] uppercase tracking-[0.3em] leading-none">{s.label}</div>
             </motion.div>
           ))}
         </div>
@@ -307,9 +307,9 @@ export default function NarrativeLogicMatrixPage() {
                          required
                          title="Script topic"
                          placeholder="Enter your topic, hook, or angle..."
-                         className="w-full bg-black/60 border-2 border-white/10 rounded-[1.5rem] px-8 py-6 text-2xl font-bold text-white tracking-tight focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner placeholder:text-slate-500 pr-20"
+                         className="w-full bg-black/60 border-2 border-white/10 rounded-[1.5rem] px-8 py-6 text-2xl font-bold text-white tracking-tight focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner placeholder:text-[var(--text-dim)] pr-20"
                        />
-                       <PenTool size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-emerald-500 transition-colors duration-300" />
+                       <PenTool size={28} className="absolute right-6 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within/input:text-emerald-500 transition-colors duration-300" />
                     </div>
                   </div>
 
@@ -326,7 +326,7 @@ export default function NarrativeLogicMatrixPage() {
                           onClick={() => setVector(id)}
                           title={cfg.label}
                           className={`flex items-center gap-4 px-5 py-4 rounded-[1.5rem] text-[13px] font-bold border-2 transition-colors relative overflow-hidden group/v active:scale-95 ${vector === id ? `bg-white text-black border-transparent shadow-lg shadow-emerald-500/20` : 'bg-white/[0.02] border-white/10 text-slate-300 hover:text-white hover:bg-white/[0.05]'}`}>
-                          <cfg.icon size={20} className={`relative z-10 ${vector === id ? 'text-black' : 'text-slate-400 group-hover/v:text-white'}`} />
+                          <cfg.icon size={20} className={`relative z-10 ${vector === id ? 'text-black' : 'text-[var(--text-dim)] group-hover/v:text-white'}`} />
                           <span className="relative z-10">{cfg.label}</span>
                           <div className={`absolute inset-0 bg-gradient-to-br ${cfg.gradient} opacity-0 group-hover/v:opacity-[0.08] transition-opacity duration-300`} />
                         </button>
@@ -385,7 +385,7 @@ export default function NarrativeLogicMatrixPage() {
                               onChange={e => setArchetypeReceptor(e.target.value)}
                               placeholder="e.g. solo creators, busy parents, finance newbies"
                               title="Target audience"
-                              className="w-full bg-black/60 border-2 border-white/10 rounded-[1rem] px-5 py-3.5 text-base font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner placeholder:text-slate-500"
+                              className="w-full bg-black/60 border-2 border-white/10 rounded-[1rem] px-5 py-3.5 text-base font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner placeholder:text-[var(--text-dim)]"
                            />
                         </div>
                      </div>
@@ -402,9 +402,9 @@ export default function NarrativeLogicMatrixPage() {
                            onChange={e => setLinguisticParticles(e.target.value)}
                            placeholder="growth, productivity, mindset"
                            title="Keywords"
-                           className="w-full bg-black/60 border-2 border-white/10 rounded-[1rem] px-5 py-3.5 text-base font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner placeholder:text-slate-500"
+                           className="w-full bg-black/60 border-2 border-white/10 rounded-[1rem] px-5 py-3.5 text-base font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors shadow-inner placeholder:text-[var(--text-dim)]"
                         />
-                        <p className="text-[10px] font-medium text-slate-500 pl-2">Comma- or space-separated. Optional.</p>
+                        <p className="text-[10px] font-medium text-[var(--text-dim)] pl-2">Comma- or space-separated. Optional.</p>
                      </div>
                   </div>
                 </div>
@@ -459,10 +459,10 @@ export default function NarrativeLogicMatrixPage() {
                   Open script
                 </button>
                 <button type="button" title="Export" onClick={() => handlePacketExtraction(activePhantom._id)}
-                  className="w-12 h-12 bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white hover:border-white/30 rounded-[1.2rem] flex items-center justify-center transition-colors">
+                  className="w-12 h-12 bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white hover:border-white/30 rounded-[1.2rem] flex items-center justify-center transition-colors">
                   <Download size={18} />
                 </button>
-                <button type="button" title="Dismiss" onClick={() => setLatestPhantomId(null)} className="w-12 h-12 bg-white/5 border border-white/10 text-slate-500 hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors"><X size={18} /></button>
+                <button type="button" title="Dismiss" onClick={() => setLatestPhantomId(null)} className="w-12 h-12 bg-white/5 border border-white/10 text-[var(--text-dim)] hover:text-white rounded-[1.2rem] flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
             </motion.div>
           )}
@@ -476,7 +476,7 @@ export default function NarrativeLogicMatrixPage() {
                <div className="w-14 h-14 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[1.6rem] flex items-center justify-center shadow-lg"><Network size={26} className="text-indigo-400" /></div>
                <div>
                   <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tighter leading-none mb-2">Your scripts</h2>
-                  <p className="text-[13px] text-slate-400 font-medium leading-none">Browse, edit, duplicate, and export.</p>
+                  <p className="text-[13px] text-[var(--text-dim)] font-medium leading-none">Browse, edit, duplicate, and export.</p>
                </div>
             </div>
 
@@ -491,16 +491,16 @@ export default function NarrativeLogicMatrixPage() {
           {scripts.length > 0 && (
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 px-10 py-5 border-b border-white/5 bg-black/40 relative z-10">
                <div className="relative flex-1 group/search">
-                  <Target size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/search:text-emerald-400 transition-colors" />
+                  <Target size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-focus-within/search:text-emerald-400 transition-colors" />
                   <input
                      type="text"
                      value={search}
                      onChange={e => setSearch(e.target.value)}
                      placeholder="Search scripts by topic or title…"
-                     className="w-full bg-black/60 border border-white/10 rounded-full pl-12 pr-10 py-3 text-[13px] font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-slate-500"
+                     className="w-full bg-black/60 border border-white/10 rounded-full pl-12 pr-10 py-3 text-[13px] font-medium text-white focus:outline-none focus:border-emerald-500/50 transition-colors placeholder:text-[var(--text-dim)]"
                   />
                   {search && (
-                     <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-rose-500/20">
+                     <button type="button" onClick={() => setSearch('')} title="Clear" className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white hover:bg-rose-500/20">
                         <X size={12} />
                      </button>
                   )}
@@ -524,11 +524,11 @@ export default function NarrativeLogicMatrixPage() {
             {scripts.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center py-24 gap-8">
                 <div className="w-24 h-24 bg-white/5 rounded-[2rem] border border-white/10 flex items-center justify-center">
-                   <Activity size={44} className="text-slate-500" />
+                   <Activity size={44} className="text-[var(--text-dim)]" />
                 </div>
                 <div className="text-center space-y-3">
                    <p className="text-3xl font-black text-white tracking-tight leading-tight">No scripts yet</p>
-                   <p className="text-[13px] font-medium text-slate-400 max-w-md leading-relaxed">Generate your first AI script — pick a platform, set the tone, and let Click write it for you.</p>
+                   <p className="text-[13px] font-medium text-[var(--text-dim)] max-w-md leading-relaxed">Generate your first AI script — pick a platform, set the tone, and let Click write it for you.</p>
                 </div>
                 <button type="button" onClick={() => setShowTerminal(true)} className="px-8 py-3.5 bg-white text-black rounded-full text-[12px] font-bold uppercase tracking-[0.2em] hover:bg-emerald-500 hover:text-white transition-colors flex items-center gap-3">
                    <Sparkles size={16} /> Generate first script
@@ -536,10 +536,10 @@ export default function NarrativeLogicMatrixPage() {
               </div>
             ) : filteredScripts.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center py-20 gap-6">
-                <Target size={40} className="text-slate-500" />
+                <Target size={40} className="text-[var(--text-dim)]" />
                 <div className="text-center space-y-2">
                    <p className="text-2xl font-black text-white tracking-tight leading-tight">No matches</p>
-                   <p className="text-[12px] font-medium text-slate-400 leading-relaxed">Adjust filters or clear your search.</p>
+                   <p className="text-[12px] font-medium text-[var(--text-dim)] leading-relaxed">Adjust filters or clear your search.</p>
                 </div>
                 <button type="button" onClick={() => { setSearch(''); setFilterVector('all') }} className="px-6 py-2.5 bg-white/5 border border-white/10 text-slate-300 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:text-white hover:border-emerald-500/50 transition-colors">
                    Reset filters
@@ -568,7 +568,7 @@ export default function NarrativeLogicMatrixPage() {
                           <p className="text-2xl font-black text-white tracking-tight truncate group-hover:text-emerald-400 transition-colors leading-tight">{s.topic || s.title || 'Untitled script'}</p>
                           {isNew && <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-emerald-500 text-black uppercase tracking-[0.2em] shadow-lg">New</span>}
                         </div>
-                        <div className="flex flex-wrap items-center gap-4 text-[12px] font-medium text-slate-400">
+                        <div className="flex flex-wrap items-center gap-4 text-[12px] font-medium text-[var(--text-dim)]">
                           <span className="px-3 py-1 bg-black/40 rounded-md border border-white/5 transition-colors group-hover:border-emerald-500/30 group-hover:text-emerald-400 text-[11px] font-bold uppercase tracking-[0.2em]">{cfg.label}</span>
                           <div className="w-1 h-1 rounded-full bg-slate-700" />
                           <span className="flex items-center gap-2 group-hover:text-white transition-colors"><Database size={14} className="text-indigo-400" /> {s.wordCount.toLocaleString()} words</span>
@@ -630,7 +630,7 @@ export default function NarrativeLogicMatrixPage() {
                   <div className="flex-1 min-w-0">
                      <p className="text-[10px] font-bold text-rose-400 uppercase tracking-[0.3em] mb-2">Permanent action</p>
                      <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight leading-tight mb-2">Delete this script?</h3>
-                     <p className="text-[13px] font-medium text-slate-400 leading-relaxed">
+                     <p className="text-[13px] font-medium text-[var(--text-dim)] leading-relaxed">
                         <span className="text-white font-bold">{purgeTarget.topic || purgeTarget.title || 'Untitled script'}</span> will be permanently deleted. This cannot be undone.
                      </p>
                   </div>

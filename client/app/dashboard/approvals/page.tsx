@@ -132,7 +132,7 @@ export default function ConsensusValidationNodePage() {
     return (
       <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Shield size={64} className="text-indigo-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Calibrating Consensus Matrix...</span>
+        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] animate-pulse italic">Calibrating Consensus Matrix...</span>
       </div>
     )
   }
@@ -153,7 +153,7 @@ export default function ConsensusValidationNodePage() {
       <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
         <div className="flex items-center gap-10">
           <button onClick={() => router.push('/dashboard')} title="Abort"
-            className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
+            className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
             <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
           </button>
           <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
@@ -171,7 +171,7 @@ export default function ConsensusValidationNodePage() {
               </div>
             </div>
             <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] drop-shadow-2xl">Approvals</h1>
-            <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Posts and edits waiting on someone's review. Approve, reject, or request changes — Click routes the next step automatically.</p>
+            <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Posts and edits waiting on someone's review. Approve, reject, or request changes — Click routes the next step automatically.</p>
           </div>
         </div>
 
@@ -209,7 +209,7 @@ export default function ConsensusValidationNodePage() {
                       </div>
                       <div>
                         <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Pending Node Gates</h2>
-                        <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-amber-500/20 pl-8 ml-4">Operational streams awaiting consensus validation signatures.</p>
+                        <p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.5em] italic leading-none border-l-4 border-amber-500/20 pl-8 ml-4">Operational streams awaiting consensus validation signatures.</p>
                       </div>
                    </div>
                    <div className="px-10 py-4 rounded-full bg-amber-500/10 border-2 border-amber-500/20 text-amber-500 text-[12px] font-black uppercase tracking-[0.3em] italic animate-bounce shadow-3xl">RESONANCE_ALERT: {pendingNodes.length} STREAMS_HELD</div>
@@ -228,15 +228,15 @@ export default function ConsensusValidationNodePage() {
                                   <span className="text-indigo-400 text-[11px] font-black uppercase tracking-[0.4em] italic">NODE_{request.entityType.toUpperCase()}</span>
                                </div>
                                <div className="flex items-center gap-3">
-                                  <Clock size={14} className="text-slate-500" />
-                                  <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] italic">{new Date(request.createdAt).toLocaleTimeString()}</span>
+                                  <Clock size={14} className="text-[var(--text-dim)]" />
+                                  <span className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic">{new Date(request.createdAt).toLocaleTimeString()}</span>
                                </div>
                             </div>
                             <div>
                                <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4 drop-shadow-2xl">{request.requestedBy.name}</h3>
                                <div className="flex items-center gap-4 py-2 px-6 rounded-2xl bg-black/40 border border-white/5 w-fit shadow-inner">
-                                  <Database size={14} className="text-slate-500" />
-                                  <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] italic leading-none font-mono">ID: {request.entityId.substring(0, 16)}...</p>
+                                  <Database size={14} className="text-[var(--text-dim)]" />
+                                  <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic leading-none font-mono">ID: {request.entityId.substring(0, 16)}...</p>
                                </div>
                             </div>
                          </div>
@@ -247,7 +247,7 @@ export default function ConsensusValidationNodePage() {
                       </div>
                       
                       {request.response && (
-                        <div className="mb-12 p-8 rounded-[3rem] bg-indigo-500/5 border-2 border-white/5 italic text-[16px] font-black text-slate-400 leading-relaxed uppercase tracking-tighter line-clamp-3 relative shadow-inner group-hover:border-indigo-500/20 transition-all duration-300">
+                        <div className="mb-12 p-8 rounded-[3rem] bg-indigo-500/5 border-2 border-white/5 italic text-[16px] font-black text-[var(--text-dim)] leading-relaxed uppercase tracking-tighter line-clamp-3 relative shadow-inner group-hover:border-indigo-500/20 transition-all duration-300">
                            <div className="absolute top-4 left-6 text-indigo-500 opacity-20"><MessageSquare size={24} /></div>
                            <span className="pl-12 block group-hover:text-white transition-colors duration-300">OBJECTIVE_CONTEXT:</span>
                            <p className="pl-12 mt-2 opacity-60 group-hover:opacity-100 transition-opacity duration-300">"{request.response}"</p>
@@ -261,7 +261,7 @@ export default function ConsensusValidationNodePage() {
                           AUTHORIZE
                         </button>
                         <button onClick={() => handleDissent(request._id)}
-                          className="flex-1 py-8 bg-white/5 border-2 border-white/10 text-slate-400 rounded-[2.5rem] text-[15px] font-black uppercase tracking-[0.5em] hover:bg-rose-600 hover:text-white hover:border-rose-500 hover:scale-105 active:scale-75 transition-all duration-[0.8s] italic flex items-center justify-center gap-6 group/diss shadow-2xl">
+                          className="flex-1 py-8 bg-white/5 border-2 border-white/10 text-[var(--text-dim)] rounded-[2.5rem] text-[15px] font-black uppercase tracking-[0.5em] hover:bg-rose-600 hover:text-white hover:border-rose-500 hover:scale-105 active:scale-75 transition-all duration-[0.8s] italic flex items-center justify-center gap-6 group/diss shadow-2xl">
                           <XCircle size={24} className="group-hover/diss:-rotate-12 transition-transform duration-700" />
                           DISSENT
                         </button>
@@ -282,15 +282,15 @@ export default function ConsensusValidationNodePage() {
                   </div>
                   <div>
                     <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">Validation Ledger</h2>
-                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Immutable records of consensus decisions and nodal authorizations.</p>
+                    <p className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.5em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Immutable records of consensus decisions and nodal authorizations.</p>
                   </div>
                </div>
                <div className="flex items-center gap-12">
                   <div className="px-10 py-4 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
-                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.6em] italic leading-none">{matrix.length} PROTOCOL_LOGS ANALYZED</span>
+                    <span className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic leading-none">{matrix.length} PROTOCOL_LOGS ANALYZED</span>
                   </div>
                   <div className="w-[2px] h-12 bg-white/10" />
-                  <button className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-indigo-500/50 transition-all duration-700 shadow-3xl hover:scale-110 active:scale-90"><Search size={32} /></button>
+                  <button className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white hover:border-indigo-500/50 transition-all duration-700 shadow-3xl hover:scale-110 active:scale-90"><Search size={32} /></button>
                </div>
             </div>
 
@@ -299,7 +299,7 @@ export default function ConsensusValidationNodePage() {
                  <div className="w-32 h-32 bg-white/[0.02] rounded-[4rem] border-2 border-white/5 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300"><Globe size={72} className="text-white/20 animate-spin-slow" /></div>
                  <div className="space-y-4">
                    <p className="text-3xl font-black text-white uppercase tracking-[0.8em] italic leading-none drop-shadow-2xl">Ghost Matrix</p>
-                   <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic opacity-40">No historical consensus records identified in current lattice.</p>
+                   <p className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic opacity-40">No historical consensus records identified in current lattice.</p>
                  </div>
               </div>
             ) : (
@@ -322,7 +322,7 @@ export default function ConsensusValidationNodePage() {
                       <div className="flex-1 flex flex-col md:flex-row items-center gap-16 relative z-10 w-full">
                           <div className="w-24 h-24 rounded-[2.5rem] bg-black border-2 border-white/10 flex flex-col items-center justify-center gap-2 font-black shadow-inner flex-shrink-0 group-hover:border-indigo-400 transition-colors duration-300">
                              <span className="text-[28px] text-white leading-none drop-shadow-2xl">{new Date(request.createdAt).getDate()}</span>
-                             <span className="text-[10px] text-slate-400 uppercase leading-none tracking-widest">{new Date(request.createdAt).toLocaleString('default', { month: 'short' }).toUpperCase()}</span>
+                             <span className="text-[10px] text-[var(--text-dim)] uppercase leading-none tracking-widest">{new Date(request.createdAt).toLocaleString('default', { month: 'short' }).toUpperCase()}</span>
                           </div>
                           
                           <div className="flex-1 min-w-0 text-center md:text-left space-y-8">
@@ -331,7 +331,7 @@ export default function ConsensusValidationNodePage() {
                                    {request.status.toUpperCase()}
                                  </div>
                                  <div className="flex items-center gap-4 py-1.5 px-6 rounded-full bg-white/[0.03] border border-white/5 italic">
-                                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NODE_{request.entityType.toUpperCase()}</span>
+                                   <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest">NODE_{request.entityType.toUpperCase()}</span>
                                  </div>
                                  <div className="flex items-center gap-4 group/id cursor-pointer">
                                    <Binary size={14} className="text-indigo-400 opacity-40 group-hover/id:opacity-100 transition-opacity duration-300" />
@@ -341,14 +341,14 @@ export default function ConsensusValidationNodePage() {
                               
                               <div className="flex flex-col md:flex-row md:items-center gap-8 md:gap-16">
                                 <div className="space-y-3">
-                                   <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.6em] italic opacity-40 leading-none">IDENT_MAP_PRIMARY</p>
+                                   <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic opacity-40 leading-none">IDENT_MAP_PRIMARY</p>
                                    <p className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none drop-shadow-2xl">
                                      {isInitiator ? request.requestedFrom.name : request.requestedBy.name}
                                    </p>
                                 </div>
                                 <div className="w-[1px] h-12 bg-white/5 hidden md:block" />
                                 <div className="space-y-3">
-                                   <p className="text-[11px] font-black text-slate-500 uppercase tracking-[0.6em] italic opacity-40 leading-none">NODE_ROLE_SIGNER</p>
+                                   <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic opacity-40 leading-none">NODE_ROLE_SIGNER</p>
                                    <p className="text-xl font-black text-indigo-400/60 transition-colors duration-300 group-hover:text-indigo-400 italic uppercase tracking-widest leading-none drop-shadow-2xl">
                                      {isInitiator ? 'TARGET_VALIDATOR' : 'INBOUND_INITIATOR'}
                                    </p>
@@ -356,7 +356,7 @@ export default function ConsensusValidationNodePage() {
                               </div>
 
                               {request.response && (
-                                 <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 italic text-[15px] font-black text-slate-400 group-hover:text-white leading-relaxed uppercase tracking-tighter border-l-4 border-l-indigo-500/50 pl-10 transition-all duration-300 relative shadow-inner">
+                                 <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 italic text-[15px] font-black text-[var(--text-dim)] group-hover:text-white leading-relaxed uppercase tracking-tighter border-l-4 border-l-indigo-500/50 pl-10 transition-all duration-300 relative shadow-inner">
                                     <div className="absolute top-4 left-4 text-indigo-500 opacity-10"><Workflow size={24} /></div>
                                     <span className="opacity-30 block mb-2 text-[10px] tracking-[0.4em]">LOG_RESONANCE_DATA:</span>
                                     "{request.response}"
@@ -376,11 +376,11 @@ export default function ConsensusValidationNodePage() {
                               )}
                               {isInitiator && (
                                 <button onClick={() => handleAbortInit(request._id)}
-                                  className="px-12 py-6 bg-white/5 border-2 border-white/10 text-slate-400 hover:text-white hover:border-rose-500/50 rounded-[1.8rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-700 italic hover:bg-rose-600 active:scale-90 shadow-2xl">ABORT_INIT</button>
+                                  className="px-12 py-6 bg-white/5 border-2 border-white/10 text-[var(--text-dim)] hover:text-white hover:border-rose-500/50 rounded-[1.8rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-700 italic hover:bg-rose-600 active:scale-90 shadow-2xl">ABORT_INIT</button>
                               )}
                             </div>
                           )}
-                          <button className="w-20 h-20 bg-white/5 border-2 border-white/10 rounded-[1.8rem] flex items-center justify-center text-slate-500 hover:text-white transition-all duration-700 hover:bg-indigo-600 hover:border-indigo-400 hover:scale-110 active:scale-90 shadow-3xl group">
+                          <button className="w-20 h-20 bg-white/5 border-2 border-white/10 rounded-[1.8rem] flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-700 hover:bg-indigo-600 hover:border-indigo-400 hover:scale-110 active:scale-90 shadow-3xl group">
                             <ChevronRight size={36} className="group-hover:translate-x-2 transition-transform duration-700" />
                           </button>
                       </div>
@@ -409,10 +409,10 @@ export default function ConsensusValidationNodePage() {
                   <div className="w-28 h-28 rounded-[3.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.3)] animate-pulse"><Shield size={56} className="text-indigo-400" /></div>
                   <div>
                      <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 drop-shadow-2xl">Initialize Gate</h2>
-                     <p className="text-[13px] font-black text-slate-400 uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Defining consensus parameters for validated mission deployment.</p>
+                     <p className="text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic leading-none border-l-4 border-indigo-500/20 pl-8 ml-4">Defining consensus parameters for validated mission deployment.</p>
                   </div>
                 </div>
-                <button onClick={() => setShowInitializationModal(false)} className="w-24 h-24 rounded-[3rem] bg-white/[0.03] border-4 border-white/10 flex items-center justify-center text-slate-500 hover:text-white hover:bg-rose-600 hover:border-rose-400 transition-all duration-700 hover:scale-110 active:scale-75 shadow-3xl group">
+                <button onClick={() => setShowInitializationModal(false)} className="w-24 h-24 rounded-[3rem] bg-white/[0.03] border-4 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white hover:bg-rose-600 hover:border-rose-400 transition-all duration-700 hover:scale-110 active:scale-75 shadow-3xl group">
                   <X size={48} className="group-hover:rotate-180 transition-transform duration-300" />
                 </button>
               </div>
@@ -422,12 +422,12 @@ export default function ConsensusValidationNodePage() {
                     <div className="space-y-10">
                        <div className="flex items-center gap-6 px-4">
                           <Layers size={20} className="text-indigo-500" />
-                          <label className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic">Node Entity Selection</label>
+                          <label className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic">Node Entity Selection</label>
                        </div>
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {['content', 'script', 'payload'].map(type => (
                              <button key={type} onClick={() => setNewRequest({ ...newRequest, entityType: type })}
-                               className={`px-10 py-8 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic text-center transition-all duration-700 border-4 active:scale-95 ${newRequest.entityType === type ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'bg-black/60 border-white/5 text-slate-500 hover:text-white hover:border-indigo-500/30'}`}>
+                               className={`px-10 py-8 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic text-center transition-all duration-700 border-4 active:scale-95 ${newRequest.entityType === type ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'bg-black/60 border-white/5 text-[var(--text-dim)] hover:text-white hover:border-indigo-500/30'}`}>
                                NODE_{type.toUpperCase()}
                              </button>
                           ))}
@@ -437,12 +437,12 @@ export default function ConsensusValidationNodePage() {
                     <div className="space-y-10">
                        <div className="flex items-center gap-6 px-4">
                           <Gauge size={20} className="text-amber-500" />
-                          <label className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic">Criticality Flux Calibration</label>
+                          <label className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic">Criticality Flux Calibration</label>
                        </div>
                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                           {['low', 'medium', 'high', 'urgent'].map(p => (
                              <button key={p} onClick={() => setNewRequest({ ...newRequest, priority: p })}
-                               className={`px-6 py-6 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] italic transition-all duration-700 border-4 active:scale-95 ${newRequest.priority === p ? (p === 'urgent' ? 'bg-rose-600 text-white border-rose-400 shadow-[0_0_60px_rgba(244,63,94,0.6)] scale-110' : 'bg-white text-black border-white shadow-3xl scale-110') : 'bg-black/60 border-white/5 text-slate-500'}`}>
+                               className={`px-6 py-6 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] italic transition-all duration-700 border-4 active:scale-95 ${newRequest.priority === p ? (p === 'urgent' ? 'bg-rose-600 text-white border-rose-400 shadow-[0_0_60px_rgba(244,63,94,0.6)] scale-110' : 'bg-white text-black border-white shadow-3xl scale-110') : 'bg-black/60 border-white/5 text-[var(--text-dim)]'}`}>
                                {p === 'low' ? 'MINIMAL' : p.toUpperCase()}
                              </button>
                           ))}
@@ -454,38 +454,38 @@ export default function ConsensusValidationNodePage() {
                     <div className="space-y-10">
                        <div className="flex items-center gap-6 px-4">
                           <UserCheck size={20} className="text-indigo-400" />
-                          <label className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic">Target Signer Node identity</label>
+                          <label className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic">Target Signer Node identity</label>
                        </div>
                        <div className="relative group">
                           <input type="text" value={newRequest.requestedFrom} onChange={e => setNewRequest({ ...newRequest, requestedFrom: e.target.value })}
-                            className="w-full px-12 py-10 bg-black/60 border-4 border-white/5 rounded-[3.5rem] text-[20px] font-black uppercase text-white tracking-[0.3em] focus:outline-none focus:border-indigo-500/50 transition-all duration-300 placeholder:text-slate-600 italic shadow-inner group-hover:border-white/10"
+                            className="w-full px-12 py-10 bg-black/60 border-4 border-white/5 rounded-[3.5rem] text-[20px] font-black uppercase text-white tracking-[0.3em] focus:outline-none focus:border-indigo-500/50 transition-all duration-300 placeholder:text-[var(--text-dim)] italic shadow-inner group-hover:border-white/10"
                             placeholder="OPERATOR_HEX_ID..."
                           />
-                          <Key size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-indigo-400 transition-colors duration-300 group-hover:rotate-12" />
+                          <Key size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors duration-300 group-hover:rotate-12" />
                        </div>
                     </div>
 
                     <div className="space-y-10">
                        <div className="flex items-center gap-6 px-4">
                           <Database size={20} className="text-indigo-400" />
-                          <label className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic">Operational Payload Hash</label>
+                          <label className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic">Operational Payload Hash</label>
                        </div>
                        <div className="relative group">
                           <input type="text" value={newRequest.entityId} onChange={e => setNewRequest({ ...newRequest, entityId: e.target.value })}
-                            className="w-full px-12 py-10 bg-black/60 border-4 border-white/5 rounded-[3.5rem] text-[20px] font-black uppercase text-white tracking-[0.3em] focus:outline-none focus:border-indigo-500/50 transition-all duration-300 placeholder:text-slate-600 italic shadow-inner group-hover:border-white/10"
+                            className="w-full px-12 py-10 bg-black/60 border-4 border-white/5 rounded-[3.5rem] text-[20px] font-black uppercase text-white tracking-[0.3em] focus:outline-none focus:border-indigo-500/50 transition-all duration-300 placeholder:text-[var(--text-dim)] italic shadow-inner group-hover:border-white/10"
                             placeholder="BLAKE3_PAYLOAD_HASH..."
                           />
-                          <Anchor size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-indigo-400 transition-colors duration-300 group-hover:-rotate-12" />
+                          <Anchor size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors duration-300 group-hover:-rotate-12" />
                        </div>
                     </div>
 
                     <div className="space-y-10">
                        <div className="flex items-center gap-6 px-4">
                           <Terminal size={20} className="text-indigo-400" />
-                          <label className="text-[14px] font-black text-slate-500 uppercase tracking-[0.6em] italic">Resonance Objective Prompt</label>
+                          <label className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic">Resonance Objective Prompt</label>
                        </div>
                        <textarea value={newRequest.message} onChange={e => setNewRequest({ ...newRequest, message: e.target.value })}
-                         className="w-full px-12 py-10 bg-black/60 border-4 border-white/5 rounded-[3.5rem] text-[18px] font-black uppercase text-white tracking-[0.2em] focus:outline-none focus:border-indigo-500/50 transition-all duration-300 placeholder:text-slate-600 italic shadow-inner resize-none mb-8 group-hover:border-white/10"
+                         className="w-full px-12 py-10 bg-black/60 border-4 border-white/5 rounded-[3.5rem] text-[18px] font-black uppercase text-white tracking-[0.2em] focus:outline-none focus:border-indigo-500/50 transition-all duration-300 placeholder:text-[var(--text-dim)] italic shadow-inner resize-none mb-8 group-hover:border-white/10"
                          rows={3} placeholder="DEFINE_CONSENSUS_GOAL..."
                        />
                        

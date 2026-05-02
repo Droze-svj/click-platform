@@ -99,7 +99,7 @@ export default function MarketingOraclePage() {
       <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
         <div>
           <div className="flex items-center gap-4 mb-6">
-            <Link href="/dashboard" className="flex items-center gap-3 text-slate-600 hover:text-white text-sm font-bold uppercase tracking-widest transition-colors">
+            <Link href="/dashboard" className="flex items-center gap-3 text-[var(--text-dim)] hover:text-white text-sm font-bold uppercase tracking-widest transition-colors">
               <ChevronRight size={14} className="rotate-180" /> Back to Command
             </Link>
             <Link
@@ -118,7 +118,7 @@ export default function MarketingOraclePage() {
               <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">AI Marketing Expert</h1>
             </div>
           </div>
-          <p className="text-slate-600 text-sm font-bold uppercase tracking-widest max-w-xl">
+          <p className="text-[var(--text-dim)] text-sm font-bold uppercase tracking-widest max-w-xl">
             Self-learning global intelligence · Real-time trend radar · Retention automation · Creativity & engagement engine
           </p>
         </div>
@@ -185,10 +185,10 @@ export default function MarketingOraclePage() {
           { label: 'Quantum_Load', value: 'MINIMAL', sub: '42.1_PFLOPS', color: 'text-rose-400' },
         ].map((stat, i) => (
           <div key={i} className={`${glass} p-8 rounded-[2.5rem] border-white/5 space-y-3 group hover:border-white/20 transition-all`}>
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
+             <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic group-hover:text-white transition-colors">{stat.label}</p>
              <div className="flex items-end justify-between">
                 <span className={`text-4xl font-black italic tracking-tighter ${stat.color}`}>{stat.value}</span>
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{stat.sub}</span>
+                <span className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1">{stat.sub}</span>
              </div>
           </div>
         ))}
@@ -201,7 +201,7 @@ export default function MarketingOraclePage() {
             className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-500 border-2 ${
               activePanel === p.id
                 ? 'bg-white text-black border-white shadow-[0_20px_60px_rgba(255,255,255,0.15)] scale-105'
-                : `${glass} border-white/5 text-slate-500 hover:text-white hover:border-white/20`
+                : `${glass} border-white/5 text-[var(--text-dim)] hover:text-white hover:border-white/20`
             }`}
           >
             <p.icon size={18} />
@@ -288,7 +288,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
               </div>
               <h2 className="text-2xl font-black italic uppercase tracking-tighter">Global Trend Radar</h2>
             </div>
-            <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">Live 2026 intelligence for your niche</p>
+            <p className="text-[var(--text-dim)] text-xs font-bold uppercase tracking-widest">Live 2026 intelligence for your niche</p>
           </div>
           <ActionButton label="Scan Now" icon={RefreshCw} loading={loading.trendReport}
             onClick={() => load('trendReport', `/trend-report?niche=${niche}`)} />
@@ -308,20 +308,20 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
                 />
               </div>
               <span className="text-2xl font-black text-indigo-400 tabular-nums">{report.confidenceScore || 80}%</span>
-              <span className="text-xs font-black uppercase tracking-widest text-slate-600">Confidence</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[var(--text-dim)]">Confidence</span>
             </div>
 
             {/* Niche opportunities */}
             {report.niching?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Niche Opportunities</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Niche Opportunities</p>
                 {report.niching.slice(0, 4).map((opp: any, i: number) => (
                   <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
                     className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-indigo-500/30 transition-all">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="font-black text-white text-sm mb-1">{opp.title || opp}</p>
-                        {opp.description && <p className="text-slate-500 text-xs leading-relaxed">{opp.description}</p>}
+                        {opp.description && <p className="text-[var(--text-dim)] text-xs leading-relaxed">{opp.description}</p>}
                       </div>
                       {opp.urgency && (
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shrink-0 ${
@@ -339,7 +339,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
             {/* Actionable insights */}
             {report.actionableInsights?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Actionable Insights</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Actionable Insights</p>
                 {report.actionableInsights.slice(0, 3).map((insight: string, i: number) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
                     <Zap size={14} className="text-indigo-400 mt-0.5 shrink-0" />
@@ -352,10 +352,10 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
             {/* 2026 Macro Trends */}
             {report.globalTrends2026 && (
               <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">2026 Global Macro Trends</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">2026 Global Macro Trends</p>
                 <div className="flex flex-wrap gap-2">
                   {report.globalTrends2026.slice(0, 6).map((t: string, i: number) => (
-                    <span key={i} className="px-3 py-1 rounded-full bg-black/60 border border-white/5 text-xs font-bold text-slate-400">{t}</span>
+                    <span key={i} className="px-3 py-1 rounded-full bg-black/60 border border-white/5 text-xs font-bold text-[var(--text-dim)]">{t}</span>
                   ))}
                 </div>
               </div>
@@ -366,7 +366,7 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
         {!report && !loading.trendReport && (
           <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
             <Globe size={48} className="text-indigo-400/30" />
-            <p className="text-slate-600 font-bold">Set your niche and click Scan Now to see live global trends</p>
+            <p className="text-[var(--text-dim)] font-bold">Set your niche and click Scan Now to see live global trends</p>
           </div>
         )}
       </div>
@@ -385,11 +385,11 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
         {knowledge && (
           <div className="space-y-5">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600 mb-3">Recommended Frameworks</p>
+              <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)] mb-3">Recommended Frameworks</p>
               {knowledge.recommendedFrameworks?.map((f: any, i: number) => (
                 <div key={i} className="p-4 rounded-2xl bg-black/40 border border-white/5 mb-3 space-y-1">
                   <p className="font-black text-amber-400 text-sm">{f.name}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{f.description}</p>
+                  <p className="text-xs text-[var(--text-dim)] leading-relaxed">{f.description}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {f.bestFor?.map((tag: string) => (
                       <span key={tag} className="px-2 py-0.5 rounded-full bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400 font-bold">{tag}</span>
@@ -399,11 +399,11 @@ function TrendsPanel({ niche, load, data, loading, error }: any) {
               ))}
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600 mb-3">Quick Wins</p>
+              <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)] mb-3">Quick Wins</p>
               {knowledge.quickWins?.map((win: string, i: number) => (
                 <div key={i} className="flex items-start gap-2 mb-2">
                   <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 shrink-0" />
-                  <p className="text-xs text-slate-400 font-bold">{win}</p>
+                  <p className="text-xs text-[var(--text-dim)] font-bold">{win}</p>
                 </div>
               ))}
             </div>
@@ -430,7 +430,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
           </div>
           <div>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Retention Health</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">Audience loyalty score</p>
+            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">Audience loyalty score</p>
           </div>
         </div>
 
@@ -453,7 +453,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
                 />
                 <div className="text-center">
                   <p className="text-5xl font-black text-emerald-400 tabular-nums leading-none">{score.score}</p>
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-600 mt-1">/100</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-[var(--text-dim)] mt-1">/100</p>
                 </div>
               </div>
             </div>
@@ -472,7 +472,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
             {/* Improvements */}
             {score.improvements?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Improvement Steps</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Improvement Steps</p>
                 {score.improvements.map((imp: string, i: number) => (
                   <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-black/40 border border-white/5">
                     <ArrowRight size={14} className="text-emerald-400 mt-0.5 shrink-0" />
@@ -493,7 +493,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
           </div>
           <div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter">Re-engagement Sequence</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">5-post AI drip campaign</p>
+            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">5-post AI drip campaign</p>
           </div>
         </div>
 
@@ -510,7 +510,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
 
         {sequence && (
           <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">
+            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">
               {sequence.sequenceName} · {sequence.estimatedReachRate}
             </p>
             {sequence.posts?.slice(0, 5).map((post: any, i: number) => (
@@ -521,7 +521,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
                   <span className="px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-black text-violet-400 uppercase">{post.psychTrigger}</span>
                 </div>
                 <p className="text-sm text-white font-bold leading-relaxed">{post.hook}</p>
-                <p className="text-xs text-slate-500">{post.cta}</p>
+                <p className="text-xs text-[var(--text-dim)]">{post.cta}</p>
               </motion.div>
             ))}
           </div>
@@ -531,7 +531,7 @@ function RetentionPanel({ niche, platform, load, data, loading, error }: any) {
           <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-2">
             <p className="text-xs font-black uppercase tracking-[0.6em] text-emerald-400">Campaign Plan Generated</p>
             <p className="text-sm font-black text-white">{campaign.campaignName}</p>
-            <p className="text-xs text-slate-500">{campaign.totalPosts} posts scheduled · {campaign.campaignDurationDays} days</p>
+            <p className="text-xs text-[var(--text-dim)]">{campaign.totalPosts} posts scheduled · {campaign.campaignDurationDays} days</p>
             <p className="text-xs text-emerald-400 font-bold">{campaign.expectedOutcome}</p>
           </div>
         )}
@@ -554,12 +554,12 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
           </div>
           <div>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Fresh Angles Generator</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">10 non-obvious content angles</p>
+            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">10 non-obvious content angles</p>
           </div>
         </div>
 
         <div className="space-y-3">
-          <label className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-600">Topic or Idea</label>
+          <label className="text-[10px] font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Topic or Idea</label>
           <input
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
@@ -575,14 +575,14 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
 
         {freshAngles?.angles?.length > 0 && (
           <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Your 10 Novel Angles</p>
+            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Your 10 Novel Angles</p>
             {freshAngles.angles.map((angle: any, i: number) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                 className="p-5 rounded-2xl bg-black/60 border border-amber-500/10 hover:border-amber-500/30 transition-all group">
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <span className="text-xs font-black text-amber-400 uppercase tracking-widest">Angle {i + 1} · {angle.format}</span>
                   {angle.originalityScore && (
-                    <span className="text-xs font-black text-slate-500">{angle.originalityScore}/100 originality</span>
+                    <span className="text-xs font-black text-[var(--text-dim)]">{angle.originalityScore}/100 originality</span>
                   )}
                 </div>
                 <p className="text-sm text-white font-bold leading-relaxed mb-2">{angle.angle}</p>
@@ -601,7 +601,7 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
           </div>
           <div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter">Inspiration Drop</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">Proven marketing framework · Applied to your niche</p>
+            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">Proven marketing framework · Applied to your niche</p>
           </div>
         </div>
 
@@ -616,15 +616,15 @@ function CreativityPanel({ niche, topic, setTopic, load, data, loading, error }:
               <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-500/10 to-violet-500/10 border border-white/10 space-y-4">
                 <p className="text-xs font-black uppercase tracking-[0.6em] text-rose-400">Framework</p>
                 <p className="text-xl font-black text-white">{drop.framework}</p>
-                <p className="text-sm text-slate-400 italic leading-relaxed">&ldquo;{drop.principle}&rdquo;</p>
+                <p className="text-sm text-[var(--text-dim)] italic leading-relaxed">&ldquo;{drop.principle}&rdquo;</p>
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">How to Execute</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">How to Execute</p>
                 <p className="text-sm text-slate-300 leading-relaxed font-bold">{drop.adaptedExecution || drop.execution}</p>
               </div>
               <div className="p-4 rounded-2xl bg-black/60 border border-white/5 space-y-2">
-                <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Example</p>
-                <p className="text-sm text-slate-400 leading-relaxed">{drop.example}</p>
+                <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Example</p>
+                <p className="text-sm text-[var(--text-dim)] leading-relaxed">{drop.example}</p>
               </div>
               <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
                 <p className="text-xs font-black uppercase tracking-[0.6em] text-amber-400 mb-2">Your Challenge Today</p>
@@ -652,7 +652,7 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
           </div>
           <div>
             <h2 className="text-2xl font-black italic uppercase tracking-tighter">Engagement Prompts</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">AI-written CTAs, polls & hooks</p>
+            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">AI-written CTAs, polls & hooks</p>
           </div>
         </div>
 
@@ -664,7 +664,7 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
 
         {prompts?.prompts?.length > 0 && (
           <div className="space-y-4">
-            <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Ready-to-Use Prompts</p>
+            <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Ready-to-Use Prompts</p>
             {prompts.prompts.map((p: any, i: number) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
                 className="p-5 rounded-2xl bg-black/60 border border-rose-500/10 hover:border-rose-500/30 transition-all group">
@@ -680,7 +680,7 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
                   )}
                 </div>
                 <p className="text-sm text-white font-bold leading-relaxed">{p.text || p.prompt}</p>
-                {p.psychTrigger && <p className="text-xs text-slate-600 mt-2">Trigger: {p.psychTrigger}</p>}
+                {p.psychTrigger && <p className="text-xs text-[var(--text-dim)] mt-2">Trigger: {p.psychTrigger}</p>}
               </motion.div>
             ))}
           </div>
@@ -695,7 +695,7 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
           </div>
           <div>
             <h2 className="text-xl font-black italic uppercase tracking-tighter">2026 Benchmarks</h2>
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">{platform} engagement standards</p>
+            <p className="text-xs text-[var(--text-dim)] font-bold uppercase tracking-widest">{platform} engagement standards</p>
           </div>
         </div>
 
@@ -714,21 +714,21 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
           ]
           return (
             <div className="space-y-4">
-              <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">{platform.charAt(0).toUpperCase() + platform.slice(1)} Engagement Rate Benchmarks</p>
+              <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">{platform.charAt(0).toUpperCase() + platform.slice(1)} Engagement Rate Benchmarks</p>
               {tiers.map((tier) => (
                 <div key={tier.label} className={`flex items-center justify-between p-4 rounded-2xl border ${tier.bg}`}>
                   <span className="text-sm font-black text-white uppercase tracking-widest">{tier.label}</span>
                   <span className={`text-2xl font-black tabular-nums ${tier.color}`}>{tier.value}%+</span>
                 </div>
               ))}
-              <p className="text-xs text-slate-600 font-bold">Source: {benchmarks.note || '2026 industry standards'}</p>
+              <p className="text-xs text-[var(--text-dim)] font-bold">Source: {benchmarks.note || '2026 industry standards'}</p>
             </div>
           )
         })()}
 
         {/* Quick engagement tips */}
         <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
-          <p className="text-xs font-black uppercase tracking-[0.6em] text-slate-600">Activate Your Audience</p>
+          <p className="text-xs font-black uppercase tracking-[0.6em] text-[var(--text-dim)]">Activate Your Audience</p>
           {[
             { icon: Heart, text: 'Add specific questions to every post — not "what do you think?" but "which of these two strategies matches your experience?"', color: 'text-rose-400' },
             { icon: Users, text: 'Reply to every comment in the first 60 minutes — algorithms reward early engagement velocity', color: 'text-indigo-400' },
@@ -736,7 +736,7 @@ function EngagementPanel({ niche, platform, load, data, loading, error }: any) {
           ].map((tip, i) => (
             <div key={i} className="flex items-start gap-3">
               <tip.icon size={14} className={`${tip.color} mt-0.5 shrink-0`} />
-              <p className="text-xs text-slate-400 font-bold leading-relaxed">{tip.text}</p>
+              <p className="text-xs text-[var(--text-dim)] font-bold leading-relaxed">{tip.text}</p>
             </div>
           ))}
         </div>
@@ -761,7 +761,7 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
           </div>
           <div>
             <h2 className="text-3xl font-black uppercase tracking-wide">Pre-Publish Content Analyzer</h2>
-            <p className="text-slate-400 font-medium">Evaluate hook strength, predict engagement, and check algorithm fit before you post.</p>
+            <p className="text-[var(--text-dim)] font-medium">Evaluate hook strength, predict engagement, and check algorithm fit before you post.</p>
           </div>
         </div>
 
@@ -792,11 +792,11 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
             {/* Verdict Header */}
             <div className={`p-6 rounded-2xl border ${report.overallScore >= 75 ? 'bg-emerald-500/10 border-emerald-500/30' : report.overallScore >= 55 ? 'bg-amber-500/10 border-amber-500/30' : 'bg-rose-500/10 border-rose-500/30'} flex items-center justify-between`}>
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Pre-Flight Verdict</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-dim)]">Pre-Flight Verdict</p>
                 <h3 className="text-2xl font-black mt-1">{report.verdict}</h3>
               </div>
               <div className="text-right">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Score</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-dim)]">Score</p>
                 <div className={`text-4xl font-black ${report.overallScore >= 75 ? 'text-emerald-400' : report.overallScore >= 55 ? 'text-amber-400' : 'text-rose-400'}`}>
                   {report.overallScore}/100
                 </div>
@@ -824,7 +824,7 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
                 </div>
                 {report.hookAnalysis.rewrites?.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-white/10">
-                    <p className="text-xs font-bold uppercase text-slate-500 mb-3">AI Rewrites to test</p>
+                    <p className="text-xs font-bold uppercase text-[var(--text-dim)] mb-3">AI Rewrites to test</p>
                     <div className="space-y-3">
                       {report.hookAnalysis.rewrites.map((r: any, i: number) => (
                         <div key={i} className="bg-white/5 p-3 rounded-xl border border-white/5">
@@ -866,7 +866,7 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
                   </div>
                   {report.emotionalResonance.missingHighImpactTriggers?.[0] && (
                     <div className="text-sm bg-white/5 p-3 rounded-xl">
-                      <p className="text-slate-400 mb-1">Missing high-impact trigger: <strong>{report.emotionalResonance.missingHighImpactTriggers[0].trigger}</strong></p>
+                      <p className="text-[var(--text-dim)] mb-1">Missing high-impact trigger: <strong>{report.emotionalResonance.missingHighImpactTriggers[0].trigger}</strong></p>
                       <p className="text-white italic">&quot;{report.emotionalResonance.missingHighImpactTriggers[0].suggestion}&quot;</p>
                     </div>
                   )}
@@ -880,7 +880,7 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
               <div className="flex flex-wrap gap-3">
                 {report.optimalPostingTimes.optimalWindows.map((tw: any, i: number) => (
                   <div key={i} className="px-4 py-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-sm">
-                    <strong className="text-indigo-300">{tw.day}</strong> <span className="text-slate-400">@ {tw.time}</span>
+                    <strong className="text-indigo-300">{tw.day}</strong> <span className="text-[var(--text-dim)]">@ {tw.time}</span>
                   </div>
                 ))}
               </div>

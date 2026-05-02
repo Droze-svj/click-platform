@@ -50,7 +50,7 @@ const PROVIDER_GRADIENT: Record<string, string> = {
 
 const STATUS_CFG: Record<string, { label: string; color: string; dot: string; bg: string }> = {
   active:   { label: 'Connected', color: 'text-emerald-400', dot: 'bg-emerald-500', bg: 'bg-emerald-500/10' },
-  inactive: { label: 'Inactive',  color: 'text-slate-400',  dot: 'bg-slate-600',  bg: 'bg-white/5' },
+  inactive: { label: 'Inactive',  color: 'text-[var(--text-dim)]',  dot: 'bg-slate-600',  bg: 'bg-white/5' },
   error:    { label: 'Auth Failed', color: 'text-rose-400',   dot: 'bg-rose-500',   bg: 'bg-rose-500/10' },
   pending:  { label: 'Connecting', color: 'text-amber-400',  dot: 'bg-amber-500',  bg: 'bg-amber-500/10' },
 }
@@ -143,7 +143,7 @@ export default function IntegrationsPage() {
           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
           <Plug size={64} className="text-indigo-500 animate-spin relative z-10" />
         </div>
-        <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.4em] animate-pulse">Syncing Platforms...</p>
+        <p className="text-sm font-bold text-[var(--text-dim)] uppercase tracking-[0.4em] animate-pulse">Syncing Platforms...</p>
       </div>
     )
   }
@@ -156,7 +156,7 @@ export default function IntegrationsPage() {
         {/* Header HUD */}
         <header className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-50">
           <div className="flex items-center gap-8">
-            <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl">
+            <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-105 active:scale-95 shadow-xl">
               <ArrowLeft size={24} />
             </button>
             <div className="w-16 h-16 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-2xl flex items-center justify-center shadow-2xl relative group">
@@ -169,10 +169,10 @@ export default function IntegrationsPage() {
                 <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-400/80 italic">Neural Connection Mesh</span>
               </div>
               <h1 className="text-4xl font-black text-[var(--text-main)] tracking-tight leading-none">Platform Vault</h1>
-              <p className="text-slate-400 text-sm mt-2 font-medium max-w-lg">Manage your social ecosystems. Connect platforms to automate publishing and track performance data.</p>
+              <p className="text-[var(--text-dim)] text-sm mt-2 font-medium max-w-lg">Manage your social ecosystems. Connect platforms to automate publishing and track performance data.</p>
             </div>
           </div>
-          <button onClick={() => setShowMarketplace(s => !s)} className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-xl ${showMarketplace ? 'bg-white/5 text-slate-400 border border-white/10' : 'bg-white text-black hover:bg-indigo-500 hover:text-white'}`}>
+          <button onClick={() => setShowMarketplace(s => !s)} className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 shadow-xl ${showMarketplace ? 'bg-white/5 text-[var(--text-dim)] border border-white/10' : 'bg-white text-black hover:bg-indigo-500 hover:text-white'}`}>
             {showMarketplace ? <X size={18} /> : <Plus size={18} />}
             {showMarketplace ? 'Exit Marketplace' : 'Browse Platforms'}
           </button>
@@ -191,7 +191,7 @@ export default function IntegrationsPage() {
                 <s.icon size={22} className={s.color} />
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 italic opacity-60 leading-none">{s.label}</p>
+                <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest mb-1 italic opacity-60 leading-none">{s.label}</p>
                 <p className={`text-2xl font-black italic tabular-nums tracking-tighter leading-none ${s.color}`}>{s.value}</p>
               </div>
             </motion.div>
@@ -210,19 +210,19 @@ export default function IntegrationsPage() {
                     </div>
                     <div>
                       <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-none mb-2">Connect New Platforms</h2>
-                      <p className="text-xs font-medium text-slate-400 tracking-wide uppercase italic opacity-60">Browse available social nodes for integration.</p>
+                      <p className="text-xs font-medium text-[var(--text-dim)] tracking-wide uppercase italic opacity-60">Browse available social nodes for integration.</p>
                     </div>
                   </div>
                   <div className="relative w-full md:w-80">
-                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search platforms..." className="w-full bg-black/60 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-600" />
+                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search platforms..." className="w-full bg-black/60 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-sm font-medium text-white focus:outline-none focus:border-indigo-500/50 transition-all placeholder:text-[var(--text-dim)]" />
                   </div>
                 </div>
 
                 {visibleMarketplace.length === 0 ? (
                   <div className="py-20 text-center space-y-4">
-                    <Search size={48} className="text-slate-600 mx-auto" />
-                    <p className="text-xl font-bold text-slate-400">No platforms match your search.</p>
+                    <Search size={48} className="text-[var(--text-dim)] mx-auto" />
+                    <p className="text-xl font-bold text-[var(--text-dim)]">No platforms match your search.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -237,11 +237,11 @@ export default function IntegrationsPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="text-xl font-black text-[var(--text-main)] tracking-tight truncate leading-none mb-2">{m.name}</h4>
-                              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">{m.category || 'Social'}</p>
+                              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-widest italic leading-none">{m.category || 'Social'}</p>
                             </div>
                             {m.popular && <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[8px] font-black uppercase tracking-widest">POPULAR</span>}
                           </div>
-                          <p className="text-xs text-slate-400 font-medium leading-relaxed line-clamp-2 opacity-80">{m.description}</p>
+                          <p className="text-xs text-[var(--text-dim)] font-medium leading-relaxed line-clamp-2 opacity-80">{m.description}</p>
                           <button onClick={() => handleInstall(m)} disabled={isInstalling} className="mt-auto py-3 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-40 flex items-center justify-center gap-2 group-hover:shadow-lg active:scale-95">
                             {isInstalling ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
                             {isInstalling ? 'Authorizing...' : 'Connect Platform'}
@@ -265,7 +265,7 @@ export default function IntegrationsPage() {
               </div>
               <div>
                 <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight leading-none">Active Ecosystem</h2>
-                <p className="text-xs font-medium text-slate-400 tracking-wide mt-1 italic opacity-60 uppercase leading-none">Live platform connections and sync status.</p>
+                <p className="text-xs font-medium text-[var(--text-dim)] tracking-wide mt-1 italic opacity-60 uppercase leading-none">Live platform connections and sync status.</p>
               </div>
             </div>
           </div>
@@ -273,11 +273,11 @@ export default function IntegrationsPage() {
           {installed.length === 0 ? (
             <div className="py-32 flex flex-col items-center text-center gap-8 px-8">
               <div className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-                <Unlink size={40} className="text-slate-600" />
+                <Unlink size={40} className="text-[var(--text-dim)]" />
               </div>
               <div className="space-y-3">
                 <h3 className="text-2xl font-black text-[var(--text-main)]">No Platforms Linked</h3>
-                <p className="text-slate-400 text-sm max-w-sm font-medium leading-relaxed opacity-80">Connect your first platform to start distributing content and tracking cross-platform growth.</p>
+                <p className="text-[var(--text-dim)] text-sm max-w-sm font-medium leading-relaxed opacity-80">Connect your first platform to start distributing content and tracking cross-platform growth.</p>
               </div>
               <button onClick={() => setShowMarketplace(true)} className="px-8 py-4 bg-white text-black rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-xl active:scale-95 flex items-center gap-3">
                 <Plus size={18} /> Link First Node
@@ -295,7 +295,7 @@ export default function IntegrationsPage() {
                     </div>
                     <div className="flex-1 min-w-0 text-center md:text-left space-y-2">
                       <h4 className="text-2xl font-black text-[var(--text-main)] tracking-tight truncate leading-none uppercase italic">{intg.name}</h4>
-                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none opacity-60">
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest italic leading-none opacity-60">
                         <span className="text-white">{intg.provider || intg.type}</span>
                         <div className="w-1 h-1 rounded-full bg-slate-700" />
                         <span>Last Sync: {intg.lastSyncAt ? new Date(intg.lastSyncAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Pending Initial Sync'}</span>
@@ -308,10 +308,10 @@ export default function IntegrationsPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <button disabled={isSyncing} onClick={() => handleSync(intg._id)} className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white hover:border-white/20 flex items-center justify-center transition-all active:scale-90 shadow-lg">
+                      <button disabled={isSyncing} onClick={() => handleSync(intg._id)} className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white hover:border-white/20 flex items-center justify-center transition-all active:scale-90 shadow-lg">
                         <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
                       </button>
-                      <button className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white hover:border-white/20 flex items-center justify-center transition-all active:scale-90 shadow-lg">
+                      <button className="w-11 h-11 rounded-xl bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white hover:border-white/20 flex items-center justify-center transition-all active:scale-90 shadow-lg">
                         <Settings size={18} />
                       </button>
                       <button onClick={() => setRemoveTargetId(intg._id)} className="w-11 h-11 rounded-xl bg-rose-500/5 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all active:scale-90 shadow-lg">
@@ -339,11 +339,11 @@ export default function IntegrationsPage() {
                     <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight uppercase italic leading-none">Disconnect {removeTarget.name}?</h3>
                   </div>
                 </div>
-                <p className="text-sm text-slate-400 font-medium leading-relaxed mb-10 opacity-80 italic">
+                <p className="text-sm text-[var(--text-dim)] font-medium leading-relaxed mb-10 opacity-80 italic">
                   This will purge all OAuth credentials and sever the neural link. All scheduled posts for this platform will be terminated immediately.
                 </p>
                 <div className="flex items-center gap-4 justify-end">
-                  <button disabled={removing} onClick={() => setRemoveTargetId(null)} className="px-6 py-3 text-xs font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">CANCEL</button>
+                  <button disabled={removing} onClick={() => setRemoveTargetId(null)} className="px-6 py-3 text-xs font-black text-[var(--text-dim)] uppercase tracking-widest hover:text-white transition-colors">CANCEL</button>
                   <button disabled={removing} onClick={() => handleRemove(removeTarget._id)} className="px-8 py-3 bg-rose-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-rose-500 shadow-xl active:scale-95 flex items-center gap-2">
                     {removing ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
                     {removing ? 'SEVERING LINK...' : 'CONFIRM TERMINATION'}

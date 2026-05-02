@@ -197,7 +197,7 @@ export default function SovereignCalibrationNodePage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Fingerprint size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
-        <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Deciphering Matrix Topology...</span>
+        <span className="text-[16px] font-black text-[var(--text-dim)] uppercase tracking-[1em] animate-pulse italic">Deciphering Matrix Topology...</span>
      </div>
   );
 
@@ -213,7 +213,7 @@ export default function SovereignCalibrationNodePage() {
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
@@ -232,7 +232,7 @@ export default function SovereignCalibrationNodePage() {
                    </div>
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Settings</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your account, defaults, integrations, and notifications. Set things once here and Click remembers them across every project.</p>
+                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your account, defaults, integrations, and notifications. Set things once here and Click remembers them across every project.</p>
               </div>
            </div>
 
@@ -244,7 +244,7 @@ export default function SovereignCalibrationNodePage() {
                 <p className="text-[24px] font-black uppercase tracking-[0.2em] text-white italic leading-none mb-4 group-hover:text-indigo-400 transition-colors">{user?.name || 'Sovereign_Node'}</p>
                 <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5">
                    <ShieldCheck size={16} className="text-indigo-400" />
-                   <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">CORE_IDENTITY_DNA_LOCKED</span>
+                   <span className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-none">CORE_IDENTITY_DNA_LOCKED</span>
                 </div>
               </div>
            </Link>
@@ -264,18 +264,18 @@ export default function SovereignCalibrationNodePage() {
                 ].map((tab) => (
                   <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
                     className={`w-full group flex items-center justify-between p-10 rounded-[3.5rem] transition-all duration-300 italic font-black relative overflow-hidden ${
-                      activeTab === tab.id ? 'bg-white text-black scale-105 shadow-[0_40px_100px_rgba(255,255,255,0.1)]' : 'hover:bg-white/[0.04] text-slate-400 hover:text-white border-2 border-transparent'
+                      activeTab === tab.id ? 'bg-white text-black scale-105 shadow-[0_40px_100px_rgba(255,255,255,0.1)]' : 'hover:bg-white/[0.04] text-[var(--text-dim)] hover:text-white border-2 border-transparent'
                     }`}
                   >
                     <div className="flex items-center gap-8 relative z-10 text-left">
                       <div className={`w-20 h-20 rounded-[2rem] border-2 flex items-center justify-center transition-all duration-300 ${
-                        activeTab === tab.id ? 'bg-black text-white border-black rotate-12 scale-110' : 'bg-black/60 border-white/10 text-slate-500 group-hover:text-indigo-400 group-hover:rotate-12 group-hover:bg-white/5 shadow-inner'
+                        activeTab === tab.id ? 'bg-black text-white border-black rotate-12 scale-110' : 'bg-black/60 border-white/10 text-[var(--text-dim)] group-hover:text-indigo-400 group-hover:rotate-12 group-hover:bg-white/5 shadow-inner'
                       }`}>
                         {tab.icon}
                       </div>
                       <div className="space-y-1">
                         <span className="text-[18px] font-black uppercase tracking-[0.2em] leading-none block">{tab.label}</span>
-                        <p className={`text-[11px] font-black uppercase tracking-[0.2em] italic leading-none ${activeTab === tab.id ? 'text-black/40' : 'text-slate-500 group-hover:text-slate-500'}`}>{tab.desc}</p>
+                        <p className={`text-[11px] font-black uppercase tracking-[0.2em] italic leading-none ${activeTab === tab.id ? 'text-black/40' : 'text-[var(--text-dim)] group-hover:text-[var(--text-dim)]'}`}>{tab.desc}</p>
                       </div>
                     </div>
                     {activeTab === tab.id && <ChevronRight size={36} className="text-black relative z-10" />}
@@ -314,7 +314,7 @@ export default function SovereignCalibrationNodePage() {
                                <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><CpuIcon className="text-indigo-400" size={56} /></div>
                                <div>
                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Neural Core</h2>
-                                  <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Global OS fundamentals and spectral localization</p>
+                                  <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Global OS fundamentals and spectral localization</p>
                                 </div>
                             </div>
                           </header>
@@ -344,7 +344,7 @@ export default function SovereignCalibrationNodePage() {
                                <div className="w-24 h-24 rounded-[3.5rem] bg-amber-500/5 border-2 border-amber-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(245,158,11,0.2)] animate-pulse"><Zap className="text-amber-400" size={56} /></div>
                                <div>
                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Heuristic Matrix</h2>
-                                  <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none">Autonomous swarm and synthetic avatar orchestration</p>
+                                  <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none">Autonomous swarm and synthetic avatar orchestration</p>
                                </div>
                             </div>
                           </header>
@@ -363,7 +363,7 @@ export default function SovereignCalibrationNodePage() {
                                   <div className="flex justify-between items-center px-6">
                                      <div className="space-y-4 text-left">
                                         <p className="text-[20px] font-black uppercase tracking-[0.5em] text-white italic leading-none">Heuristic Consensus Seed</p>
-                                        <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-tight max-w-sm">Minimum confidence threshold for autonomous deployment protocols_v14</p>
+                                        <p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-tight max-w-sm">Minimum confidence threshold for autonomous deployment protocols_v14</p>
                                      </div>
                                      <span className="text-6xl font-black text-indigo-400 italic tabular-nums tracking-tighter leading-none drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]">{settings.agentic.predictiveThreshold}%</span>
                                   </div>
@@ -373,7 +373,7 @@ export default function SovereignCalibrationNodePage() {
                                        className="w-full h-6 bg-black/60 rounded-full appearance-none cursor-pointer accent-white focus:outline-none border-2 border-white/5 shadow-inner"
                                      />
                                   </div>
-                                  <div className="flex justify-between text-[13px] font-black text-slate-500 uppercase tracking-[1em] italic leading-none px-10">
+                                  <div className="flex justify-between text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[1em] italic leading-none px-10">
                                      <span>FAST_EVOLUTION</span>
                                      <span>PEAK_INTEGRITY</span>
                                   </div>
@@ -409,7 +409,7 @@ export default function SovereignCalibrationNodePage() {
                                 <div className="w-24 h-24 rounded-[3.5rem] bg-fuchsia-500/5 border-2 border-fuchsia-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(217,70,239,0.2)] animate-pulse"><Palette className="text-fuchsia-400" size={56} /></div>
                                 <div>
                                    <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Identity DNA</h2>
-                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none">Synthetic DNA constraints for autonomous AI payloads</p>
+                                   <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none">Synthetic DNA constraints for autonomous AI payloads</p>
                                 </div>
                              </div>
                           </header>
@@ -417,21 +417,21 @@ export default function SovereignCalibrationNodePage() {
                           {brandKitLoading ? (
                             <div className="flex flex-col items-center justify-center py-96 bg-black/60 rounded-[8rem] border-2 border-white/5 shadow-inner">
                               <RefreshCw className="w-32 h-32 text-indigo-500 animate-spin mb-12 shadow-[0_0_60px_rgba(99,102,241,0.5)]" />
-                              <p className="text-[18px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Deciphering DNA Matrix Spectrum...</p>
+                              <p className="text-[18px] font-black text-[var(--text-dim)] uppercase tracking-[1em] animate-pulse italic">Deciphering DNA Matrix Spectrum...</p>
                             </div>
                           ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-32 pt-20">
                                <ConfigGroup title="Chroma DNA Topology">
                                   <div className="flex gap-20">
                                      <div className="flex flex-col gap-10 flex-1">
-                                        <label className="text-[16px] font-black uppercase text-slate-400 tracking-[0.8em] italic pl-10 text-left mb-2">Primary_Hex</label>
+                                        <label className="text-[16px] font-black uppercase text-[var(--text-dim)] tracking-[0.8em] italic pl-10 text-left mb-2">Primary_Hex</label>
                                         <div className="flex items-center gap-12 p-10 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner font-black group/color transition-all duration-300 hover:border-white/20">
                                            <input type="color" value={brandKit.primaryColor || '#6366f1'} title="Primary Color" aria-label="Primary Color" onChange={(e) => updateBrandKitField('primaryColor', e.target.value)} className="w-24 h-24 rounded-[2rem] border-none bg-transparent cursor-pointer shadow-3xl group-hover/color:rotate-12 group-hover:scale-110 transition-transform duration-300 p-0" />
                                            <input type="text" value={brandKit.primaryColor || ''} title="Primary Hex" aria-label="Primary Hex" onChange={(e) => updateBrandKitField('primaryColor', e.target.value)} className="bg-transparent border-none text-4xl font-black font-mono text-white focus:outline-none w-full italic tracking-tighter" placeholder="#FF00FF" />
                                         </div>
                                      </div>
                                      <div className="flex flex-col gap-10 flex-1">
-                                        <label className="text-[16px] font-black uppercase text-slate-400 tracking-[0.8em] italic pl-10 text-left mb-2">Accent_Hex</label>
+                                        <label className="text-[16px] font-black uppercase text-[var(--text-dim)] tracking-[0.8em] italic pl-10 text-left mb-2">Accent_Hex</label>
                                         <div className="flex items-center gap-12 p-10 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner font-black group/color transition-all duration-300 hover:border-white/20">
                                            <input type="color" value={brandKit.accentColor || '#8b5cf6'} title="Accent Color" aria-label="Accent Color" onChange={(e) => updateBrandKitField('accentColor', e.target.value)} className="w-24 h-24 rounded-[2rem] border-none bg-transparent cursor-pointer shadow-3xl group-hover/color:rotate-12 group-hover:scale-110 transition-transform duration-300 p-0" />
                                            <input type="text" value={brandKit.accentColor || ''} title="Accent Hex" aria-label="Accent Hex" onChange={(e) => updateBrandKitField('accentColor', e.target.value)} className="bg-transparent border-none text-4xl font-black font-mono text-white focus:outline-none w-full italic tracking-tighter" placeholder="#AA00FF" />
@@ -492,7 +492,7 @@ export default function SovereignCalibrationNodePage() {
                                 <div className="w-24 h-24 rounded-[3.5rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(244,63,94,0.2)] animate-pulse"><Bell className="text-rose-400" size={56} /></div>
                                 <div>
                                    <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Resonance Routing</h2>
-                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-rose-500/30">Signal protocols and urgency thresholds</p>
+                                   <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-rose-500/30">Signal protocols and urgency thresholds</p>
                                 </div>
                              </div>
                           </header>
@@ -518,10 +518,10 @@ export default function SovereignCalibrationNodePage() {
                         <div className="space-y-32">
                           <header className="space-y-10">
                             <div className="flex items-center gap-12">
-                               <div className="w-24 h-24 rounded-[3.5rem] bg-slate-500/5 border-2 border-slate-500/20 flex items-center justify-center shadow-inner"><EyeOff className="text-slate-400" size={56} /></div>
+                               <div className="w-24 h-24 rounded-[3.5rem] bg-slate-500/5 border-2 border-slate-500/20 flex items-center justify-center shadow-inner"><EyeOff className="text-[var(--text-dim)]" size={56} /></div>
                                <div>
                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Logic Sovereignty</h2>
-                                  <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-white/10">Manifestation consent and neural telemetry analytics</p>
+                                  <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-white/10">Manifestation consent and neural telemetry analytics</p>
                                </div>
                             </div>
                           </header>
@@ -543,7 +543,7 @@ export default function SovereignCalibrationNodePage() {
                                 <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><Shield size={56} className="text-indigo-400" /></div>
                                 <div>
                                    <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Shielding Protocols</h2>
-                                   <p className="text-slate-400 font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Authentication matrices and cross-node encryption</p>
+                                   <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Authentication matrices and cross-node encryption</p>
                                 </div>
                              </div>
                           </header>
@@ -560,7 +560,7 @@ export default function SovereignCalibrationNodePage() {
                                           <p className="text-[28px] text-rose-500 font-black uppercase tracking-[0.4em] italic leading-none underline decoration-rose-500/40">LATTICE_DISSOLUTION_PROTOCOL</p>
                                        </div>
                                        <div className="p-12 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner">
-                                          <p className="text-[16px] text-slate-500 font-black uppercase tracking-[0.3em] italic leading-relaxed max-w-5xl text-left border-l-8 border-rose-600/30 pl-16">
+                                          <p className="text-[16px] text-[var(--text-dim)] font-black uppercase tracking-[0.3em] italic leading-relaxed max-w-5xl text-left border-l-8 border-rose-600/30 pl-16">
                                             Initializing lattice dissolution will immediately disconnect all active resonance bridges, purge the Sovereign Ledger permanently, and terminate your identity DNA across the entire global substrate. This action is absolute, non-invertible, and chemically permanent. No logic recovery possible.
                                           </p>
                                        </div>
@@ -612,8 +612,8 @@ function ConfigGroup({ title, children, fullWidth = false }: { title: string; ch
   return (
     <div className={`flex flex-col gap-20 ${fullWidth ? 'col-span-full' : ''} group/group`}>
       <div className="flex items-center gap-12 border-b-2 border-white/10 pb-12 transition-all group-hover/group:border-indigo-500/30">
-        <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center"><Sliders size={20} className="text-slate-500 group-hover/group:text-indigo-400 transition-colors" /></div>
-        <h3 className="text-[18px] font-black uppercase tracking-[1em] text-slate-500 italic leading-none group-hover/group:text-slate-700 transition-colors">{title}</h3>
+        <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center"><Sliders size={20} className="text-[var(--text-dim)] group-hover/group:text-indigo-400 transition-colors" /></div>
+        <h3 className="text-[18px] font-black uppercase tracking-[1em] text-[var(--text-dim)] italic leading-none group-hover/group:text-slate-700 transition-colors">{title}</h3>
       </div>
       <div className="flex flex-col gap-12">{children}</div>
     </div>
@@ -625,7 +625,7 @@ function ToggleControl({ label, description, value, onChange }: { label: string;
     <div className="flex items-center justify-between p-14 rounded-[5.5rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
       <div className="flex flex-col gap-6 text-left pl-8">
         <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-indigo-400 transition-colors leading-none mb-2">{label}</span>
-        <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest italic leading-tight max-w-xl opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
+        <span className="text-[15px] font-bold text-[var(--text-dim)] uppercase tracking-widest italic leading-tight max-w-xl opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
       </div>
       <button onClick={() => onChange(!value)} title={value ? 'OFF' : 'ON'} aria-label={value ? 'OFF' : 'ON'}
         className={`w-36 h-20 rounded-full relative transition-all duration-300 border-8 border-black shadow-[0_0_80px_rgba(0,0,0,1)] flex-shrink-0 ${value ? 'bg-indigo-600 shadow-[0_0_80px_rgba(99,102,241,0.5)]' : 'bg-slate-700'}`}
@@ -633,7 +633,7 @@ function ToggleControl({ label, description, value, onChange }: { label: string;
         <motion.div animate={{ x: value ? 64 : 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} 
           className={`absolute top-1 left-1 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center ${value ? 'bg-white' : 'bg-slate-900 border-2 border-white/5'}`}
         >
-          {value ? <Check size={28} className="text-indigo-600" /> : <X size={28} className="text-slate-500" />}
+          {value ? <Check size={28} className="text-indigo-600" /> : <X size={28} className="text-[var(--text-dim)]" />}
         </motion.div>
       </button>
     </div>
@@ -645,7 +645,7 @@ function DropdownControl({ label, description, value, options, onChange }: { lab
     <div className="flex flex-col gap-16 p-14 rounded-[5.5rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
       <div className="flex flex-col gap-6 text-left pl-8">
         <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-indigo-400 transition-colors leading-none mb-2">{label}</span>
-        <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest italic leading-tight opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
+        <span className="text-[15px] font-bold text-[var(--text-dim)] uppercase tracking-widest italic leading-tight opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
       </div>
       <div className="relative group/sel">
          <select value={value} onChange={(e) => onChange(e.target.value)} title={label} aria-label={label}
@@ -653,7 +653,7 @@ function DropdownControl({ label, description, value, options, onChange }: { lab
          >
            {options.map(o => <option key={o.id} value={o.id} className="bg-[var(--page-bg)] text-white py-10">{o.label}</option>)}
          </select>
-         <div className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover/sel:text-indigo-400 transition-colors duration-300 group-hover/sel:rotate-180">
+         <div className="absolute right-12 top-1/2 -translate-y-1/2 text-[var(--text-dim)] pointer-events-none group-hover/sel:text-indigo-400 transition-colors duration-300 group-hover/sel:rotate-180">
             <ChevronRight size={44} className="rotate-90" />
          </div>
       </div>
@@ -665,11 +665,11 @@ function InputControl({ label, type = 'text', placeholder, value, onChange }: { 
   return (
     <div className="flex flex-col gap-12 p-14 rounded-[6rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
       <div className="flex items-center gap-6 pl-8">
-         <Key size={24} className="text-slate-500 group-hover:text-indigo-400 transition-colors" />
+         <Key size={24} className="text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors" />
          <span className="text-[22px] font-black uppercase tracking-[0.5em] text-white italic group-hover:text-indigo-400 transition-colors leading-none text-left">{label}</span>
       </div>
       <input type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/95 border-2 border-white/10 px-16 py-10 rounded-[4rem] text-[24px] font-mono font-black text-indigo-400 focus:outline-none focus:border-indigo-500 transition-all duration-300 placeholder:text-slate-600 italic shadow-[0_0_40px_rgba(0,0,0,0.8)]"
+        className="w-full bg-black/95 border-2 border-white/10 px-16 py-10 rounded-[4rem] text-[24px] font-mono font-black text-indigo-400 focus:outline-none focus:border-indigo-500 transition-all duration-300 placeholder:text-[var(--text-dim)] italic shadow-[0_0_40px_rgba(0,0,0,0.8)]"
         title={label}
       />
     </div>

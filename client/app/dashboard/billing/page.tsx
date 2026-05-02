@@ -137,7 +137,7 @@ export default function BillingPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
+            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
             <div className="w-20 h-20 bg-amber-500/10 border-2 border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
@@ -149,14 +149,14 @@ export default function BillingPage() {
                 <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-400 italic leading-none">Sovereign Ledger</span>
               </div>
               <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
-              <p className="text-slate-500 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
+              <p className="text-[var(--text-dim)] text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
             </div>
           </div>
           <div className={`${glassStyle} px-8 py-5 rounded-[2.5rem] flex items-center gap-5 border-amber-500/20`}>
             <div className={`w-3 h-3 rounded-full ${subStatus === 'active' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : subStatus === 'trial' ? 'bg-amber-500 animate-pulse' : 'bg-slate-500'}`} />
             <div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none mb-1">CURRENT_TIER</p>
-              <p className="text-xl font-black text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-emerald-400' : subStatus === 'trial' ? 'text-amber-400' : 'text-slate-400'}>{subStatus}</span></p>
+              <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-none mb-1">CURRENT_TIER</p>
+              <p className="text-xl font-black text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-emerald-400' : subStatus === 'trial' ? 'text-amber-400' : 'text-[var(--text-dim)]'}>{subStatus}</span></p>
             </div>
           </div>
         </div>
@@ -169,7 +169,7 @@ export default function BillingPage() {
             </div>
             <div>
               <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">CURRENT_BILLING_CYCLE</p>
+              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic mt-2 leading-none">CURRENT_BILLING_CYCLE</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-10">
@@ -183,13 +183,13 @@ export default function BillingPage() {
                       <m.icon size={22} className={m.color} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">{m.label}</p>
+                      <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-none">{m.label}</p>
                     </div>
                     {overage && <span className="text-[8px] font-black text-rose-400 uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> OVER</span>}
                   </div>
                   <div className="flex items-end gap-3">
                     <p className={`text-4xl font-black italic tabular-nums tracking-tighter leading-none ${m.color}`}>{fmtNumber(m.used)}</p>
-                    {m.cap != null && <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.3em] italic mb-1 leading-none">/ {m.cap === -1 ? '∞' : fmtNumber(m.cap)}</p>}
+                    {m.cap != null && <p className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic mb-1 leading-none">/ {m.cap === -1 ? '∞' : fmtNumber(m.cap)}</p>}
                   </div>
                   {m.cap && m.cap > 0 && (
                     <div className="h-2 rounded-full bg-white/5 overflow-hidden">
@@ -210,7 +210,7 @@ export default function BillingPage() {
             </div>
             <div>
               <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Tier Selector</h2>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">UPGRADE · DOWNGRADE · COMMIT</p>
+              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic mt-2 leading-none">UPGRADE · DOWNGRADE · COMMIT</p>
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-10">
@@ -229,12 +229,12 @@ export default function BillingPage() {
                     </div>
                     <div>
                       <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{plan.name}</h3>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic mt-2 leading-none">{plan.tagline}</p>
+                      <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic mt-2 leading-none">{plan.tagline}</p>
                     </div>
                   </div>
                   <div className="flex items-end gap-2">
                     <p className="text-6xl font-black text-white italic tabular-nums tracking-tighter leading-none">${plan.priceMonthly}</p>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic mb-2 leading-none">/ mo</p>
+                    <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic mb-2 leading-none">/ mo</p>
                   </div>
                   <ul className="space-y-3 flex-1">
                     {includedFeatures.map(f => (
@@ -261,31 +261,31 @@ export default function BillingPage() {
             </div>
             <div>
               <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Ledger History</h2>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{history.length} INVOICES_LOGGED</p>
+              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic mt-2 leading-none">{history.length} INVOICES_LOGGED</p>
             </div>
           </div>
           {history.length === 0 ? (
             <div className="py-20 flex flex-col items-center text-center gap-4">
-              <Clock size={48} className="text-slate-500" />
+              <Clock size={48} className="text-[var(--text-dim)]" />
               <p className="text-2xl font-black text-white italic uppercase tracking-tight">Ledger Empty</p>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] italic">No invoices recorded yet.</p>
+              <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">No invoices recorded yet.</p>
             </div>
           ) : (
             <div className="divide-y divide-white/[0.04]">
               {history.map((inv, i) => (
                 <div key={inv._id || inv.id || i} className="flex items-center gap-6 px-10 py-6 hover:bg-white/[0.02] transition-colors">
                   <div className="w-12 h-12 rounded-[1rem] bg-white/[0.03] border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <CreditCard size={20} className="text-slate-400" />
+                    <CreditCard size={20} className="text-[var(--text-dim)]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-black text-white italic uppercase tracking-tight leading-none mb-1.5 truncate">{inv.description || 'Subscription Renewal'}</p>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic leading-none">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}</p>
+                    <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic leading-none">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}</p>
                   </div>
                   <p className="text-2xl font-black text-white italic tabular-nums tracking-tight">{fmtCurrency(inv.amount, inv.currency || 'USD')}</p>
                   <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] italic border ${inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : inv.status === 'failed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
                     {(inv.status || 'PENDING').toUpperCase()}
                   </span>
-                  <button type="button" title="Download invoice" className="w-10 h-10 rounded-[1rem] bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+                  <button type="button" title="Download invoice" className="w-10 h-10 rounded-[1rem] bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white flex items-center justify-center transition-colors">
                     <Download size={16} />
                   </button>
                 </div>

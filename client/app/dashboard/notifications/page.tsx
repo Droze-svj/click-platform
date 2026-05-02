@@ -139,7 +139,7 @@ export default function SignalDiffusionLedgerPage() {
   if (loading) return (
      <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
         <Radio size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
-        <span className="text-[16px] font-black text-slate-400 uppercase tracking-[1em] animate-pulse italic">Decoding Signal Spectrum...</span>
+        <span className="text-[16px] font-black text-[var(--text-dim)] uppercase tracking-[1em] animate-pulse italic">Decoding Signal Spectrum...</span>
      </div>
   )
 
@@ -155,7 +155,7 @@ export default function SignalDiffusionLedgerPage() {
         <header className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
            <div className="flex items-center gap-12">
               <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
               <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
@@ -176,16 +176,16 @@ export default function SignalDiffusionLedgerPage() {
                    )}
                  </div>
                  <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Notifications</h1>
-                 <p className="text-slate-400 text-sm md:text-base font-medium leading-relaxed max-w-2xl">Posts that went live, approvals waiting on you, jobs that need attention. Click rolls them up so nothing slips.</p>
+                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl">Posts that went live, approvals waiting on you, jobs that need attention. Click rolls them up so nothing slips.</p>
               </div>
            </div>
 
            <div className="flex items-center gap-8">
               <button onClick={loadSignals} className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group shadow-2xl active:scale-95 border-none bg-white/[0.02]`}>
-                 <RefreshCw size={36} className={`text-slate-400 group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
+                 <RefreshCw size={36} className={`text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
               </button>
               <button onClick={() => setShowPreferences(!showPreferences)} 
-                className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center gap-8 italic border-2 active:scale-95 ${showPreferences ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'}`}
+                className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center gap-8 italic border-2 active:scale-95 ${showPreferences ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-[var(--text-dim)] hover:text-white'}`}
               >
                 <Sliders size={28} className={showPreferences ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} /> SENSOR_FUSION_CALIBRATION
               </button>
@@ -206,7 +206,7 @@ export default function SignalDiffusionLedgerPage() {
                       </div>
                       <div>
                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Mission Telemetry</h2>
-                         <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.6em] italic leading-none">Real-time kinetic execution downlink_v14.2</p>
+                         <p className="text-[14px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">Real-time kinetic execution downlink_v14.2</p>
                       </div>
                    </div>
                    {liveStatus.lastUpdated && <div className="px-10 py-5 rounded-[2.5rem] bg-black/60 border-2 border-white/5 text-[12px] font-black text-indigo-400 uppercase tracking-widest italic shadow-inner">LAST_SIGNAL_BURST: {new Date(liveStatus.lastUpdated).toLocaleTimeString().toUpperCase()}</div>}
@@ -224,14 +224,14 @@ export default function SignalDiffusionLedgerPage() {
                                      <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-indigo-400 transition-colors duration-300 leading-none mb-3">{t.title}</p>
                                      <div className="flex items-center gap-4">
                                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]" />
-                                        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] font-mono leading-none">{t.status.toUpperCase()} // DIRECTIVE_LOCKED</span>
+                                        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] font-mono leading-none">{t.status.toUpperCase()} // DIRECTIVE_LOCKED</span>
                                      </div>
                                   </div>
                                </div>
-                               <button onClick={() => router.push(`/dashboard/tasks?open=${t.id}`)} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
+                               <button onClick={() => router.push(`/dashboard/tasks?open=${t.id}`)} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
                             </motion.div>
                          ))}
-                         {liveStatus.tasks.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Ghost size={48} className="text-slate-500 mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] italic">NO_KINETIC_TRAJECTORIES_ARMED</p></div>}
+                         {liveStatus.tasks.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Ghost size={48} className="text-[var(--text-dim)] mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">NO_KINETIC_TRAJECTORIES_ARMED</p></div>}
                       </div>
                    </div>
                    <div className="space-y-12">
@@ -245,14 +245,14 @@ export default function SignalDiffusionLedgerPage() {
                                      <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-purple-400 transition-colors duration-300 leading-none mb-3">{j.title}</p>
                                      <div className="flex items-center gap-4">
                                         <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-                                        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] font-mono leading-none">{j.status.toUpperCase()} // QUEUE::{j.queue?.toUpperCase()}</span>
+                                        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] font-mono leading-none">{j.status.toUpperCase()} // QUEUE::{j.queue?.toUpperCase()}</span>
                                      </div>
                                   </div>
                                </div>
-                               <button onClick={() => router.push('/dashboard/jobs')} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
+                               <button onClick={() => router.push('/dashboard/jobs')} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
                             </motion.div>
                          ))}
-                         {liveStatus.jobs.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Wind size={48} className="text-slate-500 mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-slate-500 uppercase tracking-[0.8em] italic">ASYNC_LATTICE_QUIESCENT</p></div>}
+                         {liveStatus.jobs.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Wind size={48} className="text-[var(--text-dim)] mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">ASYNC_LATTICE_QUIESCENT</p></div>}
                       </div>
                    </div>
                 </div>
@@ -278,18 +278,18 @@ export default function SignalDiffusionLedgerPage() {
            <header className="flex flex-col xl:flex-row items-center justify-between gap-20 mb-32 relative z-10 border-b border-white/5 pb-20">
               <div className="flex items-center gap-12 flex-1 w-full relative group/search">
                  <div className="absolute left-12 top-1/2 -translate-y-1/2 flex items-center gap-6 pointer-events-none">
-                    <Search className="text-slate-500 group-focus-within/search:text-indigo-400 transition-all duration-300" size={40} />
+                    <Search className="text-[var(--text-dim)] group-focus-within/search:text-indigo-400 transition-all duration-300" size={40} />
                     <div className="w-1 h-10 bg-white/5 rounded-full" />
                  </div>
                  <input type="text" placeholder="SCAN_GLOBAL_SIGNAL_MATRIX..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                   className="w-full bg-black/80 border-4 border-white/5 rounded-[5.5rem] pl-32 pr-16 py-12 text-5xl font-black text-white uppercase italic tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all duration-300 shadow-inner placeholder:text-slate-600 font-mono"
+                   className="w-full bg-black/80 border-4 border-white/5 rounded-[5.5rem] pl-32 pr-16 py-12 text-5xl font-black text-white uppercase italic tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all duration-300 shadow-inner placeholder:text-[var(--text-dim)] font-mono"
                  />
               </div>
               
               <nav className="flex items-center gap-8 bg-black/60 p-6 rounded-[4.5rem] border-2 border-white/5 shadow-inner">
                  {(['all', 'unread', 'read'] as const).map(f => (
                    <button key={f} onClick={() => setFilter(f)}
-                     className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic ${filter === f ? 'bg-white text-black shadow-2xl scale-110' : 'bg-transparent text-slate-400 hover:text-white hover:bg-white/5'}`}
+                     className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic ${filter === f ? 'bg-white text-black shadow-2xl scale-110' : 'bg-transparent text-[var(--text-dim)] hover:text-white hover:bg-white/5'}`}
                    >
                      {f.toUpperCase()}
                    </button>
@@ -338,7 +338,7 @@ export default function SignalDiffusionLedgerPage() {
                          <Trash2 size={40} className="group-hover/purge:rotate-12 transition-transform" /> PURGE_LEDGER_DATA
                       </button>
                    </div>
-                   <button onClick={() => setSelectedNotifications(new Set())} className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-slate-500 hover:text-white hover:bg-rose-500/20 transition-all duration-300 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
+                   <button onClick={() => setSelectedNotifications(new Set())} className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-rose-500/20 transition-all duration-300 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
                 </motion.div>
              )}
            </AnimatePresence>
@@ -349,7 +349,7 @@ export default function SignalDiffusionLedgerPage() {
                    <div className="w-80 h-80 bg-white/5 rounded-[12rem] border-4 border-white/5 flex items-center justify-center animate-pulse shadow-inner"><Bell size={160} className="text-white opacity-40" /></div>
                    <div className="space-y-10 max-w-4xl">
                       <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-6">Signal Spectrum Void</h3>
-                      <p className="text-3xl font-black text-slate-400 uppercase tracking-[1em] italic leading-relaxed">No active resonance triggered in the current temporal resolution.</p>
+                      <p className="text-3xl font-black text-[var(--text-dim)] uppercase tracking-[1em] italic leading-relaxed">No active resonance triggered in the current temporal resolution.</p>
                    </div>
                 </div>
               ) : (
@@ -379,8 +379,8 @@ export default function SignalDiffusionLedgerPage() {
                               <div className="flex items-center justify-between border-b border-white/5 pb-8 mb-4">
                                  <div className="flex items-center gap-10">
                                     {n.category && <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] italic bg-indigo-500/10 px-10 py-3 rounded-[2.5rem] border-2 border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-all duration-300">{n.category.replace('_', ' ')}</span>}
-                                    <div className="flex items-center gap-4 text-slate-400">
-                                       <Timer size={16} className="text-slate-500" />
+                                    <div className="flex items-center gap-4 text-[var(--text-dim)]">
+                                       <Timer size={16} className="text-[var(--text-dim)]" />
                                        <span className="text-[12px] font-black uppercase tracking-[0.4em] italic font-mono">{new Date(n.createdAt).toLocaleString().toUpperCase()}</span>
                                     </div>
                                  </div>
@@ -389,7 +389,7 @@ export default function SignalDiffusionLedgerPage() {
 
                               <div className="space-y-10">
                                  <h3 className="text-7xl font-black text-[var(--text-main)] uppercase italic tracking-tighter leading-none mb-10 group-hover:text-indigo-400 transition-colors duration-300 drop-shadow-2xl">{n.title}</h3>
-                                 <p className="text-slate-400 font-black text-3xl uppercase tracking-tighter italic leading-tight max-w-5xl opacity-80 group-hover:opacity-100 transition-opacity duration-300 group-hover:text-slate-200">{n.message || n.aiSummary || 'NULL_SIGNAL_PAYLOAD'}</p>
+                                 <p className="text-[var(--text-dim)] font-black text-3xl uppercase tracking-tighter italic leading-tight max-w-5xl opacity-80 group-hover:opacity-100 transition-opacity duration-300 group-hover:text-slate-200">{n.message || n.aiSummary || 'NULL_SIGNAL_PAYLOAD'}</p>
                                  
                                  <AnimatePresence>
                                    {n.suggestion && (
