@@ -17,7 +17,7 @@ const ProfileHUD = () => {
     setSaving(true)
     try {
       await apiPost('/user/profile', { name, niche })
-      await refresh(true)
+      await refresh(0, true)
       setIsEditing(false)
     } catch (err) {
       console.error('Failed to update profile', err)

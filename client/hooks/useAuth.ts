@@ -122,7 +122,7 @@ export function useAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const checkAuth = async (retryCount = 0) => {
+  const checkAuth = async (retryCount = 0, force = false) => {
     // Debug logging disabled to prevent console spam
     // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
 
@@ -230,6 +230,7 @@ export function useAuth() {
       const currentTime = Date.now()
       if (
         retryCount === 0 &&
+        !force &&
         cachedToken &&
         cachedToken === token &&
         cachedUser &&
