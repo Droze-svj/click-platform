@@ -285,9 +285,13 @@ console.log('CONNECTING TO MONGODB');
 // (database.connected: false) until the credential or network issue is
 // resolved.
 const MONGO_MAX_RETRY_DELAY_MS = 30_000;
+const MONGO_MAX_RETRIES = 5;
 let mongoRetryDelayMs = 2_000;
+let mongoRetryAttempt = 0;
+let mongoGaveUp = false;
 
 function connectMongo() {
+  if (mongoGaveUp) return Promise.resolve();
   return mongoose
     .connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
@@ -297,13 +301,37 @@ function connectMongo() {
       console.log('✅ MongoDB connected successfully');
       logger.info('✅ MongoDB connected successfully');
       mongoRetryDelayMs = 2_000;
+      mongoRetryAttempt = 0;
     })
     .catch((err) => {
-      console.error('❌ MongoDB connection error:', err.message);
+      // Two log-spam mitigations:
+      //  1. Auth failures are unrecoverable without human intervention —
+      //     retrying the same bad creds forever just floods the logs. Stop
+      //     immediately and let `initDatabases()` fall back to local /
+      //     MongoMemoryServer.
+      //  2. Even for non-auth errors (network, DNS, timeouts), cap the
+      //     total retry count so the loop is bounded.
+      const isAuthError = /bad auth|authentication failed|Authentication failed/i.test(err.message || '');
+      mongoRetryAttempt += 1;
+      const giveUpDueToAuth = isAuthError;
+      const giveUpDueToCount = mongoRetryAttempt >= MONGO_MAX_RETRIES;
+
       logger.error('❌ MongoDB connection error', {
         error: err.message,
-        retryInMs: mongoRetryDelayMs,
+        attempt: mongoRetryAttempt,
+        maxRetries: MONGO_MAX_RETRIES,
+        retryInMs: giveUpDueToAuth || giveUpDueToCount ? 0 : mongoRetryDelayMs,
       });
+
+      if (giveUpDueToAuth || giveUpDueToCount) {
+        mongoGaveUp = true;
+        const reason = giveUpDueToAuth
+          ? 'auth failure — credentials in MONGODB_URI are wrong'
+          : `${MONGO_MAX_RETRIES} attempts exhausted`;
+        logger.warn(`⚠️  Stopped retrying secondary Mongo connect (${reason}). Primary initDatabases() will provide an in-memory fallback in dev.`);
+        return;
+      }
+
       setTimeout(connectMongo, mongoRetryDelayMs);
       mongoRetryDelayMs = Math.min(mongoRetryDelayMs * 2, MONGO_MAX_RETRY_DELAY_MS);
     });
