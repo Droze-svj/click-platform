@@ -50,6 +50,13 @@ function pickClipShape(parentId, clip) {
     expiresAt: clip.expiresAt || null,
     createdAt: clip.createdAt || clip.generatedAt || clip.timestamp || null,
     aiGenerated: clip.aiGenerated === true || clip.source === 'ai-auto-edit',
+    // Smart Publish defaults — written by smartPublishService after each
+    // auto-edit. The drawer renders these as editable defaults; capturing
+    // any user edit feeds the learning loop on publish.
+    recommendedCaptions: clip.recommendedCaptions || null,
+    recommendedHashtags: clip.recommendedHashtags || null,
+    recommendedSlots: Array.isArray(clip.recommendedSlots) ? clip.recommendedSlots : [],
+    publishRationale: clip.publishRationale || null,
     // Slim caption track for the client-side overlay layer. Pulled from the
     // saved keyMoments so the lightbox can show captions even when the
     // exported MP4 doesn't have them baked in (older clips rendered before
@@ -325,6 +332,13 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
     const userId = getUserIdFromReq(req);
     const { contentId, clipId } = req.params;
     const platform = (req.body?.platform || '').toString().toLowerCase() || null;
+    // Optional Smart Publish payload from the SchedulePublishDrawer. When
+    // present, we record the deltas (caption / time) so the learning loop
+    // captures user disagreement with the AI suggestion as a signal.
+    const userCaption = typeof req.body?.caption === 'string' ? req.body.caption : null;
+    const originalCaption = typeof req.body?.originalCaption === 'string' ? req.body.originalCaption : null;
+    const scheduledTime = req.body?.scheduledTime ? new Date(req.body.scheduledTime) : null;
+    const originalTime  = req.body?.originalTime  ? new Date(req.body.originalTime)  : null;
 
     // Dev-content shortcut so the publish loop is testable without a Mongo
     // record. Gated behind allowDevMode so a real prod user can't publish
@@ -346,8 +360,27 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
     if (!clip) return sendError(res, 'Clip not found', 404);
 
     clip.published = true;
-    clip.publishedAt = new Date();
+    // Persist the user's chosen schedule. If they didn't pass one, fall
+    // back to "now" — that's the previous behaviour.
+    clip.publishedAt = scheduledTime && Number.isFinite(scheduledTime.getTime()) ? scheduledTime : new Date();
     if (platform) clip.publishedPlatform = platform;
+    if (userCaption) clip.publishedCaption = userCaption;
+    // Capture the deltas so future analytics can correlate "kept AI
+    // suggestion" vs "user rewrote it" with engagement outcomes.
+    if (originalCaption !== null && userCaption && originalCaption !== userCaption) {
+      clip.captionDelta = {
+        original: originalCaption,
+        final: userCaption,
+        editedAt: new Date(),
+      };
+    }
+    if (originalTime && scheduledTime && Math.abs(originalTime.getTime() - scheduledTime.getTime()) > 60_000) {
+      clip.timeDelta = {
+        original: originalTime,
+        final: scheduledTime,
+        editedAt: new Date(),
+      };
+    }
     doc.markModified('generatedContent');
     await doc.save();
 
@@ -365,6 +398,12 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
         hookStyle: clip.hookStyle,
         pacingIntensity: clip.pacingIntensity,
         musicGenre: clip.musicGenre,
+        platform: platform || clip.publishedPlatform,
+        // Final values that the user actually shipped — these drive the
+        // publishHours / publishDays / avgCaptionLength updates inside
+        // styleLearningService.
+        caption: userCaption || clip.caption,
+        publishedAt: clip.publishedAt,
       });
     } catch (e) {
       logger.warn('learnFromPublishedClip failed; publish still succeeded', { error: e.message });
@@ -375,6 +414,8 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
       clipId,
       published: true,
       publishedAt: clip.publishedAt,
+      captionEdited: !!clip.captionDelta,
+      timeEdited: !!clip.timeDelta,
       learned: !!learnResult?.success,
       preferredPresetId: learnResult?.preferredPresetId || null,
     });

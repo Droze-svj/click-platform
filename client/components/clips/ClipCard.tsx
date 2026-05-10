@@ -37,6 +37,12 @@ export interface Clip {
   publishedAt?: string | null
   folder?: { id: string; name: string; color: string } | null
   captions?: Array<{ start: number; end: number; text: string }>
+  // Smart Publish suggestions written by smartPublishService at edit time.
+  // The drawer uses these as editable defaults; deltas feed the learning loop.
+  recommendedCaptions?: { tiktok?: string; shorts?: string; reels?: string; x?: string } | null
+  recommendedHashtags?: { tiktok?: string[]; shorts?: string[]; reels?: string[]; x?: string[] } | null
+  recommendedSlots?: Array<{ platform: string; isoTime: string; score: number; confidence: string; reason: string }>
+  publishRationale?: string | null
 }
 
 interface Props {

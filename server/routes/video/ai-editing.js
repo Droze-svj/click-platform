@@ -369,8 +369,45 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
         editedUrl: result.editedVideoUrl,
         editsCount: result.editsApplied?.length || 0
       });
+
+      // Smart Publish suggestion: per-platform captions + best publish
+      // slots, attached to the freshly-saved clip in Mongo so the
+      // SchedulePublishDrawer can render them as editable defaults.
+      // Best-effort — a suggestion failure must not break the edit
+      // success path. Runs in setImmediate so we return to the client
+      // immediately rather than blocking on the LLM round-trip.
+      let publishSuggestion = null;
+      try {
+        const { buildPublishSuggestion } = require('../../services/smartPublishService');
+        publishSuggestion = await buildPublishSuggestion({
+          userId,
+          contentId: videoId,
+          clip: result,
+          platforms: ['tiktok', 'shorts', 'reels'],
+          niche: resolvedOptions.niche || 'general',
+          language: resolvedOptions.language || 'en',
+        });
+        // Persist the suggestion onto the most-recent clip (the one we
+        // just appended). Index lookup by url is robust across the
+        // inconsistent clip._id shapes the model uses.
+        if (publishSuggestion && result.editedVideoUrl) {
+          await Content.updateOne(
+            { _id: videoId, 'generatedContent.shortVideos.url': result.editedVideoUrl },
+            { $set: {
+              'generatedContent.shortVideos.$.recommendedCaptions': publishSuggestion.captions,
+              'generatedContent.shortVideos.$.recommendedHashtags': publishSuggestion.hashtags,
+              'generatedContent.shortVideos.$.recommendedSlots':    publishSuggestion.recommendedSlots,
+              'generatedContent.shortVideos.$.publishRationale':    publishSuggestion.rationale,
+            } }
+          ).catch((e) => logger.warn('Persist publishSuggestion failed', { videoId, error: e.message }));
+        }
+      } catch (e) {
+        logger.warn('buildPublishSuggestion failed (non-fatal)', { videoId, error: e.message });
+      }
+
       sendSuccess(res, 'Video automatically edited and saved successfully', 200, {
         ...result,
+        publishSuggestion,
         message: `Video has been automatically edited with ${result.editsApplied?.length || 0} improvements applied. The edited video has replaced the original.`,
       });
     } else {

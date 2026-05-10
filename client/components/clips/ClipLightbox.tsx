@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import type { Clip } from './ClipCard'
 import { apiPost, apiDelete } from '../../lib/api'
+import SchedulePublishDrawer from './SchedulePublishDrawer'
 
 interface Props {
   clips: Clip[]
@@ -61,6 +62,7 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
   const clip = clips[index]
   const videoRef = useRef<HTMLVideoElement>(null)
   const [busy, setBusy] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   // Time-synced caption layer. Backed by clip.captions (server pulls these
   // from keyMoments). Active when the current playhead is inside [start,end].
   // Renders even when the exported MP4 has no burn-in text — useful for the
@@ -118,24 +120,13 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
     }
   }
 
-  const publish = async () => {
+  // Replaces the old direct-publish flow. Opens the SchedulePublishDrawer
+  // which renders the AI's caption + best-time suggestion as editable
+  // defaults; the drawer itself does the apiPost with originals attached
+  // so the learning loop can capture deltas.
+  const publish = () => {
     if (busy || !clip || clip.published) return
-    setBusy(true)
-    onClipChange?.({ ...clip, published: true, publishedAt: new Date().toISOString() })
-    try {
-      const res: any = await apiPost(`/video/clips/${clip.contentId}/${clip.id}/publish`, {})
-      const data = res?.data || res
-      if (data?.learned && typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('toast', { detail: {
-          message: 'Published. Click learned this style is yours.',
-          type: 'success',
-        }}))
-      }
-    } catch (_) {
-      onClipChange?.({ ...clip, published: false, publishedAt: null })
-    } finally {
-      setBusy(false)
-    }
+    setDrawerOpen(true)
   }
 
   const remove = async () => {
@@ -379,6 +370,12 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
           </div>
         </div>
       </div>
+      <SchedulePublishDrawer
+        open={drawerOpen}
+        clip={clip}
+        onClose={() => setDrawerOpen(false)}
+        onPublished={(next) => { onClipChange?.(next); setDrawerOpen(false) }}
+      />
     </div>,
     document.body
   )

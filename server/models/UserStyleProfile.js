@@ -53,6 +53,17 @@ const userStyleProfileSchema = new mongoose.Schema({
   transitions:  { type: [counterSchema], default: [] },
   niches:       { type: [counterSchema], default: [] },
   platforms:    { type: [counterSchema], default: [] },
+  // Added for the Smart Publish + learning loop. presets = stylePresetId
+  // (mrbeast-energy, hormozi-bold, cinematic-doc, ...). hookStyles =
+  // hookStyle option (curiosity-gap, listicle, etc). musicGenres =
+  // selected music genre. publishHours = bucketed hour of day at the
+  // moment the user clicked Schedule (0..23). publishDays = day of week
+  // (0=Sun..6=Sat). All bumped via recordPick().
+  presets:      { type: [counterSchema], default: [] },
+  hookStyles:   { type: [counterSchema], default: [] },
+  musicGenres:  { type: [counterSchema], default: [] },
+  publishHours: { type: [counterSchema], default: [] },
+  publishDays:  { type: [counterSchema], default: [] },
 
   // Performance-weighted versions of the same facets — populated by
   // creatorPerformanceService once a published post's analytics arrive.
@@ -88,7 +99,7 @@ const userStyleProfileSchema = new mongoose.Schema({
  */
 userStyleProfileSchema.statics.recordPick = async function recordPick(userId, facet, key) {
   if (!userId || !facet || !key) return null;
-  const validFacets = ['fonts', 'captionStyles', 'animations', 'motions', 'colorGrades', 'transitions', 'niches', 'platforms'];
+  const validFacets = ['fonts', 'captionStyles', 'animations', 'motions', 'colorGrades', 'transitions', 'niches', 'platforms', 'presets', 'hookStyles', 'musicGenres', 'publishHours', 'publishDays'];
   if (!validFacets.includes(facet)) throw new Error(`Invalid facet: ${facet}`);
 
   // Try to bump an existing counter

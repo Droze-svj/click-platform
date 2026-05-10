@@ -292,6 +292,18 @@ let mongoGaveUp = false;
 
 function connectMongo() {
   if (mongoGaveUp) return Promise.resolve();
+  // initDatabases() (called later) already handles MongoDB connection +
+  // in-memory fallback in dev. If we fire mongoose.connect here against
+  // a bad URI, the failed attempt leaves the default connection in a
+  // buffering state that initDatabases can't recover. Skip in dev so the
+  // in-memory path takes over cleanly. In production, initDatabases is
+  // expected to succeed against the real URI; we still attempt here as
+  // belt-and-suspenders.
+  if (process.env.NODE_ENV !== 'production') {
+    mongoGaveUp = true;
+    logger.info('Secondary connectMongo() skipped in dev — initDatabases() owns the connection.');
+    return Promise.resolve();
+  }
   return mongoose
     .connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
