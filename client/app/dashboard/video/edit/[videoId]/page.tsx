@@ -365,10 +365,10 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+            <button type="button" onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
               {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button onClick={() => router.push('/dashboard/video')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+            <button type="button" onClick={() => router.push('/dashboard/video')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
               <ChevronLeft size={16} />
               Return
             </button>
@@ -394,7 +394,7 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
 
             <div className="space-y-4">
-              <button onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all text-left overflow-hidden">
+              <button type="button" onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all text-left overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 dark:bg-primary-900/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Wand2 className="w-7 h-7 text-primary-600 dark:text-primary-400" />
@@ -411,7 +411,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 </div>
               </button>
 
-              <button onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:shadow-md transition-all text-left overflow-hidden">
+              <button type="button" onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:shadow-md transition-all text-left overflow-hidden">
                 <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Scissors className="w-7 h-7 text-surface-600 dark:text-surface-400" />
                 </div>
@@ -466,14 +466,14 @@ export default function VideoEditPage({ params }: PageProps) {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <button type="button" onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <button onClick={() => handleAnalyzeVideo()} disabled={analyzing} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
+              <button type="button" onClick={() => handleAnalyzeVideo()} disabled={analyzing} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
                 {analyzing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
                 {analyzing ? 'Analyzing...' : 'Analyze Video'}
               </button>
-              <button onClick={() => setEditMode('selection')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+              <button type="button" onClick={() => setEditMode('selection')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
                 <ChevronLeft size={16} /> Return
               </button>
             </div>
@@ -514,10 +514,10 @@ export default function VideoEditPage({ params }: PageProps) {
                     <p className="text-surface-500 font-medium text-sm">Your video has been successfully processed and edited by AI.</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    <button onClick={() => handleEditModeSelect('manual')} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
+                    <button type="button" onClick={() => handleEditModeSelect('manual')} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
                       Open in Editor <ArrowRight size={16} />
                     </button>
-                    <button onClick={() => { setAiEditResult(null); setEditMode('selection'); }} className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                    <button type="button" onClick={() => { setAiEditResult(null); setEditMode('selection'); }} className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                       Dismiss
                     </button>
                   </div>
@@ -642,6 +642,7 @@ export default function VideoEditPage({ params }: PageProps) {
                              const atCap = stylePresetIds.length >= 3 && !active
                              return (
                                <button
+                                 type="button"
                                  key={p.id}
                                  disabled={atCap}
                                  onClick={() => {
@@ -686,7 +687,7 @@ export default function VideoEditPage({ params }: PageProps) {
                               ].map(node => {
                                 const on = !!editingOptions[node.id as keyof typeof editingOptions]
                                 return (
-                                  <button key={node.id} onClick={() => setEditingOptions(prev => ({ ...prev, [node.id]: !prev[node.id as keyof typeof prev] }))} className={`w-full px-4 py-3 rounded-xl border transition-all flex items-center justify-between text-left ${on ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
+                                  <button type="button" key={node.id} onClick={() => setEditingOptions(prev => ({ ...prev, [node.id]: !prev[node.id as keyof typeof prev] }))} className={`w-full px-4 py-3 rounded-xl border transition-all flex items-center justify-between text-left ${on ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
                                     <div>
                                       <p className={`text-sm font-bold ${on ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>{node.label}</p>
                                       <p className={`text-[11px] font-medium mt-0.5 ${on ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>{node.desc}</p>
@@ -710,7 +711,7 @@ export default function VideoEditPage({ params }: PageProps) {
                               <p className="text-xs font-bold text-surface-900 dark:text-white">Aspect ratio</p>
                               <div className="flex flex-wrap gap-2">
                                 {[{ id: 'auto', label: 'Auto' }, { id: 'vertical', label: '9:16' }, { id: 'square', label: '1:1' }, { id: 'standard', label: '16:9' }].map(f => (
-                                  <button key={f.id} onClick={() => setOutputFormat(f.id as 'auto' | 'vertical' | 'square' | 'standard')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${outputFormat === f.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{f.label}</button>
+                                  <button type="button" key={f.id} onClick={() => setOutputFormat(f.id as 'auto' | 'vertical' | 'square' | 'standard')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${outputFormat === f.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{f.label}</button>
                                 ))}
                               </div>
                            </div>
@@ -732,7 +733,7 @@ export default function VideoEditPage({ params }: PageProps) {
                                   { id: 'mid-5-10', label: '1-3m' },
                                   { id: 'full', label: 'Full' }
                                 ].map(o => (
-                                  <button key={o.id} onClick={() => setClipTargetLength(o.id as any)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${clipTargetLength === o.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{o.label}</button>
+                                  <button type="button" key={o.id} onClick={() => setClipTargetLength(o.id as any)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${clipTargetLength === o.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{o.label}</button>
                                 ))}
                               </div>
                            </div>
@@ -741,7 +742,7 @@ export default function VideoEditPage({ params }: PageProps) {
                               <p className="text-xs font-bold text-surface-900 dark:text-white">Pacing</p>
                               <div className="flex gap-2">
                                 {(['gentle', 'medium', 'aggressive'] as const).map(p => (
-                                  <button key={p} onClick={() => setPacingIntensity(p)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors border ${pacingIntensity === p ? 'bg-primary-500 text-white border-primary-500' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{p}</button>
+                                  <button type="button" key={p} onClick={() => setPacingIntensity(p)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors border ${pacingIntensity === p ? 'bg-primary-500 text-white border-primary-500' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{p}</button>
                                 ))}
                               </div>
                            </div>
@@ -753,7 +754,7 @@ export default function VideoEditPage({ params }: PageProps) {
                           that map 1:1 to backend options. Hidden by default
                           so the basic flow stays simple. */}
                       <div className="border-t border-surface-200 dark:border-surface-800 pt-6">
-                         <button onClick={() => setAdvancedOpen(o => !o)} className="w-full flex items-center justify-between text-left group">
+                         <button type="button" onClick={() => setAdvancedOpen(o => !o)} className="w-full flex items-center justify-between text-left group">
                             <div className="flex items-center gap-3">
                                <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
                                   <Settings size={16} className="text-surface-600 dark:text-surface-400" />
@@ -795,7 +796,7 @@ export default function VideoEditPage({ params }: PageProps) {
                                       <p className="text-[10px] font-medium text-surface-500">Sine-modulate clip pace for energy</p>
                                    </div>
                                 </div>
-                                <button onClick={() => setSpeedRamping(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${speedRamping ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
+                                <button type="button" aria-label={`Toggle speed ramping`} onClick={() => setSpeedRamping(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${speedRamping ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
                                    <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
                                 </button>
                              </div>
@@ -808,7 +809,7 @@ export default function VideoEditPage({ params }: PageProps) {
                                       <p className="text-[10px] font-medium text-surface-500">Bias the first 3s for retention</p>
                                    </div>
                                 </div>
-                                <button onClick={() => setPrioritizeHook(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${prioritizeHook ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
+                                <button type="button" aria-label={`Toggle prioritize hook`} onClick={() => setPrioritizeHook(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${prioritizeHook ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
                                    <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
                                 </button>
                              </div>
@@ -889,7 +890,7 @@ export default function VideoEditPage({ params }: PageProps) {
 
                       {/* Submit */}
                       <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
-                         <button onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                         <button type="button" onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white disabled:opacity-50 disabled:cursor-not-allowed">
                            {processing ? <RefreshCw size={20} className="animate-spin" /> : <Wand2 size={20} />}
                            {processing ? 'Composing your edit…' : `Compose ${clipCount} clip${clipCount === 1 ? '' : 's'}`}
                          </button>

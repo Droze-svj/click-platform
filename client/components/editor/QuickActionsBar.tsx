@@ -117,22 +117,27 @@ export default function QuickActionsBar({
   })()
 
   return (
-    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-md border-b border-white/5">
-      <Action icon={Wand2} label="Apply my style" loading={busy === 'apply'}
-              onClick={handleApplyStyle} accent="primary" />
+    // overflow-x-auto + flex-nowrap: rail scrolls horizontally on small
+    // screens instead of being hidden, so mobile users can still tap
+    // every action. The min-w-max trick keeps actions from squishing.
+    <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-black/30 backdrop-blur-md border-b border-white/5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-2 min-w-max">
+        <Action icon={Wand2} label="Apply my style" loading={busy === 'apply'}
+                onClick={handleApplyStyle} accent="primary" />
 
-      {onSplitAtPlayhead && (
-        <Action icon={Scissors} label="Split at playhead"
-                onClick={onSplitAtPlayhead} hotkey="S" />
-      )}
-      <Action icon={Type}    label="Captions"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
-      <Action icon={Palette} label="Grade"     onClick={() => setActiveCategory('color')}      hotkey="5" />
-      <Action icon={Zap}     label="Effects"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
-      <Action icon={Sparkles} label="AI"       onClick={() => setActiveCategory('ai')}         hotkey="A" />
+        {onSplitAtPlayhead && (
+          <Action icon={Scissors} label="Split" longLabel="Split at playhead"
+                  onClick={onSplitAtPlayhead} hotkey="S" />
+        )}
+        <Action icon={Type}    label="Captions"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
+        <Action icon={Palette} label="Grade"     onClick={() => setActiveCategory('color')}      hotkey="5" />
+        <Action icon={Zap}     label="Effects"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
+        <Action icon={Sparkles} label="AI"       onClick={() => setActiveCategory('ai')}         hotkey="A" />
+      </div>
 
       {learnedLabel && (
         <span
-          className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest text-emerald-300"
+          className="hidden md:inline-flex ml-auto items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest text-emerald-300 flex-shrink-0"
           title={`Click learned from ${insight!.totalPicks} of your published clips`}
         >
           <Brain className="w-3 h-3" />
@@ -146,6 +151,7 @@ export default function QuickActionsBar({
 function Action({
   icon: Icon,
   label,
+  longLabel,
   onClick,
   hotkey,
   loading,
@@ -153,6 +159,8 @@ function Action({
 }: {
   icon: any
   label: string
+  /** Full label shown on md+ screens; short `label` shown otherwise. */
+  longLabel?: string
   onClick: () => void
   hotkey?: string
   loading?: boolean
@@ -171,9 +179,16 @@ function Action({
       title={hotkey ? `${label} (${hotkey})` : label}
     >
       {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
-      {label}
+      {longLabel ? (
+        <>
+          <span className="hidden md:inline">{longLabel}</span>
+          <span className="md:hidden">{label}</span>
+        </>
+      ) : (
+        <span>{label}</span>
+      )}
       {hotkey && (
-        <kbd className="hidden md:inline-block ml-1 px-1 py-0 rounded bg-black/30 border border-white/10 text-[9px] font-mono text-slate-300">
+        <kbd className="hidden lg:inline-block ml-1 px-1 py-0 rounded bg-black/30 border border-white/10 text-[9px] font-mono text-slate-300">
           {hotkey}
         </kbd>
       )}
