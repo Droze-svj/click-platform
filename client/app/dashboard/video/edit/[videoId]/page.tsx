@@ -179,7 +179,12 @@ export default function VideoEditPage({ params }: PageProps) {
   // server/services/aiVideoEditingService.js or clipStylePresets.js — no
   // placebo controls. Defaults are chosen so a "do nothing" run still
   // produces a strong creator-grade clip.
-  const [stylePresetId, setStylePresetId] = useState<string>('')
+  //
+  // Multi-preset: backend's variation expansion supports up to 3 presets.
+  // Each preset adds 3 variations (Big Stakes / Pattern Break / Reveal
+  // Loop on MrBeast Energy, etc.), so picking 2 presets at clipCount=6
+  // produces 6 visibly distinct clips (3 from each angle).
+  const [stylePresetIds, setStylePresetIds] = useState<string[]>([])
   const [hookStyle, setHookStyle] = useState<'auto' | 'question' | 'stat' | 'mystery' | 'story' | 'bold-claim' | 'pattern-break'>('auto')
   const [musicGenre, setMusicGenre] = useState<'auto' | 'phonk' | 'lofi' | 'cinematic' | 'synthwave' | 'upbeat-pop' | 'chill' | 'dark-ambient'>('auto')
   const [colorGrade, setColorGrade] = useState<'auto' | 'vivid' | 'cinematic' | 'natural' | 'cool' | 'warm' | 'vintage' | 'bw'>('auto')
@@ -192,7 +197,53 @@ export default function VideoEditPage({ params }: PageProps) {
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(false)
   const [editJobId, setEditJobId] = useState<string | null>(null)
   const [newVideoScore, setNewVideoScore] = useState<{ score: number; factors?: { name: string; value: string; impact: string }[] } | null>(null)
+  // Resolved style insight from the publish→learn loop. When the user
+  // has ≥3 publishes, we pre-select their top preset / color grade /
+  // hook style so the HUD opens already biased toward their style. The
+  // user can still override anything before submitting.
+  const [styleInsight, setStyleInsight] = useState<{
+    source: 'user' | 'team' | 'defaults'
+    totalPicks: number
+    topPicks?: {
+      preset?: string | null
+      colorGrade?: string | null
+      hookStyle?: string | null
+      musicGenre?: string | null
+      transition?: string | null
+      captionStyle?: string | null
+    }
+  } | null>(null)
+  const [insightApplied, setInsightApplied] = useState<boolean>(false)
   const videoPreviewRef = useRef<HTMLVideoElement>(null)
+
+  // Fetch style insight once on mount. When source==='user' (≥3
+  // publishes), bias the AI Director defaults to the user's top picks
+  // so the panel feels like Click already knows their style. We mark
+  // insightApplied so the bias only runs once — subsequent changes the
+  // user makes are sticky.
+  useEffect(() => {
+    if (insightApplied) return
+    apiGet<any>('/video/clips/style-insight')
+      .then((res: any) => {
+        const data = res?.data ?? res
+        if (!data || typeof data !== 'object') return
+        setStyleInsight(data)
+        if (data.source !== 'user') return  // only auto-bias when user has real history
+        const top = data.topPicks || {}
+        if (top.preset && stylePresetIds.length === 0 && STYLE_PRESETS.some(p => p.id === top.preset)) {
+          setStylePresetIds([top.preset])
+        }
+        if (top.colorGrade && colorGrade === 'auto') setColorGrade(top.colorGrade as any)
+        if (top.hookStyle && hookStyle === 'auto') setHookStyle(top.hookStyle as any)
+        if (top.musicGenre && musicGenre === 'auto') setMusicGenre(top.musicGenre as any)
+        if (top.transition && transitionStyle === 'auto') setTransitionStyle(top.transition as any)
+        if (top.captionStyle) setCaptionStyle(top.captionStyle)
+        setInsightApplied(true)
+      })
+      .catch(() => { /* no learned data yet — defaults stand */ })
+    // Run once on mount; we deliberately don't track changing values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!aiEditResult || !videoId) return
@@ -244,8 +295,15 @@ export default function VideoEditPage({ params }: PageProps) {
         prioritizeHook,
         aspectFormats: exportFormats,
         pacingIntensity,
-        // Style preset (drives variation expansion server-side)
-        ...(stylePresetId ? { stylePresetIds: [stylePresetId], stylePresetId } : {}),
+        // Style presets (drives variation expansion server-side). When
+        // user picks 1 preset, also send `stylePresetId` for back-compat
+        // with anywhere the backend still reads the singular form.
+        ...(stylePresetIds.length > 0
+          ? {
+            stylePresetIds,
+            ...(stylePresetIds.length === 1 ? { stylePresetId: stylePresetIds[0] } : {}),
+          }
+          : {}),
         // Granular controls — only forward non-'auto' picks so the
         // backend's intelligent defaults still kick in when the user
         // hasn't overridden a dimension.
@@ -551,27 +609,56 @@ export default function VideoEditPage({ params }: PageProps) {
                          </div>
                          <div className="flex-1">
                             <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">AI Director</h2>
-                            <p className="text-sm font-medium text-surface-500 mt-1">Pick a style or fine-tune every dimension. {stylePresetId && <span className="text-primary-600 dark:text-primary-400 font-bold">· Preset: {STYLE_PRESETS.find(p => p.id === stylePresetId)?.label}</span>}</p>
+                            <p className="text-sm font-medium text-surface-500 mt-1">
+                              Pick up to 3 styles or fine-tune every dimension.
+                              {stylePresetIds.length > 0 && (
+                                <span className="text-primary-600 dark:text-primary-400 font-bold">
+                                  {' · '}{stylePresetIds.length} preset{stylePresetIds.length === 1 ? '' : 's'}: {stylePresetIds.map(id => STYLE_PRESETS.find(p => p.id === id)?.label).filter(Boolean).join(' + ')}
+                                </span>
+                              )}
+                            </p>
                          </div>
                       </div>
 
                       {/* Style Preset Gallery — visual cards for each of
-                          the 8 presets. Selecting one biases everything
-                          downstream; user can still override individual
-                          controls below. */}
+                          the 8 presets. Multi-select up to 3: each
+                          selection adds 3 variation angles to the render
+                          plan, so 2 presets at clipCount=6 → 6 distinct
+                          clips (3 angles × 2 presets). Selection order
+                          is shown as a numbered badge. */}
                       <div className="space-y-4">
                          <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
                            <Sparkles size={14} className="text-primary-500" /> Style preset
+                           {stylePresetIds.length > 0 && (
+                             <span className="ml-auto text-[10px] text-surface-400 font-medium normal-case tracking-normal">
+                               {stylePresetIds.length}/3 selected · click again to remove
+                             </span>
+                           )}
                          </label>
                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                            {STYLE_PRESETS.map(p => {
-                             const active = stylePresetId === p.id
+                             const orderIndex = stylePresetIds.indexOf(p.id)
+                             const active = orderIndex !== -1
+                             const atCap = stylePresetIds.length >= 3 && !active
                              return (
                                <button
                                  key={p.id}
-                                 onClick={() => setStylePresetId(active ? '' : p.id)}
-                                 className={`p-4 rounded-2xl border text-left transition-all ${active ? `bg-gradient-to-br ${p.accent} border-transparent shadow-md scale-[1.02]` : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}
+                                 disabled={atCap}
+                                 onClick={() => {
+                                   setStylePresetIds(prev => {
+                                     if (prev.includes(p.id)) return prev.filter(id => id !== p.id)
+                                     if (prev.length >= 3) return prev
+                                     return [...prev, p.id]
+                                   })
+                                 }}
+                                 className={`relative p-4 rounded-2xl border text-left transition-all ${active ? `bg-gradient-to-br ${p.accent} border-transparent shadow-md scale-[1.02]` : atCap ? 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 opacity-40 cursor-not-allowed' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}
+                                 title={atCap ? 'Up to 3 presets — remove one to swap' : active ? `Selected #${orderIndex + 1} — click to remove` : `Add to render plan`}
                                >
+                                 {active && (
+                                   <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/95 text-surface-900 text-xs font-black flex items-center justify-center shadow-sm tabular-nums">
+                                     {orderIndex + 1}
+                                   </span>
+                                 )}
                                  <div className="text-2xl mb-2">{p.emoji}</div>
                                  <p className={`text-sm font-black tracking-tight ${active ? 'text-white' : 'text-surface-900 dark:text-white'}`}>{p.label}</p>
                                  <p className={`text-[10px] font-medium mt-1 ${active ? 'text-white/80' : 'text-surface-500'}`}>{p.tagline}</p>
@@ -729,6 +816,77 @@ export default function VideoEditPage({ params }: PageProps) {
                          )}
                       </div>
 
+                      {/* Live AI Plan — recomposes itself on every state
+                          change so the user can see exactly what the
+                          AI is about to do before clicking Compose. The
+                          processing-time estimate is heuristic but
+                          calibrated against real auto-edit jobs:
+                          ~25s per clip + 5s per active task + 10s if
+                          captions are on (Whisper transcription is the
+                          long pole). */}
+                      {(() => {
+                        const tasksOn = Object.values(editingOptions).filter(Boolean).length
+                        const presets = stylePresetIds.map(id => STYLE_PRESETS.find(p => p.id === id)).filter(Boolean) as typeof STYLE_PRESETS[number][]
+                        const variations = stylePresetIds.length === 0 ? 1 : Math.min(stylePresetIds.length * 3, 9)
+                        const estSeconds = Math.max(15, clipCount * 25 + tasksOn * 5 + ((editingOptions as any).addCaptions ? 10 : 0))
+                        const estLabel = estSeconds < 60 ? `~${estSeconds}s` : `~${Math.ceil(estSeconds / 60)}m`
+                        const learnedNow = styleInsight?.source === 'user' && insightApplied && stylePresetIds.length > 0
+                        const aspectLabel = outputFormat === 'auto' ? 'Auto-fit' : outputFormat === 'vertical' ? '9:16' : outputFormat === 'square' ? '1:1' : '16:9'
+                        const lengthLabel = clipTargetLength === 'short' ? '<30s' : clipTargetLength === 'mid-3-5' ? '30-60s' : clipTargetLength === 'mid-5-10' ? '1-3m' : 'Full'
+                        return (
+                          <div className="rounded-2xl bg-gradient-to-br from-primary-500/[0.06] via-transparent to-primary-500/[0.04] border border-primary-200/50 dark:border-primary-700/30 p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-primary-500/15 border border-primary-300/40 dark:border-primary-700/40 flex items-center justify-center">
+                                <Sparkle size={13} className="text-primary-600 dark:text-primary-400" />
+                              </div>
+                              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-primary-700 dark:text-primary-300">AI Plan</p>
+                              {learnedNow && (
+                                <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                                  <Brain size={10} /> Pre-loaded your style
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-surface-800 dark:text-surface-200 leading-relaxed">
+                              Compose <span className="font-black">{clipCount}</span> {aspectLabel} clip{clipCount === 1 ? '' : 's'}, target <span className="font-black">{lengthLabel}</span>
+                              {presets.length > 0 ? (
+                                <> across <span className="font-black">{presets.map(p => p.label).join(' + ')}</span> ({variations} variation angles)</>
+                              ) : (
+                                <> with <span className="font-black">auto-detected</span> style</>
+                              )}
+                              {colorGrade !== 'auto' && <>, <span className="font-black capitalize">{colorGrade.replace('-', ' ')}</span> color grade</>}
+                              {hookStyle !== 'auto' && <>, <span className="font-black capitalize">{hookStyle.replace('-', ' ')}</span> hook</>}
+                              {pacingIntensity !== 'medium' && <>, <span className="font-black capitalize">{pacingIntensity}</span> pacing</>}
+                              {speedRamping && <>, speed-ramping on</>}
+                              {brollFrequency !== 'off' && brollFrequency !== 'balanced' && <>, <span className="font-black capitalize">{brollFrequency}</span> B-roll</>}
+                              .
+                            </p>
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
+                                <Cpu size={10} /> {tasksOn} task{tasksOn === 1 ? '' : 's'}
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
+                                <Activity size={10} /> est {estLabel}
+                              </span>
+                              {(editingOptions as any).addCaptions && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
+                                  <Type size={10} /> Captions
+                                </span>
+                              )}
+                              {(editingOptions as any).enhanceColor && colorGrade === 'auto' && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
+                                  <Palette size={10} /> Auto-grade
+                                </span>
+                              )}
+                              {speedRamping && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
+                                  <Gauge size={10} /> Speed ramp
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })()}
+
                       {/* Submit */}
                       <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
                          <button onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white disabled:opacity-50 disabled:cursor-not-allowed">
@@ -736,7 +894,9 @@ export default function VideoEditPage({ params }: PageProps) {
                            {processing ? 'Composing your edit…' : `Compose ${clipCount} clip${clipCount === 1 ? '' : 's'}`}
                          </button>
                          <p className="text-[10px] text-center text-surface-500 mt-3 font-medium">
-                           {stylePresetId ? `Using ${STYLE_PRESETS.find(p => p.id === stylePresetId)?.label} preset` : 'Auto-select preset based on your content'}
+                           {stylePresetIds.length > 0
+                             ? `Using ${stylePresetIds.map(id => STYLE_PRESETS.find(p => p.id === id)?.label).filter(Boolean).join(' + ')}`
+                             : 'Auto-select preset based on your content'}
                            {' · '}
                            {Object.values(editingOptions).filter(Boolean).length} task{Object.values(editingOptions).filter(Boolean).length === 1 ? '' : 's'} on
                          </p>
