@@ -182,7 +182,17 @@ export default function VideoEditPage({ params }: PageProps) {
       }
       const result = await apiPost('/video/ai-editing/auto-edit', { videoId, editingOptions: backendOptions, outputFormat })
       const jobId = result.data?.jobId || result.jobId
-      if (jobId) setEditJobId(jobId)
+      if (jobId) {
+        setEditJobId(jobId)
+      } else {
+        // Synchronous success (no jobId) — capture the result so the
+        // success UI renders, then redirect to the clip hub for this
+        // video so the user lands on their fresh clips with the AI's
+        // recommended captions + slots already populated.
+        setAiEditResult(result)
+        setProcessing(false)
+        setTimeout(() => router.push(`/dashboard/clips/hub/${videoId}`), 1200)
+      }
     } catch (error: any) {
       setProcessing(false)
     }
@@ -342,7 +352,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 <p className="text-surface-500 font-medium mb-10 text-sm">Our AI is currently analyzing, cutting, and optimizing your video...</p>
                 {editJobId ? (
                   <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
-                     <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); }} onError={() => { setProcessing(false); }} />
+                     <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); setTimeout(() => router.push(`/dashboard/clips/hub/${videoId}`), 1200); }} onError={() => { setProcessing(false); }} />
                   </div>
                 ) : (
                   <div className="space-y-4">

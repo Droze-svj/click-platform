@@ -8,6 +8,26 @@ function CheckIcon() {
   return <Check className="w-3.5 h-3.5 text-white" />
 }
 
+/**
+ * Pretty-print a recommended publish slot ISO timestamp into the compact
+ * "Today 7pm" / "Tomorrow 8am" / "Tue 7pm" form used on the card preview.
+ * Mirrors slotLabel() in SchedulePublishDrawer so both surfaces speak the
+ * same language. Returns the raw iso if it's unparseable.
+ */
+function formatSlot(iso: string): string {
+  const d = new Date(iso)
+  if (!Number.isFinite(d.getTime())) return iso
+  const hour = d.getHours()
+  const ap = hour < 12 ? 'am' : 'pm'
+  const h12 = ((hour + 11) % 12) + 1
+  const today = new Date()
+  if (d.toDateString() === today.toDateString()) return `Today ${h12}${ap}`
+  const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1)
+  if (d.toDateString() === tomorrow.toDateString()) return `Tomorrow ${h12}${ap}`
+  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
+  return `${day} ${h12}${ap}`
+}
+
 export interface Clip {
   id: string
   contentId: string
@@ -248,6 +268,33 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
         <p className="text-sm font-bold text-white leading-snug line-clamp-3">
           {clip.caption || clip.highlight || 'Untitled clip'}
         </p>
+
+        {/* Smart Publish suggestion preview — when smartPublishService has
+             populated this clip with a recommended slot or caption, surface
+             a quiet hint so users see the AI's plan without opening the
+             lightbox. Hides cleanly when no suggestion exists. */}
+        {(() => {
+          const topSlot = Array.isArray(clip.recommendedSlots) && clip.recommendedSlots.length > 0
+            ? clip.recommendedSlots[0]
+            : null
+          if (!topSlot && !clip.recommendedCaptions) return null
+          const slotLabel = topSlot ? formatSlot(topSlot.isoTime) : null
+          const platform = topSlot?.platform || 'tiktok'
+          const suggestedCaption = clip.recommendedCaptions?.[platform as keyof typeof clip.recommendedCaptions]
+          return (
+            <div className="rounded-lg bg-indigo-500/[0.08] border border-indigo-500/20 px-2.5 py-2 space-y-1">
+              <p className="text-[9px] font-black uppercase tracking-widest text-indigo-300 flex items-center gap-1.5">
+                <Sparkles className="w-2.5 h-2.5" />
+                AI plan{slotLabel ? ` · ${slotLabel}` : ''}
+              </p>
+              {suggestedCaption && (
+                <p className="text-[11px] text-slate-300 leading-snug line-clamp-2 italic">
+                  "{suggestedCaption}"
+                </p>
+              )}
+            </div>
+          )
+        })()}
 
         {clip.editsApplied && clip.editsApplied.length > 0 && (
           <div className="flex flex-wrap gap-1">

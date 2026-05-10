@@ -136,12 +136,34 @@ function fmt(n: number | null | undefined): string {
   return n.toLocaleString()
 }
 
+interface StyleInsight {
+  source: 'user' | 'team' | 'defaults'
+  totalPicks: number
+  topPicks: {
+    preset?: string | null
+    captionStyle?: string | null
+    hookStyle?: string | null
+    colorGrade?: string | null
+    transition?: string | null
+    musicGenre?: string | null
+    platform?: string | null
+    publishHour?: string | null
+    publishDay?: string | null
+  }
+  hint?: string | null
+}
+
 export default function NeuralDashboard() {
   const { user } = useAuth() as any
   const { resolvedTheme, toggle } = useTheme()
   const [stats, setStats] = useState<DashboardStat[]>([])
   const [apiStatus, setApiStatus] = useState<'online' | 'offline' | 'checking'>('checking')
   const [loading, setLoading] = useState(true)
+  // Real learned-style data from /api/video/clips/style-insight, populated
+  // by the publish→learn loop. Replaces the previously-hardcoded
+  // 'Pattern-Interrupt hooks lift retention 14%' marketing copy with the
+  // user's actual top picks.
+  const [styleInsight, setStyleInsight] = useState<StyleInsight | null>(null)
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
@@ -150,11 +172,14 @@ export default function NeuralDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [health, analyticsRes, integrationsRes] = await Promise.allSettled([
+      const [health, analyticsRes, integrationsRes, insightRes] = await Promise.allSettled([
         fetch('/api/health'),
         apiGet<any>('/analytics/dashboard'),
         apiGet<any>('/integrations'),
+        apiGet<any>('/video/clips/style-insight'),
       ])
+      const insight = insightRes.status === 'fulfilled' ? (insightRes.value?.data ?? insightRes.value) : null
+      if (insight && typeof insight === 'object') setStyleInsight(insight as StyleInsight)
 
       setApiStatus(health.status === 'fulfilled' && health.value.ok ? 'online' : 'offline')
 
@@ -295,12 +320,39 @@ export default function NeuralDashboard() {
                     <div className="flex items-center gap-2">
                       <Brain size={18} className="text-primary-600 dark:text-primary-400" />
                       <span className="text-sm font-bold text-surface-900 dark:text-surface-50">Strategy Insight</span>
+                      {styleInsight && (
+                        <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-surface-500">
+                          {styleInsight.source === 'user' ? 'Your style' : styleInsight.source === 'team' ? 'Team style' : 'Starter'}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
-                      Our neural model predicts a 14% increase in retention if you utilize <span className="text-surface-900 dark:text-surface-50 font-semibold">Pattern-Interrupt</span> hooks in your next 3 videos.
+                      {(() => {
+                        // Real learned-style data replaces the previously-hardcoded
+                        // 'Pattern-Interrupt' marketing copy. Three states:
+                        // (1) no data yet → coaching hint, (2) some picks → top
+                        // preset/hook explanation, (3) rich → multi-dimensional sentence.
+                        if (!styleInsight || styleInsight.totalPicks === 0) {
+                          return 'Publish your first 3 clips and Click will start surfacing your learned style here — top hooks, color grades, and best publish hours.'
+                        }
+                        const top = styleInsight.topPicks || {}
+                        const parts: string[] = []
+                        if (top.preset) parts.push(<>your top preset is <span key="p" className="text-surface-900 dark:text-surface-50 font-semibold">{top.preset}</span></> as any)
+                        if (top.hookStyle) parts.push(<>your hooks lean <span key="h" className="text-surface-900 dark:text-surface-50 font-semibold">{top.hookStyle}</span></> as any)
+                        if (top.publishHour) parts.push(<>you ship best at <span key="t" className="text-surface-900 dark:text-surface-50 font-semibold">{top.publishHour}:00</span></> as any)
+                        if (parts.length === 0) return styleInsight.hint || 'Click is learning your style — publish more clips to refine.'
+                        // Render a real React fragment so the inline emphasis renders.
+                        return (
+                          <>
+                            From <span className="text-surface-900 dark:text-surface-50 font-semibold">{styleInsight.totalPicks}</span> publishes Click learned: {parts.map((p, i) => (
+                              <span key={i}>{i > 0 ? (i === parts.length - 1 ? ', and ' : ', ') : ''}{p as any}</span>
+                            ))}.
+                          </>
+                        ) as any
+                      })()}
                     </p>
-                    <Link href="/dashboard/scripts" className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline">
-                      Optimize Scripts <ArrowRight size={14} />
+                    <Link href="/dashboard/clips/hub" className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline">
+                      {styleInsight && styleInsight.totalPicks > 0 ? 'See your clips' : 'Generate your first clip'} <ArrowRight size={14} />
                     </Link>
                   </div>
 
