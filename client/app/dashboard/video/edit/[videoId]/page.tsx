@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useSocket } from '../../../../../hooks/useSocket'
-import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun, Wand2, Scissors } from 'lucide-react'
+import { Sparkles, Edit3, Play, Loader2, AlertCircle, Settings, CheckCircle2, XCircle, Download, Eye, BarChart3, Award, Edit, Zap, ChevronDown, ChevronRight, ChevronLeft, ChevronUp, Palette, Fingerprint, Cpu, RefreshCw, Activity, Brain, Terminal, Globe, LayoutGrid, Layers, ArrowLeft, ArrowRight, Sparkle, Video, TrendingUp, Layout, Moon, Sun, Wand2, Scissors, Music, Type, Hash, Flame, Mic, Film, Gauge } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
@@ -46,6 +46,56 @@ const STORAGE_KEYS = {
   exportFormats: 'click-ai-edit-export-formats',
   pacingIntensity: 'click-ai-edit-pacing-intensity',
 } as const
+
+// Style presets — mirror server/services/clipStylePresets.js (the eight
+// presets that drive variation expansion + per-clip overrides). emoji +
+// tagline + accent gradient are display-only.
+const STYLE_PRESETS = [
+  { id: 'mrbeast-energy',     label: 'MrBeast Energy',     emoji: '⚡',  tagline: 'Big stakes · pattern break',   accent: 'from-amber-500 to-orange-700' },
+  { id: 'hormozi-bold',       label: 'Hormozi Bold',       emoji: '💎',  tagline: 'Hard stat · contrarian take',  accent: 'from-rose-500 to-rose-800' },
+  { id: 'cinematic-doc',      label: 'Cinematic Doc',      emoji: '🎬',  tagline: 'Slow burn · whisper cut',      accent: 'from-indigo-600 to-violet-800' },
+  { id: 'educational-clean',  label: 'Educational Clean',  emoji: '📚',  tagline: 'Question frame · fact drop',   accent: 'from-emerald-500 to-emerald-800' },
+  { id: 'news-authority',     label: 'News Authority',     emoji: '📰',  tagline: 'Headline · breaking · expert', accent: 'from-slate-600 to-slate-900' },
+  { id: 'casual-vlog',        label: 'Casual Vlog',        emoji: '🎙️', tagline: 'Day-in-life · conversational',  accent: 'from-sky-500 to-cyan-700' },
+  { id: 'mystery-hook',       label: 'Mystery Hook',       emoji: '🕯️', tagline: 'Curiosity loop · slow reveal',  accent: 'from-fuchsia-600 to-purple-800' },
+  { id: 'gym-grit',           label: 'Gym Grit',           emoji: '🔥',  tagline: 'High-intensity · tough love',   accent: 'from-red-600 to-orange-800' },
+] as const
+
+// Compact select-card used inside the Advanced collapsible. One file-local
+// component — keeps the markup of each option-row identical and avoids
+// 9 copies of the same JSX.
+function SelectCard<T extends string>({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  icon: any
+  label: string
+  value: T
+  onChange: (v: T) => void
+  options: readonly T[]
+}) {
+  return (
+    <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-2">
+      <div className="flex items-center gap-2">
+        <Icon size={14} className="text-primary-500" />
+        <p className="text-xs font-bold text-surface-900 dark:text-white">{label}</p>
+      </div>
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg px-3 py-2 text-xs font-bold text-surface-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/40 capitalize"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>{String(o).replace(/-/g, ' ')}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
 
 export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
@@ -125,6 +175,21 @@ export default function VideoEditPage({ params }: PageProps) {
   const [exportFormats, setExportFormats] = useState<('9:16' | '1:1' | '16:9')[]>(['9:16'])
   const [pacingIntensity, setPacingIntensity] = useState<'gentle' | 'medium' | 'aggressive'>('medium')
   const [editPreset, setEditPreset] = useState<string>('')
+  // Richer AI-edit controls. Every value here is consumed by
+  // server/services/aiVideoEditingService.js or clipStylePresets.js — no
+  // placebo controls. Defaults are chosen so a "do nothing" run still
+  // produces a strong creator-grade clip.
+  const [stylePresetId, setStylePresetId] = useState<string>('')
+  const [hookStyle, setHookStyle] = useState<'auto' | 'question' | 'stat' | 'mystery' | 'story' | 'bold-claim' | 'pattern-break'>('auto')
+  const [musicGenre, setMusicGenre] = useState<'auto' | 'phonk' | 'lofi' | 'cinematic' | 'synthwave' | 'upbeat-pop' | 'chill' | 'dark-ambient'>('auto')
+  const [colorGrade, setColorGrade] = useState<'auto' | 'vivid' | 'cinematic' | 'natural' | 'cool' | 'warm' | 'vintage' | 'bw'>('auto')
+  const [transitionStyle, setTransitionStyle] = useState<'auto' | 'fast-cut' | 'crossfade' | 'glitch' | 'whip-pan' | 'hard-cut'>('auto')
+  const [subtitlePosition, setSubtitlePosition] = useState<'auto' | 'top' | 'middle' | 'bottom' | 'lower-third'>('auto')
+  const [ctaStyle, setCtaStyle] = useState<'auto' | 'question' | 'urgency' | 'value' | 'curiosity'>('auto')
+  const [speedRamping, setSpeedRamping] = useState<boolean>(false)
+  const [brollFrequency, setBrollFrequency] = useState<'off' | 'sparse' | 'balanced' | 'heavy'>('balanced')
+  const [voiceTone, setVoiceTone] = useState<'auto' | 'energetic' | 'calm' | 'authoritative' | 'playful' | 'serious'>('auto')
+  const [advancedOpen, setAdvancedOpen] = useState<boolean>(false)
   const [editJobId, setEditJobId] = useState<string | null>(null)
   const [newVideoScore, setNewVideoScore] = useState<{ score: number; factors?: { name: string; value: string; impact: string }[] } | null>(null)
   const videoPreviewRef = useRef<HTMLVideoElement>(null)
@@ -178,7 +243,21 @@ export default function VideoEditPage({ params }: PageProps) {
         contentGenre,
         prioritizeHook,
         aspectFormats: exportFormats,
-        pacingIntensity
+        pacingIntensity,
+        // Style preset (drives variation expansion server-side)
+        ...(stylePresetId ? { stylePresetIds: [stylePresetId], stylePresetId } : {}),
+        // Granular controls — only forward non-'auto' picks so the
+        // backend's intelligent defaults still kick in when the user
+        // hasn't overridden a dimension.
+        ...(hookStyle !== 'auto' ? { hookStyle } : {}),
+        ...(musicGenre !== 'auto' ? { musicGenre } : {}),
+        ...(colorGrade !== 'auto' ? { colorGrade } : {}),
+        ...(transitionStyle !== 'auto' ? { transitionStyle } : {}),
+        ...(subtitlePosition !== 'auto' ? { subtitlePosition } : {}),
+        ...(ctaStyle !== 'auto' ? { ctaStyle } : {}),
+        ...(voiceTone !== 'auto' ? { voiceTone } : {}),
+        speedRamping,
+        brollFrequency,
       }
       const result = await apiPost('/video/ai-editing/auto-edit', { videoId, editingOptions: backendOptions, outputFormat })
       const jobId = result.data?.jobId || result.jobId
@@ -460,81 +539,207 @@ export default function VideoEditPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                {/* Right Col: Edit Config */}
+                {/* Right Col: Edit Config — three-zone HUD: Style Preset
+                    gallery → core controls → advanced collapsible. Every
+                    option here maps to a real backend dimension consumed
+                    by aiVideoEditingService.js or clipStylePresets.js. */}
                 <div className="lg:col-span-8">
-                   <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 sm:p-12 rounded-3xl shadow-sm">
-                      <div className="flex items-center gap-5 mb-10 pb-8 border-b border-surface-200 dark:border-surface-800">
-                         <div className="w-14 h-14 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center">
-                           <Settings size={28} className="text-surface-600 dark:text-surface-400" />
+                   <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 p-8 sm:p-10 rounded-3xl shadow-sm space-y-8">
+                      <div className="flex items-center gap-5 pb-6 border-b border-surface-200 dark:border-surface-800">
+                         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500/20 to-primary-700/10 border border-primary-200 dark:border-primary-800 flex items-center justify-center">
+                           <Wand2 size={28} className="text-primary-600 dark:text-primary-400" />
                          </div>
-                         <div>
-                            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">Processing Rules</h2>
-                            <p className="text-sm font-medium text-surface-500 mt-1">Configure how the AI will edit your video.</p>
+                         <div className="flex-1">
+                            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">AI Director</h2>
+                            <p className="text-sm font-medium text-surface-500 mt-1">Pick a style or fine-tune every dimension. {stylePresetId && <span className="text-primary-600 dark:text-primary-400 font-bold">· Preset: {STYLE_PRESETS.find(p => p.id === stylePresetId)?.label}</span>}</p>
                          </div>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        <div className="space-y-6">
+                      {/* Style Preset Gallery — visual cards for each of
+                          the 8 presets. Selecting one biases everything
+                          downstream; user can still override individual
+                          controls below. */}
+                      <div className="space-y-4">
+                         <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
+                           <Sparkles size={14} className="text-primary-500" /> Style preset
+                         </label>
+                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                           {STYLE_PRESETS.map(p => {
+                             const active = stylePresetId === p.id
+                             return (
+                               <button
+                                 key={p.id}
+                                 onClick={() => setStylePresetId(active ? '' : p.id)}
+                                 className={`p-4 rounded-2xl border text-left transition-all ${active ? `bg-gradient-to-br ${p.accent} border-transparent shadow-md scale-[1.02]` : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}
+                               >
+                                 <div className="text-2xl mb-2">{p.emoji}</div>
+                                 <p className={`text-sm font-black tracking-tight ${active ? 'text-white' : 'text-surface-900 dark:text-white'}`}>{p.label}</p>
+                                 <p className={`text-[10px] font-medium mt-1 ${active ? 'text-white/80' : 'text-surface-500'}`}>{p.tagline}</p>
+                               </button>
+                             )
+                           })}
+                         </div>
+                      </div>
+
+                      {/* Two-column core controls */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-2">
+                        {/* AI Tasks */}
+                        <div className="space-y-4">
                            <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
-                             <Scissors size={14} className="text-primary-500" /> 
-                             AI Tasks
+                             <Scissors size={14} className="text-primary-500" /> AI tasks
                            </label>
-                           <div className="space-y-3">
+                           <div className="space-y-2">
                               {[
-                                { id: 'removeSilence', label: 'Remove Silence', desc: 'Auto-cut dead air & pauses' }, 
-                                { id: 'optimizePacing', label: 'Optimize Pacing', desc: 'Improve flow and retention' }, 
-                                { id: 'enhanceAudio', label: 'Enhance Audio', desc: 'Reduce background noise' }, 
-                                { id: 'generateClips', label: 'Generate Short Clips', desc: 'Extract viral moments' }, 
-                                { id: 'addCaptions', label: 'Add Captions', desc: 'Burn-in dynamic text' }, 
-                                { id: 'enhanceColor', label: 'Color Correction', desc: 'AI-driven color grading' }
-                              ].map(node => (
-                                <button key={node.id} onClick={() => setEditingOptions(prev => ({ ...prev, [node.id]: !prev[node.id as keyof typeof prev] }))} className={`w-full p-5 rounded-2xl border transition-all flex items-center justify-between text-left ${editingOptions[node.id as keyof typeof editingOptions] ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700 shadow-sm' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
-                                  <div>
-                                    <p className={`text-sm font-bold mb-1 ${editingOptions[node.id as keyof typeof editingOptions] ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>{node.label}</p>
-                                    <p className={`text-xs font-medium ${editingOptions[node.id as keyof typeof editingOptions] ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>{node.desc}</p>
-                                  </div>
-                                  <div className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 ${editingOptions[node.id as keyof typeof editingOptions] ? 'bg-primary-500 border-primary-500 text-white' : 'bg-white dark:bg-surface-900 border-surface-300 dark:border-surface-700 text-transparent'}`}>
-                                    <CheckCircle2 size={14} />
-                                  </div>
-                                </button>
-                              ))}
+                                { id: 'removeSilence', label: 'Remove silence', desc: 'Auto-cut dead air & pauses' },
+                                { id: 'optimizePacing', label: 'Optimize pacing', desc: 'Tight cuts for retention' },
+                                { id: 'enhanceAudio', label: 'Enhance audio', desc: 'Noise reduction + leveling' },
+                                { id: 'generateClips', label: 'Generate short clips', desc: 'Extract viral moments' },
+                                { id: 'addCaptions', label: 'Burn-in captions', desc: 'Word-synced dynamic text' },
+                                { id: 'enhanceColor', label: 'Color correction', desc: 'Auto LUT + grade' }
+                              ].map(node => {
+                                const on = !!editingOptions[node.id as keyof typeof editingOptions]
+                                return (
+                                  <button key={node.id} onClick={() => setEditingOptions(prev => ({ ...prev, [node.id]: !prev[node.id as keyof typeof prev] }))} className={`w-full px-4 py-3 rounded-xl border transition-all flex items-center justify-between text-left ${on ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
+                                    <div>
+                                      <p className={`text-sm font-bold ${on ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>{node.label}</p>
+                                      <p className={`text-[11px] font-medium mt-0.5 ${on ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>{node.desc}</p>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${on ? 'bg-primary-500 border-primary-500 text-white' : 'bg-white dark:bg-surface-900 border-surface-300 dark:border-surface-700 text-transparent'}`}>
+                                      <CheckCircle2 size={12} />
+                                    </div>
+                                  </button>
+                                )
+                              })}
                            </div>
                         </div>
 
-                        <div className="space-y-8">
-                           <div className="space-y-6">
-                              <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
-                                <LayoutGrid size={14} className="text-primary-500" /> 
-                                Format Settings
-                              </label>
-                              <div className="space-y-5">
-                                 <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-4">
-                                    <p className="text-xs font-bold text-surface-900 dark:text-white">Output Aspect Ratio</p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {[{ id: 'auto', label: 'Auto' }, { id: 'vertical', label: 'Vertical (9:16)' }, { id: 'square', label: 'Square (1:1)' }, { id: 'standard', label: 'Standard (16:9)' }].map(f => (
-                                        <button key={f.id} onClick={() => setOutputFormat(f.id as "auto" | "vertical" | "square" | "standard")} className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors border ${outputFormat === f.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
-                                          {f.label}
-                                        </button>
-                                      ))}
-                                    </div>
-                                 </div>
+                        {/* Output, length, count */}
+                        <div className="space-y-5">
+                           <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
+                             <LayoutGrid size={14} className="text-primary-500" /> Output
+                           </label>
 
-                                 <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-4">
-                                    <p className="text-xs font-bold text-surface-900 dark:text-white">Caption Style</p>
-                                    <select value={captionStyle} onChange={(e) => setCaptionStyle(e.target.value)} className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-sm font-bold text-surface-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/50">
-                                       {['modern', 'bold', 'minimal', 'tiktok', 'youtube', 'neon', 'pill', 'cinematic'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-                                    </select>
-                                 </div>
+                           <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
+                              <p className="text-xs font-bold text-surface-900 dark:text-white">Aspect ratio</p>
+                              <div className="flex flex-wrap gap-2">
+                                {[{ id: 'auto', label: 'Auto' }, { id: 'vertical', label: '9:16' }, { id: 'square', label: '1:1' }, { id: 'standard', label: '16:9' }].map(f => (
+                                  <button key={f.id} onClick={() => setOutputFormat(f.id as 'auto' | 'vertical' | 'square' | 'standard')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${outputFormat === f.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{f.label}</button>
+                                ))}
                               </div>
                            </div>
 
-                           <div className="pt-8">
-                              <button onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-3 bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50">
-                                {processing ? <RefreshCw size={20} className="animate-spin" /> : <Wand2 size={20} />} 
-                                {processing ? 'Processing...' : 'Start AI Editing'}
-                              </button>
+                           <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-bold text-surface-900 dark:text-white">Clips to generate</p>
+                                <span className="text-sm font-black text-primary-600 dark:text-primary-400 tabular-nums">{clipCount}</span>
+                              </div>
+                              <input type="range" min="1" max="20" step="1" value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} className="w-full accent-primary-500" />
+                           </div>
+
+                           <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
+                              <p className="text-xs font-bold text-surface-900 dark:text-white">Target length</p>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  { id: 'short', label: '< 30s' },
+                                  { id: 'mid-3-5', label: '30-60s' },
+                                  { id: 'mid-5-10', label: '1-3m' },
+                                  { id: 'full', label: 'Full' }
+                                ].map(o => (
+                                  <button key={o.id} onClick={() => setClipTargetLength(o.id as any)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${clipTargetLength === o.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{o.label}</button>
+                                ))}
+                              </div>
+                           </div>
+
+                           <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
+                              <p className="text-xs font-bold text-surface-900 dark:text-white">Pacing</p>
+                              <div className="flex gap-2">
+                                {(['gentle', 'medium', 'aggressive'] as const).map(p => (
+                                  <button key={p} onClick={() => setPacingIntensity(p)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors border ${pacingIntensity === p ? 'bg-primary-500 text-white border-primary-500' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{p}</button>
+                                ))}
+                              </div>
                            </div>
                         </div>
+                      </div>
+
+                      {/* Advanced collapsible — six grouped dimensions
+                          (mood, captions, transitions, voice, B-roll, CTA)
+                          that map 1:1 to backend options. Hidden by default
+                          so the basic flow stays simple. */}
+                      <div className="border-t border-surface-200 dark:border-surface-800 pt-6">
+                         <button onClick={() => setAdvancedOpen(o => !o)} className="w-full flex items-center justify-between text-left group">
+                            <div className="flex items-center gap-3">
+                               <div className="w-9 h-9 rounded-lg bg-surface-100 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center group-hover:border-primary-300 dark:group-hover:border-primary-700 transition-colors">
+                                  <Settings size={16} className="text-surface-600 dark:text-surface-400" />
+                               </div>
+                               <div>
+                                  <p className="text-sm font-black text-surface-900 dark:text-white tracking-tight">Advanced</p>
+                                  <p className="text-[11px] font-medium text-surface-500">Mood, captions, transitions, voice, B-roll, CTA</p>
+                               </div>
+                            </div>
+                            {advancedOpen ? <ChevronUp size={18} className="text-surface-400" /> : <ChevronDown size={18} className="text-surface-400" />}
+                         </button>
+
+                         {advancedOpen && (
+                           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <SelectCard icon={Palette} label="Color grade" value={colorGrade} onChange={setColorGrade}
+                                options={['auto', 'vivid', 'cinematic', 'natural', 'cool', 'warm', 'vintage', 'bw']} />
+                             <SelectCard icon={Music} label="Music genre" value={musicGenre} onChange={setMusicGenre}
+                                options={['auto', 'phonk', 'lofi', 'cinematic', 'synthwave', 'upbeat-pop', 'chill', 'dark-ambient']} />
+                             <SelectCard icon={Flame} label="Hook style" value={hookStyle} onChange={setHookStyle}
+                                options={['auto', 'question', 'stat', 'mystery', 'story', 'bold-claim', 'pattern-break']} />
+                             <SelectCard icon={Film} label="Transitions" value={transitionStyle} onChange={setTransitionStyle}
+                                options={['auto', 'fast-cut', 'crossfade', 'glitch', 'whip-pan', 'hard-cut']} />
+                             <SelectCard icon={Type} label="Caption style" value={captionStyle} onChange={setCaptionStyle}
+                                options={['modern', 'bold', 'minimal', 'tiktok', 'youtube', 'neon', 'pill', 'cinematic']} />
+                             <SelectCard icon={Layout} label="Subtitle position" value={subtitlePosition} onChange={setSubtitlePosition}
+                                options={['auto', 'top', 'middle', 'bottom', 'lower-third']} />
+                             <SelectCard icon={Mic} label="Voice tone" value={voiceTone} onChange={setVoiceTone}
+                                options={['auto', 'energetic', 'calm', 'authoritative', 'playful', 'serious']} />
+                             <SelectCard icon={Hash} label="CTA style" value={ctaStyle} onChange={setCtaStyle}
+                                options={['auto', 'question', 'urgency', 'value', 'curiosity']} />
+                             <SelectCard icon={Video} label="B-roll frequency" value={brollFrequency} onChange={setBrollFrequency}
+                                options={['off', 'sparse', 'balanced', 'heavy']} />
+
+                             <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                   <Gauge size={14} className="text-primary-500" />
+                                   <div>
+                                      <p className="text-xs font-bold text-surface-900 dark:text-white">Speed ramping</p>
+                                      <p className="text-[10px] font-medium text-surface-500">Sine-modulate clip pace for energy</p>
+                                   </div>
+                                </div>
+                                <button onClick={() => setSpeedRamping(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${speedRamping ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
+                                   <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
+                                </button>
+                             </div>
+
+                             <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                   <Zap size={14} className="text-primary-500" />
+                                   <div>
+                                      <p className="text-xs font-bold text-surface-900 dark:text-white">Prioritize hook</p>
+                                      <p className="text-[10px] font-medium text-surface-500">Bias the first 3s for retention</p>
+                                   </div>
+                                </div>
+                                <button onClick={() => setPrioritizeHook(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${prioritizeHook ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
+                                   <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
+                                </button>
+                             </div>
+                           </div>
+                         )}
+                      </div>
+
+                      {/* Submit */}
+                      <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
+                         <button onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                           {processing ? <RefreshCw size={20} className="animate-spin" /> : <Wand2 size={20} />}
+                           {processing ? 'Composing your edit…' : `Compose ${clipCount} clip${clipCount === 1 ? '' : 's'}`}
+                         </button>
+                         <p className="text-[10px] text-center text-surface-500 mt-3 font-medium">
+                           {stylePresetId ? `Using ${STYLE_PRESETS.find(p => p.id === stylePresetId)?.label} preset` : 'Auto-select preset based on your content'}
+                           {' · '}
+                           {Object.values(editingOptions).filter(Boolean).length} task{Object.values(editingOptions).filter(Boolean).length === 1 ? '' : 's'} on
+                         </p>
                       </div>
                    </div>
                 </div>
