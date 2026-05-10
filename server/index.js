@@ -1759,6 +1759,9 @@ app.use('/api/video/advanced-editing', require('./routes/video/advanced-editing'
 // backup-before-revert-2026-05-10 because the page at
 // /dashboard/clips/hub depends on these endpoints.
 app.use('/api/video/clips', require('./routes/video/clips'));
+// Tools hub: silence-removal, filler removal, edit-by-text. Thin wrappers
+// around aiVideoEditingService.js so the Tools UI can hit single endpoints.
+app.use('/api/video/tools', require('./routes/video/tools'));
 app.use('/api/graphql', require('./routes/graphql'));
 app.use('/api/plugins', require('./routes/plugins'));
 app.use('/api/marketplace', require('./routes/marketplace'));
