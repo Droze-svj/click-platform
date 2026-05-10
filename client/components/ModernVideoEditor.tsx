@@ -93,6 +93,7 @@ import { useToast } from '../contexts/ToastContext'
 import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 import { InsightsSidebar } from './editor/InsightsSidebar'
 import EditorHUD from './editor/EditorHUD'
+import QuickActionsBar from './editor/QuickActionsBar'
 import CommandK from './editor/CommandK'
 import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
@@ -1088,6 +1089,47 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     showToast(`Neural DNA Protocol Deployed: ${profile.name} (Pacing: ${neuralPacing.toFixed(1)}s)`, 'success')
   }, [showToast, setCaptionStyle, setVideoFilters, setTextOverlays, videoState.duration, setImageOverlays])
 
+  /**
+   * One-shot "Apply my learned style" — fed by QuickActionsBar after it
+   * fetches /api/video/clips/style-insight. Maps the user's top picks
+   * (recorded by learnFromPublishedClip after each Publish & Learn) onto
+   * the editor's videoFilters + caption style. Best-effort — any field we
+   * don't recognize is skipped silently.
+   *
+   * Color-grade mapping mirrors server/services/aiVideoEditingService.js
+   * so the editor preview lines up with what the auto-edit pipeline
+   * would actually render at export time.
+   */
+  const handleApplyMyStyle = useCallback((insight: { topPicks?: Record<string, string | null | undefined> }) => {
+    const top = insight?.topPicks || {}
+    const grade = (top.colorGrade || '').toLowerCase()
+    const COLOR_GRADES: Record<string, Partial<VideoFilter>> = {
+      vivid:     { contrast: 115, brightness: 102, saturation: 125 },
+      cinematic: { contrast: 120, brightness: 95, saturation: 90, temperature: 95 },
+      natural:   { contrast: 105, brightness: 100, saturation: 100 },
+      cool:      { contrast: 110, brightness: 100, saturation: 105, temperature: 80 },
+      warm:      { contrast: 110, brightness: 102, saturation: 110, temperature: 120 },
+      vintage:   { contrast: 95, brightness: 100, saturation: 75, sepia: 20 },
+      bw:        { contrast: 115, brightness: 100, saturation: 0 },
+    }
+    const applied: string[] = []
+    if (grade && COLOR_GRADES[grade]) {
+      setVideoFilters((prev) => ({ ...prev, ...COLOR_GRADES[grade] }))
+      applied.push(`${grade} grade`)
+    }
+    const cs = (top.captionStyle || '').toString()
+    if (cs) {
+      setCaptionStyle((prev) => prev ? { ...prev, style: cs as any } : { enabled: true, style: cs as any, font: 'Inter', size: 32, color: '#FFFFFF', position: 'bottom-center' } as any)
+      applied.push(`${cs} captions`)
+    }
+    showToast(
+      applied.length > 0
+        ? `Applied your style — ${applied.join(' · ')}`
+        : 'Your style is not specific enough yet — publish more clips.',
+      applied.length > 0 ? 'success' : 'info'
+    )
+  }, [setVideoFilters, setCaptionStyle, showToast])
+
 
 
   const handleGenerateClips = useCallback(() => {
@@ -1883,6 +1925,18 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             onCommandK={() => setCommandKOpen(true)}
             styleDNA={styleDNA}
             onNormalizeStyle={handleStyleNormalize}
+          />
+
+          {/* Quick-actions rail — single-tap shortcuts to the most-used
+              operations + 'Apply my style' that pulls the user's learned
+              style profile from /api/video/clips/style-insight and
+              applies the top color grade + caption style. Lives between
+              the HUD and the preview so it's always reachable. */}
+          <QuickActionsBar
+            setActiveCategory={setActiveCategory}
+            onSplitAtPlayhead={handleSplitAtPlayhead}
+            onApplyMyStyle={handleApplyMyStyle}
+            showToast={showToast}
           />
 
           {/* Real-time Heatmap - Sticky below HUD or float? Let's place it at the top of the content row */}
