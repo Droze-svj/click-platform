@@ -1755,6 +1755,10 @@ app.use('/api/assets', require('./routes/assets'));
 app.use('/api/video/voice-hooks', require('./routes/video/voice-hooks'));
 app.use('/api/video/captions', require('./routes/video/captions'));
 app.use('/api/video/advanced-editing', require('./routes/video/advanced-editing'));
+// Clip hub: list, rate, delete, publish-and-learn. Restored from
+// backup-before-revert-2026-05-10 because the page at
+// /dashboard/clips/hub depends on these endpoints.
+app.use('/api/video/clips', require('./routes/video/clips'));
 app.use('/api/graphql', require('./routes/graphql'));
 app.use('/api/plugins', require('./routes/plugins'));
 app.use('/api/marketplace', require('./routes/marketplace'));

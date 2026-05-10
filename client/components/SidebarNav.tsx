@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight,
   // Studio
-  LayoutDashboard, Video, Sparkles, FileText, BookOpen, Hammer,
+  LayoutDashboard, Video, Sparkles, FileText, BookOpen, Hammer, Film,
   // Publish
   Send, CalendarDays, Workflow,
   // Grow
@@ -36,6 +36,7 @@ const ZONES = [
       { path: '/dashboard/onboarding',  label: 'Get Started',  icon: Compass,         badge: 'Start' },
       { path: '/dashboard/forge',       label: 'AI Video Creator', icon: Hammer,       badge: 'AI' },
       { path: '/dashboard/video',       label: 'Video Editor', icon: Video,           badge: 'AI' },
+      { path: '/dashboard/clips/hub',   label: 'AI Clips',     icon: Film,            badge: 'New' },
       { path: '/dashboard/content',     label: 'Content AI',   icon: Sparkles,        badge: null },
       { path: '/dashboard/scripts',     label: 'Scripts',      icon: FileText,        badge: null },
       { path: '/dashboard/library',     label: 'Asset Library',icon: BookOpen,        badge: null },
