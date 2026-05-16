@@ -48,16 +48,21 @@ router.get('/global', auth, asyncHandler(async (req, res) => {
       analytics = data || [];
     }
 
-    // Phantom Fallback for New Accounts
+    // New-account fallback. Previously this returned a "phantom" response
+    // labelled `SPECTRE_SIMULATION` with hardcoded 4.5M views / 284k
+    // engagement — i.e. a brand-new paying customer would log in and see
+    // 4.5 million views on posts they hadn't made. That is the single
+    // worst credibility hit a creator-tool can ship. Return honest zeros
+    // and let the dashboard render the cold-start UX.
     if (!analytics || analytics.length === 0) {
       return res.json({
         success: true,
-        total_views: 4520000,
-        total_engagement: 284000,
-        overall_engagement_rate: 6.2,
-        sync_nodes: 84,
+        total_views: 0,
+        total_engagement: 0,
+        overall_engagement_rate: 0,
+        sync_nodes: 0,
         isFallback: true,
-        status: 'SPECTRE_SIMULATION'
+        status: 'COLD_START',
       });
     }
 
@@ -78,8 +83,20 @@ router.get('/global', auth, asyncHandler(async (req, res) => {
       status: 'SYNCHRONIZED_ACTIVE_STREAM'
     });
   } catch (error) {
-    
-    res.status(500).json({ success: false, error: 'GLOBAL_SYNC_FAILURE' });
+    // Don't leak `GLOBAL_SYNC_FAILURE` to a new user — schema mismatches,
+    // RLS denials, or transient Supabase errors should all degrade to
+    // honest zeros so the dashboard renders cleanly.
+    const logger = require('../../utils/logger');
+    logger.warn('Global metric query failed; returning zeros', { error: error.message });
+    res.json({
+      success: true,
+      total_views: 0,
+      total_engagement: 0,
+      overall_engagement_rate: 0,
+      sync_nodes: 0,
+      isFallback: true,
+      status: 'COLD_START',
+    });
   }
 }));
 

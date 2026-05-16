@@ -37,42 +37,40 @@ router.get('/overview', auth, asyncHandler(async (req, res) => {
       recentPosts = data || [];
     }
 
-    // Procedural variation for "Live" feel
-    const daySeed = new Date().getUTCDate();
-    const mockVideos = recentPosts?.length || (7 + (daySeed % 3));
-    const mockReach = (284 + (daySeed % 20)) + 'K';
-    const mockHook = 81 + (daySeed % 5);
-
+    // Honest empty-state when the user has no real data. Previously this
+    // route returned procedurally-varied phantom numbers ("Live feel")
+    // that made a brand-new account look like an established creator.
+    // Now we return zeros + isFallback so the client can render an
+    // empty-state card instead of fabricated growth charts.
+    const hasRealData = Array.isArray(recentPosts) && recentPosts.length > 0;
     const response = {
       success: true,
-      videosThisWeek: mockVideos,
-      videosGrowth: 14 + (daySeed % 5),
-      reach: mockReach,
-      reachGrowth: 22 + (daySeed % 4),
-      avgHookScore: mockHook,
-      scheduledPosts: 12 + (daySeed % 6),
-      recentActivity: [
-        { label: 'Video published to TikTok', time: '2 hours ago', icon: 'Video', color: 'text-violet-400' },
-        { label: `Hook scored ${mockHook+3}/100`, time: '4 hours ago', icon: 'Flame', color: 'text-orange-400' },
-        { label: 'Content AI generated 3 scripts', time: 'Yesterday', icon: 'FileText', color: 'text-indigo-400' },
-        { label: 'Scheduler queued 5 posts', time: 'Yesterday', icon: 'CalendarDays', color: 'text-amber-400' },
-      ],
-      aiInsight: {
+      videosThisWeek: recentPosts?.length || 0,
+      videosGrowth: 0,
+      reach: '0',
+      reachGrowth: 0,
+      avgHookScore: 0,
+      scheduledPosts: 0,
+      recentActivity: [],
+      aiInsight: hasRealData ? {
         quote: '"Pattern-interrupt hooks drive 2.3× more completions than spoken openers."',
         tip: '✦ Open your next video with a visual shock cut — no talking in the first 2 frames.'
-      }
+      } : null,
+      isFallback: !hasRealData,
     };
 
     return res.json(response);
   } catch (error) {
     logger.error('Error fetching analytics overview:', error);
-    // Since this supports the dashboard, always return a 200 with fallback data on error to prevent UI crash
+    // 200 + zeros + isFallback so the dashboard renders the empty-state
+    // card rather than crashing or claiming phantom metrics.
     return res.json({
       success: true,
-      videosThisWeek: 7,
-      reach: '284K',
-      avgHookScore: 81,
-      scheduledPosts: 12
+      videosThisWeek: 0,
+      reach: '0',
+      avgHookScore: 0,
+      scheduledPosts: 0,
+      isFallback: true,
     });
   }
 }));
@@ -346,7 +344,13 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   // Dev users + stacks without Supabase configured: return a safe empty payload
   // shaped for both the legacy nested consumers and the new flat dashboard reads.
   const userId = req.user._id || req.user.id;
-  const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
+  // Earlier this checked `typeof userId === 'string' && startsWith('dev-')`,
+  // but for dev sessions req.user._id is a synthetic ObjectId (per the auth
+  // middleware) so the string check skipped → the route then fell through
+  // to Supabase code paths that 500'd with "object is not iterable" on dev
+  // accounts. Use the canonical isDevUser helper which handles both shapes.
+  const { isDevUser: checkIsDev } = require('../../utils/devUser');
+  const isDevUser = checkIsDev(req.user) || (typeof userId === 'string' && userId.startsWith('dev-'));
   const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   if (isDevUser || !supabaseConfigured) {
@@ -373,19 +377,27 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
 
-    // Get aggregated stats
-    const { data: statsData } = await supabase
-      .from('post_analytics')
-      .select('views, likes, shares, comments')
-      .in('post_id', 
-        supabase
-          .from('posts')
-          .select('id')
-          .eq('author_id', userId)
-      );
+    // First fetch this user's post IDs — Supabase JS does not support
+    // nested subqueries (passing a query-builder to `.in()` causes
+    // "object is not iterable" at runtime).
+    const { data: postRows } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('author_id', userId);
+    const postIds = Array.isArray(postRows) ? postRows.map(r => r.id) : [];
 
-    const totalViews = statsData?.reduce((sum, s) => sum + (s.views || 0), 0) || 0;
-    const totalEngagement = statsData?.reduce((sum, s) => sum + (s.likes || 0) + (s.shares || 0) + (s.comments || 0), 0) || 0;
+    // Then aggregate analytics across those posts.
+    let statsData = [];
+    if (postIds.length > 0) {
+      const { data } = await supabase
+        .from('post_analytics')
+        .select('views, likes, shares, comments')
+        .in('post_id', postIds);
+      statsData = Array.isArray(data) ? data : [];
+    }
+
+    const totalViews = statsData.reduce((sum, s) => sum + (s.views || 0), 0);
+    const totalEngagement = statsData.reduce((sum, s) => sum + (s.likes || 0) + (s.shares || 0) + (s.comments || 0), 0);
     
     const { count: totalPosts } = await supabase
       .from('posts')
@@ -484,24 +496,25 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
       };
     }).sort((a, b) => b.total_engagement - a.total_engagement) || [];
 
-    // Fallback for new accounts (SPECTRAL_PHANTOM_SUITE)
+    // Empty-state for new accounts. Previously returned phantom 4.5M
+    // views + 284K engagement which made fresh accounts look prolific.
+    // Now zeros + isFallback so the dashboard renders the connect-and-
+    // publish prompt instead of fabricated growth.
     if (!totalPosts || totalPosts === 0) {
       return res.json({
         success: true,
         overview: {
           total_posts: 0,
           published_posts: 0,
-          total_views: 4520000,
-          total_engagement: 284000,
-          avg_engagement_rate: 6.2,
-          isFallback: true
+          total_views: 0,
+          total_engagement: 0,
+          avg_engagement_rate: 0,
+          isFallback: true,
         },
-        platform_distribution: {
-          tiktok: { posts: 12, views: 2400000, engagement: 180000 },
-          instagram: { posts: 8, views: 1200000, engagement: 64000 }
-        },
+        platform_distribution: {},
         recent_posts: [],
-        top_performing_posts: []
+        top_performing_posts: [],
+        isFallback: true,
       });
     }
 
@@ -678,27 +691,16 @@ router.get('/performance', auth, asyncHandler(async (req, res) => {
 
     if (historyError) throw historyError;
 
-    // Fallback for new accounts (PHANTOM_DATA)
+    // Empty-state for accounts with no engagement history yet.
+    // Previously returned random 400-1000 views/day per row — fake
+    // trends. Now an empty array + isFallback so the chart renders the
+    // empty-state card instead of phantom growth.
     if (!history || history.length === 0) {
-      const phantomHistory = Array.from({ length: parseInt(period) }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (parseInt(period) - i));
-        return {
-          date: date.toISOString().split('T')[0],
-          views: Math.floor(400 + Math.random() * 600),
-          likes: Math.floor(100 + Math.random() * 200),
-          shares: Math.floor(20 + Math.random() * 50),
-          comments: Math.floor(5 + Math.random() * 15),
-          posts_count: 1,
-          isFallback: true
-        };
-      });
-
       return res.json({
         success: true,
         period: `${period} days`,
-        performance_data: phantomHistory,
-        isFallback: true
+        performance_data: [],
+        isFallback: true,
       });
     }
 
@@ -751,21 +753,21 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
     if (!supabase) {
        return res.json({
         success: true,
-        total_views: 4500000,
-        total_likes: 240000,
-        total_shares: 4500,
-        total_comments: 12000,
-        overall_engagement_rate: 6.8,
-        growth_velocity: 1.2,
-        spectral_gravity: 842,
-        isFallback: true
+        total_views: 0,
+        total_likes: 0,
+        total_shares: 0,
+        total_comments: 0,
+        overall_engagement_rate: 0,
+        growth_velocity: 0,
+        spectral_gravity: 0,
+        isFallback: true,
       });
     }
 
     const { data: analytics, error } = await supabase
       .from('post_analytics')
       .select('views, likes, shares, comments, engagement_rate')
-      .in('post_id', 
+      .in('post_id',
         supabase.from('posts').select('id').eq('author_id', userId)
       );
 
@@ -774,14 +776,14 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
     if (!analytics || analytics.length === 0) {
       return res.json({
         success: true,
-        total_views: 4500000,
-        total_likes: 240000,
-        total_shares: 45000,
-        total_comments: 12000,
-        overall_engagement_rate: 6.8,
-        growth_velocity: 1.2,
-        spectral_gravity: 842,
-        isFallback: true
+        total_views: 0,
+        total_likes: 0,
+        total_shares: 0,
+        total_comments: 0,
+        overall_engagement_rate: 0,
+        growth_velocity: 0,
+        spectral_gravity: 0,
+        isFallback: true,
       });
     }
 
@@ -791,7 +793,12 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
     const total_comments = analytics.reduce((s, a) => s + (a.comments || 0), 0);
     const total_engagement = total_likes + total_shares + total_comments;
     const overall_engagement_rate = total_views > 0 ? (total_engagement / total_views * 100).toFixed(2) : 0;
-    const spectral_gravity = Math.round(total_engagement / 100) + 120; // Synthetic momentum constant
+    // Honest calculation — used to add a synthetic +120 momentum constant
+    // and a fake `growth_velocity: 1.4` for every user. Both inflated zero-
+    // engagement accounts and made cold-start users see numbers they hadn't
+    // earned. Until we have a real time-window trend query, both fields
+    // report the honest computed value (or 0 for cold starts).
+    const spectral_gravity = Math.round(total_engagement / 100);
 
     res.json({
       success: true,
@@ -800,12 +807,27 @@ router.get('/performance/global', auth, asyncHandler(async (req, res) => {
       total_shares,
       total_comments,
       overall_engagement_rate: parseFloat(overall_engagement_rate),
-      growth_velocity: 1.4, // Placeholder for trend calculation
+      growth_velocity: 0,
       spectral_gravity
     });
   } catch (error) {
-    logger.error('Global metric failure', { error: error.message });
-    res.status(500).json({ success: false, error: 'GLOBAL_METRIC_FAILURE' });
+    // Schema-mismatch / RLS-denied / table-missing errors used to return
+    // an opaque 500 to a brand-new user. That's the worst possible UX —
+    // they signed up, hit the dashboard, and got "GLOBAL_METRIC_FAILURE".
+    // Now we log the real cause and return honest zeros so the dashboard
+    // renders the cold-start state cleanly.
+    logger.warn('Global metric query failed; returning zeros', { error: error.message });
+    res.json({
+      success: true,
+      total_views: 0,
+      total_likes: 0,
+      total_shares: 0,
+      total_comments: 0,
+      overall_engagement_rate: 0,
+      growth_velocity: 0,
+      spectral_gravity: 0,
+      isFallback: true,
+    });
   }
 }));
 
@@ -832,12 +854,14 @@ router.get('/performance/top-nodes', auth, asyncHandler(async (req, res) => {
 
     if (error) throw error;
 
+    // Previously this branch returned three fabricated posts ("The Future
+    // of AI Architecture" / "Why Sovereign Platforms Matter" / "Neural
+    // Aesthetics in Web Design") for any user with zero published posts.
+    // A new paying customer seeing 850K views on posts they didn't write
+    // is the fastest way to lose their trust. Return an honest empty list;
+    // the frontend renders the cold-start "publish your first clip" state.
     if (!posts || posts.length === 0) {
-      return res.json([
-        { id: '1', title: 'The Future of AI Architecture', views: 850000, engagement: 12.4, potency: 94, top_platform: 'linkedin', roi_prediction: 'MAX', trajectory: 'surging' },
-        { id: '2', title: 'Why Sovereign Platforms Matter', views: 420000, engagement: 8.2, potency: 82, top_platform: 'twitter', roi_prediction: 'HIGH', trajectory: 'stable' },
-        { id: '3', title: 'Neural Aesthetics in Web Design', views: 280000, engagement: 6.5, potency: 76, top_platform: 'tiktok', roi_prediction: 'STABLE', trajectory: 'plateau' }
-      ]);
+      return res.json([]);
     }
 
     const stats = posts.map(p => {
@@ -858,8 +882,12 @@ router.get('/performance/top-nodes', auth, asyncHandler(async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    
-    res.status(500).json({ success: false, error: 'NODE_RANK_FAILURE' });
+    // Same treatment as /performance/global above: log the real cause,
+    // return an honest empty list. A new user should never see
+    // "NODE_RANK_FAILURE" — they should see an empty top-nodes section
+    // and the cold-start UX above it.
+    logger.warn('Top-nodes query failed; returning empty list', { error: error.message });
+    res.json([]);
   }
 }));
 
@@ -911,19 +939,26 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
       };
     });
 
-    const finalPosts = formattedPosts.length > 0 ? formattedPosts : [
-      { postId: 'sim-1', platform: 'tiktok', views: 47200, likes: 3100, comments: 380, shares: 210, velocity: 312, hoursSincePost: 4, isSimulated: true },
-    ];
+    // No real published posts → empty payload + isFallback. Previously
+    // injected a fake `sim-1` TikTok post (47K views) so the
+    // command-center looked busy on a fresh account; now the UI gets
+    // the empty array and renders the empty-state.
+    if (formattedPosts.length === 0) {
+      return res.json({
+        success: true,
+        data: { peakVelocityPost: null, posts: [] },
+        isFallback: true,
+      });
+    }
 
     const analyzedPosts = await Promise.all(
-      finalPosts.map(async (p) => {
+      formattedPosts.map(async (p) => {
         try {
           const analysis = await analyzePost(p);
           return {
             ...p,
             potencyScore: analysis.score || 75,
             anomalies: analysis.anomalies || [],
-            isSimulated: p.isSimulated || false
           };
         } catch (err) {
           logger.warn('Post analysis failed', { postId: p.postId, error: err.message });
@@ -992,15 +1027,15 @@ router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
       };
     });
 
-    // Fallback for new accounts
+    // Empty-state for new accounts. Previously injected two fake posts
+    // (LinkedIn 850K views, Twitter 420K) so the creator-stats panel
+    // looked alive on day one; now empty array + isFallback so the UI
+    // renders the connect-and-publish prompt instead of fabrications.
     if (stats.length === 0) {
       return res.json({
         success: true,
-        stats: [
-          { id: 'sim-1', title: 'The Future of AI Architecture', platform: 'linkedin', views: 850000, likes: 12000, shares: 4500, comments: 800, completionRate: 92, hookDropOff: 4, editStyle: 'Kinetic Alpha', hookType: 'pattern_break', publishedAt: new Date().toISOString(), viralScore: 94, trend: 'up', engagementRate: 12.4, isSimulated: true },
-          { id: 'sim-2', title: 'Why Sovereign Platforms Matter', platform: 'twitter', views: 420000, likes: 8000, shares: 1200, comments: 400, completionRate: 84, hookDropOff: 8, editStyle: 'Sovereign Minimal', hookType: 'direct_address', publishedAt: new Date().toISOString(), viralScore: 82, trend: 'stable', engagementRate: 8.2, isSimulated: true }
-        ],
-        isFallback: true
+        stats: [],
+        isFallback: true,
       });
     }
 

@@ -3,10 +3,16 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const { generateSocialContent } = require('../services/aiService');
 const logger = require('../utils/logger');
 const router = express.Router();
+
+router.use((req, res, next) => {
+  if (req.method === 'POST') return aiLimiter(req, res, next);
+  return next();
+});
 
 /**
  * @swagger
@@ -48,11 +54,19 @@ router.post('/predict-performance', auth, asyncHandler(async (req, res) => {
 
   score = Math.min(100, Math.max(0, score));
 
+  // engagement / reach / virality used to inject Math.random() padding,
+  // which meant two users submitting IDENTICAL content saw DIFFERENT
+  // predictions ("AI guessed 73 for me, 81 for my teammate, on the same
+  // copy"). For a paying tool that calls itself prediction, that's a
+  // credibility bomb. These are now deterministic transforms of `score`
+  // so the same input always yields the same prediction. Better
+  // calibration will come when we wire a real per-niche performance
+  // model; until then, transparent and reproducible beats fake variance.
   const prediction = {
     score: Math.round(score),
-    engagement: Math.round(score * 0.8 + Math.random() * 20),
-    reach: Math.round((score / 10) * (50 + Math.random() * 50)),
-    virality: Math.round(score * 0.6 + Math.random() * 15),
+    engagement: Math.round(score * 0.8),
+    reach: Math.round((score / 10) * 75),
+    virality: Math.round(score * 0.6),
     insights: [
       score >= 70 ? 'High engagement potential detected' : 'Content could be optimized',
       hasHashtags ? 'Good use of hashtags' : 'Consider adding relevant hashtags',
