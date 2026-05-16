@@ -53,11 +53,26 @@
     "setNiche": "निच चुनें",
     "next": "आगे",
     "stages": {
-      "ingest":   { "label": "इनजेस्ट",  "description": "फ़ुटेज लाएँ — अपलोड, लिंक या लाइव रिकॉर्डिंग।" },
-      "script":   { "label": "स्क्रिप्ट", "description": "AI आपके निच के अनुसार हुक, बॉडी और CTA लिखता है।" },
-      "edit":     { "label": "एडिट",     "description": "स्टाइल इंटेलिजेंस के साथ कट, कैप्शन और ब्रांडिंग।" },
-      "schedule": { "label": "शेड्यूल",  "description": "हर प्लेटफ़ॉर्म पर सबसे अच्छे समय पर पोस्ट करें।" },
-      "analyze":  { "label": "विश्लेषण",  "description": "प्रदर्शन मापें और जानें क्या दोहराना है।" }
+      "ingest": {
+        "label": "इनजेस्ट",
+        "description": "फ़ुटेज लाएँ — अपलोड, लिंक या लाइव रिकॉर्डिंग।"
+      },
+      "script": {
+        "label": "स्क्रिप्ट",
+        "description": "AI आपके निच के अनुसार हुक, बॉडी और CTA लिखता है।"
+      },
+      "edit": {
+        "label": "एडिट",
+        "description": "स्टाइल इंटेलिजेंस के साथ कट, कैप्शन और ब्रांडिंग।"
+      },
+      "schedule": {
+        "label": "शेड्यूल",
+        "description": "हर प्लेटफ़ॉर्म पर सबसे अच्छे समय पर पोस्ट करें।"
+      },
+      "analyze": {
+        "label": "विश्लेषण",
+        "description": "प्रदर्शन मापें और जानें क्या दोहराना है।"
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,167 @@
   },
   "language": {
     "label": "भाषा",
-    "picker": "भाषा चुनें"
+    "picker": "भाषा चुनें",
+    "options": "भाषाएं",
+    "search": "भाषाएं खोजें…",
+    "recent": "हाल ही में उपयोग किए गए",
+    "recentBadge": "हालिया",
+    "all": "सभी भाषाएं",
+    "noResults": "कोई भाषा नहीं मिली",
+    "useSuggested": "उपयोग करें",
+    "useIt": "इसे उपयोग करें"
   },
   "settings": {
     "title": "सेटिंग्स",
     "subtitle": "अपने अकाउंट की प्राथमिकताएँ प्रबंधित करें",
     "language": "भाषा",
-    "saveSettings": "सहेजें"
+    "saveSettings": "सहेजें",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Auto (System)",
+    "timezone": "Timezone",
+    "saving": "Save हो रहा है...",
+    "saved": "Settings सफलतापूर्वक Save हो गईं",
+    "saveFailed": "Settings Save नहीं हो पाईं",
+    "profile": "Profile",
+    "editProfile": "Profile एडिट करें",
+    "general": "General",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "security": "Security"
   },
   "video": {
     "title": "वीडियो",
     "upload": "अपलोड",
     "edit": "एडिट",
-    "processing": "प्रोसेसिंग…"
+    "processing": "प्रोसेसिंग…",
+    "noVideo": "कोई Video Load नहीं हुआ",
+    "noVideoHint": "Editing शुरू करने के लिए कृपया एक Video URL दें।",
+    "goToVideos": "Videos पर जाएँ"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "आपका फिर से स्वागत है",
+    "heroWelcome": "Click में आपका स्वागत है",
+    "heroTitle": "Create, repurpose और publish करें",
+    "heroSubtitle": "AI-powered tools, smart scheduling और analytics, एक ही workspace में।",
+    "heroDescription": "आपका AI-powered workspace 6 platforms पर create, repurpose और publish करने के लिए। long-form content को social-ready formats में बदलें—तेज़ी से।",
+    "stats": {
+      "videosProcessed": "Videos Processed",
+      "contentGenerated": "Content Generated",
+      "contentCreated": "Content Created",
+      "quotesCreated": "Quotes बनाए गए",
+      "postsScheduled": "Posts Scheduled"
+    },
+    "clickToView": "विवरण देखने के लिए Click करें →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
+  },
+  "content": {
+    "title": "Content",
+    "create": "Content बनाएँ",
+    "edit": "Content Edit करें",
+    "delete": "Content Delete करें",
+    "duplicate": "Duplicate करें",
+    "publish": "Publish करें",
+    "schedule": "Schedule करें"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Overview",
+    "trends": "Trends",
+    "platforms": "Platforms",
+    "engagement": "Engagement",
+    "views": "Views",
+    "likes": "Likes",
+    "shares": "Shares"
+  },
+  "moderation": {
+    "title": "Content Moderation",
+    "checking": "Content की जांच हो रही है...",
+    "approved": "Content Approve हो गया",
+    "flagged": "Content को Review के लिए Flag किया गया",
+    "profanity": "Profanity मिली",
+    "spam": "Spam मिला"
+  },
+  "backup": {
+    "title": "Backups",
+    "create": "Backup बनाएँ",
+    "download": "Download",
+    "delete": "Delete",
+    "passwordRequired": "Encrypted Backup के लिए Password ज़रूरी है",
+    "created": "Backup सफलतापूर्वक बन गया",
+    "createFailed": "Backup बनाने में विफल",
+    "downloaded": "Backup डाउनलोड हो गया",
+    "downloadFailed": "Backup डाउनलोड विफल रहा",
+    "deleted": "Backup डिलीट हो गया",
+    "deleteFailed": "Backup डिलीट विफल रहा"
+  },
+  "translation": {
+    "title": "अनुवाद",
+    "translate": "अनुवाद करें",
+    "translateTo": "इसमें अनुवाद करें",
+    "translateToAll": "सभी में अनुवाद करें",
+    "targetLanguage": "लक्ष्य भाषा",
+    "viewIn": "इसमें देखें",
+    "original": "Original",
+    "translations": "अनुवाद",
+    "noTranslations": "अभी तक कोई अनुवाद नहीं",
+    "translating": "अनुवाद हो रहा है…",
+    "translated": "अनुवाद हो गया",
+    "translationFailed": "अनुवाद विफल रहा",
+    "viewOriginal": "Original देखें",
+    "selectLanguage": "भाषा चुनें",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign up",
+    "logout": "Logout",
+    "loggingIn": "Logging in...",
+    "email": "Email",
+    "password": "Password",
+    "passwordPlaceholder": "अपना Password दर्ज करें",
+    "forgotPassword": "Password भूल गए?",
+    "noAccount": "Account नहीं है?",
+    "hasAccount": "पहले से Account है?",
+    "loginTitle": "Click में आपका स्वागत है",
+    "loginSubtitle": "AI‑powered content creation के लिए अपने Account में Sign in करें।",
+    "registerTitle": "अपना Account बनाएं",
+    "registerSubtitle": "AI-powered content creation के साथ शुरुआत करें।"
   }
 }

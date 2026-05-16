@@ -107,7 +107,7 @@ export default function ContentDetailPage() {
       showToast(t('translation.translated'), 'success')
       await loadTranslations()
     } catch (e: any) {
-      showToast(t('translation.translationFailed') + ': ' + (e?.response?.data?.error || e?.message || ''), 'error')
+      showToast(t('translation.translationFailedWith', { error: e?.response?.data?.error || e?.message || '' }), 'error')
     } finally {
       setIsTranslating(false)
     }
@@ -122,10 +122,17 @@ export default function ContentDetailPage() {
       })
       const ok = (res as any)?.successful?.length || 0
       const fail = (res as any)?.failed?.length || 0
-      showToast(t('translation.translated') + ` (${ok} ok${fail ? `, ${fail} failed` : ''})`, fail ? 'info' : 'success')
+      // Interpolated so RTL/word-order languages can position {{ok}} and
+      // {{fail}} naturally in their sentence — concatenation broke Arabic.
+      showToast(
+        fail > 0
+          ? t('translation.translatedWithFailures', { ok, fail })
+          : t('translation.translatedWithCount', { ok }),
+        fail ? 'info' : 'success'
+      )
       await loadTranslations()
     } catch (e: any) {
-      showToast(t('translation.translationFailed') + ': ' + (e?.response?.data?.error || e?.message || ''), 'error')
+      showToast(t('translation.translationFailedWith', { error: e?.response?.data?.error || e?.message || '' }), 'error')
     } finally {
       setIsTranslating(false)
     }
@@ -179,7 +186,7 @@ export default function ContentDetailPage() {
       <div className="text-center space-y-8 p-20 rounded-[4rem] border border-white/5 bg-white/[0.02]">
         <AlertCircle size={100} className="text-rose-500 mx-auto" />
         <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Node Not Found</h2>
-        <button onClick={() => router.push('/dashboard/content')} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest italic hover:bg-indigo-500 transition-all">ABORT_TO_REPOSITORY</button>
+        <button type="button" onClick={() => router.push('/dashboard/content')} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest italic hover:bg-indigo-500 transition-all">ABORT_TO_REPOSITORY</button>
       </div>
     </div>
   )
@@ -195,7 +202,7 @@ export default function ContentDetailPage() {
         {/* Diagnostic Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <button onClick={() => router.push('/dashboard/content')} title="Back"
+              <button type="button" onClick={() => router.push('/dashboard/content')} title="Back"
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
@@ -220,11 +227,11 @@ export default function ContentDetailPage() {
            </div>
 
            <div className="flex items-center gap-8">
-              <button onClick={handleToggleFavorite}
+              <button type="button" onClick={handleToggleFavorite}
                 className={`w-20 h-20 rounded-[2.2rem] flex items-center justify-center transition-all duration-300 shadow-2xl ${content.isFavorite ? 'bg-amber-500 text-white' : 'bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white'}`}>
                 <Star size={36} className={content.isFavorite ? 'fill-current' : ''} />
               </button>
-              <button onClick={() => router.push('/dashboard/library')}
+              <button type="button" onClick={() => router.push('/dashboard/library')}
                 className="px-16 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-2xl transition-all duration-300 flex items-center gap-8 italic active:scale-95 group border-none">
                 <Box size={28} className="group-hover:rotate-12 transition-transform" />
                 ORGANIZE_NODE
@@ -241,7 +248,7 @@ export default function ContentDetailPage() {
              { id: 'performance', label: 'Resonance Metrics', icon: BarChart3 },
              { id: 'translations', label: 'Transpositions', icon: Languages },
            ].map(t => (
-             <button key={t.id} onClick={() => setActiveTab(t.id as any)}
+             <button type="button" key={t.id} onClick={() => setActiveTab(t.id as any)}
                className={`flex items-center gap-6 px-10 py-6 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${activeTab === t.id ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)]' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
                <t.icon size={28} className={activeTab === t.id ? 'text-black' : 'text-slate-500 group-hover:text-white transition-colors'} />
                <span className="text-[14px] font-black uppercase tracking-[0.2em] italic">{t.label}</span>
@@ -295,7 +302,7 @@ export default function ContentDetailPage() {
                                              <span className="px-8 py-3 bg-indigo-500 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.4em] italic shadow-2xl">{post.platform} NODE</span>
                                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,1)]" />
                                           </div>
-                                          <button onClick={() => { navigator.clipboard.writeText(post.content); showToast('Logic Captured', 'success') }}
+                                          <button type="button" onClick={() => { navigator.clipboard.writeText(post.content); showToast('Logic Captured', 'success') }}
                                              className="w-16 h-16 rounded-[1.5rem] bg-white/[0.03] border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all">
                                              <Copy size={24} />
                                           </button>
@@ -442,7 +449,7 @@ export default function ContentDetailPage() {
                                  <option key={l.code} value={l.code}>{l.name.toUpperCase()}</option>
                               ))}
                            </select>
-                           <button onClick={handleTranslate} disabled={isTranslating}
+                           <button type="button" onClick={handleTranslate} disabled={isTranslating}
                               className="px-16 py-8 bg-purple-600 text-white rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(147,51,234,0.3)] hover:bg-white hover:text-black transition-all duration-300 italic disabled:opacity-20 active:scale-95 group">
                               {isTranslating ? t('translation.translating') : <span><Zap className="inline mr-4 group-hover:scale-125 transition-transform" /> {t('translation.translate')}</span>}
                            </button>
@@ -452,13 +459,13 @@ export default function ContentDetailPage() {
                      <div className="flex flex-wrap gap-6 items-center">
                         <span className="text-[11px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none mr-6">SYNCHRONIZED_MATRICES:</span>
                         {viewingLang && (
-                           <button onClick={() => setViewingLang(null)}
+                           <button type="button" onClick={() => setViewingLang(null)}
                               className="px-10 py-5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic shadow-inner hover:bg-amber-500 hover:text-white transition-all">
                               {t('translation.viewOriginal')}
                            </button>
                         )}
                         {translationList.map((tr) => (
-                           <button key={tr._id} onClick={() => handleViewInLanguage(tr.language)}
+                           <button type="button" key={tr._id} onClick={() => handleViewInLanguage(tr.language)}
                               className={`px-10 py-5 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${viewingLang === tr.language ? 'bg-purple-600 text-white shadow-2xl' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20 shadow-inner'}`}>
                               {t('translation.viewIn')} {tr.language.toUpperCase()}_NODE
                            </button>
@@ -516,7 +523,7 @@ export default function ContentDetailPage() {
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
           .custom-scrollbar::-webkit-scrollbar { width: 4px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }

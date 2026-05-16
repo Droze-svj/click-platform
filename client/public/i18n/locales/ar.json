@@ -53,11 +53,26 @@
     "setNiche": "اختر المجال",
     "next": "التالي",
     "stages": {
-      "ingest":   { "label": "استيراد", "description": "أحضر اللقطات — ملف أو رابط أو تسجيل مباشر." },
-      "script":   { "label": "السيناريو", "description": "يكتب الذكاء الاصطناعي الجاذب والمحتوى وCTA حسب مجالك." },
-      "edit":     { "label": "تحرير", "description": "قص وترجم وأضف هويتك بذكاء أسلوبي." },
-      "schedule": { "label": "جدولة", "description": "انشر على كل منصة في وقتها الأمثل." },
-      "analyze":  { "label": "تحليل", "description": "قِس الأداء وتعلّم ما يستحق التكرار." }
+      "ingest": {
+        "label": "استيراد",
+        "description": "أحضر اللقطات — ملف أو رابط أو تسجيل مباشر."
+      },
+      "script": {
+        "label": "السيناريو",
+        "description": "يكتب الذكاء الاصطناعي الجاذب والمحتوى وCTA حسب مجالك."
+      },
+      "edit": {
+        "label": "تحرير",
+        "description": "قص وترجم وأضف هويتك بذكاء أسلوبي."
+      },
+      "schedule": {
+        "label": "جدولة",
+        "description": "انشر على كل منصة في وقتها الأمثل."
+      },
+      "analyze": {
+        "label": "تحليل",
+        "description": "قِس الأداء وتعلّم ما يستحق التكرار."
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,167 @@
   },
   "language": {
     "label": "اللغة",
-    "picker": "اختر اللغة"
+    "picker": "اختر اللغة",
+    "options": "اللغات",
+    "search": "ابحث عن اللغات…",
+    "recent": "المستخدمة مؤخراً",
+    "recentBadge": "حديثة",
+    "all": "جميع اللغات",
+    "noResults": "لا توجد لغات مطابقة",
+    "useSuggested": "استخدام",
+    "useIt": "استخدمها"
   },
   "settings": {
     "title": "الإعدادات",
     "subtitle": "إدارة تفضيلات حسابك",
     "language": "اللغة",
-    "saveSettings": "حفظ"
+    "saveSettings": "حفظ",
+    "profile": "الملف الشخصي",
+    "editProfile": "تعديل الملف الشخصي",
+    "general": "عام",
+    "notifications": "الإشعارات",
+    "privacy": "الخصوصية",
+    "security": "الأمان",
+    "appearance": "المظهر",
+    "theme": "السمة",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeAuto": "تلقائي (النظام)",
+    "timezone": "المنطقة الزمنية",
+    "saving": "جاري الحفظ...",
+    "saved": "تم حفظ الإعدادات بنجاح",
+    "saveFailed": "فشل حفظ الإعدادات"
   },
   "video": {
     "title": "الفيديوهات",
     "upload": "رفع",
     "edit": "تحرير",
-    "processing": "قيد المعالجة…"
+    "processing": "قيد المعالجة…",
+    "noVideo": "لم يتم تحميل أي فيديو",
+    "noVideoHint": "يرجى تقديم URL للفيديو لبدء التعديل.",
+    "goToVideos": "الانتقال إلى الفيديوهات"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "loggingIn": "جاري تسجيل الدخول...",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "loginTitle": "مرحبًا بك في Click",
+    "loginSubtitle": "سجل الدخول إلى حسابك للوصول إلى أدوات صناعة المحتوى المدعومة بـ AI.",
+    "registerTitle": "أنشئ حسابك",
+    "registerSubtitle": "ابدأ الآن مع صناعة المحتوى المدعومة بـ AI."
+  },
+  "content": {
+    "title": "المحتوى",
+    "create": "إنشاء محتوى",
+    "edit": "تعديل المحتوى",
+    "delete": "حذف المحتوى",
+    "duplicate": "تكرار",
+    "publish": "نشر",
+    "schedule": "جدولة"
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "overview": "نظرة عامة",
+    "trends": "التوجهات",
+    "platforms": "المنصات",
+    "engagement": "التفاعل",
+    "views": "المشاهدات",
+    "likes": "الإعجابات",
+    "shares": "المشاركات"
+  },
+  "moderation": {
+    "title": "الإشراف على المحتوى",
+    "checking": "جاري فحص المحتوى...",
+    "approved": "تمت الموافقة على المحتوى",
+    "flagged": "تم وضع علامة على المحتوى للمراجعة",
+    "profanity": "تم اكتشاف لغة بذيئة",
+    "spam": "تم اكتشاف محتوى غير مرغوب فيه"
+  },
+  "backup": {
+    "title": "النسخ الاحتياطي",
+    "create": "إنشاء نسخة احتياطية",
+    "download": "تنزيل",
+    "delete": "حذف",
+    "passwordRequired": "كلمة المرور مطلوبة للنسخة الاحتياطية المشفرة",
+    "created": "تم إنشاء النسخة الاحتياطية بنجاح",
+    "createFailed": "فشل إنشاء النسخة الاحتياطية",
+    "downloaded": "تم تنزيل النسخة الاحتياطية",
+    "downloadFailed": "فشل تنزيل النسخة الاحتياطية",
+    "deleted": "تم حذف النسخة الاحتياطية",
+    "deleteFailed": "فشل حذف النسخة الاحتياطية"
+  },
+  "translation": {
+    "title": "الترجمة",
+    "translate": "ترجمة",
+    "translateTo": "ترجمة إلى",
+    "translateToAll": "ترجمة للكل",
+    "targetLanguage": "اللغة المستهدفة",
+    "viewIn": "عرض بـ",
+    "original": "الأصل",
+    "translations": "الترجمات",
+    "noTranslations": "لا توجد ترجمات بعد",
+    "translating": "جاري الترجمة…",
+    "translated": "تمت الترجمة",
+    "translationFailed": "فشلت الترجمة",
+    "viewOriginal": "عرض الأصل",
+    "selectLanguage": "اختر اللغة",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "welcome": "مرحباً بك مجدداً",
+    "heroWelcome": "مرحباً بك في Click",
+    "heroTitle": "أنشئ، وأعد الصياغة، وانشر",
+    "heroSubtitle": "أدوات مدعومة بـ AI، وجدولة ذكية، وتحليلات في مساحة عمل واحدة.",
+    "heroDescription": "مساحة عملك المدعومة بـ AI لإنشاء وإعادة صياغة ونشر المحتوى عبر 6 منصات. حوّل المحتوى الطويل إلى تنسيقات جاهزة للنشر الاجتماعي—بشكل أسرع.",
+    "stats": {
+      "videosProcessed": "فيديوهات تمت معالجتها",
+      "contentGenerated": "محتوى تم توليده",
+      "contentCreated": "محتوى تم إنشاؤه",
+      "quotesCreated": "اقتباسات تم إنشاؤها",
+      "postsScheduled": "منشورات تمت جدولتها"
+    },
+    "clickToView": "انقر لعرض التفاصيل ←",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   }
 }

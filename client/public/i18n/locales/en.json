@@ -37,8 +37,23 @@
     "approvals": "Approvals",
     "quotes": "Quotes",
     "scheduler": "Scheduler",
+    "recurring": "Recurring",
     "calendar": "Calendar",
+    "studio": "Studio",
+    "grow": "Grow",
+    "manage": "Manage",
+    "onboarding": "Get started",
+    "forge": "Forge",
+    "videoEditor": "Editor",
+    "aiClips": "AI clips",
+    "aiTools": "AI tools",
+    "creatorsHub": "Creators",
+    "discover": "Discover",
+    "strategist": "Strategist",
+    "aiInsights": "AI insights",
+    "roadmap": "Roadmap",
     "social": "Social",
+    "connectAccounts": "Connect Accounts",
     "analytics": "Analytics",
     "achievements": "Achievements",
     "membership": "Membership",
@@ -53,11 +68,26 @@
     "setNiche": "Set niche",
     "next": "Next",
     "stages": {
-      "ingest":   { "label": "Ingest",   "description": "Bring footage in — upload, paste a link, or record live." },
-      "script":   { "label": "Script",   "description": "AI drafts hook, body, and CTA tuned to your niche." },
-      "edit":     { "label": "Edit",     "description": "Cut, caption, and brand the video with style intelligence." },
-      "schedule": { "label": "Schedule", "description": "Queue across platforms at optimal post times." },
-      "analyze":  { "label": "Analyze",  "description": "Measure performance and learn what to repeat." }
+      "ingest": {
+        "label": "Ingest",
+        "description": "Bring footage in — upload, paste a link, or record live."
+      },
+      "script": {
+        "label": "Script",
+        "description": "AI drafts hook, body, and CTA tuned to your niche."
+      },
+      "edit": {
+        "label": "Edit",
+        "description": "Cut, caption, and brand the video with style intelligence."
+      },
+      "schedule": {
+        "label": "Schedule",
+        "description": "Queue across platforms at optimal post times."
+      },
+      "analyze": {
+        "label": "Analyze",
+        "description": "Measure performance and learn what to repeat."
+      }
     }
   },
   "ingest": {
@@ -106,7 +136,15 @@
   },
   "language": {
     "label": "Language",
-    "picker": "Select language"
+    "picker": "Select language",
+    "options": "Languages",
+    "search": "Search languages…",
+    "recent": "Recently used",
+    "recentBadge": "recent",
+    "all": "All languages",
+    "noResults": "No languages match",
+    "useSuggested": "Use",
+    "useIt": "Use it"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -122,7 +160,39 @@
       "quotesCreated": "Quotes Made",
       "postsScheduled": "Posts Scheduled"
     },
-    "clickToView": "Click to view details →"
+    "clickToView": "Click to view details →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
   },
   "auth": {
     "login": "Sign In",
@@ -224,6 +294,9 @@
     "translated": "Translated",
     "translationFailed": "Translation failed",
     "viewOriginal": "View original",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
   }
 }

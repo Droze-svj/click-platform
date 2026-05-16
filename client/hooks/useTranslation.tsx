@@ -4,10 +4,24 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 import { supportedLanguages, defaultLanguage, rtlLanguages, type SupportedLanguage } from '../i18n/config'
 import { usePreferences } from './usePreferences'
 
+/**
+ * `params` lets callers interpolate variables into a translated string,
+ * e.g. `t('translation.translationFailedWith', { error: err.message })`
+ * against a locale value like `"Translation failed: {{error}}"`.
+ *
+ * Why this matters: previously the only way to inject a value into a
+ * translated phrase was string concatenation (`t('foo') + ': ' + bar`),
+ * which breaks in RTL languages (Arabic flips visual order of the parts)
+ * and in any language where the variable doesn't naturally sit at the
+ * end of the sentence. Real interpolation lets translators control where
+ * the variable lands in each locale.
+ */
+type TranslationParams = Record<string, string | number>
+
 interface TranslationContextType {
   language: SupportedLanguage
   setLanguage: (lang: SupportedLanguage) => void
-  t: (key: string) => string
+  t: (key: string, params?: TranslationParams) => string
   isLoading: boolean
 }
 
@@ -42,6 +56,32 @@ function lookup(dict: Record<string, any> | null | undefined, key: string): stri
     if (v === undefined) return undefined
   }
   return typeof v === 'string' ? v : undefined
+}
+
+/**
+ * Last-resort label generator when neither the active locale nor the
+ * English fallback contains the key. Splits camelCase + snake_case +
+ * dot.case and produces a sentence-cased phrase: `nav.aiInsights` →
+ * `AI insights`, `dashboard.exportCsv` → `Export csv`. Common all-caps
+ * words (AI, URL, CSV, FAQ, OAuth) are preserved.
+ */
+const ALL_CAPS = new Set(['ai', 'api', 'csv', 'cta', 'faq', 'gif', 'hud', 'id', 'kpi', 'oauth', 'pdf', 'png', 'roi', 'rss', 'sdk', 'sms', 'ui', 'url', 'ux'])
+function humanise(key: string): string {
+  const tail = key.split('.').pop() || key
+  const words = tail
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+  if (words.length === 0) return key
+  const out = words.map((w, i) => {
+    if (ALL_CAPS.has(w)) return w.toUpperCase()
+    if (i === 0) return w.charAt(0).toUpperCase() + w.slice(1)
+    return w
+  }).join(' ')
+  return out
 }
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
@@ -100,12 +140,24 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   )
 
   const t = useCallback(
-    (key: string): string => {
+    (key: string, params?: TranslationParams): string => {
       const primary = lookup(translations, key)
-      if (primary !== undefined) return primary
-      const fallback = lookup(enFallback, key)
-      if (fallback !== undefined) return fallback
-      return key
+      const fallback = primary !== undefined ? primary : lookup(enFallback, key)
+      // Graceful fallback when neither the active locale nor English
+      // has the key — humanise the last segment so the UI never leaks
+      // raw keys like `nav.aiInsights`. "aiInsights" → "AI insights",
+      // "deepDiveAnalytics" → "Deep dive analytics". Previously we
+      // returned the raw key, which is how `NAV.STRATEGIST` was
+      // appearing in the sidebar.
+      const value = fallback !== undefined ? fallback : humanise(key)
+      if (!params) return value
+      // `{{name}}` interpolation. Missing params become empty strings
+      // rather than the literal `{{name}}`, so a partly-supplied call
+      // still renders cleanly. This is the same convention as i18next.
+      return value.replace(/\{\{(\w+)\}\}/g, (_, name: string) => {
+        const v = params[name]
+        return v === undefined || v === null ? '' : String(v)
+      })
     },
     [translations, enFallback]
   )
@@ -123,7 +175,9 @@ export function useTranslation() {
     return {
       language: defaultLanguage as SupportedLanguage,
       setLanguage: () => {},
-      t: (key: string) => key,
+      // Mirror the in-context `t` signature so callers that pass params
+      // don't get a runtime error in non-Provider tests / stories.
+      t: (key: string, _params?: TranslationParams) => key,
       isLoading: false,
     }
   }

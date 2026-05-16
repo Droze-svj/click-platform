@@ -10,8 +10,9 @@ import ErrorAlert from '../../../../components/ErrorAlert'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../../lib/api'
+import { useDraftAutosave } from '../../../../hooks/useDraftAutosave'
+import ClickAutosaveBadge from '../../../../components/click/ClickAutosaveBadge'
 
 interface Script {
   _id: string
@@ -44,6 +45,16 @@ export default function ScriptDetailPage() {
   const [editing, setEditing] = useState(false)
   const [editedScript, setEditedScript] = useState('')
   const [saving, setSaving] = useState(false)
+  const [draftRecovered, setDraftRecovered] = useState(false)
+
+  // Autosave the in-progress edit to /api/drafts/script/:id while the user
+  // is typing. Survives browser close, network blips, and server restarts.
+  const autosave = useDraftAutosave<{ script: string }>({
+    scope: 'script',
+    scopeId: typeof params.id === 'string' ? params.id : null,
+    state: { script: editedScript },
+    enabled: editing,
+  })
 
   const loadScript = useCallback(async () => {
     try {
@@ -74,7 +85,9 @@ export default function ScriptDetailPage() {
 
     setSaving(true)
     try {
-      const token = localStorage.getItem('token')
+      // Flush any pending autosave so the canonical save lands on the
+      // freshest text, then push the canonical save through the script API.
+      await autosave.flush()
       const response = await axios.put(
         `${API_URL}/scripts/${script._id}`,
         { script: editedScript },
@@ -84,12 +97,31 @@ export default function ScriptDetailPage() {
       if (response.data.success) {
         setScript(response.data.data)
         setEditing(false)
+        setDraftRecovered(false)
+        // Canonical save succeeded — the draft is no longer needed.
+        await autosave.clear()
         showToast('Script saved successfully!', 'success')
       }
     } catch (error: any) {
       showToast('Failed to save script', 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  // When the user enters edit mode, check if there's a newer in-progress
+  // draft and offer to recover it. The hook does the lookup; we only apply
+  // it if the draft text differs from what's already in the canonical
+  // script — otherwise there's nothing to recover.
+  const startEditing = async () => {
+    setEditing(true)
+    if (!script) return
+    const snap = await autosave.hydrate()
+    const draftText = (snap?.state as { script?: string } | undefined)?.script
+    if (draftText && draftText !== editedScript && draftText !== script.script) {
+      setEditedScript(draftText)
+      setDraftRecovered(true)
+      showToast('Click recovered your in-progress draft.', 'info')
     }
   }
 
@@ -185,7 +217,7 @@ export default function ScriptDetailPage() {
             {!editing ? (
               <>
                 <button
-                  onClick={() => setEditing(true)}
+                  onClick={startEditing}
                   title="Initialize Logic Modification"
                   className="px-10 py-5 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all flex items-center gap-5 italic active:scale-95 shadow-2xl"
                 >
@@ -209,7 +241,19 @@ export default function ScriptDetailPage() {
                 </div>
               </>
             ) : (
-              <div className="flex gap-6">
+              <div className="flex gap-6 items-center">
+                <ClickAutosaveBadge
+                  status={autosave.status}
+                  lastSavedAt={autosave.lastSavedAt}
+                />
+                {draftRecovered && (
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-wider text-indigo-300"
+                    title="Click recovered your draft from a previous session."
+                  >
+                    Draft recovered
+                  </span>
+                )}
                 <button
                   onClick={handleSave}
                   disabled={saving}

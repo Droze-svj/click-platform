@@ -53,11 +53,26 @@
     "setNiche": "ニッチを選択",
     "next": "次へ",
     "stages": {
-      "ingest":   { "label": "取り込み",   "description": "素材を取り込みます — ファイル、リンク、ライブ録画。" },
-      "script":   { "label": "台本",       "description": "AIがニッチに合わせてフック・本編・CTAを作成します。" },
-      "edit":     { "label": "編集",       "description": "カット、字幕、ブランディングをスタイル分析で。" },
-      "schedule": { "label": "スケジュール", "description": "各プラットフォームで最適な時間に投稿します。" },
-      "analyze":  { "label": "分析",       "description": "成果を測定し、繰り返すべき要素を学習します。" }
+      "ingest": {
+        "label": "取り込み",
+        "description": "素材を取り込みます — ファイル、リンク、ライブ録画。"
+      },
+      "script": {
+        "label": "台本",
+        "description": "AIがニッチに合わせてフック・本編・CTAを作成します。"
+      },
+      "edit": {
+        "label": "編集",
+        "description": "カット、字幕、ブランディングをスタイル分析で。"
+      },
+      "schedule": {
+        "label": "スケジュール",
+        "description": "各プラットフォームで最適な時間に投稿します。"
+      },
+      "analyze": {
+        "label": "分析",
+        "description": "成果を測定し、繰り返すべき要素を学習します。"
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,167 @@
   },
   "language": {
     "label": "言語",
-    "picker": "言語を選択"
+    "picker": "言語を選択",
+    "options": "言語",
+    "search": "言語を検索…",
+    "recent": "最近使用した言語",
+    "recentBadge": "最近",
+    "all": "すべての言語",
+    "noResults": "一致する言語がありません",
+    "useSuggested": "使用する",
+    "useIt": "使用する"
   },
   "settings": {
     "title": "設定",
     "subtitle": "アカウント設定を管理します",
     "language": "言語",
-    "saveSettings": "保存"
+    "saveSettings": "保存",
+    "profile": "プロフィール",
+    "editProfile": "プロフィールを編集",
+    "general": "一般",
+    "notifications": "通知",
+    "privacy": "プライバシー",
+    "security": "セキュリティ",
+    "appearance": "外観",
+    "theme": "テーマ",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "themeAuto": "自動 (システム)",
+    "timezone": "タイムゾーン",
+    "saving": "保存中...",
+    "saved": "設定を保存しました",
+    "saveFailed": "設定の保存に失敗しました"
   },
   "video": {
     "title": "動画",
     "upload": "アップロード",
     "edit": "編集",
-    "processing": "処理中…"
+    "processing": "処理中…",
+    "noVideo": "動画が読み込まれていません",
+    "noVideoHint": "編集を開始するには動画の URL を入力してください",
+    "goToVideos": "動画一覧へ"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "お帰りなさい",
+    "heroWelcome": "Clickへようこそ",
+    "heroTitle": "作成、リパーパス、公開",
+    "heroSubtitle": "AIツール、スマート予約投稿、分析を1つのワークスペースで。",
+    "heroDescription": "6つのプラットフォームで作成、リパーパス、公開ができるAIワークスペース。長尺コンテンツをSNS向けフォーマットへ、よりスピーディーに変換。",
+    "stats": {
+      "videosProcessed": "処理済み動画",
+      "contentGenerated": "生成済みコンテンツ",
+      "contentCreated": "作成済みコンテンツ",
+      "quotesCreated": "作成済み引用",
+      "postsScheduled": "予約済み投稿"
+    },
+    "clickToView": "Clickして詳細を表示 →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
+  },
+  "auth": {
+    "login": "ログイン",
+    "register": "新規登録",
+    "logout": "ログアウト",
+    "loggingIn": "ログイン中...",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "noAccount": "アカウントをお持ちでない場合",
+    "hasAccount": "すでにアカウントをお持ちの場合",
+    "loginTitle": "Clickへようこそ",
+    "loginSubtitle": "アカウントにログインして、AIを活用したコンテンツ作成を始めましょう。",
+    "registerTitle": "アカウント作成",
+    "registerSubtitle": "AIを活用したコンテンツ作成を今すぐ開始。"
+  },
+  "content": {
+    "title": "コンテンツ",
+    "create": "コンテンツを作成",
+    "edit": "コンテンツを編集",
+    "delete": "コンテンツを削除",
+    "duplicate": "複製",
+    "publish": "公開",
+    "schedule": "予約投稿"
+  },
+  "analytics": {
+    "title": "アナリティクス",
+    "overview": "概要",
+    "trends": "トレンド",
+    "platforms": "プラットフォーム",
+    "engagement": "エンゲージメント",
+    "views": "視聴数",
+    "likes": "いいね",
+    "shares": "シェア"
+  },
+  "moderation": {
+    "title": "コンテンツモデレーション",
+    "checking": "コンテンツを確認中...",
+    "approved": "コンテンツが承認されました",
+    "flagged": "審査対象としてフラグされました",
+    "profanity": "不適切な表現を検出",
+    "spam": "スパムを検出"
+  },
+  "backup": {
+    "title": "バックアップ",
+    "create": "バックアップを作成",
+    "download": "ダウンロード",
+    "delete": "削除",
+    "passwordRequired": "暗号化されたバックアップにはパスワードが必要です",
+    "created": "バックアップを作成しました",
+    "createFailed": "バックアップの作成に失敗しました",
+    "downloaded": "バックアップをダウンロードしました",
+    "downloadFailed": "バックアップのダウンロードに失敗しました",
+    "deleted": "バックアップを削除しました",
+    "deleteFailed": "バックアップの削除に失敗しました"
+  },
+  "translation": {
+    "title": "翻訳",
+    "translate": "翻訳する",
+    "translateTo": "次の言語に翻訳",
+    "translateToAll": "すべての言語に翻訳",
+    "targetLanguage": "翻訳先言語",
+    "viewIn": "次の言語で表示",
+    "original": "原文",
+    "translations": "翻訳",
+    "noTranslations": "翻訳はまだありません",
+    "translating": "翻訳中…",
+    "translated": "翻訳済み",
+    "translationFailed": "翻訳に失敗しました",
+    "viewOriginal": "原文を表示",
+    "selectLanguage": "言語を選択",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
   }
 }

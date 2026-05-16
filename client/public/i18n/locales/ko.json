@@ -53,11 +53,26 @@
     "setNiche": "니치 선택",
     "next": "다음",
     "stages": {
-      "ingest":   { "label": "가져오기", "description": "소스 가져오기 — 파일, 링크, 라이브 녹화." },
-      "script":   { "label": "스크립트", "description": "AI가 니치에 맞춰 후크, 본문, CTA를 작성합니다." },
-      "edit":     { "label": "편집",     "description": "스타일 인텔리전스로 컷, 자막, 브랜딩." },
-      "schedule": { "label": "예약",     "description": "각 플랫폼의 최적 시간에 게시합니다." },
-      "analyze":  { "label": "분석",     "description": "성과를 측정하고 반복할 요소를 학습합니다." }
+      "ingest": {
+        "label": "가져오기",
+        "description": "소스 가져오기 — 파일, 링크, 라이브 녹화."
+      },
+      "script": {
+        "label": "스크립트",
+        "description": "AI가 니치에 맞춰 후크, 본문, CTA를 작성합니다."
+      },
+      "edit": {
+        "label": "편집",
+        "description": "스타일 인텔리전스로 컷, 자막, 브랜딩."
+      },
+      "schedule": {
+        "label": "예약",
+        "description": "각 플랫폼의 최적 시간에 게시합니다."
+      },
+      "analyze": {
+        "label": "분석",
+        "description": "성과를 측정하고 반복할 요소를 학습합니다."
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,167 @@
   },
   "language": {
     "label": "언어",
-    "picker": "언어 선택"
+    "picker": "언어 선택",
+    "options": "언어",
+    "search": "언어 검색…",
+    "recent": "최근 사용",
+    "recentBadge": "최근",
+    "all": "모든 언어",
+    "noResults": "일치하는 언어 없음",
+    "useSuggested": "사용",
+    "useIt": "사용하기"
   },
   "settings": {
     "title": "설정",
     "subtitle": "계정 환경설정을 관리하세요",
     "language": "언어",
-    "saveSettings": "저장"
+    "saveSettings": "저장",
+    "profile": "프로필",
+    "editProfile": "프로필 수정",
+    "general": "일반",
+    "notifications": "알림",
+    "privacy": "개인정보 보호",
+    "security": "보안",
+    "appearance": "화면 설정",
+    "theme": "테마",
+    "themeLight": "라이트",
+    "themeDark": "다크",
+    "themeAuto": "자동 (시스템 설정)",
+    "timezone": "시간대",
+    "saving": "저장 중...",
+    "saved": "설정이 저장되었습니다",
+    "saveFailed": "설정 저장에 실패했습니다"
   },
   "video": {
     "title": "영상",
     "upload": "업로드",
     "edit": "편집",
-    "processing": "처리 중…"
+    "processing": "처리 중…",
+    "noVideo": "불러온 동영상 없음",
+    "noVideoHint": "편집을 시작하려면 동영상 URL을 입력해 주세요.",
+    "goToVideos": "동영상 목록으로 이동"
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "welcome": "다시 만나서 반가워요",
+    "heroWelcome": "Click에 오신 것을 환영합니다",
+    "heroTitle": "제작, 리퍼퍼징, 게시",
+    "heroSubtitle": "AI 기반 도구, 스마트 예약, 분석을 하나의 워크스페이스에서.",
+    "heroDescription": "6개 플랫폼에서 제작, 리퍼퍼징, 게시를 지원하는 AI 기반 워크스페이스. 긴 콘텐츠를 소셜 미디어용 포맷으로 더 빠르게 변환하세요.",
+    "stats": {
+      "videosProcessed": "처리된 비디오",
+      "contentGenerated": "생성된 콘텐츠",
+      "contentCreated": "제작된 콘텐츠",
+      "quotesCreated": "제작된 인용구",
+      "postsScheduled": "예약된 게시물"
+    },
+    "clickToView": "Click하여 상세 보기 →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
+  },
+  "auth": {
+    "login": "로그인",
+    "register": "회원가입",
+    "logout": "로그아웃",
+    "loggingIn": "로그인 중...",
+    "email": "이메일",
+    "password": "비밀번호",
+    "passwordPlaceholder": "비밀번호를 입력하세요",
+    "forgotPassword": "비밀번호를 잊으셨나요?",
+    "noAccount": "계정이 없으신가요?",
+    "hasAccount": "이미 계정이 있으신가요?",
+    "loginTitle": "Click에 오신 것을 환영합니다",
+    "loginSubtitle": "AI 기반 콘텐츠 제작을 위해 계정에 로그인하세요.",
+    "registerTitle": "계정 만들기",
+    "registerSubtitle": "AI 기반 콘텐츠 제작을 시작해 보세요."
+  },
+  "content": {
+    "title": "콘텐츠",
+    "create": "콘텐츠 만들기",
+    "edit": "콘텐츠 수정",
+    "delete": "콘텐츠 삭제",
+    "duplicate": "복제",
+    "publish": "게시",
+    "schedule": "예약"
+  },
+  "analytics": {
+    "title": "분석",
+    "overview": "개요",
+    "trends": "트렌드",
+    "platforms": "플랫폼",
+    "engagement": "참여도",
+    "views": "조회수",
+    "likes": "좋아요",
+    "shares": "공유"
+  },
+  "moderation": {
+    "title": "콘텐츠 검토",
+    "checking": "콘텐츠 확인 중...",
+    "approved": "콘텐츠 승인됨",
+    "flagged": "검토를 위해 플래그 지정됨",
+    "profanity": "비속어 감지됨",
+    "spam": "스팸 감지됨"
+  },
+  "backup": {
+    "title": "백업",
+    "create": "백업 생성",
+    "download": "다운로드",
+    "delete": "삭제",
+    "passwordRequired": "암호화된 백업을 위해 비밀번호가 필요합니다",
+    "created": "백업이 성공적으로 생성되었습니다",
+    "createFailed": "백업 생성 실패",
+    "downloaded": "백업 다운로드 완료",
+    "downloadFailed": "백업 다운로드 실패",
+    "deleted": "백업 삭제 완료",
+    "deleteFailed": "백업 삭제 실패"
+  },
+  "translation": {
+    "title": "번역",
+    "translate": "번역하기",
+    "translateTo": "다음 언어로 번역",
+    "translateToAll": "전체 번역",
+    "targetLanguage": "대상 언어",
+    "viewIn": "다음 언어로 보기",
+    "original": "원본",
+    "translations": "번역본",
+    "noTranslations": "번역이 없습니다",
+    "translating": "번역 중…",
+    "translated": "번역 완료",
+    "translationFailed": "번역 실패",
+    "viewOriginal": "원본 보기",
+    "selectLanguage": "언어 선택",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
   }
 }

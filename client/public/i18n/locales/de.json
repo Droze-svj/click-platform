@@ -53,11 +53,26 @@
     "setNiche": "Nische wählen",
     "next": "Weiter",
     "stages": {
-      "ingest":   { "label": "Importieren", "description": "Material reinholen — Datei, Link oder Live-Aufnahme." },
-      "script":   { "label": "Skript",      "description": "Die KI schreibt Hook, Hauptteil und CTA für deine Nische." },
-      "edit":     { "label": "Schneiden",   "description": "Schnitt, Untertitel und Branding mit Style-Intelligenz." },
-      "schedule": { "label": "Planen",      "description": "Posten zur optimalen Zeit auf jeder Plattform." },
-      "analyze":  { "label": "Analysieren", "description": "Performance messen und lernen, was funktioniert." }
+      "ingest": {
+        "label": "Importieren",
+        "description": "Material reinholen — Datei, Link oder Live-Aufnahme."
+      },
+      "script": {
+        "label": "Skript",
+        "description": "Die KI schreibt Hook, Hauptteil und CTA für deine Nische."
+      },
+      "edit": {
+        "label": "Schneiden",
+        "description": "Schnitt, Untertitel und Branding mit Style-Intelligenz."
+      },
+      "schedule": {
+        "label": "Planen",
+        "description": "Posten zur optimalen Zeit auf jeder Plattform."
+      },
+      "analyze": {
+        "label": "Analysieren",
+        "description": "Performance messen und lernen, was funktioniert."
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,167 @@
   },
   "language": {
     "label": "Sprache",
-    "picker": "Sprache wählen"
+    "picker": "Sprache wählen",
+    "options": "Sprachen",
+    "search": "Sprachen suchen…",
+    "recent": "Zuletzt verwendet",
+    "recentBadge": "zuletzt",
+    "all": "Alle Sprachen",
+    "noResults": "Keine passenden Sprachen",
+    "useSuggested": "Verwenden",
+    "useIt": "Jetzt verwenden"
   },
   "settings": {
     "title": "Einstellungen",
     "subtitle": "Verwalte deine Konto-Einstellungen",
     "language": "Sprache",
-    "saveSettings": "Speichern"
+    "saveSettings": "Speichern",
+    "profile": "Profil",
+    "editProfile": "Profil bearbeiten",
+    "general": "Allgemein",
+    "notifications": "Benachrichtigungen",
+    "privacy": "Datenschutz",
+    "security": "Sicherheit",
+    "appearance": "Erscheinungsbild",
+    "theme": "Design",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "themeAuto": "Auto (System)",
+    "timezone": "Zeitzone",
+    "saving": "Wird gespeichert...",
+    "saved": "Einstellungen erfolgreich gespeichert",
+    "saveFailed": "Fehler beim Speichern der Einstellungen"
   },
   "video": {
     "title": "Videos",
     "upload": "Hochladen",
     "edit": "Bearbeiten",
-    "processing": "Verarbeitung…"
+    "processing": "Verarbeitung…",
+    "noVideo": "Kein Video geladen",
+    "noVideoHint": "Bitte gib eine Video-URL an, um mit der Bearbeitung zu beginnen.",
+    "goToVideos": "Zu den Videos"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Willkommen zurück",
+    "heroWelcome": "Willkommen bei Click",
+    "heroTitle": "Erstellen, aufbereiten und veröffentlichen",
+    "heroSubtitle": "AI-gestützte Tools, intelligente Planung und Analysen in einem Workspace.",
+    "heroDescription": "Dein AI-gestützter Workspace zum Erstellen, Aufbereiten und Veröffentlichen auf 6 Plattformen. Verwandle Long-Form-Content schneller in Social-Media-Formate.",
+    "stats": {
+      "videosProcessed": "Verarbeitete Videos",
+      "contentGenerated": "Generierter Content",
+      "contentCreated": "Erstellter Content",
+      "quotesCreated": "Erstellte Zitate",
+      "postsScheduled": "Geplante Posts"
+    },
+    "clickToView": "Click für Details →",
+    "nav": {
+      "forge": {
+        "label": "One-Click Forge",
+        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "badge": "AI ENGINE"
+      },
+      "studio": {
+        "label": "Neural Video Studio",
+        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
+        "badge": "ADVANCED"
+      },
+      "script": {
+        "label": "Script Architect",
+        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
+        "badge": "AI WRITER"
+      },
+      "scheduler": {
+        "label": "Global Scheduler",
+        "desc": "Coordinate and automate your content distribution across all platforms.",
+        "badge": "SYNCED"
+      },
+      "discover": {
+        "label": "Market Discover",
+        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
+        "badge": "LIVE"
+      },
+      "vault": {
+        "label": "Platform Vault",
+        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
+        "badge": "SECURE"
+      }
+    }
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "loggingIn": "Anmeldung läuft...",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "passwordPlaceholder": "Passwort eingeben",
+    "forgotPassword": "Passwort vergessen?",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "loginTitle": "Willkommen bei Click",
+    "loginSubtitle": "Melde dich an, um auf AI-gestützte Content-Erstellung zuzugreifen.",
+    "registerTitle": "Konto erstellen",
+    "registerSubtitle": "Starte jetzt mit AI-gestützter Content-Erstellung."
+  },
+  "content": {
+    "title": "Content",
+    "create": "Content erstellen",
+    "edit": "Content bearbeiten",
+    "delete": "Content löschen",
+    "duplicate": "Duplizieren",
+    "publish": "Veröffentlichen",
+    "schedule": "Planen"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Übersicht",
+    "trends": "Trends",
+    "platforms": "Plattformen",
+    "engagement": "Engagement",
+    "views": "Aufrufe",
+    "likes": "Likes",
+    "shares": "Shares"
+  },
+  "moderation": {
+    "title": "Inhaltsmoderation",
+    "checking": "Inhalt wird geprüft...",
+    "approved": "Inhalt genehmigt",
+    "flagged": "Inhalt zur Überprüfung markiert",
+    "profanity": "Anstößige Sprache erkannt",
+    "spam": "Spam erkannt"
+  },
+  "backup": {
+    "title": "Backups",
+    "create": "Backup erstellen",
+    "download": "Herunterladen",
+    "delete": "Löschen",
+    "passwordRequired": "Passwort für verschlüsseltes Backup erforderlich",
+    "created": "Backup erfolgreich erstellt",
+    "createFailed": "Backup-Erstellung fehlgeschlagen",
+    "downloaded": "Backup heruntergeladen",
+    "downloadFailed": "Backup-Download fehlgeschlagen",
+    "deleted": "Backup gelöscht",
+    "deleteFailed": "Löschen des Backups fehlgeschlagen"
+  },
+  "translation": {
+    "title": "Übersetzung",
+    "translate": "Übersetzen",
+    "translateTo": "Übersetzen in",
+    "translateToAll": "In alle übersetzen",
+    "targetLanguage": "Zielsprache",
+    "viewIn": "Anzeigen in",
+    "original": "Original",
+    "translations": "Übersetzungen",
+    "noTranslations": "Noch keine Übersetzungen",
+    "translating": "Wird übersetzt…",
+    "translated": "Übersetzt",
+    "translationFailed": "Übersetzung fehlgeschlagen",
+    "viewOriginal": "Original anzeigen",
+    "selectLanguage": "Sprache auswählen",
+    "translationFailedWith": "Translation failed: {{error}}",
+    "translatedWithCount": "Translated ({{ok}} ok)",
+    "translatedWithFailures": "Translated ({{ok}} ok, {{fail}} failed)"
   }
 }
