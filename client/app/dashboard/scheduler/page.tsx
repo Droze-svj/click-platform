@@ -1,287 +1,582 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { apiGet, apiPost } from '../../../lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Calendar, Clock, Zap, Trash2, Layers, CheckCircle,
-  AlertCircle, RefreshCw, ArrowRight, Eye, Send, ArrowLeft, Image as ImageIcon
+  Send, Calendar, Clock, Image as ImageIcon,
+  CheckCircle, AlertCircle, RefreshCw, ArrowLeft,
+  Layout, Globe, Radio, Sparkles, Hash, X, Plus,
+  ChevronRight, Timer, Target, Zap, Activity
 } from 'lucide-react'
-import { useAuth } from '../../../hooks/useAuth'
-import { useToast } from '../../../contexts/ToastContext'
-import { extractApiData } from '../../../utils/apiResponse'
-import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { useAuth } from '../../../hooks/useAuth'
+import { useUserSocket } from '../../../hooks/useUserSocket'
+import { useToast } from '../../../contexts/ToastContext'
+import ToastContainer from '../../../components/ToastContainer'
+import ClickLoadingState from '@/components/click/ClickLoadingState'
 
 interface ScheduledPost {
-  _id: string; platform: string;
-  content: { text: string; mediaUrl?: string; hashtags?: string[] };
-  scheduledTime: string; status: 'scheduled' | 'posted' | 'failed' | 'draft';
-  contentId?: { _id: string; title: string };
+  _id: string
+  platform: string
+  content: { text: string; hashtags?: string[]; mediaUrl?: string }
+  scheduledTime: string
+  status: 'scheduled' | 'posted' | 'failed' | 'draft'
 }
 
 const PLATFORMS = [
-  { id: 'tiktok',    label: 'TikTok',    gradient: 'from-surface-900 to-black',       charLimit: 2200, icon: '♪' },
-  { id: 'instagram', label: 'Instagram', gradient: 'from-pink-500 to-purple-600',   charLimit: 2200, icon: '◎' },
-  { id: 'youtube',   label: 'YouTube',   gradient: 'from-rose-500 to-rose-700',       charLimit: 5000, icon: '▶' },
-  { id: 'twitter',   label: 'X (Twitter)',gradient: 'from-surface-700 to-surface-900',  charLimit: 280,  icon: '𝕏' },
-  { id: 'linkedin',  label: 'LinkedIn',  gradient: 'from-blue-500 to-blue-700',     charLimit: 3000, icon: 'in' },
-  { id: 'facebook',  label: 'Facebook',  gradient: 'from-indigo-500 to-indigo-700', charLimit: 63206, icon: 'f' },
+  { id: 'tiktok',    label: 'TikTok',      icon: '♪',  gradient: 'from-slate-800 to-black' },
+  { id: 'instagram', label: 'Instagram',   icon: '◎',  gradient: 'from-pink-500 to-purple-600' },
+  { id: 'youtube',   label: 'YouTube',     icon: '▶', gradient: 'from-red-600 to-red-800' },
+  { id: 'twitter',   label: 'X (Twitter)', icon: '𝕏',  gradient: 'from-slate-700 to-slate-900' },
+  { id: 'linkedin',  label: 'LinkedIn',    icon: 'in', gradient: 'from-blue-600 to-blue-800' },
 ]
 
-export default function ContentSchedulerPage() {
+export default function SchedulerPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const { showToast } = useToast()
 
   const [posts, setPosts] = useState<ScheduledPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-  const [postText, setPostText] = useState('')
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['tiktok'])
-  const [scheduledTime, setScheduledTime] = useState('')
-  const [useOptimalTime, setUseOptimalTime] = useState(true)
+  const [scheduling, setScheduling] = useState(false)
+  const [queuedClipIds, setQueuedClipIds] = useState<string[]>([])
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [form, setForm] = useState({
+    platform: 'instagram',
+    text: '',
+    hashtags: '',
+    scheduledTime: '',
+    mediaUrl: '',
+    // Which connected account on the selected platform to post from. Null
+    // resolves to the user's primary account server-side. Surfaces as a
+    // dropdown only when the platform has 2+ accounts linked.
+    accountId: null as string | null,
+  })
 
-  const loadSchedule = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true)
-    else setLoading(true)
+  // Per-platform connected accounts, keyed by platform id. Loaded once on
+  // mount and refreshed when the user pivots platforms in the composer.
+  type PlatformAccount = {
+    accountId: string
+    platformUserId?: string
+    platformUsername?: string | null
+    avatar?: string | null
+    isPrimary?: boolean
+  }
+  const [accountsByPlatform, setAccountsByPlatform] = useState<Record<string, PlatformAccount[]>>({})
+
+  // When arriving from the clips hub with ?clipIds=... pre-fill the form
+  // so the user can hit "Inject" without retyping. This is the autonomous
+  // handoff the workflow chain depends on.
+  useEffect(() => {
+    if (!searchParams) return
+    const idsParam = searchParams.get('clipIds')
+    if (!idsParam) return
+    const ids = idsParam.split(',').map(s => s.trim()).filter(Boolean)
+    if (ids.length === 0) return
+    setQueuedClipIds(ids)
+    // Fetch the first clip's metadata to seed caption/media. Best-effort —
+    // if the fetch fails the user just gets an empty form to fill in.
+    apiGet<any>(`/video/clips/${ids[0]}`)
+      .then((res: any) => {
+        const c = res?.data || res
+        if (!c) return
+        setForm(f => ({
+          ...f,
+          text: c.caption || c.hookText || f.text,
+          mediaUrl: c.url || c.signedUrl || f.mediaUrl,
+        }))
+      })
+      .catch(() => { /* best-effort prefill */ })
+    showToast(`✓ ${ids.length} clip${ids.length === 1 ? '' : 's'} pre-loaded from forge`, 'success')
+  }, [searchParams, showToast])
+
+  const [activeTab, setActiveTab] = useState<'queue' | 'history'>('queue')
+  const [optimalTimes, setOptimalTimes] = useState<string[]>([])
+  const [translating, setTranslating] = useState(false)
+  const [userLang, setUserLang] = useState<string>('en')
+
+  useEffect(() => {
     try {
-      const res = await axios.get(`${API_URL}/scheduler`)
-      const data = extractApiData<ScheduledPost[]>(res) || []
-      setPosts(Array.isArray(data) ? data : [])
-    } catch (err) {
-      showToast('Failed to load scheduled posts', 'error')
+      const prefs = JSON.parse(localStorage.getItem('click-user-preferences') || '{}')
+      if (prefs?.language && prefs.language !== 'en') setUserLang(prefs.language)
+    } catch { /* ignore */ }
+  }, [])
+
+  const translateCaption = async () => {
+    if (!form.text.trim() || userLang === 'en') return
+    setTranslating(true)
+    try {
+      const res: any = await apiPost('/translation/translate', {
+        text: form.text,
+        targetLanguage: userLang,
+        context: 'social_media_caption',
+      })
+      const translated = res?.data?.translatedText || res?.translatedText
+      if (translated) setForm(f => ({ ...f, text: translated }))
+    } catch {
+      showToast('TRANSLATE_ERR: Translation service unavailable', 'error')
     } finally {
-      setLoading(false); setRefreshing(false)
+      setTranslating(false)
+    }
+  }
+
+  // Load every platform's connected accounts up-front so the platform tiles
+  // can show a "connected" dot and the composer can decide whether to show
+  // the per-platform account dropdown. One call, not seven.
+  useEffect(() => {
+    apiGet<any>('/oauth/connections')
+      .then((res: any) => {
+        const data = res?.accounts || res?.data?.accounts || res?.data || {}
+        setAccountsByPlatform(data || {})
+      })
+      .catch(() => { /* best-effort */ })
+  }, [])
+
+  // Default `accountId` to the primary of the newly-picked platform whenever
+  // the user pivots. Without this, the dropdown defaulted to whatever the
+  // previous platform's account id was, which the server then rejected.
+  useEffect(() => {
+    const accs = accountsByPlatform[form.platform] || []
+    if (accs.length === 0) {
+      if (form.accountId !== null) setForm((f) => ({ ...f, accountId: null }))
+      return
+    }
+    const primary = accs.find((a) => a.isPrimary) || accs[0]
+    if (form.accountId !== primary.accountId) {
+      setForm((f) => ({ ...f, accountId: primary.accountId }))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.platform, accountsByPlatform])
+
+  useEffect(() => {
+    if (!form.platform) return
+    apiGet<any>(`/scheduler/optimal-times?platform=${form.platform}`)
+      .then((res: any) => {
+        const data = res?.data || res
+        const slots: string[] = []
+        const wins = data?.windows?.[form.platform] || []
+        wins.slice(0, 3).forEach((w: any) => {
+          const iso = data?.nextSuggested?.[form.platform] || null
+          if (iso && slots.length === 0) slots.push(iso)
+          if (w.label && slots.length < 3) {
+            const d = new Date()
+            const daysAhead = (w.dayOfWeek - d.getDay() + 7) % 7 || 7
+            d.setDate(d.getDate() + daysAhead)
+            d.setHours(w.hour, 0, 0, 0)
+            const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+              .toISOString().slice(0, 16)
+            if (!slots.includes(local)) slots.push(local)
+          }
+        })
+        setOptimalTimes(slots.slice(0, 3))
+      })
+      .catch(() => { /* best-effort */ })
+  }, [form.platform])
+
+  const loadPosts = useCallback(async () => {
+    try {
+      const res: any = await apiGet('/scheduler')
+      setPosts(res?.data || res || [])
+    } catch {
+      showToast("Could not load your scheduled posts. Retry in a moment.", 'error')
+    } finally {
+      setLoading(false)
     }
   }, [showToast])
 
   useEffect(() => {
-    if (!user) { router.push('/login'); return }
-    loadSchedule()
-    const next = new Date()
-    next.setHours(next.getHours() + 1, 0, 0, 0)
-    setScheduledTime(next.toISOString().slice(0, 16))
-  }, [user, router, loadSchedule])
+    if (!user) router.push('/login')
+    else loadPosts()
+  }, [user, router, loadPosts])
 
-  const handleSchedulePost = async () => {
-    if (!postText.trim()) { showToast('Please enter post content', 'warning'); return }
-    if (selectedPlatforms.length === 0) { showToast('Select at least one platform', 'warning'); return }
-    setSubmitting(true)
+  // Subscribe to live post status changes so the scheduler queue updates
+  // without a manual refresh when the worker publishes (or fails) a post.
+  useUserSocket((user as any)?._id || (user as any)?.id, {
+    onPostStatus: (payload) => {
+      setPosts(prev => prev.map(p => (
+        p._id === payload.postId
+          ? { ...p, status: payload.status === 'published' ? 'posted' : (payload.status === 'failed' ? 'failed' : p.status) }
+          : p
+      )))
+      if (payload.status === 'published') {
+        showToast(
+          payload.url
+            ? `✓ Live on ${payload.platform || 'platform'} — ${payload.url}`
+            : `✓ Posted to ${payload.platform || 'platform'}`,
+          'success'
+        )
+      } else if (payload.status === 'failed') {
+        showToast(`✗ ${payload.platform || 'Post'} failed: ${payload.error || 'unknown error'}`, 'error')
+      }
+    },
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.text.trim() || !form.scheduledTime) {
+      showToast('PARAM_ERR: CONTENT_&_TIME_REQUIRED', 'error')
+      return
+    }
+
+    setScheduling(true)
     try {
-      await Promise.all(selectedPlatforms.map(platform => {
-        const body = {
-          platform,
-          content: { text: postText },
-          ...(useOptimalTime ? {} : { scheduledTime: new Date(scheduledTime).toISOString() }),
-        }
-        return axios.post(useOptimalTime ? `${API_URL}/scheduling/optimal` : `${API_URL}/scheduler`, body)
-      }))
-      showToast('Post scheduled successfully', 'success')
-      setPostText('')
-      loadSchedule()
-    } catch (err: any) {
-      showToast('Failed to schedule post', 'error')
-    } finally { setSubmitting(false) }
+      const hashtags = form.hashtags.split(/[\s,]+/).filter(Boolean)
+      const baseTime = new Date(form.scheduledTime).getTime()
+
+      // If the user arrived from the clips hub with multiple clipIds queued,
+      // fan out: one ScheduledPost per clip, staggered 5 minutes apart so
+      // they don't all hit the platform at once.
+      if (queuedClipIds.length > 1) {
+        await Promise.all(queuedClipIds.map((clipId, i) =>
+          apiPost('/scheduler/schedule', {
+            platform: form.platform,
+            accountId: form.accountId || undefined,
+            content: {
+              text: form.text,
+              hashtags,
+              mediaUrl: form.mediaUrl || undefined,
+            },
+            contentId: clipId,
+            scheduledTime: new Date(baseTime + i * 5 * 60 * 1000).toISOString(),
+          })
+        ))
+        showToast(`Scheduled ${queuedClipIds.length} post${queuedClipIds.length === 1 ? '' : 's'} — track them in Posts.`, 'success')
+      } else {
+        await apiPost('/scheduler/schedule', {
+          platform: form.platform,
+          accountId: form.accountId || undefined,
+          content: {
+            text: form.text,
+            hashtags,
+            mediaUrl: form.mediaUrl || undefined
+          },
+          contentId: queuedClipIds[0] || undefined,
+          scheduledTime: new Date(form.scheduledTime).toISOString()
+        })
+        showToast('Post scheduled.', 'success')
+      }
+      setForm({ platform: 'instagram', text: '', hashtags: '', scheduledTime: '', mediaUrl: '', accountId: null })
+      setQueuedClipIds([])
+      loadPosts()
+    } catch {
+      showToast("Could not schedule that post. Try again.", 'error')
+    } finally {
+      setTimeout(() => setScheduling(false), 800)
+    }
   }
 
-  const handleDelete = async (id: string) => {
-    try {
-      await axios.delete(`${API_URL}/scheduler/posts/${id}`)
-      showToast('Post deleted', 'success')
-      setPosts(prev => prev.filter(p => p._id !== id))
-    } catch { showToast('Failed to delete post', 'error') }
-  }
-
-  const autoResize = () => {
-    const el = textareaRef.current
-    if (el) { el.style.height = 'auto'; el.style.height = `${Math.min(el.scrollHeight, 400)}px` }
-  }
-
-  const currentLimit = useMemo(() => {
-    const limits = selectedPlatforms.map(id => PLATFORMS.find(p => p.id === id)?.charLimit || 9999)
-    return Math.min(...limits)
-  }, [selectedPlatforms])
-  
-  const charCount = postText.length
-  const upcomingPosts = posts.filter(p => p.status === 'scheduled')
+  if (loading) return (
+    <div className="flex items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
+       <ClickLoadingState intent="loading" />
+    </div>
+  )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter pb-32">
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-8 lg:px-12 pt-8 max-w-[1800px] mx-auto space-y-16 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter overflow-x-hidden">
         <ToastContainer />
 
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10 space-y-10">
-          
-          {/* Header */}
-          <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
-             <div className="flex items-center gap-6">
-                <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
-                  <ArrowLeft size={20} />
-                </button>
-                <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
-                  <Send size={32} className="text-primary-600 dark:text-primary-400" />
-                </div>
-                <div>
-                   <div className="flex items-center gap-2 mb-1">
-                     <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                       Distribution Hub
-                     </span>
-                   </div>
-                   <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Multi-Platform Scheduler</h1>
-                   <p className="text-surface-500 text-sm mt-2 font-medium">Compose once, distribute everywhere. Let AI pick the best time to post.</p>
-                </div>
-             </div>
+        {/* Header HUD */}
+        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-12 border-b border-surface-100 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-8 w-full lg:w-auto">
+              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard"
+                className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90 group">
+                <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
+              </button>
+              <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
+                <Send size={40} className="text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.2em] border-2 border-primary-500/20 italic leading-none">
+                      Scheduler
+                    </span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        {posts.filter(p => p.status === 'scheduled').length} scheduled
+                    </div>
+                 </div>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Scheduler</h1>
+              </div>
+           </div>
 
-             <div className="flex items-center gap-4">
-                <button onClick={() => loadSchedule(true)} disabled={refreshing} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm disabled:opacity-50">
-                  <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
-                </button>
-                <button onClick={() => router.push('/dashboard/calendar')} className="px-6 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-colors flex items-center gap-2">
-                  <Calendar size={18} /> View Calendar
-                </button>
-             </div>
-          </header>
+           <div className="flex items-center gap-6">
+              <button type="button" onClick={() => router.push('/dashboard/calendar')}
+                className="px-8 py-4 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] italic shadow-xl hover:border-primary-500/40 hover:text-primary-500 transition-all flex items-center gap-4 active:scale-95"
+              >
+                <Calendar size={20} /> Open Calendar
+              </button>
+              <button type="button" onClick={() => loadPosts()} title="Refresh Sequences" aria-label="Refresh Sequences"
+                className="w-14 h-14 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-2xl flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90"
+              >
+                <RefreshCw size={24} className={loading ? 'animate-spin text-primary-500' : ''} />
+              </button>
+           </div>
+        </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-             {/* Composer */}
-             <div className="lg:col-span-3 space-y-8">
-                <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 sm:p-10 shadow-sm">
-                   <h3 className="text-sm font-bold text-surface-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider"><Layers size={18} className="text-primary-600 dark:text-primary-400" /> Select Platforms</h3>
-                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-                      {PLATFORMS.map(p => {
-                        const active = selectedPlatforms.includes(p.id)
+        <main className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative z-10">
+           {/* Scheduling Terminal */}
+           <section className="lg:col-span-5 bg-surface-card backdrop-blur-3xl rounded-[4rem] border-2 border-surface-100 dark:border-primary-500/10 overflow-hidden shadow-2xl group transition-all duration-700 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] flex flex-col">
+              <div className="px-10 py-12 border-b-2 border-surface-100 dark:border-surface-800 flex items-center gap-8 bg-primary-500/5">
+                 <div className="w-14 h-14 bg-primary-600 rounded-[1.2rem] flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform">
+                   <Zap size={28} className="text-white animate-pulse" />
+                 </div>
+                 <div>
+                    <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">New post</h2>
+                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">Pick a platform, write your caption, choose when to publish</p>
+                 </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-10 sm:p-14 space-y-12 flex-1">
+                 <div className="space-y-6">
+                    <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Platform</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+                       {PLATFORMS.map(p => {
+                         const active = form.platform === p.id
+                         const isTikTok = p.id === 'tiktok'
+                         if (isTikTok) {
+                           // Render as a real button that explains the "soon" state
+                           // on click — silent no-ops on cards make the UI feel broken.
+                           return (
+                             <button
+                               type="button"
+                               key={p.id}
+                               onClick={() => showToast('TikTok publishing is coming soon — you can already connect the account.', 'info')}
+                               title="TikTok publishing coming soon — connect your account now to be ready"
+                               aria-label="TikTok (coming soon)"
+                               className="flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-amber-500/30 bg-amber-500/5 text-amber-500/70 opacity-80 relative hover:opacity-100 hover:border-amber-500/50 transition-all"
+                             >
+                               <span className="text-2xl sm:text-3xl opacity-50 grayscale" aria-hidden="true">{p.icon}</span>
+                               <span className="text-[8px] font-black uppercase tracking-widest italic">{p.id}</span>
+                               <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full bg-amber-500 text-black text-[7px] font-black uppercase tracking-wider leading-none">SOON</span>
+                             </button>
+                           )
+                         }
+                         return (
+                           <button type="button" key={p.id} onClick={() => setForm(f => ({ ...f, platform: p.id }))}
+                             title={`Select ${p.label}`} aria-label={`Select ${p.label}`}
+                             className={`flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 group/node ${active ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent shadow-2xl scale-110 z-10' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-400 hover:border-primary-500/40'}`}
+                           >
+                              <span className={`text-2xl sm:text-3xl transition-transform duration-500 ${active ? 'scale-125 rotate-12' : 'opacity-40 grayscale group-hover/node:grayscale-0 group-hover/node:opacity-100 group-hover/node:scale-110'}`} aria-hidden="true">{p.icon}</span>
+                              <span className="text-[8px] font-black uppercase tracking-widest italic">{p.id}</span>
+                           </button>
+                         )
+                       })}
+                    </div>
+                    {/* Per-platform connected-account picker. Shows the
+                        active account at all times so the user can see
+                        WHICH account they're posting from; expands to a
+                        dropdown only when 2+ accounts are linked. When 0
+                        accounts are linked the strip becomes a "Connect"
+                        prompt that deep-links into the social dashboard. */}
+                    {(() => {
+                      const accs = accountsByPlatform[form.platform] || []
+                      if (accs.length === 0) {
                         return (
-                          <button key={p.id} onClick={() => setSelectedPlatforms(prev => prev.includes(p.id) ? prev.filter(x => x !== p.id) : [...prev, p.id])}
-                            className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all ${active ? `border-transparent bg-gradient-to-br ${p.gradient} shadow-md scale-105` : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 text-surface-400 hover:border-surface-300 dark:hover:border-surface-700'}`}
+                          <a
+                            href={`/dashboard/social?platform=${form.platform}`}
+                            className="mt-4 flex items-center justify-between px-6 py-4 rounded-2xl border-2 border-rose-500/30 bg-rose-500/5 text-rose-500 hover:border-rose-500/60 hover:bg-rose-500/10 transition-all text-xs font-black uppercase tracking-widest italic"
                           >
-                            <span className={`text-2xl ${active ? 'text-white drop-shadow-md' : 'opacity-60'}`}>{p.icon}</span>
-                          </button>
+                            <span>No {form.platform} account connected</span>
+                            <span className="text-[10px]">Connect →</span>
+                          </a>
                         )
-                      })}
-                   </div>
+                      }
+                      if (accs.length === 1) {
+                        const only = accs[0]
+                        return (
+                          <div className="mt-4 flex items-center gap-4 px-6 py-3 rounded-2xl border-2 border-emerald-500/20 bg-emerald-500/5 text-xs font-black uppercase tracking-widest italic text-emerald-600 dark:text-emerald-400">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                            <span className="truncate">Posting as {only.platformUsername || only.accountId}</span>
+                          </div>
+                        )
+                      }
+                      return (
+                        <div className="mt-4 space-y-2">
+                          <label className="text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Account</label>
+                          <select
+                            aria-label={`Select ${form.platform} account to post from`}
+                            title={`Select ${form.platform} account to post from`}
+                            value={form.accountId || ''}
+                            onChange={(e) => setForm((f) => ({ ...f, accountId: e.target.value || null }))}
+                            className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest italic text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 transition-all"
+                          >
+                            {accs.map((a) => (
+                              <option key={a.accountId} value={a.accountId}>
+                                {a.platformUsername || a.accountId}{a.isPrimary ? ' (primary)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )
+                    })()}
+                 </div>
 
-                   <h3 className="text-sm font-bold text-surface-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider"><Edit3 size={18} className="text-primary-600 dark:text-primary-400" /> Compose Post</h3>
-                   <div className="relative mb-10">
-                      <textarea
-                        ref={textareaRef}
-                        value={postText}
-                        onChange={e => { setPostText(e.target.value); autoResize() }}
-                        placeholder="Write your caption here..."
-                        className={`w-full bg-surface-50 dark:bg-surface-950 border rounded-2xl p-6 text-base font-medium text-surface-900 dark:text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 transition-all resize-none min-h-[160px] ${charCount > currentLimit ? 'border-rose-300 dark:border-rose-700/50 ring-rose-500/20' : 'border-surface-200 dark:border-surface-800 focus:ring-primary-500/30 focus:border-primary-500/50'}`}
-                      />
-                      <div className={`absolute bottom-4 right-4 text-[10px] font-bold px-3 py-1.5 rounded-lg border ${charCount > currentLimit ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50' : 'bg-white dark:bg-surface-900 text-surface-500 border-surface-200 dark:border-surface-800'}`}>
-                         {charCount} / {currentLimit}
-                      </div>
-                   </div>
+                 <div className="space-y-6">
+                    <div className="flex items-center justify-between pl-2">
+                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">Caption</label>
+                      {userLang !== 'en' && form.text.trim().length > 0 && (
+                        <button type="button" onClick={translateCaption} disabled={translating}
+                          className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 text-[9px] font-black uppercase tracking-widest italic hover:bg-primary-500 hover:text-white transition-all disabled:opacity-40"
+                        >
+                          {translating ? <RefreshCw size={10} className="animate-spin" /> : <Globe size={10} />}
+                          {translating ? 'Translating…' : `Generate in ${userLang.toUpperCase()}`}
+                        </button>
+                      )}
+                    </div>
+                    <textarea value={form.text} onChange={e => setForm(f => ({ ...f, text: e.target.value }))}
+                      placeholder="Write your caption…"
+                      className="w-full h-64 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-10 text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight italic focus:outline-none focus:border-primary-500 transition-all shadow-inner resize-none backdrop-blur-xl custom-scrollbar"
+                    />
+                 </div>
 
-                   <h3 className="text-sm font-bold text-surface-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider"><Clock size={18} className="text-primary-600 dark:text-primary-400" /> Schedule Time</h3>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                      <button onClick={() => setUseOptimalTime(true)} className={`p-6 rounded-2xl border-2 flex flex-col items-start gap-2 transition-all text-left ${useOptimalTime ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700 shadow-sm' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
-                         <Zap size={24} className={useOptimalTime ? 'text-primary-600 dark:text-primary-400' : 'text-surface-400'} />
-                         <div>
-                            <span className={`block text-sm font-bold mb-1 ${useOptimalTime ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>Optimal AI Time</span>
-                            <span className={`text-xs font-medium ${useOptimalTime ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>Posts when followers are most active</span>
-                         </div>
-                      </button>
-                      <button onClick={() => setUseOptimalTime(false)} className={`p-6 rounded-2xl border-2 flex flex-col items-start gap-2 transition-all text-left ${!useOptimalTime ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700 shadow-sm' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}>
-                         <Calendar size={24} className={!useOptimalTime ? 'text-primary-600 dark:text-primary-400' : 'text-surface-400'} />
-                         <div>
-                            <span className={`block text-sm font-bold mb-1 ${!useOptimalTime ? 'text-primary-900 dark:text-primary-50' : 'text-surface-900 dark:text-white'}`}>Custom Time</span>
-                            <span className={`text-xs font-medium ${!useOptimalTime ? 'text-primary-700 dark:text-primary-400' : 'text-surface-500'}`}>Select a specific date and exact time</span>
-                         </div>
-                      </button>
-                   </div>
-
-                   <AnimatePresence>
-                     {!useOptimalTime && (
-                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-10 overflow-hidden">
-                          <input type="datetime-local" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)}
-                            className="w-full bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl px-6 py-4 text-sm font-bold text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                       <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Hashtags</label>
+                       <div className="relative group/tag">
+                          <input type="text" value={form.hashtags} onChange={e => setForm(f => ({ ...f, hashtags: e.target.value }))}
+                            placeholder="VIRAL, GROWTH, TECH..."
+                            className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl pl-12 pr-6 py-5 text-xs font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner"
                           />
+                          <Hash size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within/tag:text-primary-500 transition-colors" />
+                       </div>
+                    </div>
+                    <div className="space-y-6">
+                       <div className="flex items-center justify-between pl-2">
+                         <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic leading-none">Temporal Anchor (Time)</label>
+                         {optimalTimes.length > 0 && (
+                           <span className="text-[9px] font-black text-primary-500 uppercase tracking-widest italic">Best times</span>
+                         )}
+                       </div>
+                       {optimalTimes.length > 0 && (
+                         <div className="flex flex-wrap gap-2">
+                           {optimalTimes.map((iso, i) => {
+                             const d = new Date(iso)
+                             const label = d.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+                             const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+                             return (
+                               <button key={i} type="button"
+                                 onClick={() => setForm(f => ({ ...f, scheduledTime: localIso }))}
+                                 className="px-4 py-2 rounded-xl bg-primary-500/10 border-2 border-primary-500/20 text-primary-500 text-[9px] font-black uppercase tracking-widest italic hover:bg-primary-500 hover:text-white transition-all active:scale-95"
+                               >{label}</button>
+                             )
+                           })}
+                         </div>
+                       )}
+                       <div className="relative group/time">
+                          <input type="datetime-local" value={form.scheduledTime} onChange={e => setForm(f => ({ ...f, scheduledTime: e.target.value }))}
+                            aria-label="Scheduled time"
+                            title="Scheduled time"
+                            className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl pl-12 pr-6 py-5 text-xs font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner appearance-none cursor-pointer"
+                          />
+                          <Clock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within/time:text-primary-500 transition-colors" />
+                       </div>
+                       <p className="text-[9px] font-black text-surface-300 dark:text-slate-700 uppercase tracking-[0.3em] italic pl-2 flex items-center gap-2">
+                         <Globe size={10} />
+                         {Intl.DateTimeFormat().resolvedOptions().timeZone} (your local time)
+                       </p>
+                    </div>
+                 </div>
+
+                 <button type="submit" disabled={scheduling}
+                   className="w-full py-10 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-sm font-black uppercase tracking-[1em] italic shadow-[0_40px_100px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all duration-500 hover:-translate-y-2 active:scale-95 border-none flex items-center justify-center gap-10 group/submit"
+                 >
+                   {scheduling ? <RefreshCw className="animate-spin" size={32} /> : <Target size={32} className="group-hover/submit:scale-125 group-hover/submit:rotate-12 transition-all duration-700 text-primary-500" />}
+                   {scheduling ? 'QUEUEING_SEQUENCE...' : 'INJECT_INTO_QUEUE'}
+                 </button>
+              </form>
+           </section>
+
+           {/* Deployment Queue */}
+           <section className="lg:col-span-7 space-y-10">
+              <div className="flex items-center justify-between gap-10">
+                 <div className="flex items-center gap-4 p-2 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-xl">
+                    <button type="button" onClick={() => setActiveTab('queue')}
+                      className={`px-8 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${activeTab === 'queue' ? 'bg-primary-600 text-white shadow-2xl' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}
+                    >
+                      ACTIVE_QUEUE
+                    </button>
+                    <button type="button" onClick={() => setActiveTab('history')}
+                      className={`px-8 py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${activeTab === 'history' ? 'bg-primary-600 text-white shadow-2xl' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}
+                    >
+                      ARCHIVE_LOGS
+                    </button>
+                 </div>
+                 <div className="hidden sm:flex items-center gap-6 text-[10px] font-black text-surface-400 uppercase tracking-[0.5em] italic opacity-60">
+                    <Activity size={16} className="text-emerald-500 animate-pulse" /> LIVE_QUEUE_MONITOR
+                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-8">
+                 <AnimatePresence mode="popLayout">
+                    {posts.filter(p => activeTab === 'queue' ? (p.status === 'scheduled' || p.status === 'draft') : (p.status === 'posted' || p.status === 'failed')).length === 0 ? (
+                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-48 flex flex-col items-center justify-center bg-surface-card dark:bg-surface-950/30 border-4 border-dashed border-surface-100 dark:border-surface-800 rounded-[4rem] opacity-20 group/empty hover:opacity-40 transition-all duration-1000">
+                          <Layout size={100} className="mb-10 text-surface-400 group-hover/empty:scale-125 transition-transform duration-1000" />
+                          <p className="text-3xl font-black uppercase tracking-[0.8em] italic">NULL_PAYLOAD_DETECTED</p>
                        </motion.div>
-                     )}
-                   </AnimatePresence>
+                    ) : (
+                       posts
+                        .filter(p => activeTab === 'queue' ? (p.status === 'scheduled' || p.status === 'draft') : (p.status === 'posted' || p.status === 'failed'))
+                        .map((p, idx) => {
+                           const pCfg = PLATFORMS.find(pl => pl.id === p.platform) || PLATFORMS[0]
+                           const statusCfg = {
+                             scheduled: { label: 'SCHEDULED', icon: Clock, color: 'text-primary-500 bg-primary-500/10 border-primary-500/20' },
+                             posted:    { label: 'PUBLISHED', icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+                             failed:    { label: 'FAILED',    icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+                             draft:     { label: 'DRAFT',     icon: Timer, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+                           }[p.status]
+                           const StatusIcon = statusCfg.icon
 
-                   <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
-                     <button onClick={handleSchedulePost} disabled={submitting || charCount > currentLimit || selectedPlatforms.length === 0}
-                       className="w-full py-5 bg-primary-600 text-white rounded-2xl text-sm font-bold uppercase tracking-wider hover:bg-primary-700 transition-colors shadow-sm flex items-center justify-center gap-3 disabled:opacity-50"
-                     >
-                       {submitting ? <RefreshCw className="animate-spin" size={20} /> : <Send size={20} />}
-                       {submitting ? 'Scheduling...' : 'Schedule to Multiple Platforms'}
-                     </button>
-                   </div>
-                </div>
-             </div>
+                           return (
+                             <motion.div layout initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }} key={p._id}
+                               className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-10 hover:border-primary-500/30 transition-all duration-500 group/item shadow-xl relative overflow-hidden"
+                             >
+                                <div className="absolute top-0 right-0 p-12 opacity-[0.01] pointer-events-none group-hover/item:opacity-[0.05] transition-opacity duration-1000"><StatusIcon size={200} /></div>
+                                
+                                <div className={`w-24 h-24 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-3xl flex items-center justify-center text-3xl sm:text-5xl group-hover/item:rotate-12 group-hover/item:scale-110 transition-all duration-700 shadow-inner shrink-0 relative overflow-hidden`}>
+                                   <div className={`absolute inset-0 bg-gradient-to-br ${pCfg.gradient} opacity-0 group-hover/item:opacity-20 transition-opacity duration-700`} />
+                                   <span className="relative z-10">{pCfg.icon}</span>
+                                </div>
 
-             {/* Queue Sidebar */}
-             <div className="lg:col-span-2 space-y-6">
-                <div className="flex items-center justify-between mb-2">
-                   <h3 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">Upcoming Queue</h3>
-                   <span className="px-3 py-1 bg-surface-100 dark:bg-surface-800 rounded-lg text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider">{upcomingPosts.length} Posts</span>
-                </div>
-                <p className="text-surface-500 text-sm font-medium mb-6">Your next posts scheduled for delivery.</p>
-                
-                {loading ? (
-                  <div className="py-24 flex flex-col items-center justify-center text-center gap-4 bg-white dark:bg-surface-900 rounded-3xl border border-surface-200 dark:border-surface-800 shadow-sm">
-                     <RefreshCw size={32} className="text-primary-500 animate-spin" />
-                     <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Loading queue...</p>
-                  </div>
-                ) : upcomingPosts.length === 0 ? (
-                  <div className="bg-white dark:bg-surface-900 p-12 rounded-3xl text-center border border-dashed border-surface-300 dark:border-surface-700 flex flex-col items-center gap-4 shadow-sm">
-                     <div className="w-16 h-16 bg-surface-50 dark:bg-surface-950 rounded-2xl flex items-center justify-center border border-surface-200 dark:border-surface-800">
-                        <Calendar size={32} className="text-surface-400" />
-                     </div>
-                     <div>
-                        <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight mb-1">Queue Empty</p>
-                        <p className="text-sm font-medium text-surface-500">No posts scheduled yet. Use the composer to schedule your first post.</p>
-                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                     {upcomingPosts.slice(0, 8).map((post) => {
-                       const pl = PLATFORMS.find(p => p.id === post.platform)
-                       return (
-                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={post._id}
-                           className="bg-white dark:bg-surface-900 p-6 rounded-2xl flex items-start gap-4 border border-surface-200 dark:border-surface-800 shadow-sm group hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
-                         >
-                            <div className={`w-12 h-12 rounded-xl shrink-0 bg-gradient-to-br ${pl?.gradient || 'from-surface-600 to-surface-800'} flex items-center justify-center text-white text-xl shadow-sm border border-black/10`}>
-                              {pl?.icon}
-                            </div>
-                            <div className="flex-1 min-w-0 pt-1">
-                               <p className="text-sm font-bold text-surface-900 dark:text-white truncate mb-2">{post.content.text || 'No text content'}</p>
-                               <div className="flex items-center gap-2 text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
-                                  <Clock size={14} /> {new Date(post.scheduledTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                               </div>
-                            </div>
-                            <button onClick={() => handleDelete(post._id)} className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors self-center md:opacity-0 md:group-hover:opacity-100">
-                               <Trash2 size={16} />
-                            </button>
-                         </motion.div>
-                       )
-                     })}
-                     {upcomingPosts.length > 8 && (
-                       <button onClick={() => router.push('/dashboard/calendar')} className="w-full py-4 text-xs font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider hover:text-surface-900 dark:hover:text-white transition-colors bg-white dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800">
-                         View all {upcomingPosts.length} posts in Calendar
-                       </button>
-                     )}
-                  </div>
-                )}
-             </div>
-          </div>
-        </div>
+                                <div className="flex-1 min-w-0">
+                                   <div className="flex flex-wrap items-center gap-4 mb-4">
+                                      <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border-2 italic leading-none flex items-center gap-2 ${statusCfg.color}`}>
+                                         <StatusIcon size={12} /> {statusCfg.label}
+                                      </span>
+                                      <span className="text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-widest italic leading-none flex items-center gap-2">
+                                         <Clock size={12} /> {new Date(p.scheduledTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }).toUpperCase()}
+                                      </span>
+                                   </div>
+                                   <h4 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white tracking-tighter truncate italic uppercase group-hover/item:text-primary-500 transition-colors duration-500 leading-none mb-6">{p.content.text}</h4>
+                                   <div className="flex flex-wrap gap-3">
+                                      {p.content.hashtags?.map(h => <span key={h} className="text-[9px] font-black text-primary-500 bg-primary-500/10 px-3 py-1 rounded-lg border-2 border-primary-500/20 italic tracking-widest uppercase shadow-sm">#{h.toUpperCase()}</span>)}
+                                   </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 relative z-10">
+                                   <button type="button" title="View Sequence Details" aria-label="View Sequence Details" className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 hover:text-primary-500 transition-all shadow-xl active:scale-90 group/act border-none">
+                                      <ChevronRight size={24} className="group-hover/act:translate-x-1 transition-transform" />
+                                   </button>
+                                </div>
+                             </motion.div>
+                           )
+                        })
+                    )}
+                 </AnimatePresence>
+              </div>
+           </section>
+        </main>
+
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
+        `}</style>
       </div>
     </ErrorBoundary>
   )
 }
-
-// Ensure Edit3 is available
-const Edit3 = ({ className, size }: { className?: string; size?: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-)

@@ -53,7 +53,7 @@ export default function VideoError({ error, reset }: { error: Error & { digest?:
         <h2 className="text-2xl font-black italic mb-3">Video Studio <span className="text-rose-400">Error</span></h2>
         <p className="text-slate-500 text-sm mb-7">{isChunk ? 'The video editor module failed to load. Clearing cache and retrying should fix this.' : 'An unexpected error occurred in the video studio.'}</p>
         <div className="flex gap-3">
-          <button onClick={isChunk ? async () => { if ('caches' in window) { const n = await caches.keys(); await Promise.all(n.map(k => caches.delete(k))) }; reset() } : reset}
+          <button type="button" onClick={isChunk ? async () => { if ('caches' in window) { const n = await caches.keys(); await Promise.all(n.map(k => caches.delete(k))) }; reset() } : reset}
             className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-violet-600/20 border border-violet-500/30 text-violet-300 font-black text-[10px] uppercase tracking-widest hover:bg-violet-600/30 transition-all">
             {isChunk ? <Trash2 className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />}
             {isChunk ? 'Clear & Retry' : 'Try Again'}

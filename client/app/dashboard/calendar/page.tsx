@@ -14,8 +14,8 @@ import {
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
+import ClickLoadingState from '@/components/click/ClickLoadingState'
 
 interface ScheduledPost {
   _id: string
@@ -119,9 +119,8 @@ export default function ContentCalendarPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 min-h-screen bg-surface-50 dark:bg-surface-950 relative z-10 gap-6">
-        <RefreshCw size={40} className="text-primary-500 animate-spin" />
-        <span className="text-sm font-bold text-surface-500 uppercase tracking-widest">Loading Calendar...</span>
+     <div className="flex items-center justify-center py-48 min-h-screen bg-surface-50 dark:bg-surface-950 relative z-10">
+        <ClickLoadingState intent="loading" />
      </div>
   )
 
@@ -134,7 +133,7 @@ export default function ContentCalendarPage() {
           {/* Header */}
           <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
             <div className="flex items-center gap-6">
-              <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 <ArrowLeft size={20} />
               </button>
               <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
@@ -187,9 +186,9 @@ export default function ContentCalendarPage() {
           <section className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl overflow-hidden shadow-sm">
              <div className="p-6 md:p-8 border-b border-surface-200 dark:border-surface-800 flex flex-col md:flex-row items-center justify-between gap-6 bg-surface-50 dark:bg-surface-900">
                 <div className="flex items-center gap-2 bg-white dark:bg-surface-950 p-1.5 rounded-xl border border-surface-200 dark:border-surface-800 shadow-sm">
-                   <button onClick={() => navigateTime(-1)} className="w-9 h-9 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 transition-colors"><ChevronLeft size={20} /></button>
-                   <button onClick={() => setCurrentDate(new Date())} className="px-4 text-xs font-bold text-surface-700 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Today</button>
-                   <button onClick={() => navigateTime(1)} className="w-9 h-9 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 transition-colors"><ChevronRight size={20} /></button>
+                   <button type="button" onClick={() => navigateTime(-1)} title="Previous period" aria-label="Previous period" className="w-9 h-9 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 transition-colors"><ChevronLeft size={20} /></button>
+                   <button type="button" onClick={() => setCurrentDate(new Date())} title="Go to today" aria-label="Go to today" className="px-4 text-xs font-bold text-surface-700 dark:text-surface-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Today</button>
+                   <button type="button" onClick={() => navigateTime(1)} title="Next period" aria-label="Next period" className="w-9 h-9 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 transition-colors"><ChevronRight size={20} /></button>
                 </div>
                 
                 <h2 className="text-xl md:text-2xl font-black text-surface-900 dark:text-white tracking-tight">
@@ -294,7 +293,7 @@ export default function ContentCalendarPage() {
                                 </div>
                              </div>
                           </div>
-                          <button onClick={() => setSelectedPost(null)} className="absolute top-6 right-6 p-2 text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors"><X size={20} /></button>
+                          <button type="button" onClick={() => setSelectedPost(null)} title="Close post details" aria-label="Close post details" className="absolute top-6 right-6 p-2 text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800 rounded-xl transition-colors"><X size={20} /></button>
                        </div>
 
                        <div className="bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 mb-8">

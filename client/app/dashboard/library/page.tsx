@@ -1,22 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
-import { 
-  Database, Folder, Search, 
-  Plus, Tag, Star, Copy, X, ArrowLeft,
-  Trash2, Download, Network, Layers, 
-  Target, Boxes, RefreshCw, Box, Link2, Key,
-  Activity, Video, CheckCircle2, ChevronRight
+import {
+  Folder, Search,
+  Plus, Tag, Star, X, ArrowLeft,
+  Trash2, Download, Layers,
+  Boxes, RefreshCw, FolderPlus,
+  Activity, Video, ChevronRight
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../components/ToastContainer'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
+import ClickLoadingState from '@/components/click/ClickLoadingState'
 
 interface Content {
   _id: string; title: string; type: string; status: string;
@@ -30,7 +30,6 @@ interface FolderType {
 
 export default function LibraryPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { user } = useAuth()
   const { showToast } = useToast()
   
@@ -153,9 +152,8 @@ export default function LibraryPage() {
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-surface-50 dark:bg-surface-950 min-h-screen">
-        <Database size={48} className="text-primary-500 animate-pulse mb-6" />
-        <span className="text-sm font-bold text-surface-500 uppercase tracking-widest animate-pulse">Loading Library...</span>
+     <div className="flex items-center justify-center py-48 bg-surface-50 dark:bg-surface-950 min-h-screen">
+        <ClickLoadingState intent="loading" />
      </div>
   )
 
@@ -167,7 +165,7 @@ export default function LibraryPage() {
         {/* ── Header ── */}
         <header className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-6 pb-6 border-b border-surface-200 dark:border-surface-800">
           <div className="flex items-center gap-5">
-            <button onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
+            <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors shadow-sm">
               <ArrowLeft size={20} />
             </button>
             <div className="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/40 border border-primary-200 dark:border-primary-800 flex items-center justify-center shadow-sm">
@@ -308,7 +306,8 @@ export default function LibraryPage() {
                         {selectMode && (
                           <div className="absolute top-4 left-4 z-20">
                             <input type="checkbox" checked={selectedItems.includes(item._id)} onChange={() => setSelectedItems(prev => prev.includes(item._id) ? prev.filter(x => x !== item._id) : [...prev, item._id])}
-                              className="w-5 h-5 rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
+                              aria-label={`Select ${item.title || 'item'}`}
+                              className="w-5 h-5 rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                             />
                           </div>
                         )}
@@ -322,7 +321,9 @@ export default function LibraryPage() {
                                   <span className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">{item.type}</span>
                                 </div>
                              </div>
-                             <button onClick={(e) => { e.stopPropagation(); handleToggleFavorite(item._id, item.isFavorite) }}
+                             <button type="button" onClick={(e) => { e.stopPropagation(); handleToggleFavorite(item._id, item.isFavorite) }}
+                               title={item.isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+                               aria-label={item.isFavorite ? 'Remove from favourites' : 'Add to favourites'}
                                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${item.isFavorite ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'text-surface-400 hover:text-surface-600 dark:hover:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
                                <Star size={16} fill={item.isFavorite ? 'currentColor' : 'none'} />
                              </button>
@@ -346,7 +347,8 @@ export default function LibraryPage() {
                         </div>
 
                         <div className="flex gap-2 pt-4 mt-4 border-t border-surface-200 dark:border-surface-800">
-                          <button onClick={() => router.push(`/dashboard/content/${item._id}`)}
+                          <button type="button" onClick={() => router.push(`/dashboard/content/${item._id}`)}
+                            title="Open asset"
                             className="flex-1 bg-surface-900 dark:bg-white text-white dark:text-surface-900 py-2 rounded-xl text-xs font-bold transition-all shadow-sm hover:bg-surface-800 dark:hover:bg-surface-100 flex items-center justify-center gap-2"
                           >
                             Open <ChevronRight size={14} />
@@ -383,17 +385,17 @@ export default function LibraryPage() {
                    </div>
                    
                    <div className="flex items-center gap-2 px-4">
-                      <button onClick={() => setTagModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Add Tags">
+                      <button type="button" onClick={() => setTagModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Add tags" aria-label="Add tags">
                         <Tag size={20} />
                       </button>
-                      <button onClick={() => setMoveModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Move to Folder">
+                      <button type="button" onClick={() => setMoveModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Move to folder" aria-label="Move to folder">
                         <Folder size={20} />
                       </button>
-                      <button onClick={() => setExportModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Export">
+                      <button type="button" onClick={() => setExportModalIds(selectedItems)} className="p-2.5 text-surface-400 hover:text-white dark:hover:text-surface-900 hover:bg-surface-800 dark:hover:bg-surface-100 rounded-xl transition-colors" title="Export selected" aria-label="Export selected">
                         <Download size={20} />
                       </button>
                       <div className="w-px h-6 bg-surface-800 dark:bg-surface-200 mx-2" />
-                      <button 
+                      <button type="button"
                          onClick={async () => {
                             if (!confirm(`Delete ${selectedItems.length} items? This action cannot be undone.`)) return
                             setBusy(true)
@@ -412,11 +414,146 @@ export default function LibraryPage() {
                         Delete
                       </button>
                    </div>
-                   <button onClick={() => setSelectedItems([])} className="p-2 text-surface-400 hover:text-white dark:hover:text-surface-900 mr-2"><X size={20}/></button>
+                   <button type="button" onClick={() => setSelectedItems([])} title="Clear selection" aria-label="Clear selection" className="p-2 text-surface-400 hover:text-white dark:hover:text-surface-900 mr-2"><X size={20}/></button>
                 </div>
              </motion.div>
            )}
         </AnimatePresence>
+      {/* ── Tag Modal ── */}
+      <AnimatePresence>
+        {tagModalIds !== null && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setTagModalIds(null)}
+          >
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-surface-900 rounded-3xl p-8 w-full max-w-md shadow-2xl border border-surface-200 dark:border-surface-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">Add Tags</h3>
+                <button type="button" onClick={() => setTagModalIds(null)} title="Close" aria-label="Close tag modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+              </div>
+              <p className="text-sm text-surface-500 mb-4">Adding tag to <strong>{tagModalIds.length}</strong> item{tagModalIds.length !== 1 ? 's' : ''}.</p>
+              <input
+                type="text" value={tagInput} onChange={e => setTagInput(e.target.value)}
+                placeholder="e.g. tutorial, brand, q4-campaign"
+                aria-label="Tag name" title="Tag name"
+                className="w-full border border-surface-200 dark:border-surface-700 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-950 text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 mb-4"
+                onKeyDown={e => { if (e.key === 'Enter') handleTagInjection() }}
+              />
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setTagModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={handleTagInjection} disabled={busy || !tagInput.trim()} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Tag size={14} />} Apply Tag
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Move to Folder Modal ── */}
+      <AnimatePresence>
+        {moveModalIds !== null && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setMoveModalIds(null)}
+          >
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-surface-900 rounded-3xl p-8 w-full max-w-md shadow-2xl border border-surface-200 dark:border-surface-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">Move to Folder</h3>
+                <button type="button" onClick={() => setMoveModalIds(null)} title="Close" aria-label="Close move modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+              </div>
+              <p className="text-sm text-surface-500 mb-4">Moving <strong>{moveModalIds.length}</strong> item{moveModalIds.length !== 1 ? 's' : ''}.</p>
+              <select
+                value={moveFolderId} onChange={e => setMoveFolderId(e.target.value)}
+                aria-label="Select destination folder" title="Select destination folder"
+                className="w-full border border-surface-200 dark:border-surface-700 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-950 text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 mb-4"
+              >
+                <option value="none">No folder (root)</option>
+                {folders.map(f => <option key={f._id} value={f._id}>{f.name}</option>)}
+              </select>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setMoveModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={handleLatticeTransfer} disabled={busy} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Folder size={14} />} Move
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Export Modal ── */}
+      <AnimatePresence>
+        {exportModalIds !== null && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setExportModalIds(null)}
+          >
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-surface-900 rounded-3xl p-8 w-full max-w-md shadow-2xl border border-surface-200 dark:border-surface-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight">Export Assets</h3>
+                <button type="button" onClick={() => setExportModalIds(null)} title="Close" aria-label="Close export modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+              </div>
+              <p className="text-sm text-surface-500 mb-4">Exporting <strong>{exportModalIds.length}</strong> item{exportModalIds.length !== 1 ? 's' : ''}.</p>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {(['json', 'csv'] as const).map(fmt => (
+                  <button key={fmt} type="button" onClick={() => setExportFormat(fmt)}
+                    className={`py-3 rounded-2xl border-2 text-sm font-bold uppercase tracking-wider transition-all ${exportFormat === fmt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' : 'border-surface-200 dark:border-surface-700 text-surface-600 dark:text-surface-400 hover:border-surface-300'}`}
+                  >{fmt}</button>
+                ))}
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setExportModalIds(null)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={handleExtraction} disabled={busy} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  {busy ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />} Export
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Create Folder Modal ── */}
+      <AnimatePresence>
+        {showCreateFolder && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setShowCreateFolder(false)}
+          >
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-surface-900 rounded-3xl p-8 w-full max-w-md shadow-2xl border border-surface-200 dark:border-surface-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-surface-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                  <FolderPlus size={20} className="text-primary-500" /> New Folder
+                </h3>
+                <button type="button" onClick={() => setShowCreateFolder(false)} title="Close" aria-label="Close create folder modal" className="p-2 rounded-xl hover:bg-surface-100 dark:hover:bg-surface-800 text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors"><X size={18} /></button>
+              </div>
+              <input
+                type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
+                placeholder="Folder name"
+                aria-label="Folder name" title="Folder name"
+                className="w-full border border-surface-200 dark:border-surface-700 rounded-2xl px-4 py-3 text-sm bg-white dark:bg-surface-950 text-surface-900 dark:text-white focus:outline-none focus:border-primary-500 mb-4"
+                onKeyDown={e => { if (e.key === 'Enter') handleInitCapsule() }}
+              />
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowCreateFolder(false)} className="flex-1 py-3 rounded-2xl border border-surface-200 dark:border-surface-700 text-sm font-bold text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">Cancel</button>
+                <button type="button" onClick={handleInitCapsule} disabled={!newFolderName.trim()} className="flex-1 py-3 rounded-2xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-500 transition-colors disabled:opacity-40">Create</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </div>
     </ErrorBoundary>
   )

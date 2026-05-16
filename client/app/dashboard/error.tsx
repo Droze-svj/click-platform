@@ -93,14 +93,14 @@ export default function DashboardError({
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <button onClick={reset}
+          <button type="button" onClick={reset}
             className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-black font-black text-[11px] uppercase tracking-widest hover:bg-slate-100 transition-all shadow-lg active:scale-95"
           >
             <RotateCcw className="w-4 h-4" /> Try Again
           </button>
 
           {isChunkError && (
-            <button onClick={clearCacheAndRetry}
+            <button type="button" onClick={clearCacheAndRetry}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-black text-[11px] uppercase tracking-widest hover:bg-indigo-600/30 transition-all active:scale-95"
             >
               <Trash2 className="w-4 h-4" /> Clear Cache + Retry

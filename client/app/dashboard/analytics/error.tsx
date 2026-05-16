@@ -25,7 +25,7 @@ export default function AnalyticsError({ error, reset }: { error: Error; reset: 
             : 'The analytics module encountered an error. Your data is safe.'}
         </p>
         <div className="flex gap-3">
-          <button onClick={reset} className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600/30 transition-all">
+          <button type="button" onClick={reset} className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600/30 transition-all">
             <RotateCcw className="w-3.5 h-3.5" /> Retry
           </button>
           <Link href="/dashboard" className="flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-white/[0.08] transition-all">

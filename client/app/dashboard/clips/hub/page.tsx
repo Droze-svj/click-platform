@@ -2,11 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Sparkles, Filter, Loader2, Video, Search, CheckSquare, Square, Download, Trash2 } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, Sparkles, Filter, Video, Search, CheckSquare, Square, Download, Trash2 } from 'lucide-react'
+import ClickLoadingState from '@/components/click/ClickLoadingState'
+import ClickEmptyState from '@/components/click/ClickEmptyState'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiDelete } from '../../../../lib/api'
 import ClipCard, { type Clip } from '../../../../components/clips/ClipCard'
 import ClipLightbox from '../../../../components/clips/ClipLightbox'
 import { confirmDialog } from '../../../../components/ui/ConfirmDialog'
+import ToastContainer from '../../../../components/ToastContainer'
 
 type SortKey = 'viralScore' | 'rating' | 'newest' | 'duration'
 type ClipWithSource = Clip & { 
@@ -102,11 +106,6 @@ export default function ClipHubPage() {
 
     setBulkBusy(true)
     const ids = Array.from(selectedIds)
-    // Snapshot the clips we're about to optimistically remove so we can
-    // restore exactly the ones whose server-side delete fails. The
-    // previous Promise.all swallowed errors and never rolled back, so a
-    // partial failure left the UI claiming clips were deleted that still
-    // existed on the server (and would reappear on next page load).
     const targets = clips.filter(c => selectedIds.has(c.id))
     const survivors = clips.filter(c => !selectedIds.has(c.id))
     setClips(survivors)
@@ -120,7 +119,6 @@ export default function ClipHubPage() {
     results.forEach((r, i) => { if (r.status === 'rejected') failures.push(targets[i]) })
 
     if (failures.length > 0) {
-      // Roll back the failed clips into local state so the UI doesn't lie.
       setClips((prev) => {
         const have = new Set(prev.map(c => c.id))
         return [...prev, ...failures.filter(f => !have.has(f.id))]
@@ -141,7 +139,6 @@ export default function ClipHubPage() {
     setBulkBusy(false)
   }
 
-  // Group clips by parent source video for the "folder" view.
   const grouped = sorted.reduce<Record<string, ClipWithSource[]>>((acc, c) => {
     const key = c.contentId
     if (!acc[key]) acc[key] = []
@@ -150,122 +147,131 @@ export default function ClipHubPage() {
   }, {})
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--text-main)] pb-16">
-      <div className="max-w-[1500px] mx-auto px-6 lg:px-12 pt-10 space-y-8">
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter pb-32">
+      <ToastContainer />
+      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 pt-10 space-y-12">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-8 pb-8 border-b border-surface-200 dark:border-surface-800">
+          <div className="flex items-center gap-5 min-w-0">
             <button
               type="button"
-              onClick={() => router.back()}
-              title="Back"
-              className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all flex-shrink-0"
+              onClick={() => router.push('/dashboard')}
+              title="Back to Dashboard"
+              aria-label="Back to Dashboard"
+              className="w-12 h-12 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 italic">AI Clip Hub</p>
-              <h1 className="text-3xl md:text-4xl font-black uppercase italic tracking-tight truncate">All AI clips</h1>
-              <p className="text-xs font-bold text-[var(--text-dim)] uppercase tracking-widest mt-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
+                  Media Hub
+                </span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-tight sm:leading-none mt-1 break-words">All AI clips</h1>
+              <p className="text-xs font-bold text-surface-500 uppercase tracking-widest mt-2">
                 {planLimits ? `${planLimits.label} plan · ${planLimits.aiClipCount} clips/video · ${planLimits.retentionDays}-day retention` : 'Auto-saved · organized by source'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 focus-within:border-indigo-500/40 transition-colors">
-              <Search className="w-3.5 h-3.5 text-[var(--text-dim)]" />
+            <div className="relative group w-full sm:w-56 md:w-64 lg:w-80">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 group-focus-within:text-primary-500 transition-colors" />
               <input
                 type="text"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search captions or videos"
-                aria-label="Search clips"
-                className="bg-transparent outline-none text-[11px] font-medium text-white placeholder:text-slate-600 w-44"
+                placeholder="Search captions..."
+                className="w-full bg-surface-card border border-surface-200 dark:border-surface-800 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all shadow-inner"
               />
             </div>
+            
             {/* Multi-select */}
             <button
               type="button"
               onClick={() => { setSelectMode(v => !v); if (selectMode) clearSelection() }}
-              className={`px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${selectMode ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/10 text-[var(--text-main)] hover:bg-white/10'}`}
-              title="Toggle multi-select"
+              className={`px-6 py-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm ${selectMode ? 'bg-primary-600 border-primary-500 text-white' : 'bg-surface-card border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800'}`}
             >
-              {selectMode ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+              {selectMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
               Select
             </button>
+            
             <button
               type="button"
               onClick={() => setGroupBySource(v => !v)}
-              className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${groupBySource ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/10 text-[var(--text-main)] hover:bg-white/10'}`}
-              title="Toggle source-video grouping"
+              className={`px-6 py-3 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm ${groupBySource ? 'bg-primary-600 border-primary-500 text-white' : 'bg-surface-card border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800'}`}
             >
-              <Video className="w-3.5 h-3.5" /> {groupBySource ? 'Grouped' : 'Flat'}
+              <Video className="w-4 h-4" /> {groupBySource ? 'Grouped' : 'Flat'}
             </button>
-            <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-              <Filter className="w-3 h-3 text-[var(--text-dim)]" />
-              <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mr-1">Sort</label>
+            
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 shadow-sm">
+              <Filter className="w-4 h-4 text-surface-400" />
               <select
                 value={sort}
                 onChange={e => setSort(e.target.value as SortKey)}
-                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-white outline-none"
+                aria-label="Sort clips"
                 title="Sort clips"
+                className="bg-transparent text-xs font-bold uppercase tracking-wider text-surface-900 dark:text-white outline-none cursor-pointer"
               >
-                <option value="newest" className="bg-[#05080c]">Newest</option>
-                <option value="viralScore" className="bg-[#05080c]">Viral score</option>
-                <option value="rating" className="bg-[#05080c]">Your rating</option>
-                <option value="duration" className="bg-[#05080c]">Duration</option>
+                <option value="newest">Newest</option>
+                <option value="viralScore">Viral score</option>
+                <option value="rating">Your rating</option>
+                <option value="duration">Duration</option>
               </select>
             </div>
           </div>
         </header>
 
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-slate-500">
-            <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
+          <ClickLoadingState intent="loading.analyzing" />
         ) : error ? (
-          <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 text-rose-300 text-sm">
-            {error}
+          <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-8 text-rose-500 flex items-center gap-6 shadow-xl">
+             <AlertTriangle size={32} />
+             <p className="font-bold text-lg">{error}</p>
           </div>
         ) : sorted.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-12 text-center">
-            <Sparkles className="w-10 h-10 text-indigo-400 mx-auto mb-4" />
-            <h2 className="text-xl font-black uppercase italic tracking-tight mb-2">No AI clips yet</h2>
-            <p className="text-sm text-[var(--text-dim)] max-w-md mx-auto">
-              Upload a video and run the AI Auto Edit. Your generated clips will land here with virality ratings, captions, and styles.
-            </p>
-            <button
-              type="button"
-              onClick={() => router.push('/dashboard/video')}
-              className="mt-6 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-black uppercase tracking-widest text-white transition-all"
-            >
-              Upload a video
-            </button>
-          </div>
+          <ClickEmptyState
+            intent="empty.clips"
+            title="No AI clips yet"
+            icon={<Sparkles className="w-7 h-7 text-primary-500 animate-pulse" />}
+            action={
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/video')}
+                className="px-8 py-4 bg-primary-600 hover:bg-primary-500 rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all shadow-lg active:scale-95 border-none"
+              >
+                Initiate Upload
+              </button>
+            }
+          />
         ) : groupBySource ? (
-          <div className="space-y-10">
+          <div className="space-y-16">
             {Object.entries(grouped).map(([cid, list]) => (
-              <section key={cid} className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
+              <section key={cid} className="space-y-6">
+                <div className="flex items-center justify-between gap-6 px-4">
                   <div className="min-w-0">
-                    <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">
-                      Source · {list.length} clip{list.length === 1 ? '' : 's'}
+                    <div className="flex items-center gap-3 mb-2">
+                       <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic leading-none">
+                        Source · {list.length} clip{list.length === 1 ? '' : 's'}
+                      </p>
                       {list[0]?.folder && (
-                        <span className="ml-2 px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--text-dim)]">
-                          Folder: {list[0].folder.name}
+                        <span className="px-2 py-0.5 rounded bg-surface-card border border-surface-200 dark:border-surface-800 text-[9px] font-bold text-surface-500 uppercase tracking-widest">
+                          {list[0].folder.name}
                         </span>
                       )}
-                    </p>
-                    <h2 className="text-lg font-black uppercase italic tracking-tight truncate">{list[0]?.parentTitle || 'Untitled'}</h2>
+                    </div>
+                    <h2 className="text-2xl font-black uppercase italic tracking-tight text-surface-900 dark:text-white truncate">{list[0]?.parentTitle || 'Untitled Archive'}</h2>
                   </div>
-                  <a
-                    href={`/dashboard/clips/hub/${cid}`}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-[9px] font-black uppercase tracking-widest text-[var(--text-main)] transition-all flex-shrink-0"
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/dashboard/clips/hub/${cid}`)}
+                    className="px-6 py-2 rounded-xl bg-surface-card border border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800 text-xs font-bold uppercase tracking-widest text-surface-900 dark:text-white transition-all shadow-sm shrink-0"
                   >
-                    Open
-                  </a>
+                    Manage Archive
+                  </button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
                   {list.map(clip => {
                     const flatIdx = sorted.findIndex(c => c.id === clip.id)
                     return (
@@ -285,7 +291,7 @@ export default function ClipHubPage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
             {sorted.map((clip, i) => (
               <ClipCard
                 key={clip.id}
@@ -302,20 +308,33 @@ export default function ClipHubPage() {
       </div>
 
       {/* Bulk action bar */}
-      {selectMode && selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 px-4 py-3 rounded-2xl bg-[#0a0a0c] border border-white/10 shadow-2xl flex items-center gap-3">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white">{selectedIds.size} selected</span>
-          <button type="button" onClick={selectAll} className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-colors">Select all</button>
-          <button type="button" onClick={clearSelection} className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-dim)] hover:text-white transition-colors">Clear</button>
-          <div className="w-px h-5 bg-white/10" />
-          <button type="button" onClick={bulkDownload} className="px-3 py-1.5 rounded-lg bg-white text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-transform">
-            <Download className="w-3 h-3" /> Download
-          </button>
-          <button type="button" onClick={bulkDelete} disabled={bulkBusy} className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 hover:bg-rose-500/25 text-rose-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors disabled:opacity-50">
-            <Trash2 className="w-3 h-3" /> Delete
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {selectMode && selectedIds.size > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+3rem)] left-1/2 -translate-x-1/2 z-50 px-4 sm:px-8 py-4 rounded-[3rem] bg-surface-card border-2 border-primary-500/30 dark:border-primary-500/20 shadow-[0_50px_100px_rgba(0,0,0,0.5)] flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8 backdrop-blur-3xl max-w-[calc(100vw-2rem)]"
+          >
+            <div className="flex flex-col">
+               <span className="text-xs font-black uppercase tracking-widest text-primary-500 leading-none mb-1">{selectedIds.size} SELECTIONS</span>
+               <div className="flex items-center gap-4">
+                  <button type="button" onClick={selectAll} className="text-[10px] font-bold uppercase tracking-widest text-surface-400 hover:text-primary-500 transition-colors border-none bg-transparent p-0">Select all</button>
+                  <button type="button" onClick={clearSelection} className="text-[10px] font-bold uppercase tracking-widest text-surface-400 hover:text-rose-500 transition-colors border-none bg-transparent p-0">Clear</button>
+               </div>
+            </div>
+            <div className="w-px h-10 bg-surface-200 dark:bg-white/10" />
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={bulkDownload} className="px-6 py-3 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-black text-[11px] font-black uppercase tracking-widest flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-lg border-none">
+                <Download className="w-4 h-4" /> Download
+              </button>
+              <button type="button" onClick={bulkDelete} disabled={bulkBusy} className="px-6 py-3 rounded-2xl bg-rose-600 text-white text-[11px] font-black uppercase tracking-widest flex items-center gap-3 hover:bg-rose-700 transition-all disabled:opacity-50 shadow-lg active:scale-95 border-none">
+                <Trash2 className="w-4 h-4" /> {bulkBusy ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {lightboxIndex !== null && (
         <ClipLightbox

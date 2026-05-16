@@ -13,6 +13,7 @@ import { apiGet, apiPost } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
+import ClickLoadingState from '@/components/click/ClickLoadingState'
 import { PLANS, buildCheckoutTarget, type BillingPeriod, type Plan as CanonicalPlan } from '../../../lib/plans'
 
 interface UsageRecord {
@@ -44,9 +45,6 @@ interface Invoice {
   description?: string
 }
 
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.6)] transition-all duration-300'
-
-// In-app billing only shows monthly here (yearly toggle lives on the landing).
 const BILLING_PERIOD: BillingPeriod = 'monthly'
 
 function fmtNumber(n?: number) { if (n == null) return '0'; return n.toLocaleString() }
@@ -77,7 +75,7 @@ export default function BillingPage() {
       const hist = Array.isArray(histBody) ? histBody : (histBody?.invoices ?? histBody?.history ?? [])
       setHistory(Array.isArray(hist) ? hist : [])
     } catch {
-      showToast('LEDGER_SYNC_ERR: BILLING_NODE_OFFLINE', 'error')
+      showToast('Could not load: BILLING_unavailable', 'error')
     } finally { setLoading(false) }
   }, [showToast])
 
@@ -91,15 +89,11 @@ export default function BillingPage() {
     if (plan.id === currentPlan) return
     setUpgradingId(plan.id)
     try {
-      // First try the Whop hosted-checkout path (no server round-trip).
       const target = buildCheckoutTarget(plan, BILLING_PERIOD, user || null)
       if (target.kind === 'whop') {
         window.location.href = target.href
         return
       }
-      // No Whop URL configured for this plan/period — fall through to the
-      // legacy server endpoint (which currently no-ops without Whop API
-      // wiring, but the toast keeps the UI honest).
       const res: any = await apiPost('/billing/upgrade', { planId: plan.id })
       const url = res?.data?.checkoutUrl || res?.checkoutUrl
       if (url) { window.location.href = url; return }
@@ -111,65 +105,61 @@ export default function BillingPage() {
   }
 
   const meters = [
-    { label: 'Videos Processed',  used: usage.videosProcessed,  cap: limits.videosProcessed,  icon: Video,    color: 'text-rose-400',    bar: 'bg-rose-500' },
-    { label: 'AI Generations',    used: usage.contentGenerated, cap: limits.contentGenerated, icon: Sparkles, color: 'text-indigo-400',  bar: 'bg-indigo-500' },
-    { label: 'Posts Scheduled',   used: usage.postsScheduled,   cap: limits.postsScheduled,   icon: Calendar, color: 'text-amber-400',   bar: 'bg-amber-500' },
-    { label: 'Quote Cards',       used: usage.quotesCreated,    cap: limits.quotesCreated,    icon: FileText, color: 'text-emerald-400', bar: 'bg-emerald-500' },
-    { label: 'Storage (MB)',      used: usage.storageUsedMb,    cap: limits.storageUsedMb,    icon: Database, color: 'text-violet-400',  bar: 'bg-violet-500' },
-    { label: 'AI Credits',        used: usage.aiCreditsUsed,    cap: limits.aiCreditsUsed,    icon: Zap,      color: 'text-cyan-400',    bar: 'bg-cyan-500' },
+    { label: 'Videos Processed',  used: usage.videosProcessed,  cap: limits.videosProcessed,  icon: Video,    color: 'text-rose-600 dark:text-rose-400',    bar: 'bg-rose-500' },
+    { label: 'AI Generations',    used: usage.contentGenerated, cap: limits.contentGenerated, icon: Sparkles, color: 'text-primary-600 dark:text-primary-400',  bar: 'bg-primary-500' },
+    { label: 'Posts Scheduled',   used: usage.postsScheduled,   cap: limits.postsScheduled,   icon: Calendar, color: 'text-amber-600 dark:text-amber-400',   bar: 'bg-amber-500' },
+    { label: 'Quote Cards',       used: usage.quotesCreated,    cap: limits.quotesCreated,    icon: FileText, color: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500' },
+    { label: 'Storage (MB)',      used: usage.storageUsedMb,    cap: limits.storageUsedMb,    icon: Database, color: 'text-violet-600 dark:text-violet-400',  bar: 'bg-violet-500' },
+    { label: 'AI Credits',        used: usage.aiCreditsUsed,    cap: limits.aiCreditsUsed,    icon: Zap,      color: 'text-cyan-600 dark:text-cyan-400',    bar: 'bg-cyan-500' },
   ]
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-[var(--page-bg)] min-h-screen gap-10 backdrop-blur-3xl">
-      <div className="relative">
-        <div className="absolute inset-0 bg-amber-500 blur-3xl opacity-20 animate-pulse" />
-        <Gem size={80} className="text-amber-500 animate-spin relative z-10" />
-      </div>
-      <p className="text-[12px] font-black text-amber-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Resolving Ledger Vector...</p>
+    <div className="flex items-center justify-center py-24 bg-surface-page min-h-screen transition-colors duration-500">
+      <ClickLoadingState intent="loading" />
     </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-[var(--page-bg)]">
+      <div className="min-h-screen relative z-10 pb-32 px-4 sm:px-8 pt-12 max-w-[1700px] mx-auto space-y-16 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
         <ToastContainer />
 
         {/* Header */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 border-b border-surface-200 dark:border-surface-800 pb-12">
           <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-colors hover:border-rose-500/50">
+            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-surface-card border border-surface-200 dark:border-white/10 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm">
               <ArrowLeft size={28} />
             </button>
-            <div className="w-20 h-20 bg-amber-500/10 border-2 border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
-              <Gem size={40} className="text-amber-400" />
+            <div className="w-20 h-20 bg-amber-500/10 border-2 border-amber-500/20 rounded-[2.5rem] flex items-center justify-center shadow-lg">
+              <Gem size={40} className="text-amber-500 dark:text-amber-400" />
             </div>
             <div>
               <div className="flex items-center gap-4 mb-3">
-                <Activity size={14} className="text-amber-400 animate-pulse" />
-                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-400 italic leading-none">Sovereign Ledger</span>
+                <Activity size={14} className="text-amber-500 dark:text-amber-400 animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-[0.5em] text-amber-500 dark:text-amber-400 italic leading-none">Sovereign Ledger</span>
               </div>
-              <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
-              <p className="text-[var(--text-dim)] text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
+              <h1 className="text-4xl sm:text-6xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">Billing & Usage</h1>
+              <p className="text-surface-500 dark:text-slate-400 text-[12px] uppercase font-black tracking-[0.4em] italic leading-none">Plan tier · consumption meters · ledger history.</p>
             </div>
           </div>
-          <div className={`${glassStyle} px-8 py-5 rounded-[2.5rem] flex items-center gap-5 border-amber-500/20`}>
-            <div className={`w-3 h-3 rounded-full ${subStatus === 'active' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : subStatus === 'trial' ? 'bg-amber-500 animate-pulse' : 'bg-slate-500'}`} />
+          <div className="bg-surface-card backdrop-blur-3xl px-8 py-5 rounded-[2.5rem] flex items-center gap-5 border border-surface-200 dark:border-amber-500/20 shadow-xl">
+            <div className={`w-3 h-3 rounded-full ${subStatus === 'active' ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : subStatus === 'trial' ? 'bg-amber-500 animate-pulse' : 'bg-surface-300 dark:bg-slate-500'}`} />
             <div>
-              <p className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-none mb-1">CURRENT_TIER</p>
-              <p className="text-xl font-black text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-emerald-400' : subStatus === 'trial' ? 'text-amber-400' : 'text-[var(--text-dim)]'}>{subStatus}</span></p>
+              <p className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none mb-1">CURRENT_TIER</p>
+              <p className="text-xl font-black text-surface-900 dark:text-white italic uppercase tracking-tight leading-none">{currentPlan} · <span className={subStatus === 'active' ? 'text-emerald-600 dark:text-emerald-400' : subStatus === 'trial' ? 'text-amber-600 dark:text-amber-400' : 'text-surface-400 dark:text-slate-500'}>{subStatus.toUpperCase()}</span></p>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Usage meters */}
-        <div className={`${glassStyle} rounded-[3rem] overflow-hidden`}>
-          <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-white/5">
-            <div className="w-14 h-14 rounded-[1.4rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-              <TrendingUp size={26} className="text-indigo-400" />
+        <section className="bg-surface-card backdrop-blur-3xl rounded-[3rem] overflow-hidden border border-surface-200 dark:border-surface-800 shadow-xl transition-all duration-500">
+          <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-surface-100 dark:border-white/5 bg-surface-page/30 dark:bg-white/[0.01]">
+            <div className="w-14 h-14 rounded-[1.4rem] bg-primary-500/10 border border-primary-500/20 flex items-center justify-center">
+              <TrendingUp size={26} className="text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
-              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic mt-2 leading-none">CURRENT_BILLING_CYCLE</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Consumption Meters</h2>
+              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">CURRENT_BILLING_CYCLE</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-10">
@@ -177,22 +167,22 @@ export default function BillingPage() {
               const pct = m.cap && m.cap > 0 ? Math.min(100, Math.round(((m.used || 0) / m.cap) * 100)) : 0
               const overage = m.cap != null && (m.used || 0) > m.cap
               return (
-                <div key={m.label} className={`${glassStyle} rounded-[2rem] p-7 flex flex-col gap-4 ${overage ? 'border-rose-500/30' : ''}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-[1rem] bg-white/[0.03] border border-white/10 flex items-center justify-center">
-                      <m.icon size={22} className={m.color} />
+                <div key={m.label} className="bg-surface-page dark:bg-white/[0.02] border border-surface-200 dark:border-white/10 rounded-[2rem] p-7 flex flex-col gap-4 transition-all duration-500 hover:bg-surface-card hover:shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-[1rem] bg-surface-card dark:bg-white/[0.03] border border-surface-100 dark:border-white/10 flex items-center justify-center shadow-sm">
+                        <m.icon size={22} className={m.color} />
+                      </div>
+                      <p className="text-[10px] font-black text-surface-500 dark:text-slate-400 uppercase tracking-[0.4em] italic leading-none">{m.label}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-none">{m.label}</p>
-                    </div>
-                    {overage && <span className="text-[8px] font-black text-rose-400 uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> OVER</span>}
+                    {overage && <span className="text-[8px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-[0.3em] italic flex items-center gap-1"><AlertTriangle size={10} /> OVER</span>}
                   </div>
                   <div className="flex items-end gap-3">
                     <p className={`text-4xl font-black italic tabular-nums tracking-tighter leading-none ${m.color}`}>{fmtNumber(m.used)}</p>
-                    {m.cap != null && <p className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic mb-1 leading-none">/ {m.cap === -1 ? '∞' : fmtNumber(m.cap)}</p>}
+                    {m.cap != null && <p className="text-[12px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic mb-1 leading-none">/ {m.cap === -1 ? '∞' : fmtNumber(m.cap)}</p>}
                   </div>
                   {m.cap && m.cap > 0 && (
-                    <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-2 rounded-full bg-surface-200 dark:bg-white/5 overflow-hidden shadow-inner">
                       <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} className={`h-full ${overage ? 'bg-rose-500' : m.bar}`} />
                     </div>
                   )}
@@ -200,17 +190,17 @@ export default function BillingPage() {
               )
             })}
           </div>
-        </div>
+        </section>
 
         {/* Plans */}
-        <div className={`${glassStyle} rounded-[3rem] overflow-hidden`}>
-          <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-white/5">
+        <section className="bg-surface-card backdrop-blur-3xl rounded-[3rem] overflow-hidden border border-surface-200 dark:border-surface-800 shadow-xl transition-all duration-500">
+          <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-surface-100 dark:border-white/5 bg-surface-page/30 dark:bg-white/[0.01]">
             <div className="w-14 h-14 rounded-[1.4rem] bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Crown size={26} className="text-amber-400" />
+              <Crown size={26} className="text-amber-500 dark:text-amber-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Tier Selector</h2>
-              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic mt-2 leading-none">UPGRADE · DOWNGRADE · COMMIT</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Tier Selector</h2>
+              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">UPGRADE · DOWNGRADE · COMMIT</p>
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 p-10">
@@ -220,79 +210,81 @@ export default function BillingPage() {
               const includedFeatures = plan.features.filter(f => f.included)
               const PlanIcon = plan.icon
               return (
-                <div key={plan.id} className={`${glassStyle} rounded-[2.5rem] p-8 flex flex-col gap-6 relative ${plan.featured ? 'border-indigo-500/40 shadow-[0_0_80px_rgba(99,102,241,0.15)]' : ''} ${isCurrent ? 'ring-2 ring-emerald-500/40' : ''}`}>
-                  {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-indigo-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic shadow-[0_10px_30px_rgba(99,102,241,0.4)]">RECOMMENDED</span>}
+                <div key={plan.id} className={`bg-surface-page dark:bg-white/[0.02] border border-surface-200 dark:border-white/10 rounded-[2.5rem] p-8 flex flex-col gap-6 relative transition-all duration-500 hover:bg-surface-card hover:shadow-2xl ${plan.featured ? 'ring-2 ring-primary-500/40 shadow-xl' : ''} ${isCurrent ? 'ring-2 ring-emerald-500/40' : ''}`}>
+                  {plan.featured && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic shadow-lg">RECOMMENDED</span>}
                   {isCurrent && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-[0.4em] italic">CURRENT_TIER</span>}
                   <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-[1.4rem] bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-xl`}>
+                    <div className={`w-14 h-14 rounded-[1.4rem] bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-lg border border-black/10`}>
                       <PlanIcon size={26} className="text-white" />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{plan.name}</h3>
-                      <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic mt-2 leading-none">{plan.tagline}</p>
+                      <h3 className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">{plan.name}</h3>
+                      <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic mt-2 leading-none">{plan.tagline}</p>
                     </div>
                   </div>
                   <div className="flex items-end gap-2">
-                    <p className="text-6xl font-black text-white italic tabular-nums tracking-tighter leading-none">${plan.priceMonthly}</p>
-                    <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic mb-2 leading-none">/ mo</p>
+                    <p className="text-5xl font-black text-surface-900 dark:text-white italic tabular-nums tracking-tighter leading-none">${plan.priceMonthly}</p>
+                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic mb-2 leading-none">/ mo</p>
                   </div>
                   <ul className="space-y-3 flex-1">
                     {includedFeatures.map(f => (
-                      <li key={f.label} className="flex items-start gap-3 text-[11px] text-slate-300 leading-relaxed">
-                        <CheckCircle size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <li key={f.label} className="flex items-start gap-3 text-[11px] text-surface-600 dark:text-slate-300 leading-relaxed font-bold italic uppercase tracking-tight">
+                        <CheckCircle size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                         <span>{f.label}</span>
                       </li>
                     ))}
                   </ul>
-                  <button type="button" disabled={isCurrent || isUpgrading} onClick={() => handleUpgrade(plan)} className={`mt-auto py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic transition-colors flex items-center justify-center gap-3 ${isCurrent ? 'bg-emerald-500/10 text-emerald-400 border-2 border-emerald-500/30 cursor-default' : plan.featured ? 'bg-white text-black hover:bg-indigo-500 hover:text-white' : 'bg-white/5 border-2 border-white/10 text-slate-300 hover:text-white hover:border-white/30'} disabled:opacity-60`}>
+                  <button type="button" disabled={isCurrent || isUpgrading} onClick={() => handleUpgrade(plan)} className={`mt-auto py-4 rounded-full text-[11px] font-black uppercase tracking-[0.4em] italic transition-all flex items-center justify-center gap-3 active:scale-95 border-none ${isCurrent ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 cursor-default' : plan.featured ? 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white shadow-lg' : 'bg-surface-100 dark:bg-white/5 border border-surface-200 dark:border-white/10 text-surface-500 dark:text-slate-300 hover:bg-surface-200 dark:hover:bg-white/10 shadow-sm'} disabled:opacity-60`}>
                     {isCurrent ? 'ACTIVE_TIER' : isUpgrading ? <><RefreshCw size={14} className="animate-spin" /> ROUTING...</> : <>{plan.cta.label.toUpperCase().replace(/ /g, '_')} <ArrowRight size={14} /></>}
                   </button>
                 </div>
               )
             })}
           </div>
-        </div>
+        </section>
 
         {/* History */}
-        <div className={`${glassStyle} rounded-[3rem] overflow-hidden`}>
-          <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-white/5">
+        <section className="bg-surface-card backdrop-blur-3xl rounded-[3rem] overflow-hidden border border-surface-200 dark:border-surface-800 shadow-xl transition-all duration-500">
+          <div className="flex items-center gap-6 px-10 py-8 border-b-2 border-surface-100 dark:border-white/5 bg-surface-page/30 dark:bg-white/[0.01]">
             <div className="w-14 h-14 rounded-[1.4rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <Receipt size={26} className="text-emerald-400" />
+              <Receipt size={26} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Ledger History</h2>
-              <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic mt-2 leading-none">{history.length} INVOICES_LOGGED</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none">Ledger History</h2>
+              <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic mt-2 leading-none">{history.length} INVOICES_LOGGED</p>
             </div>
           </div>
           {history.length === 0 ? (
-            <div className="py-20 flex flex-col items-center text-center gap-4">
-              <Clock size={48} className="text-[var(--text-dim)]" />
-              <p className="text-2xl font-black text-white italic uppercase tracking-tight">Ledger Empty</p>
-              <p className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">No invoices recorded yet.</p>
+            <div className="py-24 flex flex-col items-center text-center gap-6 opacity-20">
+              <Clock size={64} className="text-surface-900 dark:text-white" />
+              <div className="space-y-2">
+                 <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tight">Ledger Empty</p>
+                 <p className="text-[11px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic">No invoices recorded yet.</p>
+              </div>
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.04]">
+            <div className="divide-y divide-surface-100 dark:divide-white/[0.04] bg-surface-page/5">
               {history.map((inv, i) => (
-                <div key={inv._id || inv.id || i} className="flex items-center gap-6 px-10 py-6 hover:bg-white/[0.02] transition-colors">
-                  <div className="w-12 h-12 rounded-[1rem] bg-white/[0.03] border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <CreditCard size={20} className="text-[var(--text-dim)]" />
+                <div key={inv._id || inv.id || i} className="flex items-center gap-6 px-10 py-6 hover:bg-surface-page dark:hover:bg-white/[0.02] transition-colors group">
+                  <div className="w-12 h-12 rounded-[1rem] bg-surface-card dark:bg-white/[0.03] border border-surface-200 dark:border-white/10 flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                    <CreditCard size={20} className="text-surface-400 dark:text-slate-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-black text-white italic uppercase tracking-tight leading-none mb-1.5 truncate">{inv.description || 'Subscription Renewal'}</p>
-                    <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] italic leading-none">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}</p>
+                    <p className="text-base font-black text-surface-900 dark:text-white italic uppercase tracking-tight leading-none mb-1.5 truncate">{inv.description || 'Subscription Renewal'}</p>
+                    <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic leading-none">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}</p>
                   </div>
-                  <p className="text-2xl font-black text-white italic tabular-nums tracking-tight">{fmtCurrency(inv.amount, inv.currency || 'USD')}</p>
-                  <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] italic border ${inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : inv.status === 'failed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
+                  <p className="text-2xl font-black text-surface-900 dark:text-white italic tabular-nums tracking-tight">{fmtCurrency(inv.amount, inv.currency || 'USD')}</p>
+                  <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] italic border shadow-inner ${inv.status === 'paid' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30' : inv.status === 'failed' ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'}`}>
                     {(inv.status || 'PENDING').toUpperCase()}
                   </span>
-                  <button type="button" title="Download invoice" className="w-10 h-10 rounded-[1rem] bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white flex items-center justify-center transition-colors">
+                  <button type="button" title="Download invoice" className="w-10 h-10 rounded-[1rem] bg-surface-card dark:bg-white/[0.03] border border-surface-200 dark:border-white/10 text-surface-400 hover:text-surface-900 dark:hover:text-white flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-sm">
                     <Download size={16} />
                   </button>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </ErrorBoundary>
   )

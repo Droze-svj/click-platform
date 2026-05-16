@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useSocket } from '../../../../../hooks/useSocket'
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { DynamicModernVideoEditor } from '../../../../../components/DynamicImports'
 import VideoProgressTracker from '../../../../../components/VideoProgressTracker'
 import { useTheme } from '../../../../../components/ThemeProvider'
+import ClickLoadingState from '@/components/click/ClickLoadingState'
 
 interface PageProps {
   params: {
@@ -99,6 +100,12 @@ function SelectCard<T extends string>({
 
 export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // ?aiTool=silence|fillers|edit-by-text — sent here from the AI Tools
+  // hub. We jump straight to manual editing and forward the tool to
+  // ModernVideoEditor so it can auto-open the SmartCleanup panel on the
+  // requested tool. No mode-picker friction.
+  const aiTool = searchParams?.get('aiTool') as ('silence' | 'fillers' | 'edit-by-text' | null) || null
   const videoId = params.videoId
   const { user } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
@@ -106,7 +113,7 @@ export default function VideoEditPage({ params }: PageProps) {
   const [video, setVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [editMode, setEditMode] = useState<'selection' | 'manual' | 'ai-auto'>('selection')
+  const [editMode, setEditMode] = useState<'selection' | 'manual' | 'ai-auto'>(aiTool ? 'manual' : 'selection')
   const [processing, setProcessing] = useState(false)
   const [liveProgress, setLiveProgress] = useState<{ stage: string; percent: number; message: string } | null>(null)
 
@@ -125,10 +132,15 @@ export default function VideoEditPage({ params }: PageProps) {
         if (videoData.originalFile?.url) {
           let videoUrl = videoData.originalFile.url
           if (videoUrl.startsWith('/uploads/')) {
-            const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5001'
+            const backendUrl = (
+              process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') ||
+              (typeof window !== 'undefined' ? window.location.origin : '')
+            )
             videoUrl = `${backendUrl}${videoUrl}`
           } else if (videoUrl.startsWith('/')) {
-            const baseUrl = typeof window !== 'undefined' ? window.location.origin : (API_URL.startsWith('http') ? new URL(API_URL).origin : 'http://localhost:5001')
+            const baseUrl = typeof window !== 'undefined'
+              ? window.location.origin
+              : (API_URL.startsWith('http') ? new URL(API_URL).origin : '')
             videoUrl = `${baseUrl}${videoUrl}`
           }
           videoData.originalFile.url = videoUrl
@@ -212,9 +224,21 @@ export default function VideoEditPage({ params }: PageProps) {
       transition?: string | null
       captionStyle?: string | null
     }
+    topN?: {
+      presets?: Array<{ key: string; count: number }>
+      captionStyles?: Array<{ key: string; count: number }>
+      colorGrades?: Array<{ key: string; count: number }>
+      publishHours?: Array<{ key: string; count: number }>
+      publishDays?: Array<{ key: string; count: number }>
+    }
   } | null>(null)
   const [insightApplied, setInsightApplied] = useState<boolean>(false)
   const videoPreviewRef = useRef<HTMLVideoElement>(null)
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+  }, [])
 
   // Fetch style insight once on mount. When source==='user' (≥3
   // publishes), bias the AI Director defaults to the user's top picks
@@ -223,8 +247,10 @@ export default function VideoEditPage({ params }: PageProps) {
   // user makes are sticky.
   useEffect(() => {
     if (insightApplied) return
-    apiGet<any>('/video/clips/style-insight')
+    const ac = new AbortController()
+    apiGet<any>('/video/clips/style-insight', { signal: ac.signal })
       .then((res: any) => {
+        if (ac.signal.aborted) return
         const data = res?.data ?? res
         if (!data || typeof data !== 'object') return
         setStyleInsight(data)
@@ -240,10 +266,27 @@ export default function VideoEditPage({ params }: PageProps) {
         if (top.captionStyle) setCaptionStyle(top.captionStyle)
         setInsightApplied(true)
       })
-      .catch(() => { /* no learned data yet — defaults stand */ })
+      .catch(() => { /* aborted or no learned data — defaults stand */ })
+    return () => ac.abort()
     // Run once on mount; we deliberately don't track changing values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Reorder the preset palette so the user's learned top picks (from the
+  // /style-insight loop) float to the top. Falls back to declared order
+  // when there's no signal yet. Catalog membership is preserved — every
+  // preset still renders, just biased by what the user actually publishes.
+  const orderedPresets = useMemo(() => {
+    const learned = styleInsight?.topN?.presets
+    if (!Array.isArray(learned) || learned.length === 0) return STYLE_PRESETS
+    const wanted = learned
+      .map(p => STYLE_PRESETS.find(s => s.id === p.key))
+      .filter((p): p is typeof STYLE_PRESETS[number] => Boolean(p))
+    if (wanted.length === 0) return STYLE_PRESETS
+    const seen = new Set(wanted.map(p => p.id))
+    const rest = STYLE_PRESETS.filter(p => !seen.has(p.id))
+    return [...wanted, ...rest]
+  }, [styleInsight])
 
   useEffect(() => {
     if (!aiEditResult || !videoId) return
@@ -281,6 +324,16 @@ export default function VideoEditPage({ params }: PageProps) {
   }
 
   const handleStartAIEdit = async () => {
+    const sourceUrl = video?.originalFile?.url
+    if (!sourceUrl) {
+      setProcessingError('This video is missing its source file. Re-upload and try again.')
+      return
+    }
+    if (stylePresetIds.length > 3) {
+      setProcessingError('You can mix at most 3 style presets per edit.')
+      return
+    }
+    setProcessingError('')
     setProcessing(true)
     setAiEditResult(null)
     setLiveProgress(null)
@@ -328,17 +381,65 @@ export default function VideoEditPage({ params }: PageProps) {
         // recommended captions + slots already populated.
         setAiEditResult(result)
         setProcessing(false)
-        setTimeout(() => router.push(`/dashboard/clips/hub/${videoId}`), 1200)
+        if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+        redirectTimerRef.current = setTimeout(() => {
+          redirectTimerRef.current = null
+          router.push(`/dashboard/clips/hub/${videoId}`)
+        }, 1200)
       }
     } catch (error: any) {
       setProcessing(false)
+      // Surface useful detail when the server returned an error body. axios
+      // wraps the server payload at error.response.data, so prefer that over
+      // the generic "Request failed with status code 500".
+      const status = error?.response?.status
+      const serverMsg =
+        error?.response?.data?.error
+        || error?.response?.data?.message
+        || (typeof error?.response?.data === 'string' ? error.response.data : null)
+
+      if (status === 500) {
+        setProcessingError(
+          serverMsg
+            ? `The AI service hit an error: ${serverMsg}`
+            : 'The AI service hit an internal error. Check the backend server logs and try again.'
+        )
+      } else if (status === 401 || status === 403) {
+        setProcessingError('Your session expired. Sign in again and retry.')
+      } else if (status === 429) {
+        setProcessingError('Too many edit requests. Wait a moment and try again.')
+      } else if (status >= 400 && status < 500) {
+        setProcessingError(serverMsg || `Request was rejected (${status}). Check your inputs and retry.`)
+      } else if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
+        setProcessingError('The edit request timed out. The video may be too large or the server is slow to respond.')
+      } else if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+        setProcessingError('Cannot reach the backend. Make sure the server is running on port 5001.')
+      } else {
+        setProcessingError(serverMsg || error?.message || 'Could not start the AI edit. Try again.')
+      }
     }
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen">
-      <Loader2 size={40} className="text-primary-500 animate-spin mb-6" />
-      <p className="text-sm font-bold text-surface-500 uppercase tracking-widest animate-pulse">Loading Video...</p>
+    <div className="flex items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen">
+      <ClickLoadingState intent="loading.analyzing" />
+    </div>
+  )
+
+  // Mobile gate — this editor is built around a full timeline, drag-targets,
+  // and side-by-side preset gallery that don't yet have a mobile-native
+  // layout. Rather than ship a broken touch experience, show an honest
+  // "desktop recommended" banner. The user can still scroll past and use
+  // the read-only progress / asset views below, but the heavy edit surface
+  // is gated. Hidden on md+ so desktop is unaffected.
+  const mobileGate = (
+    <div className="md:hidden bg-amber-500/10 border-b border-amber-500/30 text-amber-200 px-5 py-4 text-sm">
+      <p className="font-bold">Click&apos;s editor works best on desktop</p>
+      <p className="text-amber-200/80 mt-1 text-xs leading-relaxed">
+        The timeline, multi-clip preview, and drag controls need more screen
+        than a phone gives. Switch to a laptop or tablet (≥ 768px) for the
+        full experience. You can still preview clips below.
+      </p>
     </div>
   )
 
@@ -347,8 +448,9 @@ export default function VideoEditPage({ params }: PageProps) {
 
   const selectionUI = (
     <div className="min-h-screen w-full bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 overflow-x-hidden relative pb-24 transition-colors duration-500">
+      {mobileGate}
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10">
-        
+
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-surface-200 dark:border-surface-800 pb-8">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl flex items-center justify-center shadow-sm">
@@ -365,10 +467,10 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+            <button type="button" onClick={toggle} title="Toggle Theme" aria-label="Toggle Theme" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
               {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button type="button" onClick={() => router.push('/dashboard/video')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+            <button type="button" onClick={() => router.push('/dashboard/video')} title="Return to Video Dashboard" aria-label="Return to Video Dashboard" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
               <ChevronLeft size={16} />
               Return
             </button>
@@ -394,7 +496,7 @@ export default function VideoEditPage({ params }: PageProps) {
             </div>
 
             <div className="space-y-4">
-              <button type="button" onClick={() => handleEditModeSelect('ai-auto')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all text-left overflow-hidden">
+              <button type="button" onClick={() => handleEditModeSelect('ai-auto')} title="Select AI Auto Edit Mode" aria-label="Select AI Auto Edit Mode" className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all text-left overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 dark:bg-primary-900/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Wand2 className="w-7 h-7 text-primary-600 dark:text-primary-400" />
@@ -411,7 +513,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 </div>
               </button>
 
-              <button type="button" onClick={() => handleEditModeSelect('manual')} className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:shadow-md transition-all text-left overflow-hidden">
+              <button type="button" onClick={() => handleEditModeSelect('manual')} title="Select Manual Editor Mode" aria-label="Select Manual Editor Mode" className="w-full group relative flex items-start gap-6 p-8 rounded-3xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700 hover:shadow-md transition-all text-left overflow-hidden">
                 <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Scissors className="w-7 h-7 text-surface-600 dark:text-surface-400" />
                 </div>
@@ -437,10 +539,10 @@ export default function VideoEditPage({ params }: PageProps) {
     if (!urlForEditor) return null
     return (
       <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
-        <button type="button" onClick={() => setEditMode('selection')} className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
+        <button type="button" onClick={() => setEditMode('selection')} title="Back to Workflow Selection" aria-label="Back to Workflow Selection" className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
           <ChevronLeft size={16} /> Workflow Selection
         </button>
-        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} />
+        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} />
       </div>
     )
   }
@@ -466,14 +568,14 @@ export default function VideoEditPage({ params }: PageProps) {
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={toggle} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <button type="button" onClick={toggle} title="Toggle Theme" aria-label="Toggle Theme" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <button type="button" onClick={() => handleAnalyzeVideo()} disabled={analyzing} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
+              <button type="button" onClick={() => handleAnalyzeVideo()} disabled={analyzing} title="Analyze Video" aria-label="Analyze Video" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
                 {analyzing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
                 {analyzing ? 'Analyzing...' : 'Analyze Video'}
               </button>
-              <button type="button" onClick={() => setEditMode('selection')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+              <button type="button" onClick={() => setEditMode('selection')} title="Back to Workflow Selection" aria-label="Back to Workflow Selection" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
                 <ChevronLeft size={16} /> Return
               </button>
             </div>
@@ -517,7 +619,7 @@ export default function VideoEditPage({ params }: PageProps) {
                     <button type="button" onClick={() => handleEditModeSelect('manual')} className="px-8 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-3">
                       Open in Editor <ArrowRight size={16} />
                     </button>
-                    <button type="button" onClick={() => { setAiEditResult(null); setEditMode('selection'); }} className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+                    <button type="button" onClick={() => { setAiEditResult(null); setEditMode('selection'); }} title="Dismiss and return to selection" aria-label="Dismiss and return to selection" className="px-6 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                       Dismiss
                     </button>
                   </div>
@@ -636,13 +738,13 @@ export default function VideoEditPage({ params }: PageProps) {
                            )}
                          </label>
                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                           {STYLE_PRESETS.map(p => {
+                           {orderedPresets.map(p => {
                              const orderIndex = stylePresetIds.indexOf(p.id)
                              const active = orderIndex !== -1
                              const atCap = stylePresetIds.length >= 3 && !active
                              return (
                                <button
-                                 type="button"
+                                type="button"
                                  key={p.id}
                                  disabled={atCap}
                                  onClick={() => {
@@ -653,7 +755,8 @@ export default function VideoEditPage({ params }: PageProps) {
                                    })
                                  }}
                                  className={`relative p-4 rounded-2xl border text-left transition-all ${active ? `bg-gradient-to-br ${p.accent} border-transparent shadow-md scale-[1.02]` : atCap ? 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 opacity-40 cursor-not-allowed' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}
-                                 title={atCap ? 'Up to 3 presets — remove one to swap' : active ? `Selected #${orderIndex + 1} — click to remove` : `Add to render plan`}
+                                 title={atCap ? 'Up to 3 presets — remove one to swap' : active ? `Selected #${orderIndex + 1} — click to remove` : `Select style: ${p.label}`}
+                                 aria-label={atCap ? 'Up to 3 presets — remove one to swap' : active ? `Selected style #${orderIndex + 1}: ${p.label}` : `Select style: ${p.label}`}
                                >
                                  {active && (
                                    <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/95 text-surface-900 text-xs font-black flex items-center justify-center shadow-sm tabular-nums">
@@ -721,7 +824,7 @@ export default function VideoEditPage({ params }: PageProps) {
                                 <p className="text-xs font-bold text-surface-900 dark:text-white">Clips to generate</p>
                                 <span className="text-sm font-black text-primary-600 dark:text-primary-400 tabular-nums">{clipCount}</span>
                               </div>
-                              <input type="range" min="1" max="20" step="1" value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} className="w-full accent-primary-500" />
+                              <input type="range" min="1" max="20" step="1" value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} aria-label="Number of clips to generate" title="Number of clips to generate" className="w-full accent-primary-500" />
                            </div>
 
                            <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">

@@ -5,28 +5,32 @@ import { glass } from './_styles';
 
 const FAQS = [
   {
+    q: 'Will Click sound like every other AI editor?',
+    a: "No — and that's the whole point. Click ships with niche playbooks for finance, fitness, lifestyle, tech, beauty, gaming, business, food, and more. Then it learns YOUR voice on top: every clip you publish nudges the hooks, captions, and cuts toward what your audience already keeps watching. The longer you use Click, the less your clips look like anyone else's.",
+  },
+  {
+    q: "How fast does Click actually edit?",
+    a: 'First clip out the door in about 90 seconds from upload. For longer videos (10+ min), the AI typically finishes in 3–5 minutes — and renders run in the background while you queue the next one. You never wait on Click; Click waits on you.',
+  },
+  {
     q: 'What happens after my free trial?',
-    a: 'Free is forever-free with limits (3 exports/month, 30-second clips, watermark). You only pay if you upgrade — and you can do that any time, no card required to start.',
+    a: "There's no trial — Free is forever-free with limits (3 exports / month, 30-second clips, watermark). You only pay if you outgrow it, and you can upgrade or downgrade anytime. No card required to start. No surprise charges.",
+  },
+  {
+    q: 'Who owns the content Click makes?',
+    a: 'You do. Period. Click never claims license to your footage, transcripts, captions, voice clones, or generated assets. We process it on the way out; you own everything that comes back.',
   },
   {
     q: 'Can I switch plans or cancel later?',
-    a: 'Yes. Switch tiers from your billing dashboard at any time — proration is automatic. Cancel any time; you keep access until your billing period ends.',
+    a: 'Yes. Switch tiers from billing any time — proration is automatic. Cancel any time; you keep access until your billing period ends, and your library stays right where you left it.',
   },
   {
     q: 'Do you offer refunds?',
-    a: '14-day full refund, no questions asked, on every paid plan. After that, we honour pro-rated refunds on a case-by-case basis.',
+    a: "14-day full refund on every paid plan, no questions asked. If Click didn't earn its keep in two weeks, that's on us. After that, we honour pro-rated refunds case by case.",
   },
   {
-    q: 'Who owns the content I create?',
-    a: 'You do. Period. Click never claims license to your footage, transcripts, captions, or generated assets. We process it; you own it.',
-  },
-  {
-    q: 'How does the AI know my niche?',
-    a: 'Click ships with playbooks for finance, fitness, lifestyle, tech, beauty, gaming, business, food, and more. The AI shapes every prompt — captions, hooks, edit suggestions — by your selected niche, platform, and audience-language. No generic outputs.',
-  },
-  {
-    q: 'Is there a watermark on my exports?',
-    a: 'On Free only. Creator, Pro, and Agency plans export clean, unbranded video. Agency goes further with white-label exports for shared previews.',
+    q: 'Will my exports have a watermark?',
+    a: 'On Free only. Creator, Pro, and Agency plans export clean, unbranded video. Agency goes further with white-label review links so your clients see your brand, not ours.',
   },
 ];
 
@@ -41,9 +45,9 @@ export function FAQ() {
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-4">
-            QUESTIONS <span className="text-indigo-400">ANSWERED</span>
+            ASK CLICK <span className="text-indigo-400">ANYTHING.</span>
           </h2>
-          <p className="text-slate-400 text-base font-medium">Common objections, answered honestly.</p>
+          <p className="text-slate-400 text-base font-medium">The questions creators actually send us — answered straight.</p>
         </div>
 
         <div className="space-y-3">
