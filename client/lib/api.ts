@@ -11,30 +11,25 @@ import { extractApiError } from '../utils/apiResponse'
 function resolveBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL
 
-  // Debug instrumentation disabled
-
-  // If you're running the frontend locally, always prefer same-origin proxy (/api)
-  // to avoid CORS, mixed-host issues, and "invisible" auth failures.
+  // Frontend running on localhost: only ROUTE THROUGH the same-origin
+  // proxy (`/api`) when the env URL points at a REMOTE host like Render
+  // (the user wired prod creds for local dev — we don't want to leak
+  // remote calls). When the env URL is itself localhost (e.g. our
+  // direct-backend bypass to dodge Next.js's ~30s proxy timeout for
+  // long-running auto-edit), USE IT — that's the explicit intent.
+  // The previous version forced `/api` for direct-local URLs too,
+  // which silently undid the proxy bypass and brought back the 30s
+  // socket-hangup on auto-edit.
   if (typeof window !== 'undefined') {
     const host = window.location.hostname
     const isLocal = host === 'localhost' || host === '127.0.0.1'
     const isRemoteRender = !!envUrl && envUrl.includes('onrender.com')
-    const isDirectLocalApi =
-      !!envUrl &&
-      (envUrl.startsWith('http://localhost:5001') ||
-        envUrl.startsWith('http://127.0.0.1:5001') ||
-        envUrl.startsWith('https://localhost:5001') ||
-        envUrl.startsWith('https://127.0.0.1:5001'))
-
-    if (isLocal && (isRemoteRender || isDirectLocalApi)) {
-      // Debug instrumentation disabled
+    if (isLocal && isRemoteRender) {
       return '/api'
     }
   }
 
-  const finalUrl = envUrl || '/api'
-  // Debug instrumentation disabled
-  return finalUrl
+  return envUrl || '/api'
 }
 
 /**
@@ -147,6 +142,47 @@ async function executeWithRetry<T>(requestFn: () => Promise<T>, retryCount: numb
   }
 }
 
+/**
+ * Singleton refresh-in-flight promise so N parallel 401s trigger ONE
+ * /auth/refresh call. Returns the new access token (also written to
+ * localStorage as a side effect). Throws if the refresh fails so the
+ * interceptor knows to fall through to logout.
+ *
+ * Built on raw axios (not our axios instance) so the refresh request
+ * doesn't itself go through the response interceptor and recurse.
+ */
+let refreshInFlight: Promise<string> | null = null
+function getOrStartRefresh(refreshToken: string): Promise<string> {
+  if (refreshInFlight) return refreshInFlight
+  refreshInFlight = (async () => {
+    try {
+      const res = await axios.post(
+        `${resolveBaseUrl()}/auth/refresh`,
+        { refreshToken },
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+      // Refresh endpoint returns { success, data: { accessToken, refreshToken, expiresIn } }.
+      const data = (res.data as any)?.data ?? res.data
+      const newAccess: string | undefined = data?.accessToken || data?.token
+      const newRefresh: string | undefined = data?.refreshToken
+      if (!newAccess) {
+        throw new Error('Refresh response missing access token')
+      }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', newAccess)
+        if (newRefresh) localStorage.setItem('refreshToken', newRefresh)
+      }
+      return newAccess
+    } finally {
+      // Always clear so the NEXT 401 (after another expiry cycle) can
+      // start a fresh refresh. The promise above resolves/rejects before
+      // this clears, so concurrent callers all see the same result.
+      refreshInFlight = null
+    }
+  })()
+  return refreshInFlight
+}
+
 function createApiClient(): AxiosInstance {
   // API client initialized successfully
   console.log('🔗 API Client initialized with baseURL:', resolveBaseUrl());
@@ -195,7 +231,11 @@ function createApiClient(): AxiosInstance {
     headers: {
       'Content-Type': 'application/json',
     },
-    timeout: 45000, // 45 seconds (increased for slow database operations)
+    // 5 min default. Auto-edit + ffmpeg renders + transcription routinely
+    // run 60-90s; the previous 45s ceiling killed the request mid-render
+    // and the user saw a 500 even though the server was still working.
+    // Per-call overrides can still pass `timeout` to short-circuit.
+    timeout: 300_000,
   })
 
   // Enhanced request interceptor with comprehensive debugging
@@ -211,27 +251,35 @@ function createApiClient(): AxiosInstance {
       
       // Get auth token with SSR safety check
       const authToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-      
+
+      // Auth-public routes — these MINT or rotate the credential, so
+      // attaching an existing (often stale) Bearer just causes the
+      // server to reject before the body even gets parsed. Previously
+      // a leftover `dev-jwt-token-*` from an earlier dev session would
+      // ride along on /auth/login and 401 the user out of the only
+      // path back into a working state.
+      const url = String(config.url || '')
+      const isAuthPublic = (
+        url.includes('/auth/login') ||
+        url.includes('/auth/register') ||
+        url.includes('/auth/refresh') ||
+        url.includes('/auth/forgot-password') ||
+        url.includes('/auth/reset-password') ||
+        url.includes('/auth/oauth/')
+      )
+
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 API: Token available:', !!authToken, 'length:', authToken?.length || 0, 'isDevToken:', authToken?.startsWith('dev-jwt-token-'))
+        console.log('🔍 API: Token available:', !!authToken, 'length:', authToken?.length || 0, 'isDevToken:', authToken?.startsWith('dev-jwt-token-'), 'authPublic:', isAuthPublic)
       }
 
-      // Always ensure token is set in development (only in browser)
-      /* 
-      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && !authToken) {
-        const devToken = 'dev-jwt-token-' + Date.now()
-        localStorage.setItem('token', devToken)
-        config.headers.Authorization = `Bearer ${devToken}`
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔧 API: Auto-generated dev token for request:', config.url)
-        }
-      } else */ if (authToken) {
+      if (authToken && !isAuthPublic) {
         config.headers.Authorization = `Bearer ${authToken}`
         if (process.env.NODE_ENV === 'development') {
           console.log('🔍 API: Authorization header added')
         }
-      } else {
-        /* no auth token */
+      } else if (isAuthPublic && config.headers && (config.headers as any).Authorization) {
+        // Strip any inherited Authorization header on auth-public routes.
+        delete (config.headers as any).Authorization
       }
 
       // Attach the user's chosen UI language so the server can localize AI
@@ -307,10 +355,17 @@ function createApiClient(): AxiosInstance {
 
       return response
     },
-    (error: AxiosError) => {
+    async (error: AxiosError) => {
       const duration = (error.config as any)?.metadata?.startTime ? Date.now() - (error.config as any).metadata.startTime : 0
 
-      console.error('🔍 API: Response error for:', error.config?.url, 'duration:', duration + 'ms', 'error:', error.message)
+      // Don't log "canceled" errors as console.error — these are standard
+      // React behavior on unmount/re-render and just clutter the log.
+      if (!axios.isCancel(error)) {
+        console.error('🔍 API: Response error for:', error.config?.url, 'duration:', duration + 'ms', 'error:', error.message)
+      } else if (process.env.NODE_ENV === 'development') {
+        // Keep a quieter warning in dev so we know it happened
+        console.warn('🔍 API: Request canceled for:', error.config?.url, 'duration:', duration + 'ms')
+      }
 
       // Enhanced error logging
       const responseStatus = error.response?.status
@@ -391,40 +446,76 @@ function createApiClient(): AxiosInstance {
         console.warn(`⏸️ API: Rate limited (429). Server suggests waiting ${waitTime / 1000}s. Please reduce request frequency.`)
       }
 
-      // Handle 401 Unauthorized - redirect to login
-      // In development mode, don't remove dev tokens - they should always be valid
+      // Handle 401 Unauthorized — try silent refresh first, fall back to
+      // logout. The refresh attempt is gated on (a) the failing request is
+      // not itself a public-auth endpoint, (b) we have a refresh token in
+      // localStorage, (c) we haven't already retried this request once.
+      // A singleton refreshPromise coalesces concurrent 401s so 10 parallel
+      // requests trigger ONE refresh instead of 10.
       if (error.response?.status === 401) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-        const isDevToken = process.env.NODE_ENV === 'development' && token && token.startsWith('dev-jwt-token-')
-        const requestUrl = error.config?.url || 'unknown'
+        const originalRequest = error.config as (AxiosRequestConfig & { _retried?: boolean }) | undefined
+        const requestUrl = String(error.config?.url || 'unknown')
         const requestMethod = error.config?.method || 'unknown'
-        
-        // Enhanced logging for 401 errors
+        const isAuthPublic = (
+          requestUrl.includes('/auth/login') ||
+          requestUrl.includes('/auth/register') ||
+          requestUrl.includes('/auth/refresh') ||
+          requestUrl.includes('/auth/forgot-password') ||
+          requestUrl.includes('/auth/reset-password')
+        )
+        // /auth/me has its own retry + redirect logic in useAuth.ts — the
+        // interceptor shouldn't race with it and force a logout before the
+        // hook can retry. Without this, a single transient 401 from any
+        // race-y backend (e.g. cold-start Supabase) kicks the user back
+        // to /login immediately after sign-in.
+        const isAuthMe = requestUrl.includes('/auth/me') || requestUrl.includes('/auth/profile')
+
+        const refreshTokenValue = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
+        const canTryRefresh = (
+          !!refreshTokenValue &&
+          !isAuthPublic &&
+          !!originalRequest &&
+          !originalRequest._retried
+        )
+
         if (process.env.NODE_ENV === 'development') {
-          console.warn('🔧 [API] 401 Unauthorized error:', {
+          console.warn('🔧 [API] 401 Unauthorized:', {
             url: requestUrl,
             method: requestMethod,
-            hasToken: !!token,
-            isDevToken,
-            tokenPrefix: token ? token.substring(0, 20) + '...' : 'none',
-            responseData: error.response?.data,
-            headers: error.config?.headers
+            hasRefreshToken: !!refreshTokenValue,
+            willTryRefresh: canTryRefresh,
+            authPublic: isAuthPublic,
           })
         }
-        
-        // Only remove token and redirect if it's not a dev token
-        // Dev tokens should always be valid in development mode
-        if (!isDevToken && typeof window !== 'undefined') {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('🔧 [API] Removing non-dev token and redirecting to login')
+
+        if (canTryRefresh) {
+          try {
+            const newToken = await getOrStartRefresh(refreshTokenValue!)
+            if (newToken && originalRequest) {
+              originalRequest._retried = true
+              originalRequest.headers = {
+                ...(originalRequest.headers || {}),
+                Authorization: `Bearer ${newToken}`,
+              }
+              return client.request(originalRequest)
+            }
+          } catch (refreshErr) {
+            // Refresh failed — fall through to logout below.
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('🔧 [API] Token refresh failed, will sign out:', refreshErr)
+            }
           }
+        }
+
+        if (typeof window !== 'undefined' && !isAuthPublic && !isAuthMe) {
+          // Clear both tokens — refresh either failed, wasn't possible, or
+          // we already retried this request once.
           localStorage.removeItem('token')
-          window.location.href = '/login'
-        } else if (isDevToken) {
-          // In development, log the 401 but don't remove the token
-          // This might indicate a server-side issue with token validation
-          console.warn('🔧 [API] 401 error with dev token - this might indicate a server issue. Token preserved for development.')
-          console.warn('🔧 [API] Check that the backend auth middleware is correctly handling dev tokens.')
+          localStorage.removeItem('refreshToken')
+          const onAuthPage = /\/(login|register|signup)(\b|$|\/)/.test(window.location.pathname)
+          if (!onAuthPage) {
+            window.location.href = '/login'
+          }
         }
       }
       return Promise.reject(error)
@@ -449,7 +540,8 @@ const CACHE_ENABLED_ENDPOINTS = [
   '/workflows/suggestions',
   '/dashboard',
   '/library/items',
-  '/analytics/dashboard'
+  '/analytics/dashboard',
+  '/video/clips/style-insight'
 ]
 
 function getCacheKey(endpoint: string, config?: AxiosRequestConfig): string {
@@ -667,8 +759,27 @@ export function setAuthToken(token: string): void {
 }
 
 /**
+ * Store BOTH the access token and refresh token after a successful login,
+ * register, or refresh. Use this in preference to `setAuthToken` when the
+ * server response includes a `refreshToken` — that's what powers the
+ * silent-refresh-on-401 interceptor below.
+ */
+export function setTokens(token: string, refreshToken?: string | null): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem('token', token)
+  if (refreshToken) {
+    localStorage.setItem('refreshToken', refreshToken)
+  }
+}
+
+export function getRefreshToken(): string | null {
+  if (typeof window !== 'undefined') return localStorage.getItem('refreshToken')
+  return null
+}
+
+/**
  * Removes the authentication token and clears authorization headers.
- * 
+ *
  * @example
  * ```typescript
  * clearAuthToken()
@@ -677,6 +788,7 @@ export function setAuthToken(token: string): void {
 export function clearAuthToken(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
   }
 }
 
