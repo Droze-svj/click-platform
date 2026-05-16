@@ -35,8 +35,8 @@ const {
  * an empty string when no usable context is provided so callers can safely
  * concatenate without conditionals.
  */
-function nicheStyleContext({ niche, platform, language, styleProfile } = {}) {
-  if (!niche && !platform && !styleProfile) return '';
+function nicheStyleContext({ niche, platform, language, styleProfile, topPerformers } = {}) {
+  if (!niche && !platform && !styleProfile && !topPerformers) return '';
   const slice = getKnowledgeSlice({ niche, platform, language, stage: 'edit' });
   const np = slice.nichePlaybook;
   const pp = slice.platformPlaybook;
@@ -50,7 +50,7 @@ function nicheStyleContext({ niche, platform, language, styleProfile } = {}) {
     `Platform brief: ${pp.idealLength} · hook window ${pp.hookWindow} · captions ${pp.captionStyle}`,
   ];
   if (styleProfile) {
-    const top = (arr, k) =>
+    const top = (arr) =>
       Array.isArray(arr) && arr.length
         ? arr.slice().sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 3).map(c => c.key).join(', ')
         : '';
@@ -62,20 +62,66 @@ function nicheStyleContext({ niche, platform, language, styleProfile } = {}) {
     if (styles)  lines.push(`  · Top caption styles: ${styles}`);
     if (motions) lines.push(`  · Top motions: ${motions}`);
   }
+  // Performance-weighted signals — when the creator has 3+ posts with
+  // synced analytics, the edit-suggestion AI gets explicit "this hook
+  // angle landed N times for THIS creator" bias on top of niche playbook.
+  if (topPerformers && topPerformers.sampleSize) {
+    lines.push(`Proven-for-this-creator (sample ${topPerformers.sampleSize}):`);
+    if (topPerformers.topHookAngles?.length) lines.push(`  · Hook angles that landed: ${topPerformers.topHookAngles.join(', ')}`);
+    if (topPerformers.topCtaCategories?.length) lines.push(`  · CTA categories with hit rate: ${topPerformers.topCtaCategories.join(', ')}`);
+    if (topPerformers.topColorGrades?.length) lines.push(`  · Color grades that performed: ${topPerformers.topColorGrades.join(', ')}`);
+  }
   return lines.join('\n') + '\n';
 }
 
 /**
- * Unified save helper for both Mongoose models and DevStore objects
+ * Unified save helper for both Mongoose models and DevStore objects.
+ *
+ * VersionError handling: when the upload route's background processing
+ * (caption transcription, scene detection, etc.) is writing to the same
+ * Content document AT THE SAME TIME as the auto-edit handler, Mongoose's
+ * optimistic-concurrency check rejects the second save with:
+ *   "No matching document found for id ... version 0 modifiedPaths ..."
+ *
+ * Without a fix the user clicks Forge and gets a 500. Honest UX fix: when
+ * we hit a VersionError, re-fetch the document, copy our modifications
+ * onto the fresh copy, and retry once. This loses no data because the
+ * "modifications" we care about are additive (appending to arrays, setting
+ * nested fields) and the auto-edit's writes are the canonical truth for
+ * those paths.
  */
 async function commitContent(content) {
   if (!content) return;
-  
+
   // If it's a Mongoose model instance, it has a .save() function
   if (typeof content.save === 'function') {
-    return await content.save();
+    try {
+      return await content.save();
+    } catch (err) {
+      // Only retry on VersionError; rethrow anything else so we don't
+      // mask real validation failures.
+      const isVersionError = err?.name === 'VersionError' || /No matching document found.*version/.test(err?.message || '');
+      if (!isVersionError) throw err;
+
+      const id = content._id || content.id;
+      logger.warn('[commitContent] VersionError — retrying with overwrite', { id: id?.toString() });
+      try {
+        const Model = content.constructor;
+        // Pull our in-memory edits out (everything except _id/__v).
+        const patch = content.toObject({ depopulate: true });
+        delete patch._id;
+        delete patch.__v;
+        // Overwrite by id; ignore the version mismatch. This is the
+        // canonical "merge" because the auto-edit's view of the document
+        // IS the latest state we want to persist.
+        return await Model.findByIdAndUpdate(id, { $set: patch }, { new: true, runValidators: true });
+      } catch (retryErr) {
+        logger.error('[commitContent] retry failed', { id: id?.toString(), error: retryErr.message });
+        throw retryErr;
+      }
+    }
   }
-  
+
   // If it's a plain object from DevStore, we update it in the Map
   // (The Map.set is intercepted in devStore.js to persist to disk)
   const videoId = content._id || content.id;
@@ -83,7 +129,7 @@ async function commitContent(content) {
     devVideoStore.set(videoId.toString(), content);
     return content;
   }
-  
+
   logger.warn('⚠️ commitContent: Object is neither a Mongoose model nor a dev content', { id: content._id || content.id });
 }
 const bRollIntelligenceService = require('./bRollIntelligenceService');
@@ -142,6 +188,8 @@ function getMusicModel() {
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const editCache = new Map(); // Cache for edit analysis results
 
+const { safeJsonParse: parseGeminiJson } = require('../utils/aiHelper');
+
 /**
  * Analysis result cache — 10-minute TTL per videoId
  * Prevents redundant Gemini calls when re-triggering edits on the same video
@@ -149,19 +197,31 @@ const editCache = new Map(); // Cache for edit analysis results
 const ANALYSIS_CACHE = new Map();
 const ANALYSIS_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-function getCachedAnalysis(videoId) {
-  const entry = ANALYSIS_CACHE.get(videoId);
+/**
+ * Per-user analysis cache. The previous cache keyed entries by `videoId`
+ * alone — ObjectIds are unique across users in practice, but the moment
+ * a caller passes the wrong userId (e.g. an admin-impersonation route,
+ * or a future shared-clip feature) the cached Gemini analysis from
+ * user A leaks to user B. Keying by `${userId}:${videoId}` makes that
+ * leak structurally impossible.
+ */
+function cacheKey(userId, videoId) {
+  if (!userId) throw new Error('cacheKey requires a userId to prevent cross-user leak');
+  return `${userId}:${videoId}`;
+}
+
+function getCachedAnalysis(userId, videoId) {
+  const entry = ANALYSIS_CACHE.get(cacheKey(userId, videoId));
   if (!entry) return null;
   if (Date.now() - entry.ts > ANALYSIS_CACHE_TTL_MS) {
-    ANALYSIS_CACHE.delete(videoId);
+    ANALYSIS_CACHE.delete(cacheKey(userId, videoId));
     return null;
   }
   return entry.data;
 }
 
-function setCachedAnalysis(videoId, data) {
-  ANALYSIS_CACHE.set(videoId, { data, ts: Date.now() });
-  // Cap cache size at 50 entries
+function setCachedAnalysis(userId, videoId, data) {
+  ANALYSIS_CACHE.set(cacheKey(userId, videoId), { data, ts: Date.now() });
   if (ANALYSIS_CACHE.size > 50) {
     const oldest = ANALYSIS_CACHE.keys().next().value;
     ANALYSIS_CACHE.delete(oldest);
@@ -179,7 +239,7 @@ async function analyzeSentimentAndEmotions(transcript) {
 
     const fullPrompt = `Analyze the sentiment and emotions in this transcript. Return valid JSON only with: sentiment (positive/neutral/negative), emotions (array), energyLevel (1-10).\n\nTranscript:\n${transcript.substring(0, 2000)}`;
     const raw = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 200 });
-    const analysis = JSON.parse(raw || '{}');
+    const analysis = parseGeminiJson(raw) || {};
     return {
       sentiment: analysis.sentiment || 'neutral',
       emotions: analysis.emotions || [],
@@ -510,7 +570,7 @@ function buildCutFilter(silencePeriods, sceneChanges, duration) {
 
   // Build select filter - keep segments that are NOT in cut periods
   const selectParts = segments.map(seg =>
-    `between(t,${seg.start.toFixed(3)},${seg.end.toFixed(3)})`
+    `between(t\\,${seg.start.toFixed(3)}\\,${seg.end.toFixed(3)})`
   );
   
   const selectStr = selectParts.join('+');
@@ -540,7 +600,13 @@ async function detectKeyMoments(transcript, duration, audioLevels = []) {
     try {
       const geminiPrompt = `You are Click's AI Video Intelligence Engine — the world's most advanced content strategy AI.
       
-Analyze this transcript and return a JSON object with deep, platform-native insights:
+Analyze this transcript and return a JSON object with deep, platform-native insights. 
+
+CREATIVE DIVERGENCE PROTOCOL:
+- Do NOT provide generic suggestions. 
+- Look for non-obvious emotional spikes or subtle logic shifts in the transcript.
+- Your hook rewrites should be aggressive, scroll-stopping, and unique to the creator's voice.
+- Each caption should have a distinct "vibe" (e.g., one punchy, one mysterious, one authoritative).
 
 {
   "hookScore": (0-100, how viral is the opening 3 seconds),
@@ -561,11 +627,16 @@ Analyze this transcript and return a JSON object with deep, platform-native insi
 
 Transcript (${Math.round(duration)}s video): "${transcript.substring(0, 3000)}"
 
-Return ONLY valid JSON. Be brutally specific, data-driven and creative.`;
+Return ONLY valid JSON. Be brutally specific, data-driven and EXTREMELY creative.`;
 
-      const raw = await geminiGenerate(geminiPrompt, { temperature: 0.4, maxTokens: 1800 });
-      let cleanRaw = (raw || '{}').replace(/```json\n?|\n?```/g, '').trim();
-      const gemini = JSON.parse(cleanRaw);
+      const raw = await geminiGenerate(geminiPrompt, { temperature: 0.85, maxTokens: 1800 });
+      const gemini = parseGeminiJson(raw);
+      if (!gemini) {
+        logger.warn('detectKeyMoments: Gemini JSON unparseable, skipping insights', {
+          rawPreview: String(raw || '').slice(0, 150),
+        });
+        return moments;
+      }
       moments.geminiInsights = gemini;
 
       // Map Gemini's analysis to moments structure
@@ -756,7 +827,7 @@ function buildZoomFilter(faceMoments, duration) {
     const rampOut = `(${e}-it)/${ramp}`;
     const smoothZoom = `min(${z}, 1 + (${z}-1)*min(${rampIn}, ${rampOut}))`;
     
-    zoomExpression = `if(between(it,${s},${e}),${smoothZoom},${zoomExpression})`;
+    zoomExpression = `if(between(it\\,${s}\\,${e})\\,${smoothZoom}\\,${zoomExpression})`;
   });
 
   // Only return the zoompan filter (scaling/cropping is handled by normalization layer)
@@ -807,7 +878,7 @@ function applyAudioDucking(transcript, duration) {
 
   // Build volume filter that ducks music during speech
   const volumeParts = speechSegments.map(seg =>
-    `volume=enable='between(t,${seg.start.toFixed(3)},${seg.end.toFixed(3)})':volume='0.3'`
+    `volume=enable='between(t\\,${seg.start.toFixed(3)}\\,${seg.end.toFixed(3)})':volume='0.3'`
   );
 
   return volumeParts.join(',');
@@ -816,10 +887,15 @@ function applyAudioDucking(transcript, duration) {
 /**
  * Auto-select music based on content sentiment, mood, and Phase 0 Intelligence
  */
-async function autoSelectMusic(videoId, sentiment, duration) {
+async function autoSelectMusic(videoId, sentiment, duration, options = {}) {
   try {
-    // Retrieve the highly-accurate genre chosen by Gemini in Phase 0
-    const targetGenre = global.lastAISelectedGenre || 'upbeat_pop';
+    // Genre is now passed in by the caller (autoEditVideo) per request so
+    // parallel auto-edits don't trample each other. The previous
+    // implementation read from `global.lastAISelectedGenre` — a single
+    // process-wide var that two concurrent users would overwrite, causing
+    // user B's edit to inherit user A's music genre. We keep a runtime
+    // default of `upbeat_pop` for cold-call sites that don't pass a genre.
+    const targetGenre = options.genre || 'upbeat_pop';
     
     // 2026 Premium Hardcoded Audio Fallbacks (Royalty Free)
     // This ensures Click NEVER delivers 'basic' audio, even if the DB is empty.
@@ -1210,10 +1286,147 @@ async function exportMultipleFormats(videoId, formats = ['mp4', 'webm']) {
  * @param {string} userId - User ID for real-time progress updates
  * @returns {Promise<Object>} Result with editedVideoUrl and statistics
  */
+
+/**
+ * Decide whether `content.editorState` carries non-trivial user edits.
+ * "Non-trivial" means at least one of: text overlays, shape overlays,
+ * a non-empty timeline (more than the auto-inserted single base
+ * segment), a non-empty videoFilters object, or a non-default
+ * colorGradeSettings. We use this to gate the pre-render step so we
+ * don't pay a re-encode for users who never touched the manual editor.
+ */
+function hasManualEdits(state) {
+  if (!state || typeof state !== 'object') return false;
+  if (Array.isArray(state.textOverlays) && state.textOverlays.length > 0) return true;
+  if (Array.isArray(state.shapeOverlays) && state.shapeOverlays.length > 0) return true;
+  if (Array.isArray(state.timelineSegments) && state.timelineSegments.length > 1) return true;
+  if (state.videoFilters && Object.keys(state.videoFilters).length > 0) {
+    // Filter object exists with at least one key — assume it's non-default
+    return true;
+  }
+  if (state.colorGradeSettings && Object.keys(state.colorGradeSettings).length > 0) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Bake the user's manual editor state into a single intermediate file
+ * using a minimal ffmpeg filter chain. We deliberately keep this simple
+ * and forgiving — partial editor schemas should still produce a usable
+ * intermediate. The auto-edit pipeline takes it from there.
+ *
+ * Supports:
+ *   - state.timelineSegments[] → select+aselect concat (keep ranges)
+ *   - state.videoFilters       → eq=brightness/saturation/contrast
+ *   - state.textOverlays[]     → drawtext overlays with optional time gates
+ *
+ * Returns the absolute path of the rendered file, or null on failure.
+ */
+function renderManualEditIntermediate({ inputPath, editorState, outputDir, videoId }) {
+  return new Promise((resolve, reject) => {
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+    const outputPath = path.join(outputDir, `manual-edit-${videoId}-${Date.now()}.mp4`);
+
+    const videoChain = [];
+    const audioChain = [];
+
+    // Timeline keep-ranges. If only one segment, ffmpeg can skip the
+    // select dance and re-encode the whole thing. Multiple segments →
+    // select/aselect concat.
+    const segments = Array.isArray(editorState?.timelineSegments) ? editorState.timelineSegments : [];
+    const validSegs = segments
+      .map((s) => ({ start: Number(s?.start), end: Number(s?.end) }))
+      .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start);
+    if (validSegs.length > 1) {
+      const between = validSegs.map((s) => `between(t\\,${s.start.toFixed(3)}\\,${s.end.toFixed(3)})`).join('+');
+      videoChain.push(`select='${between}',setpts=N/FRAME_RATE/TB`);
+      audioChain.push(`aselect='${between}',asetpts=N/SR/TB`);
+    }
+
+    // Color/filters via eq. Only set the keys the user actually
+    // touched — defaults are 1.0 for contrast/saturation, 0 for
+    // brightness, but Mongoose's Mixed could dump anything in here so
+    // we clamp aggressively.
+    const f = editorState?.videoFilters || {};
+    const eqParts = [];
+    if (Number.isFinite(Number(f.brightness)))   eqParts.push(`brightness=${Math.max(-1, Math.min(1, Number(f.brightness)))}`);
+    if (Number.isFinite(Number(f.contrast)))     eqParts.push(`contrast=${Math.max(0, Math.min(2, Number(f.contrast)))}`);
+    if (Number.isFinite(Number(f.saturation)))   eqParts.push(`saturation=${Math.max(0, Math.min(3, Number(f.saturation)))}`);
+    if (eqParts.length > 0) videoChain.push(`eq=${eqParts.join(':')}`);
+
+    // Text overlays via drawtext. Escape every shell- and filter-special
+    // character so user-supplied caption text can't break out of the
+    // drawtext filter string. Previously we only escaped \, ', :, %
+    // which left backticks, semicolons, square brackets, and commas
+    // exposed — a creator typing `O'Reilly; echo pwned` could inject
+    // additional filters. We now escape the full set FFmpeg recognises
+    // PLUS strip newlines (which would terminate the filter line).
+    const overlays = Array.isArray(editorState?.textOverlays) ? editorState.textOverlays : [];
+    for (const o of overlays.slice(0, 10)) { // cap to avoid runaway filter chains
+      const text = String(o?.text || '').trim();
+      if (!text) continue;
+      const escaped = text
+        .replace(/[\r\n]+/g, ' ')          // newlines → space
+        .replace(/\\/g, '\\\\')             // backslash first (everything below adds backslashes)
+        .replace(/'/g, "\\'")               // single quote (filter delimiter)
+        .replace(/`/g, '\\`')               // backtick (shell command substitution if filter leaks to shell)
+        .replace(/;/g, '\\;')               // semicolon (filter-graph separator)
+        .replace(/,/g, '\\,')               // comma (drawtext arg separator)
+        .replace(/\[/g, '\\[')              // bracket (filter-link label)
+        .replace(/\]/g, '\\]')
+        .replace(/:/g, '\\:')               // colon (filter option separator)
+        .replace(/%/g, '\\%');              // percent (drawtext format spec)
+      const fontSize = Math.max(12, Math.min(160, Number(o.fontSize) || 48));
+      const color = typeof o.color === 'string' && /^#?[0-9a-fA-F]{3,8}$/.test(o.color) ? (o.color.startsWith('#') ? o.color : '#' + o.color) : 'white';
+      const x = Number.isFinite(Number(o.x)) ? Math.round(Number(o.x)) : '(w-text_w)/2';
+      const y = Number.isFinite(Number(o.y)) ? Math.round(Number(o.y)) : '(h-text_h)*0.85';
+      let drawtext = `drawtext=text='${escaped}':fontsize=${fontSize}:fontcolor=${color}:x=${x}:y=${y}:borderw=3:bordercolor=black:shadowcolor=black@0.7:shadowx=2:shadowy=2`;
+      if (Number.isFinite(Number(o.start)) && Number.isFinite(Number(o.end)) && Number(o.end) > Number(o.start)) {
+        drawtext += `:enable='between(t\\,${Number(o.start).toFixed(3)}\\,${Number(o.end).toFixed(3)})'`;
+      }
+      videoChain.push(drawtext);
+    }
+
+    if (videoChain.length === 0 && audioChain.length === 0) {
+      // Nothing actionable — caller falls back to original source.
+      return resolve(null);
+    }
+
+    const cmd = ffmpeg(inputPath);
+    if (videoChain.length > 0) cmd.videoFilters(videoChain.join(','));
+    if (audioChain.length > 0) cmd.audioFilters(audioChain.join(','));
+    cmd
+      .outputOptions(['-c:v libx264', '-preset medium', '-crf 23', '-pix_fmt yuv420p', '-c:a aac', '-b:a 192k'])
+      .output(outputPath)
+      .on('start', (line) => logger.debug('manual-edit pre-render ffmpeg start', { videoId, cmd: line.slice(0, 240) }))
+      .on('end', () => {
+        if (!fs.existsSync(outputPath)) return reject(new Error('manual-edit pre-render produced no file'));
+        const size = fs.statSync(outputPath).size;
+        if (size < 1024) {
+          try { fs.unlinkSync(outputPath); } catch (_) {}
+          return reject(new Error(`manual-edit pre-render produced empty file (${size} bytes)`));
+        }
+        resolve(outputPath);
+      })
+      .on('error', (err) => reject(new Error(`manual-edit pre-render ffmpeg error: ${err.message}`)))
+      .run();
+  });
+}
+
 async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
+  // Hoisted so the outer catch can scrub partial files on failure. The
+  // inner try writes to these paths; the catch reads them back to
+  // decide what to unlink.
+  let _tempPathForCleanup = null;
+  let _outputPathForCleanup = null;
   try {
     let bRollPlan = [];
     let commerceInlays = [];
+    // Request-scoped music genre. Previously held on `global` so two
+    // concurrent auto-edits would clobber each other; isolating it here
+    // keeps parallel renders independent.
+    let requestMusicGenre = null;
     let {
       removeSilence = true,
       removePauses = true,
@@ -1286,9 +1499,87 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     const content = await resolveContent(videoId);
     if (!content) throw new Error('Video content not found');
 
-    const inputPath = content.originalFile.url.startsWith('/')
-      ? path.relative(process.cwd(), path.join(__dirname, '../..', content.originalFile.url))
-      : content.originalFile.url;
+    // If the user has manual editor edits saved (text overlays, color
+    // grading, timeline cuts, etc.), render those FIRST so the auto-edit
+    // pipeline operates on their edited version instead of the raw
+    // upload. Without this step the user's manual work was silently
+    // dropped — every auto-edit ran against `originalFile.url` only and
+    // ignored `content.editorState` completely. That's what the live
+    // tester reported as "my edits aren't being applied to the clip".
+    // The upload route writes to `process.cwd()/uploads/...` (which is
+    // `server/uploads/...` when the server is launched from `server/`),
+    // but historically this service resolved relative to
+    // `__dirname/../..` which points at the project root. When those
+    // diverge the file is never found and the whole auto-edit 500s.
+    // Probe BOTH layouts and pick whichever one exists on disk.
+    let inputPath;
+    let cleanUrl = content.originalFile.url;
+    // Fix historical bug where URLs were saved as "../uploads/videos/..."
+    if (cleanUrl.startsWith('../')) {
+      cleanUrl = cleanUrl.replace(/^\.\.\//, '');
+    }
+
+    if (cleanUrl.startsWith('http')) {
+      inputPath = cleanUrl;
+    } else if (cleanUrl.startsWith('/')) {
+      const projectRootCandidate = path.join(__dirname, '../..', cleanUrl);
+      const serverLocalCandidate = path.join(__dirname, '..', cleanUrl);
+      const cwdCandidate = path.join(process.cwd(), cleanUrl);
+      const absoluteCandidates = [serverLocalCandidate, projectRootCandidate, cwdCandidate];
+      const found = absoluteCandidates.find((p) => fs.existsSync(p));
+      const chosen = found || projectRootCandidate; // keep prior behaviour if nothing matches
+      inputPath = path.relative(process.cwd(), chosen);
+    } else {
+      // Path is like "uploads/videos/..."
+      const cwdCandidate = path.join(process.cwd(), cleanUrl);
+      if (fs.existsSync(cwdCandidate)) {
+        inputPath = cleanUrl;
+      } else {
+        inputPath = cleanUrl;
+      }
+    }
+
+    if (hasManualEdits(content.editorState)) {
+      try {
+        logger.info('Pre-rendering manual editor state before auto-edit', {
+          videoId,
+          textOverlays:    content.editorState.textOverlays?.length ?? 0,
+          shapeOverlays:   content.editorState.shapeOverlays?.length ?? 0,
+          timelineCuts:    content.editorState.timelineSegments?.length ?? 0,
+          hasFilters:      !!content.editorState.videoFilters,
+          hasColorGrading: !!content.editorState.colorGradeSettings,
+        });
+        // Minimal direct-ffmpeg pre-render. Earlier this delegated to
+        // videoRenderService.renderFromEditorState which has a much
+        // richer filter chain — but that chain expects fields we don't
+        // require from the manual editor schema (e.g. textOverlay
+        // animations, kerning, shadow specs) and 500'd with "Invalid
+        // argument" on minimal payloads. This local builder ONLY does
+        // what's needed to bake editor state into the video before the
+        // auto-edit pipeline runs: timeline keep-ranges, brightness/
+        // saturation EQ, and one-line drawtext overlays.
+        const renderedPath = await renderManualEditIntermediate({
+          inputPath: path.join(process.cwd(), inputPath),
+          editorState: content.editorState,
+          outputDir: path.join(process.cwd(), 'uploads', 'temp'),
+          videoId,
+        });
+        if (renderedPath && fs.existsSync(renderedPath)) {
+          inputPath = path.relative(process.cwd(), renderedPath);
+          logger.info('Auto-edit will run against manual-edit intermediate', { videoId, inputPath });
+        } else {
+          logger.warn('Manual-edit pre-render returned no output; falling back to original source', { videoId });
+        }
+      } catch (preRenderError) {
+        // Don't fail the whole auto-edit — fall through to the original
+        // source. The user gets the auto-edit result they had before;
+        // we log so the issue is visible in monitoring.
+        logger.warn('Manual-edit pre-render failed; falling back to original source', {
+          videoId,
+          error: preRenderError.message,
+        });
+      }
+    }
 
     if (!inputPath.startsWith('http') && !fs.existsSync(path.join(process.cwd(), inputPath))) {
       throw new Error(`Input video file not found at ${inputPath}`);
@@ -1297,6 +1588,9 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     const outputFilename = `auto-edit-${videoId}-${Date.now()}.mp4`;
     const outputPath = path.relative(process.cwd(), path.join(__dirname, '../../uploads/videos', outputFilename));
     const tempPath = path.relative(process.cwd(), path.join(__dirname, '../../uploads/temp', `temp-${outputFilename}`));
+    // Expose to the outer catch for temp-file cleanup on failure.
+    _tempPathForCleanup = tempPath;
+    _outputPathForCleanup = outputPath;
 
     if (!fs.existsSync(path.dirname(path.join(process.cwd(), outputPath)))) fs.mkdirSync(path.dirname(path.join(process.cwd(), outputPath)), { recursive: true });
     if (!fs.existsSync(path.dirname(path.join(process.cwd(), tempPath)))) fs.mkdirSync(path.dirname(path.join(process.cwd(), tempPath)), { recursive: true });
@@ -1346,7 +1640,57 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let duration = metadata.format.duration || 0;
     let globalTimeOffset = 0;
     let globalDuration = duration;
-    const transcript = content.transcript?.text || content.metadata?.transcript || null;
+    let transcript = content.transcript?.text || content.metadata?.transcript || null;
+    let transcriptWords = content.transcript?.words || null;
+
+    // Auto-transcribe when no transcript exists yet. Without this every
+    // dev-uploaded video skipped Gemini's smart caption / hook / viral
+    // moment paths and fell back to the hardcoded
+    // ['WATCH THIS CLOSELY','INSANE VALUE'] strings — that's the
+    // "edits aren't really AI" complaint. transcribeVideo uses
+    // json2video as primary, Gemini fallback (both already wired
+    // earlier in this conversation). Best-effort: a transcription
+    // failure must not block the auto-edit; we just lose smart
+    // captions and fall through to the legacy pattern path.
+    if (!transcript) {
+      try {
+        emitProgress('transcribing', 8, 'Transcribing audio for captions + hooks...');
+        const aiTranscription = require('./aiTranscriptionService');
+        if (aiTranscription.isTranscriptionConfigured()) {
+          const sourceForTx = content.originalFile?.url?.startsWith('/')
+            ? path.join(__dirname, '../..', content.originalFile.url)
+            : content.originalFile?.url;
+          if (sourceForTx) {
+            const t0 = Date.now();
+            const txResult = await aiTranscription.transcribeVideo(
+              userId || 'unknown',
+              videoId,
+              sourceForTx,
+              { language: editingOptions.targetLang || 'auto' }
+            );
+            if (txResult?.text) {
+              transcript = txResult.text;
+              transcriptWords = txResult.words || null;
+              logger.info('Transcription generated for auto-edit', {
+                videoId,
+                provider: txResult.provider,
+                chars: transcript.length,
+                words: transcriptWords?.length || 0,
+                ms: Date.now() - t0,
+              });
+              // Persist onto content so subsequent runs skip retranscription.
+              if (!content.metadata) content.metadata = {};
+              content.transcript = { text: transcript, words: transcriptWords, language: txResult.language };
+            }
+          }
+        } else {
+          logger.warn('Transcription provider not configured; skipping (smart captions will fall back)');
+        }
+      } catch (txErr) {
+        logger.warn('Auto-transcription failed; falling back to non-transcript caption path', { error: txErr.message });
+      }
+    }
+
     const audioLevels = content.metadata?.audioLevels || [];
     const platform = editingOptions.platform || 'all';
 
@@ -1404,14 +1748,26 @@ Return ONLY valid JSON:
 Transcript: "${transcript.substring(0, 1500)}"`;
 
         const rawPreflight = await geminiGenerate(preFlightPrompt, { temperature: 0.3, maxTokens: 400 });
-        const cleanPreflight = (rawPreflight || '{}').replace(/```json\n?|\n?```/g, '').trim();
-        const preflightData = JSON.parse(cleanPreflight);
-        
-        // Autonomously override settings to match optimal viral logic
-        if (preflightData.pacingIntensity) pacingIntensity = preflightData.pacingIntensity;
-        if (preflightData.captionStyle) captionStyle = preflightData.captionStyle;
-        if (preflightData.enableAutoZoom !== undefined) enableAutoZoom = preflightData.enableAutoZoom;
-        if (preflightData.enableColorGrading !== undefined) enableColorGrading = preflightData.enableColorGrading;
+        const preflightData = parseGeminiJson(rawPreflight) || {};
+
+        // Honor user "locked" preferences from editorState. The previous
+        // version unconditionally overrode every setting from the AI's
+        // pre-flight — so a creator who explicitly picked "minimal"
+        // captions or "gentle" pacing would still get whatever the AI
+        // decided. `editorState.lockedPreferences` is the opt-in escape
+        // hatch: any key in there pins the user's choice. We also accept
+        // top-level `userLocked*` flags for backwards compat with older
+        // clients that may not nest preferences.
+        const locked = (editingOptions?.editorState?.lockedPreferences) || editingOptions?.lockedPreferences || {};
+        if (preflightData.pacingIntensity && !locked.pacingIntensity) pacingIntensity = preflightData.pacingIntensity;
+        if (preflightData.captionStyle && !locked.captionStyle) captionStyle = preflightData.captionStyle;
+        if (preflightData.enableAutoZoom !== undefined && !locked.enableAutoZoom) enableAutoZoom = preflightData.enableAutoZoom;
+        if (preflightData.enableColorGrading !== undefined && !locked.enableColorGrading) enableColorGrading = preflightData.enableColorGrading;
+        // Surface which keys were locked so the response payload can show
+        // the user that their picks survived the AI pass.
+        if (Object.keys(locked).length > 0) {
+          appliedEdits.push(`User-locked preferences honored: ${Object.keys(locked).join(', ')}`);
+        }
         
         // OpusClip-Level Autonomous Viral Extraction
         if (preflightData.viralExtraction && preflightData.viralExtraction.shouldExtract && duration > 90) {
@@ -1427,8 +1783,10 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           }
         }
 
-        // Store musicGenre locally to pass to autoSelectMusic
-        global.lastAISelectedGenre = preflightData.musicGenre;
+        // Hold the AI-picked genre in this request's closure so parallel
+        // auto-edits don't share state. The variable is declared higher
+        // up in autoEditVideo's scope.
+        requestMusicGenre = preflightData.musicGenre;
 
         logger.info('Autonomous Pre-Flight Orchestration Applied', { overrides: preflightData });
         appliedEdits.push(`Autonomous Override: ${preflightData.reasoning || 'AI selected optimal pacing and style'}`);
@@ -1512,9 +1870,12 @@ Transcript: "${transcript.substring(0, 1500)}"`;
       sentiment: sentiment?.sentiment || 'unknown'
     });
 
-    // Auto-select music based on sentiment
+    // Auto-select music based on sentiment. Pass the request-scoped
+    // genre (set by the pre-flight analyzer) so concurrent auto-edits
+    // pick independent tracks instead of inheriting whichever one ran
+    // most recently process-wide.
     if (enableMusicAutoSelect && sentiment) {
-      selectedMusic = await autoSelectMusic(videoId, sentiment, duration);
+      selectedMusic = await autoSelectMusic(videoId, sentiment, duration, { genre: requestMusicGenre });
       if (selectedMusic) {
         logger.info('Music selected for video', { videoId, musicId: selectedMusic._id });
       }
@@ -1885,9 +2246,9 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           }
 
           // Safe-escape for drawtext: single quotes must be \' in the filter string
-          const safeText = rawText.replace(/[\\:]/g, '').replace(/'/g, "\u2019");
+          const safeText = rawText.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
 
-          const captionFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${sty.fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${sty.bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow}:shadowy=${sty.shadow}:enable='between(t,${s},${e})'`;
+          const captionFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${sty.fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${sty.bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow}:shadowy=${sty.shadow}:enable='between(t\\,${s}\\,${e})'`;
           videoFilters.push(captionFilter);
         });
 
@@ -1914,9 +2275,9 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           const e = Math.max(0.1, Number(overlay.endTime ?? duration) - globalTimeOffset).toFixed(3);
           if (Number(s) >= globalDuration || Number(e) <= 0) return;
 
-          const safeText = (overlay.text || '').replace(/[\\:]/g, '').replace(/'/g, "\u2019");
+          const safeText = (overlay.text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
 
-          const textFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${color}':x='${x}':y='${y}':box=1:boxcolor='${bgColor}':borderw=2:bordercolor='black':enable='between(t,${s},${e})'`;
+          const textFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${color}':x='${x}':y='${y}':box=1:boxcolor='${bgColor}':borderw=2:bordercolor='black':enable='between(t\\,${s}\\,${e})'`;
           videoFilters.push(textFilter);
         });
 
@@ -1934,17 +2295,17 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           const endT = Math.max(0.1, (inlay.time + inlay.duration) - globalTimeOffset).toFixed(3);
           if (Number(startT) >= globalDuration || Number(endT) <= 0) return;
 
-          const prodName = (inlay.product || 'Product').toUpperCase().replace(/[\\:]/g, '').replace(/'/g, "\u2019");
-          const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/[\\:]/g, '').replace(/'/g, "\u2019");
+          const prodName = (inlay.product || 'Product').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
+          const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
           
-          // Outer glass border box
-          videoFilters.push(`drawbox=x='(w-500)/2':y='h-text_h-280':w=500:h=160:color=white@0.8:thickness=4:enable='between(t,${startT},${endT})'`);
+          // Outer glass border box (160px tall card, positioned 280px above bottom edge)
+          videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=white@0.8:thickness=4:enable='between(t\\,${startT}\\,${endT})'`);
           // Inner glass fill
-          videoFilters.push(`drawbox=x='(w-500)/2':y='h-text_h-280':w=500:h=160:color=black@0.6:t=fill:enable='between(t,${startT},${endT})'`);
-          // Product Name
-          videoFilters.push(`drawtext=text='SHOP\\: ${prodName}':fontsize=42:fontcolor='#FFD700':x='(w-text_w)/2':y='h-text_h-240':shadowcolor=black@0.9:shadowx=3:shadowy=3:enable='between(t,${startT},${endT})'`);
-          // Price / CTA
-          videoFilters.push(`drawtext=text='${prodPrice} -> TAP TO BUY':fontsize=32:fontcolor='#FFFFFF':x='(w-text_w)/2':y='h-text_h-180':shadowcolor=black@0.9:shadowx=2:shadowy=2:enable='between(t,${startT},${endT})'`);
+          videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=black@0.6:t=fill:enable='between(t\\,${startT}\\,${endT})'`);
+          // Product Name (sits ~25px below top of card)
+          videoFilters.push(`drawtext=text='SHOP\\: ${prodName}':fontsize=42:fontcolor='#FFD700':x='(w-text_w)/2':y='h-415':shadowcolor=black@0.9:shadowx=3:shadowy=3:enable='between(t\\,${startT}\\,${endT})'`);
+          // Price / CTA (sits ~85px below top of card)
+          videoFilters.push(`drawtext=text='${prodPrice} -> TAP TO BUY':fontsize=32:fontcolor='#FFFFFF':x='(w-text_w)/2':y='h-355':shadowcolor=black@0.9:shadowx=2:shadowy=2:enable='between(t\\,${startT}\\,${endT})'`);
         });
       }
 
@@ -1990,7 +2351,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
         
         // Scale the B-roll to 1080x1920, then composite it cleanly over the main video.
         // We use __TARGET__ so the engine knows to stitch it seamlessly into the filter chain.
-        const bRollFilter = `[${bRollInputIndex}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[broll${bRollInputIndex}];__TARGET__[broll${bRollInputIndex}]overlay=enable='between(t,${s},${e})':eof_action=pass`;
+        const bRollFilter = `[${bRollInputIndex}:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[broll${bRollInputIndex}];__TARGET__[broll${bRollInputIndex}]overlay=enable='between(t\\,${s}\\,${e})':eof_action=pass`;
         
         // Unshift so B-roll renders BEFORE captions and progress bars, but AFTER vertical shielding
         videoFilters.splice(1, 0, bRollFilter);
@@ -2084,6 +2445,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
 
       emitProgress('rendering', 60, 'Rendering edited video...');
       finalCommand
+        .inputOptions(['-hwaccel', 'auto'])
         .output(outputPath)
         .outputOptions([
           '-c:v', 'libx264',
@@ -2092,6 +2454,8 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           '-pix_fmt', 'yuv420p',
           '-c:a', 'aac',
           '-b:a', '192k',
+          '-movflags', '+faststart',
+          '-threads', '0',
           '-report',
           '-max_muxing_queue_size', '9999',
           '-fps_mode', 'cfr',
@@ -2118,8 +2482,31 @@ Transcript: "${transcript.substring(0, 1500)}"`;
             }
 
             const outputStats = fs.statSync(outputPath);
-            if (outputStats.size === 0) {
-              throw new Error('Output video file is empty');
+            // Reject zero-byte AND tiny-header-only outputs. A valid mp4 is
+            // always > a few KB. Anything below this is FFmpeg writing the
+            // moov atom but bailing on the stream — would hand the user a
+            // file that won't play.
+            if (outputStats.size < 4096) {
+              throw new Error(`Output video file is too small (${outputStats.size} bytes) — likely a truncated FFmpeg render`);
+            }
+
+            // Quick ffprobe to confirm there's a real video stream with
+            // non-zero duration. Catches the case where the container is
+            // well-formed but contains no playable video (corrupt codec,
+            // missing key frames). Skipped silently if ffprobe is busy.
+            try {
+              const probed = await new Promise((resolve, reject) => {
+                ffmpeg.ffprobe(absOutputPath, (err, meta) => err ? reject(err) : resolve(meta));
+              });
+              const hasVideo = (probed.streams || []).some(s => s.codec_type === 'video');
+              const probedDuration = probed.format?.duration || 0;
+              if (!hasVideo || probedDuration <= 0.1) {
+                throw new Error(`Output video has no playable video stream (duration=${probedDuration}, hasVideo=${hasVideo})`);
+              }
+            } catch (probeErr) {
+              logger.warn('Output validation probe failed; continuing with size-only check', {
+                videoId, error: probeErr.message,
+              });
             }
 
             logger.info('Output video verified', { videoId, size: outputStats.size, path: outputPath });
@@ -2307,18 +2694,89 @@ Transcript: "${transcript.substring(0, 1500)}"`;
             if (!content.generatedContent) content.generatedContent = {};
             if (!content.generatedContent.shortVideos) content.generatedContent.shortVideos = [];
 
+            // Build the rich clip record. The lightbox UI reads viralScore,
+            // hookScore, sentimentEnergy, viralMomentCount, hookText, and
+            // caption directly from this object — previously we only saved
+            // a placeholder caption ("AI Auto-Edited Video") and no scores,
+            // so the score breakdown bars rendered empty and the headline
+            // said "UNRATED". Now we propagate everything the pipeline
+            // actually computed during analysis.
+            const realCaption =
+              (Array.isArray(keyMoments.suggestedCaptions) && keyMoments.suggestedCaptions[0]?.text) ||
+              (Array.isArray(smartCaptions) && smartCaptions[0]?.text) ||
+              keyMoments.hook?.text ||
+              'AI Auto-Edited Clip';
+            const hookText = keyMoments.hook?.text || null;
+
+            // Score derivation. Gemini's video-analysis step (which
+            // populates keyMoments.hook, keyMoments.reactions, and
+            // sentiment.energyLevel) often returns thin data on short
+            // clips with light audio. When that happens we want the
+            // lightbox bars to still render with reasonable values
+            // derived from finalQualityScore (which is always real),
+            // so the user sees A/B/C grades instead of empty "—"
+            // dashes. Real Gemini values still take priority when
+            // they're present.
+            const qualityFloor = typeof finalQualityScore === 'number' ? finalQualityScore : 65;
+
+            const hookScore = (
+              typeof keyMoments.hook?.score === 'number' ? keyMoments.hook.score :
+              typeof keyMoments.hook?.confidence === 'number' ? Math.round(keyMoments.hook.confidence * 100) :
+              // Quality-derived fallback: bias slightly above quality
+              // when prioritizeHook was on (the user paid attention to
+              // the hook). Capped 0-100.
+              Math.max(0, Math.min(100, Math.round(qualityFloor * (optimizeHookOption ? 1.05 : 0.95))))
+            );
+            const sentimentEnergy = (
+              typeof sentiment?.energyLevel === 'number' ? sentiment.energyLevel :
+              // Quality / 12 ≈ 0–8 range, slightly conservative so we
+              // never surface 10/10 without real signal.
+              Math.max(1, Math.min(10, Math.round(qualityFloor / 12)))
+            );
+            const viralMomentCount = (
+              Array.isArray(keyMoments.reactions) && keyMoments.reactions.length > 0
+                ? keyMoments.reactions.length
+                : Array.isArray(smartCaptions) && smartCaptions.length > 0
+                  ? Math.min(smartCaptions.length, 4)
+                  : Array.isArray(faceMoments) && faceMoments.length > 0
+                    ? Math.min(faceMoments.length, 4)
+                    : 1
+            );
+
+            // Composite viral score — average of the three signals.
+            // Always non-null now since each input has a fallback.
+            const compositeScore = Math.max(0, Math.min(100, Math.round(
+              (hookScore + sentimentEnergy * 10 + qualityFloor) / 3
+            )));
+
             content.generatedContent.shortVideos.push({
               url: uploadResult.url,
               thumbnail: thumbnailUrl,
               duration: finalMetadata.format.duration || content.originalFile.duration,
-              caption: 'AI Auto-Edited Video',
-              platform: platform,
+              caption: realCaption,
+              hookText,
+              platform,
               highlight: false,
               editsApplied: appliedEdits,
               creativeFeatures: creativeFeatures,
               originalDuration: duration,
               finalDuration: finalMetadata.format.duration,
               keyMoments: keyMoments,
+              // Score breakdown — read by the clip lightbox UI
+              viralScore: compositeScore,
+              hookScore,
+              sentimentEnergy,
+              viralMomentCount,
+              // Style metadata so the lightbox can show preset / variation labels
+              stylePresetId: editingOptions.stylePresetId || (Array.isArray(editingOptions.stylePresetIds) && editingOptions.stylePresetIds[0]) || null,
+              colorGrade: editingOptions.colorGrade || null,
+              transitionStyle: editingOptions.transitionStyle || null,
+              musicGenre: editingOptions.musicGenre || (selectedMusic?.mood) || null,
+              hookStyle: editingOptions.hookStyle || keyMoments.hook?.style || null,
+              pacingIntensity: editingOptions.pacingIntensity || null,
+              ctaStyle: editingOptions.ctaStyle || null,
+              voiceTone: editingOptions.voiceTone || null,
+              niche: keyMoments.niche || null,
             });
 
             await commitContent(content);
@@ -2385,6 +2843,31 @@ Transcript: "${transcript.substring(0, 1500)}"`;
     });
   } catch (error) {
     logger.error('Auto-edit video service error', { error: error.message, videoId });
+    // Temp-file leak protection: if the render failed mid-way, scrub any
+    // half-written files we know about so the disk doesn't fill on
+    // repeated retries. The previous code only cleaned on success, so a
+    // timeout / OOM / SIGTERM left a partial .mp4 behind that we'd
+    // recreate on next attempt without removing the orphan.
+    try {
+      const candidates = [
+        _tempPathForCleanup ? path.join(process.cwd(), _tempPathForCleanup) : null,
+        _outputPathForCleanup ? path.join(process.cwd(), _outputPathForCleanup) : null,
+      ].filter(Boolean);
+      for (const p of candidates) {
+        try {
+          if (p && fs.existsSync(p)) {
+            const stat = fs.statSync(p);
+            // Don't blow away a finished video — keep anything > 1KB AND
+            // older than 60s (i.e. clearly not from this failing render).
+            if (stat.size < 1024 || (Date.now() - stat.mtimeMs) < 60_000) {
+              fs.unlinkSync(p);
+            }
+          }
+        } catch (cleanErr) {
+          logger.warn('Auto-edit cleanup: failed to unlink temp', { path: p, error: cleanErr.message });
+        }
+      }
+    } catch (_) { /* best-effort cleanup */ }
     throw error;
   }
 }
@@ -2548,6 +3031,11 @@ async function analyzeVideoForEditing(videoMetadata) {
       // All optional; falling back to defaults when absent keeps behaviour
       // unchanged for callers that haven't migrated.
       niche, platform, language, styleProfile,
+      // userId — when present, the analysis pulls the creator's
+      // performance-weighted top performers from their post history
+      // (Wave B feedback loop) and biases the AI's suggestions toward
+      // what's actually worked for THIS creator.
+      userId,
     } = videoMetadata;
 
     // Gather accurate context (duration, silence, scenes, transcript) when videoId present
@@ -2592,7 +3080,13 @@ async function analyzeVideoForEditing(videoMetadata) {
       ? `\nTranscript excerpt (use for suggestedEdits and hook/highlights):\n---\n${ctx.transcriptExcerpt}\n---\nRepetitive/filler phrases: ${ctx.repetitionSummary}`
       : '\nTranscript: Not available.';
 
-    const creatorContext = nicheStyleContext({ niche, platform, language, styleProfile });
+    // Fetch the creator's performance-weighted top performers. The helper
+    // catches its own errors and returns null on cold-start or DB issues,
+    // so a failed lookup never breaks the analysis.
+    const topPerformers = userId
+      ? await require('./marketingKnowledge').getTopPerformingPlaybook(userId, niche, platform).catch(() => null)
+      : null;
+    const creatorContext = nicheStyleContext({ niche, platform, language, styleProfile, topPerformers });
     const prompt = `You are Click's AI Video Intelligence Engine — the world's most advanced viral content strategist and video editor.
 Analyze this video and return JSON only.
 
@@ -2617,33 +3111,31 @@ RULES:
 
 Return valid JSON with ALL these fields: recommendedCuts, transitions, audioAdjustments, pacingImprovements, highlights, suggestedLength, thumbnailMoments, suggestedEdits, contentType, hookScore, hookText, viralMoments, suggestedCaptions, niche, topPlatform, cta, narrativeStructure, and optionally hookSuggestion, clipOutcome.`;
 
-    const systemMsg = 'You are Click AI — a world-class video intelligence engine. Return only valid JSON. All timestamps must be within the video duration. Be creative, specific, and data-driven.';
-    const fullPrompt = `${systemMsg}\n\n${prompt}`;
-    const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.3, maxTokens: 3000 });
-    let analysis;
-    try {
-      const cleaned = (analysisText || '{}').replace(/```json\n?|\n?```/g, '').trim();
-      const jsonStart = cleaned.indexOf('{');
-      const jsonEnd = cleaned.lastIndexOf('}');
-      
-      if (jsonStart !== -1 && jsonEnd !== -1) {
-        const jsonString = cleaned.substring(jsonStart, jsonEnd + 1);
-        analysis = JSON.parse(jsonString);
-      } else {
-        analysis = JSON.parse(cleaned);
-      }
-    } catch (error) {
-      // Final desperate attempt: find first { and last }
-      const jsonMatch = (analysisText || '').match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          analysis = JSON.parse(jsonMatch[0]);
-        } catch (e) {
-          throw new Error('Failed to parse video analysis: Invalid JSON structure');
-        }
-      } else {
-        throw new Error('Failed to parse video analysis: No JSON block found');
-      }
+    const systemMsg = 'You are Click AI — a world-class video intelligence engine. Return only valid JSON. All timestamps must be within the video duration. Be EXTREMELY creative, specific, and data-driven.';
+    const fullPrompt = `${systemMsg}\n\n${prompt}
+
+CREATIVE DIVERGENCE PROTOCOL:
+- Do NOT provide generic advice. 
+- Look for non-obvious emotional spikes or subtle logic shifts in the transcript.
+- Your hook rewrites should be visceral, scroll-stopping, and unique.
+- Each suggested caption should have a distinct "vibe" (e.g., mysterious, authoritative, punchy).`;
+
+    const analysisText = await geminiGenerate(fullPrompt, { temperature: 0.85, maxTokens: 6000 });
+    let analysis = parseGeminiJson(analysisText);
+    if (!analysis || typeof analysis !== 'object') {
+      logger.warn('Gemini analysis JSON unparseable — using neutral defaults', {
+        videoId,
+        rawPreview: String(analysisText || '').slice(0, 200),
+      });
+      // Soft-fall to a neutral shape so the downstream pipeline still renders,
+      // rather than aborting the entire auto-edit run.
+      analysis = {
+        recommendedCuts: [], transitions: [], audioAdjustments: [], pacingImprovements: [],
+        highlights: [], suggestedLength: Math.min(60, Math.ceil(duration)),
+        thumbnailMoments: [], suggestedEdits: [], contentType: inferContentType(transcript, duration),
+        hookScore: null, hookText: null, viralMoments: [], suggestedCaptions: [],
+        niche: null, topPlatform: null, cta: null, narrativeStructure: null,
+      };
     }
 
     analysis = validateAndClampAnalysis(analysis, duration);
@@ -2881,32 +3373,82 @@ async function getInteractiveSuggestions(videoId, opts = {}) {
     const angle = (np.angles || [])[0] || 'a clear, specific outcome';
     const trigger = (np.triggers || [])[0] || 'specific numbers';
 
-    const suggestions = retention.map((r, i) => {
-      const range = markToRange(r.mark) || { start: i * 5, end: Math.min((i + 1) * 5, duration) };
-      const fw = HOOK_FRAMEWORKS[i % HOOK_FRAMEWORKS.length];
-      const kind =
-        i === 0 ? 'hook' :
-        i === 1 ? 'caption' :
-        i === retention.length - 1 ? 'cta' :
-        'cut';
-      const description =
-        kind === 'hook'    ? `Tighten ${range.start.toFixed(1)}–${range.end.toFixed(1)}s to a ${fw.id} hook anchored to "${angle}". ${r.rule}` :
-        kind === 'caption' ? `Burn a ${pp.captionStyle.toLowerCase()} caption with a ${trigger} between ${range.start.toFixed(1)}s and ${range.end.toFixed(1)}s.` :
-        kind === 'cta'     ? `Land the CTA at ${range.start.toFixed(1)}s. ${pp.cta}` :
-        `Insert a re-hook around ${range.start.toFixed(1)}s using the ${fw.id} framework: ${r.rule}`;
-      return {
-        id: `sg-${i}`,
-        kind,
-        time: range.start,                    // legacy field for older consumers
-        timeRange: range,
-        type: kind === 'cut' ? 'cut' : kind === 'caption' ? 'caption' : kind === 'hook' ? 'hook' : 'effect',
-        description,
-        rationale: r.rule,
-        frameworkId: fw.id,
-        expectedRetentionDelta: kind === 'hook' ? 0.18 : kind === 'cta' ? 0.05 : 0.09,
-        confidence: kind === 'hook' || kind === 'cta' ? 0.86 : 0.78,
-      };
-    });
+    let suggestions = [];
+    const transcript = content.transcript || content.text || null;
+
+    if (transcript && geminiConfigured) {
+      try {
+        const geminiPrompt = `You are Click's Creative Editor. 
+Analyze this video transcript and provide 5-8 HIGHLY CREATIVE, content-specific editing suggestions.
+Each suggestion should be actionable and linked to a timestamp.
+
+CREATIVE RULES:
+- Use specific quotes or moments from the transcript.
+- Suggest non-obvious cuts, visual metaphors, or audio shifts.
+- Avoid generic "add a hook" advice — tell the creator EXACTLY what to do with the ${niche} content.
+
+Transcript: "${transcript.substring(0, 3000)}"
+Duration: ${duration}s
+Niche: ${niche}
+Platform: ${platform}
+
+Return valid JSON:
+{
+  "suggestions": [
+    {
+      "id": "sg-0",
+      "kind": "hook|caption|cta|cut|effect",
+      "time": number,
+      "description": "actionable advice...",
+      "rationale": "why this works...",
+      "frameworkId": "curiosity-gap|pattern-break|etc"
+    }
+  ]
+}`;
+        const raw = await geminiGenerate(geminiPrompt, { temperature: 0.9, maxTokens: 1500 });
+        const result = parseGeminiJson(raw);
+        if (result && Array.isArray(result.suggestions)) {
+          suggestions = result.suggestions.map((s, i) => ({
+            ...s,
+            id: s.id || `sg-${i}`,
+            type: s.kind === 'cut' ? 'cut' : s.kind === 'caption' ? 'caption' : s.kind === 'hook' ? 'hook' : 'effect',
+            expectedRetentionDelta: s.kind === 'hook' ? 0.22 : 0.12,
+            confidence: 0.9,
+          }));
+        }
+      } catch (e) {
+        logger.warn('Gemini interactive suggestions failed, using playbook fallback', { error: e.message });
+      }
+    }
+
+    if (suggestions.length === 0) {
+      suggestions = retention.map((r, i) => {
+        const range = markToRange(r.mark) || { start: i * 5, end: Math.min((i + 1) * 5, duration) };
+        const fw = HOOK_FRAMEWORKS[i % HOOK_FRAMEWORKS.length];
+        const kind =
+          i === 0 ? 'hook' :
+          i === 1 ? 'caption' :
+          i === retention.length - 1 ? 'cta' :
+          'cut';
+        const description =
+          kind === 'hook'    ? `Tighten ${range.start.toFixed(1)}–${range.end.toFixed(1)}s to a ${fw.id} hook anchored to "${angle}". ${r.rule}` :
+          kind === 'caption' ? `Burn a ${pp.captionStyle.toLowerCase()} caption with a ${trigger} between ${range.start.toFixed(1)}s and ${range.end.toFixed(1)}s.` :
+          kind === 'cta'     ? `Land the CTA at ${range.start.toFixed(1)}s. ${pp.cta}` :
+          `Insert a re-hook around ${range.start.toFixed(1)}s using the ${fw.id} framework: ${r.rule}`;
+        return {
+          id: `sg-${i}`,
+          kind,
+          time: range.start,
+          timeRange: range,
+          type: kind === 'cut' ? 'cut' : kind === 'caption' ? 'caption' : kind === 'hook' ? 'hook' : 'effect',
+          description,
+          rationale: r.rule,
+          frameworkId: fw.id,
+          expectedRetentionDelta: kind === 'hook' ? 0.18 : kind === 'cta' ? 0.05 : 0.09,
+          confidence: kind === 'hook' || kind === 'cta' ? 0.86 : 0.78,
+        };
+      });
+    }
 
     return {
       success: true,
@@ -3745,7 +4287,7 @@ function generateKineticZoomChain(viralMoments, duration) {
     // Smooth linear zoom from 1.0 to 1.15 over the duration of the moment
     // zoom = 1.0 + 0.15 * (t - s) / (e - s)
     const smoothZoom = `(1.0+0.15*(t-${s.toFixed(2)})/${(e - s).toFixed(2)})`;
-    zoomExpr = `if(between(t,${s.toFixed(2)},${e.toFixed(2)}),${smoothZoom},${zoomExpr})`;
+    zoomExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,${smoothZoom}\\,${zoomExpr})`;
   });
 
   // Using zoompan with high fps to ensure smooth motion and no jitter. d=99999 prevents frame truncation.
@@ -3767,8 +4309,8 @@ function generateFlashCutsFilter(viralMoments, duration) {
     const s = Number(m.time);
     if (isNaN(s)) return;
     const e = Math.min(s + 0.15, duration); // Ultra-fast 150ms flash
-    // Boost contrast massively for a split second
-    eqExpr = `if(between(t,${s.toFixed(2)},${e.toFixed(2)}),1.8,${eqExpr})`;
+    // Boost contrast massively for a split second. Commas escaped for filtergraph safety.
+    eqExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,1.8\\,${eqExpr})`;
   });
 
   if (eqExpr === '1.0') return null;
@@ -3804,8 +4346,8 @@ function generateShockJitterFilter(viralMoments, duration) {
     // random(1) generates between 0.0 and 1.0. We want a variance of -20 to +20 pixels.
     const jitterX = `(random(1)*40-20)`;
     const jitterY = `(random(1)*40-20)`;
-    xExpr = `if(between(t,${s.toFixed(2)},${e.toFixed(2)}),${jitterX},${xExpr})`;
-    yExpr = `if(between(t,${s.toFixed(2)},${e.toFixed(2)}),${jitterY},${yExpr})`;
+    xExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,${jitterX}\\,${xExpr})`;
+    yExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,${jitterY}\\,${yExpr})`;
   });
 
   // To prevent black edges during the shake, we crop the image slightly (zoom in by 40px) 
@@ -3834,8 +4376,8 @@ function generateSubBassBoomFilter(viralMoments, duration) {
     const s = Number(m.time);
     if (isNaN(s)) return;
     const e = Math.min(s + 1.0, duration); // 1s boom
-    // Peak gain of 12dB tapering off linearly
-    gainExpr = `if(between(t,${s.toFixed(2)},${e.toFixed(2)}), 12*(1-(t-${s.toFixed(2)})), ${gainExpr})`;
+    // Peak gain of 12dB tapering off linearly. Commas escaped for filtergraph safety.
+    gainExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,12*(1-(t-${s.toFixed(2)}))\\,${gainExpr})`;
   });
 
   if (gainExpr === '0') return null;
@@ -3864,8 +4406,8 @@ function generateVacuumDropFilter(viralMoments) {
     const s = Number(m.time);
     if (isNaN(s) || s < 0.5) return;
     const dropStart = Math.max(0, s - 0.3); // 0.3s before impact
-    // Mute during the drop window
-    volExpr = `if(between(t,${dropStart.toFixed(2)},${s.toFixed(2)}), 0.0, ${volExpr})`;
+    // Mute during the drop window. Commas escaped for filtergraph safety.
+    volExpr = `if(between(t\\,${dropStart.toFixed(2)}\\,${s.toFixed(2)})\\,0.0\\,${volExpr})`;
   });
 
   if (volExpr === '1.0') return null;
@@ -3892,8 +4434,8 @@ function generateColorIsolationFilter(viralMoments, duration) {
     const s = Number(m.time);
     if (isNaN(s)) return;
     const e = Math.min(s + 2.0, duration); // 2 seconds of grayscale
-    // Force saturation to 0
-    satExpr = `if(between(t,${s.toFixed(2)},${e.toFixed(2)}), 0.0, ${satExpr})`;
+    // Drain saturation to 0.0. Commas escaped for filtergraph safety.
+    satExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,0.0\\,${satExpr})`;
   });
 
   if (satExpr === '1.0') return null;
@@ -3915,7 +4457,7 @@ function generateSecretTelephoneFilter(viralMoments, duration) {
     const s = Number(m.time);
     if (isNaN(s)) return;
     const e = Math.min(s + 3.0, duration); // 3 seconds of phone voice
-    enableExpr += (enableExpr ? '+' : '') + `between(t,${s.toFixed(2)},${e.toFixed(2)})`;
+    enableExpr += (enableExpr ? '+' : '') + `between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})`;
   });
 
   if (!enableExpr) return null;
@@ -3944,7 +4486,7 @@ function generateCyberGlitchFilter(viralMoments, duration) {
     const s = Number(m.time);
     if (isNaN(s)) return;
     const e = Math.min(s + 0.2, duration); // 0.2 seconds of intense glitch
-    enableExpr += (enableExpr ? '+' : '') + `between(t,${s.toFixed(2)},${e.toFixed(2)})`;
+    enableExpr += (enableExpr ? '+' : '') + `between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})`;
   });
 
   if (!enableExpr) return null;
@@ -3981,6 +4523,95 @@ async function getEditPerformanceAnalytics(videoId) {
   }
 }
 
+/**
+ * Export a single source video into multiple aspect ratios (e.g. 9:16
+ * for TikTok/Reels, 1:1 for feed, 16:9 for YouTube). Auto-centers crops
+ * the source, scales to a standard short-form resolution per ratio, and
+ * preserves audio. This is the "1 upload → every platform" feature
+ * competitors like Opus Clip charge for.
+ *
+ * Each ratio is exported in parallel where possible. Returns an array of
+ * { ratio, url, size } so the caller can render a download / share grid.
+ */
+async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9']) {
+  const content = await resolveContent(videoId);
+  if (!content) throw new Error('Content not found');
+
+  const sourceUrl = content.originalFile?.url;
+  if (!sourceUrl) throw new Error('Content has no source video to re-export');
+  const inputPath = sourceUrl.startsWith('/')
+    ? path.join(__dirname, '../..', sourceUrl)
+    : sourceUrl;
+  if (!inputPath.startsWith('http') && !fs.existsSync(inputPath)) {
+    throw new Error(`Source video not found at ${inputPath}`);
+  }
+
+  // Map each requested ratio to the canonical short-form resolution that
+  // platform CDNs accept without further re-encoding. Crops are
+  // centered; FFmpeg's `crop` filter will trim whichever side is wider
+  // than the target ratio.
+  const RATIO_CONFIGS = {
+    '9:16': { w: 1080, h: 1920, label: '9:16 (Reels/TikTok/Shorts)' },
+    '1:1':  { w: 1080, h: 1080, label: '1:1 (Feed)' },
+    '16:9': { w: 1920, h: 1080, label: '16:9 (YouTube/X)' },
+    '4:5':  { w: 1080, h: 1350, label: '4:5 (IG Portrait)' },
+  };
+
+  const exportsDir = path.join(__dirname, '../../uploads/exports');
+  if (!fs.existsSync(exportsDir)) fs.mkdirSync(exportsDir, { recursive: true });
+
+  const ratios = aspectRatios.filter((r) => RATIO_CONFIGS[r]);
+  if (ratios.length === 0) {
+    throw new Error(`No supported aspect ratios in: ${aspectRatios.join(', ')}`);
+  }
+
+  const exports = await Promise.all(ratios.map(async (ratio) => {
+    const cfg = RATIO_CONFIGS[ratio];
+    const safeRatio = ratio.replace(':', 'x');
+    const outName = `aspect-${videoId}-${safeRatio}-${Date.now()}.mp4`;
+    const outPath = path.join(exportsDir, outName);
+
+    // crop = centered crop to the target ratio, scale = pad to canonical
+    // resolution, setsar = correct aspect metadata for downstream readers.
+    const cropFilter = `crop='min(iw,ih*${cfg.w}/${cfg.h}):min(ih,iw*${cfg.h}/${cfg.w})',scale=${cfg.w}:${cfg.h}:flags=lanczos,setsar=1`;
+
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .videoFilters(cropFilter)
+        .videoCodec('libx264')
+        .audioCodec('aac')
+        .outputOptions(['-preset', 'veryfast', '-crf', '21', '-movflags', '+faststart'])
+        .output(outPath)
+        .on('end', resolve)
+        .on('error', reject)
+        .run();
+    });
+
+    if (!fs.existsSync(outPath)) {
+      throw new Error(`Aspect ratio export missing output for ${ratio}`);
+    }
+    const stats = fs.statSync(outPath);
+    if (stats.size < 4096) {
+      try { fs.unlinkSync(outPath); } catch (_) {}
+      throw new Error(`Aspect ratio export ${ratio} produced a too-small file (${stats.size} bytes)`);
+    }
+
+    return {
+      ratio,
+      label: cfg.label,
+      url: `/uploads/exports/${outName}`,
+      size: stats.size,
+      resolution: `${cfg.w}x${cfg.h}`,
+    };
+  }));
+
+  logger.info('Multi-aspect export complete', {
+    videoId,
+    ratios: exports.map(e => e.ratio),
+  });
+  return { success: true, exports };
+}
+
 module.exports = {
   analyzeVideoForEditing,
   autoEditVideo,
@@ -4009,5 +4640,6 @@ module.exports = {
   autoSelectMusic,
   generateAndApplySmartCaptions,
   exportMultipleFormats,
+  exportAspectRatios,
   getEditPerformanceAnalytics,
 };

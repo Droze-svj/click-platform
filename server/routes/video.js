@@ -20,8 +20,7 @@ const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
 logger.debug('📦 uploadLimiter loaded');
 const { generateCaptions, detectHighlights } = require('../services/aiService');
 logger.debug('📦 aiService loaded');
-const { generateTranscriptFromVideo } = require('../services/whisperService');
-logger.debug('📦 whisperService loaded');
+logger.debug('📦 whisperService skipped (legacy, superceded by aiTranscriptionService)');
 const { transcribeVideo: transcribeVideoService, isTranscriptionConfigured } = require('../services/aiTranscriptionService');
 logger.debug('📦 aiTranscriptionService loaded');
 const { applyVideoEffect, addTextOverlay, addWatermark } = require('../services/videoEffects');
@@ -66,7 +65,7 @@ const storage = multer.diskStorage({
       }
       
       // Heartbeat Log for real-time telemetry
-      console.log(`🎯 [Ingress] DIRECT DISK WRITE START: ${file.originalname} -> ${uploadPath}`);
+      logger.info(`[Ingress] DIRECT DISK WRITE START: ${file.originalname} -> ${uploadPath}`);
       
       cb(null, uploadPath);
     } catch (err) {
@@ -100,14 +99,33 @@ const upload = multer({
       return;
     }
 
-    const allowedTypes = /mp4|mov|avi|mkv|webm/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    // Accept any video container by extension AND by IANA mime family.
+    // The previous implementation tested both extension and mimetype
+    // against the same `/mp4|mov|avi|mkv|webm/` regex — that worked for
+    // `video/mp4` (contains "mp4") but silently rejected:
+    //   - `.mov` → reports `video/quicktime` (no "mov" substring)
+    //   - `.mkv` → reports `video/x-matroska` (no "mkv" substring)
+    //   - `.avi` → reports `video/x-msvideo` or `video/avi` (most OSes use the former)
+    // So a creator dropping a real `.mov` got "No video file uploaded"
+    // with no useful error message. Now: extension is the allowed-list
+    // check, and the mimetype only needs to be in the `video/*` family.
+    const allowedExt = /\.(mp4|mov|avi|mkv|webm|m4v|mpg|mpeg|3gp)$/i;
+    const extOk = allowedExt.test(file.originalname || '');
+    const mime = typeof file.mimetype === 'string' ? file.mimetype : '';
+    const mimeOk = mime.startsWith('video/');
+    // Some clients (curl without `;type=`, some mobile browsers, certain
+    // S3 pre-sign tooling) send `application/octet-stream` even for valid
+    // video files. Accept that as long as the extension is one of ours —
+    // ffprobe runs on the file later and will reject genuine non-videos.
+    const octetWithVideoExt = extOk && (mime === 'application/octet-stream' || mime === '');
 
-    if (extname && mimetype) {
+    if (extOk && (mimeOk || octetWithVideoExt)) {
       cb(null, true);
     } else {
-      cb(new Error('Only video files are allowed'));
+      cb(new Error(
+        `Only video files are allowed. Got: name="${file.originalname}", mime="${file.mimetype}". ` +
+        `Allowed extensions: mp4, mov, avi, mkv, webm, m4v, mpg, 3gp.`
+      ));
     }
   }
 });
@@ -142,14 +160,32 @@ const handleMulterError = (err, req, res, next) => {
       return res.status(413).json({
         success: false,
         error: 'PAYLOAD_OVERSIZE',
-        message: `The video file depends more than the ${process.env.MAX_FILE_SIZE || '1GB'} threshold.`
+        message: `Video exceeds the ${process.env.MAX_FILE_SIZE || '5GB'} size limit. Try a shorter clip or compress it first.`
+      });
+    }
+
+    // File-type rejection from our fileFilter — a client mistake, not a
+    // server fault, so return 400 (Bad Request) with a helpful message.
+    if (err.message?.includes('Only video files are allowed')) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_FILE_TYPE',
+        message: 'That file isn\'t a supported video. Please upload an MP4, MOV, AVI, MKV, or WebM file.',
+      });
+    }
+
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        success: false,
+        error: err.code || 'UPLOAD_ERROR',
+        message: err.message || 'Upload was rejected. Please check the file and try again.',
       });
     }
 
     return res.status(500).json({
       success: false,
       error: 'INGRESS_ERROR',
-      message: err.message || 'Data stream interrupted by host architecture'
+      message: err.message || 'Upload failed unexpectedly. Please try again.'
     });
   }
   next();
@@ -471,8 +507,14 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
   }
 });
 
-// Process video: clip into short-form content
-async function processVideo(contentId, videoPath, user) {
+// Process video: transcribe and (optionally) clip into short-form content.
+// `options.generateClips` defaults to false: the upload route should only
+// prep the video (transcript + metadata) so the user can pick AI Auto Edit
+// vs Manual on the configure page and choose clip count / style / format.
+// The user's submission then drives clip generation via the dedicated
+// /api/video/ai-editing/auto-edit endpoint with their chosen options.
+async function processVideo(contentId, videoPath, user, options = {}) {
+  const { generateClips = false } = options;
   try {
     const content = await Content.findById(contentId);
     if (!content) {
@@ -494,20 +536,48 @@ async function processVideo(contentId, videoPath, user) {
     content.originalFile.duration = duration;
 
     // Generate transcript (if available) or use AI to extract key moments.
-    // Pass req.language (set by language middleware from X-Click-Language /
-    // ?lang= / Accept-Language) so Whisper transcribes Spanish videos as
-    // Spanish, not auto-detected English. 'auto' lets Whisper detect when
-    // the user hasn't picked a language explicitly.
-    const transcriptLanguage = req.language || 'auto';
-    const transcript = await generateTranscript(videoPath, transcriptLanguage);
-    content.transcript = transcript;
+    // If we're in a worker, req is undefined. Use content.language or 'auto'.
+    const transcriptLanguage = content.language || 'auto';
+    const transcript = await generateTranscript(videoPath, transcriptLanguage, user._id.toString(), contentId);
+    
+    // Save structured data to both legacy and 2026-precise fields
+    content.transcript = transcript.text;
+    content.captions = {
+      text: transcript.text,
+      words: transcript.words,
+      language: transcript.language,
+      generatedAt: new Date()
+    };
+    
     // Persist the language we transcribed in so downstream AI services
     // (captions, hooks, repurpose, reformat) generate matching-language
     // output via marketingKnowledge.buildSystemPrompt({language}).
-    content.language = transcriptLanguage === 'auto' ? 'en' : transcriptLanguage;
+    content.language = transcript.language || (transcriptLanguage === 'auto' ? 'en' : transcriptLanguage);
+
+    // If the caller only wanted transcription/metadata (upload-time prep),
+    // stop here. The user's explicit AI Auto Edit submission will run the
+    // /video/ai-editing/auto-edit endpoint with their chosen clip count
+    // and style options.
+    if (!generateClips) {
+      content.generatedContent = content.generatedContent || {};
+      if (!Array.isArray(content.generatedContent.shortVideos)) {
+        content.generatedContent.shortVideos = [];
+      }
+      content.status = 'completed';
+      await content.save();
+      try {
+        emitToUser(user._id.toString(), 'video-processed', {
+          contentId: content._id.toString(),
+          status: 'completed',
+          clips: 0,
+          ready: true
+        });
+      } catch (_) { /* socket optional */ }
+      return;
+    }
 
     // Detect highlights
-    const highlights = await detectHighlights(transcript, duration);
+    const highlights = await detectHighlights(transcript.text, duration);
 
     // Generate short clips
     const clips = [];
@@ -541,8 +611,18 @@ async function processVideo(contentId, videoPath, user) {
         { maxRetries: 2, initialDelay: 2000 }
       );
 
-      // Generate caption for clip
-      const caption = await generateCaptions(highlight.text, user.niche, highlight.platform || 'tiktok', req.language || 'en');
+      // Generate caption for clip. Passing userId (5th arg) is what
+      // unlocks the per-user personalisation path in aiService:
+      // recent-caption dedupe, top-performing hook bias, and platform-
+      // specific style preferences. Without it the AI generated
+      // generic captions that drifted into repetition across clips.
+      const caption = await generateCaptions(
+        highlight.text,
+        user.niche,
+        highlight.platform || 'tiktok',
+        content.language || 'en',
+        user._id || user.id,
+      );
 
       // Base clip path (before any effects/overlays). If we later add music mixing or other transforms,
       // update this to point at the new output file.
@@ -565,13 +645,22 @@ async function processVideo(contentId, videoPath, user) {
         quality: 90,
       });
 
-      // Optimize thumbnail image (in background, don't block)
+      // Optimize thumbnail image (in background, don't block). Sharp
+      // refuses to read and write the same path in one pass, so optimise
+      // into a sibling file then atomically replace the original.
       const { optimizeImage } = require('../utils/imageOptimizer');
-      optimizeImage(thumbnailPath, thumbnailPath, {
+      const optimizedThumbnailPath = thumbnailPath.replace(/\.jpg$/i, '.opt.jpg');
+      optimizeImage(thumbnailPath, optimizedThumbnailPath, {
         width: 1280,
         height: 720,
         quality: 85,
         format: 'jpeg'
+      }).then(() => {
+        try {
+          fs.renameSync(optimizedThumbnailPath, thumbnailPath);
+        } catch (renameErr) {
+          logger.warn('Thumbnail optimize rename failed, keeping original', { error: renameErr.message });
+        }
       }).catch(err => {
         logger.warn('Thumbnail optimization failed, using original', { error: err.message });
       });
@@ -675,10 +764,20 @@ async function processVideo(contentId, videoPath, user) {
     content.status = 'completed';
     await content.save();
 
-    // Update user usage
-    await User.findByIdAndUpdate(user._id, {
-      $inc: { 'usage.videosProcessed': 1 }
-    });
+    // Update user usage. Supabase UUID users have no row in the Mongo
+    // `users` collection — skip cleanly rather than throwing CastError.
+    try {
+      const mongoose = require('mongoose');
+      const userIdStr = user._id ? String(user._id) : '';
+      const isMongoUserId = mongoose.Types.ObjectId.isValid(userIdStr) && /^[a-f0-9]{24}$/i.test(userIdStr);
+      if (isMongoUserId) {
+        await User.findByIdAndUpdate(user._id, {
+          $inc: { 'usage.videosProcessed': 1 }
+        });
+      }
+    } catch (usageErr) {
+      logger.warn('User usage increment skipped', { userId: user._id, error: usageErr.message });
+    }
 
     // Emit real-time update
     try {
@@ -732,24 +831,30 @@ function getVideoDuration(videoPath) {
   });
 }
 
-async function generateTranscript(videoPath, language = 'auto') {
+async function generateTranscript(videoPath, language = 'auto', userId = 'unknown', contentId = 'unknown') {
   try {
-    // Try OpenAI Whisper first. whisperService respects 'auto' (lets Whisper
-    // detect) vs an explicit ISO code (en/es/fr/de/...) which constrains
-    // transcription to that language. Without this, Spanish videos got
-    // transcribed via auto-detect — usually fine but inconsistent vs the
-    // creator's chosen UI language.
-    const transcript = await generateTranscriptFromVideo(videoPath, { language });
-    if (transcript) {
-      return transcript;
+    // 2026 Unified Path: Use aiTranscriptionService which handles json2video primary
+    // and Gemini fallback. whisperService is legacy and requires an OpenAI key
+    // that isn't always present in dev.
+    const { transcribeVideo } = require('../services/aiTranscriptionService');
+    const result = await transcribeVideo(userId, contentId, videoPath, { language });
+    
+    if (result && result.success) {
+      // Re-map to the shape expected by Content model
+      return {
+        text: result.text,
+        words: result.words,
+        language: result.language,
+        provider: result.provider
+      };
     }
 
-    // Fallback if Whisper fails or not configured
-    logger.warn('Using fallback transcript generation');
-    return 'Transcript generation requires OpenAI API key. Please configure OPENAI_API_KEY to enable automatic transcription.';
+    // Fallback if transcription returns success: false
+    logger.warn('Transcription service returned unsuccessful result', { contentId });
+    return { text: '', words: [], language: 'en' };
   } catch (error) {
     logger.error('Transcript generation error', { error: error.message, videoPath, language });
-    return 'Transcript generation failed. Please try again or upload a video with clear audio.';
+    return { text: 'Transcript generation failed.', words: [], language: 'en' };
   }
 }
 
@@ -1316,10 +1421,14 @@ router.post('/analyze', auth, async (req, res) => {
       analysisResult = null;
     }
 
-    // Fallback analysis if AI fails or not configured
+    // Fallback analysis if AI fails or not configured. Previously this
+    // RANDOMLY picked a contentType and mood from a list (e.g. labelled
+    // a cooking video as "tech / humorous" if the AI service was down).
+    // Honest fallback: mark them as unknown so the UI can show
+    // "analysis pending" instead of a fabricated label.
     const fallbackAnalysis = analysisResult || {
-      contentType: ['educational', 'tutorial', 'review', 'entertainment', 'lifestyle', 'tech'][Math.floor(Math.random() * 6)],
-      mood: ['professional', 'casual', 'energetic', 'calm', 'humorous', 'inspirational'][Math.floor(Math.random() * 6)],
+      contentType: 'unknown',
+      mood: 'unknown',
       suggestedEdits: [
         {
           type: 'trim',
@@ -1350,31 +1459,18 @@ router.post('/analyze', auth, async (req, res) => {
           confidence: 0.88
         }
       ],
+      // Voice hook suggestions. Previously each entry shipped with an
+      // `engagement: Math.floor(Math.random() * 20) + 75` field — a
+      // RANDOM number between 75 and 95 displayed to users as if it
+      // were a real engagement prediction. Same content, different
+      // numbers every refresh. Honest version: omit the field entirely;
+      // real performance scores get populated by the learning loop
+      // once the user actually publishes a clip with the hook.
       voiceHookSuggestions: [
-        {
-          id: 'attention_hook',
-          text: 'Did you know...',
-          engagement: Math.floor(Math.random() * 20) + 75,
-          category: 'curiosity'
-        },
-        {
-          id: 'question_hook',
-          text: 'Have you ever wondered...',
-          engagement: Math.floor(Math.random() * 20) + 75,
-          category: 'question'
-        },
-        {
-          id: 'problem_hook',
-          text: 'Are you tired of...',
-          engagement: Math.floor(Math.random() * 20) + 75,
-          category: 'problem-solution'
-        },
-        {
-          id: 'story_hook',
-          text: 'Let me tell you a story...',
-          engagement: Math.floor(Math.random() * 20) + 75,
-          category: 'storytelling'
-        }
+        { id: 'attention_hook', text: 'Did you know...',         category: 'curiosity' },
+        { id: 'question_hook',  text: 'Have you ever wondered...', category: 'question' },
+        { id: 'problem_hook',   text: 'Are you tired of...',      category: 'problem-solution' },
+        { id: 'story_hook',     text: 'Let me tell you a story...', category: 'storytelling' },
       ],
       platformOptimizations: {
         youtube: {
@@ -1449,7 +1545,7 @@ router.post('/analyze', auth, async (req, res) => {
 
     // Save analysis to content (only if content exists)
     if (content) {
-      content.analysis = {
+      content.analytics = {
         ...fallbackAnalysis,
         analyzedAt: new Date(),
         analyzer: analysisResult ? 'ai' : 'fallback'
@@ -1661,7 +1757,7 @@ router.post('/generate-captions', auth, async (req, res) => {
     if (content) {
       content.captionsGenerated = true;
       content.captionsCount = captions.length;
-      content.captionsData = captions;
+      content.captions = captions;
       content.captionedAt = new Date();
       await content.save();
 
@@ -1908,24 +2004,38 @@ router.post('/editor/save', auth, async (req, res) => {
     const userId = req.user?._id || req.user?.id;
     const isDev = isDevUser(req.user);
 
-    // For dev users, just return success
-    if (isDev || (videoId && videoId.toString().startsWith('dev-'))) {
-      
-      return res.json({
-        success: true,
-        message: 'Editor state saved (dev mode)',
-        data: {
-          videoId,
-          savedAt: new Date().toISOString()
-        }
-      });
-    }
-
-    // For production users, save to database
     if (!videoId) {
       return res.status(400).json({
         success: false,
         error: 'Video ID is required'
+      });
+    }
+
+    // Dev-content path: persist editorState into the in-memory devStore
+    // so autoEditVideo can pre-render the user's manual edits later.
+    // Previously this branch returned 200 without writing anything,
+    // which meant every dev-user edit was silently discarded — the
+    // user could spend an hour in the editor and produce zero changes
+    // to the next auto-edit clip.
+    if (isDev || videoId.toString().startsWith('dev-')) {
+      const { devVideoStore } = require('../utils/devStore');
+      const existing = devVideoStore.get(videoId.toString());
+      if (existing) {
+        existing.editorState = editorState;
+        existing.updatedAt = new Date().toISOString();
+        devVideoStore.set(videoId.toString(), existing);
+        return res.json({
+          success: true,
+          message: 'Editor state saved (dev mode)',
+          data: { videoId, savedAt: existing.updatedAt },
+        });
+      }
+      // Dev video not in store — accept the save but warn so the
+      // editor doesn't error-toast on every keystroke.
+      return res.json({
+        success: true,
+        message: 'Editor state acknowledged (dev video not in store)',
+        data: { videoId, savedAt: new Date().toISOString() },
       });
     }
 
@@ -1937,8 +2047,12 @@ router.post('/editor/save', auth, async (req, res) => {
       });
     }
 
-    // Update editor state
+    // Update editor state. Mongoose's Mixed type requires explicit
+    // markModified — without it, mutations to nested keys inside
+    // editorState (e.g. user adds a 6th text overlay) wouldn't trigger
+    // a save and the row would silently stay stale.
     content.editorState = editorState;
+    content.markModified('editorState');
     content.updatedAt = new Date();
     await content.save();
 

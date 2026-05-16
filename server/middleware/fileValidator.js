@@ -19,9 +19,16 @@ function validateVideoFile(file) {
 
   const ext = path.extname(file.originalname).toLowerCase();
   const isValidExtension = allowedExtensions.includes(ext);
-  const isValidMimeType = allowedMimeTypes.includes(file.mimetype);
+  const mime = typeof file.mimetype === 'string' ? file.mimetype : '';
+  const isValidMimeType = allowedMimeTypes.includes(mime);
+  // Some clients (curl without `;type=`, mobile browsers, certain S3
+  // pre-sign tooling, drag-and-drop in older Safari) send
+  // `application/octet-stream` even for valid video files. If the
+  // extension is in our allowed list, accept that — the actual content
+  // gets validated by ffprobe downstream anyway.
+  const octetWithVideoExt = isValidExtension && (mime === 'application/octet-stream' || mime === '');
 
-  if (!isValidExtension || !isValidMimeType) {
+  if (!isValidExtension || (!isValidMimeType && !octetWithVideoExt)) {
     throw new Error(`Invalid video file. Allowed formats: ${allowedExtensions.join(', ')}`);
   }
 

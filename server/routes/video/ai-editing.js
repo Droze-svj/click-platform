@@ -18,6 +18,7 @@ const {
   batchAutoEdit,
   getEditPerformanceAnalytics,
   exportMultipleFormats,
+  exportAspectRatios,
   getInteractiveSuggestions,
 } = require('../../services/aiVideoEditingService');
 const asyncHandler = require('../../middleware/asyncHandler');
@@ -29,7 +30,18 @@ const ClientGuidelines = require('../../models/ClientGuidelines');
 const { resolveContent } = require('../../utils/devStore');
 const { isDevUser } = require('../../utils/devUser');
 const { guardOwnership } = require('../../utils/ownership');
+// AI-touching routes burn LLM quota per call; protect with the AI-tier
+// rate limiter to keep one user from depleting the shared key budget.
+const { aiLimiter } = require('../../middleware/enhancedRateLimiter');
 const router = express.Router();
+
+// Apply at router level so every POST under /video/ai-editing/* shares
+// the same per-user / per-IP budget instead of having to remember to
+// chain the limiter onto each handler.
+router.use((req, res, next) => {
+  if (req.method === 'POST') return aiLimiter(req, res, next);
+  return next();
+});
 
 /**
  * Dev-mode short-circuit for AI editing routes.
@@ -101,6 +113,29 @@ async function devEditingMock(kind, videoId, req) {
         'Removed 0.6s of dead air at the start',
         'Generated 12 burned-in captions',
         'Applied warm-cinematic colour grade',
+      ],
+      clips: [
+        {
+          id: `clip-${videoId}-dev-1`,
+          name: 'Minimalist Viral Cut',
+          url: toAbsolute(originalUrl),
+          engagementScore: { overall: 96, viralPotential: 95, hookStrength: 98, sentimentDensity: 90, trendAlignment: 94 },
+          editsApplied: ['Jump cuts on silence', 'Clean sans-serif captions']
+        },
+        {
+          id: `clip-${videoId}-dev-2`,
+          name: 'High-Energy Retention',
+          url: toAbsolute(originalUrl),
+          engagementScore: { overall: 88, viralPotential: 90, hookStrength: 85, sentimentDensity: 92, trendAlignment: 89 },
+          editsApplied: ['Dynamic zooming', 'B-roll injection', 'Pop captions']
+        },
+        {
+          id: `clip-${videoId}-dev-3`,
+          name: 'Educational Storyteller',
+          url: toAbsolute(originalUrl),
+          engagementScore: { overall: 82, viralPotential: 75, hookStrength: 80, sentimentDensity: 95, trendAlignment: 70 },
+          editsApplied: ['Smooth transitions', 'Highlight keywords', 'Pacing slowed']
+        }
       ],
       message: 'Auto-edit simulated (dev mode — no ffmpeg processing).',
     };
@@ -323,11 +358,17 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
   const owned = await guardOwnership(req, res, videoId);
   if (!owned) return;
 
-  // Dev users skip ffmpeg + AI calls entirely (advanced filters often aren't
-  // compiled in the local ffmpeg build → "Filter not found"). Real users
-  // continue to the full pipeline below.
-  if (isDevUser(req.user)) {
-    return sendSuccess(res, 'Auto-edit simulated (dev mode)', 200, await devEditingMock('auto-edit', videoId, req));
+  // Dev users used to short-circuit here to a mock pass-through that
+  // never ran ffmpeg. That was actively hiding the real pipeline from
+  // the live tester (236ms response = "edit applied", but the file
+  // never changed and editorState was never read). The real pipeline
+  // works fine against dev-content-* IDs because resolveContent() now
+  // pulls them out of devVideoStore. We keep the dev shortcut behind
+  // an explicit ?dev_mock=true escape hatch for the rare cases where
+  // the local ffmpeg build is missing a filter — but it must be
+  // opt-in, never silent.
+  if (isDevUser(req.user) && req.query.dev_mock === 'true') {
+    return sendSuccess(res, 'Auto-edit simulated (dev mode — explicit ?dev_mock=true)', 200, await devEditingMock('auto-edit', videoId, req));
   }
 
   try {
@@ -370,45 +411,99 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
         editsCount: result.editsApplied?.length || 0
       });
 
-      // Smart Publish suggestion: per-platform captions + best publish
-      // slots, attached to the freshly-saved clip in Mongo so the
-      // SchedulePublishDrawer can render them as editable defaults.
-      // Best-effort — a suggestion failure must not break the edit
-      // success path. Runs in setImmediate so we return to the client
-      // immediately rather than blocking on the LLM round-trip.
-      let publishSuggestion = null;
-      try {
-        const { buildPublishSuggestion } = require('../../services/smartPublishService');
-        publishSuggestion = await buildPublishSuggestion({
-          userId,
-          contentId: videoId,
-          clip: result,
-          platforms: ['tiktok', 'shorts', 'reels'],
-          niche: resolvedOptions.niche || 'general',
-          language: resolvedOptions.language || 'en',
-        });
-        // Persist the suggestion onto the most-recent clip (the one we
-        // just appended). Index lookup by url is robust across the
-        // inconsistent clip._id shapes the model uses.
-        if (publishSuggestion && result.editedVideoUrl) {
-          await Content.updateOne(
-            { _id: videoId, 'generatedContent.shortVideos.url': result.editedVideoUrl },
-            { $set: {
-              'generatedContent.shortVideos.$.recommendedCaptions': publishSuggestion.captions,
-              'generatedContent.shortVideos.$.recommendedHashtags': publishSuggestion.hashtags,
-              'generatedContent.shortVideos.$.recommendedSlots':    publishSuggestion.recommendedSlots,
-              'generatedContent.shortVideos.$.publishRationale':    publishSuggestion.rationale,
-            } }
-          ).catch((e) => logger.warn('Persist publishSuggestion failed', { videoId, error: e.message }));
+      // Re-read the persisted Content document so the response carries
+      // the REAL clip ObjectIds (not synthetic `clip-${videoId}-${now}`
+      // strings) and the engagement scores that were actually computed
+      // during the edit — not the hardcoded `{overall: 94, ...}` block
+      // that used to live here. Without this the client could not publish
+      // an auto-edited clip: it received an id that doesn't exist in
+      // `Content.generatedContent.shortVideos`, so `POST /publish` 404'd.
+      const isMongoBackedId = typeof videoId === 'string' && !videoId.startsWith('dev-');
+      let realClips = result.clips || [];
+      if ((!realClips || realClips.length === 0) && isMongoBackedId) {
+        try {
+          const Content = require('../../models/Content');
+          const persisted = await Content.findById(videoId).select('generatedContent.shortVideos').lean();
+          const shortVideos = persisted?.generatedContent?.shortVideos || [];
+          realClips = shortVideos.map((c) => ({
+            id: String(c._id || c.id || ''),
+            name: c.name || c.title || 'Auto-edited clip',
+            url: c.url,
+            caption: c.caption,
+            engagementScore: c.engagementScore,
+            editsApplied: c.editsApplied || result.editsApplied || [],
+          })).filter((c) => c.id && c.url);
+        } catch (refetchErr) {
+          logger.warn('[auto-edit] failed to re-read clips for response', { videoId, error: refetchErr.message });
         }
-      } catch (e) {
-        logger.warn('buildPublishSuggestion failed (non-fatal)', { videoId, error: e.message });
       }
 
       sendSuccess(res, 'Video automatically edited and saved successfully', 200, {
         ...result,
-        publishSuggestion,
+        clips: realClips,
         message: `Video has been automatically edited with ${result.editsApplied?.length || 0} improvements applied. The edited video has replaced the original.`,
+      });
+
+      // Smart Publish suggestion: per-platform captions + best publish slots,
+      // attached to the freshly-saved clip in Mongo so the
+      // SchedulePublishDrawer can render them as editable defaults. Failures
+      // here must not affect the edit success path the client already saw.
+      setImmediate(async () => {
+        try {
+          const { buildPublishSuggestion } = require('../../services/smartPublishService');
+          const publishSuggestion = await buildPublishSuggestion({
+            userId,
+            contentId: videoId,
+            clip: result,
+            platforms: ['tiktok', 'shorts', 'reels'],
+            niche: resolvedOptions.niche || 'general',
+            language: resolvedOptions.language || 'en',
+          });
+          if (publishSuggestion && result.editedVideoUrl) {
+            // Dev content IDs (`dev-content-*`) live in devVideoStore,
+            // not Mongo — Content.updateOne would 500 with an ObjectId
+            // cast error. Persist into the dev store instead so the
+            // hub mapper still gets the suggestion fields.
+            const devIdMatch = typeof videoId === 'string' && videoId.startsWith('dev-');
+            if (devIdMatch) {
+              try {
+                const { devVideoStore } = require('../../utils/devStore');
+                const dev = devVideoStore.get(videoId);
+                if (dev?.generatedContent?.shortVideos) {
+                  const target = dev.generatedContent.shortVideos.find(
+                    (c) => c.url === result.editedVideoUrl
+                  ) || dev.generatedContent.shortVideos[dev.generatedContent.shortVideos.length - 1];
+                  if (target) {
+                    target.recommendedCaptions        = publishSuggestion.captions;
+                    target.recommendedCaptionVariants = publishSuggestion.captionVariants || {};
+                    target.recommendedHashtags        = publishSuggestion.hashtags;
+                    target.recommendedSlots           = publishSuggestion.recommendedSlots;
+                    target.publishRationale           = publishSuggestion.rationale;
+                    devVideoStore.set(videoId, dev);
+                  }
+                }
+              } catch (devErr) {
+                logger.warn('Persist publishSuggestion to devVideoStore failed', { videoId, error: devErr.message });
+              }
+            } else {
+              await Content.updateOne(
+                { _id: videoId, 'generatedContent.shortVideos.url': result.editedVideoUrl },
+                { $set: {
+                  'generatedContent.shortVideos.$.recommendedCaptions':        publishSuggestion.captions,
+                  // Persist all 3 angles (curiosity-gap / value / contrarian)
+                  // so the SchedulePublishDrawer can offer an A/B/C picker
+                  // instead of locking the user into the first variant.
+                  'generatedContent.shortVideos.$.recommendedCaptionVariants': publishSuggestion.captionVariants || {},
+                  'generatedContent.shortVideos.$.recommendedHashtags':        publishSuggestion.hashtags,
+                  'generatedContent.shortVideos.$.recommendedSlots':           publishSuggestion.recommendedSlots,
+                  'generatedContent.shortVideos.$.publishRationale':           publishSuggestion.rationale,
+                } }
+              );
+            }
+          }
+        } catch (e) {
+          logger.warn('buildPublishSuggestion failed (non-fatal)', { videoId, error: e.message });
+        }
       });
     } else {
       sendError(res, 'Auto-edit completed but may have issues', 200, result);
@@ -688,6 +783,68 @@ router.post('/export', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Multi-format export completed', 200, exports);
   } catch (error) {
     logger.error('Multi-format export error', { error: error.message, videoId });
+    sendError(res, error.message, 500);
+  }
+}));
+
+/**
+ * POST /api/video/ai-editing/broll/:contentId
+ * Ask the B-roll Intelligence service for a plan of stock-footage
+ * insertions based on the clip's transcript. Returns:
+ *   { plan: [{ startTime, duration, url, keyword, source }] }
+ *
+ * The plan is descriptive — the editor decides whether to splice them in
+ * automatically or surface them as suggestions for the user to accept.
+ */
+router.post('/broll/:contentId', auth, asyncHandler(async (req, res) => {
+  const { contentId } = req.params;
+  if (!contentId) return sendError(res, 'contentId is required', 400);
+
+  try {
+    const content = await resolveContent(contentId);
+    if (!content) return sendError(res, 'Content not found', 404);
+
+    // The B-roll service needs segments. Pull them off the content's
+    // transcript if available; otherwise we degrade gracefully.
+    const segments =
+      content.transcript?.segments ||
+      content.metadata?.transcript?.segments ||
+      [];
+    if (!Array.isArray(segments) || segments.length === 0) {
+      return sendSuccess(res, 'No transcript segments available; cannot plan B-roll yet', 200, { plan: [] });
+    }
+
+    const brollService = require('../../services/bRollIntelligenceService');
+    const plan = await brollService.orchestrateBRoll(contentId, { segments }, req.body || {});
+    sendSuccess(res, 'B-roll plan generated', 200, { plan });
+  } catch (error) {
+    logger.error('B-roll plan error', { error: error.message, contentId });
+    sendError(res, error.message, 500);
+  }
+}));
+
+/**
+ * POST /api/video/ai-editing/export-aspect-ratios
+ * Re-export a clip into 9:16 / 1:1 / 16:9 / 4:5 in one call.
+ * Body: { videoId, aspectRatios?: ['9:16','1:1','16:9'] }
+ *
+ * Returns: { exports: [{ ratio, label, url, resolution, size }] }
+ *
+ * Why this exists: every competitor (Opus Clip, Klap, Submagic) charges
+ * for "one upload → every platform format". Click already had the FFmpeg
+ * primitives; the route just exposes them on-demand from the clip card.
+ */
+router.post('/export-aspect-ratios', auth, asyncHandler(async (req, res) => {
+  const { videoId, aspectRatios = ['9:16', '1:1', '16:9'] } = req.body;
+  if (!videoId) return sendError(res, 'Video ID is required', 400);
+  if (!Array.isArray(aspectRatios) || aspectRatios.length === 0) {
+    return sendError(res, 'aspectRatios must be a non-empty array', 400);
+  }
+  try {
+    const result = await exportAspectRatios(videoId, aspectRatios);
+    sendSuccess(res, 'Aspect-ratio export completed', 200, result);
+  } catch (error) {
+    logger.error('Aspect-ratio export error', { error: error.message, videoId });
     sendError(res, error.message, 500);
   }
 }));

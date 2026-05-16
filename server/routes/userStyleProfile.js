@@ -9,12 +9,22 @@
  */
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const logger = require('../utils/logger');
 const UserStyleProfile = require('../models/UserStyleProfile');
 const { isDevUser } = require('../utils/devUser');
+const { getUserIdFromReq } = require('../utils/userId');
 
 const router = express.Router();
+
+// Supabase users have UUID ids that Mongoose can't cast to ObjectId. When we
+// see one, return an empty taste graph instead of 500-ing the whole editor.
+const EMPTY_INSIGHTS = {
+  topPerformers: { fonts: [], captionStyles: [], animations: [], motions: [], hooks: [] },
+  lastIngestedAt: null,
+};
+function isMongoId(id) { return mongoose.Types.ObjectId.isValid(String(id)); }
 
 // Dev-mode in-memory profile so the editor can record picks without Mongo.
 const devProfiles = new Map();
@@ -60,15 +70,39 @@ function devRecordAverage(userId, key, value) {
 
 router.get('/', auth, async (req, res) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    // Canonical user-id resolver — same one publish/learnFromPublishedClip
+    // uses. Was previously `req.user?._id || req.user?.id`, which returned
+    // ObjectId-instance vs string inconsistently and meant the GET handler
+    // hit a different userId than the write path for some users. The
+    // observable symptom: publish reports `learned: true` and the
+    // style-insight endpoint shows the facets, but /api/style-profile
+    // returns an empty profile + creates a duplicate doc.
+    const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
 
     if (isDevUser(req.user)) {
       return res.json({ success: true, data: getDevProfile(String(userId)) });
     }
 
-    let profile = await UserStyleProfile.findOne({ userId });
-    if (!profile) profile = await UserStyleProfile.create({ userId });
+    // Supabase users (UUIDs) — use the in-memory dev profile so picks still work.
+    if (!isMongoId(userId)) {
+      return res.json({ success: true, data: getDevProfile(String(userId)) });
+    }
+
+    // .lean() bypasses Mongoose document hydration so we get the raw DB
+    // values. Without it we were seeing a doc with the correct _id but
+    // stale `totalPicks: 0` / empty facet arrays — even though the same
+    // _id in the underlying collection had the populated fields. The
+    // most likely cause is hydration of a previously-cached query result
+    // for that _id; .lean() eliminates the cache layer entirely.
+    // .read('primary') makes sure we don't read from a stale Atlas
+    // secondary right after a write.
+    let profile = await UserStyleProfile.findOne({ userId }).read('primary').lean();
+    if (!profile) {
+      // No doc yet for this user — create one. This is the first-visit path.
+      const created = await UserStyleProfile.create({ userId });
+      profile = created.toObject();
+    }
     res.json({ success: true, data: profile });
   } catch (err) {
     logger.error('[style-profile] GET failed', err);
@@ -81,10 +115,17 @@ router.post('/pick', auth, async (req, res) => {
     const { facet, key } = req.body || {};
     if (!facet || !key) return res.status(400).json({ success: false, error: 'facet and key are required' });
 
-    const userId = req.user?._id || req.user?.id;
+    // Canonical user-id resolver — same one publish/learnFromPublishedClip
+    // uses. Was previously `req.user?._id || req.user?.id`, which returned
+    // ObjectId-instance vs string inconsistently and meant the GET handler
+    // hit a different userId than the write path for some users. The
+    // observable symptom: publish reports `learned: true` and the
+    // style-insight endpoint shows the facets, but /api/style-profile
+    // returns an empty profile + creates a duplicate doc.
+    const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
 
-    if (isDevUser(req.user)) {
+    if (isDevUser(req.user) || !isMongoId(userId)) {
       const profile = devRecordPick(String(userId), facet, key);
       return res.json({ success: true, data: profile });
     }
@@ -103,10 +144,17 @@ router.post('/average', auth, async (req, res) => {
     if (!key || typeof value !== 'number') {
       return res.status(400).json({ success: false, error: 'key and numeric value are required' });
     }
-    const userId = req.user?._id || req.user?.id;
+    // Canonical user-id resolver — same one publish/learnFromPublishedClip
+    // uses. Was previously `req.user?._id || req.user?.id`, which returned
+    // ObjectId-instance vs string inconsistently and meant the GET handler
+    // hit a different userId than the write path for some users. The
+    // observable symptom: publish reports `learned: true` and the
+    // style-insight endpoint shows the facets, but /api/style-profile
+    // returns an empty profile + creates a duplicate doc.
+    const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
 
-    if (isDevUser(req.user)) {
+    if (isDevUser(req.user) || !isMongoId(userId)) {
       const profile = devRecordAverage(String(userId), key, value);
       return res.json({ success: true, data: profile });
     }
@@ -122,9 +170,16 @@ router.post('/average', auth, async (req, res) => {
 router.post('/batch', auth, async (req, res) => {
   try {
     const { picks = [], averages = [] } = req.body || {};
-    const userId = req.user?._id || req.user?.id;
+    // Canonical user-id resolver — same one publish/learnFromPublishedClip
+    // uses. Was previously `req.user?._id || req.user?.id`, which returned
+    // ObjectId-instance vs string inconsistently and meant the GET handler
+    // hit a different userId than the write path for some users. The
+    // observable symptom: publish reports `learned: true` and the
+    // style-insight endpoint shows the facets, but /api/style-profile
+    // returns an empty profile + creates a duplicate doc.
+    const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
-    const dev = isDevUser(req.user);
+    const dev = isDevUser(req.user) || !isMongoId(userId);
 
     let profile = null;
     for (const p of picks) {
@@ -154,7 +209,14 @@ router.post('/batch', auth, async (req, res) => {
 // reflect the new retention deltas.
 router.post('/ingest-post', auth, async (req, res) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    // Canonical user-id resolver — same one publish/learnFromPublishedClip
+    // uses. Was previously `req.user?._id || req.user?.id`, which returned
+    // ObjectId-instance vs string inconsistently and meant the GET handler
+    // hit a different userId than the write path for some users. The
+    // observable symptom: publish reports `learned: true` and the
+    // style-insight endpoint shows the facets, but /api/style-profile
+    // returns an empty profile + creates a duplicate doc.
+    const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
     const { contentId, metrics } = req.body || {};
     if (!contentId) return res.status(400).json({ success: false, error: 'contentId required' });
@@ -165,8 +227,8 @@ router.post('/ingest-post', auth, async (req, res) => {
     const owned = await guardOwnership(req, res, contentId);
     if (!owned) return;
 
-    if (isDevUser(req.user)) {
-      // Dev-mode mock — confirm the call shape without touching Mongo.
+    if (isDevUser(req.user) || !isMongoId(userId)) {
+      // Dev-mode / Supabase-UUID mock — confirm the call shape without touching Mongo.
       const delta = (metrics?.retentionRate ?? metrics?.completionRate ?? 0.55) - (metrics?.benchmarkRetention ?? 0.55);
       return res.json({
         success: true,
@@ -190,11 +252,32 @@ router.post('/ingest-post', auth, async (req, res) => {
 // suggestion-tile order toward picks with high retention deltas.
 router.get('/insights', auth, async (req, res) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    // Canonical user-id resolver — same one publish/learnFromPublishedClip
+    // uses. Was previously `req.user?._id || req.user?.id`, which returned
+    // ObjectId-instance vs string inconsistently and meant the GET handler
+    // hit a different userId than the write path for some users. The
+    // observable symptom: publish reports `learned: true` and the
+    // style-insight endpoint shows the facets, but /api/style-profile
+    // returns an empty profile + creates a duplicate doc.
+    const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ success: false, error: 'Unauthenticated' });
+
+    // Optional niche/platform filters — when present, also fold in the
+    // performance-weighted playbook from getTopPerformingPlaybook (which
+    // reads ScheduledPost.analytics + the Mongo profile and works for
+    // Supabase users too).
+    const niche = typeof req.query.niche === 'string' ? req.query.niche : null;
+    const platform = typeof req.query.platform === 'string' ? req.query.platform : null;
+    const { getTopPerformingPlaybook } = require('../services/marketingKnowledge');
+
+    // Fetch the niche/platform-scoped top performers in parallel with the
+    // profile read. Both are best-effort — a failure on either side falls
+    // back to an empty payload.
+    const performancePromise = getTopPerformingPlaybook(userId, niche, platform).catch(() => null);
 
     if (isDevUser(req.user)) {
       // Dev mode — return a deterministic mock so the UI renders without Mongo.
+      const performance = await performancePromise;
       return res.json({
         success: true,
         data: {
@@ -205,14 +288,29 @@ router.get('/insights', auth, async (req, res) => {
             motions:       [{ key: 'shake', performanceScore: 0.09, sampleSize: 2 }],
             hooks:         [{ key: 'curiosity-gap', performanceScore: 0.27, sampleSize: 4 }],
           },
+          performance,
           lastIngestedAt: new Date().toISOString(),
           devMock: true,
         },
       });
     }
 
+    // Supabase users (UUIDs) — no Mongo profile, but ScheduledPost.analytics
+    // IS available, so we return performance data (when sampleSize ≥ 3) and
+    // an otherwise empty topPerformers map. Cold-start users get `null` for
+    // performance, which the client renders as "publish a few clips to see
+    // what's working".
+    if (!isMongoId(userId)) {
+      const performance = await performancePromise;
+      return res.json({
+        success: true,
+        data: { ...EMPTY_INSIGHTS, performance },
+      });
+    }
+
     let profile = await UserStyleProfile.findOne({ userId });
     if (!profile) profile = await UserStyleProfile.create({ userId });
+    const performance = await performancePromise;
     res.json({
       success: true,
       data: {
@@ -225,6 +323,10 @@ router.get('/insights', auth, async (req, res) => {
           transitions:   profile.topPerformers('weightedTransitions', 5),
           hooks:         profile.topPerformers('weightedHooks', 5),
         },
+        // Performance-scoped block (niche/platform filtered when query
+        // params provided). The editor uses this to bias preset-tile
+        // ordering to what's working in THIS context, not just overall.
+        performance,
         lastIngestedAt: profile.lastIngestedAt || null,
       },
     });
