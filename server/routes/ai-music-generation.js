@@ -3,6 +3,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 const {
@@ -14,6 +15,11 @@ const {
 const AIMusicProviderConfig = require('../models/AIMusicProviderConfig');
 const MusicGeneration = require('../models/MusicGeneration');
 const router = express.Router();
+
+router.use((req, res, next) => {
+  if (req.method === 'POST') return aiLimiter(req, res, next);
+  return next();
+});
 
 /**
  * @route GET /api/ai-music/providers

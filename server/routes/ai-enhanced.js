@@ -4,6 +4,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const { updateConfidenceRealTime, getConfidenceHistory, getConfidenceRecommendations, setConfidenceThresholds, batchAnalyzeConfidence } = require('../services/realTimeConfidenceService');
 const { getTemplatePerformance, compareTemplateVersions, getTemplateSuggestions } = require('../services/templateAnalyticsService');
@@ -11,6 +12,11 @@ const { compareContentSideBySide, getEditSuggestions, bulkImproveSections } = re
 const { checkContentCompliance, autoFixCompliance, getOptimizationSuggestions } = require('../services/automatedComplianceService');
 const AITemplate = require('../models/AITemplate');
 const router = express.Router();
+
+router.use((req, res, next) => {
+  if (req.method === 'POST') return aiLimiter(req, res, next);
+  return next();
+});
 
 /**
  * POST /api/ai/confidence/realtime

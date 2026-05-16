@@ -7,24 +7,19 @@ const logger = require('../utils/logger');
 let RedisStore;
 let redisClient;
 
-console.log('🏗️ enhancedRateLimiter: initializing...');
 try {
   const redisUrl = process.env.REDIS_URL;
   const hasValidRedis = (redisUrl || process.env.REDIS_HOST) && !redisUrl?.includes('placeholder');
-  console.log('🏗️ enhancedRateLimiter: hasValidRedis =', hasValidRedis);
   if (hasValidRedis) {
     // Try to load rate-limit-redis (optional dependency)
     try {
-      console.log('🏗️ enhancedRateLimiter: loading rate-limit-redis');
       RedisStore = require('rate-limit-redis').default;
-      console.log('🏗️ enhancedRateLimiter: rate-limit-redis loaded');
     } catch (storeError) {
       logger.warn('rate-limit-redis not installed, using memory store for rate limiting');
       RedisStore = null;
     }
 
     if (RedisStore) {
-      console.log('🏗️ enhancedRateLimiter: loading redis client');
       const redis = require('redis');
 
       redisClient = redis.createClient({
@@ -44,14 +39,11 @@ try {
       });
 
       redisClient.on('connect', () => {
-        logger.info('✅ Redis connected for rate limiting');
+        logger.info('Redis connected for rate limiting');
       });
 
-      console.log('🏗️ enhancedRateLimiter: connecting to redis');
-      redisClient.connect().then(() => {
-        console.log('🏗️ enhancedRateLimiter: redis connected');
-      }).catch((err) => {
-        console.warn('🏗️ enhancedRateLimiter: redis connection failed', err.message);
+      redisClient.connect().catch((err) => {
+        logger.warn('Redis connection failed, falling back to memory store', { error: err.message });
         redisClient = null;
       });
     }
@@ -60,7 +52,6 @@ try {
   logger.warn('Redis not available, using memory store for rate limiting', { error: error.message });
   redisClient = null;
 }
-console.log('🏗️ enhancedRateLimiter: init complete');
 
 /**
  * Create rate limiter with optional Redis store
@@ -222,6 +213,17 @@ const aiLimiter = createRateLimiter({
   },
 });
 
+// Video render rate limiter — renders are expensive (FFmpeg+Remotion).
+// Tighter than aiLimiter so a single user can't fill the render queue.
+const renderLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  message: {
+    error: 'Render limit exceeded (5/hour). Upgrade your plan for higher limits.',
+  },
+  keyGenerator: (req) => (req.user?._id ? `render:${req.user._id}` : req.ip),
+});
+
 // Social media posting rate limiter
 const socialPostLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -303,6 +305,7 @@ module.exports = {
   authLimiter,
   uploadLimiter,
   aiLimiter,
+  renderLimiter,
   socialPostLimiter,
   oauthLimiter,
   subscriptionRateLimiter,

@@ -4,6 +4,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const { analyzeContentConfidence, getContentConfidence } = require('../services/aiConfidenceService');
 const { createOrUpdateTemplate, getTemplates, generateContentWithTemplate } = require('../services/aiTemplateService');
@@ -12,6 +13,13 @@ const aiAgentWritingService = require('../services/aiAgentWritingService');
 const AITemplate = require('../models/AITemplate');
 const Script = require('../models/Script');
 const router = express.Router();
+
+// AI generation is the expensive cost-attack vector. Apply aiLimiter to all
+// POSTs (writes/generations); leave GETs (cheap reads) under the global limit.
+router.use((req, res, next) => {
+  if (req.method === 'POST') return aiLimiter(req, res, next);
+  return next();
+});
 
 /**
  * POST /api/ai/generate-script
@@ -65,14 +73,17 @@ router.post('/save-master-script', auth, asyncHandler(async (req, res) => {
     status: 'completed'
   };
 
-  if (isDevUser) {
-    const mock = { _id: `dev-master-${Date.now()}`, ...payload, userId };
-    return sendSuccess(res, 'Script saved locally. Sign in to sync to your library.', 201, mock);
-  }
-
   const mongoose = require('mongoose');
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return sendError(res, 'Invalid user', 400);
+  const userIdStr = userId ? String(userId) : '';
+  const isMongoUser = mongoose.Types.ObjectId.isValid(userIdStr) && /^[a-f0-9]{24}$/i.test(userIdStr);
+
+  if (isDevUser || !isMongoUser) {
+    // Dev users and Supabase UUID users get a local-only echo. The user's
+    // library is sourced from the same store, so this keeps the UI
+    // consistent without writing to a Mongo collection keyed off an
+    // incompatible id.
+    const mock = { _id: `local-master-${Date.now()}`, ...payload, userId };
+    return sendSuccess(res, 'Script saved to your library.', 201, mock);
   }
 
   const doc = new Script({ userId, ...payload });

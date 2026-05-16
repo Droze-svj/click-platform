@@ -1,5 +1,8 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../utils/jwtSecret');
+const { issueTokenPair } = require('../utils/jwtTokens');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const { createClient } = require('@supabase/supabase-js');
@@ -137,18 +140,16 @@ router.post('/register',
         });
 
         await newUser.save();
-        
-        const token = jwt.sign(
-          { userId: newUser._id },
-          process.env.JWT_SECRET || 'fallback-secret',
-          { expiresIn: '30d' }
-        );
+
+        const { token, refreshToken, expiresIn } = issueTokenPair(newUser._id.toString());
 
         return res.status(201).json({
           success: true,
           message: 'User registered successfully (Mongoose)!',
           data: {
             token,
+            refreshToken,
+            expiresIn,
             user: {
               id: newUser._id,
               email: newUser.email,
@@ -211,11 +212,16 @@ router.post('/register',
       // Create combined name for response
       user.name = `${user.first_name} ${user.last_name}`;
 
-      jwt.sign(
-        { userId: user.id },
-        process.env.JWT_SECRET,
-        { expiresIn: '30d' }
-      );
+      // CRITICAL: capture the JWT (previously this call discarded the
+      // returned token — line had no `const token =` assignment — so the
+      // client got back a `success: true` response with NO token. The
+      // user creation succeeded server-side, but the user couldn't be
+      // auto-signed-in. Combined with email verification being required
+      // and SendGrid optionally unconfigured, new users were stranded
+      // unable to log in. We now both (a) issue a real token and (b)
+      // surface it in the response so the client can sign the user
+      // straight into the dashboard.
+      const { token, refreshToken, expiresIn } = issueTokenPair(user.id);
 
       logger.info('User registered successfully', { email: user.email, userId: user.id });
 
@@ -258,20 +264,29 @@ router.post('/register',
         logger.error('Failed to send verification email', { error: emailError });
       }
 
+      // Auto-sign-in: return the token so the client can flip straight
+      // into the dashboard. We still flag emailVerified=false so the
+      // dashboard can show a gentle "verify your email" prompt without
+      // blocking access to the product. `requiresVerification` stays
+      // for backward compatibility but no longer means "stuck" — it
+      // means "we'll nudge you to verify when convenient".
       res.status(201).json({
         success: true,
-        message: 'User registered successfully! Please check your email to verify your account.',
+        message: 'Welcome to Click. Check your email to verify your address (you can keep using Click in the meantime).',
         data: {
+          token,
+          refreshToken,
+          expiresIn,
           user: {
             id: user.id,
             email: user.email,
             name: user.name,
             first_name: user.first_name,
             last_name: user.last_name,
-            emailVerified: user.email_verified
+            emailVerified: user.email_verified,
           },
-          requiresVerification: true
-        }
+          requiresVerification: true,
+        },
       });
     } catch (error) {
       logger.error('Registration error:', error);
@@ -344,18 +359,16 @@ router.post('/verify-email', authRateLimiter, requireSupabase, async (req, res) 
 
     logger.info('Email verified successfully', { userId: user.id, email: user.email });
 
-    // Generate JWT token for immediate login
-    const jwtToken = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    // Generate JWT token pair for immediate login
+    const { token: jwtToken, refreshToken, expiresIn } = issueTokenPair(user.id);
 
     res.json({
       success: true,
       message: 'Email verified successfully! You can now log in.',
       data: {
         token: jwtToken,
+        refreshToken,
+        expiresIn,
         user: {
           id: user.id,
           email: user.email,
@@ -513,17 +526,15 @@ router.post('/login',
           return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign(
-          { userId: user._id },
-          process.env.JWT_SECRET || 'fallback-secret',
-          { expiresIn: '30d' }
-        );
+        const { token, refreshToken, expiresIn } = issueTokenPair(user._id.toString());
 
         return res.json({
           success: true,
           message: 'Login successful (Mongoose)',
           data: {
             token,
+            refreshToken,
+            expiresIn,
             user: {
               id: user._id,
               email: user.email,
@@ -534,47 +545,7 @@ router.post('/login',
         });
       }
 
-      // Check for development users first (before Supabase)
-      if (process.env.NODE_ENV === 'development' || !supabase) {
-        
-
-        // Simple development credentials
-        if (email === 'admin@example.com' && password === 'admin123') {
-          const user = {
-            id: 'dev-user-123',
-            email: 'admin@example.com',
-            first_name: 'Admin',
-            last_name: 'User',
-            password: null, // No password check needed for dev
-            login_attempts: 0,
-            last_login_at: null,
-            social_links: null
-          };
-
-          const token = jwt.sign(
-            { userId: user.id },
-            process.env.JWT_SECRET || 'fallback-secret',
-            { expiresIn: '30d' }
-          );
-
-          
-          return res.json({
-            success: true,
-            message: 'Login successful (dev mode)',
-            data: {
-              token,
-              user: {
-                id: user.id,
-                email: user.email,
-                name: `${user.first_name} ${user.last_name}`,
-                emailVerified: true
-              }
-            }
-          });
-        }
-      }
-
-      // Only try Supabase if not in dev mode or if Supabase is available
+      // Only try Supabase if it's available
       if (!supabase) {
         
         return res.status(503).json({ success: false, error: 'Authentication service unavailable' });
@@ -636,24 +607,10 @@ router.post('/login',
       }
 
       // Verify password
-      let isValidPassword = false;
+      const bcrypt = require('bcryptjs');
+      const isValidPassword = await bcrypt.compare(password, user.password);
 
-      // Skip password verification for development users (they don't have hashed passwords)
-      if (user.password === null && process.env.NODE_ENV === 'development') {
-        // Development user - password already verified during user lookup
-        isValidPassword = true;
-        
-      } else {
-        const bcrypt = require('bcryptjs');
-        
-        isValidPassword = await bcrypt.compare(password, user.password);
-        
-      }
-
-      // TEMPORARY: Allow login with correct email for testing
-      const tempAllow = user.email === 'freshuser@example.com' && password === 'FreshPass123';
-
-      if (!isValidPassword && !tempAllow) {
+      if (!isValidPassword) {
         // Increment login attempts and record timestamp
         const newAttempts = (user.login_attempts || 0) + 1;
         await supabase
@@ -692,7 +649,7 @@ router.post('/login',
         // Generate temporary token for 2FA verification
         const tempToken = jwt.sign(
           { userId: user.id, type: '2fa_pending' },
-          process.env.JWT_SECRET || 'fallback-secret',
+          getJwtSecret(),
           { expiresIn: '10m' } // Short expiry for 2FA verification
         );
 
@@ -713,18 +670,8 @@ router.post('/login',
           }
         });
       } else {
-        // Generate final JWT token and refresh token
-        const token = jwt.sign(
-          { userId: user.id },
-          process.env.JWT_SECRET || 'fallback-secret',
-          { expiresIn: '30d' }
-        );
-
-        const refreshToken = jwt.sign(
-          { userId: user.id, type: 'refresh' },
-          process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'fallback-secret',
-          { expiresIn: '90d' }
-        );
+        // Generate final JWT token pair via the centralized helper.
+        const { token, refreshToken, expiresIn } = issueTokenPair(user.id);
 
         // Remove password and sensitive data from response
         const userWithoutPassword = { ...user };
@@ -739,6 +686,7 @@ router.post('/login',
           data: {
             token,
             refreshToken,
+            expiresIn,
             user: userWithoutPassword
           }
         });
@@ -787,6 +735,9 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
       id: req.user.id,
       email: req.user.email,
       name: req.user.name,
+      username: req.user.username || null,
+      first_name: req.user.first_name || null,
+      last_name: req.user.last_name || null,
       subscription: req.user.subscription,
       niche: req.user.niche,
       avatar: req.user.avatar,
@@ -875,7 +826,7 @@ router.get('/validate-reset-token/:token', async (req, res) => {
 
     if (!supabase) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        const decoded = jwt.verify(token, getJwtSecret());
         if (decoded.type === 'password_reset') {
           isValid = true;
           message = 'Token is valid';
@@ -1107,17 +1058,26 @@ router.post('/resend-verification',
 // Get user profile
 router.get('/profile', require('../middleware/auth'), async (req, res) => {
   try {
-    // User data is already available from auth middleware
+    // User data is already available from auth middleware.
+    // `username` is the user's preferred display name — what should appear
+    // on the dashboard greeting and anywhere a single-name label is shown.
     const profile = {
       id: req.user.id,
       email: req.user.email,
       name: req.user.name,
+      username: req.user.username || null,
+      first_name: req.user.first_name || null,
+      last_name: req.user.last_name || null,
       avatar: req.user.avatar,
       bio: req.user.bio,
       website: req.user.website,
       location: req.user.location,
       social_links: req.user.social_links,
-      niche: req.user.niche,
+      // `niche` lives at the JSONB top-level OR inside social_links.niche
+      // (where PUT /auth/profile now stores it). Prefer the social_links
+      // copy because that's what we explicitly persist; fall back to the
+      // legacy req.user.niche for any older user docs.
+      niche: req.user?.social_links?.niche || req.user.niche || null,
       subscription: req.user.subscription,
       email_verified: req.user.email_verified,
       created_at: req.user.created_at
@@ -1133,54 +1093,243 @@ router.get('/profile', require('../middleware/auth'), async (req, res) => {
 // Update user profile
 router.put('/profile', require('../middleware/auth'), async (req, res) => {
   try {
-    const { name, bio, website, location, social_links, niche } = req.body;
+    const { name, username, bio, website, location, social_links, niche } = req.body;
+
+    // Dev users have a non-UUID id (`dev-user-123`) that Supabase rejects.
+    // Return a synthesized success so the dashboard's inline editor still
+    // confirms the change in-session; the real persistence path runs once
+    // the user signs into a real account.
+    const userIdStr = req.user?.id ? String(req.user.id) : '';
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdStr);
+    const isDevId = userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123';
+    if (isDevId || (!isUuid && userIdStr)) {
+      const trimmedName = typeof name === 'string' ? name.trim() : '';
+      const parts = trimmedName ? trimmedName.split(/\s+/) : [];
+      const profile = {
+        id: req.user.id,
+        email: req.user.email,
+        first_name: parts[0] || req.user.first_name || null,
+        last_name: parts.slice(1).join(' ') || req.user.last_name || null,
+        username: username ? String(username).trim() : (req.user.username || null),
+        name: trimmedName || req.user.name || req.user.email,
+        avatar: req.user.avatar || null,
+        bio: bio !== undefined ? (bio || null) : (req.user.bio || null),
+        website: website !== undefined ? (website || null) : (req.user.website || null),
+        location: location !== undefined ? (location || null) : (req.user.location || null),
+        social_links: social_links !== undefined ? (social_links || {}) : (req.user.social_links || {}),
+        niche: niche !== undefined ? (niche || null) : (req.user.niche || null),
+        subscription: req.user.subscription,
+        email_verified: req.user.email_verified,
+        created_at: req.user.created_at,
+      };
+      return res.json({ success: true, message: 'Profile updated (dev session — sign in to sync).', profile });
+    }
 
     // Validate input
     if (name && (typeof name !== 'string' || name.trim().length < 2)) {
       return res.status(400).json({ success: false, error: 'Name must be at least 2 characters long' });
     }
 
+    if (username !== undefined && username !== null && username !== '') {
+      if (typeof username !== 'string') {
+        return res.status(400).json({ success: false, error: 'Username must be a string' });
+      }
+      const trimmed = username.trim();
+      if (trimmed.length < 1 || trimmed.length > 40) {
+        return res.status(400).json({ success: false, error: 'Display name must be between 1 and 40 characters' });
+      }
+    }
+
     if (website && !/^https?:\/\/.+/.test(website)) {
       return res.status(400).json({ success: false, error: 'Website must be a valid URL starting with http:// or https://' });
     }
 
-    // Prepare update data
+    // Prepare update data — Supabase `users` table has first_name/last_name
+    // (no `name`) and no `niche` column, so split / drop those fields.
+    // `username` is the user's preferred display name used on the dashboard.
     const updateData = {};
-    if (name !== undefined) updateData.name = name.trim();
+    if (name !== undefined) {
+      const trimmed = name.trim();
+      const parts = trimmed.split(/\s+/);
+      updateData.first_name = parts[0] || trimmed;
+      updateData.last_name = parts.slice(1).join(' ') || '';
+    }
+    if (username !== undefined) {
+      // Allow clearing the preferred name by sending an empty string → null.
+      updateData.username = username && username.trim() ? username.trim() : null;
+    }
     if (bio !== undefined) updateData.bio = bio ? bio.trim() : null;
     if (website !== undefined) updateData.website = website ? website.trim() : null;
     if (location !== undefined) updateData.location = location ? location.trim() : null;
-    if (social_links !== undefined) updateData.social_links = social_links || {};
-    if (niche !== undefined) updateData.niche = niche;
+    // Niche persistence — we used to drop this field because the Supabase
+    // `users` table has no top-level `niche` column. That silently broke
+    // the profile form: the user picked a niche, saw "saved", reloaded,
+    // and watched the dropdown reset. We now stash niche inside the
+    // existing JSONB `social_links` column (key: `niche`), which the
+    // profile reader already pulls back. If the niche endpoint becomes
+    // canonical later, this is a non-destructive layering.
+    const incomingSocialLinks = social_links !== undefined ? (social_links || {}) : null;
+    if (incomingSocialLinks !== null || niche !== undefined) {
+      // Merge with the current row so we don't blow away keys (e.g. OAuth
+      // tokens live under social_links.oauth.* and must be preserved).
+      try {
+        const { data: existing } = await supabase
+          .from('users')
+          .select('social_links')
+          .eq('id', req.user.id)
+          .single();
+        const current = (existing && existing.social_links) || {};
+        const next = { ...current };
+        if (incomingSocialLinks !== null) {
+          // The form sends a flat object like { twitter: 'https://…' };
+          // preserve nested keys (oauth, niche) the form doesn't know about.
+          Object.assign(next, incomingSocialLinks);
+        }
+        if (niche !== undefined) {
+          next.niche = typeof niche === 'string' && niche.trim() ? niche.trim() : null;
+        }
+        updateData.social_links = next;
+      } catch (mergeErr) {
+        logger.warn('Profile niche/social merge fallback', { error: mergeErr.message });
+        // Safe fallback — at minimum write what the client sent.
+        updateData.social_links = {
+          ...(incomingSocialLinks || {}),
+          ...(niche !== undefined ? { niche: niche || null } : {}),
+        };
+      }
+    }
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ success: false, error: 'No valid fields to update' });
     }
 
-    // Update user in Supabase
+    if (!supabase) {
+      return res.status(503).json({ success: false, error: 'Profile service unavailable' });
+    }
+
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update(updateData)
       .eq('id', req.user.id)
-      .select('id, email, name, avatar, bio, website, location, social_links, niche, subscription, email_verified, created_at')
+      .select('id, email, first_name, last_name, username, avatar, bio, website, location, social_links, subscription, email_verified, created_at')
       .single();
 
     if (updateError) {
-      
+      logger.error('Profile update failed', { userId: req.user.id, error: updateError.message });
       return res.status(500).json({ success: false, error: 'Failed to update profile' });
     }
+
+    // Map first_name/last_name back to `name` so the client gets a stable
+    // shape. Hoist `niche` from social_links so the form can rehydrate
+    // the dropdown without a second request.
+    const profile = {
+      ...updatedUser,
+      name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || updatedUser.email,
+      niche: updatedUser?.social_links?.niche || null,
+    };
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      profile: updatedUser
+      profile,
     });
 
   } catch (error) {
-    
+    logger.error('PUT /auth/profile threw', { error: error.message, stack: error.stack });
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
+
+// POST /api/auth/avatar
+//
+// Upload a new profile picture. Accepts multipart/form-data with field
+// `avatar`. The image is pushed to Cloudinary via CloudStorageService
+// (auto-cleans the local temp file on its own) and the secure URL is
+// persisted on the Supabase `users.avatar` column. Falls back to
+// data-URL persistence if Cloudinary credentials aren't configured —
+// not ideal at scale, but keeps the live demo functional.
+router.post(
+  '/avatar',
+  require('../middleware/auth'),
+  (() => {
+    const multer = require('multer');
+    const path = require('path');
+    const os = require('os');
+    const fs = require('fs');
+    // Use a tmp dir Cloudinary can read; the service auto-unlinks on success.
+    const storage = multer.diskStorage({
+      destination: (req, file, cb) => {
+        const dir = path.join(os.tmpdir(), 'click-avatars');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+      },
+      filename: (req, file, cb) => {
+        const safe = (file.originalname || 'avatar').replace(/[^a-zA-Z0-9._-]/g, '_');
+        cb(null, `${Date.now()}-${safe}`);
+      },
+    });
+    return multer({
+      storage,
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB — generous for an avatar
+      fileFilter: (req, file, cb) => {
+        if (!/^image\//.test(file.mimetype)) {
+          return cb(new Error('Only image files are allowed'));
+        }
+        cb(null, true);
+      },
+    }).single('avatar');
+  })(),
+  async (req, res) => {
+    const fs = require('fs');
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No file uploaded. Use form field "avatar".' });
+      }
+
+      let avatarUrl;
+      try {
+        const CloudStorageService = require('../services/cloudStorageService');
+        avatarUrl = await CloudStorageService.uploadImage(req.file.path, 'avatars');
+      } catch (cloudErr) {
+        logger.warn('Cloudinary avatar upload failed, falling back to data URL', { error: cloudErr.message });
+        // Fallback path — only safe for small images. Read, encode, store
+        // inline on the user row. Then unlink the temp file.
+        const buf = fs.readFileSync(req.file.path);
+        avatarUrl = `data:${req.file.mimetype};base64,${buf.toString('base64')}`;
+        try { fs.unlinkSync(req.file.path); } catch (_) { /* best-effort */ }
+      }
+
+      // Dev users live entirely in-memory — return the encoded avatar so
+      // the dashboard's optimistic preview matches the response, but skip
+      // the Supabase write that would 500 on a non-UUID id.
+      const userIdStr = req.user?.id ? String(req.user.id) : '';
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdStr);
+      const isDevId = userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123';
+      if (isDevId || (!isUuid && userIdStr)) {
+        return res.json({ success: true, avatar: avatarUrl });
+      }
+
+      if (!supabase) {
+        return res.status(503).json({ success: false, error: 'Profile service unavailable' });
+      }
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar: avatarUrl })
+        .eq('id', req.user.id);
+      if (updateError) {
+        logger.error('Avatar persist failed', { userId: req.user.id, error: updateError.message });
+        return res.status(500).json({ success: false, error: 'Failed to save avatar' });
+      }
+
+      res.json({ success: true, avatar: avatarUrl });
+    } catch (error) {
+      // Make sure the temp file doesn't survive an error path.
+      if (req.file?.path) { try { fs.unlinkSync(req.file.path); } catch (_) { /* best-effort */ } }
+      logger.error('POST /auth/avatar threw', { error: error.message });
+      res.status(500).json({ success: false, error: error.message || 'Avatar upload failed' });
+    }
+  },
+);
 
 // Change password
 router.post('/change-password', require('../middleware/auth'), async (req, res) => {
@@ -1539,12 +1688,8 @@ router.post('/2fa/verify', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid 2FA token' });
     }
 
-    // Generate final JWT token
-    const finalToken = jwt.sign(
-      { userId: decoded.userId },
-      process.env.JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    // Generate final JWT token pair
+    const { token: finalToken, refreshToken, expiresIn } = issueTokenPair(decoded.userId);
 
     logger.info('2FA verification successful', {
       userId: decoded.userId,
@@ -1555,7 +1700,9 @@ router.post('/2fa/verify', async (req, res) => {
       success: true,
       message: '2FA verification successful',
       data: {
-        token: finalToken
+        token: finalToken,
+        refreshToken,
+        expiresIn,
       }
     });
 
@@ -1774,12 +1921,8 @@ router.post('/reactivate', async (req, res) => {
       return res.status(500).json({ success: false, error: 'Failed to reactivate account' });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '30d' }
-    );
+    // Generate JWT token pair
+    const { token, refreshToken, expiresIn } = issueTokenPair(user.id);
 
     logger.info('Account reactivated', { userId: user.id, email });
 
@@ -1788,6 +1931,8 @@ router.post('/reactivate', async (req, res) => {
       message: 'Account reactivated successfully',
       data: {
         token,
+        refreshToken,
+        expiresIn,
         user: {
           id: user.id,
           email: user.email
@@ -1849,7 +1994,7 @@ router.post('/refresh', async (req, res) => {
     // Verify refresh token
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'fallback-secret');
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || getJwtSecret());
       if (decoded.type !== 'refresh') {
         return res.status(400).json({ success: false, error: 'Invalid refresh token' });
       }
@@ -1857,37 +2002,58 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Invalid or expired refresh token' });
     }
 
-    // Check if user still exists and is active
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email, deactivated_at, scheduled_deletion_at')
-      .eq('id', decoded.userId)
-      .single();
+    // Check if user still exists.
+    //
+    // The refresh endpoint mirrors the auth middleware's storage lookup:
+    // users registered via the Mongoose-fallback path (when Supabase is
+    // unreachable at signup) live in MongoDB only and will fail a
+    // Supabase-only lookup with a confusing "User not found" — even though
+    // their refresh token is perfectly valid. Try Mongo first, then
+    // Supabase, then fail honestly.
+    //
+    // NOTE: we used to also select `deactivated_at` / `scheduled_deletion_at`
+    // here, but those columns don't actually exist on the Supabase schema —
+    // every refresh call was throwing a 42703 "column does not exist" error
+    // and falling through to "User not found". Account-deactivation
+    // enforcement on refresh can come back once the schema actually
+    // supports it; today the access-token rotation alone is what we want.
+    let userId = decoded.userId;
+    let userEmail = null;
 
-    if (userError || !user) {
+    if (mongoose.Types.ObjectId.isValid(String(userId))) {
+      try {
+        const User = require('../models/User');
+        const mongoUser = await User.findById(userId).select('email').lean();
+        if (mongoUser) userEmail = mongoUser.email;
+      } catch (mongoErr) {
+        logger.warn('[refresh] Mongo lookup failed; falling back to Supabase', { error: mongoErr.message });
+      }
+    }
+
+    if (!userEmail && supabase) {
+      const { data: sbUser, error: sbErr } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('id', userId)
+        .single();
+      if (sbErr) {
+        logger.warn('[refresh] Supabase lookup error', { userId, error: sbErr.message, code: sbErr.code });
+      }
+      if (!sbErr && sbUser) {
+        userEmail = sbUser.email;
+        userId = sbUser.id;
+      }
+    }
+
+    if (!userEmail) {
+      logger.warn('[refresh] user not found in any store', { userId });
       return res.status(401).json({ success: false, error: 'User not found' });
     }
 
-    // Check if account is deactivated
-    if (user.deactivated_at || user.scheduled_deletion_at) {
-      return res.status(401).json({ success: false, error: 'Account is deactivated' });
-    }
+    // Generate new token pair via the centralized helper.
+    const { token: newAccessToken, refreshToken: newRefreshToken, expiresIn } = issueTokenPair(String(userId));
 
-    // Generate new access token
-    const newAccessToken = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '30d' }
-    );
-
-    // Generate new refresh token
-    const newRefreshToken = jwt.sign(
-      { userId: user.id, type: 'refresh' },
-      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: '90d' } // Longer expiry for refresh tokens
-    );
-
-    logger.info('Tokens refreshed', { userId: user.id });
+    logger.info('Tokens refreshed', { userId: String(userId) });
 
     res.json({
       success: true,
@@ -1895,7 +2061,7 @@ router.post('/refresh', async (req, res) => {
       data: {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
-        expiresIn: 30 * 24 * 60 * 60 // 30 days in seconds
+        expiresIn,
       }
     });
 
