@@ -1640,8 +1640,8 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let duration = metadata.format.duration || 0;
     let globalTimeOffset = 0;
     let globalDuration = duration;
-    let transcript = content.transcript?.text || content.metadata?.transcript || null;
-    let transcriptWords = content.transcript?.words || null;
+    let transcript = content.captions?.text || (typeof content.transcript === 'string' ? content.transcript : content.transcript?.text) || content.metadata?.transcript || null;
+    let transcriptWords = content.captions?.words || content.transcript?.words || null;
 
     // Auto-transcribe when no transcript exists yet. Without this every
     // dev-uploaded video skipped Gemini's smart caption / hook / viral
@@ -1680,7 +1680,13 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
               });
               // Persist onto content so subsequent runs skip retranscription.
               if (!content.metadata) content.metadata = {};
-              content.transcript = { text: transcript, words: transcriptWords, language: txResult.language };
+              content.transcript = transcript;
+              content.captions = {
+                text: transcript,
+                words: transcriptWords,
+                language: txResult.language,
+                generatedAt: new Date()
+              };
             }
           }
         } else {
