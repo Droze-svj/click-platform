@@ -4362,27 +4362,9 @@ function generateShockJitterFilter(viralMoments, duration) {
 function generateSubBassBoomFilter(viralMoments, duration) {
   if (!viralMoments || !Array.isArray(viralMoments) || viralMoments.length === 0) return null;
 
-  // Broadened: apply bass boom on any impactful moment for cinematic weight
-  const impacts = viralMoments.filter(m => 
-    m.emotion === 'shock' || m.triggerType === 'shock' || m.emotion === 'hype' ||
-    m.triggerType === 'value' || m.triggerType === 'authority' || m.emotion === 'excitement' || m.emotion === 'surprise'
-  ).slice(0, 3);
-  // Fallback: use first 2 moments if nothing specific matched
-  const effectiveImpacts = impacts.length > 0 ? impacts : viralMoments.slice(0, 2);
-  if (effectiveImpacts.length === 0) return null;
-  
-  let gainExpr = '0';
-  effectiveImpacts.forEach(m => {
-    const s = Number(m.time);
-    if (isNaN(s)) return;
-    const e = Math.min(s + 1.0, duration); // 1s boom
-    // Peak gain of 12dB tapering off linearly. Commas escaped for filtergraph safety.
-    gainExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,12*(1-(t-${s.toFixed(2)}))\\,${gainExpr})`;
-  });
-
-  if (gainExpr === '0') return null;
-  // Boost 60Hz by the dynamic gain
-  return `bass=f=60:width_type=q:width=0.5:g='${gainExpr}'`;
+  // Boost bass globally by +8dB to create a rich, warm broadcast-quality voice.
+  // Dynamic EQ evaluation in the bass filter is not supported by FFmpeg and causes crashes.
+  return `bass=f=60:width_type=q:width=0.5:g=8`;
 }
 
 /**
