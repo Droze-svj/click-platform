@@ -4285,9 +4285,9 @@ function generateKineticZoomChain(viralMoments, duration) {
     if (isNaN(s)) return;
     const e = Math.min(s + 2.5, duration); // 2.5s smooth push-in
     // Smooth linear zoom from 1.0 to 1.15 over the duration of the moment
-    // zoom = 1.0 + 0.15 * (t - s) / (e - s)
-    const smoothZoom = `(1.0+0.15*(t-${s.toFixed(2)})/${(e - s).toFixed(2)})`;
-    zoomExpr = `if(between(t\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,${smoothZoom}\\,${zoomExpr})`;
+    // zoom = 1.0 + 0.15 * (it - s) / (e - s)
+    const smoothZoom = `(1.0+0.15*(it-${s.toFixed(2)})/${(e - s).toFixed(2)})`;
+    zoomExpr = `if(between(it\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,${smoothZoom}\\,${zoomExpr})`;
   });
 
   // Using zoompan with high fps to ensure smooth motion and no jitter. d=99999 prevents frame truncation.
