@@ -4290,8 +4290,8 @@ function generateKineticZoomChain(viralMoments, duration) {
     zoomExpr = `if(between(it\\,${s.toFixed(2)}\\,${e.toFixed(2)})\\,${smoothZoom}\\,${zoomExpr})`;
   });
 
-  // Using zoompan with high fps to ensure smooth motion and no jitter. d=99999 prevents frame truncation.
-  return `zoompan=z='${zoomExpr}':d=99999:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30`;
+  // Using zoompan with d=1 to output exactly 1 frame per input frame, preserving the exact video duration.
+  return `zoompan=z='${zoomExpr}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=1080x1920:fps=30`;
 }
 
 /**
