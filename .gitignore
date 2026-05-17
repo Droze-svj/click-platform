@@ -1,9 +1,22 @@
 node_modules/
 client/node_modules/
+# Environment files (sensitive)
 .env
 .env.local
+.env.production
+.env.staging
+.env.render
+.env.railway
+.env.local.production
+.env.mongodb
+.env.monitoring.local
+.env.test
+.env.production.ready
+.env.backup
 .env.nosync
 .env.local.nosync
+
+# Common ignores
 *.nosync
 *.bak
 uploads/
@@ -16,14 +29,13 @@ logs/
 .vscode/
 .idea/
 
-# Next.js build cache
+# Frameworks
 .next/
-
-# Generated assignment (ephemeral)
-ASSIGNMENT_READY.md
 node_modules/
 .aider*
-.env.production
+
+# Generated
+ASSIGNMENT_READY.md
 
 # Stray node_modules backups / scratch dirs
 .node_modules_backup/
