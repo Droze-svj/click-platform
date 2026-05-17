@@ -145,7 +145,8 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                                 Analyzes community feedback consensus and executes fully autonomous timeline modifications.
                             </p>
                         </div>
-                        <button 
+                        <button
+                            type="button"
                             onClick={triggerRemediation}
                             disabled={loading}
                             className={`w-full py-6 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] italic transition-all ${

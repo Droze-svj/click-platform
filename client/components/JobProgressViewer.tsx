@@ -213,6 +213,7 @@ export default function JobProgressViewer({
           </div>
         </div>
         <button
+          type="button"
           onClick={loadJobProgress}
           className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
           title="Refresh"

@@ -6,5 +6,7 @@ pkill -f "npm start" || true
 sleep 3
 
 echo "Starting server..."
-cd "/Users/orlandhino/WHOP AI V3"
+# Get the absolute path of the directory where this script is located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR"
 NODE_ENV=development PORT=5001 node --max-old-space-size=2048 server/index.js

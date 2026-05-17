@@ -131,6 +131,7 @@ export default function NotificationBell() {
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-800"
         aria-label="Notifications"
@@ -151,6 +152,7 @@ export default function NotificationBell() {
             <h3 className="font-semibold">Notifications</h3>
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={markAllAsRead}
                 className="text-sm text-blue-600 hover:underline"
               >

@@ -23,10 +23,12 @@
  * focused. Hides cleanly on small screens (sm:flex).
  */
 
-import { useEffect, useState } from 'react'
-import { Wand2, Scissors, Type, Palette, Zap, Sparkles, Loader2, Brain } from 'lucide-react'
-import { apiGet } from '../../lib/api'
+import { useEffect, useRef, useState } from 'react'
+import { Wand2, Scissors, Type, Palette, Zap, Sparkles, Loader2, Brain, Eraser, Shuffle, Film, TrendingUp } from 'lucide-react'
+import { apiGet, apiPost } from '../../lib/api'
 import type { EditorCategory } from '../../types/editor'
+
+const STYLE_INSIGHT_TIMEOUT_MS = 8000
 
 interface StyleInsight {
   source: 'user' | 'team' | 'defaults'
@@ -42,6 +44,13 @@ interface StyleInsight {
 }
 
 interface Props {
+  /** The clip / content currently loaded in the editor — required for the
+   *  variant / B-roll / trends actions to know what to operate on. When
+   *  unset, those actions are hidden. */
+  contentId?: string | null
+  /** Caption / hook text from the loaded clip — fed into the variant
+   *  generator so it has a base to riff on. */
+  baseContent?: string | null
   setActiveCategory: (c: EditorCategory) => void
   onSplitAtPlayhead?: () => void
   /**
@@ -52,39 +61,154 @@ interface Props {
    * keeps the contract narrow.
    */
   onApplyMyStyle?: (insight: StyleInsight) => void
+  /**
+   * Opens the in-editor SmartCleanupPanel — runs silence-cut / filler-
+   * removal / edit-by-text on the current videoId. Keeps these tools
+   * inside the editor instead of bouncing the user to a separate page.
+   */
+  onOpenSmartCleanup?: () => void
   /** Optional toast callback so we can surface "Applied X" feedback. */
   showToast?: (msg: string, type?: 'info' | 'success' | 'error') => void
 }
 
 export default function QuickActionsBar({
+  contentId,
+  baseContent,
   setActiveCategory,
   onSplitAtPlayhead,
   onApplyMyStyle,
+  onOpenSmartCleanup,
   showToast,
 }: Props) {
   const [insight, setInsight] = useState<StyleInsight | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  const pendingRef = useRef(false)
 
   // Background fetch on mount so the pill can show "Click learned X"
-  // without waiting for the user to click anything.
+  // without waiting for the user to click anything. Times out at 8s so a
+  // stalled API never leaves consumers waiting forever.
   useEffect(() => {
-    let cancelled = false
-    apiGet<any>('/video/clips/style-insight')
+    const ac = new AbortController()
+    const timer = setTimeout(() => ac.abort(), STYLE_INSIGHT_TIMEOUT_MS)
+    apiGet<any>('/video/clips/style-insight', { signal: ac.signal })
       .then((res) => {
-        if (cancelled) return
+        if (ac.signal.aborted) return
         const data = res?.data ?? res
         if (data && typeof data === 'object') setInsight(data)
       })
       .catch(() => { /* silent — bar still works without learned data */ })
-    return () => { cancelled = true }
+      .finally(() => clearTimeout(timer))
+    return () => {
+      clearTimeout(timer)
+      ac.abort()
+    }
   }, [])
 
-  const handleApplyStyle = async () => {
+  /**
+   * Generate 3 caption / hook variants for the current clip using the
+   * existing /api/ai/variants endpoint. Surfaces them via a toast that
+   * the editor can capture and route into the A/B picker. Cheap to call;
+   * no UI panel needed for V1.
+   */
+  const handleGenerateVariants = async () => {
     if (busy) return
+    if (!baseContent || !baseContent.trim()) {
+      showToast?.('Add a caption or hook first so the variant generator has something to riff on.', 'info')
+      return
+    }
+    setBusy('variants')
+    try {
+      const res: any = await apiPost('/ai/variants', { content: baseContent, count: 3 })
+      const variants: string[] = res?.data?.variants || res?.variants || []
+      if (variants.length === 0) {
+        showToast?.('No variants returned — try a longer base hook.', 'info')
+      } else {
+        showToast?.(`Generated ${variants.length} variants — open A/B picker to preview.`, 'success')
+        // Broadcast so the editor (or A/B drawer) can pick them up without
+        // tight coupling. Listeners attach in EditorMain or wherever the
+        // variant picker lives.
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('click:variants', {
+            detail: { contentId, variants },
+          }))
+        }
+      }
+    } catch (err: any) {
+      showToast?.(`Variants failed: ${err?.message || 'unknown error'}`, 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  /**
+   * Ask the B-roll intelligence service for a plan of stock-footage
+   * insertions for the current clip. The result is a list of {startTime,
+   * duration, url, keyword} entries; we dispatch them on a window event so
+   * the timeline can splice them in. No-op without a contentId.
+   */
+  const handleSuggestBRoll = async () => {
+    if (busy) return
+    if (!contentId) {
+      showToast?.('Load a clip first to suggest B-roll.', 'info')
+      return
+    }
+    setBusy('broll')
+    try {
+      const res: any = await apiPost(`/video/ai-editing/broll/${contentId}`, {})
+      const plan = res?.data?.plan || res?.plan || []
+      if (!Array.isArray(plan) || plan.length === 0) {
+        showToast?.('No B-roll gaps detected — your clip is already visually dense.', 'info')
+      } else {
+        showToast?.(`Suggested ${plan.length} B-roll insertions. Open the timeline to review.`, 'success')
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('click:broll-plan', {
+            detail: { contentId, plan },
+          }))
+        }
+      }
+    } catch (err: any) {
+      showToast?.(`B-roll suggest failed: ${err?.message || 'unknown error'}`, 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  /**
+   * Pull current trending sounds + hashtags for the clip's platform.
+   * Cached on the server to avoid hammering trend APIs every click.
+   */
+  const handleTrending = async () => {
+    if (busy) return
+    setBusy('trending')
+    try {
+      const res: any = await apiGet('/trends/now?platform=tiktok')
+      const trends = res?.data || res
+      const sounds = trends?.sounds?.length || 0
+      const hashtags = trends?.hashtags?.length || 0
+      if (sounds === 0 && hashtags === 0) {
+        showToast?.('Trend feed is warming up — try again in a minute.', 'info')
+      } else {
+        showToast?.(`Trending now: ${sounds} sounds · ${hashtags} hashtags. Picker opening.`, 'success')
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('click:trends', { detail: { trends } }))
+        }
+      }
+    } catch (err: any) {
+      showToast?.(`Trends fetch failed: ${err?.message || 'unknown error'}`, 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const handleApplyStyle = async () => {
+    if (pendingRef.current || busy) return
+    pendingRef.current = true
     setBusy('apply')
+    const ac = new AbortController()
+    const timer = setTimeout(() => ac.abort(), STYLE_INSIGHT_TIMEOUT_MS)
     try {
       // Re-fetch in case publish loop ran while editor was open.
-      const res: any = await apiGet('/video/clips/style-insight')
+      const res: any = await apiGet('/video/clips/style-insight', { signal: ac.signal })
       const data = (res?.data ?? res) as StyleInsight | null
       if (data && data.source === 'user' && (data.totalPicks ?? 0) >= 3) {
         onApplyMyStyle?.(data)
@@ -103,8 +227,14 @@ export default function QuickActionsBar({
         showToast?.('Publish 3 clips first so Click can learn your style.', 'info')
       }
     } catch (e: any) {
-      showToast?.('Could not load your style. Try again.', 'error')
+      if (ac.signal.aborted) {
+        showToast?.('Your style request timed out. Try again.', 'error')
+      } else {
+        showToast?.('Could not load your style. Try again.', 'error')
+      }
     } finally {
+      clearTimeout(timer)
+      pendingRef.current = false
       setBusy(null)
     }
   }
@@ -120,29 +250,44 @@ export default function QuickActionsBar({
     // overflow-x-auto + flex-nowrap: rail scrolls horizontally on small
     // screens instead of being hidden, so mobile users can still tap
     // every action. The min-w-max trick keeps actions from squishing.
-    <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-black/30 backdrop-blur-md border-b border-white/5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex items-center gap-2 min-w-max">
-        <Action icon={Wand2} label="Apply my style" loading={busy === 'apply'}
+    <div className="flex items-center gap-3 px-4 sm:px-6 py-3 bg-black/40 backdrop-blur-3xl border-b-2 border-white/5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden relative z-40">
+      <div className="flex items-center gap-3 min-w-max">
+        <Action icon={Wand2} label="APPLY_STYLE" loading={busy === 'apply'}
                 onClick={handleApplyStyle} accent="primary" />
 
         {onSplitAtPlayhead && (
-          <Action icon={Scissors} label="Split" longLabel="Split at playhead"
+          <Action icon={Scissors} label="SPLIT" longLabel="SPLIT_SEQUENCE"
                   onClick={onSplitAtPlayhead} hotkey="S" />
         )}
-        <Action icon={Type}    label="Captions"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
-        <Action icon={Palette} label="Grade"     onClick={() => setActiveCategory('color')}      hotkey="5" />
-        <Action icon={Zap}     label="Effects"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
-        <Action icon={Sparkles} label="AI"       onClick={() => setActiveCategory('ai')}         hotkey="A" />
+        <Action icon={Type}    label="CAPTIONS"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
+        <Action icon={Palette} label="GRADE"     onClick={() => setActiveCategory('color')}      hotkey="5" />
+        <Action icon={Zap}     label="EFFECTS"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
+        <Action icon={Sparkles} label="NEURAL"       onClick={() => setActiveCategory('ai')}         hotkey="A" />
+        {onOpenSmartCleanup && (
+          <Action icon={Eraser} label="CLEAN" longLabel="NEURAL_CLEANUP"
+                  onClick={onOpenSmartCleanup} hotkey="C" />
+        )}
+        {/* Three competitive-edge actions wired to existing services. The
+            backing routes already exist; these buttons surface them in
+            one tap so users don't have to dig through sub-menus. */}
+        <Action icon={Shuffle} label="VARIANTS" longLabel="A/B_VARIANTS"
+                onClick={handleGenerateVariants} loading={busy === 'variants'} hotkey="V" />
+        {contentId && (
+          <Action icon={Film} label="B-ROLL" longLabel="SUGGEST_B-ROLL"
+                  onClick={handleSuggestBRoll} loading={busy === 'broll'} hotkey="B" />
+        )}
+        <Action icon={TrendingUp} label="TRENDS" longLabel="TRENDING_NOW"
+                onClick={handleTrending} loading={busy === 'trending'} hotkey="T" />
       </div>
 
       {learnedLabel && (
-        <span
-          className="hidden md:inline-flex ml-auto items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-widest text-emerald-300 flex-shrink-0"
+        <div
+          className="hidden lg:flex ml-auto items-center gap-3 px-4 py-1.5 rounded-[1.25rem] bg-emerald-500/5 border-2 border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 flex-shrink-0 italic shadow-lg"
           title={`Click learned from ${insight!.totalPicks} of your published clips`}
         >
-          <Brain className="w-3 h-3" />
-          <span className="truncate max-w-[180px]">{learnedLabel}</span>
-        </span>
+          <Brain className="w-3.5 h-3.5 flex-shrink-0 animate-pulse" />
+          <span className="truncate max-w-[150px] lg:max-w-[220px]">{learnedLabel}</span>
+        </div>
       )}
     </div>
   )
@@ -166,29 +311,30 @@ function Action({
   loading?: boolean
   accent?: 'primary'
 }) {
-  const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border whitespace-nowrap'
+  const base = 'inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black transition-all border-2 whitespace-nowrap uppercase italic tracking-widest active:scale-95'
   const cls = accent === 'primary'
-    ? `${base} bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-400 hover:to-violet-500 text-white border-transparent shadow-sm`
-    : `${base} bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-slate-200`
+    ? `${base} bg-gradient-to-r from-primary-600 to-indigo-700 hover:from-primary-500 hover:to-indigo-600 text-white border-transparent shadow-[0_4px_15px_rgba(99,102,241,0.3)]`
+    : `${base} bg-white/[0.03] hover:bg-white/[0.08] border-white/5 text-slate-300 hover:text-white hover:border-white/10 shadow-sm`
   return (
     <button
-      type="button"
+     type="button"
       onClick={onClick}
       disabled={loading}
-      className={`${cls} ${loading ? 'opacity-60 cursor-wait' : ''}`}
+      aria-label={loading ? `${longLabel || label} — loading` : (hotkey ? `${longLabel || label} (shortcut ${hotkey})` : (longLabel || label))}
+      className={`${cls} ${loading ? 'opacity-60 cursor-wait' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50`}
       title={hotkey ? `${label} (${hotkey})` : label}
     >
-      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Icon className="w-3.5 h-3.5" />}
       {longLabel ? (
         <>
-          <span className="hidden md:inline">{longLabel}</span>
-          <span className="md:hidden">{label}</span>
+          <span className="hidden sm:inline">{longLabel}</span>
+          <span className="sm:hidden">{label}</span>
         </>
       ) : (
         <span>{label}</span>
       )}
       {hotkey && (
-        <kbd className="hidden lg:inline-block ml-1 px-1 py-0 rounded bg-black/30 border border-white/10 text-[9px] font-mono text-slate-300">
+        <kbd className="hidden xl:inline-block ml-2 px-1.5 py-0.5 rounded-lg bg-black/40 border-2 border-white/10 text-[9px] font-mono text-slate-500 leading-none">
           {hotkey}
         </kbd>
       )}

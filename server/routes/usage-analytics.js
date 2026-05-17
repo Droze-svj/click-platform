@@ -2,6 +2,7 @@
 // Comprehensive usage analytics and insights
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
@@ -13,6 +14,8 @@ const {
 const User = require('../models/User');
 const UsageTracking = require('../models/UsageTracking');
 const logger = require('../utils/logger');
+
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
 const router = express.Router();
 
@@ -50,7 +53,10 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   
   let user, currentUsage, stats;
   try {
-    user = await User.findById(userId).populate('membershipPackage');
+    // Supabase users (UUID) don't have a Mongo doc; skip the populate.
+    user = isMongoUserId(userId)
+      ? await User.findById(userId).populate('membershipPackage')
+      : null;
     currentUsage = await getCurrentUsage(userId);
     stats = await getUsageStats(userId, 6); // Last 6 months
   } catch (dbError) {
@@ -92,8 +98,8 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
     projections,
     alerts,
     package: {
-      name: user.membershipPackage?.name,
-      slug: user.membershipPackage?.slug
+      name: user?.membershipPackage?.name,
+      slug: user?.membershipPackage?.slug
     }
   });
 }));
@@ -152,7 +158,9 @@ router.get('/breakdown', auth, asyncHandler(async (req, res) => {
   }
   
   const { period } = req.query; // 'current', 'last', or 'YYYY-MM'
-  const user = await User.findById(userId);
+  // Supabase users don't have a Mongo doc; the breakdown only uses the user
+  // for membership package lookup which we read from elsewhere downstream.
+  const user = isMongoUserId(userId) ? await User.findById(userId) : null;
 
   let usage;
   if (period === 'current') {

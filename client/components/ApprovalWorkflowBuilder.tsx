@@ -188,6 +188,7 @@ export default function ApprovalWorkflowBuilder({
           Approval Workflow Builder
         </h2>
         <button
+          type="button"
           onClick={saveWorkflow}
           disabled={loading}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
@@ -243,6 +244,7 @@ export default function ApprovalWorkflowBuilder({
             Approval Stages
           </h3>
           <button
+            type="button"
             onClick={addStage}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
           >
@@ -276,6 +278,7 @@ export default function ApprovalWorkflowBuilder({
                     />
                   </div>
                   <button
+                    type="button"
                     onClick={() => removeStage(stageIndex)}
                     className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                   >
@@ -319,6 +322,7 @@ export default function ApprovalWorkflowBuilder({
                         Approvers
                       </label>
                       <button
+                        type="button"
                         onClick={() => addApprover(stageIndex)}
                         className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                       >
@@ -372,6 +376,7 @@ export default function ApprovalWorkflowBuilder({
                               <option value="any">Any</option>
                             </select>
                             <button
+                              type="button"
                               onClick={() => removeApprover(stageIndex, approverIndex)}
                               className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                             >

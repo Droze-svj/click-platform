@@ -145,6 +145,7 @@ export default function RemixHub({ onRemix }: { onRemix: (projectId: string) => 
                                         </div>
                                     </div>
                                     <button
+                                        type="button"
                                         onClick={() => handleRemix(project)}
                                         className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-fuchsia-500 dark:hover:bg-fuchsia-500 hover:text-white transition-all shadow-lg shadow-fuchsia-500/0 hover:shadow-fuchsia-500/20"
                                     >

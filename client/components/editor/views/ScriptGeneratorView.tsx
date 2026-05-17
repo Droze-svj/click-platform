@@ -312,9 +312,8 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
       {/* ── Panel Tab Switcher ──────────────────────────────────────────── */}
       <motion.div variants={itemVariants} className="flex items-center gap-2 p-1 bg-white/[0.03] border border-white/10 rounded-2xl w-fit">
         {[['generator', 'Script Generator'] as const, ['library', 'Hook Library ✦'] as const].map(([id, label]) => (
-          <button
+          <button type="button"
             key={id}
-            type="button"
             onClick={() => setActivePanel(id)}
             className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
               activePanel === id ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-white'
@@ -387,7 +386,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                   </div>
                   <div className="flex flex-col items-center gap-2 shrink-0">
                     <button
-                      type="button"
+                     type="button"
                       title="Toggle favourite"
                       onClick={e => { e.stopPropagation(); toggleFav(h.text) }}
                       className={`p-1.5 rounded-lg transition-all ${favourites.has(h.text) ? 'text-yellow-400' : 'text-slate-700 hover:text-slate-400'}`}
@@ -428,9 +427,8 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
               <label className="text-[10px] font-black uppercase text-slate-500 tracking-[0.4em] italic pl-4">TONAL MATRIX</label>
               <div className="flex flex-wrap gap-3">
                 {TONES.map((t) => (
-                  <button
+                  <button type="button"
                     key={t.id}
-                    type="button"
                     onClick={() => setTone(t.id)}
                     className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest italic border transition-all ${tone === t.id ? 'bg-white text-black border-white shadow-3xl' : 'bg-white/[0.02] border-white/5 text-slate-500 hover:border-white/10'
                       }`}
@@ -445,9 +443,8 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
               <label className="text-[10px] font-black uppercase text-slate-500 tracking-[0.4em] italic pl-4">NEURAL ROLE</label>
               <div className="grid grid-cols-1 gap-4">
                 {ROLES.map((r) => (
-                  <button
+                  <button type="button"
                     key={r.id}
-                    type="button"
                     onClick={() => setRole(r.id)}
                     className={`w-full flex items-center justify-between p-6 rounded-[2rem] border transition-all ${role === r.id ? 'bg-white/[0.08] border-white/20 text-white shadow-3xl' : 'bg-transparent border-white/5 text-slate-500 hover:border-white/10'
                       }`}
@@ -478,6 +475,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                 {generatedScript && (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
                     <button
+                      type="button"
                       onClick={handleSave}
                       disabled={isSaving}
                       className="w-full py-5 bg-emerald-600 text-white rounded-[2rem] font-black text-[10px] uppercase tracking-widest italic flex items-center justify-center gap-4 hover:bg-emerald-500 transition-all shadow-3xl shadow-emerald-600/20 border border-white/20"
@@ -523,6 +521,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                     </motion.button>
                     <div className="relative">
                       <button
+                        type="button"
                         onClick={() => setCopyMenuOpen((o) => !o)}
                         className="px-6 py-4 bg-white/[0.05] hover:bg-white/[0.1] rounded-2xl border border-white/10 transition-all flex items-center gap-4"
                       >
@@ -566,6 +565,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                           </div>
                           <p className="text-[13px] text-white font-bold leading-relaxed">{h.text}</p>
                           <button
+                            type="button"
                             onClick={() => { setGeneratedScript({ ...generatedScript, hook: h.text }); showToast('Hook Variant Applied', 'success') }}
                             className="w-full py-3 rounded-lg bg-indigo-500/10 text-indigo-400 text-[8px] font-black uppercase tracking-widest opacity-0 group-hover/var:opacity-100 transition-opacity border border-indigo-500/10 hover:bg-indigo-500 hover:text-white"
                           >
@@ -581,6 +581,7 @@ const ScriptGeneratorView: React.FC<ScriptGeneratorViewProps> = ({ showToast, on
                             <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{m.title}</h5>
                             <p className="text-[11px] text-slate-600 italic leading-relaxed">{m.desc}</p>
                             <button
+                              type="button"
                               onClick={() => { navigator.clipboard.writeText(`${m.title}\n${m.desc}`); showToast('Marketing Node bridged', 'success') }}
                               className="text-[8px] font-bold text-indigo-400/50 hover:text-indigo-400 transition-colors uppercase tracking-widest mt-2"
                             >

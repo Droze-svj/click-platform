@@ -330,9 +330,8 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
           const Icon = meta.icon
           const isActive = active === cat
           return (
-            <button
+            <button type="button"
               key={cat}
-              type="button"
               onClick={() => { setActive(cat); setMoodFilter('All'); setPreviewId(null) }}
               className={`flex items-center gap-3 px-5 py-3 rounded-2xl border-2 transition-colors ${
                 isActive
@@ -370,9 +369,8 @@ const StockLibraryView: React.FC<StockLibraryViewProps> = ({
           {moods.slice(0, 8).map(m => {
             const Icon = MOOD_ICONS[m] || Tag
             return (
-              <button
+              <button type="button"
                 key={m}
-                type="button"
                 onClick={() => setMoodFilter(m)}
                 className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${
                   moodFilter === m
@@ -508,7 +506,7 @@ function StockTile({
             <img src={item.thumb} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           )}
           <button
-            type="button"
+           type="button"
             onClick={(e) => { e.stopPropagation(); onFav() }}
             title={isFav ? 'Unfavorite' : 'Favorite'}
             className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500 text-white' : 'bg-black/60 text-white/70 hover:text-white'}`}
@@ -546,7 +544,7 @@ function StockTile({
             <span className="absolute top-2 left-2 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-amber-500 text-black flex items-center gap-1"><Sparkles className="w-2.5 h-2.5" /> Pro</span>
           )}
           <button
-            type="button"
+           type="button"
             onClick={onFav}
             title={isFav ? 'Unfavorite' : 'Favorite'}
             className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500 text-white' : 'bg-black/60 text-white/70 hover:text-white hover:bg-black/80'}`}
@@ -556,7 +554,7 @@ function StockTile({
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
-                type="button"
+               type="button"
                 onClick={onPreview}
                 title={isPlaying ? 'Pause' : 'Preview'}
                 className="w-9 h-9 rounded-full bg-white/90 text-black hover:bg-white flex items-center justify-center transition-colors shadow-xl"
@@ -566,7 +564,7 @@ function StockTile({
               <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded-full flex items-center gap-1.5"><Clock className="w-2.5 h-2.5" /> {item.duration}s</span>
             </div>
             <button
-              type="button"
+             type="button"
               onClick={onAdd}
               title="Add to timeline"
               className="px-4 py-1.5 bg-rose-500 hover:bg-rose-400 text-white text-[11px] font-bold uppercase tracking-wider rounded-full transition-colors flex items-center gap-1.5 shadow-xl"
@@ -601,7 +599,7 @@ function StockTile({
       }`}
     >
       <button
-        type="button"
+       type="button"
         onClick={onPreview}
         title={isPlaying ? 'Pause' : 'Preview'}
         className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white transition-colors flex-shrink-0 ${
@@ -627,7 +625,7 @@ function StockTile({
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
-          type="button"
+         type="button"
           onClick={onFav}
           title={isFav ? 'Unfavorite' : 'Favorite'}
           className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isFav ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'}`}
@@ -635,7 +633,7 @@ function StockTile({
           <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-rose-400' : ''}`} />
         </button>
         <button
-          type="button"
+         type="button"
           onClick={onAdd}
           title="Add to timeline"
           className={`px-4 py-2 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 ${

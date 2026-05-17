@@ -322,6 +322,7 @@ export default function SupportTicketSystem() {
                     <span className="text-[8px] font-black text-amber-500 uppercase tracking-[0.2em] italic flex items-center gap-1"><Sparkles className="w-3 h-3" /> Neural Drafts:</span>
                     {['Status Update?', 'Escalate Priority', 'Send Diagnostics', 'Close Uplink'].map((draft, i) => (
                       <button
+                        type="button"
                         key={i}
                         onClick={() => setNewMessage(draft)}
                         className="px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[9px] font-black text-indigo-300 uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-colors italic shadow-[0_0_10px_rgba(79,70,229,0.1)]"
@@ -475,14 +476,13 @@ function CreateTicketForm({
           </div>
           <div className="flex justify-end gap-4 pt-4 border-t border-white/5">
             <button
-              type="button"
+             type="button"
               onClick={onCancel}
               className="px-8 py-4 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-white transition-all italic"
             >
               Abort
             </button>
-            <button
-              type="submit"
+            <button              type="submit"
               className="px-10 py-4 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest italic shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:bg-indigo-500 transition-all"
             >
               Transmit Uplink

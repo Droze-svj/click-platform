@@ -116,10 +116,15 @@ router.post('/generate', auth, requireActiveSubscription, async (req, res) => {
 
     await script.save();
 
-    // Update user usage
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { 'usage.contentGenerated': 1 }
-    });
+    // Update user usage. Only meaningful for legacy Mongo users; Supabase
+    // UUIDs would CastError here.
+    const usageUserId = req.userId || req.user?._id || req.user?.id;
+    const mongooseLib = require('mongoose');
+    if (mongooseLib.Types.ObjectId.isValid(String(usageUserId))) {
+      await User.findByIdAndUpdate(usageUserId, {
+        $inc: { 'usage.contentGenerated': 1 }
+      });
+    }
 
     logger.info('Script generated', {
       scriptId: script._id,
@@ -252,11 +257,23 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    // Final safety check: if userId is a dev user ID, return empty array
-    // This prevents CastError when Mongoose tries to cast 'dev-user-123' to ObjectId
-    if (userId && (userId.toString().startsWith('dev-') || userId.toString() === 'dev-user-123' || userId.toString().startsWith('test-'))) {
-
-      logger.info('Dev user detected in scripts route, returning empty array', { userId, allowDevMode });
+    // Final safety check: if the userId is a dev user OR a Supabase UUID,
+    // return empty array. Scripts is a Mongoose-only model (no Supabase
+    // table mirror yet) so production accounts on the Supabase auth
+    // path have nothing to read here — returning [] is the correct
+    // empty state, far better than a 500 the user actually saw:
+    //
+    //   "Invalid userId format: 441b002b-…-284c9ab98066.
+    //    Expected MongoDB ObjectId."
+    //
+    // The bug was that the route only short-circuited for dev IDs;
+    // real Supabase users blew up. Once Scripts gets migrated to
+    // accept string userIds (or a Supabase mirror), this branch
+    // returns to live queries automatically.
+    const userIdStr = userId ? userId.toString() : '';
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdStr);
+    if (userIdStr && (userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123' || userIdStr.startsWith('test-') || isUuid)) {
+      logger.info('Non-Mongo userId in scripts route, returning empty array', { userIdShape: isUuid ? 'uuid' : 'dev', allowDevMode });
       return res.json({
         success: true,
         data: [],

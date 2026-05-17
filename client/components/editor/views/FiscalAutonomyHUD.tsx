@@ -68,13 +68,15 @@ export const FiscalAutonomyHUD: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5">
-                    <button 
+                    <button
+                        type="button"
                         onClick={() => setSteerMode('autonomous')}
                         className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${steerMode === 'autonomous' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                     >
                         Autonomous
                     </button>
-                    <button 
+                    <button
+                        type="button"
                         onClick={() => setSteerMode('advisory')}
                         className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${steerMode === 'advisory' ? 'bg-amber-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                     >

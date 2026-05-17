@@ -355,6 +355,7 @@ export default function VideoAdvancedTools({ videoId, videoPath, videoUrl, onPro
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {tools.map((tool) => (
           <button
+            type="button"
             key={tool.id}
             onClick={() =>
               handleProcess(tool.id, {

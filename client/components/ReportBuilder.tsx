@@ -210,6 +210,7 @@ export default function ReportBuilder({
                 <div className="text-xs text-gray-500">{metric.format}</div>
                 {selectedMetric?.id === metric.id && (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleDeleteMetric(metric.id)
@@ -300,6 +301,7 @@ export default function ReportBuilder({
           className="text-xl font-semibold border-none focus:outline-none"
         />
         <button
+          type="button"
           onClick={handleSave}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >

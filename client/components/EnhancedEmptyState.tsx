@@ -86,6 +86,7 @@ export default function EnhancedEmptyState({
       {/* Primary Action */}
       {primaryAction && (
         <button
+          type="button"
           onClick={primaryAction.onClick}
           className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl mb-6"
         >
@@ -99,6 +100,7 @@ export default function EnhancedEmptyState({
         <div className="flex flex-wrap gap-3 justify-center mb-8">
           {actions.map((action, index) => (
             <button
+              type="button"
               key={index}
               onClick={action.onClick}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

@@ -1,13 +1,40 @@
 // Pro Mode Service
 // Advanced filters, keyboard shortcuts, power-user configuration
 
+const mongoose = require('mongoose');
 const UserPreferences = require('../models/UserPreferences');
 const logger = require('../utils/logger');
+
+/**
+ * Build the in-memory default preferences shape so Supabase-only users
+ * (whose userIds are UUIDs, not Mongo ObjectIds) still get a valid response
+ * from every Pro Mode endpoint instead of a 400 CastError.
+ */
+function buildEphemeralDefaults(userId) {
+  return {
+    userId,
+    proMode: { enabled: false, features: {} },
+    advancedFilters: [],
+    keyboardShortcuts: [],
+    brandKit: {},
+    notifications: {},
+    preferences: {},
+  };
+}
+
+function isMongoUserId(userId) {
+  return mongoose.Types.ObjectId.isValid(String(userId));
+}
 
 /**
  * Get user preferences
  */
 async function getUserPreferences(userId) {
+  // Supabase users (UUIDs) can't be stored in a Mongo schema that types
+  // userId as ObjectId — return ephemeral defaults instead of throwing.
+  if (!isMongoUserId(userId)) {
+    return buildEphemeralDefaults(userId);
+  }
   try {
     let preferences = await UserPreferences.findOne({ userId }).lean();
 
@@ -280,6 +307,12 @@ async function getBrandKit(userId) {
  * Update brand kit
  */
 async function updateBrandKit(userId, brandKit) {
+  // Supabase users → echo back the requested update without persisting to Mongo.
+  // The client also persists brand-kit to localStorage so the user still
+  // sees their changes; the in-memory return keeps the route contract happy.
+  if (!isMongoUserId(userId)) {
+    return { ...brandKit };
+  }
   try {
     let preferences = await UserPreferences.findOne({ userId });
     if (!preferences) {

@@ -52,7 +52,8 @@ export default function IdentityDNA() {
            {pulse && (
              <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic pr-4">Lattice_Synced_Success</motion.span>
            )}
-           <button 
+           <button
+             type="button"
              onClick={handleSave}
              disabled={saving}
              className={`px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] shadow-xl hover:bg-indigo-500 hover:text-white transition-all duration-700 italic active:scale-95 flex items-center gap-4 ${saving ? 'opacity-50' : ''}`}
@@ -72,6 +73,7 @@ export default function IdentityDNA() {
              { id: 'content', label: 'Benchmark Sync', icon: Target, desc: 'Niche Velocity' }
            ].map(tab => (
              <button
+               type="button"
                key={tab.id}
                onClick={() => setActiveTab(tab.id as any)}
                className={`w-full p-8 rounded-[2.5rem] transition-all duration-700 text-left group border ${
@@ -138,7 +140,8 @@ export default function IdentityDNA() {
                        </div>
                        <div className="grid grid-cols-2 gap-4">
                           {['Educational', 'Authoritative', 'Witty', 'Aggressive', 'Calm', 'Entertaining'].map(arche => (
-                            <button 
+                            <button
+                              type="button"
                               key={arche}
                               className={`p-6 rounded-2xl border transition-all duration-700 text-[10px] font-black uppercase tracking-widest italic ${
                                 dna.voice.tone === arche.toLowerCase() 

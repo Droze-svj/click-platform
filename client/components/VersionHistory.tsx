@@ -108,6 +108,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
                 </div>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => setSelectedVersion(version)}
                     className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg"
                     title="View version"
@@ -116,6 +117,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
                   </button>
                   {version.versionNumber !== versions[0].versionNumber && (
                     <button
+                      type="button"
                       onClick={() => handleRestore(version)}
                       className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg"
                       title="Restore version"
@@ -143,6 +145,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
                 Version {selectedVersion.versionNumber}
               </h3>
               <button
+                type="button"
                 onClick={() => setSelectedVersion(null)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >

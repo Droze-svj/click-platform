@@ -98,7 +98,7 @@ export default function GetStartedStrip() {
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
-          type="button"
+         type="button"
           onClick={handleContinue}
           className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 rounded-lg transition"
         >
@@ -106,7 +106,7 @@ export default function GetStartedStrip() {
           <ChevronRight className="w-4 h-4" />
         </button>
         <button
-          type="button"
+         type="button"
           onClick={handleDismiss}
           className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg transition"
           aria-label="Dismiss"

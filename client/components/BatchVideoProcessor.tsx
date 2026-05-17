@@ -255,6 +255,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
         {/* Action Buttons */}
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={addBatchJob}
             disabled={selectedVideos.size === 0}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -263,6 +264,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
           </button>
 
           <button
+            type="button"
             onClick={startBatchProcessing}
             disabled={jobs.length === 0 || isProcessing}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -272,6 +274,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
 
           {jobs.some(job => job.status === 'completed') && (
             <button
+              type="button"
               onClick={clearCompletedJobs}
               className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
             >
@@ -328,6 +331,7 @@ export default function BatchVideoProcessor({ videos, onBatchComplete }: BatchVi
                   )}
 
                   <button
+                    type="button"
                     onClick={() => removeJob(job.id)}
                     className="text-gray-400 hover:text-red-500"
                     title="Remove job"

@@ -102,6 +102,7 @@ export default function ContentComplianceBadge({
 
   const badge = (
     <button
+      type="button"
       id="compliance-badge-toggle"
       onClick={() => showPopover && setIsOpen(!isOpen)}
       className={`inline-flex items-center rounded-full font-medium transition-all ${sizeClasses.badge} ${config.badgeClass} ${showPopover ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}

@@ -288,16 +288,17 @@ async function checkExportQuota(req, res, next) {
   }
 
   try {
-    // Count exports this month for this user
-    // In production, query exportCount from DB
-    const userId = req.user?.id;
+    const userId = req.user?.id || req.user?._id;
     const thisMonthStart = new Date();
     thisMonthStart.setDate(1);
     thisMonthStart.setHours(0, 0, 0, 0);
 
-    // TODO: Replace with real DB query:
-    // const count = await Export.countDocuments({ userId, createdAt: { $gte: thisMonthStart } })
-    const count = req.user?.monthlyExports || 0;
+    const ExportJob = require('../models/ExportJob');
+    const count = await ExportJob.countDocuments({
+      userId,
+      createdAt: { $gte: thisMonthStart },
+      status: { $in: ['completed', 'processing', 'pending'] },
+    });
 
     if (count >= cap) {
       return res.status(429).json({

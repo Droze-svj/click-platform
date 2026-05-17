@@ -27,10 +27,69 @@ services:
         value: https://sovereign-platform.onrender.com
       - key: PORT
         value: "5001"
-      # Set the rest in the Render dashboard (don't commit secrets):
-      #   SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
-      #   JWT_SECRET (32+ chars)
-      #   GEMINI_API_KEY  ← required for live AI; without it, all AI calls degrade to fallbacks
-      #   MONGODB_URI
-      #   REDIS_URL
-      #   TWITTER_OAUTH_*, YOUTUBE_OAUTH_*, LINKEDIN_OAUTH_*, FACEBOOK_OAUTH_*
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SENDGRID_FROM_EMAIL
+        sync: false
+      - key: WHOP_API_KEY
+        sync: false
+      - key: WHOP_WEBHOOK_SECRET
+        sync: false
+      - key: WHOP_PRODUCT_ID_CREATOR_MONTHLY
+        sync: false
+      - key: WHOP_PRODUCT_ID_CREATOR_YEARLY
+        sync: false
+      - key: WHOP_PRODUCT_ID_PRO_MONTHLY
+        sync: false
+      - key: WHOP_PRODUCT_ID_PRO_YEARLY
+        sync: false
+      - key: WHOP_PRODUCT_ID_AGENCY_MONTHLY
+        sync: false
+      - key: WHOP_PRODUCT_ID_AGENCY_YEARLY
+        sync: false
+      - key: NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY
+        sync: false
+      - key: NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY
+        sync: false
+      - key: NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY
+        sync: false
+      - key: NEXT_PUBLIC_WHOP_URL_PRO_YEARLY
+        sync: false
+      - key: NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY
+        sync: false
+      - key: NEXT_PUBLIC_WHOP_URL_AGENCY_YEARLY
+        sync: false
+      - key: TIKTOK_CLIENT_KEY
+        sync: false
+      - key: TIKTOK_CLIENT_SECRET
+        sync: false
+      - key: YOUTUBE_CLIENT_ID
+        sync: false
+      - key: YOUTUBE_CLIENT_SECRET
+        sync: false
+      - key: TWITTER_CLIENT_ID
+        sync: false
+      - key: TWITTER_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false

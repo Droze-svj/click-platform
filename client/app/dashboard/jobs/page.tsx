@@ -22,7 +22,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
 const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 interface Job {
   id: string; name: string; state: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed';
@@ -142,7 +142,7 @@ export default function BackgroundFluxTerminalPage() {
            </div>
 
            <div className="flex items-center gap-8">
-              <button onClick={loadLattice} className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group active:scale-95 border-none bg-white/[0.02] shadow-2xl`}>
+              <button type="button" onClick={loadLattice} title="Refresh job queue" aria-label="Refresh job queue" className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group active:scale-95 border-none bg-white/[0.02] shadow-2xl`}>
                  <RefreshCw size={36} className={`text-slate-400 group-hover:text-blue-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
               </button>
               <button onClick={() => setAutoRefresh(!autoRefresh)} 
@@ -327,9 +327,9 @@ function FluxCard({ job, onCancel, onView, index, isDiffracted }: { job: Job; on
           <div className="flex items-center gap-6">
              {job.queue && <span className="px-6 py-2 rounded-2xl bg-black/60 border-2 border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic shadow-inner">LATTICE::{job.queue.toUpperCase()}</span>}
              <div className="w-1 h-12 bg-white/5 rounded-full" />
-             <button onClick={onView} className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:bg-blue-600/20 active:scale-75 shadow-2xl"><Eye size={36}/></button>
+             <button type="button" onClick={onView} title="View job details" aria-label="View job details" className="w-16 h-16 rounded-[2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all duration-300 hover:bg-blue-600/20 active:scale-75 shadow-2xl"><Eye size={36}/></button>
              {(job.state === 'active' || job.state === 'waiting' || job.state === 'delayed') && (
-                <button onClick={() => onCancel(job.id)} className="w-16 h-16 rounded-[2.2rem] bg-rose-950/20 border-2 border-rose-500/20 flex items-center justify-center text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/20 transition-all duration-300 active:scale-75 shadow-2xl"><X size={36}/></button>
+                <button type="button" onClick={() => onCancel(job.id)} title="Cancel job" aria-label="Cancel job" className="w-16 h-16 rounded-[2.2rem] bg-rose-950/20 border-2 border-rose-500/20 flex items-center justify-center text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/20 transition-all duration-300 active:scale-75 shadow-2xl"><X size={36}/></button>
              )}
           </div>
        </div>

@@ -86,10 +86,15 @@ router.post('/generate', (req, res, next) => {
       await content.save();
     }
 
-    // Update usage
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { 'usage.quotesCreated': quoteCards.length }
-    });
+    // Update usage. Only meaningful for legacy Mongo users; Supabase UUIDs
+    // would CastError here, and usage is tracked separately for them.
+    const userId = req.userId || req.user?._id || req.user?.id;
+    const mongoose = require('mongoose');
+    if (mongoose.Types.ObjectId.isValid(String(userId))) {
+      await User.findByIdAndUpdate(userId, {
+        $inc: { 'usage.quotesCreated': quoteCards.length }
+      });
+    }
 
     res.json({
       message: 'Quote cards generated',

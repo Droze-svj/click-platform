@@ -12,6 +12,7 @@ const {
 } = require('../services/socialMediaService');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 /**
@@ -82,6 +83,24 @@ router.post('/post', auth, asyncHandler(async (req, res) => {
 
   if (!platform || !content) {
     return sendError(res, 'Platform and content are required', 400);
+  }
+
+  // Pre-flight token check — mirror of /api/scheduler/schedule. Prevents
+  // publish attempts against platforms the user hasn't connected, and
+  // makes the dashboard's "no token" error actionable rather than opaque.
+  try {
+    const oauthService = require('../services/oauthService');
+    const userId = req.user._id || req.user.id;
+    const accounts = await oauthService.listSocialAccounts(userId, platform);
+    if (!Array.isArray(accounts) || accounts.length === 0) {
+      return sendError(res, `No connected ${platform} account. Connect ${platform} first.`, 400, { code: 'PLATFORM_NOT_CONNECTED', platform });
+    }
+    const requestedAccountId = options?.accountId;
+    if (requestedAccountId && !accounts.some((a) => a.accountId === requestedAccountId || a.platformUserId === requestedAccountId)) {
+      return sendError(res, `Selected ${platform} account is no longer connected.`, 400, { code: 'ACCOUNT_NOT_CONNECTED', platform, accountId: requestedAccountId });
+    }
+  } catch (preflightErr) {
+    logger.warn('Social post pre-flight check failed; continuing', { platform, error: preflightErr.message });
   }
 
   const post = await postToSocialMedia(req.user._id, platform, content, options);

@@ -78,7 +78,7 @@ export default function SubstrateIntegrityTerminalPage() {
            <p className="text-[16px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-relaxed mb-16 max-w-xl mx-auto border-l-4 border-rose-500/20 pl-8">
              Mission critical substrate telemetry is restricted to administrative entities. Your entry vector has been logged into the Sovereign Integrity Ledger.
            </p>
-           <button onClick={() => router.push('/dashboard')} 
+           <button type="button" onClick={() => router.push('/dashboard')} 
              className="px-16 py-8 bg-white text-black rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] hover:bg-rose-600 hover:text-white transition-all duration-700 italic shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-90 flex items-center gap-6 mx-auto group">
              <ArrowLeft size={24} className="group-hover:-translate-x-2 transition-transform" /> RETURN_TO_BASE
            </button>
@@ -101,7 +101,7 @@ export default function SubstrateIntegrityTerminalPage() {
         {/* Substrate Integrity Header HUD */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
+              <button type="button" onClick={() => router.push('/dashboard')} title="Abort"
                 className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
                 <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
               </button>
@@ -135,8 +135,8 @@ export default function SubstrateIntegrityTerminalPage() {
                     <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">SYSTEM_OPTIMAL</p>
                  </div>
               </div>
-              <button onClick={() => window.location.reload()} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-                <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 transition-colors duration-700 group-hover:rotate-180 transition-transform" />
+              <button type="button" onClick={() => window.location.reload()} title="Refresh Telemetry" aria-label="Refresh Telemetry" className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+                <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 transition-all duration-700 group-hover:rotate-180" />
               </button>
            </div>
         </header>
@@ -196,7 +196,7 @@ export default function SubstrateIntegrityTerminalPage() {
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
           .custom-scrollbar::-webkit-scrollbar { width: 4px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); border-radius: 10px; }
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 10px; }

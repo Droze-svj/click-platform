@@ -151,6 +151,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
               {/* HUD Indicators */}
               <div className="absolute top-8 right-8 flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setActivePreviewId(activePreviewId === platform.id ? null : platform.id)}
                   title={`View AI-driven social media preview for ${platform.id}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase italic transition-all ${activePreviewId === platform.id ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
@@ -276,6 +277,7 @@ const SocialVaultView: React.FC<SocialVaultViewProps> = ({
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => showToast(`${platform.label} telemetry coming soon`, 'info')}
                       title={`View account telemetry for ${platform.id}`}
                       className="p-3 bg-white/5 rounded-2xl text-slate-600 hover:text-white hover:bg-white/10 border border-white/5 transition-all"

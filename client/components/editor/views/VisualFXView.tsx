@@ -90,7 +90,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
             </div>
           </div>
           <button
-            type="button"
+           type="button"
             title={smartCameraEnabled ? "Disable Smart Camera" : "Enable Smart Camera"}
             onClick={() => {
               setSmartCameraEnabled(!smartCameraEnabled)
@@ -105,9 +105,8 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[10px] font-semibold text-theme-muted">Duration</span>
           {[2, 3, 5, 10].map((d) => (
-            <button
+            <button type="button"
               key={d}
-              type="button"
               onClick={() => setDuration(d)}
               title={`Set VFX duration to ${d}s`}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${duration === d ? 'bg-amber-500 text-white' : 'bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card-hover'}`}
@@ -128,9 +127,8 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {filtered.map((preset) => (
-            <button
+            <button type="button"
               key={preset.name}
-              type="button"
               onClick={() => addEffect(preset)}
               title={`Add ${preset.name} effect`}
               className="flex items-center gap-3 p-3 rounded-xl border border-subtle bg-surface-elevated hover:border-default hover:bg-surface-card-hover transition-all text-left group"
@@ -164,7 +162,7 @@ const VisualFXView: React.FC<VisualFXViewProps> = ({
       </div>
 
       <button
-        type="button"
+       type="button"
         onClick={() => setActiveCategory('effects')}
         title="View full Effects & Transition Library"
         className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-surface-card border border-subtle text-theme-primary hover:bg-surface-card-hover transition-colors"

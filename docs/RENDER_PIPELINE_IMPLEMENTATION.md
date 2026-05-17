@@ -17,7 +17,7 @@ How to implement the video render pipeline so that all editor features (filters,
 
 ## Architecture Overview
 
-```
+```text
 ┌─────────────────┐     POST /api/video/render      ┌──────────────────────┐
 │  ExportView     │ ─────────────────────────────►  │  VideoRenderService  │
 │  (editor state) │  { videoId, filters, overlays,  │  (FFmpeg pipeline)   │
@@ -239,7 +239,7 @@ For smooth ramps, you need more complex expressions or multiple filter passes.
 
 ## File Structure Suggestion
 
-```
+```text
 server/
   services/
     videoRenderService.js     # Main orchestrator

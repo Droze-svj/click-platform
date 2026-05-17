@@ -61,7 +61,7 @@ async function generateEnhancedSummary(reportData, options = {}) {
       benchmarks,
       recommendations: await generateRecommendations(reportData),
       generatedAt: new Date(),
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       language,
       industry
     };

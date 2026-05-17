@@ -93,7 +93,8 @@ export const SpectralForecastHUD: React.FC = () => {
                             State: {data.spectralAnalysis.elasticityState.replace(/_/g, ' ')}
                         </div>
                     )}
-                    <button 
+                    <button
+                        type="button"
                         onClick={fetchForecast}
                         disabled={loading}
                         className="p-4 rounded-xl bg-white/5 border border-white/5 text-white hover:bg-white/10 transition-all"

@@ -5,6 +5,7 @@ Post-merge steps to take Click from "code is on main" to "users can sign up and 
 ## 1. Wait for the platform builds (≤ 10 min)
 
 After every merge to `main`:
+
 - **Render** rebuilds the Docker image (defined in `Dockerfile`, configured by `render.yaml`).
 - **Vercel** rebuilds the four `click-platform-*` previews (Next.js client).
 
@@ -14,7 +15,7 @@ Watch the Render dashboard for build completion. The Dockerfile fails fast if ff
 
 These are *required* for the platform to do real work. Set them in **Render dashboard → click-platform service → Environment**.
 
-```
+```bash
 GOOGLE_AI_API_KEY=<from https://aistudio.google.com/apikey>
 JWT_SECRET=<openssl rand -hex 64>
 MONGODB_URI=<from MongoDB Atlas>
@@ -26,7 +27,7 @@ NEXT_PUBLIC_API_URL=https://<your-render-domain>/api
 
 Recommended for full functionality:
 
-```
+```bash
 REDIS_URL=<from Render Redis or Upstash>     # scheduling, queues
 SUPABASE_URL=<https://<project>.supabase.co> # analytics surface
 SUPABASE_SERVICE_ROLE_KEY=<from Supabase>
@@ -35,7 +36,7 @@ SENTRY_DSN=<from Sentry project>             # observability
 
 OAuth providers (set per-platform you want users to publish to):
 
-```
+```bash
 TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET            # tiktok.com/developers
 YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET           # console.cloud.google.com
 TWITTER_CLIENT_ID, TWITTER_CLIENT_SECRET           # developer.twitter.com
@@ -49,7 +50,7 @@ For each OAuth provider, the redirect URL pattern is `${APP_URL}/api/oauth/<plat
 
 The pricing cards on the public landing read each plan's hosted checkout URL from `NEXT_PUBLIC_WHOP_URL_*` env vars. Paste the URLs from your Whop dashboard (Products → click the product → "Get checkout link"):
 
-```
+```bash
 NEXT_PUBLIC_WHOP_URL_CREATOR_MONTHLY=https://whop.com/checkout/...
 NEXT_PUBLIC_WHOP_URL_CREATOR_YEARLY=https://whop.com/checkout/...
 NEXT_PUBLIC_WHOP_URL_PRO_MONTHLY=https://whop.com/checkout/...
@@ -70,7 +71,7 @@ Once you've configured Whop checkout URLs above, wire the inbound webhook so pay
 4. Copy the signing secret Whop generates → paste into Render env as `WHOP_WEBHOOK_SECRET`.
 5. Paste each plan's product ID into Render env:
 
-```
+```bash
 WHOP_PRODUCT_ID_CREATOR_MONTHLY=<product_id from Whop>
 WHOP_PRODUCT_ID_CREATOR_YEARLY=<product_id>
 WHOP_PRODUCT_ID_PRO_MONTHLY=<product_id>
@@ -96,7 +97,7 @@ It walks every required + recommended var, validates format, and prints exactly 
 In order, hit:
 
 | Check | URL | Expected |
-|---|---|---|
+| --- | --- | --- |
 | Health | `${APP_URL}/api/health` | 200 with status JSON |
 | Trend report (AI key wired) | `${APP_URL}/api/marketing-intelligence/trend-report?niche=finance&platform=tiktok` | `source: "ai"` (NOT `"fallback"`) |
 | Auto-edit (the original bug) | Sign in → upload a clip → run "Make it great" | The four stage chips advance, `editsApplied` non-empty, output video plays |

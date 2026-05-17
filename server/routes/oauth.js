@@ -12,7 +12,7 @@ const youtubeOAuth = require('../services/youtubeOAuthService');
 const instagramOAuth = require('../services/instagramOAuthService');
 const linkedinOAuth = require('../services/linkedinOAuthService');
 const facebookOAuth = require('../services/facebookOAuthService');
-const { isDevUser } = require('../utils/devUser');
+const googleOAuth = require('../services/googleOAuthService');
 const { validateConnect, validateCallback, validateDisconnect } = require('../validators/oauthValidator');
 
 /**
@@ -27,6 +27,7 @@ function getServiceByPlatform(platform) {
   case 'instagram': return instagramOAuth;
   case 'linkedin': return linkedinOAuth;
   case 'facebook': return facebookOAuth;
+  case 'google': return googleOAuth;
   default: return null;
   }
 }
@@ -176,8 +177,26 @@ router.get('/:platform/callback', validateCallback, asyncHandler(async (req, res
     res.redirect(successRedirectUri);
 
   } catch (error) {
-    logger.error(`OAuth callback error for ${platform}:`, error);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=oauth_failed`);
+    // Extract useful fields rather than dumping the whole error object —
+    // AxiosError has circular references (request <-> response) that
+    // previously crashed the winston printf format and turned a
+    // diagnosable failure into an opaque 500 with no log info.
+    const status = error?.response?.status || error?.statusCode || null;
+    const providerError =
+      error?.response?.data?.error_description
+      || error?.response?.data?.error
+      || (typeof error?.response?.data === 'string' ? error.response.data : null)
+      || error?.message
+      || 'unknown';
+    logger.error(`OAuth callback error for ${platform}`, {
+      platform,
+      status,
+      provider: providerError,
+      // Useful for triage but bounded — full stack would balloon the log.
+      stack: error?.stack?.split('\n').slice(0, 6).join('\n'),
+    });
+    const reason = encodeURIComponent(typeof providerError === 'string' ? providerError.slice(0, 200) : 'oauth_failed');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/social?error=${reason}&platform=${platform}`);
   }
 }));
 
@@ -187,31 +206,28 @@ router.get('/:platform/callback', validateCallback, asyncHandler(async (req, res
  */
 router.get('/connections', auth, apiLimiter, asyncHandler(async (req, res) => {
   try {
-    const userId = req.user.id || req.user._id;
+    const userId = req.userId || req.user.id || req.user._id;
+    const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'];
 
-    if (isDevUser(req.user)) {
-      const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
-      const accounts = Object.fromEntries(platforms.map((p) => [p, null]));
-      return res.json({ success: true, accounts });
-    }
+    // No dev-user short-circuit here. Dev users can OAuth real platforms
+    // against their stable ObjectId; the per-platform `/status` route already
+    // reads real storage, so the unified `/connections` view must do the same
+    // or the dashboard reports stale "0 connected" while the platform card
+    // shows "connected". Storage returns [] for unconnected platforms anyway.
 
-    const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
+    // accounts: { <platform>: PlatformAccount[] }
     const accounts = {};
-
-    for (const p of platforms) {
-      accounts[p] = null;
+    await Promise.all(platforms.map(async (p) => {
+      accounts[p] = [];
       const service = getServiceByPlatform(p);
-      if (service && service.getConnectedAccounts) {
-        try {
-          const accs = await service.getConnectedAccounts(userId);
-          if (accs && accs.length > 0) {
-            accounts[p] = p === 'twitter' ? accs : accs[0];
-          }
-        } catch (e) { 
-          logger.warn(`Error fetching ${p} accounts:`, { userId, error: e?.message }); 
-        }
+      if (!service || typeof service.getConnectedAccounts !== 'function') return;
+      try {
+        const accs = await service.getConnectedAccounts(userId);
+        accounts[p] = Array.isArray(accs) ? accs : (accs ? [accs] : []);
+      } catch (e) {
+        logger.warn(`Error fetching ${p} accounts:`, { userId, error: e?.message });
       }
-    }
+    }));
 
     res.json({ success: true, accounts });
   } catch (error) {
@@ -227,33 +243,23 @@ router.get('/connections', auth, apiLimiter, asyncHandler(async (req, res) => {
  */
 router.get('/accounts', auth, apiLimiter, asyncHandler(async (req, res) => {
   try {
-    const userId = req.user.id || req.user._id;
+    const userId = req.userId || req.user.id || req.user._id;
+    const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'];
 
-    // Handle Development/Dev-User bypass
-    if (isDevUser(req.user)) {
-      const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
-      const accounts = Object.fromEntries(platforms.map((p) => [p, null]));
-      return res.json({ success: true, accounts });
-    }
+    // Read real storage even for dev users — see /connections for rationale.
 
-    const platforms = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
     const accounts = {};
-
-    for (const p of platforms) {
-      accounts[p] = null;
+    await Promise.all(platforms.map(async (p) => {
+      accounts[p] = [];
       const service = getServiceByPlatform(p);
-      if (service && service.getConnectedAccounts) {
-        try {
-          const accs = await service.getConnectedAccounts(userId);
-          if (accs && accs.length > 0) {
-            // Twitter usually returns multiple, others usually return one
-            accounts[p] = p === 'twitter' ? accs : accs[0];
-          }
-        } catch (e) {
-          logger.warn(`Failed to fetch ${p} accounts for user ${userId}`, { error: e.message });
-        }
+      if (!service || typeof service.getConnectedAccounts !== 'function') return;
+      try {
+        const accs = await service.getConnectedAccounts(userId);
+        accounts[p] = Array.isArray(accs) ? accs : (accs ? [accs] : []);
+      } catch (e) {
+        logger.warn(`Failed to fetch ${p} accounts for user ${userId}`, { error: e.message });
       }
-    }
+    }));
 
     res.json({ success: true, accounts });
   } catch (error) {
@@ -264,12 +270,19 @@ router.get('/accounts', auth, apiLimiter, asyncHandler(async (req, res) => {
 
 /**
  * DELETE /api/oauth/:platform/disconnect
+ *
+ * Multi-account aware. Body params (all optional):
+ *   - platform_user_id (legacy) — platform-side user id of the account to drop
+ *   - accountId — same thing, named for consistency with the new storage
+ * Without either, every account on that platform is disconnected.
+ *
+ * Response shape: { success, remaining: <count of accounts still connected> }
  */
 router.delete('/:platform/disconnect', auth, apiLimiter, validateDisconnect, asyncHandler(async (req, res) => {
   const { platform } = req.params;
   const plat = platform.toLowerCase();
-  const userId = req.user.id || req.user._id;
-  const { platform_user_id } = req.body;
+  const userId = req.userId || req.user.id || req.user._id;
+  const accountId = req.body?.accountId || req.body?.platform_user_id || null;
 
   const service = getServiceByPlatform(plat);
   if (!service) {
@@ -277,21 +290,69 @@ router.delete('/:platform/disconnect', auth, apiLimiter, validateDisconnect, asy
   }
 
   try {
-    // Standardize disconnect
-    if (service.disconnectAccount) {
-      await service.disconnectAccount(userId, platform_user_id);
-    } else if (service[`disconnect${platform.charAt(0).toUpperCase() + platform.slice(1)}`]) {
-      // Fallback for older naming
-      await service[`disconnect${platform.charAt(0).toUpperCase() + platform.slice(1)}`](userId);
+    let result;
+    // Prefer the generic name, fall back to the per-platform name. Pass
+    // accountId through so single-account drops work.
+    if (typeof service.disconnectAccount === 'function') {
+      result = await service.disconnectAccount(userId, accountId);
     } else {
-      throw new Error('Disconnect method not found on service');
+      const fnName = `disconnect${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
+      if (typeof service[fnName] === 'function') {
+        result = await service[fnName](userId, accountId);
+      } else {
+        throw new Error('Disconnect method not found on service');
+      }
     }
 
-    logger.info('Account disconnected', { platform: plat, userId, platform_user_id });
-    res.json({ success: true, message: `${platform} disconnected successfully` });
+    logger.info('Account disconnected', { platform: plat, userId, accountId, remaining: result?.remaining });
+    res.json({
+      success: true,
+      message: `${platform} disconnected successfully`,
+      remaining: typeof result?.remaining === 'number' ? result.remaining : null,
+    });
   } catch (error) {
     logger.error('OAuth disconnect error', { error: error.message, platform });
     res.status(500).json({ success: false, error: 'Failed to disconnect account' });
+  }
+}));
+
+/**
+ * POST /api/oauth/:platform/active
+ * Switch which connected account is active for one-account UI surfaces.
+ * Body: { accountId } (required).
+ */
+router.post('/:platform/active', auth, apiLimiter, asyncHandler(async (req, res) => {
+  const { platform } = req.params;
+  const userId = req.userId || req.user.id || req.user._id;
+  const { accountId } = req.body || {};
+  if (!accountId) return res.status(400).json({ success: false, error: 'accountId is required' });
+
+  const oauthService = require('../services/oauthService');
+  try {
+    const ok = await oauthService.setActiveSocialAccount(userId, platform.toLowerCase(), accountId);
+    if (!ok) return res.status(404).json({ success: false, error: 'Account not found for this user/platform' });
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Set active account error', { error: error.message, platform });
+    res.status(500).json({ success: false, error: 'Failed to switch active account' });
+  }
+}));
+
+/**
+ * GET /api/oauth/:platform/accounts
+ * List every connected account for the user on this platform.
+ * Used by the new social dashboard to render the per-platform list.
+ */
+router.get('/:platform/accounts', auth, asyncHandler(async (req, res) => {
+  const { platform } = req.params;
+  const userId = req.userId || req.user.id || req.user._id;
+  const oauthService = require('../services/oauthService');
+  try {
+    const accounts = await oauthService.listSocialAccounts(userId, platform.toLowerCase());
+    res.json({ success: true, accounts });
+  } catch (error) {
+    logger.error('List accounts error', { error: error.message, platform });
+    res.status(500).json({ success: false, error: 'Failed to list accounts' });
   }
 }));
 
@@ -306,15 +367,23 @@ router.get('/:platform/status', auth, asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, error: `Unsupported platform: ${platform}` });
   }
 
-  const userId = req.user.id || req.user._id;
-  const accounts = service.getConnectedAccounts ? await service.getConnectedAccounts(userId) : null;
+  const userId = req.userId || req.user.id || req.user._id;
+  const rawAccounts = service.getConnectedAccounts ? await service.getConnectedAccounts(userId) : [];
+  // Normalise to an array — some legacy callers returned a single object
+  // or null. The `accounts` field is always an array so the client can
+  // iterate without type guards.
+  const accounts = Array.isArray(rawAccounts) ? rawAccounts : (rawAccounts ? [rawAccounts] : []);
 
   res.json({
     success: true,
     platform,
     configured: service.isConfigured(),
-    connected: !!accounts,
-    account: accounts
+    // `connected` reflects "at least one account linked", not
+    // "endpoint returned a value" — `!!accounts` used to be true even
+    // for an empty array, which made the dashboard show platforms as
+    // connected when nothing was actually linked.
+    connected: accounts.length > 0,
+    accounts,
   });
 }));
 

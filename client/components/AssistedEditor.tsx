@@ -139,6 +139,7 @@ export default function AssistedEditor({ content, onContentChange }: AssistedEdi
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={generateVariants}
           disabled={loading}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
@@ -146,6 +147,7 @@ export default function AssistedEditor({ content, onContentChange }: AssistedEdi
           {loading && editingMode === 'variants' ? 'Generating...' : 'Generate 5 Variants'}
         </button>
         <button
+          type="button"
           onClick={improveHook}
           disabled={loading}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
@@ -165,6 +167,7 @@ export default function AssistedEditor({ content, onContentChange }: AssistedEdi
             <option value="authoritative">Authoritative</option>
           </select>
           <button
+            type="button"
             onClick={rewriteForTone}
             disabled={loading}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
@@ -173,6 +176,7 @@ export default function AssistedEditor({ content, onContentChange }: AssistedEdi
           </button>
         </div>
         <button
+          type="button"
           onClick={generateHooks}
           disabled={loading}
           className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
@@ -213,12 +217,14 @@ export default function AssistedEditor({ content, onContentChange }: AssistedEdi
             <p className="text-sm text-gray-700 mb-3">{improvedSection}</p>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={applyImprovedSection}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
               >
                 Apply
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setImprovedSection(null)
                   setEditingMode(null)

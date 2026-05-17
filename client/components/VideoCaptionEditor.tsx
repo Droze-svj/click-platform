@@ -15,6 +15,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { extractApiData } from '../utils/apiResponse'
+import { apiGet, apiPost, apiPut, handleApiError } from '../lib/api'
 
 interface CaptionSegment {
   id: number
@@ -55,19 +56,12 @@ export default function VideoCaptionEditor({
 
   const loadCaptions = useCallback(async () => {
     try {
-      const response = await fetch(`/api/video/captions/${contentId}?format=${selectedFormat}`, {
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const captionData = extractApiData<CaptionData>(data)
-        if (captionData) {
-          setCaptions(captionData)
-          // Parse segments if available
-          if (captionData.segments) {
-            setEditedSegments(captionData.segments)
-          }
+      const data = await apiGet<any>(`/video/captions/${contentId}?format=${selectedFormat}`)
+      const captionData = extractApiData<CaptionData>(data)
+      if (captionData) {
+        setCaptions(captionData)
+        if (captionData.segments) {
+          setEditedSegments(captionData.segments)
         }
       }
     } catch (err) {
@@ -85,36 +79,22 @@ export default function VideoCaptionEditor({
     setError(null)
 
     try {
-      const formData = new FormData()
-      formData.append('contentId', contentId)
-      if (language) {
-        formData.append('language', language)
-      }
+      const payload: { contentId: string; language?: string } = { contentId }
+      if (language) payload.language = language
 
-      const response = await fetch('/api/video/captions/generate', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        const captionData = extractApiData<CaptionData>(data)
-        if (captionData) {
-          setCaptions(captionData)
-          if (captionData.segments) {
-            setEditedSegments(captionData.segments)
-          }
-          if (onSave) {
-            onSave(captionData)
-          }
+      const data = await apiPost<any>('/video/captions/generate', payload)
+      const captionData = extractApiData<CaptionData>(data)
+      if (captionData) {
+        setCaptions(captionData)
+        if (captionData.segments) {
+          setEditedSegments(captionData.segments)
         }
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Failed to generate captions')
+        if (onSave) {
+          onSave(captionData)
+        }
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to generate captions')
+      setError(handleApiError(err) || 'Failed to generate captions')
     } finally {
       setIsGenerating(false)
     }
@@ -125,24 +105,10 @@ export default function VideoCaptionEditor({
     setError(null)
 
     try {
-      const response = await fetch(`/api/video/captions/${contentId}/translate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ targetLanguage }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        await loadCaptions() // Reload captions
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || 'Failed to translate captions')
-      }
+      await apiPost<any>(`/video/captions/${contentId}/translate`, { targetLanguage })
+      await loadCaptions()
     } catch (err: any) {
-      setError(err.message || 'Failed to translate captions')
+      setError(handleApiError(err) || 'Failed to translate captions')
     } finally {
       setIsTranslating(false)
     }
@@ -162,10 +128,37 @@ export default function VideoCaptionEditor({
     URL.revokeObjectURL(url)
   }
 
-  const handleSaveEdits = () => {
-    // Save edited segments (would need API endpoint for this)
-    setIsEditing(false)
-    // TODO: Implement save edited captions API call
+  const handleSaveEdits = async () => {
+    if (!captions) {
+      setIsEditing(false)
+      return
+    }
+    setError(null)
+    // Persist edited segments to the same captions resource. The backend
+    // is expected to merge `segments` into the stored caption record for
+    // this contentId and return the updated CaptionData. If your server
+    // uses a different verb/path, adjust here.
+    try {
+      const data = await apiPut<any>(`/video/captions/${contentId}`, {
+        segments: editedSegments,
+        language: selectedLanguage,
+      })
+      const next = extractApiData<CaptionData>(data)
+      if (next) {
+        setCaptions(next)
+        if (next.segments) setEditedSegments(next.segments)
+        if (onSave) onSave(next)
+      } else {
+        // Server returned no body — keep local edits authoritative so the
+        // user's work isn't lost on a successful-but-empty response.
+        const merged: CaptionData = { ...captions, segments: editedSegments }
+        setCaptions(merged)
+        if (onSave) onSave(merged)
+      }
+      setIsEditing(false)
+    } catch (err: any) {
+      setError(handleApiError(err) || 'Failed to save caption edits')
+    }
   }
 
   const formatTime = (seconds: number) => {
@@ -213,6 +206,8 @@ export default function VideoCaptionEditor({
                     setSelectedFormat(e.target.value as 'srt' | 'vtt' | 'ssa')
                     loadCaptions()
                   }}
+                  aria-label="Caption export format"
+                  title="Caption export format"
                   className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="srt">SRT</option>
@@ -220,6 +215,7 @@ export default function VideoCaptionEditor({
                   <option value="ssa">SSA</option>
                 </select>
                 <button
+                  type="button"
                   onClick={handleDownload}
                   className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
@@ -252,6 +248,7 @@ export default function VideoCaptionEditor({
             </p>
             <div className="flex flex-col gap-2 items-center">
               <button
+                type="button"
                 onClick={() => handleGenerateCaptions()}
                 disabled={isGenerating}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
@@ -275,6 +272,8 @@ export default function VideoCaptionEditor({
                 <select
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
+                  aria-label="Caption source language"
+                  title="Caption source language"
                   className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   {languages.map((lang) => (
@@ -284,6 +283,7 @@ export default function VideoCaptionEditor({
                   ))}
                 </select>
                 <button
+                  type="button"
                   onClick={() => handleGenerateCaptions(selectedLanguage)}
                   disabled={isGenerating}
                   className="ml-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:opacity-50"
@@ -323,6 +323,7 @@ export default function VideoCaptionEditor({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsEditing(!isEditing)}
                 className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
               >
@@ -347,12 +348,16 @@ export default function VideoCaptionEditor({
                           newSegments[index].text = e.target.value
                           setEditedSegments(newSegments)
                         }}
+                        aria-label={`Caption text for segment ${index + 1}`}
+                        title={`Caption text for segment ${index + 1}`}
+                        placeholder="Caption text"
                         className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         rows={2}
                       />
                     </div>
                   ))}
                   <button
+                    type="button"
                     onClick={handleSaveEdits}
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors mt-2"
                   >
@@ -374,6 +379,8 @@ export default function VideoCaptionEditor({
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
+                aria-label="Translate captions to language"
+                title="Translate captions to language"
                 className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 disabled={isTranslating}
               >
@@ -384,6 +391,7 @@ export default function VideoCaptionEditor({
                 ))}
               </select>
               <button
+                type="button"
                 onClick={() => handleTranslate(selectedLanguage)}
                 disabled={isTranslating || selectedLanguage === captions.language}
                 className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50"

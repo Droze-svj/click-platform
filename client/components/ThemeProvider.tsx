@@ -39,19 +39,38 @@ function getSystemPreference(): ResolvedTheme {
 
 function applyTheme(resolved: ResolvedTheme) {
   const root = document.documentElement
-  if (resolved === 'dark') {
-    root.classList.add('dark')
-    root.classList.remove('light')
-    root.setAttribute('data-theme', 'dark')
-    root.style.colorScheme = 'dark'
-  } else {
-    root.classList.remove('dark')
-    root.classList.add('light')
-    root.setAttribute('data-theme', 'light')
-    root.style.colorScheme = 'light'
+  
+  const updateDOM = () => {
+    // Add transitioning class
+    root.classList.add('theme-transitioning')
+    
+    if (resolved === 'dark') {
+      root.classList.add('dark')
+      root.classList.remove('light')
+      root.setAttribute('data-theme', 'dark')
+      root.style.colorScheme = 'dark'
+    } else {
+      root.classList.remove('dark')
+      root.classList.add('light')
+      root.setAttribute('data-theme', 'light')
+      root.style.colorScheme = 'light'
+    }
+
+    // Remove transitioning class after animation finishes
+    setTimeout(() => {
+      root.classList.remove('theme-transitioning')
+    }, 500)
+
+    // Notify non-React consumers
+    window.dispatchEvent(new CustomEvent('click-theme-change', { detail: { resolved } }))
   }
-  // Notify non-React consumers
-  window.dispatchEvent(new CustomEvent('click-theme-change', { detail: { resolved } }))
+
+  // Use View Transitions API if available for a premium feel
+  if (typeof document !== 'undefined' && (document as any).startViewTransition) {
+    (document as any).startViewTransition(updateDOM)
+  } else {
+    updateDOM()
+  }
 }
 
 export function ThemeProvider({ children, defaultTheme = 'dark' }: { children: React.ReactNode; defaultTheme?: Theme }) {

@@ -12,6 +12,7 @@ const {
   extractBestMoments
 } = require('../../utils/videoEnhancer');
 const logger = require('../../utils/logger');
+const { toAbsolutePath } = require('../../utils/pathUtils');
 const router = express.Router();
 
 /**
@@ -37,7 +38,7 @@ router.post('/enhance/:contentId', auth, async (req, res) => {
       });
     }
 
-    const videoPath = path.join(__dirname, '../../../', content.originalFile.url);
+    const videoPath = toAbsolutePath(content.originalFile.url);
     const outputPath = videoPath.replace('.mp4', '-enhanced.mp4');
 
     await enhanceVideoQuality(videoPath, outputPath, req.body.options || {});
@@ -46,7 +47,7 @@ router.post('/enhance/:contentId', auth, async (req, res) => {
       success: true,
       message: 'Video enhanced successfully',
       data: {
-        enhancedUrl: outputPath.replace(path.join(__dirname, '../../../'), '')
+        enhancedUrl: outputPath.replace(process.cwd(), '').replace(/\\/g, '/')
       }
     });
   } catch (error) {
@@ -81,7 +82,7 @@ router.post('/preview/:contentId', auth, async (req, res) => {
       });
     }
 
-    const videoPath = path.join(__dirname, '../../../', content.originalFile.url);
+    const videoPath = toAbsolutePath(content.originalFile.url);
     const outputPath = videoPath.replace('.mp4', '-preview.mp4');
     const speed = req.body.speed || 2;
 
@@ -91,7 +92,7 @@ router.post('/preview/:contentId', auth, async (req, res) => {
       success: true,
       message: 'Preview generated successfully',
       data: {
-        previewUrl: outputPath.replace(path.join(__dirname, '../../../'), '')
+        previewUrl: outputPath.replace(process.cwd(), '').replace(/\\/g, '/')
       }
     });
   } catch (error) {

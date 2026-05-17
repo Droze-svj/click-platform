@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Palette, Zap, Layout, Eye, Shield, Mic,
   Type as FontIcon, ToggleLeft, ToggleRight
 } from 'lucide-react'
+import styles from './DynamicSubtitleEngine.module.css'
+
+type DynStyle = CSSProperties & Record<`--${string}`, string | number | undefined>
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -215,6 +218,7 @@ export default function DynamicSubtitleEngine({
         <div className="grid grid-cols-3 gap-3">
           {PRESETS.map(preset => (
             <button
+              type="button"
               key={preset.id}
               onClick={() => setActivePreset(preset)}
               className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
@@ -248,6 +252,7 @@ export default function DynamicSubtitleEngine({
             )}
           </div>
           <button
+            type="button"
             onClick={() => setSmartDodgeActive(v => !v)}
             title="Toggle Smart Dodge"
             aria-label="Toggle Smart Dodge face avoidance"
@@ -275,8 +280,8 @@ export default function DynamicSubtitleEngine({
             <div className="flex items-center gap-1.5">
               <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-rose-500 transition-all [width:var(--vol-pct)]"
-                  style={{ '--vol-pct': `${Math.round((volumeLevel ?? 0) * 100)}%` } as React.CSSProperties}
+                  className={`h-full rounded-full bg-gradient-to-r from-emerald-500 to-rose-500 transition-all ${styles.volBar}`}
+                  style={{ '--vol-width': `${Math.round((volumeLevel ?? 0) * 100)}%` } as DynStyle}
                 />
               </div>
               <span className="text-[9px] font-mono font-black text-slate-500">
@@ -296,13 +301,8 @@ export default function DynamicSubtitleEngine({
           <div
             key={i}
             title={zone.label ?? 'Detection zone'}
-            className="absolute border border-dashed border-indigo-500/50 rounded pointer-events-none [left:var(--zx)] [top:var(--zy)] [width:var(--zw)] [height:var(--zh)]"
-            style={{
-              '--zx': `${zone.x}%`,
-              '--zy': `${zone.y}%`,
-              '--zw': `${zone.w}%`,
-              '--zh': `${zone.h}%`,
-            } as React.CSSProperties}
+            className={`absolute border border-dashed border-indigo-500/50 rounded pointer-events-none ${styles.zoneOverlay}`}
+            style={{ '--zone-x': `${zone.x}%`, '--zone-y': `${zone.y}%`, '--zone-w': `${zone.w}%`, '--zone-h': `${zone.h}%` } as DynStyle}
           >
             {zone.label && (
               <span className="absolute -top-4 left-0 text-[7px] font-black text-indigo-400 uppercase tracking-widest bg-black/60 px-1 rounded">
@@ -344,24 +344,19 @@ export default function DynamicSubtitleEngine({
                       rotate: proceduralJitter,
                     }}
                     transition={{ duration: 0.15 }}
-                    style={{ 
-                      fontSize: effectiveFontSize,
-                      '--karaoke-fill': `${fillPct}%` 
-                    } as React.CSSProperties}
-                    className={`uppercase ${activePreset.font} transition-colors duration-200 ${
+                    style={{
+                      '--word-font-size': `${effectiveFontSize}px`,
+                      '--fill-pct': `${fillPct}%`,
+                    } as DynStyle}
+                    data-preset={activePreset.id}
+                    className={`${styles.karaokeWord} uppercase ${activePreset.font} transition-colors duration-200 ${
                       isActive
                         ? `drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] z-10`
-                        : 'text-white opacity-40'
+                        : 'opacity-40'
                     }`}
                   >
                     <span 
-                      style={{
-                        background: isActive ? `linear-gradient(to right, var(--tw-gradient-from) var(--karaoke-fill), white var(--karaoke-fill))` : 'white',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: isActive ? 'transparent' : 'white',
-                        display: 'inline-block'
-                      }}
-                      className={isActive ? `from-${activePreset.highlightColor.split('-')[1]}-${activePreset.highlightColor.split('-')[2]}` : ''}
+                      className={`subtitle-karaoke-text ${isActive ? 'subtitle-karaoke-active' : 'subtitle-karaoke-inactive'} ${isActive ? `from-${activePreset.highlightColor.split('-')[1]}-${activePreset.highlightColor.split('-')[2]}` : ''}`}
                     >
                       {word.text}
                     </span>

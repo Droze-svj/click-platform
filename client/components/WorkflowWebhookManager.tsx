@@ -136,6 +136,7 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
           </h3>
         </div>
         <button
+          type="button"
           onClick={() => setShowCreate(!showCreate)}
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
@@ -173,12 +174,14 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
             </div>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={createWebhook}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Create
               </button>
               <button
+                type="button"
                 onClick={() => setShowCreate(false)}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
@@ -232,6 +235,7 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => testWebhook(webhook._id)}
                   className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                   title="Test Webhook"
@@ -239,6 +243,7 @@ export default function WorkflowWebhookManager({ workflowId }: WorkflowWebhookMa
                   <TestTube className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => deleteWebhook(webhook._id)}
                   className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                   title="Delete"

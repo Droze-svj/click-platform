@@ -89,7 +89,7 @@ const ArbitragePanel = () => {
                                 </div>
                             </div>
                         </div>
-                        <button onClick={() => steerFunnel(offer.id)}
+                        <button type="button" onClick={() => steerFunnel(offer.id)}
                             className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-400 text-black font-black text-[9px] uppercase tracking-widest transition-all">
                             Steer Swarm to this Offer
                         </button>
@@ -228,7 +228,7 @@ export default function SovereignDashboard() {
         {/* Section Nav */}
         <div className="flex flex-wrap gap-3 pt-6">
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)}
+            <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
               className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-white/10 text-slate-400 hover:text-white'}`}>
               <s.icon className="w-3.5 h-3.5" />{s.label}
             </button>

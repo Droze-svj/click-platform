@@ -148,6 +148,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={handleDismiss}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
@@ -174,6 +175,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
         {/* Actions */}
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleInstall}
             disabled={installing}
             className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -193,6 +195,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
           {typeof window !== 'undefined' && !(window as any).beforeinstallprompt && (
             <button
+              type="button"
               onClick={handleManualInstall}
               className="px-3 py-2 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
             >

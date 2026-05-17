@@ -247,6 +247,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
       </div>
 
       <button
+        type="button"
         onClick={savePreferences}
         disabled={saving}
         className="mt-6 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
@@ -260,7 +261,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
 function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (val: boolean) => void }) {
   return (
     <button
-      type="button"
+     type="button"
       onClick={() => onChange(!enabled)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
         enabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'

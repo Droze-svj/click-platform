@@ -65,6 +65,7 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
         </div>
         {searches.length > 0 && (
           <button
+            type="button"
             onClick={clearAll}
             className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           >
@@ -80,6 +81,7 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
             className="flex items-center justify-between group hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-2 py-1.5 transition-colors"
           >
             <button
+              type="button"
               onClick={() => handleSearch(search)}
               className="flex items-center gap-2 flex-1 text-left text-sm text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
             >
@@ -87,6 +89,7 @@ export default function RecentSearches({ onSearch, maxItems = 5 }: RecentSearche
               <span className="truncate">{search}</span>
             </button>
             <button
+              type="button"
               onClick={() => removeSearch(search)}
               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
             >

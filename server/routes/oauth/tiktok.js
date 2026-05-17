@@ -1,35 +1,34 @@
 // TikTok OAuth Routes
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../../middleware/auth');
-const {
-  getAuthorizationUrl,
-  exchangeCodeForToken,
-  uploadVideoToTikTok,
-  postToTikTok,
-  disconnectTikTok,
-  isConfigured
-} = require('../../services/tiktokOAuthService');
+// Singleton instance — destructuring would drop `this` and crash.
+const tiktokService = require('../../services/tiktokOAuthService');
+const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
+
 /**
  * GET /api/oauth/tiktok/authorize
  * Get TikTok OAuth authorization URL
  */
 router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) => {
-  if (!isConfigured()) {
+  if (!tiktokService.isConfigured()) {
     return sendError(res, 'TikTok OAuth not configured', 503);
   }
 
-  const callbackUrl = process.env.TIKTOK_CALLBACK_URL || 
+  const callbackUrl = process.env.TIKTOK_CALLBACK_URL ||
     `${req.protocol}://${req.get('host')}/api/oauth/tiktok/callback`;
 
-  const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { url, state } = await tiktokService.getAuthorizationUrl(userId, callbackUrl);
+
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
 
@@ -51,14 +50,12 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
   }
 
   try {
-    // Redirect to frontend with code/state
-    // Frontend will call /complete endpoint
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?platform=tiktok&code=${code}&state=${state}`);
-  } catch (error) {
-    logger.error('TikTok OAuth callback error', { error: error.message });
+  } catch (err) {
+    logger.error('TikTok OAuth callback error', { error: err.message });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error.message)}`);
+    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
   }
 }));
 
@@ -73,12 +70,11 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
     return sendError(res, 'Authorization code and state are required', 400);
   }
 
-  const { accessToken } = await exchangeCodeForToken(req.user._id, code, state);
-  
-  // Get user info for response
-  const { getTikTokUserInfo } = require('../../services/tiktokOAuthService');
-  const userInfo = await getTikTokUserInfo(accessToken);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { accessToken } = await tiktokService.exchangeCodeForToken(userId, code, state);
+
+  const userInfo = await tiktokService.getTikTokUserInfo(accessToken);
+
   sendSuccess(res, 'TikTok account connected successfully', 200, {
     connected: true,
     userInfo: {
@@ -100,14 +96,14 @@ router.post('/upload', auth, oauthPostLimiter, asyncHandler(async (req, res) => 
     return sendError(res, 'Video file and caption are required', 400);
   }
 
-  const video = await uploadVideoToTikTok(req.user._id, videoFile, caption, options || {});
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const video = await tiktokService.uploadVideoToTikTok(userId, videoFile, caption, options || {});
+
   sendSuccess(res, 'TikTok video uploaded successfully', 200, { video });
 }));
 
 /**
  * POST /api/oauth/tiktok/post
- * Post to TikTok (placeholder for future implementation)
  */
 router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   const { videoUrl, caption, options } = req.body;
@@ -116,8 +112,9 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
     return sendError(res, 'Video URL and caption are required', 400);
   }
 
-  const post = await postToTikTok(req.user._id, videoUrl, caption, options || {});
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const post = await tiktokService.postToTikTok(userId, videoUrl, caption, options || {});
+
   sendSuccess(res, 'TikTok post published successfully', 200, { post });
 }));
 
@@ -126,7 +123,8 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
  * Disconnect TikTok account
  */
 router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  await disconnectTikTok(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  await tiktokService.disconnectTikTok(userId);
   sendSuccess(res, 'TikTok account disconnected', 200);
 }));
 
@@ -135,21 +133,23 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get TikTok connection status
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const User = require('../../models/User');
-  const user = await User.findById(req.user._id).select('oauth.tiktok');
-  
-  const connected = user?.oauth?.tiktok?.connected || false;
-  const connectedAt = user?.oauth?.tiktok?.connectedAt;
-  const username = user?.oauth?.tiktok?.platformUsername;
+  const userId = req.userId || req.user?._id || req.user?.id;
+  let ttRow = null;
+
+  if (isMongoUserId(userId)) {
+    const User = require('../../models/User');
+    const user = await User.findById(userId).select('oauth.tiktok');
+    ttRow = user?.oauth?.tiktok || null;
+  } else {
+    ttRow = await OAuthStorage.loadTokens(userId, 'tiktok');
+  }
 
   sendSuccess(res, 'Status retrieved', 200, {
-    connected,
-    connectedAt,
-    username,
-    configured: isConfigured()
+    connected: !!ttRow?.connected,
+    connectedAt: ttRow?.connectedAt,
+    username: ttRow?.platformUsername,
+    configured: tiktokService.isConfigured()
   });
 }));
 
 module.exports = router;
-
-

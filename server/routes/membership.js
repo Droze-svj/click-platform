@@ -1,9 +1,12 @@
 // Membership package routes
 
 const express = require('express');
+const mongoose = require('mongoose');
 const MembershipPackage = require('../models/MembershipPackage');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 const { requireRole } = require('../middleware/roleBasedAccess');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
@@ -60,7 +63,20 @@ router.get('/packages/:slug', asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.get('/current', auth, asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id)
+  const userId = req.userId || req.user?._id || req.user?.id;
+
+  // Supabase users (UUID) don't have a Mongo doc to populate. Return a
+  // Free-tier shape so the membership card renders zeroes instead of 404.
+  if (!isMongoUserId(userId)) {
+    return sendSuccess(res, 'Current membership fetched', 200, {
+      package: null,
+      subscription: req.user?.subscription || { status: 'active', tier: 'free' },
+      usage: { videosProcessed: 0, contentGenerated: 0, scriptsGenerated: 0, musicFiles: 0 },
+      limits: null,
+    });
+  }
+
+  const user = await User.findById(userId)
     .populate('membershipPackage')
     .select('membershipPackage subscription usage');
 
@@ -119,7 +135,18 @@ router.post('/upgrade', auth, asyncHandler(async (req, res) => {
     return sendError(res, 'Package not found', 404);
   }
 
-  const user = await User.findById(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+
+  // Supabase users live in a different store; the membership upgrade flow
+  // here only knows how to persist into Mongo. Surface a clear error rather
+  // than throwing CastError, so the UI can route the user through the
+  // Supabase-aware checkout instead.
+  if (!isMongoUserId(userId)) {
+    return sendError(res, 'Membership upgrades for this account are handled via the checkout flow.', 501);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) return sendError(res, 'User not found', 404);
 
   // Check if user already has this package
   if (user.membershipPackage && user.membershipPackage.toString() === membershipPackage._id.toString()) {

@@ -1,5 +1,6 @@
 // User engagement service
 
+const mongoose = require('mongoose');
 const Achievement = require('../models/Achievement');
 const Streak = require('../models/Streak');
 const Activity = require('../models/Activity');
@@ -8,10 +9,20 @@ const Content = require('../models/Content');
 const Script = require('../models/Script');
 const logger = require('../utils/logger');
 
+// Supabase users have UUID ids; the Mongoose models keyed off of userId are
+// only meaningful for Mongo-native users. Anything that isn't a 24-char
+// ObjectId-shaped string is a no-op here.
+function isMongoUserId(userId) {
+  if (!userId) return false;
+  const s = userId.toString();
+  return mongoose.Types.ObjectId.isValid(s) && /^[a-f0-9]{24}$/i.test(s);
+}
+
 /**
  * Check and unlock achievements
  */
 async function checkAchievements(userId, action, metadata = {}) {
+  if (!isMongoUserId(userId)) return [];
   try {
     const achievements = [];
 
@@ -73,6 +84,7 @@ async function checkAchievements(userId, action, metadata = {}) {
  * Unlock an achievement
  */
 async function unlockAchievement(userId, achievementType, metadata = {}) {
+  if (!isMongoUserId(userId)) return null;
   try {
     // Check if already unlocked
     const existing = await Achievement.findOne({ userId, achievementType });
@@ -110,6 +122,7 @@ async function unlockAchievement(userId, achievementType, metadata = {}) {
  * Update user streak
  */
 async function updateStreak(userId) {
+  if (!isMongoUserId(userId)) return null;
   try {
     let streak = await Streak.findOne({ userId });
 
@@ -183,6 +196,7 @@ async function updateStreak(userId) {
  * Create activity entry
  */
 async function createActivity(userId, type, data) {
+  if (!isMongoUserId(userId)) return null;
   try {
     const activity = new Activity({
       userId,
@@ -206,6 +220,15 @@ async function createActivity(userId, type, data) {
  * Get user engagement stats
  */
 async function getUserEngagementStats(userId) {
+  if (!isMongoUserId(userId)) {
+    return {
+      achievements: { total: 0, recent: [], all: [] },
+      streak: { currentStreak: 0, longestStreak: 0, lastActivityDate: null },
+      activities: [],
+      stats: { totalContent: 0, totalVideos: 0, totalScripts: 0 },
+      level: 1
+    };
+  }
   try {
     const [achievements, streak, activities, contentCount, videoCount, scriptCount] = await Promise.all([
       Achievement.find({ userId }).sort({ unlockedAt: -1 }),

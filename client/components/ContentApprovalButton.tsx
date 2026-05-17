@@ -74,6 +74,7 @@ export default function ContentApprovalButton({
   if (workflows.length === 0) {
     return (
       <button
+        type="button"
         onClick={() => alert('No approval workflows available. Please create one first.')}
         className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 flex items-center gap-2"
         disabled
@@ -87,6 +88,7 @@ export default function ContentApprovalButton({
   return (
     <>
       <button
+        type="button"
         onClick={() => setShowModal(true)}
         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
       >
@@ -103,6 +105,7 @@ export default function ContentApprovalButton({
                   Start Approval Process
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setShowModal(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -141,12 +144,14 @@ export default function ContentApprovalButton({
 
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setShowModal(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={startApproval}
                   disabled={!selectedWorkflow || loading}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"

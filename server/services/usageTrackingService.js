@@ -147,9 +147,20 @@ async function getCurrentUsage(userId) {
   
   // In production, query from UsageTracking model
   const UsageTracking = require('../models/UsageTracking');
+  const mongooseLib = require('mongoose');
   const now = new Date();
   const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  
+
+  // UsageTracking.userId is ObjectId; Supabase UUIDs would CastError.
+  // Short-circuit to defaults instead of logging a warning every request.
+  if (!mongooseLib.Types.ObjectId.isValid(String(userId))) {
+    return {
+      usage: { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 },
+      limits: { videosProcessed: -1, contentGenerated: -1, postsScheduled: -1, storageUsed: -1 },
+      overage: { videosProcessed: 0, contentGenerated: 0, postsScheduled: 0, storageUsed: 0 }
+    };
+  }
+
   try {
     const tracking = await UsageTracking.findOne({
       userId,
@@ -189,9 +200,14 @@ async function getUsageStats(userId, months = 6) {
   
   // In production, query from UsageTracking model
   const UsageTracking = require('../models/UsageTracking');
+  const mongooseLib = require('mongoose');
   const now = new Date();
   const periods = [];
-  
+
+  if (!mongooseLib.Types.ObjectId.isValid(String(userId))) {
+    return { periods: [] };
+  }
+
   try {
     for (let i = 0; i < months; i++) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);

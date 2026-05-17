@@ -308,6 +308,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               <div className="relative flex p-1.5 bg-black/40 border border-white/5 rounded-3xl overflow-hidden w-fit shadow-inner">
                 {(['high', 'medium', 'low'] as const).map(q => (
                   <button
+                    type="button"
                     key={q}
                     onClick={() => setExportQuality(q)}
                     className={`relative px-8 py-4 text-[10px] font-black uppercase tracking-widest italic transition-colors z-10 ${exportQuality === q ? 'text-white' : 'text-slate-500 hover:text-white'}`}
@@ -355,6 +356,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               <div className="relative flex p-1.5 bg-black/40 border border-white/5 rounded-3xl overflow-hidden w-fit shadow-inner">
                 {(['h264', 'hevc', 'prores'] as const).map(c => (
                   <button
+                    type="button"
                     key={c}
                     onClick={() => setExportCodec(c)}
                     className={`relative px-8 py-4 text-[10px] font-black uppercase tracking-widest italic transition-colors z-10 ${exportCodec === c ? 'text-white' : 'text-slate-500 hover:text-white'}`}
@@ -807,6 +809,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                           </select>
                           <div className="w-px h-4 bg-indigo-500/20" />
                           <button
+                            type="button"
                             disabled={extendingId === s._id}
                             title="Confirm Extension"
                             onClick={async (e) => {

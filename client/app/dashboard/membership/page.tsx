@@ -3,17 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import { 
-  Shield, Zap, Activity, Cpu, Database, 
-  Globe, Radio, ArrowUpRight, CheckCircle2, 
-  Lock, Unlock, Target, Terminal, Layers, 
-  Settings2, Box, Sparkles,
-  ArrowLeft, Fingerprint, Gauge, Network, Brain, ArrowRight,
-  Workflow, Binary, Orbit, Scan, Command, Wind, Ghost,
-  Signal, ShieldCheck, ActivityIcon, CpuIcon, HardDrive,
-  UserCheck, Key, Anchor, Sparkle, RefreshCw
+import {
+  Shield, Activity, Database,
+  ArrowUpRight, CheckCircle2,
+  Lock, Target, Layers,
+  Sparkles, ArrowLeft, Fingerprint, Network, RefreshCw
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
@@ -21,8 +17,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
 // Force dynamic rendering to avoid SSR issues with localStorage
 export const dynamic = 'force-dynamic'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 interface MembershipPackage {
   _id: string; name: string; slug: string; description: string;
@@ -67,7 +62,7 @@ export default function IdentityDNARegistryPage() {
       setPackages(Array.isArray(pkgs) ? pkgs : [])
       setCurrentMembership(current)
     } catch {
-      showToast('SYNC_ERR: ACCESS_DATA_OFFLINE', 'error')
+      showToast('Could not sync: ACCESS_DATA_OFFLINE', 'error')
     } finally {
       setLoading(false)
     }
@@ -159,8 +154,8 @@ export default function IdentityDNARegistryPage() {
                     <p className="text-2xl font-black text-indigo-400 uppercase tracking-[0.4em] italic leading-none mt-2">PROTOCOLS_ACTIVE</p>
                  </div>
               </div>
-              <button onClick={() => loadAccessData()} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
-                <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 transition-colors duration-700 group-hover:rotate-180 transition-transform" />
+              <button type="button" onClick={() => loadAccessData()} title="Refresh membership data" aria-label="Refresh membership data" className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+                <RefreshCw size={32} className="text-slate-500 group-hover:text-indigo-400 group-hover:rotate-180 transition-all duration-700" />
               </button>
            </div>
         </header>

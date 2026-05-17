@@ -77,6 +77,18 @@ const contentSchema = new mongoose.Schema({
     enum: ['uploading', 'processing', 'completed', 'failed'],
     default: 'uploading'
   },
+  // Top-level snapshot of the manual editor's saved state — videoFilters,
+  // textOverlays, shapeOverlays, timelineSegments, captionStyle,
+  // colorGradeSettings, etc. Written by `POST /api/video/editor/save`
+  // (the autosave hook) and consumed by `autoEditVideo` so the
+  // user's manual edits are applied before the auto-edit clip extraction.
+  // Previously the save handler set `content.editorState = ...` against
+  // a non-existent top-level field — Mongoose strict mode dropped it on
+  // save, so the entire autosave loop was a no-op for months.
+  editorState: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
   generatedContent: {
     shortVideos: [{
       url: String,

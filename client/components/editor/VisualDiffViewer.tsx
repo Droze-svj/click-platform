@@ -60,12 +60,14 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
         </div>
         <div className="flex items-center gap-4">
            <button
+             type="button"
              onClick={onClose}
              className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
            >
              [ Exit Comparison ]
            </button>
            <button
+             type="button"
              onClick={onAccept}
              className="px-8 py-3 rounded-xl bg-violet-500 text-black text-[11px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_10px_30px_rgba(139,92,246,0.4)] flex items-center gap-2"
            >
@@ -176,7 +178,8 @@ const VisualDiffViewer: React.FC<VisualDiffViewerProps> = ({
                  </div>
               </div>
 
-              <button 
+              <button
+                type="button"
                 onClick={onAccept}
                 className="w-full py-5 rounded-2xl bg-white text-black text-[12px] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-violet-500 hover:text-white transition-all flex items-center justify-center gap-3 group"
               >

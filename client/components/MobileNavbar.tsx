@@ -30,6 +30,7 @@ export default function MobileNavbar() {
     { path: '/dashboard/projects', labelKey: 'nav.projects', icon: '📋' },
     { path: '/dashboard/quotes', labelKey: 'nav.quotes', icon: '💬' },
     { path: '/dashboard/scheduler', labelKey: 'nav.scheduler', icon: '📅' },
+    { path: '/dashboard/recurring', labelKey: 'nav.recurring', icon: '🔁' },
     { path: '/dashboard/calendar', labelKey: 'nav.calendar', icon: '📆' },
     { path: '/dashboard/analytics', labelKey: 'nav.analytics', icon: '📊' },
     { path: '/dashboard/achievements', labelKey: 'nav.achievements', icon: '🏆' },
@@ -50,6 +51,7 @@ export default function MobileNavbar() {
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => {
               setIsOpen(!isOpen)
             }}
@@ -61,6 +63,7 @@ export default function MobileNavbar() {
             </svg>
           </button>
           <button
+            type="button"
             onClick={() => router.push('/dashboard')}
             className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent hover:opacity-90 transition-opacity"
             aria-label="Click — go to dashboard"
@@ -95,7 +98,10 @@ export default function MobileNavbar() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">{t('common.menu')}</h2>
                 <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
+                  title="Close Menu"
+                  aria-label="Close Menu"
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,27 +117,34 @@ export default function MobileNavbar() {
             </div>
 
             <nav className="p-2">
-              {navItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    router.push(item.path)
-                    setIsOpen(false)
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive(item.path)
-                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
-                >
-                  <span className="text-xl">{item.icon}</span>
-                  <span className="font-medium">{t(item.labelKey)}</span>
-                </button>
-              ))}
+              {navItems.map((item) => {
+                const label = t(item.labelKey)
+                return (
+                  <button
+                    type="button"
+                    key={item.path}
+                    title={label}
+                    aria-label={label}
+                    onClick={() => {
+                      router.push(item.path)
+                      setIsOpen(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive(item.path)
+                      ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span className="font-medium">{label}</span>
+                  </button>
+                )
+              })}
             </nav>
 
             {user && (
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                 <button
+                  type="button"
                   onClick={() => {
                     logout()
                     setIsOpen(false)

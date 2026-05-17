@@ -122,10 +122,24 @@ const cache = new Cache({
   maxSize: 1000
 });
 
-// Clean expired entries every 5 minutes
-setInterval(() => {
-  cache.clean();
+// Clean expired entries every 5 minutes. Reference the interval so it
+// can be torn down during graceful shutdown — the previous version
+// leaked the handle, which kept the event loop alive past SIGTERM and
+// blocked clean restarts. `.unref()` lets Node exit if this is the only
+// active timer.
+const _cleanInterval = setInterval(() => {
+  try { cache.clean(); } catch (err) {
+    // Cache cleaning should never throw, but if a custom subclass adds
+    // logic that can, swallowing it here prevents the timer from
+    // crashing the process.
+    // eslint-disable-next-line no-console
+    console.warn('cache.clean() threw:', err && err.message);
+  }
 }, 5 * 60 * 1000);
+if (typeof _cleanInterval.unref === 'function') _cleanInterval.unref();
+
+// Allow callers (graceful-shutdown hook) to stop the timer explicitly.
+cache.stopCleanInterval = () => clearInterval(_cleanInterval);
 
 module.exports = cache;
 

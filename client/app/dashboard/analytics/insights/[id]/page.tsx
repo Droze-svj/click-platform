@@ -61,11 +61,13 @@ export default function StrategicSynthesisHub() {
   if (loading) return <SpectralLoader message="Synthesizing Strategic Blueprint..." subMessage="NEURAL_CORRELATION_IN_PROGRESS" />
 
   if (error) return (
-    <div className="min-h-screen bg-[var(--page-bg)] flex flex-col items-center justify-center p-12 text-center">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-12 text-center">
       <AlertCircle size={80} className="text-rose-500 mb-8 animate-pulse" />
-      <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">Link Error</h1>
+      <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter mb-6">Link Error</h1>
       <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] mb-12">{error}</p>
-      <button onClick={() => router.back()} className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all hover:bg-rose-500 hover:text-white">
+      <button type="button" onClick={() => router.back()} 
+        title="Return to Matrix" aria-label="Return to Matrix"
+        className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all hover:bg-rose-500 hover:text-white shadow-2xl">
         Return to Matrix
       </button>
     </div>
@@ -73,7 +75,7 @@ export default function StrategicSynthesisHub() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[var(--page-bg)]">
+      <div className="min-h-screen relative z-10 pb-24 sm:pb-48 px-4 sm:px-10 pt-16 max-w-[1750px] mx-auto space-y-12 sm:space-y-24 bg-black text-white">
         <ToastContainer />
         
         {/* Spectral Background Layers */}
@@ -87,7 +89,8 @@ export default function StrategicSynthesisHub() {
         {/* Synthesis Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <button 
+              <button
+                type="button"
                 onClick={() => router.back()}
                 title="Go Back"
                 className="w-24 h-24 bg-white/5 border border-white/10 rounded-[3rem] flex items-center justify-center hover:bg-white/10 transition-all group"
@@ -105,8 +108,8 @@ export default function StrategicSynthesisHub() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">{matrix?.headline || 'MANIFESTING'}</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
-                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Deep-scan complete. Heuristic optimization manifest generated.</p>
+                 <h1 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Strategic Synthesis</h1>
+                 <p className="text-slate-400 text-[10px] sm:text-[14px] uppercase font-black tracking-[0.2em] sm:tracking-[0.4em] italic leading-none">Deep-scan complete. Heuristic optimization manifest generated.</p>
               </div>
            </div>
         </header>
@@ -210,7 +213,8 @@ export default function StrategicSynthesisHub() {
                     </div>
                  </div>
 
-                 <button 
+                 <button
+                  type="button"
                   onClick={initiateScan}
                   className="w-full mt-16 py-8 bg-white text-black hover:bg-violet-600 hover:text-white font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-6 group relative z-10"
                  >
@@ -221,9 +225,9 @@ export default function StrategicSynthesisHub() {
            </div>
         </div>
 
-        <style jsx global>{`
+         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          html.dark body { font-family: 'Inter', sans-serif; background: black; color: white; overflow-x: hidden; }
         `}</style>
       </div>
     </ErrorBoundary>

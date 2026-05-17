@@ -4,28 +4,12 @@ const ffmpeg = require('fluent-ffmpeg')
 const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
-const OpenAI = require('openai')
 const logger = require('../utils/logger')
 let Sentry = null
 try {
   Sentry = require('@sentry/node')
 } catch (_) {
   // Optional dependency in some local environments
-}
-
-let openai = null;
-function getOpenAIClient() {
-  if (!openai && process.env.OPENAI_API_KEY) {
-    try {
-      openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-    } catch (e) {
-      logger.warn('OpenAI not configured for video analysis', { error: e.message });
-      return null;
-    }
-  }
-  return openai;
 }
 
 function withAgentSpan(agentName, fn, model = 'gpt-4o') {
@@ -116,7 +100,7 @@ async function detectHighlights(videoPath, options = {}) {
 
   try {
     // Extract frames for analysis
-    const { frames, tempDir } = await extractFrames(videoPath, { userId })
+    const { tempDir } = await extractFrames(videoPath, { userId })
 
     // Mock highlight detection - in production, this would use ML models
     const highlights = [
@@ -239,7 +223,17 @@ async function getVideoMetadata(videoPath) {
         height: videoStream?.height || 0,
         videoCodec: videoStream?.codec_name,
         audioCodec: audioStream?.codec_name,
-        frameRate: videoStream?.r_frame_rate ? eval(videoStream.r_frame_rate) : 0
+        frameRate: (() => {
+          const r = videoStream?.r_frame_rate;
+          if (!r) return 0;
+          const parts = String(r).split('/');
+          if (parts.length === 2) {
+            const num = parseFloat(parts[0]);
+            const den = parseFloat(parts[1]);
+            return den !== 0 ? num / den : 0;
+          }
+          return parseFloat(r) || 0;
+        })()
       }
 
       resolve(result)
@@ -253,7 +247,7 @@ async function analyzeContent(videoPath, options = {}) {
 
   try {
     // Extract a few frames for content analysis
-    const { frames, tempDir } = await extractFrames(videoPath, { count: 3, userId })
+    const { tempDir } = await extractFrames(videoPath, { count: 3, userId })
 
     // Mock content analysis - in production, use computer vision APIs
     const contentAnalysis = {
@@ -290,7 +284,7 @@ async function generateEditingSuggestions(videoPath, analysisResults, options = 
 
   // Analyze highlights for suggestions
   if (analysisResults.highlights?.length > 0) {
-    analysisResults.highlights.forEach((highlight, index) => {
+    analysisResults.highlights.forEach((highlight) => {
       if (highlight.confidence > 0.8) {
         suggestions.push({
           type: 'keep',

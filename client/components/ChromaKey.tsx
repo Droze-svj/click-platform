@@ -256,6 +256,7 @@ export default function ChromaKey({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setShowOriginal(!showOriginal)}
               className={`p-2 rounded-lg transition-colors ${
                 showOriginal
@@ -267,6 +268,7 @@ export default function ChromaKey({
               {showOriginal ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
             <button
+              type="button"
               onClick={resetSettings}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
               title="Reset settings"
@@ -314,6 +316,7 @@ export default function ChromaKey({
               <div className="grid grid-cols-4 gap-3 mb-4">
                 {backgroundImages.map((bg, index) => (
                   <button
+                    type="button"
                     key={index}
                     onClick={() => {
                       // This would typically update the background image
@@ -359,6 +362,7 @@ export default function ChromaKey({
             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <span className="font-medium text-gray-900 dark:text-white">Enable Chroma Key</span>
               <button
+                type="button"
                 onClick={() => onSettingsChange({ ...settings, enable: !settings.enable })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   settings.enable ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
@@ -390,6 +394,7 @@ export default function ChromaKey({
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setColorPickerActive(!colorPickerActive)}
                   className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
                     colorPickerActive
@@ -486,6 +491,7 @@ export default function ChromaKey({
               <h4 className="font-medium text-gray-900 dark:text-[var(--text-main)] mb-3">Presets</h4>
               <div className="grid grid-cols-2 gap-2">
                 <button
+                  type="button"
                   onClick={() => onSettingsChange({
                     ...settings,
                     keyColor: { r: 0, g: 255, b: 0 },
@@ -497,6 +503,7 @@ export default function ChromaKey({
                   Green Screen
                 </button>
                 <button
+                  type="button"
                   onClick={() => onSettingsChange({
                     ...settings,
                     keyColor: { r: 0, g: 0, b: 255 },

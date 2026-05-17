@@ -697,6 +697,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
       <div className="flex flex-wrap gap-2 mb-6">
         {categories.map(category => (
           <button
+            type="button"
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${selectedCategory === category.id
@@ -715,7 +716,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
           <div className="w-96 h-full bg-white dark:bg-gray-900 shadow-2xl p-8 transform transition-transform duration-500 animate-slide-in-right border-l border-purple-500/20">
             <div className="flex items-center justify-between mb-8">
               <h3 className="font-bold text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Personalize Design</h3>
-              <button onClick={() => setPersonalizeId(null)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X className="w-6 h-6" /></button>
+              <button type="button" onClick={() => setPersonalizeId(null)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"><X className="w-6 h-6" /></button>
             </div>
 
             <div className="space-y-8">
@@ -724,6 +725,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                 <div className="flex flex-wrap gap-3 mb-4">
                   {['#8B5CF6', '#EC4899', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#000000', '#FFFFFF'].map(color => (
                     <button
+                      type="button"
                       key={color}
                       onClick={() => setCustomColor(color)}
                       className={`w-10 h-10 rounded-xl border-2 transition-all transform hover:scale-110 ${customColor === color ? 'border-purple-500 ring-4 ring-purple-500/20' : 'border-transparent shadow-md'}`}
@@ -744,6 +746,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
                 <div className="space-y-2">
                   {['Inter', 'Impact', 'Montserrat', 'Playfair Display', 'Oswald', 'Roboto'].map(font => (
                     <button
+                      type="button"
                       key={font}
                       onClick={() => setCustomFont(font)}
                       className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all ${customFont === font ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 shadow-lg' : 'border-gray-100 dark:border-gray-800 hover:border-purple-200 dark:hover:border-purple-800'}`}
@@ -757,6 +760,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
 
               <div className="pt-8 border-t border-gray-100 dark:border-gray-800">
                 <button
+                  type="button"
                   onClick={() => {
                     const template = templates.find(t => t.id === personalizeId);
                     if (template) applyTemplate(template);
@@ -783,12 +787,14 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
             {/* Action Buttons Overlay */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all rounded-xl flex items-center justify-center gap-3 z-10">
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); applyTemplate(template); }}
                 className="px-4 py-2 bg-white text-gray-900 rounded-xl font-bold hover:bg-gray-100 transition-all"
               >
                 Quick Apply
               </button>
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); setPersonalizeId(template.id); }}
                 className="px-4 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-500 transition-all border border-purple-400 flex items-center gap-1.5"
               >

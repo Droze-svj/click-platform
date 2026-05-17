@@ -16,7 +16,7 @@
 const logger = require('../utils/logger');
 const Content = require('../models/Content');
 const { aiCallJson } = require('../utils/aiRouter');
-const { buildSystemPrompt } = require('./marketingKnowledge');
+const { buildSystemPrompt, getTopPerformingPlaybook } = require('./marketingKnowledge');
 const creativeTools = require('./creativeToolsService');
 
 const PLATFORM_TO_ASPECT = {
@@ -40,15 +40,19 @@ async function reformatForPlatform(content, platform, niche, language) {
     logger.warn('[Reformat] autoReframe failed', { platform, error: err.message });
   }
 
-  // Per-platform copy regen via aiRouter + buildSystemPrompt. Fetch
-  // creator's style profile so the captions bias toward what's already
-  // worked for them.
+  // Per-platform copy regen via aiRouter + buildSystemPrompt. Fetch the
+  // creator's style profile + performance-weighted top performers so the
+  // captions bias toward what's already worked for them. Both lookups
+  // are best-effort — null on cold-start, missing model, or DB hiccup.
+  const userId = content.userId || content.user?._id;
   let styleProfile = null;
   try {
     const UserStyleProfile = require('../models/UserStyleProfile');
-    const userId = content.userId || content.user?._id;
     styleProfile = userId ? await UserStyleProfile.findOne({ userId }).lean().catch(() => null) : null;
   } catch { /* model not available in some envs */ }
+  const topPerformers = userId
+    ? await getTopPerformingPlaybook(userId, niche, platform).catch(() => null)
+    : null;
 
   const systemPrompt = buildSystemPrompt({
     persona: 'creative-director',
@@ -57,6 +61,7 @@ async function reformatForPlatform(content, platform, niche, language) {
     stage: 'repurpose',
     language,
     styleProfile,
+    topPerformers,
     extra: `Return strict JSON only. Match the ${platform} CTA library and 3-second retention curve. Produce THREE distinct caption variants the creator can A/B — different angles, NOT three rewordings of the same idea.`,
   });
   const userPrompt = [

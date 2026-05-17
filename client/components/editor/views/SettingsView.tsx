@@ -99,9 +99,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             <p className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider mb-2">Focus mode</p>
             <div className="flex flex-wrap gap-2">
               {FOCUS_OPTIONS.map((opt) => (
-                <button
+                <button type="button"
                   key={opt.id}
-                  type="button"
                   onClick={() => { onLayoutChange({ focusMode: opt.id }); showToast(`Focus: ${opt.label}`, 'info') }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${layoutPrefs.focusMode === opt.id
                     ? 'bg-accent-violet text-white'
@@ -117,9 +116,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             <p className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider mb-2">Timeline density</p>
             <div className="flex flex-wrap gap-2">
               {DENSITY_OPTIONS.map((opt) => (
-                <button
+                <button type="button"
                   key={opt.id}
-                  type="button"
                   onClick={() => { onLayoutChange({ timelineDensity: opt.id }); showToast(`Timeline: ${opt.label}`, 'info') }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${layoutPrefs.timelineDensity === opt.id
                     ? 'bg-violet-600 text-white'
@@ -148,7 +146,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <li><kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-subtle font-mono">Ctrl+Z</kbd> Undo · <kbd className="px-1.5 py-0.5 rounded bg-surface-elevated border border-subtle font-mono">Ctrl+Shift+Z</kbd> Redo</li>
         </ul>
         <button
-          type="button"
+         type="button"
           onClick={setShowKeyboardHelp}
           className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-surface-elevated border border-subtle text-theme-primary hover:bg-surface-card-hover transition-colors text-sm font-medium"
         >
@@ -157,7 +155,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         </button>
         {onResetTimelineHint && (
           <button
-            type="button"
+           type="button"
             onClick={() => { try { localStorage.removeItem('editor-timeline-hint-dismissed') } catch { /* ignore */ }; onResetTimelineHint(); showToast('Timeline hint will show again when you open Timeline', 'success'); setActiveCategory('timeline') }}
             className="mt-2 w-full flex items-center justify-between px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-theme-primary hover:bg-amber-500/20 transition-colors text-sm font-medium"
           >
@@ -189,9 +187,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="flex gap-2 flex-wrap">
             <span className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider self-center">Quality:</span>
             {(['high', 'medium', 'low'] as const).map((q) => (
-              <button
+              <button type="button"
                 key={q}
-                type="button"
                 onClick={() => updateContentPref({ defaultExportQuality: q })}
                 className={`px-2.5 py-1 rounded text-xs font-medium ${contentPrefs.defaultExportQuality === q ? 'bg-blue-600 text-white' : 'bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card-hover'}`}
               >
@@ -202,9 +199,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="flex gap-2 flex-wrap">
             <span className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider self-center">Codec:</span>
             {(['h264', 'hevc'] as const).map((c) => (
-              <button
+              <button type="button"
                 key={c}
-                type="button"
                 onClick={() => updateContentPref({ defaultExportCodec: c })}
                 className={`px-2.5 py-1 rounded text-xs font-medium ${contentPrefs.defaultExportCodec === c ? 'bg-blue-600 text-white' : 'bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card-hover'}`}
               >
@@ -237,9 +233,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             <p className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider mb-1">Preview quality</p>
             <div className="flex gap-2">
               {(['draft', 'full'] as const).map((q) => (
-                <button
+                <button type="button"
                   key={q}
-                  type="button"
                   onClick={() => updateContentPref({ previewQuality: q })}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium ${contentPrefs.previewQuality === q ? 'bg-amber-600 text-white' : 'bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card-hover'}`}
                 >
@@ -273,9 +268,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             { id: 'timeline' as EditorCategory, label: 'Timeline', desc: 'Segments & precision' },
             { id: 'export' as EditorCategory, label: 'Export', desc: 'Render & publish' },
           ].map((item) => (
-            <button
+            <button type="button"
               key={item.id}
-              type="button"
               onClick={() => setActiveCategory(item.id)}
               className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-elevated border border-subtle text-left hover:bg-surface-card-hover hover:border-default transition-all group"
             >
@@ -302,7 +296,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             <p className="text-[10px] font-semibold text-theme-muted uppercase tracking-wider mb-2">How&apos;s the editor?</p>
             <div className="flex gap-2 mb-3">
               <button
-                type="button"
+               type="button"
                 onClick={() => sendFeedback(true)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-elevated border border-subtle text-theme-primary hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:border-emerald-500/50 transition-colors"
               >
@@ -310,7 +304,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 <span className="text-xs font-medium">Helpful</span>
               </button>
               <button
-                type="button"
+               type="button"
                 onClick={() => sendFeedback(false)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-elevated border border-subtle text-theme-primary hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:border-amber-500/50 transition-colors"
               >

@@ -87,7 +87,7 @@ const ToolButton: React.FC<React.PropsWithChildren<{
             : 'bg-white/[0.03] text-slate-300 border border-white/10 hover:bg-white/[0.06] hover:text-white hover:border-white/20'
   return (
     <button
-      type="button"
+     type="button"
       title={title}
       aria-label={title}
       onClick={onClick}

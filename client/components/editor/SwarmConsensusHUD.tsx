@@ -78,34 +78,34 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
   if (!isVisible) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none p-4 sm:p-6 lg:p-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.9, backdropFilter: 'blur(0px)' }}
-        animate={{ opacity: 1, scale: 1, backdropFilter: 'blur(24px)' }}
+        animate={{ opacity: 1, scale: 1, backdropFilter: 'blur(40px)' }}
         exit={{ opacity: 0, scale: 0.9, backdropFilter: 'blur(0px)' }}
-        className="w-full max-w-2xl bg-black/40 border border-white/10 rounded-[3.5rem] p-12 shadow-[0_0_100px_rgba(0,0,0,0.8)] relative overflow-hidden pointer-events-auto"
+        className="w-full max-w-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] sm:rounded-[4rem] p-8 sm:p-14 shadow-[0_0_150px_rgba(0,0,0,0.9)] relative overflow-hidden pointer-events-auto"
       >
         {/* Scanning Line Animation */}
         <motion.div 
-          animate={{ y: [0, 400, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-fuchsia-500/10 to-transparent h-20 w-full z-0 opacity-30"
+          animate={{ y: [0, 500, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-primary-500/10 to-transparent h-24 w-full z-0 opacity-40"
         />
 
-        <div className="relative z-10 space-y-10">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-[0.3em]">
-                <Activity className="w-3 h-3" /> SWARM CONSENSUS 2.0
+        <div className="relative z-10 space-y-12">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
+            <div className="space-y-3 text-center sm:text-left">
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-primary-500/10 border-2 border-primary-500/20 text-primary-400 text-[10px] font-black uppercase tracking-[0.4em] italic shadow-inner">
+                <Activity className="w-3.5 h-3.5 animate-pulse" /> SWARM_CONSENSUS_CORE
               </div>
-              <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{taskName}</h3>
+              <h3 className="text-3xl sm:text-4xl font-black text-white italic tracking-[0.05em] uppercase leading-none drop-shadow-lg">{taskName}</h3>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-              <ShieldCheck className="w-6 h-6 text-emerald-400 animate-pulse" />
+            <div className="w-16 h-16 rounded-[1.75rem] bg-black/40 flex items-center justify-center border-2 border-white/10 shadow-2xl group">
+              <ShieldCheck className="w-8 h-8 text-emerald-400 animate-pulse group-hover:scale-110 transition-transform duration-500" />
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {debateSteps.map((d, i) => {
               const isActive = i === step
               const isPast = i < step
@@ -114,70 +114,71 @@ export const SwarmConsensusHUD: React.FC<SwarmConsensusHUDProps> = ({ isVisible,
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -30 }}
                   animate={{ 
-                    opacity: isActive || isPast ? 1 : 0.2, 
-                    x: isActive || isPast ? 0 : -20,
-                    scale: isActive ? 1.02 : 1
+                    opacity: isActive || isPast ? 1 : 0.1, 
+                    x: isActive || isPast ? 0 : -30,
+                    scale: isActive ? 1.03 : 1
                   }}
-                  className={`p-6 rounded-[2rem] border transition-all duration-500 flex items-center gap-6 ${
-                    isActive ? 'bg-white/5 border-white/20 shadow-xl' : 'bg-transparent border-transparent'
+                  className={`p-6 sm:p-8 rounded-[2.5rem] border-2 transition-all duration-700 flex items-center gap-6 sm:gap-8 shadow-xl ${
+                    isActive ? 'bg-white/5 border-primary-500/20' : 'bg-transparent border-transparent'
                   }`}
                 >
-                  <div className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center ${isActive ? `${d.color} bg-white/5 border border-white/10` : 'text-slate-500'}`}>
-                    <Icon className="w-6 h-6" />
+                  <div className={`w-14 h-14 rounded-[1.4rem] flex items-center justify-center transition-all duration-700 ${isActive ? `${d.color} bg-black/40 border-2 border-white/10 shadow-lg` : 'text-slate-700'}`}>
+                    <Icon className={`w-7 h-7 ${isActive ? 'animate-bounce' : ''}`} />
                   </div>
                   
-                  <div className="flex-1 space-y-1">
+                  <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3">
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-white' : 'text-slate-500'}`}>{d.agent}</span>
-                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter opacity-60">[{d.role}]</span>
+                      <span className={`text-[11px] font-black uppercase tracking-[0.2em] italic ${isActive ? 'text-white' : 'text-slate-600'}`}>{d.agent}</span>
+                      <div className="w-1 h-1 rounded-full bg-white/10" />
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest opacity-60 italic">[{d.role}]</span>
                     </div>
-                    <p className={`text-sm italic font-medium ${isActive ? 'text-white' : 'text-slate-400'}`}>
-                      {isActive ? d.action : isPast ? 'Optimized & Verified' : 'Awaiting node availability...'}
+                    <p className={`text-base sm:text-lg italic font-black uppercase tracking-tight leading-tight ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                      {isActive ? d.action : isPast ? 'VALIDATED_&_COMMITTED' : 'AWAITING_NODE_SYNAPSE…'}
                     </p>
                   </div>
 
                   {isActive && (
                     <motion.div 
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full"
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                     />
                   )}
-                  {isPast && <ShieldCheck className="w-5 h-5 text-emerald-500" />}
+                  {isPast && <ShieldCheck className="w-6 h-6 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />}
                 </motion.div>
               )
             })}
           </div>
 
-          <div className="pt-6 border-t border-white/10 space-y-4">
+          <div className="pt-8 border-t-2 border-white/5 space-y-6">
              <div className="flex items-center justify-between">
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                     {debateSteps.map((_, i) => (
-                      <div key={i} className={`h-1 rounded-full transition-all duration-500 ${i <= step ? 'w-8 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'w-2 bg-white/5'}`} />
+                      <div key={i} className={`h-1.5 rounded-full transition-all duration-1000 ${i <= step ? 'w-10 bg-primary-500 shadow-[0_0_20px_rgba(99,102,241,0.6)]' : 'w-3 bg-white/5'}`} />
                     ))}
                 </div>
-                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic flex items-center gap-2">
-                  <Fingerprint className="w-3 h-3 text-indigo-400" />
-                  Neural Integrity: 99.8%
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic flex items-center gap-2.5">
+                  <Fingerprint className="w-3.5 h-3.5 text-primary-400" />
+                  NEURAL_INTEGRITY: 99.98%
                 </span>
              </div>
              
              {/* Scrolling Log Feed */}
-             <div className="h-20 overflow-hidden bg-black/20 rounded-2xl border border-white/5 p-3 flex flex-col gap-1.5 opacity-60">
+             <div className="h-24 overflow-hidden bg-black/40 rounded-[2rem] border-2 border-white/5 p-4 flex flex-col gap-2 opacity-50 shadow-inner">
                 {[
-                  `[0x${Math.random().toString(16).slice(2, 6)}] Ingesting sovereignty seed...`,
-                  `[0x${Math.random().toString(16).slice(2, 6)}] Mapping ROI nodes to hook 0x4f...`,
-                  `[0x${Math.random().toString(16).slice(2, 6)}] Swarm consensus reached at 8ms latency.`,
-                  `[0x${Math.random().toString(16).slice(2, 6)}] Injecting style-DNA into regional cluster.`
+                  `[0x${Math.random().toString(16).slice(2, 6)}] INGESTING_SOVEREIGNTY_SEED…`,
+                  `[0x${Math.random().toString(16).slice(2, 6)}] MAPPING_ROI_NODES_TO_HOOK_0x4F…`,
+                  `[0x${Math.random().toString(16).slice(2, 6)}] SWARM_CONSENSUS_REACHED_8ms_LATENCY`,
+                  `[0x${Math.random().toString(16).slice(2, 6)}] INJECTING_STYLE_DNA_INTO_CLUSTER…`
                 ].map((log, i) => (
                   <motion.p 
                     key={i} 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.2 }}
-                    className="text-[8px] font-mono text-slate-500 whitespace-nowrap overflow-hidden"
+                    transition={{ delay: i * 0.1 }}
+                    className="text-[9px] font-mono font-black text-primary-400/60 whitespace-nowrap overflow-hidden italic uppercase tracking-widest"
                   >
                     {log}
                   </motion.p>

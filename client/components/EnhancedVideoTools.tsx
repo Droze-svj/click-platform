@@ -366,6 +366,7 @@ export default function EnhancedVideoTools({
         <div className="flex flex-wrap gap-2 mb-4">
           {categories.map(category => (
             <button
+              type="button"
               key={category}
               className="flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-sm capitalize"
             >
@@ -499,6 +500,7 @@ export default function EnhancedVideoTools({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {tools.map((tool) => (
           <button
+            type="button"
             key={tool.id}
             onClick={() =>
               handleProcess(tool.id, {

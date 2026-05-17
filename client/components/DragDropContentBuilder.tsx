@@ -101,6 +101,7 @@ export default function DragDropContentBuilder({
         </h3>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => addBlock('text')}
             className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1"
           >
@@ -108,6 +109,7 @@ export default function DragDropContentBuilder({
             Text
           </button>
           <button
+            type="button"
             onClick={() => addBlock('image')}
             className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1"
           >
@@ -115,6 +117,7 @@ export default function DragDropContentBuilder({
             Image
           </button>
           <button
+            type="button"
             onClick={() => addBlock('hashtags')}
             className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm flex items-center gap-1"
           >
@@ -151,6 +154,7 @@ export default function DragDropContentBuilder({
                     {block.type}
                   </span>
                   <button
+                    type="button"
                     onClick={() => removeBlock(block.id)}
                     className="ml-auto p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                   >

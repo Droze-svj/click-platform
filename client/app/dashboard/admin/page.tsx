@@ -142,7 +142,7 @@ export default function SovereignOversightTerminalPage() {
           <ShieldAlert size={64} className="text-rose-500 mx-auto mb-8 animate-bounce" />
           <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-4">Oversight Error</h2>
           <p className="text-[var(--text-dim)] text-[13px] font-black uppercase tracking-widest italic mb-10">{error || 'UNAUTHORIZED_ACCESS_DETECTED'}</p>
-          <button onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">RETRY_SYNC</button>
+          <button type="button" onClick={loadDashboard} className="px-12 py-5 bg-white text-black font-black uppercase text-[12px] tracking-widest italic rounded-2xl hover:bg-rose-500 hover:text-white transition-all">RETRY_SYNC</button>
        </div>
     </div>
   )
@@ -181,7 +181,7 @@ export default function SovereignOversightTerminalPage() {
            </div>
 
            <div className="flex items-center gap-6">
-              <button onClick={loadDashboard}
+              <button type="button" onClick={loadDashboard}
                 className="px-10 py-5 bg-white/[0.03] border border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-white/[0.05] font-black uppercase text-[11px] tracking-[0.4em] italic rounded-2xl transition-all flex items-center gap-4 group shadow-xl">
                  <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-700" /> REFRESH_LATTICE
               </button>
@@ -310,7 +310,7 @@ export default function SovereignOversightTerminalPage() {
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
         `}</style>
       </div>
     </ErrorBoundary>
@@ -349,7 +349,7 @@ function HealthRow({ label, status }: { label: string; status: string }) {
 
 function CommandButton({ icon: Icon, label, desc, color, onClick }: { icon: any; label: string; desc: string; color: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`${glassStyle} group p-8 rounded-[3rem] hover:bg-white/[0.04] text-left transition-all duration-700 flex items-center gap-8 shadow-inner overflow-hidden relative`}>
+    <button type="button" onClick={onClick} className={`${glassStyle} group p-8 rounded-[3rem] hover:bg-white/[0.04] text-left transition-all duration-700 flex items-center gap-8 shadow-inner overflow-hidden relative`}>
        <div className="absolute inset-x-0 bottom-0 h-1 bg-white scale-x-0 group-hover:scale-x-100 transition-transform duration-700 opacity-20" />
        <div className={`w-20 h-20 rounded-[2.2rem] bg-black/60 border border-white/5 flex items-center justify-center ${color} group-hover:scale-110 group-hover:rotate-12 transition-all shadow-2xl flex-shrink-0`}>
           <Icon size={32} />

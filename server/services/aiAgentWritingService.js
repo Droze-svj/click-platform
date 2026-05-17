@@ -66,7 +66,7 @@ Return only valid JSON.`;
             name: 'invoke_agent AI Writing Agent',
             attributes: {
               'gen_ai.agent.name': 'AI Writing Agent',
-              'gen_ai.request.model': 'gemini-1.5-flash',
+              'gen_ai.request.model': 'gemini-2.5-flash',
               'gen_ai.operation.name': 'invoke_agent',
             },
           },
@@ -151,7 +151,7 @@ Return only valid JSON.`;
             name: 'invoke_agent Viral Quotes Agent',
             attributes: {
               'gen_ai.agent.name': 'Viral Quotes Agent',
-              'gen_ai.request.model': 'gemini-1.5-flash',
+              'gen_ai.request.model': 'gemini-2.5-flash',
               'gen_ai.operation.name': 'invoke_agent',
             },
           },

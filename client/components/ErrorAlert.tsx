@@ -14,6 +14,7 @@ export default function ErrorAlert({ message, onClose }: ErrorAlertProps) {
       </div>
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
           className="text-red-600 hover:text-red-800 font-bold"
         >

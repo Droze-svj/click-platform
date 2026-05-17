@@ -57,6 +57,7 @@ export default function ErrorDisplay({
       </div>
       {onDismiss && (
         <button
+          type="button"
           onClick={onDismiss}
           className="flex-shrink-0 text-current opacity-70 hover:opacity-100"
         >

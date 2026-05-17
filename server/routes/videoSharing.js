@@ -28,7 +28,12 @@ router.post('/share', auth, async (req, res) => {
   }
 
   try {
-    const content = await Content.findById(contentId);
+    // Ownership guard — the previous version did `findById(contentId)`
+    // with no userId filter, so any authenticated user could share any
+    // other user's content to their connected platforms. Scope the
+    // lookup to the caller and return 404 (not 403) so an attacker
+    // can't enumerate valid content ids.
+    const content = await Content.findOne({ _id: contentId, userId });
     if (!content) return sendError(res, 'Content not found', 404);
 
     const mediaUrl = content.originalFile.url; // Or the viral edited version

@@ -36,12 +36,14 @@ export default function ConfirmDialog({
         <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
           <button
+            type="button"
             onClick={onCancel}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             {cancelText}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
             className={`px-4 py-2 text-white rounded-lg font-semibold ${colors[type]}`}
           >

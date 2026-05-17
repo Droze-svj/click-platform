@@ -3,23 +3,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import LoadingSkeleton from '../../../components/LoadingSkeleton'
 import ToastContainer from '../../../components/ToastContainer'
 import {
-  Layout, Hexagon, Zap, Target, Shield, Activity, Cpu, Globe, 
-  Terminal, ArrowLeft, Palette, Layers, Type, Image, X,
-  RefreshCw, CheckCircle, ChevronRight, Sparkles, Hash, Search,
-  Compass, Radio, Gauge, Fingerprint, Network, Calendar, ArrowRight,
-  Workflow, Binary, Orbit, Scan, Command, Wind, Ghost,
-  Signal, ShieldCheck, ActivityIcon, CpuIcon, HardDrive,
-  UserCheck, Key, Anchor, Sparkle, Box
+  Target, Activity, Globe,
+  Terminal, ArrowLeft, Palette, Layers, X,
+  RefreshCw, CheckCircle, ChevronRight, Sparkles,
+  Compass, Gauge, Fingerprint, Network, Calendar, ArrowRight,
+  ShieldCheck, Box
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '../../../contexts/ToastContext'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 const sectors = [
   'health', 'finance', 'education', 'technology',
@@ -150,7 +147,7 @@ export default function SectorResonanceMatrixPage() {
                     <p className="text-2xl font-black text-amber-400 uppercase tracking-[0.4em] italic leading-none mt-2">ACTIVE_SCANNING</p>
                  </div>
               </div>
-              <button onClick={() => loadLattice()} className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
+              <button type="button" onClick={() => loadLattice()} title="Refresh data" aria-label="Refresh data" className={`${glassStyle} w-20 h-20 rounded-[2.5rem] border-2 flex items-center justify-center group shadow-3xl active:scale-90 border-white/5 bg-black/40 backdrop-blur-3xl`}>
                 <RefreshCw size={32} className={`text-slate-500 group-hover:text-amber-400 transition-colors duration-700 ${saving ? 'animate-spin' : ''}`} />
               </button>
            </div>
@@ -261,18 +258,18 @@ export default function SectorResonanceMatrixPage() {
                        <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Resonance Polarity</label>
                        <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-indigo-500/40 transition-all">
                           <div className="w-24 h-24 rounded-[3rem] shadow-3xl relative overflow-hidden border-4 border-white/10 cursor-pointer active:scale-90 transition-transform">
-                             <input type="color" value={identitySettings.primaryColor} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} className="absolute inset-0 scale-[5] cursor-pointer" />
+                             <input type="color" value={identitySettings.primaryColor} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} aria-label="Primary colour picker" title="Primary colour" className="absolute inset-0 scale-[5] cursor-pointer" />
                           </div>
-                          <input type="text" value={identitySettings.primaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
+                          <input type="text" value={identitySettings.primaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })} aria-label="Primary colour hex value" title="Primary colour hex" placeholder="#6366F1" className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
                        </div>
                     </div>
                     <div className="space-y-8">
                        <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Diffraction Baseline</label>
                        <div className="flex items-center gap-8 p-4 rounded-[4rem] bg-black/60 border-2 border-white/5 shadow-inner group/color focus-within:border-indigo-500/40 transition-all">
                           <div className="w-24 h-24 rounded-[3rem] shadow-3xl relative overflow-hidden border-4 border-white/10 cursor-pointer active:scale-90 transition-transform">
-                             <input type="color" value={identitySettings.secondaryColor} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} className="absolute inset-0 scale-[5] cursor-pointer" />
+                             <input type="color" value={identitySettings.secondaryColor} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} aria-label="Secondary colour picker" title="Secondary colour" className="absolute inset-0 scale-[5] cursor-pointer" />
                           </div>
-                          <input type="text" value={identitySettings.secondaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
+                          <input type="text" value={identitySettings.secondaryColor.toUpperCase()} onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })} aria-label="Secondary colour hex value" title="Secondary colour hex" placeholder="#8B5CF6" className="flex-1 bg-transparent text-4xl font-black text-white uppercase tracking-tighter italic focus:outline-none placeholder:text-slate-600 font-mono" />
                        </div>
                     </div>
                  </div>
@@ -280,7 +277,7 @@ export default function SectorResonanceMatrixPage() {
                  <div className="space-y-8">
                     <label className="text-[13px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none ml-10 border-l-4 border-indigo-500/20 pl-6">Logic Topography</label>
                     <div className="relative group/sel">
-                       <select value={identitySettings.font} onChange={e => setIdentitySettings({ ...identitySettings, font: e.target.value })} className="w-full appearance-none bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-5xl font-black text-white italic uppercase focus:border-indigo-500/50 transition-all shadow-inner cursor-pointer hover:bg-black/80 hover:shadow-[inset_0_0_50px_rgba(255,255,255,0.02)]">
+                       <select value={identitySettings.font} onChange={e => setIdentitySettings({ ...identitySettings, font: e.target.value })} aria-label="Brand font selection" title="Select brand font" className="w-full appearance-none bg-black/60 border-4 border-white/10 rounded-[4rem] px-16 py-12 text-5xl font-black text-white italic uppercase focus:border-indigo-500/50 transition-all shadow-inner cursor-pointer hover:bg-black/80 hover:shadow-[inset_0_0_50px_rgba(255,255,255,0.02)]">
                           <option value="Arial" className="bg-[#050505]">ARIAL_LOGIC</option>
                           <option value="Helvetica" className="bg-[#050505]">HELVETICA_PROTOCOL</option>
                           <option value="Verdana" className="bg-[#050505]">VERDANA_FLOW</option>

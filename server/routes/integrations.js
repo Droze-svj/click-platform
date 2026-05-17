@@ -2,6 +2,7 @@
 // Integration marketplace and management
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
@@ -14,6 +15,11 @@ const {
 const Integration = require('../models/Integration');
 
 const router = express.Router();
+
+// Supabase users have UUID ids — Integration.userId is typed as ObjectId,
+// so Mongoose throws CastError when we query with a UUID. Detect and
+// short-circuit to an empty result instead of 400-ing.
+const isMongoId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
 /**
  * GET /api/integrations/marketplace
@@ -50,6 +56,12 @@ router.post('/install', auth, asyncHandler(async (req, res) => {
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
   const { type = null, status = null, workspaceId = null } = req.query;
+
+  // Supabase users — Integration collection only stores ObjectId userIds.
+  // Return empty list instead of throwing a CastError-driven 400.
+  if (!isMongoId(req.user._id)) {
+    return sendSuccess(res, 'Integrations retrieved', 200, { integrations: [] });
+  }
 
   const query = { userId: req.user._id };
   if (type) query.type = type;
@@ -91,6 +103,9 @@ router.get('/setup-status', (req, res) => {
  * Get integration
  */
 router.get('/:id', auth, asyncHandler(async (req, res) => {
+  if (!isMongoId(req.user._id) || !isMongoId(req.params.id)) {
+    return sendError(res, 'Integration not found', 404);
+  }
   const integration = await Integration.findOne({
     _id: req.params.id,
     userId: req.user._id
@@ -116,6 +131,9 @@ router.get('/:id', auth, asyncHandler(async (req, res) => {
  * Update integration
  */
 router.put('/:id', auth, asyncHandler(async (req, res) => {
+  if (!isMongoId(req.user._id) || !isMongoId(req.params.id)) {
+    return sendError(res, 'Integration not found', 404);
+  }
   const integration = await Integration.findOne({
     _id: req.params.id,
     userId: req.user._id
@@ -141,6 +159,9 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
  * Delete integration
  */
 router.delete('/:id', auth, asyncHandler(async (req, res) => {
+  if (!isMongoId(req.user._id) || !isMongoId(req.params.id)) {
+    return sendError(res, 'Integration not found', 404);
+  }
   const integration = await Integration.findOne({
     _id: req.params.id,
     userId: req.user._id
@@ -310,6 +331,13 @@ router.get('/marketplace/search', auth, asyncHandler(async (req, res) => {
 router.get('/analytics', auth, asyncHandler(async (req, res) => {
   const Integration = require('../models/Integration');
   const { startDate, endDate } = req.query;
+
+  if (!isMongoId(req.user._id)) {
+    return sendSuccess(res, 'Integration analytics retrieved', 200, {
+      totalIntegrations: 0, activeIntegrations: 0, totalSyncs: 0,
+      successfulSyncs: 0, errorRate: 0, integrationsByType: {}, recentActivity: [],
+    });
+  }
 
   const query = { userId: req.user._id };
   const integrations = await Integration.find(query).lean();

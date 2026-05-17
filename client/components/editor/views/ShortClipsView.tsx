@@ -257,6 +257,7 @@ const ShortClipsView: React.FC<ShortClipsViewProps> = ({
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
                   <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Target: {hook.endTime - hook.startTime}s Segment</span>
                     <button
+                      type="button"
                       onClick={() => handleApplyHook(hook)}
                       title={`Process ${hook.text}`}
                       className="px-6 py-2.5 rounded-xl bg-rose-500 text-white font-black text-[9px] uppercase tracking-widest italic shadow-lg shadow-rose-500/20 hover:scale-105 transition-transform"

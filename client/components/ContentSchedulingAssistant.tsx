@@ -122,6 +122,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => handleSchedule(time)}
                 className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
@@ -133,6 +134,7 @@ export default function ContentSchedulingAssistant({ contentId, content }: Sched
       </div>
 
       <button
+        type="button"
         onClick={() => router.push('/dashboard/scheduler')}
         className="mt-4 w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
       >

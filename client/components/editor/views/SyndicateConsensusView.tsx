@@ -74,7 +74,8 @@ export const SyndicateConsensusView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
+                        type="button"
                         onClick={triggerConsensus}
                         disabled={loading}
                         className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-2xl transition-all ${

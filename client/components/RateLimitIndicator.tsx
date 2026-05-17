@@ -16,9 +16,9 @@ export default function RateLimitIndicator({ response }: RateLimitIndicatorProps
 
   useEffect(() => {
     if (response) {
-      const remaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0')
-      const limit = parseInt(response.headers.get('X-RateLimit-Limit') || '0')
-      const reset = parseInt(response.headers.get('X-RateLimit-Reset') || '0')
+      const remaining = parseInt(response.headers.get('RateLimit-Remaining') || response.headers.get('X-RateLimit-Remaining') || '0')
+      const limit = parseInt(response.headers.get('RateLimit-Limit') || response.headers.get('X-RateLimit-Limit') || '0')
+      const reset = parseInt(response.headers.get('RateLimit-Reset') || response.headers.get('X-RateLimit-Reset') || '0')
 
       if (remaining !== null && limit !== null) {
         setRateLimitInfo({ remaining, limit, reset })

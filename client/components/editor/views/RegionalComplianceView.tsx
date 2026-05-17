@@ -123,7 +123,8 @@ export const RegionalComplianceView: React.FC = () => {
                                 />
                             </div>
 
-                            <button 
+                            <button
+                                type="button"
                                 onClick={triggerAudit}
                                 disabled={loading}
                                 className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] italic shadow-2xl transition-all ${

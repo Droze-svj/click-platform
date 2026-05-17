@@ -141,6 +141,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Export / Import</h2>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
@@ -153,6 +154,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b">
             <button
+              type="button"
               onClick={() => setActiveTab('export')}
               className={`px-4 py-2 font-medium ${
                 activeTab === 'export'
@@ -163,6 +165,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
               Export
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('import')}
               className={`px-4 py-2 font-medium ${
                 activeTab === 'import'
@@ -198,6 +201,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
               )}
 
               <button
+                type="button"
                 onClick={handleExport}
                 disabled={exporting}
                 className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -232,6 +236,7 @@ export default function ExportImportModal({ isOpen, onClose, type, selectedIds =
               </div>
 
               <button
+                type="button"
                 onClick={handleImport}
                 disabled={!importFile || importing}
                 className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -96,6 +96,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
           </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button
+              type="button"
               onClick={() => setAutoRefresh(!autoRefresh)}
               style={{
                 padding: '4px 8px',
@@ -108,6 +109,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
               {autoRefresh ? '👁️ Auto-refresh' : '👁️‍🗨️ Manual'}
             </button>
             <button
+              type="button"
               onClick={fetchDebugData}
               style={{
                 padding: '4px 8px',
@@ -120,6 +122,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
               🔄 Refresh
             </button>
             <button
+              type="button"
               onClick={exportDebugData}
               style={{
                 padding: '4px 8px',
@@ -132,6 +135,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
               💾 Export
             </button>
             <button
+              type="button"
               onClick={clearDebugData}
               style={{
                 padding: '4px 8px',
@@ -144,6 +148,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
               🗑️ Clear
             </button>
             <button
+              type="button"
               onClick={onClose}
               style={{
                 padding: '4px 8px',
@@ -163,6 +168,7 @@ export default function DebugDashboard({ isOpen, onClose }: DebugDashboardProps)
           <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
             {['overview', 'performance', 'api', 'errors', 'components'].map((tab) => (
               <button
+                type="button"
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 style={{

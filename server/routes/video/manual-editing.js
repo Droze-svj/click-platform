@@ -63,6 +63,34 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage, limits: { fileSize: 2 * 1024 * 1024 * 1024 } }); // 2GB
 
+/**
+ * Auto-cleanup middleware — installed router-wide. By the time `finish`
+ * fires, multer has already populated `req.file` (it runs as per-route
+ * middleware before the handler). When the response closes — success or
+ * error — we delete the multer temp upload at /uploads/manual-editing so
+ * the source video doesn't pile up forever. The actual processed output
+ * (sibling file in the same dir) is preserved for the frontend to fetch;
+ * only the raw input is removed.
+ *
+ * Idempotent and silent: a missing file is fine, since either the request
+ * never received one or we already cleaned it.
+ */
+router.use((req, res, next) => {
+  const cleanup = () => {
+    if (req.file?.path) {
+      fs.promises.unlink(req.file.path).catch(() => { /* gone or never created */ });
+    }
+    if (Array.isArray(req.files)) {
+      for (const f of req.files) {
+        if (f?.path) fs.promises.unlink(f.path).catch(() => {});
+      }
+    }
+  };
+  res.on('finish', cleanup);
+  res.on('close', cleanup);
+  next();
+});
+
 // ==================== 1. ADVANCED COLOR GRADING ====================
 
 router.post('/color-grading/curves', auth, upload.single('video'), asyncHandler(async (req, res) => {

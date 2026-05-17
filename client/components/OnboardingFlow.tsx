@@ -148,6 +148,7 @@ export default function OnboardingFlow() {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setIsVisible(false)}
             className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors text-slate-500 hover:text-white"
             title="Close onboarding"
@@ -188,6 +189,7 @@ export default function OnboardingFlow() {
           <div className="flex gap-4">
             {currentStep > 0 && (
               <button
+                type="button"
                 onClick={prevStep}
                 className="px-6 py-3 rounded-2xl border border-white/10 text-slate-400 font-bold text-sm hover:bg-white/5 hover:text-white transition-all flex items-center gap-2"
               >
@@ -196,6 +198,7 @@ export default function OnboardingFlow() {
               </button>
             )}
             <button
+              type="button"
               onClick={() => currentStep === steps.length - 1 ? finishOnboarding() : nextStep()}
               className="px-8 py-3 rounded-2xl bg-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/20 hover:scale-105 transition-all flex items-center gap-2"
             >
@@ -253,6 +256,7 @@ function ProfileStep({ onComplete }: { onComplete: () => void }) {
       <div className="grid grid-cols-2 gap-4">
         {niches.map(n => (
           <button
+            type="button"
             key={n.id}
             onClick={() => setSelected(n.id)}
             className={`p-6 rounded-3xl border-2 text-left transition-all group ${selected === n.id

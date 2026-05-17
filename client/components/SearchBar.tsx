@@ -92,6 +92,7 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
         </svg>
         {query && (
           <button
+            type="button"
             onClick={() => {
               setQuery('')
               onSearch('')
@@ -107,6 +108,7 @@ export default function SearchBar({ onSearch, placeholder = 'Search...', type = 
         <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {suggestions.map((suggestion) => (
             <button
+              type="button"
               key={suggestion.id}
               onClick={() => handleSuggestionClick(suggestion)}
               className="w-full px-4 py-2 text-left hover:bg-gray-100"

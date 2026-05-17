@@ -2,13 +2,9 @@
 
 const express = require('express');
 const auth = require('../../middleware/auth');
-const {
-  getAuthorizationUrl,
-  exchangeCodeForToken,
-  postTweetForUser,
-  disconnectTwitter,
-  isConfigured
-} = require('../../services/twitterOAuthService');
+// Import the singleton instance directly — destructuring its methods would
+// drop the `this` binding and crash on the first call that touches state.
+const twitterService = require('../../services/twitterOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
@@ -20,28 +16,25 @@ const router = express.Router();
  * Get Twitter OAuth authorization URL
  */
 router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) => {
-  if (!isConfigured()) {
+  if (!twitterService.isConfigured()) {
     return sendError(res, 'Twitter OAuth not configured', 503);
   }
 
-  // Use TWITTER_CALLBACK_URL if set, otherwise construct from request
-  // In production, prefer environment variable to avoid localhost issues
   let callbackUrl = process.env.TWITTER_CALLBACK_URL;
-  
+
   if (!callbackUrl) {
-    // Fallback: construct from request, but prefer HTTPS in production
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
     const host = req.get('host') || req.get('x-forwarded-host') || 'localhost:5001';
     callbackUrl = `${protocol}://${host}/api/oauth/twitter/callback`;
-    
-    // Log warning if using fallback in production
+
     if (process.env.NODE_ENV === 'production') {
       logger.warn('TWITTER_CALLBACK_URL not set, using fallback', { callbackUrl, host });
     }
   }
 
-  const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { url, state } = await twitterService.getAuthorizationUrl(userId, callbackUrl);
+
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
 
@@ -57,13 +50,13 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
   }
 
   try {
-    const { accessToken } = await exchangeCodeForToken(req.user._id, code, state);
-    
-    // Redirect to frontend success page
+    const userId = req.userId || req.user?._id || req.user?.id;
+    await twitterService.exchangeCodeForToken(userId, code, state);
+
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?connected=twitter&success=true`);
   } catch (error) {
-    logger.error('Twitter OAuth callback error', { error: error.message, userId: req.user._id });
+    logger.error('Twitter OAuth callback error', { error: error.message, userId: req.userId });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error.message)}`);
   }
@@ -88,8 +81,9 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   if (replyTo) options.reply = { in_reply_to_tweet_id: replyTo };
   if (mediaIds && mediaIds.length > 0) options.media = { media_ids: mediaIds };
 
-  const tweet = await postTweetForUser(req.user._id, text, options, platform_user_id);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const tweet = await twitterService.postTweetForUser(userId, text, options, platform_user_id);
+
   sendSuccess(res, 'Tweet posted successfully', 200, { tweet });
 }));
 
@@ -98,7 +92,8 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
  * Disconnect Twitter account
  */
 router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  await disconnectTwitter(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  await twitterService.disconnectTwitter(userId);
   sendSuccess(res, 'Twitter account disconnected', 200);
 }));
 
@@ -107,16 +102,15 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get Twitter connection status (supports multiple X accounts)
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const { getConnectedAccounts } = require('../../services/twitterOAuthService');
-  const accounts = await getConnectedAccounts(req.user._id);
-  const connected = accounts.length > 0;
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const accounts = await twitterService.getConnectedAccounts(userId);
+  const connected = Array.isArray(accounts) && accounts.length > 0;
 
   sendSuccess(res, 'Status retrieved', 200, {
     connected,
-    accounts,
-    configured: isConfigured()
+    accounts: accounts || [],
+    configured: twitterService.isConfigured()
   });
 }));
 
 module.exports = router;
-

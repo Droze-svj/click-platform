@@ -187,6 +187,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
            <div className="flex-1 space-y-3 px-2">
               {(['Gen Z', 'B2B Professional', 'Tech Enthusiast', 'Lifestyle/Vlog'] as Persona[]).map(p => (
                 <button
+                  type="button"
                   key={p}
                   onClick={() => setSelectedPersona(p)}
                   className={`w-full p-6 rounded-[2rem] border text-left flex items-center justify-between group transition-all ${selectedPersona === p ? 'bg-indigo-600 border-indigo-500 shadow-xl shadow-indigo-600/20' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
@@ -279,6 +280,7 @@ const PredictionEngineView: React.FC<PredictionEngineViewProps> = ({
            
            {hookTestState === 'idle' && (
              <button
+                type="button"
                 onClick={runHookTest}
                 className="px-8 py-4 rounded-[2rem] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-[0.3em] transition-colors shadow-lg shadow-indigo-500/20 flex items-center gap-3"
              >

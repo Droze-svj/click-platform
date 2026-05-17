@@ -263,6 +263,41 @@ const SECURITY_CHECKS = {
   },
 };
 
+/**
+ * Detect obvious placeholder values that pass length / format checks but
+ * are clearly not real credentials. The previous verifier returned ✅ for
+ * values like "your-twitter-client-id" or "SG.placeholder_..." — which
+ * meant `npm run verify:production:env` reported "all good" right before
+ * a deploy that would 401 on every OAuth handshake. This catches those.
+ *
+ * Returns the matched placeholder pattern (string) if value is a
+ * placeholder, otherwise null.
+ */
+const PLACEHOLDER_PATTERNS = [
+  /^your[-_]/i,
+  /placeholder/i,
+  /change[-_]?(me|this)/i,
+  /^(xxx|yyy|zzz)/i,
+  /^example[-_]/i,
+  /must[-_]be[-_]real/i,
+  /^todo$/i,
+  /^prod_[a-z_]+_(monthly|yearly)$/i,   // e.g. prod_creator_monthly (fake Whop product ids)
+  /^https?:\/\/whop\.com\/checkout\/(creator|pro|agency)-(monthly|yearly)$/i, // fake Whop URLs from .env.production template
+  /^sk-(test|fake|placeholder)/i,
+  /^sg\.placeholder/i,
+  /^apik_placeholder/i,
+  /default[-_]secret/i,
+  /^test[-_]?(client|key|secret|id)$/i,
+];
+
+function detectPlaceholder(value) {
+  if (!value || typeof value !== 'string') return null;
+  for (const pattern of PLACEHOLDER_PATTERNS) {
+    if (pattern.test(value)) return pattern.toString();
+  }
+  return null;
+}
+
 function loadEnvFile(filePath) {
   const env = {};
   
@@ -314,17 +349,26 @@ function verifyEnvironment() {
   console.log('📋 Checking Required Variables...');
   for (const [varName, config] of Object.entries(REQUIRED_VARS)) {
     const value = env[varName];
-    
+
     if (!value) {
       errors.push(`❌ ${varName}: Missing (required)`);
       continue;
     }
-    
+
     if (config.validate && !config.validate(value)) {
       errors.push(`❌ ${varName}: Invalid - ${config.message}`);
       continue;
     }
-    
+
+    // Catch placeholder values that pass length / format checks but are
+    // clearly the .env.example template strings (the previous verifier
+    // approved "your-twitter-client-id" and "prod_creator_monthly" as ✅).
+    const placeholderMatch = detectPlaceholder(value);
+    if (placeholderMatch) {
+      errors.push(`❌ ${varName}: Placeholder value detected ("${value}" matches ${placeholderMatch}) — replace with the real credential from the provider's dev console`);
+      continue;
+    }
+
     // Mask sensitive values for display
     const displayValue = varName.includes('SECRET') || varName.includes('KEY') || varName.includes('PASSWORD')
       ? '***' + value.slice(-4)
@@ -336,17 +380,25 @@ function verifyEnvironment() {
   console.log('\n📋 Checking Recommended Variables...');
   for (const [varName, config] of Object.entries(RECOMMENDED_VARS)) {
     const value = env[varName];
-    
+
     if (!value) {
       warnings.push(`⚠️  ${varName}: Not set (recommended)`);
       continue;
     }
-    
+
     if (config.validate && !config.validate(value)) {
       warnings.push(`⚠️  ${varName}: Invalid - ${config.message}`);
       continue;
     }
-    
+
+    // Placeholder check (same logic as required vars, but emits a warning
+    // instead of an error since these are not strictly required).
+    const placeholderMatch = detectPlaceholder(value);
+    if (placeholderMatch) {
+      warnings.push(`⚠️  ${varName}: Placeholder value ("${value}") — replace with the real credential`);
+      continue;
+    }
+
     // Mask sensitive values
     const displayValue = varName.includes('SECRET') || varName.includes('KEY') || varName.includes('PASSWORD')
       ? '***' + value.slice(-4)
@@ -385,8 +437,16 @@ function verifyEnvironment() {
     securityIssues.forEach(issue => console.log(`   ${issue}`));
   }
   
-  const allPass = errors.length === 0 && securityIssues.length === 0;
-  
+  // Count placeholders among warnings — these aren't optional like Sentry
+  // or GA; they're real production blockers (SendGrid placeholder = no
+  // emails sent; Whop product placeholders = no plan upgrades happen).
+  // We separate the "truly recommended but missing" case from the
+  // "placeholder value that will silently break the feature" case.
+  const placeholderWarnings = warnings.filter((w) => /Placeholder value/.test(w));
+  const purelyOptional = warnings.length - placeholderWarnings.length;
+
+  const allPass = errors.length === 0 && securityIssues.length === 0 && placeholderWarnings.length === 0;
+
   if (allPass) {
     console.log('\n✅ All required variables are set correctly!');
     if (warnings.length === 0) {
@@ -395,7 +455,22 @@ function verifyEnvironment() {
       console.log(`⚠️  ${warnings.length} recommended variable(s) missing (non-critical)`);
     }
   } else {
-    console.log('\n❌ Verification failed. Please fix the errors above.');
+    console.log('\n❌ Verification failed.');
+    if (placeholderWarnings.length > 0) {
+      console.log(`   🔴 ${placeholderWarnings.length} placeholder value(s) detected — replace with real credentials before deploy:`);
+      for (const w of placeholderWarnings) {
+        console.log('     ' + w.replace(/^[⚠️  ]+/u, ''));
+      }
+    }
+    if (errors.length > 0) {
+      console.log(`   ❌ ${errors.length} required variable(s) missing or invalid`);
+    }
+    if (securityIssues.length > 0) {
+      console.log(`   🔴 ${securityIssues.length} security issue(s)`);
+    }
+    if (purelyOptional > 0) {
+      console.log(`   ⚠️  ${purelyOptional} purely-optional variable(s) missing (non-blocking)`);
+    }
     process.exit(1);
   }
   

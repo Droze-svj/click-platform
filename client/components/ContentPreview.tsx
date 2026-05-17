@@ -21,6 +21,7 @@ export default function ContentPreview({ content, onClose }: ContentPreviewProps
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Preview</h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >
@@ -77,6 +78,7 @@ export default function ContentPreview({ content, onClose }: ContentPreviewProps
 
         <div className="mt-6 flex justify-end">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
           >

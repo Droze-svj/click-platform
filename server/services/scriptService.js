@@ -2,7 +2,7 @@
 
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-const { buildSystemPrompt } = require('./marketingKnowledge');
+const { buildSystemPrompt, getTopPerformingPlaybook } = require('./marketingKnowledge');
 
 /**
  * Generate YouTube video script with Strategic Upgrades (Phase 11)
@@ -25,14 +25,27 @@ async function generateYouTubeScript(topic, options = {}) {
   } = options;
 
   try {
+    // Bias the prompt toward the creator's proven hook angles + CTA
+    // categories when we know who they are. Cold-start users (no userId
+    // or no history yet) get pure-playbook generation.
+    const topPerformers = options.userId
+      ? await getTopPerformingPlaybook(options.userId, targetAudience, options.platform || 'youtube').catch(() => null)
+      : null;
     const system = buildSystemPrompt({
       persona: 'script-writer',
       niche: targetAudience,
       platform: options.platform || 'youtube',
       stage: 'script',
       language: options.language || 'en',
+      topPerformers,
     });
     const prompt = `${system}
+
+── Grounding rules ──
+- Only use claims you can support from the topic statement or the playbook above.
+- Do NOT invent statistics, study citations, dollar amounts, dates, brand names, or named experts. If you don't have a real source, state the claim generically ("studies suggest…" is OK only if the playbook says so; specific "Stanford 2023 study found 47%" is NOT OK).
+- The "engagementScore" field is a relative estimate based on the framework's proven patterns; it is NOT a real-world view-count prediction.
+- Stay neutral on gender / race / age / body type unless the topic explicitly calls for one.
 
 ── Task ──
 Create a ${duration}-minute YouTube video script about "${topic}".
@@ -209,12 +222,17 @@ Requirements:
 - Include a call-to-action
 - Format as JSON with: title, content, hashtags, callToAction`;
 
+    const socialNiche = options.targetAudience || 'other';
+    const socialTopPerformers = options.userId
+      ? await getTopPerformingPlaybook(options.userId, socialNiche, platform).catch(() => null)
+      : null;
     const system = buildSystemPrompt({
       persona: 'script-writer',
-      niche: options.targetAudience || 'other',
+      niche: socialNiche,
       platform,
       stage: 'script',
       language: options.language || 'en',
+      topPerformers: socialTopPerformers,
     });
     const fullPrompt = `${system}\n\n── Task ──\n${prompt}`;
     const content = await geminiGenerate(fullPrompt, { temperature: 0.8, maxTokens: 500 });

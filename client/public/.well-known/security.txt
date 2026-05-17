@@ -1,0 +1,12 @@
+# Click — Security Disclosure Policy
+# https://click.example/security
+
+Contact: mailto:security@click.example
+Contact: https://click.example/security
+Expires: 2027-01-01T00:00:00.000Z
+Encryption: https://click.example/.well-known/security-pgp.asc
+Acknowledgments: https://click.example/security#hall-of-fame
+Preferred-Languages: en
+Canonical: https://click.example/.well-known/security.txt
+Policy: https://click.example/security
+Hiring: https://click.example/careers

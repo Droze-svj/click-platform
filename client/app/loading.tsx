@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 z-[100] bg-[var(--page-bg)] flex flex-col items-center justify-center" role="status" aria-live="polite" aria-label="Loading Click">
+    <div className="min-h-screen w-full bg-[var(--page-bg)] flex flex-col items-center justify-center relative overflow-hidden" role="status" aria-live="polite" aria-label="Loading Click">
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30vh] h-[30vh] bg-indigo-600/20 blur-[100px] rounded-full animate-pulse" />
 

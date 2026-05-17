@@ -90,18 +90,21 @@ const CreatorPayoutMap: React.FC<CreatorPayoutMapProps> = ({ onApplyStyleBridge,
             <div className="h-4 w-[1px] bg-white/10" />
             <div className="flex bg-white/5 rounded-full p-1 border border-white/5">
                <button
+                 type="button"
                  onClick={() => setViewMode('revenue')}
                  className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.1em] transition-all ${viewMode === 'revenue' ? 'bg-emerald-500 text-black' : 'text-slate-500 hover:text-white'}`}
                >
                  Revenue Flow
                </button>
                <button
+                 type="button"
                  onClick={() => setViewMode('style')}
                  className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.1em] transition-all ${viewMode === 'style' ? 'bg-violet-500 text-white' : 'text-slate-500 hover:text-white'}`}
                >
                  Style DNA
                </button>
                <button
+                 type="button"
                  onClick={() => setViewMode('evolution')}
                  className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.1em] transition-all ${viewMode === 'evolution' ? 'bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.4)]' : 'text-slate-500 hover:text-white'}`}
                >

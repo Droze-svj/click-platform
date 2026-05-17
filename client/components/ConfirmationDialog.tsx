@@ -114,6 +114,7 @@ export default function ConfirmationDialog({
             </div>
             {!isLoading && (
               <button
+                type="button"
                 onClick={onClose}
                 className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                 aria-label="Close dialog"
@@ -126,6 +127,7 @@ export default function ConfirmationDialog({
           {/* Actions */}
           <div className="flex justify-end gap-3 mt-6">
             <button
+              type="button"
               ref={cancelButtonRef}
               onClick={onClose}
               disabled={isLoading}
@@ -134,6 +136,7 @@ export default function ConfirmationDialog({
               {cancelLabel}
             </button>
             <button
+              type="button"
               onClick={onConfirm}
               disabled={isLoading}
               className={`

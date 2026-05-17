@@ -164,6 +164,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
               const hasSynergy = currentScore.viralPotential > 80 && activePlatform === p.id
               return (
                 <button
+                  type="button"
                   key={p.id}
                   onClick={() => setActivePlatform(p.id)}
                   aria-label={`Select ${p.label}`}
@@ -370,6 +371,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
           <div className="grid grid-cols-2 gap-2">
             {nicheOptions.map((opt) => (
               <button
+                type="button"
                 key={opt.id}
                 onClick={() => onNicheChange(opt.id)}
                 className={`py-2 px-3 rounded-xl text-[9px] font-black uppercase tracking-tighter transition-all border ${
@@ -455,6 +457,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
               className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-[11px] font-medium text-slate-300 focus:outline-none focus:border-indigo-500 transition-all resize-none h-24 placeholder:text-slate-600"
             />
             <button
+              type="button"
               onClick={() => { onManualOverride(overrideText); setOverrideText('') }}
               title="Send neural override command"
               className="absolute bottom-3 right-3 p-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-all shadow-lg text-white"
@@ -466,6 +469,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         {/* Scheduling Action */}
         <button
+          type="button"
           onClick={onScheduleUpload}
           className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-fuchsia-600 border border-white/20 py-4 rounded-2xl flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl"
         >

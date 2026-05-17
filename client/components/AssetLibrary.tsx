@@ -372,6 +372,7 @@ export default function AssetLibrary({
               />
             </div>
             <button
+              type="button"
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
               className="p-3.5 bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] rounded-2xl transition-all"
             >
@@ -384,6 +385,7 @@ export default function AssetLibrary({
         <div className="flex flex-wrap gap-3 mb-8">
           {(['all', 'music', 'image', 'broll', 'hook', 'favorites', 'recent', 'uploads'] as AssetType[]).map(type => (
             <button
+              type="button"
               key={type}
               onClick={() => setSelectedType(type)}
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center gap-3 border shadow-2xl ${selectedType === type
@@ -613,6 +615,7 @@ export default function AssetLibrary({
                   </button>
                   {onAddToTimeline && (
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         onAddToTimeline(asset, currentTime)
@@ -673,7 +676,7 @@ export default function AssetLibrary({
               <div className="p-10 space-y-8">
                 <div className="flex items-center justify-between">
                   <h2 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter">{previewAsset.title}</h2>
-                  <button onClick={() => setPreviewAsset(null)} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
+                  <button type="button" onClick={() => setPreviewAsset(null)} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
                 </div>
                 <div className="aspect-video bg-black/50 rounded-[3rem] border border-white/5 flex items-center justify-center relative overflow-hidden shadow-inner">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_70%)]" />

@@ -53,11 +53,26 @@
     "setNiche": "Set niche",
     "next": "Next",
     "stages": {
-      "ingest":   { "label": "Ingest",   "description": "Bring footage in — upload, paste a link, or record live." },
-      "script":   { "label": "Script",   "description": "AI drafts hook, body, and CTA tuned to your niche." },
-      "edit":     { "label": "Edit",     "description": "Cut, caption, and brand the video with style intelligence." },
-      "schedule": { "label": "Schedule", "description": "Queue across platforms at optimal post times." },
-      "analyze":  { "label": "Analyze",  "description": "Measure performance and learn what to repeat." }
+      "ingest": {
+        "label": "Ingest",
+        "description": "Bring footage in — upload, paste a link, or record live."
+      },
+      "script": {
+        "label": "Script",
+        "description": "AI drafts hook, body, and CTA tuned to your niche."
+      },
+      "edit": {
+        "label": "Edit",
+        "description": "Cut, caption, and brand the video with style intelligence."
+      },
+      "schedule": {
+        "label": "Schedule",
+        "description": "Queue across platforms at optimal post times."
+      },
+      "analyze": {
+        "label": "Analyze",
+        "description": "Measure performance and learn what to repeat."
+      }
     }
   },
   "ingest": {
@@ -106,7 +121,15 @@
   },
   "language": {
     "label": "Language",
-    "picker": "Select language"
+    "picker": "Select language",
+    "options": "Języki",
+    "search": "Szukaj języków…",
+    "recent": "Ostatnio używane",
+    "recentBadge": "ostatnie",
+    "all": "Wszystkie języki",
+    "noResults": "Brak pasujących języków",
+    "useSuggested": "Użyj",
+    "useIt": "Użyj go"
   },
   "dashboard": {
     "title": "Dashboard",

@@ -36,6 +36,7 @@ Use **Remotion** when you need **server-side or headless video export** from Rea
 - **When to use:** High-quality export (ProRes, H.264) with full control over every frame; reusable React components for lower-thirds, captions, motion graphics; timeline-driven animations via `useCurrentFrame()` and `interpolate()`.
 - **Integration:** Add a Remotion project (or subfolder) and a composition that reads editor state (segments, overlays, keyframes). Render via `npx remotion render` or Remotion Lambda. The existing server FFmpeg pipeline can remain for quick exports; use Remotion for “final master” or template-based exports.
 - **Example pattern:**
+
   ```tsx
   // Remotion composition (conceptual)
   export const ClickComposition = () => {

@@ -9,10 +9,30 @@ const { sanitizeString, sanitizeObject, sanitizeMongoQuery, validateInput } = re
 // Use advanced sanitizer from utils
 
 /**
- * Sanitize input middleware
+ * Paths whose query/body params must NEVER be HTML-escaped. OAuth
+ * callbacks carry opaque tokens (`code`, `state`, JWT-shaped `id_token`)
+ * that the platform generates and we round-trip verbatim — escaping
+ * `/` to `&#x2F;` or `&` to `&amp;` inside them produces garbage that
+ * the platform's token endpoint rejects with "Malformed auth code" or
+ * an equivalent error. Google's `4/0...` codes were the canary; the
+ * other platforms work today only because their codes happen to be
+ * base64url-clean.
+ *
+ * Anything else that needs to pass raw bytes through (webhooks, etc.)
+ * can be added here. Keep this list narrow.
  */
+const SANITIZER_BYPASS_PATHS = [
+  /^\/api\/oauth\/[^/]+\/callback($|\?)/,
+  /^\/api\/oauth\/callback($|\?)/, // legacy single-callback path, just in case
+];
+
 function sanitizeInput(req, res, next) {
   try {
+    // Skip sanitization for OAuth callback paths — see comment above.
+    const reqPath = req.path || req.url || '';
+    if (SANITIZER_BYPASS_PATHS.some((rx) => rx.test(reqPath))) {
+      return next();
+    }
     if (req.body) {
       req.body = sanitizeObject(req.body, {});
     }

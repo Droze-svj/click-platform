@@ -150,6 +150,7 @@ export default function CollaborativeComments({ entityId, teamId, title }: { ent
             className="w-full bg-black/40 border border-white/10 rounded-2xl pl-4 pr-12 py-4 text-xs text-white placeholder:text-slate-700 focus:outline-none focus:border-indigo-500 transition-all"
           />
           <button
+            type="button"
             onClick={handleSend}
             disabled={sending || !newComment.trim()}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-30"

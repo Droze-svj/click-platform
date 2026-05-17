@@ -146,6 +146,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
         <div style={{ display: 'flex', gap: 8 }}>
           {['summary', 'quiz', 'avatar'].map(v => (
             <button
+              type="button"
               key={v}
               onClick={() => { setView(v as any); setQuizStep(0); }}
               style={{
@@ -171,7 +172,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
             <div style={{ padding: '12px 14px', background: 'rgba(168,85,247,0.08)', borderRadius: 10, border: '1px dashed rgba(168,85,247,0.3)', marginBottom: 14, textAlign: 'center' }}>
               <div style={{ color: '#a855f7', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>🧬 Your Creator DNA is not set up</div>
               <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 10 }}>Set up your DNA so CLICK writes in YOUR voice, not generic AI voice.</div>
-              <button onClick={() => setView('quiz')} style={{ padding: '8px 18px', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => setView('quiz')} style={{ padding: '8px 18px', background: 'linear-gradient(135deg, #a855f7, #7c3aed)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 🚀 Set Up My DNA (2 mins)
               </button>
             </div>
@@ -254,6 +255,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                   {currentQuestion.options.map(opt => (
                     <button
+                      type="button"
                       key={opt.value}
                       onClick={() => { setAnswer(currentQuestion.id, opt.value); }}
                       style={{
@@ -301,6 +303,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                     const selected = (answers[currentQuestion.id] || []).includes(val);
                     return (
                       <button
+                        type="button"
                         key={val}
                         onClick={() => toggleMultiSelect(currentQuestion.id, val)}
                         style={{
@@ -325,6 +328,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
           {/* Navigation */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20 }}>
             <button
+              type="button"
               onClick={() => setQuizStep(Math.max(0, quizStep - 1))}
               disabled={quizStep === 0}
               style={{
@@ -341,6 +345,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
 
             {quizStep < questions.length - 1 ? (
               <button
+                type="button"
                 onClick={() => setQuizStep(quizStep + 1)}
                 style={{
                   padding: '8px 20px',
@@ -354,6 +359,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
               </button>
             ) : (
               <button
+                type="button"
                 onClick={saveDNA}
                 disabled={saving}
                 style={{
@@ -426,6 +432,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
                   { id: 'custom', label: '✨ Custom' }
                 ].map(av => (
                   <button
+                    type="button"
                     key={av.id}
                     onClick={() => setAvatarData({ ...avatarData, characterId: av.id })}
                     style={{
@@ -471,6 +478,7 @@ export default function CreatorDNA({ onDNASaved, compact = false, className = ''
               {saved ? '✨ Synchronized with Neural Core' : 'Select an archetype above'}
             </div>
             <button
+              type="button"
               onClick={saveAvatar}
               disabled={saving}
               style={{

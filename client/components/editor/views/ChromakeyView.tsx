@@ -76,6 +76,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
       <div className={`relative p-8 rounded-[3rem] border transition-all duration-700 overflow-hidden ${glassStyle} ${chromaKey.enabled ? 'border-emerald-500/50 shadow-[0_0_60px_rgba(16,185,129,0.15)]' : 'border-white/10'}`}>
         <div className="absolute top-8 right-8 flex gap-3">
           <button
+            type="button"
             onClick={() => setActivePreview(!activePreview)}
             title={activePreview ? "Disable AI Preview" : "Enable AI Preview"}
             className={`flex items-center gap-2 px-4 py-2 rounded-full border text-[9px] font-black uppercase italic transition-all ${activePreview ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
@@ -139,9 +140,8 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 ml-2">Target Extraction Color</h4>
             <div className="flex flex-wrap items-center gap-4 mb-6">
               {PRESET_COLORS.filter((p) => p.hex).map((p) => (
-                <button
+                <button type="button"
                   key={p.name}
-                  type="button"
                   onClick={() => setPreset(p.hex)}
                   className={`w-14 h-14 rounded-2xl border-2 transition-all shadow-xl hover:scale-110 ${chromaKey.color.toLowerCase() === p.hex.toLowerCase() ? 'border-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'border-white/10 hover:border-white/30'}`}
                   style={{ backgroundColor: p.hex }}
@@ -203,7 +203,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
 
             <div className="mt-8 flex justify-end">
                 <button
-                  type="button"
+                 type="button"
                   onClick={reset}
                   title="Reset Chroma Engine Parameters"
                   className="flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -235,6 +235,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
           <div className="flex gap-4">
             {samMode && (
               <button
+                type="button"
                 onClick={() => showToast('Optimization routine running...', 'info')}
                 title="Optimize Neural Weights"
                 className="px-6 py-4 rounded-[1.5rem] bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500/20 transition-all"
@@ -243,6 +244,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
               </button>
             )}
             <button
+              type="button"
               onClick={() => {
                 setSamMode(!samMode)
                 showToast(samMode ? 'SAM Node Offline' : 'SAM Model Loaded - Points Initialized', 'success')
@@ -326,6 +328,7 @@ const ChromakeyView: React.FC<ChromakeyViewProps> = ({ chromaKey, setChromaKey, 
              </div>
              <p className="text-[10px] text-slate-700 font-black uppercase tracking-[0.3em] italic relative z-10">Waiting for Engine Initiation...</p>
              <button
+               type="button"
                onClick={() => { setSamMode(true); showToast('SAM Model Initialized', 'success') }}
                className="mt-6 px-10 py-3 rounded-full bg-white/5 border border-white/5 text-[9px] font-black text-slate-500 hover:text-white hover:border-white/10 transition-all uppercase tracking-[0.2em] relative z-10"
              >

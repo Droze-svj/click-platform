@@ -1,0 +1,25 @@
+/* ── AdvancedTimelineView styles ──────────────────────────────────────────────
+   Dynamic per-element values (height, opacity, backgroundColor, width, left, top)
+   are applied directly via React's style prop on the element.
+   These classes handle only the decorative/structural rules that don't require
+   runtime values.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Track-label sidebar row — height and opacity set directly via style prop. */
+.trackRow {
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s ease;
+}
+
+/* Scrollable Konva stage wrapper — width and height set directly via style prop. */
+.canvas {
+  position: relative;
+}
+
+/* Right-click context menu — left and top set directly via style prop.
+   min-width kept here so it stays out of the JSX. */
+.contextMenu {
+  position: fixed;
+  min-width: 160px;
+}

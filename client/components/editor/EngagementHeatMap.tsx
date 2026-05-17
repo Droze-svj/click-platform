@@ -66,7 +66,7 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
             <Activity className="w-4 h-4 text-emerald-400 animate-pulse" />
           </div>
           <div>
-            <h4 className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">Neural Engagement Map</h4>
+            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em] italic">Neural Engagement Map</h4>
             <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Predictive Retention // 0xRetent</p>
           </div>
         </div>
@@ -84,7 +84,7 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
         {/* Playhead Indicator */}
         <motion.div
           className="absolute top-0 bottom-0 w-[2px] bg-white z-20 shadow-[0_0_15px_rgba(255,255,255,0.8)]"
-          style={{ left: `${progress}%` }}
+          style={{ '--progress-left': `${progress}%`, left: 'var(--progress-left)' } as any}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         />
 
@@ -97,9 +97,11 @@ const EngagementHeatMap: React.FC<EngagementHeatMapProps> = ({
                 : 'bg-white/10'
             }`}
             style={{
-              height: `${wave.score}%`,
-              opacity: (i / 100) * 100 > progress ? 0.3 : 1
-            }}
+              '--wave-height': `${wave.score}%`,
+              '--wave-opacity': (i / 100) * 100 > progress ? 0.3 : 1,
+              height: 'var(--wave-height)',
+              opacity: 'var(--wave-opacity)'
+            } as any}
           />
         ))}
       </div>

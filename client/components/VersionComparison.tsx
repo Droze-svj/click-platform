@@ -92,6 +92,7 @@ export default function VersionComparison({
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Version Comparison</h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >
@@ -213,6 +214,7 @@ export default function VersionComparison({
             <option value="pdf">PDF</option>
           </select>
           <button
+            type="button"
             onClick={handleExport}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >

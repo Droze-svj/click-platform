@@ -101,6 +101,7 @@ export default function SubscriptionStatus() {
 
         {(status.isExpired || status.isExpiringSoon) && (
           <button
+            type="button"
             onClick={() => router.push('/dashboard/membership')}
             className="w-full mt-4 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >

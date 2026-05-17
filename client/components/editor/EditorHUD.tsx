@@ -23,6 +23,8 @@ import {
   Timer,
   Cpu,
   Bot,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { EditorCategory, StyleDNA } from '../../types/editor'
 
@@ -53,6 +55,8 @@ interface EditorHUDProps {
   agentRunning?: boolean
   styleDNA?: StyleDNA
   onNormalizeStyle?: () => void
+  zenMode?: boolean
+  setZenMode?: (val: boolean) => void
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -75,27 +79,27 @@ function ScoreRing({
 
   return (
     <svg width={size} height={size} className="shrink-0 -rotate-90">
-      {/* Track */}
       <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke="rgba(255,255,255,0.05)"
+        className="text-white/10"
         strokeWidth={strokeWidth}
-      />
-      {/* Progress */}
-      <circle
+        stroke="currentColor"
+        fill="transparent"
+        r={r}
         cx={size / 2}
         cy={size / 2}
-        r={r}
-        fill="none"
-        stroke={color}
+      />
+      <motion.circle
+        className="transition-all duration-700 ease-out"
         strokeWidth={strokeWidth}
         strokeDasharray={circ}
-        strokeDashoffset={fill}
+        initial={{ strokeDashoffset: circ }}
+        animate={{ strokeDashoffset: fill }}
+        stroke={color}
+        fill="transparent"
+        r={r}
+        cx={size / 2}
+        cy={size / 2}
         strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.22,1,0.36,1)' }}
       />
     </svg>
   )
@@ -169,8 +173,8 @@ function HUDTooltip({
 
 /** Mini bar chart for a sub-score */
 function ScoreBar({ label, value }: { label: string; value: number }) {
-  const col =
-    value >= 90 ? '#34d399' : value >= 70 ? '#fbbf24' : '#f87171'
+  const barColorClass =
+    value >= 90 ? 'bg-emerald-400' : value >= 70 ? 'bg-amber-400' : 'bg-red-400'
   return (
     <div className="flex items-center gap-2">
       <span className="text-[9px] text-slate-400 w-16 shrink-0">{label}</span>
@@ -179,8 +183,7 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="h-full rounded-full"
-          style={{ backgroundColor: col }}
+          className={`h-full rounded-full ${barColorClass}`}
         />
       </div>
       <span className="text-[9px] font-mono font-black text-slate-300 w-6 text-right">{value}</span>
@@ -230,10 +233,10 @@ const scoreTxtColor = (v: number) =>
 
 const scoreBg = (v: number) =>
   v >= 90
-    ? 'bg-emerald-500/10 border-emerald-500/20'
+    ? 'bg-emerald-500/5 border-emerald-500/20'
     : v >= 70
-    ? 'bg-amber-500/10 border-amber-500/20'
-    : 'bg-rose-500/10 border-rose-500/20'
+    ? 'bg-amber-500/5 border-amber-500/20'
+    : 'bg-rose-500/5 border-rose-500/20'
 
 // ─── Delta Flasher hook ───────────────────────────────────────────────────────
 
@@ -274,29 +277,33 @@ function MetricPill({
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`relative flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[10px] font-black transition-all ${scoreBg(value)} ${
-        isOpen ? 'ring-1 ring-indigo-500/40' : ''
-      } hover:brightness-125`}
+      aria-label={`${label} score ${value}%`}
+      aria-haspopup="dialog"
+      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-2xl border-2 text-[10px] font-black uppercase italic transition-all backdrop-blur-xl ${scoreBg(value)} ${
+        isOpen ? 'ring-2 ring-primary-500/40 border-primary-500/40' : 'border-white/5'
+      } hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 shadow-lg`}
+      style={{ '--icon-col': col } as any}
     >
       {/* Ring + icon combined */}
       <div className="relative flex items-center justify-center shrink-0">
-        <ScoreRing value={value} size={18} strokeWidth={2} color={col} />
-        <Icon className="absolute w-2 h-2" style={{ color: col }} />
+        <ScoreRing value={value} size={20} strokeWidth={2.5} color={col} />
+        <Icon className="absolute w-2.5 h-2.5 text-[var(--icon-col)]" />
       </div>
 
-      <span className={`font-mono tabular-nums ${scoreTxtColor(value)}`}>{value}%</span>
-      <span className="text-slate-500 hidden lg:block">{label}</span>
+      <span className={`font-mono tabular-nums tracking-tighter ${scoreTxtColor(value)}`}>{value}%</span>
+      <span className="text-slate-500 hidden xl:block tracking-widest">{label}</span>
 
       {/* Delta flash */}
       <AnimatePresence>
         {delta !== null && (
           <motion.span
             initial={{ opacity: 0, y: -6, scale: 0.8 }}
-            animate={{ opacity: 1, y: -16, scale: 1 }}
+            animate={{ opacity: 1, y: -20, scale: 1.2 }}
             exit={{ opacity: 0, scale: 0.7 }}
             transition={{ duration: 0.3 }}
-            className={`absolute -top-1 left-1/2 -translate-x-1/2 text-[9px] font-black pointer-events-none ${
+            className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-black pointer-events-none drop-shadow-md ${
               delta > 0 ? 'text-emerald-400' : 'text-rose-400'
             }`}
           >
@@ -334,7 +341,9 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   gpuVendor,
   agentRunning = false,
   styleDNA,
-  onNormalizeStyle
+  onNormalizeStyle,
+  zenMode = false,
+  setZenMode
 }) => {
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [openMetric, setOpenMetric] = useState<'engagement' | 'viral' | 'hook' | null>(null)
@@ -368,27 +377,34 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
 
   return (
     <motion.div
-      initial={{ y: -24, opacity: 0 }}
+      initial={{ y: -30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute top-3 left-1/2 -translate-x-1/2 z-50 w-full px-4 neural-hud-max-w"
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-6rem)] neural-hud-max-w"
     >
       {/* ── Main bar ── */}
-      <div className="flex items-center gap-2 h-12 px-3 rounded-2xl border border-white/[0.07] neural-hud-bar">
+      <div className="flex items-center gap-3 h-14 px-4 rounded-[1.5rem] sm:rounded-[2rem] border-2 border-white/5 bg-black/40 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+        
+        {/* Subtle Scanline Decor */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />
 
         {/* ── Brand + Project Name ── */}
-        <div className="flex items-center gap-2.5 shrink-0 min-w-0">
-          <div className="w-7 h-7 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
-            <Zap className="w-3.5 h-3.5 text-white fill-white" />
+        <div className="flex items-center gap-4 shrink-0 min-w-0 relative z-10">
+          <div className="w-9 h-9 rounded-[1.25rem] bg-primary-600 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] shrink-0 group-hover:scale-110 transition-transform duration-500">
+            <Zap className="w-4 h-4 text-white fill-white" />
           </div>
 
           <div className="flex flex-col min-w-0">
-            <input
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              className="bg-transparent border-none text-white font-black text-[12px] tracking-tight focus:ring-0 p-0 outline-none w-[120px] truncate leading-tight"
-              placeholder="Untitled Project"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                aria-label="Project name"
+                className="bg-transparent border-none text-white font-black text-sm tracking-tight focus:ring-0 p-0 outline-none min-w-[80px] max-w-[140px] sm:max-w-[220px] lg:max-w-[320px] w-full truncate leading-none transition-all uppercase italic"
+                placeholder="UNTITLED_SEQUENCE"
+              />
+              <div className="hidden sm:block w-1 h-1 rounded-full bg-white/20 shrink-0" />
+            </div>
             {/* Context label */}
             <AnimatePresence mode="wait">
               {categoryLabel && (
@@ -398,15 +414,15 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="text-[8px] font-black uppercase tracking-[0.2em] text-indigo-400/60 leading-tight hidden sm:block"
+                  className="text-[9px] font-black uppercase tracking-[0.3em] text-primary-400/60 leading-none mt-1 hidden sm:block italic"
                 >
-                  • {categoryLabel}
+                  {categoryLabel}
                 </motion.span>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Autosave pill — animated cross-fade */}
+          {/* Autosave pill */}
           <AnimatePresence mode="wait">
             <motion.div
               key={autosaveStatus}
@@ -414,62 +430,51 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
               transition={{ duration: 0.2 }}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest shrink-0 ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 text-[9px] font-black uppercase tracking-widest shrink-0 shadow-sm ${
                 autosaveStatus === 'saving'
-                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                  ? 'bg-amber-500/5 border-amber-500/20 text-amber-400'
                   : autosaveStatus === 'error'
-                  ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  ? 'bg-rose-500/5 border-rose-500/20 text-rose-400'
+                  : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
               }`}
             >
               {autosaveStatus === 'saving' ? (
-                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin" />
               ) : autosaveStatus === 'error' ? (
-                <AlertCircle className="w-2.5 h-2.5" />
+                <AlertCircle className="w-3 h-3" />
               ) : (
-                <CheckCircle2 className="w-2.5 h-2.5" />
+                <CheckCircle2 className="w-3 h-3" />
               )}
-              <span className="hidden sm:block">
-                {autosaveStatus === 'saving' ? 'SYNCHRONIZING' : autosaveStatus === 'error' ? 'ABORTED' : 'COMMITTED'}
+              <span className="hidden xl:block italic">
+                {autosaveStatus === 'saving' ? 'SYNCING' : autosaveStatus === 'error' ? 'FAIL' : 'SECURE'}
               </span>
             </motion.div>
           </AnimatePresence>
-
-          {/* Style DNA Sync Badge */}
-          {styleDNA && (
-            <div 
-              onClick={onNormalizeStyle}
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 group cursor-pointer hover:bg-indigo-500/10 transition-all"
-            >
-               <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-               <span className="text-[8px] font-black text-indigo-400 uppercase tracking-tighter">Style Sync: {styleDNA.theme || 'Vlog'}</span>
-               <div className="hidden group-hover:flex items-center gap-1 ml-1 pl-1 border-l border-white/10">
-                  <span className="text-[7px] text-white font-bold opacity-70">Nudge to DNA?</span>
-               </div>
-            </div>
-          )}
         </div>
 
-        <div className="h-6 w-px bg-white/[0.06] mx-1 shrink-0" />
+        <div className="h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
 
         {/* ── Undo / Redo ── */}
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <HUDTooltip label="Undo" shortcut="⌘ Z">
             <button
+              type="button"
               onClick={handleUndo}
               disabled={!canUndo}
-              className="relative flex items-center justify-center w-8 h-8 rounded-xl hover:bg-white/[0.06] disabled:opacity-25 transition-all text-slate-300 hover:text-white"
+              aria-label="Undo"
+              title="Undo (⌘Z)"
+              className="relative flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/[0.08] disabled:opacity-20 transition-all text-slate-300 hover:text-white border-2 border-transparent hover:border-white/5 active:scale-90"
             >
-              <Undo2 className="w-3.5 h-3.5" />
+              <Undo2 className="w-4 h-4" />
               <AnimatePresence>
                 {canUndo && (
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-indigo-600 text-[7px] font-black flex items-center justify-center text-white leading-none"
+                    className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary-600 text-[8px] font-black flex items-center justify-center text-white leading-none shadow-[0_2px_8px_rgba(99,102,241,0.5)]"
                   >
-                    {Math.min(historyIndex, 9)}
+                    {historyIndex}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -478,226 +483,174 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
 
           <HUDTooltip label="Redo" shortcut="⌘ Y">
             <button
+              type="button"
               onClick={handleRedo}
               disabled={!canRedo}
-              className="flex items-center justify-center w-8 h-8 rounded-xl hover:bg-white/[0.06] disabled:opacity-25 transition-all text-slate-300 hover:text-white"
+              aria-label="Redo"
+              title="Redo (⌘Y)"
+              className="flex items-center justify-center w-9 h-9 rounded-xl hover:bg-white/[0.08] disabled:opacity-20 transition-all text-slate-300 hover:text-white border-2 border-transparent hover:border-white/5 active:scale-90"
             >
-              <Redo2 className="w-3.5 h-3.5" />
+              <Redo2 className="w-4 h-4" />
             </button>
           </HUDTooltip>
         </div>
 
-        <div className="h-6 w-px bg-white/[0.06] mx-1 shrink-0" />
+        <div className="h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
 
         {/* ── Live Timecode ── */}
-        <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-          <Timer className="w-3 h-3 text-slate-500 shrink-0" />
-          <span className="text-[11px] font-mono font-black text-indigo-300 tabular-nums">
+        <div className="flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-2xl bg-white/[0.03] border-2 border-white/5 shadow-inner">
+          <Timer className="w-3.5 h-3.5 text-primary-400 shrink-0" />
+          <span className="text-xs font-mono font-black text-white tabular-nums tracking-tighter">
             {formatTime(currentTime)}
           </span>
-          <span className="text-[9px] text-slate-600 font-black">/</span>
-          <span className="text-[11px] font-mono font-black text-slate-500 tabular-nums">
+          <span className="text-[10px] text-slate-600 font-black">/</span>
+          <span className="text-xs font-mono font-black text-slate-500 tabular-nums tracking-tighter">
             {formatTime(duration)}
           </span>
         </div>
 
-        <div className="h-6 w-px bg-white/[0.06] mx-1 shrink-0" />
-
         {/* ── Neural Command ── */}
         <button
+          type="button"
           onClick={onCommandK}
-          className="flex-1 min-w-0 flex items-center gap-2.5 px-3 h-8 rounded-xl border border-white/[0.06] hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all group neural-hud-command"
+          aria-label="Open Command Menu"
+          title="Command Menu (⌘K)"
+          className="flex-1 min-w-0 max-w-[400px] flex items-center gap-3 px-4 h-10 rounded-2xl border-2 border-white/5 bg-black/20 hover:border-primary-500/30 hover:bg-primary-500/5 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 shadow-inner overflow-hidden"
         >
-          <Search className="w-3 h-3 text-slate-500 group-hover:text-indigo-400 transition-colors shrink-0" />
-          <span className="text-[10px] font-black italic uppercase tracking-[0.25em] text-slate-600 group-hover:text-slate-400 transition-colors truncate">
-            NEURAL_SYNAPSE…
+          <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-primary-400 transition-colors shrink-0" />
+          <span className="text-[10px] font-black italic uppercase tracking-[0.4em] text-slate-600 group-hover:text-slate-400 transition-colors truncate">
+            NEURAL_OS_INPUT…
           </span>
-          <div className="flex items-center gap-0.5 ml-auto shrink-0 opacity-40 group-hover:opacity-70 transition-opacity">
-            <kbd className="text-[9px] font-black border border-white/20 rounded px-1 py-px leading-none text-slate-400">⌘</kbd>
-            <kbd className="text-[9px] font-black border border-white/20 rounded px-1 py-px leading-none text-slate-400">K</kbd>
+          <div className="flex items-center gap-1 ml-auto shrink-0 opacity-30 group-hover:opacity-100 transition-all duration-500">
+            <kbd className="text-[10px] font-black border-2 border-white/10 rounded-lg px-1.5 py-0.5 leading-none text-slate-500 bg-black/40">⌘</kbd>
+            <kbd className="text-[10px] font-black border-2 border-white/10 rounded-lg px-1.5 py-0.5 leading-none text-slate-500 bg-black/40">K</kbd>
           </div>
         </button>
 
-        <div className="h-6 w-px bg-white/[0.06] mx-1 shrink-0" />
+        {/* ── Metrics ── */}
+        <div className="flex items-center gap-2 shrink-0 overflow-x-auto no-scrollbar max-w-[140px] md:max-w-[240px] lg:max-w-none" ref={popoverRef}>
+          <MetricPill
+            icon={Activity}
+            value={engagementScore}
+            label="RETENTION"
+            isOpen={openMetric === 'engagement'}
+            onClick={() => toggleMetric('engagement')}
+          />
+          <MetricPill
+            icon={Flame}
+            value={viralPotential}
+            label="VIRAL"
+            isOpen={openMetric === 'viral'}
+            onClick={() => toggleMetric('viral')}
+          />
+          <MetricPill
+            icon={TrendingUp}
+            value={hookStrength}
+            label="HOOK"
+            isOpen={openMetric === 'hook'}
+            onClick={() => toggleMetric('hook')}
+          />
 
-        {/* ── Metrics with rings + popovers ── */}
-        <div className="flex items-center gap-1.5 shrink-0" ref={popoverRef}>
-          {/* Engagement */}
-          <div className="relative">
-            <MetricPill
-              icon={Activity}
-              value={engagementScore}
-              label="Ret."
-              isOpen={openMetric === 'engagement'}
-              onClick={() => toggleMetric('engagement')}
-            />
-            <AnimatePresence>
-              {openMetric === 'engagement' && (
-                <MetricPopover
-                  title="Retention"
-                  value={engagementScore}
-                  heatmap={retentionHeatmap}
-                  allScores={{ 'Viral': viralPotential, 'Hook': hookStrength, 'Sentiment': sentimentDensity, 'Trend': trendAlignment }}
-                  tip={aiTips.engagement}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Viral */}
-          <div className="relative">
-            <MetricPill
-              icon={Flame}
-              value={viralPotential}
-              label="Viral"
-              isOpen={openMetric === 'viral'}
-              onClick={() => toggleMetric('viral')}
-            />
-            <AnimatePresence>
-              {openMetric === 'viral' && (
-                <MetricPopover
-                  title="Viral Potential"
-                  value={viralPotential}
-                  heatmap={retentionHeatmap}
-                  allScores={{ 'Retention': engagementScore, 'Hook': hookStrength, 'Sentiment': sentimentDensity, 'Trend': trendAlignment }}
-                  tip={aiTips.viral}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Hook */}
-          <div className="relative">
-            <MetricPill
-              icon={TrendingUp}
-              value={hookStrength}
-              label="Hook"
-              isOpen={openMetric === 'hook'}
-              onClick={() => toggleMetric('hook')}
-            />
-            <AnimatePresence>
-              {openMetric === 'hook' && (
-                <MetricPopover
-                  title="Hook Strength"
-                  value={hookStrength}
-                  heatmap={retentionHeatmap}
-                  allScores={{ 'Retention': engagementScore, 'Viral': viralPotential, 'Sentiment': sentimentDensity, 'Trend': trendAlignment }}
-                  tip={aiTips.hook}
-                />
-              )}
-            </AnimatePresence>
-          </div>
+          <AnimatePresence>
+            {openMetric && (
+              <MetricPopover
+                title={openMetric === 'engagement' ? 'Retention Matrix' : openMetric === 'viral' ? 'Viral Projection' : 'Hook Potency'}
+                value={openMetric === 'engagement' ? engagementScore : openMetric === 'viral' ? viralPotential : hookStrength}
+                label={openMetric}
+                heatmap={retentionHeatmap}
+                allScores={{ 
+                  'RETENTION': engagementScore, 
+                  'VIRAL': viralPotential, 
+                  'HOOK': hookStrength, 
+                  'SENTIMENT': sentimentDensity, 
+                  'TREND': trendAlignment 
+                }}
+                tip={aiTips[openMetric]}
+              />
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="h-6 w-px bg-white/[0.06] mx-1 shrink-0" />
+        <div className="h-8 w-px bg-white/[0.1] mx-1 shrink-0" />
 
         {/* ── Action Buttons ── */}
-        <div className="flex items-center gap-0.5 shrink-0">
-          <HUDTooltip label="Keyboard Shortcuts" shortcut="?">
-            <button
-              onClick={() => setShowKeyboardHelp(true)}
-              className="flex items-center justify-center w-8 h-8 rounded-xl hover:bg-white/[0.06] transition-all text-slate-500 hover:text-white"
-            >
-              <Keyboard className="w-3.5 h-3.5" />
-            </button>
-          </HUDTooltip>
-
-          {/* Layout picker */}
-          <div className="relative">
-            <HUDTooltip label="Layout" shortcut="Change view mode">
+        <div className="flex items-center gap-1 shrink-0">
+          <HUDTooltip label="Layout Matrix" shortcut="L">
+            <div className="relative">
               <button
+                type="button"
                 onClick={() => setLayoutOpen((v) => !v)}
-                className="flex items-center gap-1 px-2 h-8 rounded-xl hover:bg-white/[0.06] transition-all text-slate-500 hover:text-white"
+                aria-label="Layout Matrix"
+                title="Workspace Layout (L)"
+                className="flex items-center gap-1.5 px-3 h-10 rounded-xl hover:bg-white/[0.08] transition-all text-slate-400 hover:text-white border-2 border-transparent hover:border-white/5 active:scale-95"
               >
-                <Layout className="w-3.5 h-3.5" />
-                <ChevronDown className={`w-2.5 h-2.5 transition-transform ${layoutOpen ? 'rotate-180' : ''}`} />
+                <Layout className="w-4 h-4" />
+                <ChevronDown className={`w-3 h-3 transition-transform duration-500 ${layoutOpen ? 'rotate-180' : ''}`} />
               </button>
-            </HUDTooltip>
 
-            <AnimatePresence>
-              {layoutOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full right-0 mt-2 w-52 rounded-2xl border border-white/10 overflow-hidden z-50 neural-hud-dropdown"
-                >
-                  <div className="px-3 pt-3 pb-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">WORKSPACE_LAYOUT</div>
-                  {[
-                    { id: 'balanced', label: 'BALANCED_MATRIX', icon: '⚖️', desc: 'Hybrid Kinetic Calibration' },
-                    { id: 'preview', label: 'PREVIEW_CORE', icon: '🎬', desc: 'Full-Spectrum Monitoring' },
-                    { id: 'timeline', label: 'SEQUENCE_FOCUS', icon: '🎵', desc: 'Deep Temporal Sequencing' },
-                  ].map((mode) => (
-                    <button
-                      key={mode.id}
-                      onClick={() => { onLayoutChange({ focusMode: mode.id }); setLayoutOpen(false) }}
-                      className="w-full flex items-start gap-2.5 px-3 py-2 hover:bg-white/5 transition-all text-left"
-                    >
-                      <span className="text-sm mt-0.5 shrink-0">{mode.icon}</span>
-                      <div>
-                        <div className="text-[10px] font-black text-white">{mode.label}</div>
-                        <div className="text-[9px] text-slate-500">{mode.desc}</div>
-                      </div>
-                    </button>
-                  ))}
-                  <div className="h-px bg-white/5 my-1 mx-3" />
-                  <div className="px-3 pb-1 text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">TEMPORAL_DENSITY</div>
-                  {[
-                    { id: 'compact', label: 'Compact', icon: '▬' },
-                    { id: 'comfortable', label: 'Comfortable', icon: '▭' },
-                    { id: 'expanded', label: 'Expanded', icon: '▤' },
-                  ].map((d) => (
-                    <button
-                      key={d.id}
-                      onClick={() => { onLayoutChange({ timelineDensity: d.id }); setLayoutOpen(false) }}
-                      className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-white/5 transition-all text-left"
-                    >
-                      <span className="text-xs text-slate-500">{d.icon}</span>
-                      <div className="text-[10px] font-black text-slate-300">{d.label}</div>
-                    </button>
-                  ))}
-                  <div className="pb-2" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+              <AnimatePresence>
+                {layoutOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-3 w-60 rounded-3xl border-2 border-white/10 bg-black/60 backdrop-blur-3xl p-2 z-50 shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
+                  >
+                    <div className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 italic border-b-2 border-white/5 mb-2">Workspace_Matrix</div>
+                    {[
+                      { id: 'balanced', label: 'BALANCED_VIEW', icon: '⚖️', desc: 'Default Calibration' },
+                      { id: 'preview', label: 'CINEMATIC_CORE', icon: '🎬', desc: 'Focus on High-Fidelity' },
+                      { id: 'timeline', label: 'SEQUENCE_DEEP', icon: '🎵', desc: 'Granular Temporal Edit' },
+                    ].map((mode) => (
+                      <button
+                        type="button"
+                        key={mode.id}
+                        onClick={() => { onLayoutChange({ focusMode: mode.id }); setLayoutOpen(false) }}
+                        className="w-full flex items-center gap-4 px-4 py-3 hover:bg-primary-500/10 rounded-2xl transition-all text-left group"
+                      >
+                        <span className="text-xl group-hover:scale-125 transition-transform">{mode.icon}</span>
+                        <div>
+                          <div className="text-[11px] font-black text-white italic">{mode.label}</div>
+                          <div className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">{mode.desc}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </HUDTooltip>
+
+          {/* GPU/Agent Status */}
+          <div className="hidden xl:flex items-center gap-2 mx-2">
+            {gpuBackend && (
+              <div className={`px-3 py-1.5 rounded-xl border-2 text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 ${gpuBackend === 'webgpu' ? 'bg-blue-500/5 border-blue-500/20 text-blue-400' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'}`}>
+                <Cpu className="w-3 h-3" />
+                {gpuBackend.toUpperCase()}
+              </div>
+            )}
+            {agentRunning && (
+              <div className="px-3 py-1.5 rounded-xl bg-fuchsia-500/5 border-2 border-fuchsia-500/20 text-fuchsia-400 text-[9px] font-black uppercase tracking-widest italic flex items-center gap-2 animate-pulse">
+                <Bot className="w-3 h-3" />
+                AGENT_LIVE
+              </div>
+            )}
           </div>
 
-          <HUDTooltip label="Neural AI" shortcut="Open AI console">
-            <button className="relative group flex items-center justify-center w-8 h-8 rounded-xl hover:bg-indigo-600 transition-all text-slate-400 hover:text-white">
-              <div className="absolute inset-0 rounded-xl bg-indigo-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Sparkles className="w-3.5 h-3.5 relative z-10" />
+          <HUDTooltip label="Zen Mode" shortcut="Z">
+            <button 
+              onClick={() => setZenMode?.(!zenMode)}
+              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-90 ${zenMode ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40' : 'hover:bg-white/[0.08] text-slate-500 hover:text-white'}`}
+            >
+              {zenMode ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </HUDTooltip>
 
-          {/* GPU Engine Badge */}
-          {gpuBackend && gpuBackend !== 'canvas2d' && (
-            <div
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${
-                gpuBackend === 'webgpu'
-                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-              }`}
-              title={gpuVendor ?? 'GPU Accelerated'}
-            >
-              <Cpu className="w-3 h-3" />
-              <span className="hidden lg:block">{gpuBackend === 'webgpu' ? 'WebGPU' : 'WebGL2'}</span>
-            </div>
-          )}
-
-          {/* Agent Running Badge */}
-          {agentRunning && (
-            <div className="flex items-center gap-1.5 ml-1 px-2 py-1 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20">
-              <Bot className="w-3 h-3 text-fuchsia-400 animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-fuchsia-400 hidden lg:block">Agent_Active</span>
-            </div>
-          )}
-
-          {/* Live indicator */}
-          <div className="flex items-center gap-1.5 ml-1 px-2 py-1 rounded-xl bg-rose-500/10 border border-rose-500/20">
-            <Radio className="w-3 h-3 text-rose-400 animate-pulse" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-rose-400 hidden lg:block">Live</span>
-          </div>
+          {/* Final Launch Action */}
+          <button className="flex items-center gap-2 px-4 h-10 rounded-xl bg-rose-500/10 border-2 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all duration-500 shadow-lg group ml-1">
+             <Radio className="w-4 h-4 animate-pulse" />
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] italic group-hover:translate-x-1 transition-transform">GO_LIVE</span>
+          </button>
         </div>
 
       </div>
@@ -705,17 +658,21 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   )
 }
 
+
+
 // ─── Metrics Popover ─────────────────────────────────────────────────────────
 
 function MetricPopover({
   title,
   value,
+  label,
   heatmap,
   allScores,
   tip,
 }: {
   title: string
   value: number
+  label: string
   heatmap: number[]
   allScores: Record<string, number>
   tip: string
@@ -728,7 +685,7 @@ function MetricPopover({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 6, scale: 0.95 }}
       transition={{ duration: 0.18 }}
-      className="absolute top-full left-0 mt-2 z-[60] w-52 rounded-2xl border border-white/10 overflow-hidden neural-hud-dropdown p-3"
+      className="absolute top-full left-0 mt-2 z-[60] w-52 max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 neural-hud-dropdown p-3"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
@@ -736,9 +693,9 @@ function MetricPopover({
           <div className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{title}</div>
           <div className="text-[9px] text-slate-500 mt-0.5">Live Neural Score</div>
         </div>
-        <div className="flex items-center gap-1">
-          <ScoreRing value={value} size={28} strokeWidth={3} color={col} />
-          <span className="text-[14px] font-black font-mono" style={{ color: col }}>{value}</span>
+        <div className="flex items-center gap-2" style={{ '--score-col': col } as any}>
+          <span className="text-[14px] font-black font-mono text-[var(--score-col)]">{value}</span>
+          <span className="text-[10px] text-slate-500 font-bold tracking-widest italic">{label.toUpperCase()}</span>
         </div>
       </div>
 

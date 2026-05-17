@@ -301,6 +301,7 @@ export default function AISceneDetection({
               Auto-apply
             </label>
             <button
+              type="button"
               onClick={analyzeVideo}
               disabled={isAnalyzing || !videoUrl}
               className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
@@ -380,6 +381,7 @@ export default function AISceneDetection({
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={autoApplyAllEdits}
                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                   >
@@ -420,6 +422,7 @@ export default function AISceneDetection({
                       </div>
                       <div className="flex items-center gap-2">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation()
                             if (videoRef.current) {
@@ -490,6 +493,7 @@ export default function AISceneDetection({
                                 </span>
                               </div>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   applySuggestedEdit(edit)
@@ -515,6 +519,7 @@ export default function AISceneDetection({
             {/* Scene Navigation */}
             <div className="flex items-center justify-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
+                type="button"
                 onClick={() => jumpToScene(Math.max(0, currentSceneIndex - 1))}
                 disabled={currentSceneIndex === 0}
                 className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -527,6 +532,7 @@ export default function AISceneDetection({
               </span>
 
               <button
+                type="button"
                 onClick={() => jumpToScene(Math.min(scenes.length - 1, currentSceneIndex + 1))}
                 disabled={currentSceneIndex === scenes.length - 1}
                 className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"

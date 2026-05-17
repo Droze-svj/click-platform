@@ -88,7 +88,7 @@ export default function WorkflowRail() {
 
         {/* Platform picker */}
         <button
-          type="button"
+         type="button"
           onClick={() => {
             const idx = PLATFORM_OPTIONS.findIndex(p => p.id === state.platform)
             const next = PLATFORM_OPTIONS[(idx + 1) % PLATFORM_OPTIONS.length]
@@ -115,7 +115,7 @@ export default function WorkflowRail() {
               <React.Fragment key={s}>
                 <li className="flex-shrink-0">
                   <button
-                    type="button"
+                   type="button"
                     onClick={() => { setStage(s); router.push(meta.route) }}
                     aria-current={isCurrent ? 'step' : undefined}
                     className={`flex items-center gap-2 px-3 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap ${

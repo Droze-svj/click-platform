@@ -124,6 +124,7 @@ export default function EnhancedContentSuggestions() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">💡 Enhanced Content Suggestions</h2>
         <button
+          type="button"
           onClick={() => {
             loadSuggestions()
             loadGaps()
@@ -137,6 +138,7 @@ export default function EnhancedContentSuggestions() {
 
       <div className="flex gap-2 mb-4 border-b overflow-x-auto">
         <button
+          type="button"
           onClick={() => setActiveTab('suggestions')}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
             activeTab === 'suggestions'
@@ -147,6 +149,7 @@ export default function EnhancedContentSuggestions() {
           Suggestions
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('gaps')}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
             activeTab === 'gaps'
@@ -157,6 +160,7 @@ export default function EnhancedContentSuggestions() {
           Content Gaps
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('trending')}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
             activeTab === 'trending'
@@ -167,6 +171,7 @@ export default function EnhancedContentSuggestions() {
           Trending
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('viral')}
           className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
             activeTab === 'viral'
@@ -215,6 +220,7 @@ export default function EnhancedContentSuggestions() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">{suggestion.description}</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleUseSuggestion(suggestion)}
                       className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 ml-2"
                     >
@@ -297,6 +303,7 @@ export default function EnhancedContentSuggestions() {
                   className="w-full px-4 py-2 border rounded-lg"
                 />
                 <button
+                  type="button"
                   onClick={handlePredictViral}
                   disabled={!predictionContent.trim()}
                   className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"

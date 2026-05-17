@@ -51,7 +51,7 @@ async function generateReportSummary(reportData, templateConfig) {
       keyHighlights: highlights,
       recommendations,
       generatedAt: new Date(),
-      model: 'gemini-1.5-flash'
+      model: 'gemini-2.5-flash'
     };
   } catch (error) {
     logger.error('Error generating AI summary', { error: error.message });
@@ -268,7 +268,7 @@ Write a ${tone} summary suitable for agency leadership:`;
     return {
       text,
       generatedAt: new Date(),
-      model: 'gemini-1.5-flash'
+      model: 'gemini-2.5-flash'
     };
   } catch (error) {
     logger.error('Error generating rollup summary', { error: error.message });

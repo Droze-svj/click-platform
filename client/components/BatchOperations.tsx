@@ -93,18 +93,21 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
           </span>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setOperation('export')}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
             >
               Export
             </button>
             <button
+              type="button"
               onClick={() => setOperation('delete')}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
             >
               Delete
             </button>
             <button
+              type="button"
               onClick={onComplete}
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
             >
@@ -120,6 +123,7 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
             </p>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={handleBatchDelete}
                 disabled={loading}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50"
@@ -127,6 +131,7 @@ export default function BatchOperations({ selectedItems, type, onComplete }: Bat
                 {loading ? 'Deleting...' : 'Confirm Delete'}
               </button>
               <button
+                type="button"
                 onClick={() => setOperation(null)}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
               >

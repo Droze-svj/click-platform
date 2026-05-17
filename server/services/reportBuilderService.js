@@ -5,7 +5,7 @@ const ReportTemplate = require('../models/ReportTemplate');
 const GeneratedReport = require('../models/GeneratedReport');
 const logger = require('../utils/logger');
 const { getClientHealthMetrics } = require('./clientHealthService');
-// const { getPerformanceMetrics } = require('./performanceMetricsService'); // TODO: Create this service
+const { getAggregatedPerformanceMetrics: getPerformanceMetrics } = require('./socialPerformanceMetricsService');
 
 /**
  * Create or update report template

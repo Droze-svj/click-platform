@@ -382,6 +382,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
           { id: 'automate', label: 'Sonic Energy', icon: Music, color: 'text-orange-500', desc: 'AI music & voiceover' }
         ].map(e => (
           <button
+            type="button"
             key={e.id}
             onClick={() => { setActiveCategory(e.id as EditorCategory); showToast(`Opening ${e.label}`, 'info') }}
             className="editor-card p-6 editor-card-hover hover:scale-[1.02] transition-all text-left group"
@@ -535,7 +536,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  type="button"
+                 type="button"
                   onClick={addKeyframeAtPlayhead}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors"
                   title="Add keyframe at current playhead (or press K)"
@@ -545,7 +546,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 </button>
                 {keyframeAtPlayhead && (
                   <button
-                    type="button"
+                   type="button"
                     onClick={removeKeyframeAtPlayhead}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors"
                     title="Remove keyframe at playhead"
@@ -557,7 +558,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 {onSeek && keyframes.length > 0 && (
                   <>
                     <button
-                      type="button"
+                     type="button"
                       onClick={() => { if (prevKeyframeTime != null) { onSeek(prevKeyframeTime); showToast(`Seek to ${formatTime(prevKeyframeTime)}`, 'info') } }}
                       disabled={prevKeyframeTime == null}
                       className="flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-bold bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card disabled:opacity-40 disabled:pointer-events-none"
@@ -567,7 +568,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                       Prev
                     </button>
                     <button
-                      type="button"
+                     type="button"
                       onClick={() => { if (nextKeyframeTime != null) { onSeek(nextKeyframeTime); showToast(`Seek to ${formatTime(nextKeyframeTime)}`, 'info') } }}
                       disabled={nextKeyframeTime == null}
                       className="flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-bold bg-surface-elevated border border-subtle text-theme-secondary hover:bg-surface-card disabled:opacity-40 disabled:pointer-events-none"
@@ -580,7 +581,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 )}
                 {keyframes.length > 0 && (
                   <button
-                    type="button"
+                   type="button"
                     onClick={() => {
                       const next = keyframes.map((k) => ({ ...k, id: `kf-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }))
                       setClipboardKeyframes(next)
@@ -596,7 +597,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 )}
                 {clipboardKeyframes != null && clipboardKeyframeSource != null && (clipboardKeyframeSource === 'effect') === isEffect && (
                   <button
-                    type="button"
+                   type="button"
                     onClick={() => {
                       const next = clipboardKeyframes.map((k) => ({ ...k, id: `kf-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` }))
                       if (isEffect && setTimelineEffects && effect) {
@@ -614,7 +615,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                   </button>
                 )}
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => {
                     showToast('Analyzing motion…', 'info')
                     setTimeout(() => showToast('✓ Motion track locked', 'success'), 1500)
@@ -637,7 +638,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
               <span className="text-[9px] text-theme-muted">Stack: GSAP</span>
               <div ref={gsapDemoRef} className="w-8 h-8 rounded-lg bg-amber-500/40 shrink-0" style={{ transformOrigin: 'center center' }} />
               <button
-                type="button"
+               type="button"
                 onClick={() => runGsapDemo(keyframeAtPlayhead?.easing ?? keyframes[keyframes.length - 1]?.easing ?? 'ease-in-out')}
                 className="text-[10px] font-bold text-amber-600 hover:text-amber-500 whitespace-nowrap"
                 title="Run gsap.to(box, { rotation: 360, duration: 2, ease }) using current keyframe easing"
@@ -653,7 +654,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 return (
                   <div key={key} className="flex items-center gap-3">
                     <button
-                      type="button"
+                     type="button"
                       onClick={() => toggleKeyframe(key as any)}
                       className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-amber-500 text-white' : 'text-theme-muted hover:bg-surface-card-hover hover:text-amber-500'}`}
                       title={active ? `Disable keyframes (${count} keyframes)` : 'Enable keyframes — add keyframe at playhead'}
@@ -833,9 +834,8 @@ const EffectsView: React.FC<EffectsViewProps> = ({
             <span className="text-xs font-black uppercase tracking-widest text-theme-muted">Duration</span>
             <div className="flex items-center gap-1">
               {QUICK_DURATIONS.map((d) => (
-                <button
+                <button type="button"
                   key={d.value}
-                  type="button"
                   title={`Set duration to ${d.label}`}
                   onClick={() => setCustomDuration(d.value)}
                   className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition-all ${customDuration === d.value
@@ -862,7 +862,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                   className="w-28 px-2 py-1 text-[10px] rounded-xl border border-subtle bg-surface-card text-theme-primary"
                 />
                 <button
-                  type="button"
+                 type="button"
                   onClick={saveAsTemplate}
                   className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                   title="Save selected as template"
@@ -874,7 +874,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
 
             {/* Templates button */}
             <button
-              type="button"
+             type="button"
               onClick={() => setShowTemplates(!showTemplates)}
               title="Toggle Saved Templates"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${showTemplates
@@ -908,7 +908,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[11px] font-bold text-theme-primary truncate">{template.name}</span>
                       <button
-                        type="button"
+                       type="button"
                         onClick={() => deleteTemplate(template.id)}
                         className="p-1 rounded-lg text-theme-muted hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                         title="Delete template"
@@ -918,7 +918,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                     </div>
                     <p className="text-[9px] text-theme-muted mb-2">{template.description}</p>
                     <button
-                      type="button"
+                     type="button"
                       onClick={() => applyTemplate(template)}
                       title={`Apply ${template.name} template`}
                       className="w-full px-2 py-1 text-[9px] font-bold bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
@@ -955,7 +955,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
             />
             {searchQuery && (
               <button
-                type="button"
+               type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-theme-muted hover:text-theme-primary hover:bg-surface-card-hover"
               >
@@ -978,7 +978,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
             return (
               <div key={cat.type}>
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => !searchQuery && setExpandedCategory(isExpanded ? null : cat.type)}
                   className={`w-full px-4 py-3 flex items-center justify-between transition-colors rounded-xl ${!searchQuery ? 'hover:bg-surface-card-hover cursor-pointer' : 'cursor-default'}`}
                 >
@@ -995,9 +995,8 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 {isExpanded && presets.length > 0 && (
                   <div className="px-4 pb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                     {presets.map((preset) => (
-                      <button
+                      <button type="button"
                         key={preset.name}
-                        type="button"
                         draggable
                         onDragStart={() => setDraggedPreset(preset)}
                         onDragEnd={() => setDraggedPreset(null)}
@@ -1034,7 +1033,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-theme-muted">Ctrl+Click multi · Shift+Click range</span>
               <button
-                type="button"
+               type="button"
                 onClick={() => setShowAdvancedPanel(!showAdvancedPanel)}
                 className={`p-1.5 rounded-xl transition-colors ${showAdvancedPanel ? 'bg-accent-violet-solid text-white' : 'text-theme-muted hover:bg-surface-card-hover'}`}
                 title="Toggle advanced controls"
@@ -1098,7 +1097,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                       {/* Layer controls */}
                       <div className="flex flex-col gap-0.5 mr-1">
                         <button
-                          type="button"
+                         type="button"
                           onClick={(e) => { e.stopPropagation(); moveLayer(effect.id, 'up') }}
                           className="p-0.5 rounded text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
                           title="Move layer up"
@@ -1106,7 +1105,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                           <MoveUp className="w-3 h-3" />
                         </button>
                         <button
-                          type="button"
+                         type="button"
                           onClick={(e) => { e.stopPropagation(); moveLayer(effect.id, 'down') }}
                           className="p-0.5 rounded text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
                           title="Move layer down"
@@ -1116,7 +1115,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                       </div>
 
                       <button
-                        type="button"
+                       type="button"
                         onClick={(e) => { e.stopPropagation(); toggleLock(effect.id) }}
                         className={`p-1.5 rounded-lg transition-colors ${effect.locked ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                         title={effect.locked ? 'Unlock' : 'Lock'}
@@ -1124,7 +1123,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                         {effect.locked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                       </button>
                       <button
-                        type="button"
+                       type="button"
                         onClick={(e) => { e.stopPropagation(); toggleEffect(effect.id) }}
                         className={`p-1.5 rounded-lg transition-colors ${effect.enabled ? 'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                         title={effect.enabled ? 'Disable' : 'Enable'}
@@ -1132,7 +1131,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                         {effect.enabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                       </button>
                       <button
-                        type="button"
+                       type="button"
                         onClick={(e) => { e.stopPropagation(); duplicateEffect(effect.id) }}
                         className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                         title="Duplicate"
@@ -1141,7 +1140,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                       </button>
                       {!effect.locked && (
                         <button
-                          type="button"
+                         type="button"
                           onClick={(e) => { e.stopPropagation(); deleteEffect(effect.id) }}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           title="Delete"
@@ -1347,7 +1346,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                       {/* Quick actions */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
-                          type="button"
+                         type="button"
                           onClick={() => updateEffectTiming(effect.id, 'startTime', videoState?.currentTime || 0)}
                           className="px-2 py-1 text-[9px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                           disabled={effect.locked}
@@ -1355,7 +1354,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                           Start → Now
                         </button>
                         <button
-                          type="button"
+                         type="button"
                           onClick={() => updateEffectTiming(effect.id, 'endTime', videoState?.currentTime || 0)}
                           className="px-2 py-1 text-[9px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                           disabled={effect.locked}
@@ -1363,7 +1362,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                           End → Now
                         </button>
                         <button
-                          type="button"
+                         type="button"
                           onClick={() => applyToFullVideo(effect.id)}
                           className="px-2 py-1 text-[9px] font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
                           disabled={effect.locked}
@@ -1371,7 +1370,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                           Full Video
                         </button>
                         <button
-                          type="button"
+                         type="button"
                           onClick={() => extendToEnd(effect.id)}
                           className="px-2 py-1 text-[9px] font-bold bg-green-100 dark:bg-green-900/30 text-green-600 rounded hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                           disabled={effect.locked}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { apiGet } from '../lib/api'
 
 interface ProgressData {
   progress: number
@@ -143,47 +144,33 @@ export function useRealtimeProgress({
       const pollInterval = setInterval(async () => {
         try {
           if (uploadId) {
-            const response = await fetch(`/api/upload/progress/${uploadId}`, {
-              credentials: 'include',
-            })
-            if (response.ok) {
-              const data = await response.json()
-              if (data.data) {
-                setProgress(data.data)
-                if (data.data.status === 'completed' && onComplete) {
-                  onComplete(data.data)
-                } else if (data.data.status === 'failed' && onError) {
-                  onError(data.data.error || 'Upload failed')
-                }
+            const data = await apiGet<any>(`/upload/progress/${uploadId}`).catch(() => null)
+            if (data?.data) {
+              setProgress(data.data)
+              if (data.data.status === 'completed' && onComplete) {
+                onComplete(data.data)
+              } else if (data.data.status === 'failed' && onError) {
+                onError(data.data.error || 'Upload failed')
               }
             }
           } else if (jobId && queueName) {
-            const response = await fetch(`/api/jobs/${queueName}/${jobId}/progress`, {
-              credentials: 'include',
-            })
-            if (response.ok) {
-              const data = await response.json()
-              if (data.data) {
-                setProgress(data.data)
-                if (data.data.state === 'completed' && onComplete) {
-                  onComplete(data.data)
-                } else if (data.data.state === 'failed' && onError) {
-                  onError(data.data.failedReason || 'Job failed')
-                }
+            const data = await apiGet<any>(`/jobs/${queueName}/${jobId}/progress`).catch(() => null)
+            if (data?.data) {
+              setProgress(data.data)
+              if (data.data.state === 'completed' && onComplete) {
+                onComplete(data.data)
+              } else if (data.data.state === 'failed' && onError) {
+                onError(data.data.failedReason || 'Job failed')
               }
             }
           } else if (videoId && videoOperation) {
-            const response = await fetch(`/api/video/progress/${videoId}?operation=${videoOperation}`, {
-              credentials: 'include',
-            })
-            if (response.ok) {
-              const data = await response.json()
+            const data = await apiGet<any>(`/video/progress/${videoId}?operation=${videoOperation}`).catch(() => null)
+            if (data) {
               const progressData = data.data || data
               if (progressData) {
                 setProgress(progressData)
                 if (progressData.status === 'completed' || progressData.status === 'done') {
                   if (onComplete) onComplete({ ...progressData, status: 'completed' })
-                  // Clear interval once completed successfully to prevent over-polling
                   clearInterval(pollInterval)
                 } else if (progressData.status === 'failed' || progressData.status === 'error') {
                   if (onError) onError(progressData.error || 'Video processing failed')

@@ -51,6 +51,7 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
 
   return (
     <button
+      type="button"
       onClick={handleDuplicate}
       disabled={isDuplicating || isDuplicated}
       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${

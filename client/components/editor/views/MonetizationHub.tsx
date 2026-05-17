@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Store
 } from 'lucide-react'
+import { apiGet, apiPost } from '../../../lib/api'
 
 interface Product {
   id: string;
@@ -72,16 +73,13 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
       setIsLoadingProducts(true)
       setError(null)
       try {
-        const response = await fetch(`/api/video/advanced/monetization/products?provider=${provider}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        })
-        const result = await response.json()
-        if (result.success) {
+        const result = await apiGet<any>(`/video/advanced/monetization/products?provider=${provider}`)
+        if (result?.success) {
+          setProducts(result.data)
+        } else if (Array.isArray(result?.data)) {
           setProducts(result.data)
         } else {
-          setError(result.message || 'Failed to fetch SKUs')
+          setError(result?.message || 'Failed to fetch SKUs')
         }
       } catch (err) {
         setError('Connection to Monetization Bridge failed')
@@ -102,27 +100,20 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
     setError(null)
 
     try {
-      const response = await fetch('/api/video/advanced/monetization-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ 
-          transcript, 
-          videoId: contentId, // Point to persistence
-          provider 
-        })
+      const result = await apiPost<any>('/video/advanced/monetization-plan', {
+        transcript,
+        videoId: contentId,
+        provider,
       })
-
-      const result = await response.json()
-      if (result.success) {
+      if (result?.success && result?.data) {
+        setCurrentPlan(result.data)
+      } else if (result?.data) {
         setCurrentPlan(result.data)
       } else {
-        setError(result.message || 'Failed to generate plan')
+        setError(result?.message || 'Failed to generate plan')
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred during plan generation')
+      setError(err?.message || 'An error occurred during plan generation')
     } finally {
       setIsGenerating(false)
     }
@@ -221,13 +212,15 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                 Monetization Bridge
              </h2>
              <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 ml-4">
-                <button 
+                <button
+                  type="button"
                   onClick={() => setProvider('whop')}
                   className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${provider === 'whop' ? 'bg-emerald-500 text-black' : 'text-slate-500 hover:text-white'}`}
                 >
                   Whop
                 </button>
-                <button 
+                <button
+                  type="button"
                   onClick={() => setProvider('shopify')}
                   className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${provider === 'shopify' ? 'bg-indigo-500 text-black' : 'text-slate-500 hover:text-white'}`}
                 >
@@ -240,6 +233,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
           </p>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
         >
@@ -315,6 +309,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                <div className="flex items-center gap-4">
                   {error && <span className="text-[10px] text-rose-500 font-black uppercase animate-pulse">{error}</span>}
                   <button
+                    type="button"
                     onClick={handleGeneratePlan}
                     disabled={isGenerating || !transcript}
                     className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
@@ -350,6 +345,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                       </div>
 
                       <button
+                        type="button"
                         onClick={handleFinalizePlan}
                         disabled={isSaving || currentPlan.status === 'finalized'}
                         className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
@@ -437,6 +433,7 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
                         </div>
                         <div className="flex gap-2">
                            <button
+                             type="button"
                              title="View SKU"
                              aria-label="View SKU"
                              className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all"

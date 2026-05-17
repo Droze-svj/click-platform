@@ -79,6 +79,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
         />
         {searchQuery && (
           <button
+            type="button"
             onClick={() => setSearchQuery('')}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
@@ -90,6 +91,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={() => setFilters({ ...filters, recent: !filters.recent })}
           className={`px-3 py-1 rounded-lg border transition-all ${
             filters.recent
@@ -101,6 +103,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
           Recent
         </button>
         <button
+          type="button"
           onClick={() => setFilters({ ...filters, favorites: !filters.favorites })}
           className={`px-3 py-1 rounded-lg border transition-all ${
             filters.favorites
@@ -112,6 +115,7 @@ export default function AdvancedSearchFilters({ onSearch, items, searchFields = 
           Favorites
         </button>
         <button
+          type="button"
           onClick={() => setFilters({ ...filters, mostUsed: !filters.mostUsed })}
           className={`px-3 py-1 rounded-lg border transition-all ${
             filters.mostUsed

@@ -149,6 +149,7 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
         </h2>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => {
               const newDate = new Date(currentDate)
               newDate.setMonth(newDate.getMonth() - 1)
@@ -159,12 +160,14 @@ export default function DraggableCalendar({ view = 'month', onPostUpdate }: Drag
             ← Previous
           </button>
           <button
+            type="button"
             onClick={() => setCurrentDate(new Date())}
             className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             Today
           </button>
           <button
+            type="button"
             onClick={() => {
               const newDate = new Date(currentDate)
               newDate.setMonth(newDate.getMonth() + 1)

@@ -100,6 +100,7 @@ export default function QuickTemplateAccess() {
           </h3>
         </div>
         <button
+          type="button"
           onClick={() => router.push('/dashboard/templates')}
           className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
         >
@@ -110,6 +111,7 @@ export default function QuickTemplateAccess() {
       <div className="grid grid-cols-2 gap-3">
         {templates.map((template) => (
           <button
+            type="button"
             key={template._id}
             onClick={() => handleUseTemplate(template)}
             className="text-left p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group"

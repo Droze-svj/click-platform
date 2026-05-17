@@ -120,6 +120,7 @@ export default function AIConfidenceIndicator({ contentId, onReviewRequested }: 
             </div>
             {onReviewRequested && (
               <button
+                type="button"
                 onClick={onReviewRequested}
                 className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
               >

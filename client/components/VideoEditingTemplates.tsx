@@ -847,6 +847,7 @@ export default function VideoEditingTemplates({
           {/* Overlay with quick actions */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 flex items-center justify-center gap-2">
             <button
+              type="button"
               onClick={() => setShowTemplateDetails(template.id)}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
               title="View details"
@@ -854,6 +855,7 @@ export default function VideoEditingTemplates({
               <Eye className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => handleDuplicateTemplate(template)}
               className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
               title="Duplicate template"
@@ -862,6 +864,7 @@ export default function VideoEditingTemplates({
             </button>
             {isCustom && (
               <button
+                type="button"
                 onClick={() => handleDeleteTemplate(template.id)}
                 className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-full text-white transition-colors"
                 title="Delete template"
@@ -891,6 +894,7 @@ export default function VideoEditingTemplates({
               {template.targetAudience}
             </span>
             <button
+              type="button"
               onClick={() => handleApplyTemplate(template)}
               className={`px-4 py-2 bg-gradient-to-r ${template.color} text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-md`}
             >
@@ -923,6 +927,7 @@ export default function VideoEditingTemplates({
         </div>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => setShowCustomTemplates(!showCustomTemplates)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               showCustomTemplates
@@ -934,6 +939,7 @@ export default function VideoEditingTemplates({
             My Templates
           </button>
           <button
+            type="button"
             onClick={() => onSaveCustomTemplate?.({
               id: `custom-${Date.now()}`,
               name: 'Custom Template',
@@ -1011,6 +1017,7 @@ export default function VideoEditingTemplates({
             const Icon = category.icon
             return (
               <button
+                type="button"
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
@@ -1075,6 +1082,7 @@ export default function VideoEditingTemplates({
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => setShowTemplateDetails(null)}
                         className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors"
                         title="Close details"
@@ -1146,6 +1154,7 @@ export default function VideoEditingTemplates({
                   <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
                     <div className="flex justify-end gap-3">
                       <button
+                        type="button"
                         onClick={() => handleDuplicateTemplate(template)}
                         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                       >
@@ -1153,6 +1162,7 @@ export default function VideoEditingTemplates({
                         Duplicate
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           handleApplyTemplate(template)
                           setShowTemplateDetails(null)

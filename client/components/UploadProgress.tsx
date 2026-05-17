@@ -117,6 +117,7 @@ export default function UploadProgress({
           </span>
           {showCancel && progress.status === 'uploading' && (
             <button
+              type="button"
               onClick={handleCancel}
               disabled={isCancelling}
               className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"

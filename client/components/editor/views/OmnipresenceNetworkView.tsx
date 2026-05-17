@@ -135,6 +135,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
         <div className="flex flex-wrap gap-2 p-1.5 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-3xl">
             {(['general', 'b2b', 'gaming', 'lifestyle'] as ContentNiche[]).map(cat => (
                 <button
+                    type="button"
                     key={cat}
                     onClick={() => setNiche(cat)}
                     className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -169,7 +170,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                         <div key={idx} className="p-5 bg-black/40 border border-white/5 rounded-2xl space-y-3 group hover:border-indigo-500/30 transition-all">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-black text-white italic uppercase tracking-widest">{signal.tactic}</span>
-                                <button 
+                                <button
+                                    type="button"
                                     onClick={() => broadcastS2SPulse(signal.tactic)}
                                     className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors"
                                     title="Broadcast S2S Pulse"
@@ -230,7 +232,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                         </div>
                     </div>
 
-                    <button 
+                    <button
+                        type="button"
                         onClick={handleBroadcast}
                         disabled={isBroadcasting}
                         className="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] italic shadow-2xl transition-all disabled:opacity-50"
@@ -322,7 +325,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                     <button className="p-4 rounded-2xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 text-slate-500 hover:text-red-400 transition-all">
                                         <XCircle className="w-5 h-5" />
                                     </button>
-                                    <button 
+                                    <button
+                                        type="button"
                                         onClick={() => approveResponse(draft._id)}
                                         className="flex-1 max-w-[200px] flex items-center justify-center gap-4 p-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.2em] italic shadow-xl transition-all"
                                     >

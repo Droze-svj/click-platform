@@ -159,7 +159,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
           >
             <div className="flex items-center justify-between">
                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] italic">MOD_OVERRIDE: {selectedEntity.toUpperCase()}</p>
-               <button onClick={() => setSelectedEntity(null)} title="Close Selection"><X size={16} className="text-slate-800 hover:text-white" /></button>
+               <button type="button" onClick={() => setSelectedEntity(null)} title="Close Selection"><X size={16} className="text-slate-800 hover:text-white" /></button>
             </div>
             <textarea
               className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white text-xs placeholder:text-slate-800 focus:outline-none focus:border-indigo-500/50 italic"
@@ -169,6 +169,7 @@ export const SpatialLedgerEditor: React.FC<SpatialLedgerEditorProps> = ({ videoI
               rows={2}
             />
             <button
+              type="button"
               onClick={handleApplyOverride}
               className="w-full py-4 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-indigo-500 hover:text-white transition-all italic active:scale-95 shadow-xl"
             >

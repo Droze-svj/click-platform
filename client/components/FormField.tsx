@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { AlertCircle, CheckCircle, Eye, EyeOff, Hash, Lock, Mail, Type } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface FormFieldProps {
   label: string
@@ -83,31 +84,33 @@ export default function FormField({
   const inputId = `field-${name}`
   const inputType = type === 'password' && showPassword ? 'text' : type
 
+  const Icon = type === 'email' ? Mail : type === 'password' ? Lock : type === 'number' ? Hash : Type
+
   const baseInputClasses = `
-    w-full px-4 py-3 bg-black/40 text-white border rounded-xl transition-all duration-300
-    focus:outline-none focus:bg-indigo-500/5
-    disabled:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 text-sm font-medium tracking-wide
+    w-full px-6 py-5 bg-surface-page dark:bg-black/40 text-surface-900 dark:text-white border-2 rounded-2xl transition-all duration-500
+    focus:outline-none focus:bg-surface-card dark:focus:bg-black/60
+    disabled:bg-surface-page/50 disabled:cursor-not-allowed disabled:opacity-50 text-sm font-black uppercase tracking-widest italic
     ${hasError
-      ? 'border-red-500/50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+      ? 'border-rose-500/50 focus:border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.1)]'
       : hasSuccess
-        ? 'border-emerald-500/50 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10'
-        : 'border-white/10 hover:border-white/20 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10'
+        ? 'border-emerald-500/50 focus:border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
+        : 'border-surface-100 dark:border-white/5 hover:border-primary-500/30 focus:border-primary-500 shadow-inner'
     }
   `
 
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2"
+          className="block text-[10px] font-black uppercase tracking-[0.4em] text-surface-400 dark:text-slate-600 mb-3 italic leading-none pl-1"
         >
           {label}
-          {required && <span className="text-red-500/80 ml-1">*</span>}
+          {required && <span className="text-rose-500/80 ml-2 font-black">*</span>}
         </label>
       )}
 
-      <div className="relative">
+      <div className="relative group/field">
         {type === 'textarea' ? (
           <textarea
             id={inputId}
@@ -122,50 +125,51 @@ export default function FormField({
             autoFocus={autoFocus}
             disabled={disabled}
             rows={rows}
-            className={baseInputClasses}
-            aria-invalid={hasError ? true : undefined}
+            className={`${baseInputClasses} resize-none custom-scrollbar`}
             aria-describedby={hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           />
         ) : (
-          <input
-            id={inputId}
-            name={name}
-            type={inputType}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            required={required}
-            maxLength={maxLength}
-            minLength={minLength}
-            pattern={pattern}
-            autoFocus={autoFocus}
-            disabled={disabled}
-            className={baseInputClasses}
-            aria-invalid={hasError ? true : undefined}
-            aria-describedby={hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-          />
+          <div className="relative">
+             <input
+              id={inputId}
+              name={name}
+              type={inputType}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onBlur={handleBlur}
+              placeholder={placeholder}
+              required={required}
+              maxLength={maxLength}
+              minLength={minLength}
+              pattern={pattern}
+              autoFocus={autoFocus}
+              disabled={disabled}
+              className={baseInputClasses}
+              aria-describedby={hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+            />
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500 opacity-0 group-focus-within/field:opacity-100 transition-opacity rounded-l-2xl" />
+          </div>
         )}
 
         {/* Password toggle */}
         {type === 'password' && showPasswordToggle && (
           <button
-            type="button"
+           type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-400 transition-colors"
+            className="absolute right-6 top-1/2 -translate-y-1/2 text-surface-300 dark:text-slate-800 hover:text-primary-500 transition-colors border-none bg-transparent"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
           </button>
         )}
 
         {/* Validation icons */}
-        {touched && !isValidating && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        {touched && !isValidating && !showPasswordToggle && (
+          <div className="absolute right-6 top-1/2 -translate-y-1/2">
             {hasError ? (
-              <AlertCircle size={20} className="text-red-500" />
+              <AlertCircle size={24} className="text-rose-500 animate-pulse" />
             ) : hasSuccess ? (
-              <CheckCircle size={20} className="text-green-500" />
+              <CheckCircle size={24} className="text-emerald-500" />
             ) : null}
           </div>
         )}
@@ -173,36 +177,44 @@ export default function FormField({
 
       {/* Character counter */}
       {maxLength && (
-        <div className="mt-1 text-xs text-gray-500 text-right">
-          {value.length} / {maxLength}
+        <div className="mt-2 text-[9px] font-black text-surface-300 dark:text-slate-800 text-right uppercase tracking-widest italic">
+          {value.length} / {maxLength} BITS_DATA
         </div>
       )}
 
       {/* Error message */}
-      {hasError && (
-        <p
-          id={`${inputId}-error`}
-          className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
-          role="alert"
-        >
-          <AlertCircle size={14} />
-          {displayError}
-        </p>
-      )}
+      <AnimatePresence>
+        {hasError && (
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            id={`${inputId}-error`}
+            className="mt-3 text-[11px] font-black text-rose-500 flex items-center gap-2 uppercase tracking-widest italic"
+            role="alert"
+          >
+            <AlertCircle size={14} />
+            {displayError}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {/* Hint */}
       {!hasError && hint && (
         <p
           id={`${inputId}-hint`}
-          className="mt-1.5 text-sm text-gray-500 dark:text-gray-400"
+          className="mt-3 text-[11px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic"
         >
           {hint}
         </p>
       )}
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
+      `}</style>
     </div>
   )
 }
-
-
-
-

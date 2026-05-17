@@ -104,7 +104,7 @@ export default function AiTimelineChat({
         {isProcessing && (
           <div className="flex items-start max-w-[90%]">
             <div className="px-3 py-2 rounded-2xl text-[11px] bg-white/5 text-slate-400 rounded-bl-sm border border-white/10 flex gap-1">
-              <span className="animate-bounce">.</span><span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span><span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+              <span className="animate-bounce">.</span><span className="animate-bounce animation-delay-150">.</span><span className="animate-bounce animation-delay-300">.</span>
             </div>
           </div>
         )}
@@ -120,9 +120,10 @@ export default function AiTimelineChat({
             placeholder="e.g. Make it cinematic..."
             className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-3 pr-10 text-[11px] text-white placeholder-slate-500 outline-none focus:border-indigo-500/50 transition-colors"
           />
-          <button 
-            type="submit"
+          <button            type="submit"
             disabled={!input.trim() || isProcessing}
+            title="Send Message"
+            aria-label="Send Message"
             className="absolute right-2 p-1.5 text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition-colors"
           >
             <Send className="w-3.5 h-3.5" />

@@ -35,13 +35,26 @@ async function processScheduledPosts() {
     // null/missing holdUntil means "no hold needed" — usually because the
     // post was created with a long enough lead time that the safety window
     // has already elapsed by the time the scheduledTime arrives.
+    // Picks up two kinds of rows:
+    //   1. Freshly-scheduled posts whose scheduledTime + holdUntil have passed.
+    //   2. failed_retryable rows whose nextRetryAt has elapsed — these are
+    //      transient failures (network/timeout/rate-limit) the worker
+    //      classified for backoff retry. Permanent failures stay parked.
     const upcomingPosts = await ScheduledPost.find({
-      status: 'scheduled',
-      scheduledTime: { $lte: now },
       $or: [
-        { holdUntil: null },
-        { holdUntil: { $exists: false } },
-        { holdUntil: { $lte: now } },
+        {
+          status: 'scheduled',
+          scheduledTime: { $lte: now },
+          $or: [
+            { holdUntil: null },
+            { holdUntil: { $exists: false } },
+            { holdUntil: { $lte: now } },
+          ],
+        },
+        {
+          status: 'failed_retryable',
+          nextRetryAt: { $lte: now },
+        },
       ],
     })
       .limit(100)
@@ -83,6 +96,43 @@ async function processScheduledPosts() {
 }
 
 /**
+ * Reset posts stuck in `publishing` state. If the worker crashes between
+ * flipping a post to `publishing` and writing its final status, the row
+ * parks forever — the scheduler cron won't pick it up (it only scans
+ * `scheduled` + `failed_retryable`) and the dashboard shows "still
+ * publishing" indefinitely. We sweep anything stuck >10 minutes back to
+ * `scheduled` so the next cron tick re-queues it. attemptCount goes up
+ * so a permanently bad post eventually flips to `failed_permanent`.
+ */
+async function resetStuckPublishing() {
+  try {
+    const cutoff = new Date(Date.now() - 10 * 60 * 1000);
+    const result = await ScheduledPost.updateMany(
+      {
+        status: 'publishing',
+        // Use `updatedAt` if the schema has it; otherwise fall back to
+        // `scheduledTime` which is always set. Either way, only sweep
+        // rows that have been in `publishing` long enough that we're
+        // confident the worker is gone, not just slow.
+        $or: [
+          { updatedAt: { $lt: cutoff } },
+          { updatedAt: { $exists: false }, scheduledTime: { $lt: cutoff } },
+        ],
+      },
+      {
+        $set: { status: 'scheduled' },
+        $inc: { attemptCount: 1 },
+      },
+    );
+    if (result?.modifiedCount > 0) {
+      logger.info('Reset stuck-publishing posts', { count: result.modifiedCount });
+    }
+  } catch (error) {
+    logger.error('Failed to reset stuck-publishing posts', { error: error.message });
+  }
+}
+
+/**
  * Clean up old completed jobs
  */
 async function cleanupOldJobs() {
@@ -115,6 +165,13 @@ function initializeScheduler() {
   // Process scheduled posts every minute
   cron.schedule('* * * * *', async () => {
     await processScheduledPosts();
+  });
+
+  // Sweep stuck-publishing posts every 5 min. This is a recovery path
+  // for worker crashes mid-publish — without it, a single bad shutdown
+  // can leave a creator's post "publishing forever" with no way out.
+  cron.schedule('*/5 * * * *', async () => {
+    await resetStuckPublishing();
   });
 
   // Cleanup old jobs daily at 2 AM

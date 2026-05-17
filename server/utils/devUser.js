@@ -7,6 +7,21 @@
  */
 
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+
+/**
+ * Ensure a string ID is a valid Mongoose ObjectId.
+ * If it's a UUID, hashes it to a deterministic 24-character hex string.
+ * This prevents CastErrors when using Supabase UUIDs with Mongoose models.
+ */
+function ensureObjectId(idStr) {
+  if (!idStr) return null;
+  const str = String(idStr);
+  if (mongoose.Types.ObjectId.isValid(str)) return new mongoose.Types.ObjectId(str);
+  // Hash UUID to deterministic 24-char hex
+  const hash = crypto.createHash('md5').update(str).digest('hex').substring(0, 24);
+  return new mongoose.Types.ObjectId(hash);
+}
 
 /** Stable ObjectIds for dev users – single source of truth */
 const DEV_USER_IDS = {
@@ -84,4 +99,5 @@ module.exports = {
   isDevUser,
   getDevUserObjectId,
   allowDevMode,
+  ensureObjectId,
 };

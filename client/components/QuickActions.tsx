@@ -54,6 +54,7 @@ export default function QuickActions() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-sm">Quick Actions</h3>
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
               className="text-gray-400 hover:text-gray-600"
             >
@@ -63,6 +64,7 @@ export default function QuickActions() {
           <div className="space-y-2">
             {quickActions.map((action) => (
               <button
+                type="button"
                 key={action.action}
                 onClick={() => {
                   router.push(action.action)
@@ -85,6 +87,7 @@ export default function QuickActions() {
         </div>
       ) : (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
           className="w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 flex items-center justify-center text-2xl transition-transform hover:scale-110"
           aria-label="Quick Actions"

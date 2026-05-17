@@ -201,8 +201,7 @@ export default function FileUpload({
           : 'border-gray-300 hover:border-purple-400'
           } ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
         role="button"
-        aria-label="File upload area"
-        aria-disabled={disabled || uploading}
+        aria-label={disabled || uploading ? 'File upload area, disabled' : 'File upload area, drop or click to select'}
         tabIndex={disabled || uploading ? -1 : 0}
         onKeyDown={(e) => {
           if ((e.key === 'Enter' || e.key === ' ') && !disabled && !uploading) {
@@ -211,7 +210,7 @@ export default function FileUpload({
           }
         }}
       >
-        <input {...getInputProps()} aria-label="File input" />
+        <input {...getInputProps()} aria-hidden="true" tabIndex={-1} />
         <div className="space-y-4">
           <div className="text-4xl">📁</div>
           {uploading ? (
@@ -246,6 +245,7 @@ export default function FileUpload({
             <p className="font-semibold">Upload Failed</p>
             <p className="text-red-300 text-xs mt-0.5">{uploadError}</p>
             <button
+              type="button"
               onClick={() => setUploadError(null)}
               className="text-xs text-red-400 underline mt-1 hover:text-red-300"
             >

@@ -87,6 +87,7 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5">
                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Cut on Sentence</span>
                    <button
+                    type="button"
                     title="Toggle Cut on Sentence"
                     onClick={() => setProfile({ ...profile, pacing: { ...profile.pacing, cutOnSentence: !profile.pacing.cutOnSentence } })}
                     className={`w-10 h-5 rounded-full relative transition-colors ${profile.pacing.cutOnSentence ? 'bg-indigo-500' : 'bg-white/10'}`}
@@ -218,12 +219,14 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
         {/* Action Buttons */}
         <div className="mt-8 flex gap-4 pt-8 border-t border-white/10">
           <button
+            type="button"
             onClick={onCancel}
             className="flex-1 px-8 py-5 rounded-[1.5rem] bg-white/[0.03] border border-white/5 text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic hover:text-white hover:bg-white/[0.06] transition-all"
           >
             Discard
           </button>
           <button
+            type="button"
             onClick={() => onApply(profile)}
             className="flex-1 px-8 py-5 rounded-[1.5rem] bg-blue-600/20 border border-blue-500/30 text-[10px] font-black text-white uppercase tracking-[0.3em] italic hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
           >
@@ -231,6 +234,7 @@ export const ProfileTuningView: React.FC<ProfileTuningViewProps> = ({
             Apply to Timeline
           </button>
           <button
+            type="button"
             onClick={() => onSave(profile)}
             className="flex-[2] px-8 py-5 rounded-[1.5rem] bg-indigo-600 border border-indigo-500/30 text-[10px] font-black text-white uppercase tracking-[0.3em] italic hover:bg-indigo-500 flex items-center justify-center gap-3 shadow-[0_0_50px_rgba(79,70,229,0.3)] transition-all"
           >

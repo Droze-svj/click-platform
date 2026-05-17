@@ -112,13 +112,14 @@ export default function SocialAccountManager() {
                     const isLinked = accounts.find(acc => acc.platform === p.id)
                     return (
                         <button
+                            type="button"
                             key={p.id}
                             onClick={() => !isLinked && handleLink(p.id)}
                             disabled={oauthLoading || isLoading}
                             className={`p-4 md:p-6 rounded-3xl border-2 transition-all duration-300 flex flex-col items-center gap-3 group ${isLinked ? 'bg-gray-50 dark:bg-gray-950 border-emerald-500/50 cursor-default' : `bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 ${p.color} hover:shadow-xl hover:-translate-y-1`} disabled:opacity-50`}
                         >
                             <div className={`p-3 rounded-2xl transition-colors ${isLinked ? 'bg-emerald-500 text-white' : 'bg-gray-50 dark:bg-gray-800 group-hover:bg-transparent'}`}>
-                                <p.icon className="w-5 h-5 md:w-6 h-6" />
+                                <p.icon className="w-5 h-5 md:w-6 md:h-6" />
                             </div>
                             <div className="text-center">
                                 <p className="text-[10px] md:text-xs font-black uppercase mb-1">{p.name}</p>
@@ -171,8 +172,11 @@ export default function SocialAccountManager() {
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                                 <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
                             </div>
-                            <button 
+                            <button
+                                type="button"
                                 onClick={() => handleUnlink(acc.platform)}
+                                title={`Disconnect ${acc.platform}`}
+                                aria-label={`Disconnect ${acc.platform} account`}
                                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all"
                             >
                                 <Unlink className="w-4 h-4" />

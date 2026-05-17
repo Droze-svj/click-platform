@@ -209,10 +209,10 @@ async function getPendingApprovalsCount(userId) {
     }
 
     // Ensure userId is a valid ObjectId or string
-    const mongoose = require('mongoose');
+    const { ensureObjectId } = require('../utils/devUser');
     let userIdObj;
     try {
-      userIdObj = mongoose.Types.ObjectId.isValid(userId) ? userId : new mongoose.Types.ObjectId(userId);
+      userIdObj = ensureObjectId(userId);
     } catch (idError) {
       logger.error('Invalid userId format for getPendingApprovalsCount', { userId, error: idError.message });
       return 0;

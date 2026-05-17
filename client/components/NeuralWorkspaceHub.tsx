@@ -165,6 +165,7 @@ export default function NeuralWorkspaceHub() {
         <div className="flex items-center gap-3 overflow-x-auto pb-1 px-1 custom-scrollbar">
           {workspaces.map(ws => (
             <button
+              type="button"
               key={ws._id}
               onClick={() => setSelectedWorkspace(ws)}
               className={`px-6 py-4 rounded-2xl whitespace-nowrap transition-all flex items-center gap-3 border shadow-inner ${

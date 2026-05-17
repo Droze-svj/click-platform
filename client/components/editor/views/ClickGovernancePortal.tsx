@@ -71,6 +71,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
           <div className="flex bg-white/5 rounded-2xl p-1 border border-white/10 ml-8">
             {currencies.map(c => (
               <button
+                type="button"
                 key={c}
                 onClick={() => setSelectedCurrency(c)}
                 className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${selectedCurrency === c ? 'bg-emerald-500 text-black' : 'text-slate-500 hover:text-white'}`}
@@ -81,6 +82,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
           </div>
         </div>
         <button
+          type="button"
           onClick={onClose}
           title="Close Governance Portal"
           className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
@@ -141,6 +143,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
 
                   <div className="flex flex-col gap-3">
                     <button
+                      type="button"
                       onClick={() => onVote(proposal.id, true, selectedCurrency)}
                       className="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 shadow-xl shadow-emerald-900/20 transition-all"
                       title="Approve Decision"
@@ -148,6 +151,7 @@ const ClickGovernancePortal: React.FC<ClickGovernancePortalProps> = ({
                       <Check className="w-6 h-6" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => onVote(proposal.id, false, selectedCurrency)}
                       className="w-14 h-14 rounded-2xl bg-red-600/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
                       title="Reject/Override Decision"

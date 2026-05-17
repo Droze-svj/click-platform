@@ -1,42 +1,87 @@
 const ContentPerformance = require('../models/ContentPerformance');
+const ScheduledPost = require('../models/ScheduledPost');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
 
 const sovereignLedger = require('./sovereignLedgerService');
 
 /**
- * Task 9.2: Autonomous Strategy Pivoting
- * "The Brain" - Analyzes winners and refines the agency strategy.
- * @param {string} workspaceId
- * @param {string} niche - The specific market niche to stress-test (e.g., "AI SaaS", "Gaming")
+ * Pull the top-performing ScheduledPost entries for this user as a
+ * real performance dataset for the cognitive loop. Replaces the prior
+ * hardcoded `revenue: 4200, engagement: 8.4` mock that made every new
+ * user see the same fabricated recommendations.
+ *
+ * Falls through to ContentPerformance.find first (that's the legacy
+ * "workspace-level analytics" table). If ContentPerformance is empty,
+ * we synthesize from ScheduledPost.analytics — the source of truth
+ * after a post has been synced by the platform ingestion cron.
  */
-async function analyzeStrategicPivots(workspaceId, niche = 'General') {
+async function loadUserPerformanceData(workspaceId, userId, niche) {
+  // Path 1: agency-level performance ledger.
+  if (workspaceId) {
+    const wsPerf = await ContentPerformance.find({
+      workspaceId,
+      category: 'top_performer',
+    }).sort({ 'performance.revenue': -1 }).limit(10).lean();
+    if (wsPerf.length > 0) return wsPerf;
+  }
+
+  // Path 2: user-level real published posts with engagement metrics.
+  if (userId) {
+    const userPosts = await ScheduledPost.find({
+      userId: String(userId),
+      status: 'posted',
+      // Only count posts that platform-ingestion actually synced.
+      'analytics.lastUpdated': { $exists: true },
+    })
+      .sort({ 'analytics.engagement': -1 })
+      .limit(20)
+      .lean();
+
+    if (userPosts.length > 0) {
+      return userPosts.map((p) => ({
+        platform: p.platform,
+        performance: {
+          revenue: p.analytics?.revenue || 0,
+          engagement: p.analytics?.engagementRate?.byImpressions || p.analytics?.engagement || 0,
+          impressions: p.analytics?.impressions || 0,
+          reach: p.analytics?.reach || 0,
+        },
+        scores: {
+          overall: Math.round((p.analytics?.engagementRate?.byImpressions || 0) * 100),
+        },
+        content: {
+          format: p.content?.mediaUrl ? 'video' : 'text',
+          text: p.content?.text || '',
+          topics: p.content?.hashtags || [],
+        },
+        publishedAt: p.postedAt,
+      }));
+    }
+  }
+
+  // Path 3: no real data at all — return empty so the caller emits a
+  // graceful "publish first to get real recommendations" message.
+  return [];
+}
+
+async function analyzeStrategicPivots(workspaceId, niche = 'General', opts = {}) {
   try {
     logger.info('Starting Cognitive Loop Analysis', { workspaceId, niche });
 
-    // 1. Get top performers (or simulate for stress-test if database is empty)
-    let topPerformers = await ContentPerformance.find({
-      workspaceId,
-      category: 'top_performer'
-    }).sort({ 'performance.revenue': -1 }).limit(10).lean();
+    const topPerformers = await loadUserPerformanceData(workspaceId, opts.userId || null, niche);
 
-    // STRESS-TEST FALLBACK: If we have no data, generate a high-performance simulation for the niche
+    // When there's NO real performance data yet, return an honest
+    // "cold-start" response instead of fabricated revenue numbers. The
+    // dashboard can surface this as "Publish your first 3 posts so
+    // Click can learn what works for you" — that's the truthful UX.
     if (topPerformers.length === 0) {
-      logger.info('Using stress-test simulation for niche:', niche);
-      topPerformers = [
-        {
-          platform: 'tiktok',
-          performance: { revenue: 4200, engagement: 8.4 },
-          scores: { overall: 92 },
-          content: { format: 'tutorial', topics: [niche, 'efficiency', 'future'] }
-        },
-        {
-          platform: 'shorts',
-          performance: { revenue: 3100, engagement: 12.1 },
-          scores: { overall: 88 },
-          content: { format: 'story', topics: [niche, 'hacks', 'viral'] }
-        }
-      ];
+      return {
+        status: 'cold_start',
+        message: `No published-post performance data yet for ${niche}. Publish your first few posts and Click will tailor recommendations to your actual results.`,
+        plan: null,
+        analyzedVideos: 0,
+      };
     }
 
     // 2. Prepare data for AI analysis

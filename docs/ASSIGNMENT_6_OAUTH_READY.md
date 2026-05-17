@@ -12,7 +12,8 @@
 **Title:** `[Roadmap] OAuth Token Refresh Mechanisms`
 
 **Body:** (copy below)
-```
+
+```markdown
 ## Goal
 OAuth Token Refresh Mechanisms
 
@@ -53,7 +54,7 @@ Copy this row. After creating the issue, replace `XX` with the issue number:
 
 (copy after you have the issue number)
 
-```
+```text
 **New assignment:** #6 — OAuth Token Refresh Mechanisms
 Issue: https://github.com/Droze-svj/click-platform/issues/XX  ← replace XX with issue #
 Branch: `feature/oauth-refresh`

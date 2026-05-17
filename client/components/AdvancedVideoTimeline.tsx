@@ -248,16 +248,16 @@ export default function AdvancedVideoTimeline({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">Advanced Timeline</h3>
           <div className="flex items-center gap-2">
-            <button onClick={handleZoomOut} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button type="button" onClick={handleZoomOut} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
               <ZoomOut className="w-4 h-4" />
             </button>
             <span className="text-sm text-gray-600 dark:text-gray-400 min-w-[60px] text-center">
               {Math.round(zoom * 100)}%
             </span>
-            <button onClick={handleZoomIn} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button type="button" onClick={handleZoomIn} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
               <ZoomIn className="w-4 h-4" />
             </button>
-            <button onClick={handleResetZoom} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded ml-2">
+            <button type="button" onClick={handleResetZoom} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded ml-2">
               <RotateCcw className="w-4 h-4" />
             </button>
           </div>
@@ -280,24 +280,28 @@ export default function AdvancedVideoTimeline({
           </div>
           <div className="flex gap-1">
             <button
+              type="button"
               onClick={() => addSegment('video')}
               className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
             >
               + Video
             </button>
             <button
+              type="button"
               onClick={() => addSegment('audio')}
               className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
             >
               + Audio
             </button>
             <button
+              type="button"
               onClick={() => addSegment('text')}
               className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
             >
               + Text
             </button>
             <button
+              type="button"
               onClick={() => addSegment('transition')}
               className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-700"
             >
@@ -360,6 +364,7 @@ export default function AdvancedVideoTimeline({
                 Track {track + 1}
               </span>
               <button
+                type="button"
                 onClick={() => setShowTrack(prev => ({ ...prev, [track]: !prev[track] }))}
                 className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
               >
@@ -412,6 +417,7 @@ export default function AdvancedVideoTimeline({
 
                   {/* Delete button */}
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       onSegmentDelete(segment.id)

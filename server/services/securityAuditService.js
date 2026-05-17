@@ -2,29 +2,38 @@
 
 const SecurityLog = require('../models/SecurityLog');
 const logger = require('../utils/logger');
-const { maskSensitiveData } = require('../utils/dataEncryption');
 
 /**
  * Log security event
  */
-async function logSecurityEvent(event, details = {}) {
+async function logSecurityEvent(eventType, details = {}) {
   try {
-    // Temporarily disable security logging since we're using Supabase instead of MongoDB
-    // TODO: Create security_logs table in Supabase and implement proper logging
+    const log = new SecurityLog({
+      userId: details.userId,
+      eventType: eventType,
+      severity: details.severity || 'low',
+      ipAddress: details.ip || '0.0.0.0',
+      userAgent: details.userAgent,
+      details: details.metadata || {},
+      metadata: {
+        path: details.path,
+        method: details.method
+      }
+    });
 
-    // For now, just log critical events to console
-    if (['failed_login', 'suspicious_activity', 'unauthorized_access'].includes(event)) {
-      logger.warn('Security event', {
-        event,
+    await log.save();
+
+    if (['failed_login', 'suspicious_activity', 'unauthorized_access', 'account_locked'].includes(eventType)) {
+      logger.warn('Security alert', {
+        eventType,
         userId: details.userId,
         ip: details.ip,
-        path: details.path,
       });
     }
 
-    return { logged: true, method: 'console_only' };
+    return { logged: true, id: log._id };
   } catch (error) {
-    logger.error('Log security event error', { error: error.message, event });
+    logger.error('Log security event error', { error: error.message, eventType });
     return null;
   }
 }
@@ -32,12 +41,19 @@ async function logSecurityEvent(event, details = {}) {
 /**
  * Detect suspicious activity
  */
-async function detectSuspiciousActivity(userId, ip, userAgent) {
+async function detectSuspiciousActivity(userId, ip, _userAgent) {
   try {
-    // Temporarily disable suspicious activity detection since we're using Supabase
-    // TODO: Implement suspicious activity detection using Supabase tables
+    // Check for multiple failed logins in short period
+    const recentFailed = await SecurityLog.countDocuments({
+      ipAddress: ip,
+      eventType: 'login_failed',
+      createdAt: { $gte: new Date(Date.now() - 15 * 60 * 1000) } // Last 15 mins
+    });
 
-    // Return safe default for now
+    if (recentFailed > 5) {
+      return { suspicious: true, reason: 'excessive_failed_logins', count: recentFailed };
+    }
+
     return { suspicious: false };
   } catch (error) {
     logger.error('Detect suspicious activity error', { error: error.message, userId });

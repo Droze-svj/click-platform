@@ -206,6 +206,8 @@ export default function PrivacySettings() {
             <select
               value={settings.cookies}
               onChange={(e) => updateSettings({ cookies: e.target.value as any })}
+              title="Select Cookie Preferences"
+              aria-label="Select Cookie Preferences"
               className="w-full p-2 border rounded"
             >
               <option value="essential">Essential Only</option>

@@ -52,23 +52,34 @@ async function addShapeOverlay(videoPath, outputPath, shape) {
  */
 async function applyChromaKey(videoPath, outputPath, chromaKeyOptions) {
   const { color = '0x00ff00', similarity = 0.3, blend = 0.1 } = chromaKeyOptions;
-  
+
   return new Promise((resolve, reject) => {
-    // Extract RGB from hex color
-    const r = parseInt(color.slice(2, 4), 16);
-    const g = parseInt(color.slice(4, 6), 16);
-    const b = parseInt(color.slice(6, 8), 16);
-    
-    const filter = `colorkey=${r}:${g}:${b}:similarity=${similarity}:blend=${blend}`;
-    
+    // FFmpeg's `colorkey` filter takes a single colour value, NOT three
+    // comma-separated RGB components. The previous build constructed
+    // `colorkey=0:255:0:similarity=…` which FFmpeg silently mis-parsed
+    // (the 0/255/0 ended up as positional similarity/blend/yuv args).
+    // Normalise the incoming colour to FFmpeg's expected `0xRRGGBB` form.
+    let hex = String(color).trim();
+    if (hex.startsWith('#')) hex = '0x' + hex.slice(1);
+    if (/^[0-9a-fA-F]{6}$/.test(hex)) hex = '0x' + hex;
+    if (!/^0x[0-9a-fA-F]{6}$/.test(hex)) hex = '0x00ff00';
+
+    const sim = Math.max(0.01, Math.min(1, Number(similarity) || 0.3));
+    const bl = Math.max(0, Math.min(1, Number(blend) || 0.1));
+
+    const filter = `colorkey=color=${hex}:similarity=${sim}:blend=${bl}`;
+
     ffmpeg(videoPath)
       .videoFilters(filter)
       .output(outputPath)
       .on('end', () => {
-        logger.info('Chroma key applied', { outputPath, color });
+        logger.info('Chroma key applied', { outputPath, color: hex, similarity: sim, blend: bl });
         resolve(outputPath);
       })
-      .on('error', reject)
+      .on('error', (err) => {
+        logger.error('Chroma key FFmpeg failed', { outputPath, error: err.message });
+        reject(err);
+      })
       .run();
   });
 }

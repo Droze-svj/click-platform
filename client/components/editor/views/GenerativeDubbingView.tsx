@@ -221,6 +221,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setVoiceCloneEnabled(v => !v)}
                 disabled={isRunning}
                 className={`w-11 h-6 rounded-full border transition-all relative ${
@@ -250,6 +251,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[8px] font-black text-amber-400">Elite</span>
               </div>
               <button
+                type="button"
                 onClick={() => setLipSyncEnabled(v => !v)}
                 disabled={isRunning}
                 className={`w-11 h-6 rounded-full border transition-all relative ${
@@ -346,6 +348,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
                           <p className="text-[9px] text-emerald-600">Added to timeline • Track A3</p>
                         </div>
                         <button
+                          type="button"
                           className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
                           title={`Preview ${lang.name} dub`}
                         >

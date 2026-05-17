@@ -15,6 +15,12 @@ import {
   Layers,
   Zap,
   RefreshCw,
+  Monitor,
+  Database,
+  ArrowRight,
+  CheckCircle,
+  MoreVertical,
+  Fingerprint
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost, apiPut, apiDelete } from '../../../../lib/api'
@@ -22,6 +28,8 @@ import { extractApiData, extractApiError } from '../../../../utils/apiResponse'
 import LoadingSpinner from '../../../../components/LoadingSpinner'
 import { useAuth } from '../../../../hooks/useAuth'
 import { useToast } from '../../../../contexts/ToastContext'
+import ToastContainer from '../../../../components/ToastContainer'
+import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 
 interface TeamMember {
   userId: { _id: string; name: string; email: string }
@@ -73,7 +81,7 @@ export default function TeamDetailsPage() {
       const data = extractApiData<Team>(res as any) ?? (res as any)?.data
       setTeam(data || null)
     } catch {
-      showToast('Failed to load team', 'error')
+      showToast('Could not load: TEAM_unavailable', 'error')
       router.push('/dashboard/teams')
     } finally {
       setLoading(false)
@@ -91,23 +99,22 @@ export default function TeamDetailsPage() {
   })()
 
   const isOwner = (m: TeamMember) => m.role === 'owner'
-  const ownerId = (t: Team) => (t.ownerId as any)?._id
 
   const handleInviteByEmail = async () => {
     const email = inviteEmail.trim()
     if (!email) {
-      showToast('Enter an email address', 'error')
+      showToast('PARAM_ERR: EMAIL_REQUIRED', 'warning')
       return
     }
     setInviting(true)
     try {
       await apiPost(`/teams/${teamId}/invite-by-email`, { email, role: inviteRole })
-      showToast('Invite sent', 'success')
+      showToast('✓ PAYLOAD_SENT: INDUCTION_PENDING', 'success')
       setInviteEmail('')
       await loadTeam()
     } catch (e: any) {
       const err = extractApiError(e)
-      showToast(err?.message || 'Invite failed', 'error')
+      showToast(err?.message || 'WRITE_ERR: INDUCTION_FAILURE', 'error')
     } finally {
       setInviting(false)
     }
@@ -117,293 +124,341 @@ export default function TeamDetailsPage() {
     setUpdatingRole(memberId)
     try {
       await apiPut(`/teams/${teamId}/members/${memberId}/role`, { role })
-      showToast('Role updated', 'success')
+      showToast('✓ ROLE_CALIBRATED', 'success')
       await loadTeam()
     } catch (e: any) {
       const err = extractApiError(e)
-      showToast(err?.message || 'Update failed', 'error')
+      showToast(err?.message || 'WRITE_ERR: ROLE_SYNC_FAILURE', 'error')
     } finally {
       setUpdatingRole(null)
     }
   }
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Remove this member from the team?')) return
+    if (!confirm('TERMINATE_CONNECTION: Are you sure?')) return
     setRemoving(memberId)
     try {
       await apiDelete(`/teams/${teamId}/members/${memberId}`)
-      showToast('Member removed', 'success')
+      showToast('✓ NODE_DECOUPLED', 'success')
       await loadTeam()
     } catch (e: any) {
       const err = extractApiError(e)
-      showToast(err?.message || 'Remove failed', 'error')
+      showToast(err?.message || 'DELETE_ERR: REMOVAL_FAILURE', 'error')
     } finally {
       setRemoving(null)
     }
   }
 
-  const getRoleBadge = (role: string) => {
-    const c: Record<string, string> = {
-      owner: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200',
-      admin: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200',
-      editor: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200',
-      viewer: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
-    }
-    return c[role] || c.viewer
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] gap-8">
-        <div className="relative">
-           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
-           <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
-        </div>
-        <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">Synchronizing Swarm Node...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page transition-colors duration-500">
+        <RefreshCw size={80} className="text-primary-500 animate-spin mb-12" />
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic">Synchronizing Swarm Node...</p>
       </div>
     )
   }
 
   if (!team) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] p-12 text-center">
-        <div className="w-48 h-48 rounded-[3rem] bg-white/[0.02] border-2 border-white/5 flex items-center justify-center mb-10 shadow-3xl">
-           <Users size={80} className="text-rose-500/40" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page p-12 text-center transition-colors duration-500">
+        <div className="w-48 h-48 rounded-[3.5rem] bg-surface-card border-4 border-dashed border-surface-200 dark:border-surface-800 flex items-center justify-center mb-12 shadow-2xl">
+           <Users size={80} className="text-surface-200 dark:text-slate-800" />
         </div>
-        <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">SWARM_CLUSTER_ABSENT</h2>
-        <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">The requested swarm cluster is not registered in the neural lattice.</p>
-        <button onClick={() => router.push('/dashboard/teams')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">REVERT_TO_COLLECTIVE</button>
+        <h2 className="text-5xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter mb-6">SWARM_NODE_ABSENT</h2>
+        <p className="text-surface-500 dark:text-slate-600 text-sm font-black uppercase tracking-[0.5em] mb-12 italic leading-relaxed max-w-md">The requested swarm node is not registered in the active collective lattice.</p>
+        <button type="button" onClick={() => router.push('/dashboard/teams')} className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2rem] text-[11px] font-black uppercase tracking-[0.6em] hover:bg-primary-500 hover:text-white transition-all shadow-2xl italic active:scale-95 border-none">REVERT_TO_COLLECTIVE</button>
       </div>
     )
   }
 
-  const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[20px_40px_100px_rgba(0,0,0,0.8)] transition-all duration-700 hover:bg-white/[0.04]'
-
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-white selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-         <Users size={800} className="text-white absolute -top-40 -right-40 -rotate-12" />
-      </div>
+    <ErrorBoundary>
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
+        <ToastContainer />
 
-      <div className="max-w-[1200px] mx-auto px-10 py-24 space-y-16 relative z-10">
-        <button
-          onClick={() => router.push('/dashboard/teams')}
-          title="Return to Swarm Matrix"
-          className="inline-flex items-center gap-4 text-slate-500 hover:text-indigo-400 transition-all text-[12px] font-black uppercase tracking-[0.6em] italic"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          BACK_TO_COLLECTIVE
-        </button>
-
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-12 border-b-2 border-white/5 pb-16">
-          <div className="space-y-6">
-             <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                   <Layers size={16} className="text-indigo-400" />
-                   <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Swarm Cluster v12.4</span>
-                </div>
-                <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 tracking-widest uppercase italic leading-none">ACTIVE_NODE</div>
-             </div>
-             <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{team.name.toUpperCase()}</h1>
-             {team.description && (
-               <p className="text-[18px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed max-w-2xl opacity-60">{team.description.toUpperCase()}</p>
-             )}
-             <div className="flex flex-wrap gap-10 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none opacity-40 pt-4">
-               <span className="flex items-center gap-3"><Shield size={16} className="text-indigo-400" /> ARCHITECT: {team.ownerId?.name?.toUpperCase()}</span>
-               <span className="flex items-center gap-3"><Users size={16} className="text-indigo-400" /> {team.members.length} NEURAL_UNITS</span>
-               <span className="flex items-center gap-3"><Activity size={16} className="text-indigo-400" /> UPTIME: {new Date(team.createdAt).toLocaleDateString().toUpperCase()}</span>
-             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-           <div className="lg:col-span-8 space-y-12">
-              {/* Members Matrix */}
-              <div className={`${glassStyle} rounded-[4rem] overflow-hidden`}>
-                <div className="px-12 py-10 border-b-2 border-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-6">
-                     <Users className="w-6 h-6 text-indigo-400" />
-                     <h2 className="text-[18px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">CLUSTER_MEMBERS</h2>
-                  </div>
-                  <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{team.members.length} UNITS_SYNCED</div>
-                </div>
-                <div className="divide-y-2 divide-white/5">
-                  {team.members.map((m) => (
-                    <div
-                      key={(m.userId as any)?._id}
-                      className="px-12 py-10 flex flex-wrap items-center justify-between gap-8 hover:bg-white/[0.02] transition-colors group"
-                    >
-                      <div className="flex items-center gap-8">
-                        <div className="w-20 h-20 rounded-[2rem] bg-white/[0.05] border-2 border-white/10 flex items-center justify-center text-xl font-black text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-xl italic">
-                          {(m.userId?.name || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-[20px] font-black text-white italic uppercase tracking-tighter leading-tight">{m.userId?.name}</p>
-                          <p className="text-[12px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 mb-2">{m.userId?.email}</p>
-                          <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic opacity-40">
-                            INITIALIZED: {new Date(m.joinedAt).toLocaleDateString().toUpperCase()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        {isOwner(m) ? (
-                          <div className="px-6 py-2 rounded-full bg-amber-500/10 border-2 border-amber-500/20 text-[10px] font-black text-amber-500 uppercase tracking-widest italic flex items-center gap-3">
-                            <Shield className="w-4 h-4" />
-                            CORE_OWNER
-                          </div>
-                        ) : canManage ? (
-                          <div className="flex items-center gap-4">
-                            <select
-                              value={m.role}
-                              onChange={(e) => handleUpdateRole((m.userId as any)._id, e.target.value)}
-                              disabled={!!updatingRole}
-                              title="Assign Component Role"
-                              className="px-6 py-2.5 bg-black/60 border-2 border-white/5 rounded-2xl text-[11px] font-black text-slate-300 uppercase tracking-widest italic focus:border-indigo-500 transition-all custom-scrollbar"
-                            >
-                              {ROLES.map((r) => (
-                                <option key={r.value} value={r.value} className="bg-[var(--page-bg)]">
-                                  {r.label.toUpperCase()}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              onClick={() => handleRemoveMember((m.userId as any)._id)}
-                              disabled={!!removing}
-                              className="w-12 h-12 flex items-center justify-center text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/5 rounded-2xl transition-all border-2 border-transparent hover:border-rose-500/20"
-                              title="Terminate Node Connection"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className={`px-6 py-2 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest italic`}>
-                            {m.role.toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
+              <button type="button" onClick={() => router.push('/dashboard/teams')} aria-label="Back to teams" title="Back to teams" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+                <ArrowLeft size={24} />
+              </button>
+              <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
+                 <Users size={40} className="text-primary-600 dark:text-primary-400" />
               </div>
-
-              {/* Advanced Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-6">
-                 <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
-                    <div className="flex items-center gap-6">
-                       <Share2 className="w-6 h-6 text-indigo-400" />
-                       <h3 className="text-[18px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">LATTICE_INTEGRATION</h3>
-                    </div>
-                    <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">Cross-link modular components with this cluster to synchronize narrative and kinetic assets.</p>
-                    <button
-                      onClick={() => router.push('/dashboard/content')}
-                      className="w-full py-5 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] transition-all italic active:scale-95 shadow-2xl"
-                    >
-                      INTEGRATE_ASSETS
-                    </button>
-                 </div>
-                 <div className={`${glassStyle} rounded-[4rem] p-12 space-y-8`}>
-                    <div className="flex items-center gap-6">
-                       <Zap className="w-6 h-6 text-indigo-400" />
-                       <h3 className="text-[18px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">SWARM_TELEMETRY</h3>
-                    </div>
-                    <div className="space-y-4">
-                       <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
-                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">ID_DNA_REGISTRY</span>
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">VERIFIED</span>
-                       </div>
-                       <div className="flex items-center justify-between px-6 py-4 rounded-3xl bg-black/40 border border-white/5">
-                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-60">NEURAL_SYNC_RATE</span>
-                          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">99.8%</span>
-                       </div>
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
+                      Collective Node
+                    </span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
+                        <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                        SYNCED_ONLINE
                     </div>
                  </div>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">{team.name}</h1>
               </div>
            </div>
 
-           <div className="lg:col-span-4 space-y-12">
-              {/* Invite Node */}
+           <div className="flex flex-wrap items-center gap-6 justify-end w-full md:w-auto">
+              <div className="flex items-center gap-3 px-6 py-3 bg-surface-card border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic shadow-inner">
+                 <Activity size={16} className="text-primary-500" /> UPTIME: {new Date(team.createdAt).toLocaleDateString().toUpperCase()}
+              </div>
+              <button type="button" onClick={() => loadTeam()} aria-label="Refresh team data" title="Refresh team data" className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90">
+                 <RefreshCw size={28} />
+              </button>
+           </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
+           {/* Members Matrix Section */}
+           <main className="lg:col-span-8 space-y-12">
+              <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] overflow-hidden shadow-2xl transition-all duration-500 group hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)]">
+                 <div className="px-10 sm:px-14 py-12 border-b-2 border-surface-100 dark:border-surface-800 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                       <div className="w-14 h-14 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 shadow-lg group-hover:rotate-12 transition-all">
+                          <Fingerprint size={28} />
+                       </div>
+                       <div>
+                          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-1">Members Matrix</h2>
+                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">NEURAL_UNIT_REGISTRY</p>
+                       </div>
+                    </div>
+                    <div className="px-5 py-2 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-xl text-[11px] font-black text-primary-500 uppercase tracking-widest tabular-nums italic shadow-inner">
+                       {team.members.length} UNITS_SYNCED
+                    </div>
+                 </div>
+
+                 <div className="divide-y-2 divide-surface-100 dark:divide-surface-800/50">
+                    {team.members.map((m) => (
+                      <div key={(m.userId as any)?._id} className="px-10 sm:px-14 py-10 flex flex-wrap items-center justify-between gap-10 hover:bg-surface-page/50 dark:hover:bg-white/[0.01] transition-all duration-500 group/member">
+                        <div className="flex items-center gap-8">
+                           <div className="w-20 h-20 rounded-[2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-2xl font-black text-primary-500 group-hover/member:bg-primary-500 group-hover/member:text-white group-hover/member:rotate-12 transition-all duration-500 shadow-inner group-hover/member:shadow-primary-500/30 italic">
+                             {(m.userId?.name || '?').charAt(0).toUpperCase()}
+                           </div>
+                           <div>
+                              <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight mb-2 group-hover/member:text-primary-500 transition-colors">{m.userId?.name}</p>
+                              <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] italic mb-3 leading-none">{m.userId?.email}</p>
+                              <div className="flex items-center gap-3">
+                                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic border-r-2 border-surface-100 dark:border-surface-800 pr-3 leading-none">INITIALIZED: {new Date(m.joinedAt).toLocaleDateString().toUpperCase()}</span>
+                                 <div className="flex items-center gap-2 text-[9px] font-black text-primary-500 uppercase tracking-widest italic leading-none">
+                                    <Activity size={10} className="group-hover/member:animate-pulse" /> SYNCED_READY
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                           {isOwner(m) ? (
+                             <div className="px-6 py-3 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-[0.4em] italic flex items-center gap-4 shadow-sm">
+                                <Shield className="w-4 h-4" /> CORE_OWNER
+                             </div>
+                           ) : canManage ? (
+                             <div className="flex items-center gap-4">
+                                <div className="relative group/sel">
+                                   <select
+                                     value={m.role}
+                                     onChange={(e) => handleUpdateRole((m.userId as any)._id, e.target.value)}
+                                     disabled={!!updatingRole}
+                                     aria-label={`Role for ${m.userId?.name || 'member'}`}
+                                     title={`Role for ${m.userId?.name || 'member'}`}
+                                     className="px-8 py-3 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl text-[11px] font-black text-surface-600 dark:text-slate-400 uppercase tracking-widest italic focus:border-primary-500/50 focus:text-primary-500 outline-none appearance-none cursor-pointer transition-all shadow-inner group-hover/sel:bg-surface-card"
+                                   >
+                                     {ROLES.map((r) => (
+                                       <option key={r.value} value={r.value} className="bg-surface-card">
+                                         {r.label.toUpperCase()}
+                                       </option>
+                                     ))}
+                                   </select>
+                                   <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-300 group-hover/sel:text-primary-500 pointer-events-none transition-all" />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMember((m.userId as any)._id)}
+                                  disabled={!!removing}
+                                  className="w-12 h-12 flex items-center justify-center text-surface-200 dark:text-slate-800 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all border-2 border-transparent hover:border-rose-500/20 active:scale-90"
+                                >
+                                  {removing === (m.userId as any)._id ? <RefreshCw className="animate-spin" size={20} /> : <Trash2 size={20} />}
+                                </button>
+                             </div>
+                           ) : (
+                             <div className="px-6 py-3 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 text-[10px] font-black text-primary-600 dark:text-primary-500 uppercase tracking-[0.4em] italic shadow-sm">
+                                {m.role.toUpperCase()}
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+              </section>
+
+              {/* Advanced Controls Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                 <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-12 space-y-8 shadow-xl transition-all duration-500 hover:border-primary-500/30 group">
+                    <div className="flex items-center gap-6">
+                       <div className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-primary-500 shadow-inner group-hover:rotate-12 transition-transform">
+                          <Share2 size={28} />
+                       </div>
+                       <div>
+                          <h3 className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">Lattice Integration</h3>
+                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">NODE_CROSS_LINKING</p>
+                       </div>
+                    </div>
+                    <p className="text-sm font-bold text-surface-500 dark:text-slate-600 uppercase tracking-tight italic leading-relaxed">Cross-link modular components with this node to synchronize narrative and kinetic assets across the swarm.</p>
+                    <button type="button" onClick={() => router.push('/dashboard/content')}
+                      className="w-full py-5 bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.6em] transition-all italic active:scale-95 shadow-xl border-none"
+                    >
+                      SYNCHRONIZE_ASSETS
+                    </button>
+                 </section>
+
+                 <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-12 space-y-10 shadow-xl transition-all duration-500 hover:border-primary-500/30 group">
+                    <div className="flex items-center gap-6">
+                       <div className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-primary-500 shadow-inner group-hover:rotate-12 transition-transform">
+                          <Zap size={28} />
+                       </div>
+                       <div>
+                          <h3 className="text-xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-1">Swarm Telemetry</h3>
+                          <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">REAL_TIME_NODE_STATUS</p>
+                       </div>
+                    </div>
+                    <div className="space-y-4">
+                       <div className="flex items-center justify-between px-8 py-5 rounded-[1.8rem] bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 shadow-inner group-hover:bg-surface-card transition-all">
+                          <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic">ID_DNA_REGISTRY</span>
+                          <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic flex items-center gap-2"><CheckCircle size={14} /> VERIFIED</span>
+                       </div>
+                       <div className="flex items-center justify-between px-8 py-5 rounded-[1.8rem] bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 shadow-inner group-hover:bg-surface-card transition-all">
+                          <span className="text-[10px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic">NEURAL_SYNC_RATE</span>
+                          <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest italic">99.8%_OPTIMAL</span>
+                       </div>
+                    </div>
+                 </section>
+              </div>
+           </main>
+
+           {/* Sidebar Section */}
+           <aside className="lg:col-span-4 space-y-10">
+              {/* Invite Node HUD */}
               {canManage && (
-                <div className={`${glassStyle} rounded-[4rem] p-12 space-y-10 shadow-[20px_40px_100px_rgba(0,0,0,0.8)] border-indigo-500/20`}>
-                   <div className="flex items-center gap-6">
-                      <UserPlus className="w-6 h-6 text-indigo-400" />
-                      <h2 className="text-[20px] font-black text-[var(--text-main)] italic uppercase tracking-tighter">NODE_INDUCTION</h2>
+                <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-10 sm:p-14 space-y-12 shadow-2xl transition-all duration-500 hover:shadow-[0_40px_100px_rgba(0,0,0,0.5)] border-primary-500/20 relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><UserPlus size={300} className="text-primary-500" /></div>
+                   
+                   <div className="flex items-center gap-6 relative z-10">
+                      <div className="w-16 h-16 rounded-[1.8rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400 shadow-xl group-hover:rotate-12 transition-transform">
+                         <UserPlus size={32} />
+                      </div>
+                      <div>
+                         <h2 className="text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter leading-none mb-1">Node Induction</h2>
+                         <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">INJECT_NEW_UNIT</p>
+                      </div>
                    </div>
-                   <p className="text-[13px] font-black text-slate-500 uppercase tracking-widest italic opacity-60 leading-relaxed">
-                     Inject a new unit into the cluster by specifying their neural coordinate (email).
+
+                   <p className="text-sm font-bold text-surface-500 dark:text-slate-600 uppercase tracking-tight italic leading-relaxed relative z-10">
+                      Inject a new neural unit into the cluster by specifying their global coordinate lattice (email).
                    </p>
-                   <div className="space-y-6">
+
+                   <div className="space-y-6 relative z-10">
                       <div className="relative group/input">
-                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within/input:text-indigo-400 transition-colors" />
+                        <Mail className="absolute left-8 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-300 dark:text-slate-800 group-focus-within/input:text-primary-500 group-focus-within/input:scale-110 transition-all" />
                         <input
                           type="email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
                           placeholder="NEURAL_COORDINATE (EMAIL)"
-                          title="Enter induction email"
-                          className="w-full pl-16 pr-8 py-5 bg-black/60 border-2 border-white/5 rounded-3xl text-[12px] font-black text-indigo-200 uppercase tracking-[0.2em] italic placeholder:text-slate-600 focus:border-indigo-500/50 transition-all shadow-inner"
+                          className="w-full pl-16 pr-8 py-6 bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-sm font-black text-surface-900 dark:text-white uppercase tracking-widest italic placeholder:text-surface-200 dark:placeholder:text-slate-800 focus:border-primary-500 outline-none transition-all shadow-inner"
                         />
                       </div>
-                      <select
-                        value={inviteRole}
-                        onChange={(e) => setInviteRole(e.target.value)}
-                        title="Select induction role"
-                        className="w-full px-8 py-5 bg-black/60 border-2 border-white/5 rounded-3xl text-[12px] font-black text-slate-300 uppercase tracking-[0.2em] italic focus:border-indigo-500 transition-all custom-scrollbar"
-                      >
-                        {ROLES.map((r) => (
-                          <option key={r.value} value={r.value} className="bg-[var(--page-bg)]">
-                            {r.label.toUpperCase()}_PROTOCOL
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative group/sel">
+                        <select
+                          value={inviteRole}
+                          onChange={(e) => setInviteRole(e.target.value)}
+                          aria-label="Invite role"
+                          title="Invite role"
+                          className="w-full px-8 py-6 bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-[11px] font-black text-surface-600 dark:text-slate-400 uppercase tracking-[0.3em] italic focus:border-primary-500 outline-none appearance-none cursor-pointer transition-all shadow-inner"
+                        >
+                          {ROLES.map((r) => (
+                            <option key={r.value} value={r.value} className="bg-surface-card">
+                              {r.label.toUpperCase()}_PROTOCOL
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown size={22} className="absolute right-8 top-1/2 -translate-y-1/2 text-surface-300 dark:text-slate-800 group-hover/sel:text-primary-500 pointer-events-none transition-all" />
+                      </div>
                       <button
+                        type="button"
                         onClick={handleInviteByEmail}
                         disabled={inviting}
-                        className="w-full py-6 bg-indigo-500 text-white hover:bg-white hover:text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.8em] transition-all italic active:scale-95 shadow-[0_20px_60px_rgba(99,102,241,0.3)] disabled:opacity-50"
+                        className="w-full py-7 bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.8em] transition-all italic active:scale-95 shadow-[0_30px_70px_rgba(0,0,0,0.5)] disabled:opacity-10 border-none group/submit"
                       >
-                        {inviting ? 'INITIATING...' : 'INDUCT_UNIT'}
+                        {inviting ? <RefreshCw className="animate-spin" size={24} /> : 'INDUCT_UNIT'}
                       </button>
                    </div>
-                </div>
+                </section>
               )}
 
-              {/* Cluster Settings */}
-              <div className={`${glassStyle} rounded-[5rem] overflow-hidden`}>
-                <div className="px-10 py-8 border-b-2 border-white/5">
-                   <h2 className="text-[16px] font-black text-[var(--text-main)] uppercase tracking-[0.4em] italic">CLUSTER_INTEGRITY</h2>
-                </div>
-                <div className="p-10 space-y-8">
-                  <div className="flex items-center justify-between p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                    <div>
-                      <p className="text-[12px] font-black text-white uppercase tracking-widest italic mb-1">UNIT_AUTONOMY</p>
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">AUTO_INDUCTION_PERMIT</p>
+              {/* Cluster Integrity HUD */}
+              <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[4rem] overflow-hidden shadow-2xl transition-all duration-500 group">
+                 <div className="px-10 py-10 border-b-2 border-surface-100 dark:border-surface-800 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                       <Shield size={24} className="text-primary-500 group-hover:rotate-12 transition-transform" />
+                       <h2 className="text-[16px] font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic leading-none">Cluster Integrity</h2>
                     </div>
-                    <div className={`w-14 h-8 rounded-full p-1.5 transition-colors duration-500 ${team.settings?.allowMemberInvites ? 'bg-indigo-500' : 'bg-white/10'}`}>
-                       <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-500 shadow-xl ${team.settings?.allowMemberInvites ? 'translate-x-6' : 'translate-x-0'}`} />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                    <div>
-                      <p className="text-[12px] font-black text-white uppercase tracking-widest italic mb-1">CONSENSUS_PROTOCOL</p>
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">MANDATORY_VALIDATION</p>
-                    </div>
-                    <div className={`w-14 h-8 rounded-full p-1.5 transition-colors duration-500 ${team.settings?.requireApproval ? 'bg-indigo-500' : 'bg-white/10'}`}>
-                       <div className={`w-5 h-5 rounded-full bg-white transition-transform duration-500 shadow-xl ${team.settings?.requireApproval ? 'translate-x-6' : 'translate-x-0'}`} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-           </div>
-        </div>
-      </div>
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
+                 </div>
+                 <div className="p-10 space-y-8">
+                   <div className="flex items-center justify-between p-8 rounded-[2.5rem] bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/toggle hover:border-primary-500/20 transition-all">
+                     <div className="flex-1">
+                       <p className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic mb-1">UNIT_AUTONOMY</p>
+                       <p className="text-[9px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic opacity-60">AUTO_INDUCTION_PERMIT</p>
+                     </div>
+                     <div className={`w-16 h-9 rounded-full p-1.5 transition-all duration-500 shadow-lg ${team.settings?.allowMemberInvites ? 'bg-primary-500' : 'bg-surface-200 dark:bg-surface-900'}`}>
+                        <div className={`w-6 h-6 rounded-full bg-white transition-transform duration-500 shadow-md ${team.settings?.allowMemberInvites ? 'translate-x-7' : 'translate-x-0'}`} />
+                     </div>
+                   </div>
+                   <div className="flex items-center justify-between p-8 rounded-[2.5rem] bg-surface-page dark:bg-surface-950/30 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/toggle hover:border-primary-500/20 transition-all">
+                     <div className="flex-1">
+                       <p className="text-[12px] font-black text-surface-900 dark:text-white uppercase tracking-[0.2em] italic mb-1">CONSENSUS_PROTOCOL</p>
+                       <p className="text-[9px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic opacity-60">MANDATORY_VALIDATION</p>
+                     </div>
+                     <div className={`w-16 h-9 rounded-full p-1.5 transition-all duration-500 shadow-lg ${team.settings?.requireApproval ? 'bg-primary-500' : 'bg-surface-200 dark:bg-surface-900'}`}>
+                        <div className={`w-6 h-6 rounded-full bg-white transition-transform duration-500 shadow-md ${team.settings?.requireApproval ? 'translate-x-7' : 'translate-x-0'}`} />
+                     </div>
+                   </div>
+                 </div>
+                 <div className="px-10 py-8 bg-surface-page dark:bg-surface-950/50 text-center">
+                    <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.6em] italic">GLOBAL_SECURITY_V9_ENABLED</p>
+                 </div>
+              </section>
 
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 20px; border: 2px solid rgba(0,0,0,0.5); }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.6); }
-      `}</style>
-    </div>
+              {/* Node Metadata HUD */}
+              <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl space-y-8 group">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                       <Database className="text-primary-500" size={20} />
+                       <span className="text-[11px] font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic">Lattice Metadata</span>
+                    </div>
+                    <MoreVertical size={16} className="text-surface-300 dark:text-slate-800" />
+                 </div>
+                 <div className="space-y-6">
+                    <div className="flex justify-between items-center text-[10px] font-black italic">
+                       <span className="text-surface-400 dark:text-slate-600 uppercase tracking-widest">CLUSTER_ID</span>
+                       <span className="text-surface-900 dark:text-white tabular-nums tracking-tighter truncate max-w-[150px]">{team._id.toUpperCase()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] font-black italic">
+                       <span className="text-surface-400 dark:text-slate-600 uppercase tracking-widest">OWNER_HASH</span>
+                       <span className="text-surface-900 dark:text-white truncate max-w-[150px]">{team.ownerId?.email?.toUpperCase()}</span>
+                    </div>
+                 </div>
+              </section>
+           </aside>
+        </div>
+
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
+        `}</style>
+      </div>
+    </ErrorBoundary>
   )
 }

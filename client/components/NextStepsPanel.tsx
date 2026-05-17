@@ -115,6 +115,7 @@ export default function NextStepsPanel() {
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h3 className="font-semibold text-sm">Suggested Next Steps</h3>
           <button
+            type="button"
             onClick={() => setCollapsed(!collapsed)}
             className="text-gray-400 hover:text-gray-600"
           >
@@ -125,6 +126,7 @@ export default function NextStepsPanel() {
           <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
             {suggestions.map((suggestion, index) => (
               <button
+                type="button"
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
                 className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-purple-50 dark:hover:bg-gray-700 transition-colors"

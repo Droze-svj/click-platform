@@ -1,35 +1,43 @@
 // Facebook OAuth Routes
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../../middleware/auth');
-const {
-  getAuthorizationUrl,
-  exchangeCodeForToken,
-  getFacebookPages,
-  postToFacebook,
-  disconnectFacebook,
-  isConfigured
-} = require('../../services/facebookOAuthService');
+// Singleton instance — destructuring would drop `this` and crash.
+const facebookService = require('../../services/facebookOAuthService');
+const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
 const router = express.Router();
 
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
+
+async function loadFacebookOauth(userId) {
+  if (isMongoUserId(userId)) {
+    const User = require('../../models/User');
+    const user = await User.findById(userId).select('oauth.facebook');
+    return user?.oauth?.facebook || null;
+  }
+  return await OAuthStorage.loadTokens(userId, 'facebook');
+}
+
 /**
  * GET /api/oauth/facebook/authorize
  * Get Facebook OAuth authorization URL
  */
 router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) => {
-  if (!isConfigured()) {
+  if (!facebookService.isConfigured()) {
     return sendError(res, 'Facebook OAuth not configured', 503);
   }
 
-  const callbackUrl = process.env.FACEBOOK_CALLBACK_URL || 
+  const callbackUrl = process.env.FACEBOOK_CALLBACK_URL ||
     `${req.protocol}://${req.get('host')}/api/oauth/facebook/callback`;
 
-  const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { url, state } = await facebookService.getAuthorizationUrl(userId, callbackUrl);
+
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
 
@@ -51,14 +59,12 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
   }
 
   try {
-    // Redirect to frontend with code/state
-    // Frontend will call /complete endpoint
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?platform=facebook&code=${code}&state=${state}`);
-  } catch (error) {
-    logger.error('Facebook OAuth callback error', { error: error.message });
+  } catch (err) {
+    logger.error('Facebook OAuth callback error', { error: err.message });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error.message)}`);
+    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
   }
 }));
 
@@ -73,13 +79,12 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
     return sendError(res, 'Authorization code and state are required', 400);
   }
 
-  const { accessToken } = await exchangeCodeForToken(req.user._id, code, state);
-  
-  // Get user info and pages for response
-  const { getFacebookUserInfo, getFacebookPages } = require('../../services/facebookOAuthService');
-  const userInfo = await getFacebookUserInfo(accessToken);
-  const pages = await getFacebookPages(accessToken);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { accessToken } = await facebookService.exchangeCodeForToken(userId, code, state);
+
+  const userInfo = await facebookService.getFacebookUserInfo(accessToken);
+  const pages = await facebookService.getFacebookPages(accessToken);
+
   sendSuccess(res, 'Facebook account connected successfully', 200, {
     connected: true,
     userInfo: {
@@ -87,7 +92,7 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
       name: userInfo.name,
       email: userInfo.email,
     },
-    pages: pages.map(page => ({
+    pages: (pages || []).map(page => ({
       id: page.id,
       name: page.name,
     })),
@@ -99,14 +104,14 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
  * Get user's Facebook pages
  */
 router.get('/pages', auth, asyncHandler(async (req, res) => {
-  const User = require('../../models/User');
-  const user = await User.findById(req.user._id).select('oauth.facebook');
-  
-  if (!user || !user.oauth?.facebook?.connected) {
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const fbRow = await loadFacebookOauth(userId);
+
+  if (!fbRow?.connected) {
     return sendError(res, 'Facebook account not connected', 400);
   }
 
-  const pages = user.oauth.facebook.pages || [];
+  const pages = fbRow.pages || [];
   sendSuccess(res, 'Pages retrieved', 200, { pages });
 }));
 
@@ -126,8 +131,9 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   if (link) options.link = link;
   if (imageUrl) options.imageUrl = imageUrl;
 
-  const post = await postToFacebook(req.user._id, text, options);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const post = await facebookService.postToFacebook(userId, text, options);
+
   sendSuccess(res, 'Facebook post published successfully', 200, { post });
 }));
 
@@ -136,7 +142,8 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
  * Disconnect Facebook account
  */
 router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  await disconnectFacebook(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  await facebookService.disconnectFacebook(userId);
   sendSuccess(res, 'Facebook account disconnected', 200);
 }));
 
@@ -145,22 +152,19 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get Facebook connection status
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const User = require('../../models/User');
-  const user = await User.findById(req.user._id).select('oauth.facebook');
-  
-  const connected = user?.oauth?.facebook?.connected || false;
-  const connectedAt = user?.oauth?.facebook?.connectedAt;
-  const pages = user?.oauth?.facebook?.pages || [];
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const fbRow = await loadFacebookOauth(userId);
+
+  const connected = !!fbRow?.connected;
+  const connectedAt = fbRow?.connectedAt;
+  const pages = fbRow?.pages || [];
 
   sendSuccess(res, 'Status retrieved', 200, {
     connected,
     connectedAt,
     pagesCount: pages.length,
-    configured: isConfigured()
+    configured: facebookService.isConfigured()
   });
 }));
 
 module.exports = router;
-
-
-

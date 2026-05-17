@@ -4,9 +4,16 @@
 
 const axios = require('axios');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 const User = require('../models/User');
 const oauthService = require('./oauthService');
+const OAuthStorage = require('../utils/oauthStorage');
+
+// Supabase users have UUIDs; Mongoose User.findById throws CastError on them.
+// Route UUID users through OAuthStorage (Supabase social_links.oauth.linkedin);
+// keep the legacy User.oauth.linkedin path for ObjectId users.
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
 const TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken';
 const USERINFO_URL = 'https://api.linkedin.com/v2/userinfo';
@@ -51,19 +58,26 @@ function handleLinkedInError(err, userId, action) {
  */
 async function getAuthorizationUrl(userId, state, callbackUrl) {
   if (!isConfigured()) throw new Error('LinkedIn OAuth not configured');
-  
-  const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
 
   const oauthState = state || crypto.randomBytes(32).toString('hex');
-  
-  // Persist state to User model for validation during callback
-  if (!user.oauth) user.oauth = {};
-  if (!user.oauth.linkedin) user.oauth.linkedin = {};
-  user.oauth.linkedin.state = oauthState;
-  user.oauth.linkedin.stateCreatedAt = new Date();
-  user.markModified('oauth');
-  await user.save();
+
+  if (isMongoUserId(userId)) {
+    // Legacy Mongo user — persist state to the User document.
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+    if (!user.oauth) user.oauth = {};
+    if (!user.oauth.linkedin) user.oauth.linkedin = {};
+    user.oauth.linkedin.state = oauthState;
+    user.oauth.linkedin.stateCreatedAt = new Date();
+    user.markModified('oauth');
+    await user.save();
+  } else {
+    // Supabase user (UUID) — persist state via OAuthStorage (Supabase social_links).
+    await OAuthStorage.saveTokens(userId, 'linkedin', {
+      state: oauthState,
+      stateCreatedAt: new Date().toISOString(),
+    });
+  }
 
   const params = new URLSearchParams({
     response_type: 'code',
@@ -80,10 +94,16 @@ async function getAuthorizationUrl(userId, state, callbackUrl) {
  * Exchange code for token
  */
 async function exchangeCodeForToken(userId, code, state) {
-  const user = await User.findById(userId);
-  if (!user || !user.oauth?.linkedin) throw new Error('OAuth session not found');
-
-  const linkedinData = user.oauth.linkedin;
+  // Resolve the OAuth state we saved during getAuthorizationUrl.
+  let linkedinData;
+  if (isMongoUserId(userId)) {
+    const user = await User.findById(userId);
+    if (!user || !user.oauth?.linkedin) throw new Error('OAuth session not found');
+    linkedinData = user.oauth.linkedin;
+  } else {
+    linkedinData = await OAuthStorage.loadTokens(userId, 'linkedin');
+    if (!linkedinData) throw new Error('OAuth session not found');
+  }
   if (linkedinData.state !== state) throw new Error('Invalid state');
 
   try {
@@ -207,15 +227,43 @@ async function postToLinkedIn(userId, text, options = {}) {
   return response.data;
 }
 
-async function disconnectLinkedIn(userId) {
-  const user = await User.findById(userId);
-  if (user && user.oauth && user.oauth.linkedin) {
-    user.oauth.linkedin = { connected: false };
-    user.markModified('oauth');
-    await user.save();
-  }
-  logger.info('LinkedIn account disconnected', { userId });
-  return { success: true };
+/**
+ * Disconnect LinkedIn. Pass `accountId` to drop one of multiple accounts.
+ */
+async function disconnectLinkedIn(userId, accountId = null) {
+  const remaining = await oauthService.removeSocialAccount(userId, 'linkedin', accountId);
+  logger.info('LinkedIn account disconnected', { userId, accountId, remaining });
+  return { success: true, remaining };
+}
+
+/**
+ * Return every connected LinkedIn account for this user.
+ */
+async function getConnectedAccounts(userId) {
+  const accounts = await oauthService.listSocialAccounts(userId, 'linkedin');
+  return accounts.map((a) => ({
+    platform: 'linkedin',
+    accountId: a.accountId,
+    platform_user_id: a.platformUserId,
+    username: a.platformUsername,
+    display_name: a.platformUsername,
+    avatar: a.avatar,
+    isPrimary: a.isPrimary,
+    isActive: a.isActive,
+    connectedAt: a.addedAt,
+  }));
+}
+
+/**
+ * Status object used by the dashboard "connected?" indicator.
+ */
+async function getConnectionStatus(userId) {
+  const accounts = await getConnectedAccounts(userId);
+  return {
+    connected: accounts.length > 0,
+    accountCount: accounts.length,
+    accounts,
+  };
 }
 
 async function getLinkedInClient(userId) {
@@ -238,5 +286,7 @@ module.exports = {
   getAccessTokenForAccount,
   postToLinkedIn,
   disconnectLinkedIn,
-  getLinkedInClient
+  getLinkedInClient,
+  getConnectedAccounts,
+  getConnectionStatus,
 };

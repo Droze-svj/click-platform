@@ -195,7 +195,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
       <div className="flex items-center justify-between shrink-0 flex-wrap gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {PLATFORMS.map(p => (
-            <button key={p} onClick={() => setPlatform(p)}
+            <button type="button" key={p} onClick={() => setPlatform(p)}
               className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
                 platform === p ? 'text-white border-white/20 bg-white/10 [box-shadow:0_0_12px_var(--glow-color)]' : 'text-slate-600 border-white/5 bg-white/[0.02] hover:text-white'
               }`}
@@ -206,7 +206,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
           ))}
           <div className="flex items-center gap-1 ml-4 p-1 bg-white/5 rounded-xl border border-white/10">
             {([['benchmarks', 'Benchmarks'], ['nextweek', 'Next Week']] as [Tab, string][]).map(([tab, label]) => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
+              <button type="button" key={tab} onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${
                   activeTab === tab ? 'bg-white/10 text-white' : 'text-slate-600 hover:text-white'
                 }`}
@@ -222,6 +222,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
             {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           <button
+            type="button"
             onClick={() => activeTab === 'benchmarks' ? fetchBenchmark() : fetchWeekPlan()}
             disabled={loading || weekLoading}
             title="Refresh"
@@ -286,8 +287,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       title="Competitor handle"
                       className="flex-1 px-4 py-3 bg-black/40 border border-white/10 rounded-2xl text-[11px] text-white placeholder-slate-800 outline-none focus:border-indigo-500/50 transition-all font-mono"
                     />
-                    <button
-                      type="submit"
+                    <button                      type="submit"
                       disabled={trackLoading || !trackHandle.trim()}
                       className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all disabled:opacity-40 flex items-center gap-2 shadow-2xl shadow-indigo-600/20"
                     >
@@ -470,7 +470,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
               <div className={`${glassStyle} rounded-[2.5rem] p-10 text-center`}>
                 <CalendarDays className="w-10 h-10 text-slate-700 mx-auto mb-4" />
                 <p className="text-slate-500 font-black uppercase text-[10px] tracking-widest mb-4">No plan yet</p>
-                <button onClick={fetchWeekPlan}
+                <button type="button" onClick={fetchWeekPlan}
                   className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all"
                 >
                   Generate 7-Day Plan

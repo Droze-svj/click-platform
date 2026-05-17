@@ -9,6 +9,7 @@ const Content = require('../../models/Content');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const { toAbsolutePath } = require('../../utils/pathUtils');
 
 // Configure multer for video uploads
 const upload = multer({
@@ -52,7 +53,7 @@ router.post('/generate', authenticate, upload.single('video'), async (req, res) 
       videoFilePath = req.file.path;
     } else if (content.originalFile?.url) {
       // Use existing video file
-      videoFilePath = content.originalFile.url;
+      videoFilePath = toAbsolutePath(content.originalFile.url);
     } else {
       return sendError(res, 'Video file is required', 400);
     }

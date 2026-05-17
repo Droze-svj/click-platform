@@ -393,6 +393,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
             <div className="flex items-center gap-4 mt-6">
               <button
+                type="button"
                 onClick={() => setView('mimic')}
                 className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center gap-3 group shadow-[0_0_20px_rgba(79,70,229,0.3)]"
               >
@@ -401,6 +402,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               </button>
 
               <button
+                type="button"
                 onClick={() => setView('variant-factory')}
                 className="px-6 py-3 rounded-2xl bg-fuchsia-600/10 border border-fuchsia-500/20 hover:bg-fuchsia-600/20 transition-all flex items-center gap-3 group"
               >
@@ -409,6 +411,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               </button>
 
               <button
+                type="button"
                 onClick={onBeatSync}
                 className="px-6 py-3 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 hover:bg-emerald-600/20 transition-all flex items-center gap-3 group"
               >
@@ -424,6 +427,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 const isActive = activeEngine === engine.id
                 return (
                   <button
+                    type="button"
                     key={engine.id}
                     onClick={() => setActiveEngine(engine.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${
@@ -451,6 +455,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                   const isActive = activePersona === persona.id
                   return (
                     <button
+                      type="button"
                       key={persona.id}
                       onClick={() => setActivePersona(persona.id)}
                       className={`flex flex-col gap-3 p-4 rounded-2xl transition-all border text-left group ${
@@ -492,6 +497,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
              {/* Agentic Forge Button */}
              <div className="pt-4">
                 <button
+                  type="button"
                   onClick={handleForge}
                   disabled={isForging || !onForgeMaster}
                   className={`w-full p-8 rounded-[2.5rem] relative overflow-hidden group transition-all transform active:scale-95 ${
@@ -575,6 +581,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleInjectAsset(asset)}
                       className="w-full py-4 rounded-xl bg-indigo-500 text-white font-black text-[10px] tracking-widest uppercase italic shadow-lg shadow-indigo-500/20 border border-white/10"
                     >
@@ -776,6 +783,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                        <span className="text-[9px] font-bold text-slate-400">VIRAL:{clip.engagementScore.viralPotential}</span>
                     </div>
                     <button
+                      type="button"
                       onClick={() => onApplyClip?.(clip)}
                       className="w-full py-4 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all italic"
                     >

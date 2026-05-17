@@ -102,6 +102,7 @@ export default function OnboardingTooltips() {
           </h3>
         </div>
         <button
+          type="button"
           onClick={() => completeTooltip(tooltip.id)}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
         >
@@ -116,6 +117,7 @@ export default function OnboardingTooltips() {
           {tooltips.findIndex(t => t.id === tooltip.id) + 1} of {tooltips.length}
         </span>
         <button
+          type="button"
           onClick={() => completeTooltip(tooltip.id)}
           className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
         >

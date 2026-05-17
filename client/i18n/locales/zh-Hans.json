@@ -53,11 +53,26 @@
     "setNiche": "选择领域",
     "next": "下一步",
     "stages": {
-      "ingest":   { "label": "导入", "description": "导入素材 — 文件、链接或现场录制。" },
-      "script":   { "label": "脚本", "description": "AI 根据你的领域撰写钩子、正文和 CTA。" },
-      "edit":     { "label": "编辑", "description": "用风格智能进行剪辑、字幕和品牌化。" },
-      "schedule": { "label": "排程", "description": "在每个平台的最佳时间发布。" },
-      "analyze":  { "label": "分析", "description": "衡量表现，找出值得复制的要素。" }
+      "ingest": {
+        "label": "导入",
+        "description": "导入素材 — 文件、链接或现场录制。"
+      },
+      "script": {
+        "label": "脚本",
+        "description": "AI 根据你的领域撰写钩子、正文和 CTA。"
+      },
+      "edit": {
+        "label": "编辑",
+        "description": "用风格智能进行剪辑、字幕和品牌化。"
+      },
+      "schedule": {
+        "label": "排程",
+        "description": "在每个平台的最佳时间发布。"
+      },
+      "analyze": {
+        "label": "分析",
+        "description": "衡量表现，找出值得复制的要素。"
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,132 @@
   },
   "language": {
     "label": "语言",
-    "picker": "选择语言"
+    "picker": "选择语言",
+    "options": "语言",
+    "search": "搜索语言…",
+    "recent": "最近使用",
+    "recentBadge": "最近",
+    "all": "所有语言",
+    "noResults": "未找到匹配语言",
+    "useSuggested": "使用",
+    "useIt": "立即使用"
   },
   "settings": {
     "title": "设置",
     "subtitle": "管理你的账户偏好",
     "language": "语言",
-    "saveSettings": "保存"
+    "saveSettings": "保存",
+    "profile": "个人资料",
+    "editProfile": "编辑个人资料",
+    "general": "常规",
+    "notifications": "通知",
+    "privacy": "隐私",
+    "security": "安全",
+    "appearance": "外观",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeAuto": "自动 (跟随系统)",
+    "timezone": "时区",
+    "saving": "正在保存...",
+    "saved": "设置已成功保存",
+    "saveFailed": "设置保存失败"
   },
   "video": {
     "title": "视频",
     "upload": "上传",
     "edit": "编辑",
-    "processing": "处理中…"
+    "processing": "处理中…",
+    "noVideo": "未加载视频",
+    "noVideoHint": "请提供视频 URL 以开始编辑。",
+    "goToVideos": "前往视频列表"
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "welcome": "欢迎回来",
+    "heroWelcome": "欢迎来到 Click",
+    "heroTitle": "创作、二次创作与发布",
+    "heroSubtitle": "集 AI 工具、智能排期与数据分析于一体的工作区。",
+    "heroDescription": "您的 AI 驱动工作区，支持在 6 个平台进行创作、二次创作和发布。更快速地将长内容转化为适用于社交媒体的格式。",
+    "stats": {
+      "videosProcessed": "已处理视频",
+      "contentGenerated": "已生成内容",
+      "contentCreated": "已创作内容",
+      "quotesCreated": "已制作金句",
+      "postsScheduled": "已排期发布"
+    },
+    "clickToView": "Click 查看详情 →"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "loggingIn": "正在登录...",
+    "email": "邮箱",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "forgotPassword": "忘记密码？",
+    "noAccount": "还没有账号？",
+    "hasAccount": "已有账号？",
+    "loginTitle": "欢迎来到 Click",
+    "loginSubtitle": "登录您的账号，开启 AI 驱动的内容创作。",
+    "registerTitle": "创建您的账号",
+    "registerSubtitle": "开启 AI 驱动的内容创作之旅。"
+  },
+  "content": {
+    "title": "内容",
+    "create": "创建内容",
+    "edit": "编辑内容",
+    "delete": "删除内容",
+    "duplicate": "复制",
+    "publish": "发布",
+    "schedule": "定时发布"
+  },
+  "analytics": {
+    "title": "数据分析",
+    "overview": "概览",
+    "trends": "趋势",
+    "platforms": "平台",
+    "engagement": "互动",
+    "views": "浏览量",
+    "likes": "点赞",
+    "shares": "分享"
+  },
+  "moderation": {
+    "title": "内容审核",
+    "checking": "正在审核内容...",
+    "approved": "内容已通过",
+    "flagged": "内容已标记待审核",
+    "profanity": "检测到不当言辞",
+    "spam": "检测到垃圾内容"
+  },
+  "backup": {
+    "title": "备份",
+    "create": "创建备份",
+    "download": "下载",
+    "delete": "删除",
+    "passwordRequired": "加密备份需要密码",
+    "created": "备份创建成功",
+    "createFailed": "备份创建失败",
+    "downloaded": "备份已下载",
+    "downloadFailed": "备份下载失败",
+    "deleted": "备份已删除",
+    "deleteFailed": "备份删除失败"
+  },
+  "translation": {
+    "title": "翻译",
+    "translate": "翻译",
+    "translateTo": "翻译为",
+    "translateToAll": "全部翻译",
+    "targetLanguage": "目标语言",
+    "viewIn": "查看语言",
+    "original": "原文",
+    "translations": "翻译版本",
+    "noTranslations": "暂无翻译",
+    "translating": "正在翻译…",
+    "translated": "已翻译",
+    "translationFailed": "翻译失败",
+    "viewOriginal": "查看原文",
+    "selectLanguage": "选择语言"
   }
 }

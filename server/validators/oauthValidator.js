@@ -14,7 +14,7 @@ const handleValidationErrors = (req, res, next) => {
 
 const validateConnect = [
   param('platform')
-    .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'])
+    .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'])
     .withMessage('Invalid or unsupported platform'),
   query('redirect_uri')
     .optional()
@@ -25,7 +25,7 @@ const validateConnect = [
 
 const validateCallback = [
   param('platform')
-    .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'])
+    .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'])
     .withMessage('Invalid or unsupported platform'),
   query('code')
     .notEmpty()
@@ -38,12 +38,13 @@ const validateCallback = [
 
 const validateDisconnect = [
   param('platform')
-    .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'])
+    .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'])
     .withMessage('Invalid or unsupported platform'),
-  body('platform_user_id')
-    .optional()
-    .notEmpty()
-    .withMessage('Platform user ID is required for disconnection'),
+  body('platform_user_id').optional({ values: 'falsy' }).isString(),
+  // Multi-account: pass `accountId` to disconnect one of several
+  // connected accounts. Both fields are optional — when neither is
+  // provided, every account on the platform is disconnected.
+  body('accountId').optional({ values: 'falsy' }).isString(),
   handleValidationErrors
 ];
 

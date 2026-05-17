@@ -121,6 +121,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
   if (!isOpen) {
     return (
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white rounded-2xl hover:scale-105 transition-all shadow-lg shadow-indigo-600/20 font-black uppercase tracking-widest text-[10px]"
       >
@@ -148,7 +149,10 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
              </h3>
           </div>
           <button
+            type="button"
             onClick={() => setIsOpen(false)}
+            title="Close Distribution Window"
+            aria-label="Close Distribution Window"
             className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-colors"
           >
             <X className="w-6 h-6" />
@@ -168,6 +172,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
 
                   return (
                     <button
+                      type="button"
                       key={platform.id}
                       onClick={() => !isPublished && handlePlatformToggle(platform.id)}
                       disabled={isPublishing || isPublished || !platform.connected}
@@ -212,7 +217,8 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                        <div className="text-[11px] font-black text-white uppercase italic">Salvage Protocol</div>
                        <div className="text-[8px] font-bold text-slate-500 uppercase">Auto-Pivot if CTR &lt; 2%</div>
                     </div>
-                    <button 
+                    <button
+                       type="button"
                        onClick={() => setSalvageActive(!salvageActive)}
                        title={salvageActive ? "Deactivate Salvage Protocol" : "Activate Salvage Protocol"}
                        className={`w-12 h-6 rounded-full transition-all relative ${salvageActive ? 'bg-indigo-600' : 'bg-white/10'}`}
@@ -230,6 +236,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                     <div className="flex gap-2">
                        {['casual', 'professional'].map(t => (
                          <button
+                           type="button"
                            key={t}
                            onClick={() => setToneModulation(t as any)}
                            className={`flex-1 py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${
@@ -245,6 +252,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
 
               {/* Action Button */}
               <button
+                type="button"
                 onClick={handlePublish}
                 disabled={isPublishing || selectedPlatforms.length === 0 || published.length > 0}
                 className="w-full py-5 bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white rounded-3xl hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl shadow-indigo-600/20"
@@ -279,13 +287,15 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                       Initial retention data for <span className="text-white font-black italic">TIKTOK</span> is below baseline. Salvage Protocol suggests swapping to <span className="text-indigo-400 font-bold uppercase tracking-widest">Variant B</span> (High Friction Hook).
                    </p>
                    <div className="flex gap-4 w-full">
-                      <button 
+                      <button
+                        type="button"
                         onClick={() => setShowSalvageAlert(false)}
                         className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white"
                       >
                         Ignore
                       </button>
-                      <button 
+                      <button
+                        type="button"
                         onClick={handleSalvageSwap}
                         title="Swap to Variant B"
                         className="flex-1 py-4 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20"

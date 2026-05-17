@@ -50,6 +50,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
           <div className="flex gap-2">
             {['AI SaaS', 'Gaming', 'Fintech', 'Ecommerce'].map(n => (
               <button
+                type="button"
                 key={n}
                 onClick={() => setSelectedNiche(n)}
                 className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-all ${
@@ -62,6 +63,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
           </div>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
         >
@@ -150,6 +152,7 @@ const StrategicPivotsView: React.FC<StrategicPivotsViewProps> = ({ pivots, curre
            </div>
 
            <button
+             type="button"
              onClick={handleApplyStrategy}
              disabled={loading}
              className="w-full py-5 rounded-[2rem] bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-[11px] uppercase tracking-[0.3em] italic transition-all flex items-center justify-center gap-4 group"

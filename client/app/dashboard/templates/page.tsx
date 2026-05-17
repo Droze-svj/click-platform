@@ -20,8 +20,7 @@ import {
   ArrowLeft, Network, Compass
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -66,7 +65,7 @@ export default function HeuristicBlueprintNodePage() {
       const templatesData: any = extractApiData<any[]>(response)
       setTemplates(Array.isArray(templatesData) ? templatesData : [])
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'SYNC_ERR: BLUEPRINT_OFFLINE', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Could not sync: BLUEPRINT_OFFLINE', type: 'error' } }))
     } finally {
       setLoading(false)
     }

@@ -80,6 +80,7 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
@@ -89,6 +90,7 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
 
         {!isEditing ? (
           <button
+            type="button"
             onClick={() => setIsEditing(true)}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
@@ -145,12 +147,14 @@ export default function BulkContentEditor({ selectedIds, onClose, onUpdate }: Bu
 
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => setIsEditing(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={isSaving}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

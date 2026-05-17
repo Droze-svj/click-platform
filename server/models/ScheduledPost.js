@@ -19,9 +19,12 @@ const scheduledPostSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Workspace'
   },
+  // Typed as String so it accepts both Mongo ObjectIds (legacy) and the
+  // UUIDs / clip ids produced by the Supabase-backed clips pipeline. Existing
+  // ObjectId values still serialise cleanly through String.
   contentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Content'
+    type: String,
+    index: true
   },
   campaignId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -33,11 +36,38 @@ const scheduledPostSchema = new mongoose.Schema({
     enum: ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin', 'facebook', 'pinterest', 'threads', 'snapchat', 'reddit'],
     required: true
   },
+  // Multi-account: which connected account on the given platform this post
+  // should publish from. Optional — when omitted, the worker picks the
+  // user's active/primary account. Stored as String to accept platform-
+  // specific ids (IG business id, page id, channel id, user id).
+  accountId: {
+    type: String,
+    default: null,
+    index: true,
+  },
+  // Last time the performance-learning cron drained this post's analytics
+  // into the creator's UserStyleProfile. The cron picks up rows whose
+  // `analytics.lastUpdated` is more recent than this timestamp.
+  lastLearnedAt: {
+    type: Date,
+    default: null,
+    index: true,
+  },
   content: {
     text: String,
     mediaUrl: String,
     hashtags: [String],
     mentions: [String]
+  },
+  // Denormalised niche tag — copied from the parent Content at create
+  // time (or from `user.niche` if no Content is attached). Lets the
+  // `getTopPerformingPlaybook` query filter by niche without joining
+  // through Content on every learning pass. Falls through to no-filter
+  // for legacy rows that predate this field.
+  niche: {
+    type: String,
+    default: null,
+    index: true,
   },
   scheduledTime: {
     type: Date,
@@ -49,8 +79,34 @@ const scheduledPostSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['scheduled', 'pending', 'posted', 'failed', 'cancelled'],
+    // - scheduled: queued, holdUntil not yet passed
+    // - pending: legacy, still accepted for in-flight rows pre-migration
+    // - publishing: worker has picked it up and is calling the platform
+    // - posted: success
+    // - failed_retryable: transient (network/timeout/rate-limit) — retry later
+    // - failed_permanent: auth/invalid_input/quota — no auto-retry, needs user
+    // - failed: legacy umbrella, still accepted for older rows
+    // - cancelled: user-cancelled inside the grace window
+    enum: ['scheduled', 'pending', 'publishing', 'posted', 'failed', 'failed_retryable', 'failed_permanent', 'cancelled'],
     default: 'scheduled'
+  },
+  // Retry tracking — when status === 'failed_retryable' the worker bumps
+  // attemptCount and reschedules via exponential backoff (1m, 5m, 25m, then
+  // gives up by flipping to 'failed_permanent').
+  attemptCount: {
+    type: Number,
+    default: 0,
+  },
+  nextRetryAt: {
+    type: Date,
+    default: null,
+  },
+  // Human-readable failure reason populated by the cron when status flips
+  // to 'failed'. Surfaced to the scheduler UI + the in-app notification so
+  // the user knows whether to reconnect, retry, or give up.
+  error: {
+    type: String,
+    default: null,
   },
   // Safety hold: posts in `scheduled` state are NOT picked up by the cron
   // until `holdUntil` has passed. Lets users cancel within a configurable
@@ -189,6 +245,13 @@ scheduledPostSchema.index({ workspaceId: 1, scheduledTime: 1 }); // Workspace ca
 scheduledPostSchema.index({ campaignId: 1 }); // Campaign posts
 scheduledPostSchema.index({ userId: 1, status: 1, postedAt: -1 }); // Optimal-time aggregation
 scheduledPostSchema.index({ status: 1, lastAnalyticsSync: 1 }); // Resync queue
+// Performance-learning cron query — picks posted rows that have synced
+// analytics and either no `lastLearnedAt` yet OR analytics moved since
+// the last learn pass. Without this index the 6h cron table-scans on
+// large collections. The `_id` tail enables cursor pagination.
+scheduledPostSchema.index({ status: 1, 'analytics.lastUpdated': 1, lastLearnedAt: 1, _id: 1 });
+// Recurring-cron query — finds active templates whose nextFireAt has elapsed.
+scheduledPostSchema.index({ userId: 1, platform: 1, postedAt: -1 }); // getTopPerformingPlaybook (recent posts per platform)
 
 // Real-time update hooks
 scheduledPostSchema.post('save', async function (doc) {

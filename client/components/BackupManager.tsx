@@ -212,6 +212,7 @@ export default function BackupManager() {
             </h3>
           </div>
           <button
+            type="button"
             onClick={() => setShowCreate(!showCreate)}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
@@ -317,6 +318,7 @@ export default function BackupManager() {
 
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={createBackup}
                   disabled={isCreating}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
@@ -324,6 +326,7 @@ export default function BackupManager() {
                   {isCreating ? 'Creating...' : 'Create Backup'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowCreate(false)
                     setEncryptionPassword('')
@@ -379,6 +382,7 @@ export default function BackupManager() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => downloadBackup(backup.filename)}
                     className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                     title="Download"
@@ -386,6 +390,7 @@ export default function BackupManager() {
                     <Download className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => deleteBackup(backup.filename)}
                     className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     title="Delete"

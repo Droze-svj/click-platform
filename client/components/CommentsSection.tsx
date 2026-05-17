@@ -135,6 +135,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
           rows={3}
         />
         <button
+          type="button"
           onClick={handleAddComment}
           className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
         >
@@ -161,6 +162,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{comment.text}</p>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => handleReaction(comment._id, hasUserReacted(comment, 'like') ? '' : 'like')}
                 className={`text-xs px-2 py-1 rounded ${
                   hasUserReacted(comment, 'like')
@@ -171,6 +173,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
                 👍 {getReactionCount(comment, 'like')}
               </button>
               <button
+                type="button"
                 onClick={() => handleReaction(comment._id, hasUserReacted(comment, 'helpful') ? '' : 'helpful')}
                 className={`text-xs px-2 py-1 rounded ${
                   hasUserReacted(comment, 'helpful')

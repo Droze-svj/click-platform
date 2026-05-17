@@ -11,7 +11,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../../hooks/useAuth'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' ? `${window.location.origin}/api` : '/api')
 
 const glass = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/5 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-700'
 const premiumCard = 'backdrop-blur-2xl bg-black/60 border-2 border-white/5 rounded-[3rem] shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] hover:border-indigo-500/20 transition-all duration-500'
@@ -90,7 +91,7 @@ export default function MarketingOraclePage() {
     <div className="min-h-screen bg-[var(--page-bg)] text-white pb-40 px-8 pt-12 max-w-[1700px] mx-auto space-y-16">
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #020205; }
+        html.dark body { font-family: 'Outfit', sans-serif; background: #020205; }
         @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
         .shimmer { animation: shimmer 2s infinite linear; }
       `}</style>
@@ -151,7 +152,8 @@ export default function MarketingOraclePage() {
             </div>
           </div>
 
-          <button 
+          <button
+            type="button"
             onClick={syncSignals}
             disabled={syncing}
             className={`group relative flex items-center gap-6 px-12 py-8 rounded-[3rem] font-black uppercase tracking-[0.4em] italic text-sm transition-all duration-300 overflow-hidden ${
@@ -774,6 +776,7 @@ function OptimizerPanel({ niche, platform, load, data, loading, error }: any) {
           />
           
           <button
+            type="button"
             onClick={() => load('optimizer', '/pre-publish-report', { method: 'POST', body: JSON.stringify({ contentText: content, platform, niche, format: 'post' }) })}
             disabled={ld || !content.trim()}
             className="w-full relative overflow-hidden group bg-white text-black font-black uppercase tracking-widest py-4 px-8 rounded-2xl hover:bg-slate-200 transition-colors disabled:opacity-50"

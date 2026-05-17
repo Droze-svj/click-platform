@@ -124,7 +124,7 @@ const GlobalCommandPalette: React.FC = () => {
   // Hide entirely on auth screens
   const hidden = !pathname || pathname === '/login' || pathname === '/register' || pathname === '/'
 
-  // Open on Cmd/Ctrl+K
+  // Open on Cmd/Ctrl+K or custom event
   useEffect(() => {
     if (hidden) return
     const onKey = (e: KeyboardEvent) => {
@@ -134,8 +134,13 @@ const GlobalCommandPalette: React.FC = () => {
         setOpen(prev => !prev)
       }
     }
+    const onTrigger = () => setOpen(true)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('click-cmdk-open', onTrigger)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('click-cmdk-open', onTrigger)
+    }
   }, [hidden])
 
   // Reset state every time we open
@@ -280,9 +285,8 @@ const GlobalCommandPalette: React.FC = () => {
                       const Icon = cmd.icon
                       const active = idx === activeIdx
                       return (
-                        <button
+                        <button type="button"
                           key={cmd.id}
-                          type="button"
                           data-cmdk-idx={idx}
                           onClick={() => run(cmd)}
                           onMouseEnter={() => setActiveIdx(idx)}

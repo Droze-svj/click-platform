@@ -147,6 +147,7 @@ export default function NeuralStrategyHub() {
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
             </div>
            <button
+             type="button"
              onClick={runPrediction}
              disabled={loading}
              className="px-10 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-600/20 flex items-center gap-3 disabled:opacity-50 transition-all active:scale-95 group overflow-hidden"
@@ -176,7 +177,7 @@ export default function NeuralStrategyHub() {
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Real-time Cross-Platform Ledger</p>
                   </div>
                </div>
-               <button onClick={fetchTrends} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all hover:rotate-180 duration-500">
+               <button type="button" onClick={fetchTrends} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all hover:rotate-180 duration-500">
                  <RefreshCw className="w-4 h-4 text-slate-400" />
                </button>
              </div>

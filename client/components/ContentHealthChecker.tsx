@@ -129,6 +129,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
           </h3>
         </div>
         <button
+          type="button"
           onClick={checkHealth}
           disabled={isChecking}
           className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
@@ -194,6 +195,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
                     </p>
                     {issue.fixable && onFix && (
                       <button
+                        type="button"
                         onClick={() => onFix(issue.message, issue.suggestion)}
                         className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
                       >

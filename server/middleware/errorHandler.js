@@ -1,8 +1,5 @@
-console.log('🏗️ errorHandler: start requires');
 const logger = require('../utils/logger');
-console.log('🏗️ errorHandler: logger loaded');
 const { captureException, addBreadcrumb } = require('../utils/sentry');
-console.log('🏗️ errorHandler: sentry loaded');
 
 const errorHandler = (err, req, res, next) => {
   // Add breadcrumb for debugging (wrap in try-catch to prevent Sentry errors from breaking error handler)

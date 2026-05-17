@@ -3,7 +3,13 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { Play, Pause, Eye, EyeOff, Circle, Activity, Crosshair, Fingerprint, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TimelineSegment, TimelineEffect, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, TemplateLayout, TEMPLATE_LAYOUTS, CaptionTextStyle, TextOverlayAnimationIn, TextOverlayAnimationOut, ShapeOverlay, MotionGraphicPreset, ImageOverlay, GradientOverlay, SvgOverlay, TransformKeyframe } from '../../types/editor'
+import './EditorComponents.css'
+import { 
+  TimelineSegment, TimelineEffect, TextOverlay, CaptionStyle, CAPTION_SIZE_PX, 
+  TemplateLayout, TEMPLATE_LAYOUTS, CaptionTextStyle, TextOverlayAnimationIn, 
+  TextOverlayAnimationOut, ShapeOverlay, MotionGraphicPreset, ImageOverlay, 
+  GradientOverlay, SvgOverlay, TransformKeyframe, VideoFilter 
+} from '../../types/editor'
 import { usePreviewRecorder } from '../../hooks/usePreviewRecorder'
 import { getMatchingEmojiForChunk } from '../../utils/captionEmojiMap'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime } from '../../utils/keyframeEasing'
@@ -30,8 +36,7 @@ function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; cur
     <video
       ref={ref}
       src={seg.sourceUrl}
-      className="max-w-full max-h-full object-contain"
-      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+      className="max-w-full max-h-full object-contain video-fit-contain"
       muted
       playsInline
     />
@@ -216,14 +221,14 @@ export interface TranscriptWord {
   end: number
 }
 
-interface RealTimeVideoPreviewProps {
+export interface RealTimeVideoPreviewProps {
   videoUrl: string
   currentTime: number
   isPlaying: boolean
   volume: number
   isMuted: boolean
   playbackSpeed: number
-  filters: import('../../types/editor').VideoFilter
+  filters: VideoFilter
   textOverlays: TextOverlay[]
   shapeOverlays?: ShapeOverlay[]
   imageOverlays?: ImageOverlay[]
@@ -242,7 +247,7 @@ interface RealTimeVideoPreviewProps {
   timelineSegments?: TimelineSegment[]
   trackVisibility?: Record<number, boolean>
   previewQuality?: 'draft' | 'full'
-  chromaKey?: import('./views/ChromakeyView').ChromaKeySettings
+  chromaKey?: any
   onUpdateOverlay?: (type: 'text' | 'shape' | 'image', id: string, updates: any) => void
   selectedOverlayId?: string | null
   onSelectOverlay?: (id: string | null) => void
@@ -328,10 +333,10 @@ function timelineHasExportOnlyOps(segments: TimelineSegment[]): { reverse: numbe
   return { reverse, jcut, lcut }
 }
 
-function blendFiltersAtTime(base: import('../../types/editor').VideoFilter, effects: TimelineEffect[], t: number): import('../../types/editor').VideoFilter {
-  let out = { ...base }
+function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: number): VideoFilter {
+  let out = { ...base };
   for (const e of effects) {
-    if (e.type !== 'filter' || !e.enabled || t < e.startTime || t > e.endTime) continue
+    if (e.type !== 'filter' || !e.enabled || t < e.startTime || t > e.endTime) continue;
     const dur = e.endTime - e.startTime
     const fadeIn = e.fadeIn ?? 0
     const fadeOut = e.fadeOut ?? 0
@@ -360,10 +365,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   const onTimeUpdateRef = useRef(onTimeUpdate)
   onTimeUpdateRef.current = onTimeUpdate
   const [internalShowFilters, setInternalShowFilters] = useState(true)
-  const [fps, setFps] = useState(0)
-  const [latency, setLatency] = useState(0)
+  const [fps, setFps] = useState(60)
+  const [latency, setLatency] = useState(0.2)
+  const [magneticSnapping, setMagneticSnapping] = useState(true)
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [previewResolution, setPreviewResolution] = useState<'Full' | '1/2' | '1/4'>('Full')
   const [videoDimensions, setVideoDimensions] = useState<{ w: number; h: number } | null>(null)
+  const [containerDimensions, setContainerDimensions] = useState<{ w: number; h: number } | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const useCompareMode = typeof compareMode === 'string'
   const isSplit = useCompareMode && compareMode === 'split'
   const showAppliedFilters = useCompareMode ? (compareMode === 'after') : (typeof showBeforeAfter === 'boolean' ? showBeforeAfter : internalShowFilters)
@@ -409,8 +418,24 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     }
   }, [])
 
+  // Track container dimensions to map percentage coordinates to actual pixels
+  useEffect(() => {
+    if (!containerRef.current) return
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.target === containerRef.current) {
+          setContainerDimensions({
+            w: entry.contentRect.width,
+            h: entry.contentRect.height
+          })
+        }
+      }
+    })
+    resizeObserver.observe(containerRef.current)
+    return () => resizeObserver.disconnect()
+  }, [])
+
   // Smart Guides State
-  const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [snapLines, setSnapLines] = useState<{ x?: number, y?: number }>({})
 
   // Performance Monitoring
@@ -574,12 +599,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
   // Determine aspect ratio from layout
   const currentLayout = TEMPLATE_LAYOUTS.find(l => l.id === templateLayout) ?? TEMPLATE_LAYOUTS[1] // Default to standard 16/9
-  const aspectStyle = currentLayout.id === 'auto' ? {} : { aspectRatio: currentLayout.aspect.replace('/', ' / ') }
+  const aspectStyle = currentLayout.id === 'auto' ? {} : { aspectRatio: currentLayout.aspect.replace('/', ' / ') };
 
-  const animatedTransform = interpolateTransformAtTime(videoTransformKeyframes, currentTime, videoTransform as any)
+  const animatedTransform = interpolateTransformAtTime(videoTransformKeyframes, currentTime, videoTransform as any);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-12 overflow-hidden">
+    <>
+      <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-12 overflow-hidden">
       {/* Neural Chroma Key SVG Filter Engine */}
       {hasChroma && (
         <svg className="absolute w-0 h-0 pointer-events-none">
@@ -607,7 +633,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         style={aspectStyle}
       >
         {/* Cinematic Underlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none video-cinematic-underlay" />
 
         {/* Core Video Frame */}
         <div
@@ -637,10 +663,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               src={videoUrl}
               className="w-full h-full object-contain pointer-events-none"
               style={{
-                filter: filterString,
-                transform: `scale(${animatedTransform.scale ?? 1}) rotate(${animatedTransform.rotation ?? 0}deg)`,
-                clipPath: videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
-              }}
+                '--v-filter': filterString,
+                '--v-transform': `scale(${animatedTransform.scale ?? 1}) rotate(${animatedTransform.rotation ?? 0}deg)`,
+                '--v-clip': videoCrop ? `inset(${videoCrop.top || 0}% ${videoCrop.right || 0}% ${videoCrop.bottom || 0}% ${videoCrop.left || 0}%)` : 'none',
+                filter: 'var(--v-filter)',
+                transform: 'var(--v-transform)',
+                clipPath: 'var(--v-clip)'
+              } as any}
               onLoadedMetadata={handleLoadedMetadata}
               autoPlay={isPlaying}
               muted={isMuted}
@@ -671,7 +700,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         </div>
 
         {/* Interactive Overlays Layer */}
-        <div className="absolute inset-0 pointer-events-none">
+        <div ref={containerRef} className="absolute inset-0 pointer-events-none">
           {/* Smart Guides Rendering */}
           {activeDragId && snapLines.x !== undefined && (
             <div
@@ -700,34 +729,48 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               >
                 <Rnd
                   bounds="parent"
-                  position={{ x: (text.x / 100) * (videoDimensions?.w || 800) || 0, y: (text.y / 100) * (videoDimensions?.h || 600) || 0 }}
+                  position={{ x: (text.x / 100) * (containerDimensions?.w || 800) || 0, y: (text.y / 100) * (containerDimensions?.h || 600) || 0 }}
                   onDragStart={() => setActiveDragId(text.id)}
                   onDrag={(e, d) => {
-                    const snapDist = 2 // 2% snap threshold
-                    const pX = (d.x / (videoDimensions?.w || 800)) * 100
-                    const pY = (d.y / (videoDimensions?.h || 600)) * 100
+                    if (!magneticSnapping) return
+                    const snapDist = 3 // 3% snap threshold
+                    const pX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const pY = (d.y / (containerDimensions?.h || 600)) * 100
                     const newSnap: {x?: number, y?: number} = {}
-                    if (Math.abs(pX - 50) < snapDist) newSnap.x = 50
-                    if (Math.abs(pY - 50) < snapDist) newSnap.y = 50
+                    
+                    const snapPoints = [0, 25, 50, 75, 100]
+                    for (const pt of snapPoints) {
+                      if (Math.abs(pX - pt) < snapDist) newSnap.x = pt
+                      if (Math.abs(pY - pt) < snapDist) newSnap.y = pt
+                    }
                     setSnapLines(newSnap)
                   }}
                   onDragStop={(e, d) => {
                     setActiveDragId(null)
                     setSnapLines({})
-                    const rawX = (d.x / (videoDimensions?.w || 800)) * 100
-                    const rawY = (d.y / (videoDimensions?.h || 600)) * 100
+                    const rawX = (d.x / (containerDimensions?.w || 800)) * 100
+                    const rawY = (d.y / (containerDimensions?.h || 600)) * 100
                     onUpdateOverlay?.('text', text.id, {
                       x: snapLines.x !== undefined ? snapLines.x : rawX,
                       y: snapLines.y !== undefined ? snapLines.y : rawY
                     })
                   }}
                   className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
+                  style={{ maxWidth: '90%' }}
                   disableDragging={isPlaying}
                   enableResizing={false}
                   onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(text.id) }}
                 >
+                  {isSelected && (
+                    <>
+                      <div className="absolute top-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute top-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                    </>
+                  )}
                     <div
-                      className="whitespace-pre-wrap text-center drop-shadow-lg"
+                      className="whitespace-pre-wrap break-words flex flex-col justify-center text-center drop-shadow-lg max-w-[90vw]"
                       style={{
                         fontSize: `${text.fontSize}px`,
                         color: text.color,
@@ -756,14 +799,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
               <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
               <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Engine Status</span>
-                <span className="text-xs font-mono font-bold text-white">{isPlaying ? 'PROCESSING' : 'STANDBY'}</span>
+                <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">Status</span>
+                <span className="text-xs font-mono font-bold text-white">{isPlaying ? 'PLAYING' : 'PAUSED'}</span>
               </div>
             </div>
             <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-2 border border-white/10 shadow-2xl items-center gap-3">
-               <Activity className="w-3.5 h-3.5 text-indigo-400" />
+              <Activity className="w-3.5 h-3.5 text-indigo-400" />
                <div className="flex flex-col">
-                 <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Performance</span>
+                 <span className="text-[9px] font-black uppercase text-white/50 tracking-wider">Metrics</span>
                  <div className="flex gap-2 text-xs font-mono font-bold text-indigo-300">
                    <span>{fps} FPS</span>
                    <span className="opacity-50">|</span>
@@ -804,19 +847,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 </div>
               )
             })()}
-            {/* Resolution Toggle */}
-            <div className="flex bg-black/40 backdrop-blur-md rounded-xl p-1 border border-white/10 shadow-2xl items-center gap-1">
-              {(['Full', '1/2', '1/4'] as const).map(res => (
-                <button
-                  key={res}
-                  onClick={() => setPreviewResolution(res)}
-                  className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${previewResolution === res ? 'bg-indigo-600 text-white' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
-                  title={`${res} Resolution`}
-                >
-                  {res}
-                </button>
-              ))}
             </div>
+            {/* Magnetic Snapping Toggle */}
+            <button
+              type="button"
+              onClick={() => setMagneticSnapping(!magneticSnapping)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border backdrop-blur-md transition-all ${magneticSnapping ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400' : 'bg-black/40 border-white/10 text-white/40'}`}
+            >
+              <Crosshair size={12} className={magneticSnapping ? 'animate-spin-slow' : ''} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Magnetic Snapping</span>
+            </button>
           </div>
 
           {/* Image Overlays */}
@@ -837,12 +877,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   size={{ width: `${img.width}%`, height: `${img.height}%` }}
                   onDragStart={() => setActiveDragId(img.id)}
                   onDrag={(e, d) => {
-                    const snapDist = 2 // 2% snap threshold
+                    if (!magneticSnapping) return
+                    const snapDist = 3
                     const pX = (d.x / (videoDimensions?.w || 800)) * 100
                     const pY = (d.y / (videoDimensions?.h || 600)) * 100
                     const newSnap: {x?: number, y?: number} = {}
-                    if (Math.abs(pX - 50) < snapDist) newSnap.x = 50
-                    if (Math.abs(pY - 50) < snapDist) newSnap.y = 50
+                    const snapPoints = [0, 25, 50, 75, 100]
+                    for (const pt of snapPoints) {
+                      if (Math.abs(pX - pt) < snapDist) newSnap.x = pt
+                      if (Math.abs(pY - pt) < snapDist) newSnap.y = pt
+                    }
                     setSnapLines(newSnap)
                   }}
                   onDragStop={(e, d) => {
@@ -863,10 +907,18 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                        y: (position.y / (videoDimensions?.h || 600)) * 100
                      })
                   }}
-                  className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500' : 'hover:ring-1 hover:ring-white/50'}`}
+                  className={`pointer-events-auto ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
                   disableDragging={isPlaying}
                   onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(img.id) }}
                 >
+                  {isSelected && (
+                    <>
+                      <div className="absolute top-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute top-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                    </>
+                  )}
                   <img
                     src={img.url}
                     alt="Image Layer"
@@ -900,12 +952,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   size={{ width: `${shape.width}%`, height: `${shape.height}%` }}
                   onDragStart={() => setActiveDragId(shape.id)}
                   onDrag={(e, d) => {
-                    const snapDist = 2 // 2% snap threshold
+                    if (!magneticSnapping) return
+                    const snapDist = 3
                     const pX = (d.x / (videoDimensions?.w || 800)) * 100
                     const pY = (d.y / (videoDimensions?.h || 600)) * 100
                     const newSnap: {x?: number, y?: number} = {}
-                    if (Math.abs(pX - 50) < snapDist) newSnap.x = 50
-                    if (Math.abs(pY - 50) < snapDist) newSnap.y = 50
+                    const snapPoints = [0, 25, 50, 75, 100]
+                    for (const pt of snapPoints) {
+                      if (Math.abs(pX - pt) < snapDist) newSnap.x = pt
+                      if (Math.abs(pY - pt) < snapDist) newSnap.y = pt
+                    }
                     setSnapLines(newSnap)
                   }}
                   onDragStop={(e, d) => {
@@ -926,10 +982,18 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                        y: (position.y / (videoDimensions?.h || 600)) * 100
                      })
                   }}
-                  className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500' : 'hover:ring-1 hover:ring-white/50'}`}
+                  className={`pointer-events-auto flex items-center justify-center ${isSelected ? 'ring-2 ring-indigo-500 bg-indigo-500/10' : 'hover:ring-1 hover:ring-white/50'}`}
                   disableDragging={isPlaying}
                   onMouseDown={(e) => { e.stopPropagation(); onSelectOverlay?.(shape.id) }}
                 >
+                  {isSelected && (
+                    <>
+                      <div className="absolute top-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute top-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mt-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 left-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -ml-1.5 rounded-full z-50 pointer-events-none" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-white border-2 border-indigo-500 -mb-1.5 -mr-1.5 rounded-full z-50 pointer-events-none" />
+                    </>
+                  )}
                   <div
                     className="w-full h-full"
                     style={{
@@ -951,8 +1015,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         <div className="absolute inset-0 pointer-events-none p-10 flex flex-col justify-between opacity-0 group-hover/preview:opacity-100 transition-opacity duration-500">
           <div className="flex justify-between items-start">
             <div className="px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-4">
-              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Projection Active</span>
+              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">Live Feed</span>
             </div>
             <div className="flex flex-col items-end gap-2">
               <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-mono">Res: {videoDimensions?.w ?? 0}x{videoDimensions?.h ?? 0}</span>
@@ -966,22 +1030,22 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                 <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Latency</span>
                 <div className="flex items-center gap-2">
                   <Zap className="w-3 h-3 text-amber-500" />
-                  <span className="text-xs font-black text-white italic">0.2ms</span>
+                  <span className="text-xs font-black text-white italic">{latency}ms</span>
                 </div>
               </div>
               <div className="w-px h-8 bg-white/10" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Engine</span>
-                <span className="text-xs font-black text-white italic">Elite v3.2</span>
+                <span className="text-xs font-black text-white italic">Precision v3</span>
               </div>
             </div>
 
             <div className="px-5 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-6 pointer-events-auto">
-              <button onClick={onPlayPause} className="text-white hover:text-indigo-400 transition-colors">
+              <button type="button" onClick={onPlayPause} className="text-white hover:text-indigo-400 transition-colors">
                 {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
               </button>
               <div className="w-px h-4 bg-white/10" />
-              <button onClick={handleBeforeAfterToggle} className={`transition-colors ${showAppliedFilters ? 'text-indigo-400' : 'text-white/40'}`}>
+              <button type="button" onClick={handleBeforeAfterToggle} className={`transition-colors ${showAppliedFilters ? 'text-indigo-400' : 'text-white/40'}`}>
                 {showAppliedFilters ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
             </div>
@@ -1025,11 +1089,11 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
         {/* Global Filter Overlays */}
         {vignetteOpacity > 0 && (
-          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,${vignetteOpacity}) 100%)` }} />
+          <div className="absolute inset-0 pointer-events-none video-vignette" style={{ '--vignette-opacity': vignetteOpacity } as any} />
         )}
       </div>
-    </div>
-  )
-}
+    </>
+  );
+};
 
 export default RealTimeVideoPreview

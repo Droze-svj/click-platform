@@ -242,7 +242,23 @@ function getIO() {
   return io;
 }
 
+/**
+ * Emit a real-time event to a single user across all their connected
+ * tabs/devices. Best-effort: if the socket layer isn't initialized yet
+ * (worker boot, tests) we silently no-op so callers don't have to guard.
+ */
+function emitToUser(userId, event, payload) {
+  if (!io || !userId) return false;
+  try {
+    io.to(`user-${userId}`).emit(event, payload);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
   initializeSocket,
-  getIO
+  getIO,
+  emitToUser
 };

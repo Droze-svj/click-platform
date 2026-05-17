@@ -11,9 +11,9 @@
  * full-run flow. Suggestion-apply is a synchronous, per-click operation.
  */
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AIDirectorSuggestion, TimelineSegment, TextOverlay } from '../types/editor'
-import { applySuggestion, applyAllSuggestions, type ApplySuggestionContext } from '../utils/applySuggestion'
+import { applySuggestion, applyAllSuggestions } from '../utils/applySuggestion'
 
 export interface UseTimelineActionsArgs {
   segments: TimelineSegment[]
@@ -21,6 +21,12 @@ export interface UseTimelineActionsArgs {
   textOverlays: TextOverlay[]
   setTextOverlays: (next: TextOverlay[] | ((prev: TextOverlay[]) => TextOverlay[])) => void
   duration: number
+  /**
+   * Optional scope key. When this changes (e.g. user opens a different
+   * video), the internal undo stack and applied-id set are wiped so
+   * history from a previous video can't be triggered against the new one.
+   */
+  resetKey?: string | number | null
   /** Toast callback — kept generic so the hook is usable from any host. */
   showToast?: (msg: string, kind?: 'success' | 'info' | 'error') => void
 }
@@ -32,12 +38,18 @@ interface HistorySnapshot {
 }
 
 export function useTimelineActions(args: UseTimelineActionsArgs) {
-  const { segments, setSegments, textOverlays, setTextOverlays, duration, showToast } = args
+  const { segments, setSegments, textOverlays, setTextOverlays, duration, resetKey, showToast } = args
   const [appliedIds, setAppliedIds] = useState<Set<string>>(() => new Set())
   const [lastAppliedAt, setLastAppliedAt] = useState<number | null>(null)
   const undoStack = useRef<HistorySnapshot[]>([])
 
-  const ctx: ApplySuggestionContext = { segments, textOverlays, duration }
+  // Clear undo + applied state when the scope changes (e.g. videoId
+  // changes) so a different video can't undo into a stale snapshot.
+  useEffect(() => {
+    undoStack.current = []
+    setAppliedIds(new Set())
+    setLastAppliedAt(null)
+  }, [resetKey])
 
   const snapshot = useCallback((description: string): HistorySnapshot => ({
     segments: segments.slice(),

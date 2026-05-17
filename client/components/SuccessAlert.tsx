@@ -14,6 +14,7 @@ export default function SuccessAlert({ message, onClose }: SuccessAlertProps) {
       </div>
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
           className="text-green-600 hover:text-green-800 font-bold"
         >

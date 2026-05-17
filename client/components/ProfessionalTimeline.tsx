@@ -621,6 +621,7 @@ export default function ProfessionalTimeline({
         <div className="flex items-center gap-2">
           {/* Playback Controls */}
           <button
+            type="button"
             onClick={onPlayPause}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
             title="Play/Pause (Space)"
@@ -628,6 +629,7 @@ export default function ProfessionalTimeline({
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
           <button
+            type="button"
             onClick={() => onTimeUpdate(Math.max(0, snapTime(currentTime - (1 / FRAMES_PER_SECOND))))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
             title="Step Back (←)"
@@ -635,6 +637,7 @@ export default function ProfessionalTimeline({
             <SkipBack className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={() => onTimeUpdate(Math.min(duration, snapTime(currentTime + (1 / FRAMES_PER_SECOND))))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
             title="Step Forward (→)"
@@ -645,6 +648,7 @@ export default function ProfessionalTimeline({
           <div className="w-px h-6 bg-gray-600 mx-2" />
 
           <button
+            type="button"
             onClick={() => setShowVersionHistory(!showVersionHistory)}
             className={`p-2 rounded transition-colors ${showVersionHistory ? 'bg-indigo-600' : 'hover:bg-gray-700'}`}
             title="Project History"
@@ -656,6 +660,7 @@ export default function ProfessionalTimeline({
 
           {/* Tools */}
           <button
+            type="button"
             onClick={() => setSelectedTool('select')}
             className={`p-2 rounded transition-colors ${selectedTool === 'select' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
             title="Selection Tool (V)"
@@ -663,6 +668,7 @@ export default function ProfessionalTimeline({
             <MousePointer2 className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={() => setSelectedTool('razor')}
             className={`p-2 rounded transition-colors ${selectedTool === 'razor' ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
             title="Razor Tool (S)"
@@ -676,6 +682,8 @@ export default function ProfessionalTimeline({
           <select
             value={editMode}
             onChange={(e) => setEditMode(e.target.value as EditMode)}
+            aria-label="Edit mode"
+            title="Edit mode"
             className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm"
           >
             <option value="normal">Normal</option>
@@ -688,6 +696,7 @@ export default function ProfessionalTimeline({
 
           {/* In/Out Points */}
           <button
+            type="button"
             onClick={() => setInPoint(currentTime)}
             className={`p-2 rounded transition-colors ${inPoint !== null ? 'bg-green-600' : 'hover:bg-gray-700'}`}
             title="Set In Point (I)"
@@ -695,6 +704,7 @@ export default function ProfessionalTimeline({
             I
           </button>
           <button
+            type="button"
             onClick={() => setOutPoint(currentTime)}
             className={`p-2 rounded transition-colors ${outPoint !== null ? 'bg-red-600' : 'hover:bg-gray-700'}`}
             title="Set Out Point (O)"
@@ -703,6 +713,7 @@ export default function ProfessionalTimeline({
           </button>
           {(inPoint !== null || outPoint !== null) && (
             <button
+              type="button"
               onClick={() => {
                 setInPoint(null)
                 setOutPoint(null)
@@ -718,6 +729,7 @@ export default function ProfessionalTimeline({
 
           {/* Zoom Controls */}
           <button
+            type="button"
             onClick={() => setZoom(prev => Math.max(MIN_ZOOM, prev / 1.5))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
             title="Zoom Out"
@@ -728,6 +740,7 @@ export default function ProfessionalTimeline({
             {Math.round(zoom * 100)}%
           </span>
           <button
+            type="button"
             onClick={() => setZoom(prev => Math.min(MAX_ZOOM, prev * 1.5))}
             className="p-2 hover:bg-gray-700 rounded transition-colors"
             title="Zoom In"
@@ -738,6 +751,7 @@ export default function ProfessionalTimeline({
           {/* Snap to Grid */}
           <div className="w-px h-6 bg-gray-600 mx-2" />
           <button
+            type="button"
             onClick={() => setSnapToGrid(!snapToGrid)}
             className={`p-2 rounded transition-colors ${snapToGrid ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
             title="Snap to Grid"
@@ -832,6 +846,7 @@ export default function ProfessionalTimeline({
                   <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">AI Suggestion: {suggestion.type}</p>
                   <p className="text-xs text-white leading-tight mb-2">{suggestion.description}</p>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onApplyAiSuggestion?.(suggestion);
@@ -918,6 +933,7 @@ export default function ProfessionalTimeline({
                     <div className="flex items-center justify-between p-2 border-b border-gray-700">
                       <div className="flex items-center gap-1">
                         <button
+                          type="button"
                           onClick={() => {
                             if (isLocked) {
                               setLockedTracks(prev => {
@@ -935,6 +951,7 @@ export default function ProfessionalTimeline({
                           {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                         </button>
                         <button
+                          type="button"
                           onClick={() => {
                             if (isHidden) {
                               setHiddenTracks(prev => {
@@ -954,6 +971,7 @@ export default function ProfessionalTimeline({
                         {track.type === 'audio' && (
                           <>
                             <button
+                              type="button"
                               onClick={() => {
                                 if (soloTracks.has(track.id)) {
                                   setSoloTracks(prev => {
@@ -977,6 +995,7 @@ export default function ProfessionalTimeline({
                               <Headphones className="w-3 h-3" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => {
                                 if (mutedTracks.has(track.id)) {
                                   setMutedTracks(prev => {
@@ -1135,6 +1154,7 @@ export default function ProfessionalTimeline({
                         {/* Delete button (on hover) */}
                         {isSelected && !isLocked && (
                           <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation()
                               onClipDelete(clip.id)
@@ -1198,6 +1218,7 @@ export default function ProfessionalTimeline({
                 Keyframe Editor - {clips.find(c => c.id === selectedClipForKeyframes)?.name}
               </h4>
               <button
+                type="button"
                 onClick={() => setSelectedClipForKeyframes(null)}
                 className="text-gray-400 hover:text-white transition-colors"
               >
@@ -1219,6 +1240,8 @@ export default function ProfessionalTimeline({
                           min="0"
                           max="100"
                           value={kf.value}
+                          aria-label={`Opacity at ${kf.time.toFixed(2)} seconds`}
+                          title={`Opacity at ${kf.time.toFixed(2)} seconds`}
                           onChange={(e) => {
                             const clip = clips.find(c => c.id === selectedClipForKeyframes)
                             if (clip) {
@@ -1234,6 +1257,7 @@ export default function ProfessionalTimeline({
                       </div>
                     ))}
                   <button
+                    type="button"
                     onClick={() => {
                       const clip = clips.find(c => c.id === selectedClipForKeyframes)
                       if (clip) {
@@ -1271,6 +1295,8 @@ export default function ProfessionalTimeline({
                           min="0"
                           max="100"
                           value={kf.value}
+                          aria-label={`Volume at ${kf.time.toFixed(2)} seconds`}
+                          title={`Volume at ${kf.time.toFixed(2)} seconds`}
                           onChange={(e) => {
                             const clip = clips.find(c => c.id === selectedClipForKeyframes)
                             if (clip) {
@@ -1286,6 +1312,7 @@ export default function ProfessionalTimeline({
                       </div>
                     ))}
                   <button
+                    type="button"
                     onClick={() => {
                       const clip = clips.find(c => c.id === selectedClipForKeyframes)
                       if (clip) {

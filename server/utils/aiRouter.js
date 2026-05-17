@@ -50,17 +50,76 @@ try {
 
 const KILL_FALLBACK = process.env.AI_ROUTER_DISABLE_FALLBACK === 'true';
 
+// Default fallback order — used when no taskKind is specified. Gemini first
+// because it's the cheapest + lowest-latency tier and we use it for the
+// long tail of "write me a caption" calls.
 const PROVIDER_ORDER = ['gemini', 'openai', 'anthropic'];
 
-// Per-provider retry policy — Gemini's 429 is daily, no point waiting;
+/**
+ * Task-aware provider chains. Each list is the *preference* order; if the
+ * top choice isn't configured (or fails / hits quota) we fall through to
+ * the next. This is how we get "Claude for orchestration, GPT-4o for
+ * vision, Gemini for speed" without forcing the caller to hard-code a
+ * provider.
+ *
+ * - `orchestration`: chain-of-thought, multi-step planning, agent loops.
+ *   Claude's reasoning + long context win here; falls back to GPT-4o.
+ * - `vision`: image / video frame analysis, thumbnail picking, OCR.
+ *   GPT-4o native vision wins; fallback to Gemini Vision.
+ * - `fast`: single-shot text generation where latency matters more than
+ *   reasoning depth (captions, hashtags, hooks). Gemini is the cheapest
+ *   + fastest tier; we lean on it.
+ * - `creative`: prose generation where voice / style matter. Claude tends
+ *   to produce less generic copy than GPT-4o.
+ */
+const TASK_PROVIDER_CHAIN = {
+  orchestration: ['anthropic', 'openai', 'gemini'],
+  vision:        ['openai', 'gemini', 'anthropic'],
+  fast:          ['gemini', 'openai', 'anthropic'],
+  creative:      ['anthropic', 'gemini', 'openai'],
+  json:          ['gemini', 'openai', 'anthropic'], // JSON-mode tasks
+  default:       PROVIDER_ORDER,
+};
+
+/**
+ * 2026 model lineup — refresh this when newer SKUs ship. Each provider's
+ * "default" is what we use for the corresponding task kind unless the
+ * caller passes an explicit `openaiModel` / `anthropicModel` override.
+ */
+const MODEL_DEFAULTS = {
+  // Anthropic: claude-opus-4-7 is the latest Opus generation (per the
+  // project knowledge cutoff). The mini-Sonnet variant is a cheaper
+  // fall-through for high-volume orchestration.
+  anthropic: {
+    orchestration: 'claude-opus-4-7',
+    creative:      'claude-opus-4-7',
+    fast:          'claude-haiku-4-5-20251001',
+    default:       'claude-sonnet-4-6',
+  },
+  // OpenAI: gpt-4o has native vision; gpt-4o-mini is the latency-tier
+  // workhorse we already used elsewhere in the codebase.
+  openai: {
+    vision:        'gpt-4o',
+    orchestration: 'gpt-4o',
+    fast:          'gpt-4o-mini',
+    creative:      'gpt-4o',
+    default:       'gpt-4o-mini',
+  },
+  // Gemini handled inside googleAI util; we just pass `maxTokens`. The
+  // wrapper uses 'gemini-flash-latest' which auto-resolves to the most
+  // recent flash SKU. No per-task override needed today.
+};
+
+// Per-provider retry policy — Gemini's 429 is daily, but its 503 is transient.
 // OpenAI's is per-minute, a single short retry can clear; Anthropic
 // publishes Retry-After but a flat 4s is close enough for our purposes.
-const PROVIDER_RETRY_MS = { gemini: 0, openai: 4000, anthropic: 4000 };
+const PROVIDER_RETRY_MS = { gemini: 2000, openai: 4000, anthropic: 4000 };
 
 function isQuotaOrRateLimit(err) {
   const msg = String(err?.message || err || '');
-  if (err?.status === 429 || err?.statusCode === 429) return true;
-  return /\b(429|quota|rate.?limit|RESOURCE_EXHAUSTED|exceeded)\b/i.test(msg);
+  const status = err?.status || err?.statusCode;
+  if (status === 429 || status === 503 || status === 504) return true;
+  return /\b(429|503|504|quota|rate.?limit|RESOURCE_EXHAUSTED|exceeded|unavailable|overloaded)\b/i.test(msg);
 }
 
 function isAuthError(err) {
@@ -108,8 +167,10 @@ async function callOpenAI(prompt, opts) {
   const messages = [];
   if (opts.systemPrompt) messages.push({ role: 'system', content: opts.systemPrompt });
   messages.push({ role: 'user', content: prompt });
+  const taskKind = opts.taskKind || 'default';
+  const model = opts.openaiModel || MODEL_DEFAULTS.openai[taskKind] || MODEL_DEFAULTS.openai.default;
   const completion = await openai.chat.completions.create({
-    model: opts.openaiModel || 'gpt-4o-mini',
+    model,
     messages,
     max_tokens: opts.maxTokens || 1024,
     temperature: opts.temperature ?? 0.7,
@@ -122,8 +183,10 @@ async function callOpenAI(prompt, opts) {
 
 async function callAnthropic(prompt, opts) {
   if (!anthropic) throw new Error('anthropic-not-configured');
+  const taskKind = opts.taskKind || 'default';
+  const model = opts.anthropicModel || MODEL_DEFAULTS.anthropic[taskKind] || MODEL_DEFAULTS.anthropic.default;
   const msg = await anthropic.messages.create({
-    model: opts.anthropicModel || 'claude-3-haiku-20240307',
+    model,
     max_tokens: opts.maxTokens || 1024,
     temperature: opts.temperature ?? 0.7,
     system: opts.systemPrompt || undefined,
@@ -167,9 +230,15 @@ function sleep(ms) { return new Promise((res) => setTimeout(res, ms)); }
  */
 async function aiCall(prompt, opts = {}) {
   const startedAt = Date.now();
-  const order = opts.preferredProvider
-    ? [opts.preferredProvider, ...PROVIDER_ORDER.filter(p => p !== opts.preferredProvider)]
+  // Task-kind picks the right provider chain (Claude-first for
+  // orchestration, OpenAI-first for vision, Gemini-first for fast text).
+  // Explicit preferredProvider always wins.
+  const baseChain = opts.taskKind && TASK_PROVIDER_CHAIN[opts.taskKind]
+    ? TASK_PROVIDER_CHAIN[opts.taskKind]
     : PROVIDER_ORDER;
+  const order = opts.preferredProvider
+    ? [opts.preferredProvider, ...baseChain.filter(p => p !== opts.preferredProvider)]
+    : baseChain;
 
   // Bake the system prompt into the user prompt for Gemini (no system role
   // in our googleAI wrapper layer). Other providers receive it natively.
@@ -247,4 +316,6 @@ module.exports = {
   isProviderAvailable,
   // Useful for tests + telemetry.
   PROVIDER_ORDER,
+  TASK_PROVIDER_CHAIN,
+  MODEL_DEFAULTS,
 };

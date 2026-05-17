@@ -88,7 +88,7 @@ const NeuralBroadcasterPanel = () => {
         </p>
       </div>
 
-      <button onClick={runPrediction} disabled={loading}
+      <button type="button" onClick={runPrediction} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-cyan-600/20">
         {loading ? <Orbit className="w-4 h-4 animate-spin" /> : <Rocket className="w-4 h-4" />}
         Schedule Omnipresence Drop
@@ -169,11 +169,11 @@ const FederatedSwarmPanel = () => {
       </div>
 
       <div className="flex gap-4">
-        <button onClick={fetchPulse} disabled={loading}
+        <button type="button" onClick={fetchPulse} disabled={loading}
           className="flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-600/20 border border-purple-500/50 hover:bg-purple-600/40 text-purple-300 font-bold text-[10px] uppercase tracking-wider transition-all">
           <Activity className="w-4 h-4" /> Fetch Pulse
         </button>
-        <button onClick={syncLocal}
+        <button type="button" onClick={syncLocal}
           className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600/20 border border-emerald-500/50 hover:bg-emerald-600/40 text-emerald-300 font-bold text-[10px] uppercase tracking-wider transition-all">
           <Zap className="w-4 h-4" /> Push Local Breakthrough
         </button>
@@ -262,7 +262,7 @@ const AutonomicCMPaPanel = () => {
       </div>
 
       <div className="flex items-center gap-6">
-        <button onClick={launchAgent} disabled={running || loading}
+        <button type="button" onClick={launchAgent} disabled={running || loading}
           className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${running ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-95'}`}>
           {loading ? <Orbit className="w-4 h-4 animate-spin" /> : (running ? <ShieldCheck className="w-4 h-4" /> : <Brain className="w-4 h-4" />)}
           {running ? 'Agent Live & Monitoring' : 'Deploy CM Agent'}
@@ -325,7 +325,7 @@ const OracleSandboxPanel = () => {
         </p>
       </div>
 
-      <button onClick={deployVariants} disabled={deployed}
+      <button type="button" onClick={deployVariants} disabled={deployed}
         className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg ${deployed ? 'bg-amber-500/20 text-amber-400 border border-amber-500/50 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/20 active:scale-95'}`}>
         <Zap className="w-4 h-4" />
         {deployed ? 'Variants Scaling in Background' : 'Deploy Sandbox Array'}
@@ -366,7 +366,7 @@ export default function Phase9Dashboard() {
         {/* Section Nav */}
         <div className="flex flex-wrap gap-3 pt-6">
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)}
+            <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
               className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-white/10 text-slate-400 hover:text-white'}`}>
               <s.icon className="w-3.5 h-3.5" />{s.label}
             </button>

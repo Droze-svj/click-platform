@@ -74,6 +74,7 @@ export default function EmptyState({
       {/* Action Button */}
       {actionLabel && onAction && (
         <button
+          type="button"
           onClick={onAction}
           className="group flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
         >

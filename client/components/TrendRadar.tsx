@@ -105,6 +105,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
       <div className="flex flex-wrap gap-3">
         {platforms.map(p => (
           <button
+            type="button"
             key={p}
             onClick={() => setActivePlatform(p)}
             className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${
@@ -182,6 +183,7 @@ export default function TrendRadar({ niche = 'general', platforms = ['tiktok', '
                              </div>
                              {onCreateContent && (
                                <button
+                                 type="button"
                                  onClick={(e) => { e.stopPropagation(); onCreateContent(alert.topic); }}
                                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all active:scale-95"
                                >

@@ -360,6 +360,7 @@ export default function FlowOptimizer({
               {showSuggestion.description}
             </div>
             <button
+              type="button"
               onClick={() => {
                 // Navigate to suggested category
                 const event = new CustomEvent('navigateToCategory', {
@@ -396,6 +397,7 @@ export default function FlowOptimizer({
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowOnboarding(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                 >
@@ -458,6 +460,7 @@ export default function FlowOptimizer({
                 </div>
                 <div className="flex gap-3">
                   <button
+                    type="button"
                     onClick={() => setUserFlow(prev => ({
                       ...prev,
                       preferences: { ...prev.preferences, showHints: false }
@@ -467,6 +470,7 @@ export default function FlowOptimizer({
                     Skip Tour
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowOnboarding(false)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
@@ -495,6 +499,7 @@ export default function FlowOptimizer({
               const status = getStepStatus(stepId)
               return (
                 <button
+                  type="button"
                   key={stepId}
                   onClick={() => {
                     const event = new CustomEvent('navigateToCategory', {
@@ -546,6 +551,7 @@ export default function FlowOptimizer({
 
             <div className="space-y-3">
               <button
+                type="button"
                 onClick={() => {
                   const event = new CustomEvent('navigateToCategory', {
                     detail: { category: 'export' }
@@ -557,6 +563,7 @@ export default function FlowOptimizer({
                 Export Your Video
               </button>
               <button
+                type="button"
                 onClick={() => window.location.reload()}
                 className="w-full px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >

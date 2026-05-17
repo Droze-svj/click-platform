@@ -232,7 +232,8 @@ export default function OverlordDashboard() {
           </div>
         </div>
         <div className="flex flex-col items-end gap-3">
-          <button 
+          <button
+            type="button"
             onClick={runVerification}
             disabled={verifying}
             className={`px-6 py-3 rounded-2xl ${verifying ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'} font-black text-[10px] uppercase tracking-widest transition-all`}
@@ -1144,7 +1145,7 @@ export default function OverlordDashboard() {
                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Universal Tactic Sync</p>
               </div>
             </div>
-            <button onClick={triggerPulse} className="w-full py-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 font-bold text-[9px] uppercase tracking-widest transition-all">
+            <button type="button" onClick={triggerPulse} className="w-full py-4 rounded-xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 font-bold text-[9px] uppercase tracking-widest transition-all">
               Broadcast Intelligence Wave
             </button>
           </div>

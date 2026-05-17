@@ -341,6 +341,7 @@ export default function AdvancedVisualEffects({
           </div>
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => setPreviewMode(!previewMode)}
               className={`p-2 rounded-lg transition-colors ${
                 previewMode
@@ -351,6 +352,7 @@ export default function AdvancedVisualEffects({
               {previewMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
             <button
+              type="button"
               onClick={resetAllEffects}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
               title="Reset all effects"
@@ -367,6 +369,7 @@ export default function AdvancedVisualEffects({
           const Icon = tab.icon
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex-1 p-4 text-center transition-colors relative ${
@@ -408,6 +411,7 @@ export default function AdvancedVisualEffects({
                   const Icon = preset.icon
                   return (
                     <button
+                      type="button"
                       key={preset.type}
                       onClick={() => addParticleSystem(preset.type)}
                       className={`p-4 bg-gradient-to-br ${preset.color} text-white rounded-lg hover:scale-105 transition-all duration-200 shadow-md`}
@@ -429,6 +433,7 @@ export default function AdvancedVisualEffects({
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <button
+                          type="button"
                           onClick={() => toggleEffect('particles', system.id)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                             system.enabled
@@ -444,6 +449,7 @@ export default function AdvancedVisualEffects({
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeEffect('particles', system.id)}
                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       >
@@ -544,6 +550,7 @@ export default function AdvancedVisualEffects({
                   { type: 'ambient' as const, name: 'Ambient', color: 'from-purple-400 to-pink-500' }
                 ].map(lightType => (
                   <button
+                    type="button"
                     key={lightType.type}
                     onClick={() => addLightEffect(lightType.type)}
                     className={`p-4 bg-gradient-to-br ${lightType.color} text-white rounded-lg hover:scale-105 transition-all duration-200 shadow-md`}
@@ -564,6 +571,7 @@ export default function AdvancedVisualEffects({
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <button
+                          type="button"
                           onClick={() => toggleEffect('lights', light.id)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                             light.enabled
@@ -579,6 +587,7 @@ export default function AdvancedVisualEffects({
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeEffect('lights', light.id)}
                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       >
@@ -670,6 +679,7 @@ export default function AdvancedVisualEffects({
             {/* Add Lens Flare Button */}
             <div>
               <button
+                type="button"
                 onClick={addLensFlare}
                 className="w-full p-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 transform hover:scale-105 shadow-md"
               >
@@ -689,6 +699,7 @@ export default function AdvancedVisualEffects({
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <button
+                          type="button"
                           onClick={() => toggleEffect('lenses', flare.id)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                             flare.enabled
@@ -704,6 +715,7 @@ export default function AdvancedVisualEffects({
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeEffect('lenses', flare.id)}
                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       >
@@ -803,6 +815,7 @@ export default function AdvancedVisualEffects({
                   { type: 'strobe' as const, name: 'Strobe', color: 'from-red-500 to-orange-500' }
                 ].map(motionType => (
                   <button
+                    type="button"
                     key={motionType.type}
                     onClick={() => addMotionEffect(motionType.type)}
                     className={`p-4 bg-gradient-to-br ${motionType.color} text-white rounded-lg hover:scale-105 transition-all duration-200 shadow-md`}
@@ -823,6 +836,7 @@ export default function AdvancedVisualEffects({
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <button
+                          type="button"
                           onClick={() => toggleEffect('motion', motion.id)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                             motion.enabled
@@ -838,6 +852,7 @@ export default function AdvancedVisualEffects({
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeEffect('motion', motion.id)}
                         className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       >

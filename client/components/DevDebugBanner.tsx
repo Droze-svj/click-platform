@@ -448,7 +448,7 @@ export default function DevDebugBanner() {
       <div style={{ marginBottom: 8 }}>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button
-            type="button"
+           type="button"
             onClick={(ev) => {
               console.log('📊 Log snapshot button clicked')
               setButtonFeedback('snapshot')
@@ -496,7 +496,7 @@ export default function DevDebugBanner() {
           </button>
 
           <button
-            type="button"
+           type="button"
             onClick={async (ev) => {
               console.log('📋 View logs button clicked')
               setButtonFeedback('logs')
@@ -533,7 +533,7 @@ export default function DevDebugBanner() {
           </button>
 
           <button
-            type="button"
+           type="button"
             onClick={(ev) => {
               // Safe stopPropagation - wrap in try-catch to prevent Illegal invocation errors
               try {
@@ -560,7 +560,7 @@ export default function DevDebugBanner() {
           </button>
 
           <button
-            type="button"
+           type="button"
             onClick={(ev) => {
               console.log('🧹 Reset All button clicked')
               setButtonFeedback('reset')
@@ -598,7 +598,7 @@ export default function DevDebugBanner() {
           </button>
 
           <button
-            type="button"
+           type="button"
             onClick={(ev) => {
               console.log('🧪 Test Recovery button clicked')
               setButtonFeedback('recovery')

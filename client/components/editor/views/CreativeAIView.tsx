@@ -281,6 +281,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       </div>
 
       <button
+        type="button"
         onClick={action}
         disabled={isProcessing}
         title={`Execute ${title} creative tool`}

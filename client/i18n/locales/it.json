@@ -53,11 +53,26 @@
     "setNiche": "Scegli nicchia",
     "next": "Avanti",
     "stages": {
-      "ingest":   { "label": "Importa",     "description": "Porta il materiale — file, link o registrazione live." },
-      "script":   { "label": "Script",      "description": "L'IA scrive hook, corpo e CTA per la tua nicchia." },
-      "edit":     { "label": "Monta",       "description": "Taglia, sottotitola e personalizza il video." },
-      "schedule": { "label": "Pianifica",   "description": "Pubblica su ogni piattaforma all'ora ottimale." },
-      "analyze":  { "label": "Analizza",    "description": "Misura le performance e capisci cosa ripetere." }
+      "ingest": {
+        "label": "Importa",
+        "description": "Porta il materiale — file, link o registrazione live."
+      },
+      "script": {
+        "label": "Script",
+        "description": "L'IA scrive hook, corpo e CTA per la tua nicchia."
+      },
+      "edit": {
+        "label": "Monta",
+        "description": "Taglia, sottotitola e personalizza il video."
+      },
+      "schedule": {
+        "label": "Pianifica",
+        "description": "Pubblica su ogni piattaforma all'ora ottimale."
+      },
+      "analyze": {
+        "label": "Analizza",
+        "description": "Misura le performance e capisci cosa ripetere."
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,132 @@
   },
   "language": {
     "label": "Lingua",
-    "picker": "Seleziona lingua"
+    "picker": "Seleziona lingua",
+    "options": "Lingue",
+    "search": "Cerca lingue…",
+    "recent": "Usate di recente",
+    "recentBadge": "recente",
+    "all": "Tutte le lingue",
+    "noResults": "Nessuna lingua corrispondente",
+    "useSuggested": "Usa",
+    "useIt": "Usalo"
   },
   "settings": {
     "title": "Impostazioni",
     "subtitle": "Gestisci le preferenze del tuo account",
     "language": "Lingua",
-    "saveSettings": "Salva"
+    "saveSettings": "Salva",
+    "profile": "Profilo",
+    "editProfile": "Modifica profilo",
+    "general": "Generali",
+    "notifications": "Notifiche",
+    "privacy": "Privacy",
+    "security": "Sicurezza",
+    "appearance": "Aspetto",
+    "theme": "Tema",
+    "themeLight": "Chiaro",
+    "themeDark": "Scuro",
+    "themeAuto": "Automatico (Sistema)",
+    "timezone": "Fuso orario",
+    "saving": "Salvataggio in corso...",
+    "saved": "Impostazioni salvate con successo",
+    "saveFailed": "Errore nel salvataggio delle impostazioni"
   },
   "video": {
     "title": "Video",
     "upload": "Carica",
     "edit": "Modifica",
-    "processing": "Elaborazione…"
+    "processing": "Elaborazione…",
+    "noVideo": "Nessun video caricato",
+    "noVideoHint": "Inserisci un URL video per iniziare a modificare.",
+    "goToVideos": "Vai ai video"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Bentornato",
+    "heroWelcome": "Benvenuto su Click",
+    "heroTitle": "Crea, adatta e pubblica",
+    "heroSubtitle": "Strumenti basati su AI, programmazione intelligente e analisi in un unico spazio di lavoro.",
+    "heroDescription": "Il tuo spazio di lavoro basato su AI per creare, adattare e pubblicare su 6 piattaforme. Trasforma contenuti long-form in formati pronti per i social, più velocemente.",
+    "stats": {
+      "videosProcessed": "Video elaborati",
+      "contentGenerated": "Contenuti generati",
+      "contentCreated": "Contenuti creati",
+      "quotesCreated": "Citazioni create",
+      "postsScheduled": "Post programmati"
+    },
+    "clickToView": "Click per i dettagli →"
+  },
+  "auth": {
+    "login": "Accedi",
+    "register": "Registrati",
+    "logout": "Logout",
+    "loggingIn": "Accesso in corso...",
+    "email": "Email",
+    "password": "Password",
+    "passwordPlaceholder": "Inserisci la tua password",
+    "forgotPassword": "Password dimenticata?",
+    "noAccount": "Non hai un account?",
+    "hasAccount": "Hai già un account?",
+    "loginTitle": "Benvenuto su Click",
+    "loginSubtitle": "Accedi al tuo account per creare contenuti con l'AI.",
+    "registerTitle": "Crea il tuo account",
+    "registerSubtitle": "Inizia a creare contenuti con l'AI."
+  },
+  "content": {
+    "title": "Contenuti",
+    "create": "Crea contenuto",
+    "edit": "Modifica contenuto",
+    "delete": "Elimina contenuto",
+    "duplicate": "Duplica",
+    "publish": "Pubblica",
+    "schedule": "Programma"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Panoramica",
+    "trends": "Trend",
+    "platforms": "Piattaforme",
+    "engagement": "Engagement",
+    "views": "Visualizzazioni",
+    "likes": "Like",
+    "shares": "Condivisioni"
+  },
+  "moderation": {
+    "title": "Moderazione contenuti",
+    "checking": "Controllo contenuti...",
+    "approved": "Contenuto approvato",
+    "flagged": "Contenuto segnalato per la revisione",
+    "profanity": "Linguaggio volgare rilevato",
+    "spam": "Spam rilevato"
+  },
+  "backup": {
+    "title": "Backup",
+    "create": "Crea backup",
+    "download": "Scarica",
+    "delete": "Elimina",
+    "passwordRequired": "Password richiesta per il backup crittografato",
+    "created": "Backup creato con successo",
+    "createFailed": "Impossibile creare il backup",
+    "downloaded": "Backup scaricato",
+    "downloadFailed": "Download del backup non riuscito",
+    "deleted": "Backup eliminato",
+    "deleteFailed": "Eliminazione del backup non riuscita"
+  },
+  "translation": {
+    "title": "Traduzione",
+    "translate": "Traduci",
+    "translateTo": "Traduci in",
+    "translateToAll": "Traduci in tutte",
+    "targetLanguage": "Lingua di destinazione",
+    "viewIn": "Visualizza in",
+    "original": "Originale",
+    "translations": "Traduzioni",
+    "noTranslations": "Ancora nessuna traduzione",
+    "translating": "Traduzione in corso…",
+    "translated": "Tradotto",
+    "translationFailed": "Traduzione non riuscita",
+    "viewOriginal": "Visualizza originale",
+    "selectLanguage": "Seleziona lingua"
   }
 }

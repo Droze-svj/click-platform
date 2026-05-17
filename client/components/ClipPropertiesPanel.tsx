@@ -43,6 +43,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           Clip Properties - {clip.name}
         </h4>
         <button
+          type="button"
           onClick={onClose}
           className="text-gray-400 hover:text-white transition-colors"
         >
@@ -61,6 +62,7 @@ export default function ClipPropertiesPanel({ clip, onUpdate, onClose }: ClipPro
           const Icon = tab.icon
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-3 py-2 text-xs font-medium transition-colors border-b-2 ${

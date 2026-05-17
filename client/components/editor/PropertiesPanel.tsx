@@ -61,6 +61,7 @@ interface PropertiesPanelProps {
   setTimelineSegments?: (v: any) => void
   selectedSegmentId?: string | null
   transcript?: any
+  zenMode?: boolean
 }
 
 export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
@@ -87,7 +88,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   timelineSegments,
   setTimelineSegments,
   selectedSegmentId,
-  transcript
+  transcript,
+  zenMode = false
 }) => {
   const [activeTab, setActiveTab] = React.useState<'synthesis' | 'projection' | 'entities' | 'transform' | 'clip'>('synthesis')
 
@@ -130,6 +132,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono font-bold text-white/50">{value}</span>
           <button
+            type="button"
             onClick={() => setVideoFilters((prev: any) => ({ ...prev, [field]: resetValue }))}
             className="text-[8px] font-black text-slate-700 hover:text-white uppercase tracking-tighter"
           >
@@ -176,10 +179,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 320, opacity: 0 }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className={`relative z-40 h-full p-6 flex flex-col pointer-events-none w-full`}
-      style={{ ...style, maxWidth: style?.width }}
+      className={`relative z-40 h-full p-4 flex flex-col pointer-events-none transition-all duration-500 ${zenMode ? 'opacity-40 hover:opacity-100' : ''}`}
+      style={{ 
+        width: style?.width || 320,
+        maxWidth: style?.width || 320,
+        position: zenMode ? 'absolute' : 'relative',
+        right: zenMode ? 16 : 0,
+        top: 0
+      }}
     >
-      <div className={`${glassStyle} h-full rounded-[3rem] border-white/5 flex flex-col overflow-hidden pointer-events-auto shadow-[0_0_100px_rgba(0,0,0,0.8)]`}>
+      <div className={`${glassStyle} h-full rounded-[2.5rem] border-white/5 flex flex-col overflow-hidden pointer-events-auto shadow-[0_0_80px_rgba(0,0,0,0.6)] ${zenMode ? 'bg-black/20 backdrop-blur-3xl' : 'bg-white/[0.02]'}`}>
         {/* Header */}
         <div className="px-6 py-6 border-b border-white/5 bg-white/[0.02] flex flex-col gap-6">
           <div className="flex items-center justify-between">
@@ -206,6 +215,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div className="flex p-1 bg-black/40 rounded-2xl border border-white/5 relative z-10 w-full overflow-x-auto custom-scrollbar">
             {(['transform', 'synthesis', 'projection', 'entities', ...(selectedSegmentId ? ['clip'] : [])] as const).map((tab) => (
               <button
+                type="button"
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all relative ${
@@ -324,6 +334,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                      </div>
                                   </div>
                                   <button
+                                     type="button"
                                      title="Toggle Auto-Ducking"
                                      onClick={() => {
                                         setTimelineSegments?.((prev: any) => prev.map((s: any) => {
@@ -426,6 +437,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         {onTimeUpdate && videoTransformKeyframes && videoTransformKeyframes.length > 0 && (
                            <div className="flex items-center gap-2 mt-2">
                              <button
+                               type="button"
                                onClick={() => {
                                  const prevKfs = videoTransformKeyframes.filter(k => k.time < currentTime - 0.05).sort((a,b) => b.time - a.time);
                                  if (prevKfs.length > 0) onTimeUpdate(prevKfs[0].time);
@@ -435,6 +447,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                ◁ Prev
                              </button>
                              <button
+                               type="button"
                                onClick={() => {
                                  const nextKfs = videoTransformKeyframes.filter(k => k.time > currentTime + 0.05).sort((a,b) => a.time - b.time);
                                  if (nextKfs.length > 0) onTimeUpdate(nextKfs[0].time);
@@ -456,6 +469,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                     <span className="text-[10px] text-slate-300 font-mono">{kf.time.toFixed(2)}s</span>
                                   </div>
                                   <button
+                                    type="button"
                                     onClick={() => {
                                       setVideoTransformKeyframes(videoTransformKeyframes.filter(k => k.id !== kf.id))
                                     }}
@@ -570,6 +584,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     <div className="flex gap-2">
                       {CAPTION_LAYOUTS.map((l) => (
                         <button
+                          type="button"
                           key={l.id}
                           onClick={() => setCaptionStyle({ ...cap, layout: l.id })}
                           className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${cap.layout === l.id ? 'bg-white text-black border-white' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
@@ -615,7 +630,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           </div>
                         </div>
                         <button
+                          type="button"
                           onClick={() => setTextOverlays((prev: any[]) => prev.filter(o => o.id !== overlay.id))}
+                          aria-label="Delete text overlay"
+                          title="Delete text overlay"
                           className="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-rose-500 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

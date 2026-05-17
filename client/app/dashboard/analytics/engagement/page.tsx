@@ -9,8 +9,8 @@ import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 const ResonanceCommandMatrix = dynamic(
   () => import('../../../../components/EngagementCommandCenter'),
   { ssr: false, loading: () => (
-    <div className="min-h-screen bg-[var(--page-bg)] flex flex-col items-center justify-center">
-       <Brain size={64} className="text-indigo-500 animate-pulse mb-8" />
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+       <Brain size={64} className="text-indigo-500 animate-pulse mb-8 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Manifesting Resonance Interface...</span>
     </div>
   )}
@@ -21,21 +21,22 @@ export default function ResonanceCommandMatrixPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[var(--page-bg)] text-white overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/10 via-transparent to-rose-900/10 opacity-30 pointer-events-none" />
+      <div className="min-h-screen bg-black text-white overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-rose-500/5 opacity-50 pointer-events-none" />
         
         {/* Sticky Global Nav Overlay (Minimal) */}
-        <div className="sticky top-0 z-[100] backdrop-blur-3xl bg-black/40 border-b border-white/5 px-10 py-6 flex items-center justify-between">
+        <div className="sticky top-0 z-[100] backdrop-blur-3xl bg-black/40 border-b border-white/5 px-10 py-6 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
            <div className="flex items-center gap-8">
-              <button onClick={() => router.push('/dashboard/analytics')} title="Back"
-                className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
+              <button type="button" onClick={() => router.push('/dashboard/analytics')} 
+                title="Back to Analytics" aria-label="Back to Analytics"
+                className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={24} />
               </button>
               <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                 <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-inner">
                     <Fingerprint size={20} className="text-indigo-400" />
                  </div>
-                 <h1 className="text-2xl font-black italic text-[var(--text-main)] uppercase tracking-tighter">Resonance_Matrix</h1>
+                 <h1 className="text-2xl font-black italic text-white uppercase tracking-tighter">Resonance_Matrix</h1>
               </div>
            </div>
            <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-2xl">

@@ -56,6 +56,7 @@ export default function SettingsPanel() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => updatePreference('isOledTheme', !preferences.isOledTheme)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${preferences.isOledTheme ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
               >
@@ -75,6 +76,7 @@ export default function SettingsPanel() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => updatePreference('sidebarCollapsed', !preferences.sidebarCollapsed)}
                 className={`w-12 h-6 rounded-full transition-colors relative ${preferences.sidebarCollapsed ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
               >
@@ -125,6 +127,7 @@ export default function SettingsPanel() {
                   { id: 'quantum', label: 'Quantum Precision', desc: 'Ultimate cinematic accuracy' },
                 ].map(acc => (
                   <button
+                    type="button"
                     key={acc.id}
                     onClick={() => updatePreference('translationAccuracy', acc.id as any)}
                     className={`p-4 rounded-xl border text-left transition-all ${preferences.translationAccuracy === acc.id
@@ -160,6 +163,7 @@ export default function SettingsPanel() {
                 <p className="text-[10px] text-gray-500">Show predictive edit suggestions across timeline</p>
               </div>
               <button
+                type="button"
                 onClick={() => updatePreference('showAiPreviews', !preferences.showAiPreviews)}
                 className={`w-10 h-5 rounded-full transition-colors relative ${preferences.showAiPreviews ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-700'}`}
               >
@@ -173,6 +177,7 @@ export default function SettingsPanel() {
                 <p className="text-[10px] text-gray-500">Continuous background sync to Click Servers</p>
               </div>
               <button
+                type="button"
                 onClick={() => updatePreference('autoSaveEnabled', !preferences.autoSaveEnabled)}
                 className={`w-10 h-5 rounded-full transition-colors relative ${preferences.autoSaveEnabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'}`}
               >
@@ -189,6 +194,7 @@ export default function SettingsPanel() {
                 <p className="text-[10px] text-gray-500">Bypass standard rendering by utilizing Edge-TPUs</p>
               </div>
               <button
+                type="button"
                 onClick={() => updatePreference('clickFastExport', !preferences.clickFastExport)}
                 className={`w-10 h-5 rounded-full transition-colors relative ${preferences.clickFastExport ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
               >
@@ -202,6 +208,7 @@ export default function SettingsPanel() {
         <section className="pt-8 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={resetPreferences}
               className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
@@ -209,6 +216,7 @@ export default function SettingsPanel() {
               Reset to Defaults
             </button>
             <button
+              type="button"
               className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all"
             >
               <Trash2 className="w-4 h-4" />

@@ -101,10 +101,13 @@ export function useSocket(userId?: string | null): UseSocketReturn {
   }, [serverUrl])
 
   // Join user room when userId becomes available or changes (without recreating socket).
+  // The server's socket handler listens for `authenticate` with { userId } and
+  // adds the socket to `user-${userId}`. Previously we emitted `join-user`,
+  // which the server ignored — so per-user broadcasts never reached this tab.
   useEffect(() => {
     if (!userId) return
     if (!socketRef.current) return
-    socketRef.current.emit('join-user', userId)
+    socketRef.current.emit('authenticate', { userId })
   }, [userId])
 
   const on = useCallback((event: string, callback: (...args: any[]) => void) => {

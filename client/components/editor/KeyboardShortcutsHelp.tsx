@@ -19,7 +19,7 @@ const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({ onClose }
             </div>
             <h2 className="text-xl font-bold tracking-tight text-theme-primary">Keyboard shortcuts</h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-surface-card-hover rounded-xl transition-colors text-theme-muted hover:text-theme-primary">
+          <button type="button" onClick={onClose} className="p-2 hover:bg-surface-card-hover rounded-xl transition-colors text-theme-muted hover:text-theme-primary">
             <X className="w-5 h-5" />
           </button>
         </div>

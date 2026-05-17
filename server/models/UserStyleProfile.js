@@ -64,6 +64,12 @@ const userStyleProfileSchema = new mongoose.Schema({
   musicGenres:  { type: [counterSchema], default: [] },
   publishHours: { type: [counterSchema], default: [] },
   publishDays:  { type: [counterSchema], default: [] },
+  // Per-variant accept tracking. Bumped from the publish endpoint when
+  // the user ships a caption that matches one of the AI-suggested
+  // variants (curiosity-gap / value-led / contrarian). Lets the
+  // reformat service rank caption-variant angles by what the creator
+  // actually keeps over what they reliably rewrite.
+  captionVariantsAccepted: { type: [counterSchema], default: [] },
 
   // Performance-weighted versions of the same facets — populated by
   // creatorPerformanceService once a published post's analytics arrive.
@@ -99,7 +105,7 @@ const userStyleProfileSchema = new mongoose.Schema({
  */
 userStyleProfileSchema.statics.recordPick = async function recordPick(userId, facet, key) {
   if (!userId || !facet || !key) return null;
-  const validFacets = ['fonts', 'captionStyles', 'animations', 'motions', 'colorGrades', 'transitions', 'niches', 'platforms', 'presets', 'hookStyles', 'musicGenres', 'publishHours', 'publishDays'];
+  const validFacets = ['fonts', 'captionStyles', 'animations', 'motions', 'colorGrades', 'transitions', 'niches', 'platforms', 'presets', 'hookStyles', 'musicGenres', 'publishHours', 'publishDays', 'captionVariantsAccepted'];
   if (!validFacets.includes(facet)) throw new Error(`Invalid facet: ${facet}`);
 
   // Try to bump an existing counter
@@ -160,26 +166,80 @@ userStyleProfileSchema.statics.recordPerformance = async function recordPerforma
   ];
   if (!allowed.includes(weightedFacet)) throw new Error(`Invalid weighted facet: ${weightedFacet}`);
 
+  // Atomic upsert path. The previous implementation did a read +
+  // in-memory mutation + .save(), which let two concurrent
+  // `recordPerformance` calls clobber each other — both reading the
+  // same baseline `performanceScore`, both computing a new EMA value,
+  // and only the second .save()'s value sticking. With high-cadence
+  // publishers (multiple posts settling analytics within the same
+  // ingestion cron tick) that's a real lost-update bug.
+  //
+  // Strategy: first try an atomic $inc on the existing array element
+  // matching the key. If the array doesn't yet contain that key,
+  // arrayFilters returns matchedCount=0 and we $push a new entry
+  // (also atomic). The EMA itself can't be fully expressed in a single
+  // pipeline-update without an aggregation stage; we approximate by
+  // running the update inside a Mongo `$set` with an aggregation
+  // pipeline so the read-modify-write happens server-side.
+  const now = new Date();
+  const pipelineUpdate = [
+    {
+      $set: {
+        userId,
+        [weightedFacet]: {
+          $let: {
+            vars: {
+              arr: { $ifNull: [`$${weightedFacet}`, []] },
+            },
+            in: {
+              $cond: [
+                { $in: [key, { $map: { input: '$$arr', as: 'c', in: '$$c.key' } }] },
+                // Key exists — update its entry in place.
+                {
+                  $map: {
+                    input: '$$arr',
+                    as: 'c',
+                    in: {
+                      $cond: [
+                        { $eq: ['$$c.key', key] },
+                        {
+                          key: '$$c.key',
+                          count: { $add: [{ $ifNull: ['$$c.count', 0] }, 1] },
+                          sampleSize: { $add: [{ $ifNull: ['$$c.sampleSize', 0] }, 1] },
+                          performanceScore: {
+                            $add: [
+                              { $multiply: [{ $ifNull: ['$$c.performanceScore', 0] }, 0.7] },
+                              retentionDelta * 0.3,
+                            ],
+                          },
+                          lastUsedAt: now,
+                        },
+                        '$$c',
+                      ],
+                    },
+                  },
+                },
+                // Key missing — append a fresh entry.
+                {
+                  $concatArrays: [
+                    '$$arr',
+                    [{ key, count: 1, sampleSize: 1, performanceScore: retentionDelta, lastUsedAt: now }],
+                  ],
+                },
+              ],
+            },
+          },
+        },
+        lastIngestedAt: now,
+      },
+    },
+  ];
+
   const profile = await this.findOneAndUpdate(
     { userId },
-    { $setOnInsert: { userId } },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    pipelineUpdate,
+    { new: true, upsert: true, setDefaultsOnInsert: true },
   );
-
-  const arr = profile[weightedFacet] || [];
-  const existing = arr.find(c => c.key === key);
-  if (existing) {
-    const prev = existing.performanceScore || 0;
-    existing.performanceScore = prev * 0.7 + retentionDelta * 0.3;
-    existing.sampleSize = (existing.sampleSize || 0) + 1;
-    existing.lastUsedAt = new Date();
-    existing.count = (existing.count || 0) + 1;
-  } else {
-    arr.push({ key, count: 1, performanceScore: retentionDelta, sampleSize: 1, lastUsedAt: new Date() });
-    profile[weightedFacet] = arr;
-  }
-  profile.lastIngestedAt = new Date();
-  await profile.save();
   return profile;
 };
 

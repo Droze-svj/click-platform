@@ -66,6 +66,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
           <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Video Comparison</h3>
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
@@ -91,12 +92,14 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
                 />
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
                   <button
+                    type="button"
                     onClick={() => togglePlay('original')}
                     className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
                   >
                     {isPlayingOriginal ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   </button>
                   <button
+                    type="button"
                     onClick={() => toggleMute('original')}
                     className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
                   >
@@ -121,12 +124,14 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
                 />
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
                   <button
+                    type="button"
                     onClick={() => togglePlay('processed')}
                     className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
                   >
                     {isPlayingProcessed ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   </button>
                   <button
+                    type="button"
                     onClick={() => toggleMute('processed')}
                     className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70"
                   >
@@ -140,6 +145,7 @@ export default function VideoComparison({ originalVideo, processedVideo, onClose
           {/* Comparison Controls */}
           <div className="mt-6 flex items-center justify-center gap-4">
             <button
+              type="button"
               onClick={() => {
                 const original = originalRef.current
                 const processed = processedRef.current

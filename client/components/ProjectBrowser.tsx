@@ -74,12 +74,14 @@ export default function ProjectBrowser({ onSelectProject }: { onSelectProject: (
                     </div>
                     <div className="flex bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-1 shadow-sm">
                         <button
+                            type="button"
                             onClick={() => setViewMode('grid')}
                             className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600' : 'text-gray-400'}`}
                         >
                             <Grid className="w-4 h-4" />
                         </button>
                         <button
+                            type="button"
                             onClick={() => setViewMode('list')}
                             className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600' : 'text-gray-400'}`}
                         >

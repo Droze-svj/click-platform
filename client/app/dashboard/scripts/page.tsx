@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Copy, Download, Trash2, Eye, CopyPlus, Sparkles, X, Check,
-  ArrowLeft, FileText, RefreshCw, Clock, Hash, Plus, ChevronDown,
-  Terminal, Cpu, Activity, Shield, Globe, Target, Radio, Layers,
-  Zap, Share2, ArrowRight, Gauge, Database, Network, BookOpen,
-  Feather, PenTool, Type, MessageSquare, Fingerprint, Loader2
+  Copy, Download, Trash2, Check,
+  ArrowLeft, FileText, RefreshCw, Clock, Plus, ChevronDown,
+  Globe, Radio, Sparkles, X, 
+  Zap, Database, BookOpen,
+  Type, MessageSquare, Feather, Loader2, Search
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-import { extractApiData, extractApiError } from '../../../utils/apiResponse'
+import { extractApiError } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
@@ -26,23 +26,23 @@ interface Script {
 }
 
 const SAMPLE_PROMPTS = [
-  'How I grew from 0 → 10K followers',
-  'My morning routine breakdown',
-  '3 mistakes beginners make',
-  'Behind the scenes of a launch',
-  'Tools I use every single day',
-  'Lessons from my biggest failure',
+  'MISSION_SUCCESS: GROW_0_TO_10K',
+  'OPERATIONAL_FLOW: MORNING_CALIBRATION',
+  'FATAL_ERRORS: 3_BEGINNER_MISTAKES',
+  'SYSTEM_LAUNCH: BEHIND_THE_SCENES',
+  'STACK_INVENTORY: DAILY_AI_TOOLS',
+  'POST_MORTEM: STRATEGIC_FAILURE_LOGS',
 ]
 
-const DEPLOYMENT_PLATFORMS: Record<string, { label: string; icon: any }> = {
-  youtube:        { label: 'YouTube',      icon: Radio },
-  podcast:        { label: 'Podcast',      icon: MessageSquare },
-  'social-media': { label: 'Social Media', icon: Globe },
-  blog:           { label: 'Blog',         icon: Feather },
-  email:          { label: 'Email',        icon: Zap },
+const DEPLOYMENT_PLATFORMS: Record<string, { label: string; icon: any; gradient: string }> = {
+  youtube:        { label: 'YouTube',      icon: Radio,         gradient: 'from-red-600/20 to-rose-600/20' },
+  podcast:        { label: 'Podcast',      icon: MessageSquare, gradient: 'from-purple-600/20 to-indigo-600/20' },
+  'social-media': { label: 'Social Media', icon: Globe,         gradient: 'from-emerald-600/20 to-teal-600/20' },
+  blog:           { label: 'Blog',         icon: Feather,       gradient: 'from-amber-600/20 to-orange-600/20' },
+  email:          { label: 'Email',        icon: Zap,           gradient: 'from-blue-600/20 to-sky-600/20' },
 }
 
-const TONE_OPTIONS = ['authoritative','inspiring','educational','visionary','precise','casual','strategic']
+const TONE_OPTIONS = ['Authoritative','Inspiring','Educational','Visionary','Precise','Casual','Strategic']
 const DOMAIN_MAP: Record<string, string> = { 'social-media': 'instagram', instagram: 'instagram', tiktok: 'tiktok', linkedin: 'linkedin', twitter: 'twitter' }
 
 export default function ScriptsPage() {
@@ -61,7 +61,7 @@ export default function ScriptsPage() {
   const [seed, setSeed] = useState('')
   const [platform, setPlatform] = useState('youtube')
   const [duration, setDuration] = useState(10)
-  const [tone, setTone] = useState('authoritative')
+  const [tone, setTone] = useState('Authoritative')
   const [targetAudience, setTargetAudience] = useState('')
   const [keywords, setKeywords] = useState('')
 
@@ -77,7 +77,7 @@ export default function ScriptsPage() {
       const data = res?.data ?? (Array.isArray(res) ? res : [])
       setScripts(data)
     } catch {
-      showToast('Failed to load scripts', 'error')
+      showToast('Could not load: SCRIPT_unavailable', 'error')
     } finally { setLoading(false) }
   }, [showToast])
 
@@ -90,7 +90,7 @@ export default function ScriptsPage() {
     try {
       const options: Record<string, any> = {
         duration: (platform === 'youtube' || platform === 'podcast') ? duration : undefined,
-        tone: tone,
+        tone: tone.toLowerCase(),
         targetAudience: targetAudience || workflow.niche || (user as any)?.niche || 'general audience',
         platform: workflow.platform || DOMAIN_MAP[platform] || 'instagram',
       }
@@ -99,12 +99,12 @@ export default function ScriptsPage() {
       const res: any = await apiPost('/scripts/generate', { topic: seed.trim(), type: platform, options })
       const data = res?.data || res
       if (data?._id) {
-        showToast('✓ Script generated', 'success')
+        showToast('✓ SYNTHESIS_COMPLETE: SCRIPT_GENERATED', 'success')
         setLatestScriptId(data._id); await loadScripts(); setShowTerminal(false); setSeed('')
         completeStage('script')
       }
     } catch {
-      showToast('Generation failed', 'error')
+      showToast('SYNTHESIS_FAILURE: GENERATION_ABORTED', 'error')
     } finally { setSynthesizing(false) }
   }
 
@@ -114,8 +114,8 @@ export default function ScriptsPage() {
       const url = URL.createObjectURL(new Blob([res.data]))
       Object.assign(document.createElement('a'), { href: url, download: `script-${id}.txt` }).click()
       URL.revokeObjectURL(url)
-      showToast('✓ Exported', 'success')
-    } catch { showToast('Export failed', 'error') }
+      showToast('✓ PAYLOAD_EXPORTED', 'success')
+    } catch { showToast('EXPORT_ERR: FAILED_TO_DOWNLOAD', 'error') }
   }
 
   const handleCopyScript = async (s: Script) => {
@@ -128,7 +128,7 @@ export default function ScriptsPage() {
     }
     if (text) {
       await navigator.clipboard.writeText(text)
-      setCopyId(s._id); showToast('✓ Copied to clipboard', 'success')
+      setCopyId(s._id); showToast('✓ CLIPBOARD_SYNCED', 'success')
       setTimeout(() => setCopyId(null), 2000)
     }
   }
@@ -137,15 +137,12 @@ export default function ScriptsPage() {
     setDeleting(true)
     try {
       await apiDelete(`/scripts/${id}`)
-      showToast('✓ Deleted', 'success')
+      showToast('✓ NODE_DELETED', 'success')
       if (latestScriptId === id) setLatestScriptId(null)
       await loadScripts()
-    } catch { showToast('Delete failed', 'error') }
+    } catch { showToast('DELETE_ERR: FAILED_TO_REMOVE', 'error') }
     finally { setDeleting(false); setDeleteTargetId(null) }
   }
-
-  const activeScript = latestScriptId ? scripts.find(s => s._id === latestScriptId) : null
-  const deleteTarget = deleteTargetId ? scripts.find(s => s._id === deleteTargetId) : null
 
   const filteredScripts = scripts.filter(s => {
     if (filterPlatform !== 'all' && s.type !== filterPlatform) return false
@@ -155,388 +152,256 @@ export default function ScriptsPage() {
   })
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen gap-6">
-      <Loader2 size={40} className="text-primary-500 animate-spin" />
-      <div className="space-y-2 text-center">
-        <p className="text-sm font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">Loading scripts...</p>
-        <p className="text-xs font-medium text-surface-500 uppercase tracking-widest">Please wait</p>
-      </div>
+    <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
+       <BookOpen size={80} className="text-primary-500 animate-spin mb-12" />
+       <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Scriptorium...</p>
     </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1750px] mx-auto space-y-12 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
         <ToastContainer />
 
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 relative z-10 space-y-10">
-          
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-surface-200 dark:border-surface-800 pb-8">
-            <div className="flex items-center gap-6">
-              <button 
-                onClick={() => router.push('/dashboard')} 
-                title="Return"
-                className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
-                <ArrowLeft size={20} />
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-100 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-8 w-full md:w-auto min-w-0">
+              <button type="button" onClick={() => router.push('/dashboard')} 
+                title="Back to Dashboard" aria-label="Back to Dashboard"
+                className="w-16 h-16 rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 transition-all shadow-xl active:scale-90 group">
+                <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
-              <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
-                <BookOpen size={32} className="text-primary-600 dark:text-primary-400" />
+              <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
+                <BookOpen size={40} className="text-primary-600 dark:text-primary-400" />
               </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                    Content Management
-                  </span>
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Scripts</h1>
-                <p className="text-surface-500 text-sm mt-2 font-medium max-w-xl leading-relaxed">
-                  Generate, edit, and export AI scripts for every platform — YouTube, podcast, social, blog, email.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowTerminal(!showTerminal)}
-              className="px-5 py-3 rounded-xl bg-primary-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-primary-700 transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
-            >
-              {showTerminal ? <X size={16} /> : <Sparkles size={16} />}
-              {showTerminal ? 'Cancel' : 'New Script'}
-            </button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { label: 'Total Scripts', value: scripts.length, icon: Layers },
-              { label: 'YouTube',       value: scripts.filter(s => s.type === 'youtube').length, icon: Radio },
-              { label: 'Social Media',  value: scripts.filter(s => s.type === 'social-media').length, icon: Globe },
-              { label: 'Email',         value: scripts.filter(s => s.type === 'email').length, icon: Zap },
-            ].map((s, i) => (
-              <motion.div 
-                 initial={{ opacity: 0, y: 10 }} 
-                 animate={{ opacity: 1, y: 0 }} 
-                 transition={{ delay: i * 0.1 }}
-                 key={s.label} 
-                 className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 flex flex-col items-center text-center shadow-sm"
-              >
-                 <div className="w-16 h-16 bg-surface-50 dark:bg-surface-950 rounded-2xl flex items-center justify-center mb-6 border border-surface-200 dark:border-surface-800">
-                    <s.icon size={28} className="text-surface-600 dark:text-surface-400" />
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.2em] border-2 border-primary-500/20 italic leading-none">
+                      Scriptorium Core
+                    </span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
+                        <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                        {scripts.length} TOTAL_SCRIPTS
+                    </div>
                  </div>
-                 <div className="text-4xl font-black text-surface-900 dark:text-white mb-2">{s.value}</div>
-                 <div className="text-xs font-bold text-surface-500 uppercase tracking-wider">{s.label}</div>
-              </motion.div>
-            ))}
-          </div>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Scriptorium</h1>
+              </div>
+           </div>
 
-          {/* Generator Terminal */}
-          <AnimatePresence>
-            {showTerminal && (
-              <motion.div 
-                 initial={{ opacity: 0, height: 0 }} 
-                 animate={{ opacity: 1, height: 'auto' }} 
-                 exit={{ opacity: 0, height: 0 }} 
-                 className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl overflow-hidden shadow-sm"
-              >
-                <div className="p-8 border-b border-surface-200 dark:border-surface-800 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 rounded-xl flex items-center justify-center border border-primary-200 dark:border-primary-800"><Sparkles size={24} className="text-primary-600 dark:text-primary-400" /></div>
-                    <div>
-                      <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight">AI Script Generator</h2>
-                      <p className="text-xs font-bold text-surface-500 uppercase tracking-wider mt-1">Configure Generation</p>
-                    </div>
+           <button type="button" onClick={() => setShowTerminal(!showTerminal)}
+             className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[11px] font-black uppercase tracking-[0.5em] italic shadow-[0_30px_80px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-5 active:scale-95 border-none"
+           >
+             {showTerminal ? <X size={24} /> : <Plus size={24} />}
+             {showTerminal ? 'ABORT_SESSION' : 'NEW_SYNTHESIS'}
+           </button>
+        </header>
+
+        {/* Stats Grid */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {[
+            { label: 'Total Scripts', value: scripts.length, icon: FileText, color: 'text-primary-500 bg-primary-500/10 border-primary-500/20' },
+            { label: 'YouTube Strands', value: scripts.filter(s => s.type === 'youtube').length, icon: Radio, color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+            { label: 'Social Vectors', value: scripts.filter(s => s.type === 'social-media').length, icon: Globe, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+            { label: 'Growth Cycles', value: scripts.filter(s => s.wordCount > 1000).length, icon: Sparkles, color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+          ].map((stat, i) => (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} key={stat.label}
+              className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-8 shadow-xl flex items-center gap-6 group hover:bg-surface-page transition-all duration-500 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-1000"><stat.icon size={120} /></div>
+              <div className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center shrink-0 shadow-inner group-hover:rotate-12 transition-transform ${stat.color}`}>
+                <stat.icon size={28} />
+              </div>
+              <div className="relative z-10">
+                <p className="text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic mb-1 leading-none">{stat.label}</p>
+                <h4 className="text-4xl font-black text-surface-900 dark:text-white italic leading-none">{stat.value}</h4>
+              </div>
+            </motion.div>
+          ))}
+        </section>
+
+        {/* Generator Form */}
+        <AnimatePresence>
+          {showTerminal && (
+            <motion.section initial={{ opacity: 0, scale: 0.95, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="bg-surface-card backdrop-blur-3xl border-2 border-primary-500/20 rounded-[4rem] overflow-hidden shadow-[0_100px_200px_rgba(0,0,0,0.5)] group"
+            >
+              <div className="p-10 border-b-2 border-surface-100 dark:border-surface-800 flex items-center gap-8 bg-primary-500/5">
+                <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform">
+                  <Sparkles size={32} className="text-white animate-pulse" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Neural Synthesis</h2>
+                  <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">Draft high-converting scripts via Swarm Consensus</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleGenerateScript} className="p-10 lg:p-16 space-y-12">
+                <div className="space-y-6">
+                  <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Inspiration Vectors</label>
+                  <div className="flex flex-wrap gap-4">
+                    {SAMPLE_PROMPTS.map(p => (
+                      <button type="button" key={p} onClick={() => setSeed(p)}
+                        className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 italic transition-all duration-300 ${seed === p ? 'bg-primary-600 text-white border-primary-500 shadow-2xl scale-105' : 'bg-surface-page dark:bg-surface-950 text-surface-500 dark:text-slate-400 border-surface-100 dark:border-surface-800 hover:border-primary-500/40 shadow-inner'}`}
+                      >
+                        {p}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <form onSubmit={handleGenerateScript} className="p-8 space-y-8 bg-surface-50 dark:bg-surface-950">
-                  <div className="space-y-4">
-                    <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Target size={16} /> Quick Start Prompts</label>
-                    <div className="flex flex-wrap gap-2">
-                      {SAMPLE_PROMPTS.map(q => (
-                        <button
-                          key={q}
-                          type="button"
-                          onClick={() => setSeed(q)}
-                          className={`px-4 py-2 text-xs font-bold rounded-xl border transition-colors ${seed === q ? 'bg-primary-600 text-white border-primary-600 shadow-sm' : 'bg-white dark:bg-surface-900 text-surface-700 dark:text-surface-300 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                    <div className="xl:col-span-2 space-y-4">
-                      <label htmlFor="seed-input" className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Terminal size={16} /> Topic</label>
-                      <input
-                        id="seed-input"
-                        type="text"
-                        value={seed}
-                        onChange={e => setSeed(e.target.value)}
-                        required
-                        placeholder="What should the script be about?"
-                        className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl px-6 py-4 text-base font-bold text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow"
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                   <div className="space-y-6 lg:col-span-2">
+                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Core Thesis / Operational Hook</label>
+                      <input type="text" value={seed} onChange={e => setSeed(e.target.value)} required placeholder="INITIALIZE_MISSION_PARAMETERS..."
+                        className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-10 py-8 text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                       />
-                    </div>
+                   </div>
 
-                    <div className="space-y-4">
-                      <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Radio size={16} /> Platform</label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Object.entries(DEPLOYMENT_PLATFORMS).map(([id, cfg]) => (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => setPlatform(id)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-colors ${platform === id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm' : 'bg-white dark:bg-surface-900 border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
-                            <cfg.icon size={18} />
-                            <span>{cfg.label}</span>
-                          </button>
-                        ))}
+                   <div className="space-y-8">
+                      <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Output Strata (Platform)</label>
+                      <div className="grid grid-cols-2 gap-6">
+                         {Object.entries(DEPLOYMENT_PLATFORMS).map(([id, cfg]) => (
+                            <button type="button" key={id} onClick={() => setPlatform(id)}
+                              className={`flex items-center gap-4 px-6 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 italic transition-all duration-300 ${platform === id ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent shadow-2xl scale-105' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-400 dark:text-slate-600 hover:border-primary-500/40 shadow-inner'}`}
+                            >
+                               <cfg.icon size={20} /> {cfg.label}
+                            </button>
+                         ))}
                       </div>
-                    </div>
+                   </div>
 
-                    <div className="space-y-6">
-                       <div className="space-y-4">
-                          <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Activity size={16} /> Tone</label>
-                          <div className="flex flex-wrap gap-2">
-                            {TONE_OPTIONS.map(t => (
-                              <button
-                                key={t}
-                                type="button"
-                                onClick={() => setTone(t)}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold capitalize border transition-colors ${tone === t ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm' : 'bg-white dark:bg-surface-900 border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                       </div>
-
-                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          {(platform === 'youtube' || platform === 'podcast') && (
-                            <div className="space-y-3">
-                              <label htmlFor="duration-input" className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Clock size={14} /> Duration (mins)</label>
-                              <input
-                                id="duration-input"
-                                type="number"
-                                value={duration}
-                                onChange={e => setDuration(parseInt(e.target.value,10)||10)}
-                                min={1} max={120}
-                                className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-sm font-bold text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                              />
-                            </div>
-                          )}
-                          <div className="space-y-3">
-                             <label htmlFor="audience-input" className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Target size={14} /> Audience</label>
-                             <input
-                                id="audience-input"
-                                type="text"
-                                value={targetAudience}
-                                onChange={e => setTargetAudience(e.target.value)}
-                                placeholder="e.g. beginners, creators"
-                                className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-sm font-medium text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                             />
-                          </div>
-                       </div>
-
-                       <div className="space-y-3">
-                          <label htmlFor="keywords-input" className="text-[10px] font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2"><Hash size={14} /> Keywords</label>
-                          <input
-                             id="keywords-input"
-                             type="text"
-                             value={keywords}
-                             onChange={e => setKeywords(e.target.value)}
-                             placeholder="growth, focus (optional)"
-                             className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl px-4 py-3 text-sm font-medium text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                   <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Vocal Signature (Tone)</label>
+                        <div className="relative group/sel">
+                          <select value={tone} onChange={e => setTone(e.target.value)} aria-label="Vocal tone" title="Vocal tone" className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-5 text-[10px] font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none appearance-none cursor-pointer shadow-inner backdrop-blur-xl transition-all group-hover/sel:bg-surface-card">
+                             {TONE_OPTIONS.map(t => <option key={t} value={t} className="bg-surface-card">{t.toUpperCase()}</option>)}
+                          </select>
+                          <ChevronDown size={22} className="absolute right-6 top-1/2 -translate-y-1/2 text-surface-400 group-hover/sel:text-primary-500 pointer-events-none transition-colors" />
+                        </div>
+                      </div>
+                      {(platform === 'youtube' || platform === 'podcast') && (
+                        <div className="space-y-6">
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Duration (Mins)</label>
+                          <input type="number" value={duration} onChange={e => setDuration(parseInt(e.target.value,10)||1)} min={1} max={60}
+                            aria-label="Duration in minutes"
+                            title="Duration in minutes"
+                            className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-5 text-sm font-black text-surface-900 dark:text-white italic focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                           />
-                       </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 flex justify-end">
-                     <button
-                       type="submit"
-                       disabled={synthesizing}
-                       className="px-8 py-4 bg-primary-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-primary-700 disabled:opacity-50 transition-colors flex items-center gap-2 shadow-sm"
-                     >
-                       {synthesizing ? <RefreshCw size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                       {synthesizing ? 'Generating...' : 'Generate Script'}
-                     </button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Latest Script Banner */}
-          <AnimatePresence>
-            {activeScript && (
-              <motion.div 
-                 initial={{ opacity: 0, y: -10 }} 
-                 animate={{ opacity: 1, y: 0 }} 
-                 exit={{ opacity: 0, y: -10 }}
-                 className="flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/50 rounded-3xl shadow-sm"
-              >
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-xl flex items-center justify-center"><Check size={24} /></div>
-                   <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Generated Successfully</p>
-                      <p className="text-xl font-black text-surface-900 dark:text-white tracking-tight truncate max-w-2xl">{activeScript.title}</p>
+                        </div>
+                      )}
                    </div>
                 </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                  <button type="button" onClick={() => router.push(`/dashboard/scripts/${activeScript._id}`)}
-                    className="flex-1 md:flex-none px-6 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-900 dark:text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
-                    Open Script
-                  </button>
-                  <button type="button" title="Dismiss" onClick={() => setLatestScriptId(null)} className="w-12 h-12 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-500 hover:text-surface-900 dark:hover:text-white rounded-xl flex items-center justify-center transition-colors"><X size={18} /></button>
+
+                <div className="flex justify-end pt-12 border-t-2 border-surface-100 dark:border-surface-800">
+                   <button type="submit" disabled={synthesizing}
+                     className="px-16 py-7 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[2.5rem] text-sm font-black uppercase tracking-[1em] italic shadow-[0_40px_100px_rgba(0,0,0,0.5)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all duration-300 border-none active:scale-95 flex items-center gap-8 group/forge"
+                   >
+                     {synthesizing ? <RefreshCw className="animate-spin" size={28} /> : <Sparkles size={28} className="group-hover/forge:rotate-12 transition-transform" />}
+                     {synthesizing ? 'INITIALIZING_SYNTHESIS...' : 'COMMENCE_SYNTHESIS'}
+                   </button>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </form>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
-          {/* Scripts List */}
-          <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl overflow-hidden shadow-sm">
-            <div className="p-8 border-b border-surface-200 dark:border-surface-800 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                 <div className="w-12 h-12 bg-surface-100 dark:bg-surface-800 rounded-xl flex items-center justify-center"><Database size={24} className="text-surface-600 dark:text-surface-400" /></div>
-                 <div>
-                    <h2 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-1">Your Scripts</h2>
-                    <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Browse and manage</p>
-                 </div>
+        {/* Scripts Archive */}
+        <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[4rem] overflow-hidden shadow-2xl relative group">
+           <div className="absolute top-0 right-0 p-16 opacity-[0.02] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-1000"><Database size={400} /></div>
+           <header className="p-10 border-b-2 border-surface-100 dark:border-surface-800 flex flex-col lg:flex-row items-center gap-10 bg-surface-page/30 relative z-10">
+              <div className="relative flex-1 w-full group/search">
+                 <Search size={24} className="absolute left-8 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within/search:text-primary-500 transition-colors" />
+                 <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="SEARCH_SCRIPTS_ARCHIVE..."
+                   className="w-full bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.2rem] pl-20 pr-8 py-5 text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner backdrop-blur-xl"
+                 />
               </div>
-              <div className="px-4 py-2 rounded-lg bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-600 dark:text-surface-400 uppercase tracking-wider">
-                 {filteredScripts.length} / {scripts.length} Total
+              <div className="flex items-center gap-4 overflow-x-auto pb-4 lg:pb-0 w-full lg:w-auto custom-scrollbar">
+                 {['all', ...Object.keys(DEPLOYMENT_PLATFORMS)].map(id => (
+                   <button key={id} onClick={() => setFilterPlatform(id)}
+                     className={`px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest italic whitespace-nowrap transition-all border-2 ${filterPlatform === id ? 'bg-primary-600 text-white border-transparent shadow-xl scale-110 z-10' : 'bg-surface-page dark:bg-surface-900/50 text-surface-400 hover:text-primary-500 border-surface-100 dark:border-surface-800 shadow-inner'}`}
+                   >
+                     {id === 'all' ? 'ALL_NODES' : DEPLOYMENT_PLATFORMS[id].label.toUpperCase()}
+                   </button>
+                 ))}
               </div>
-            </div>
+           </header>
 
-            {/* Filters */}
-            {scripts.length > 0 && (
-              <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 p-6 border-b border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950">
-                 <div className="relative flex-1">
-                    <Target size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-                    <input
-                       type="text"
-                       value={search}
-                       onChange={e => setSearch(e.target.value)}
-                       placeholder="Search by topic or title..."
-                       className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-10 py-3 text-sm font-medium text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow"
-                    />
-                    {search && (
-                       <button type="button" onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-200">
-                          <X size={16} />
-                       </button>
-                    )}
-                 </div>
-                 <div className="flex items-center gap-2 flex-wrap">
-                    {[{ id: 'all', label: 'All Platforms' }, ...Object.entries(DEPLOYMENT_PLATFORMS).map(([id, cfg]) => ({ id, label: cfg.label }))].map(opt => (
-                       <button
-                          type="button"
-                          key={opt.id}
-                          onClick={() => setFilterPlatform(opt.id)}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${filterPlatform === opt.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm' : 'bg-white dark:bg-surface-900 border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800'}`}
-                       >
-                          {opt.label}
-                       </button>
-                    ))}
-                 </div>
-              </div>
-            )}
-
-            <div className="flex flex-col">
-              {scripts.length === 0 ? (
-                <div className="py-24 flex flex-col items-center text-center gap-6">
-                  <div className="w-16 h-16 bg-surface-100 dark:bg-surface-800 rounded-2xl flex items-center justify-center">
-                     <FileText size={32} className="text-surface-400" />
-                  </div>
-                  <div>
-                     <p className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-2">No scripts yet</p>
-                     <p className="text-sm font-medium text-surface-500 max-w-sm mx-auto">Generate your first script using the AI generator above.</p>
-                  </div>
-                </div>
-              ) : filteredScripts.length === 0 ? (
-                <div className="py-20 flex flex-col items-center text-center gap-4">
-                  <Target size={32} className="text-surface-400" />
-                  <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight">No matches found</p>
-                  <button type="button" onClick={() => { setSearch(''); setFilterPlatform('all') }} className="text-sm font-bold text-primary-600 dark:text-primary-400 hover:underline">Clear filters</button>
+           <div className="divide-y-2 divide-surface-100 dark:divide-surface-800/50 relative z-10">
+              {filteredScripts.length === 0 ? (
+                <div className="py-56 text-center opacity-10 flex flex-col items-center">
+                   <FileText size={120} className="mb-10" />
+                   <p className="text-3xl font-black uppercase tracking-[1em] italic">NULL_ARCHIVE_MATCH</p>
                 </div>
               ) : (
-                <div className="divide-y divide-surface-200 dark:divide-surface-800">
-                  {filteredScripts.map((s) => {
-                    const cfg = DEPLOYMENT_PLATFORMS[s.type] || { label: s.type, icon: FileText }
-                    return (
-                      <div key={s._id} className="group flex flex-col md:flex-row items-start md:items-center gap-6 p-6 sm:p-8 hover:bg-surface-50 dark:hover:bg-surface-950/50 transition-colors">
-                        <div className="w-14 h-14 rounded-2xl bg-surface-100 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 flex items-center justify-center text-surface-600 dark:text-surface-400 shrink-0">
-                          <cfg.icon size={24} />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <p className="text-lg font-black text-surface-900 dark:text-white tracking-tight truncate mb-1">{s.topic || s.title || 'Untitled script'}</p>
-                          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-surface-500 uppercase tracking-wider">
-                            <span className="px-2 py-1 bg-surface-100 dark:bg-surface-800 rounded-md text-surface-700 dark:text-surface-300">{cfg.label}</span>
-                            <span>•</span>
-                            <span>{s.wordCount.toLocaleString()} words</span>
-                            {s.duration != null && <><span>•</span><span>{s.duration} min read</span></>}
-                            <span>•</span>
-                            <span>{new Date(s.createdAt).toLocaleDateString()}</span>
+                filteredScripts.map((s, idx) => {
+                  const cfg = DEPLOYMENT_PLATFORMS[s.type] || { label: s.type, icon: FileText, gradient: 'from-surface-400 to-surface-600' }
+                  return (
+                    <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }} key={s._id} className="p-10 group/item flex flex-col sm:flex-row items-start sm:items-center gap-10 hover:bg-primary-500/[0.03] transition-all duration-500">
+                       <div className={`w-24 h-24 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-3xl flex items-center justify-center text-surface-300 dark:text-slate-800 group-hover/item:text-primary-500 group-hover/item:border-primary-500/30 group-hover/item:rotate-6 group-hover/item:scale-110 transition-all duration-700 shadow-inner shrink-0 relative overflow-hidden`}>
+                          <div className={`absolute inset-0 bg-gradient-to-br ${cfg.gradient} opacity-0 group-hover/item:opacity-20 transition-opacity duration-700`} />
+                          <cfg.icon size={44} className="relative z-10" />
+                       </div>
+                       <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-6 mb-4">
+                             <h4 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter truncate italic uppercase group-hover/item:text-primary-500 transition-colors duration-500 leading-none">{s.topic || s.title || 'NULL_IDENTIFIER'}</h4>
+                             <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-surface-page dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 text-surface-400 uppercase tracking-widest italic leading-none">{cfg.label.toUpperCase()}</span>
                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-4 md:mt-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                          <button type="button" onClick={() => handleExportScript(s._id)} className="w-10 h-10 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white rounded-xl flex items-center justify-center transition-colors shadow-sm" title="Export">
-                            <Download size={16} />
-                          </button>
-                          <button type="button" onClick={() => handleCopyScript(s)} className="w-10 h-10 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-white rounded-xl flex items-center justify-center transition-colors shadow-sm" title="Copy text">
-                            {copyId === s._id ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
-                          </button>
-                          <button type="button" onClick={() => setDeleteTargetId(s._id)} className="w-10 h-10 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl flex items-center justify-center transition-colors shadow-sm" title="Delete">
-                            <Trash2 size={16} />
-                          </button>
-                          <div className="w-px h-6 bg-surface-200 dark:bg-surface-800 mx-1" />
-                          <button type="button" onClick={() => router.push(`/dashboard/scripts/${s._id}`)} className="px-5 py-2.5 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2">
-                            Open <ArrowRight size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                          <div className="flex flex-wrap items-center gap-10 text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic leading-none">
+                             <span className="flex items-center gap-3 hover:text-primary-500 transition-colors"><Type size={18} className="text-primary-500" /> {s.wordCount} WORDS</span>
+                             <div className="w-2 h-2 rounded-full bg-surface-100 dark:bg-surface-800" />
+                             <span className="flex items-center gap-3 hover:text-primary-500 transition-colors"><Clock size={18} className="text-primary-500" /> {new Date(s.createdAt).toLocaleDateString().toUpperCase()}</span>
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-4 sm:opacity-0 group-hover/item:opacity-100 transition-all duration-500">
+                           <button type="button" onClick={() => handleCopyScript(s)} title="Copy Script" aria-label="Copy Script" className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-emerald-500 hover:border-emerald-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
+                             {copyId === s._id ? <Check size={28} className="text-emerald-500 animate-pulse" /> : <Copy size={28} className="group-hover/btn:scale-110 transition-transform" />}
+                           </button>
+                           <button type="button" onClick={() => handleExportScript(s._id)} title="Export Script" aria-label="Export Script" className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-primary-500 hover:border-primary-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
+                             <Download size={28} className="group-hover/btn:scale-110 transition-transform" />
+                           </button>
+                           <button type="button" onClick={() => setDeleteTargetId(s._id)} title="Purge Script" aria-label="Purge Script" className="w-16 h-16 rounded-[1.5rem] border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-300 dark:text-slate-800 hover:text-rose-500 hover:border-rose-500/40 transition-all bg-surface-card dark:bg-surface-950 shadow-xl active:scale-90 group/btn border-none">
+                             <Trash2 size={28} className="group-hover/btn:scale-110 transition-transform" />
+                           </button>
+                          <Link href={`/dashboard/scripts/${s._id}`} className="px-12 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.8em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all ml-6 active:scale-95 text-center">
+                             OPEN_NODE
+                          </Link>
+                       </div>
+                    </motion.div>
+                  )
+                })
               )}
-            </div>
-          </div>
+           </div>
         </div>
-      </div>
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deleteTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/50 backdrop-blur-sm" onClick={() => !deleting && setDeleteTargetId(null)}>
-            <motion.div
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 0.95 }}
-               onClick={e => e.stopPropagation()}
-               className="bg-white dark:bg-surface-900 rounded-3xl p-8 max-w-md w-full shadow-xl border border-surface-200 dark:border-surface-800"
-            >
-               <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 flex items-center justify-center mb-6">
-                  <Trash2 size={24} className="text-rose-600 dark:text-rose-400" />
-               </div>
-               <h3 className="text-xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Delete Script?</h3>
-               <p className="text-sm font-medium text-surface-500 mb-8">
-                  Are you sure you want to delete <span className="font-bold text-surface-900 dark:text-white">{deleteTarget.topic || deleteTarget.title || 'Untitled script'}</span>? This cannot be undone.
-               </p>
-               <div className="flex items-center justify-end gap-3">
-                  <button type="button" onClick={() => setDeleteTargetId(null)} disabled={deleting} className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-                     Cancel
-                  </button>
-                  <button type="button" onClick={() => handleDeleteScript(deleteTarget._id)} disabled={deleting} className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-rose-600 text-white hover:bg-rose-700 transition-colors shadow-sm flex items-center gap-2">
-                     {deleting ? <RefreshCw size={14} className="animate-spin" /> : null}
-                     {deleting ? 'Deleting...' : 'Delete'}
-                  </button>
-               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+        {/* Delete Confirmation Overlay */}
+        <AnimatePresence>
+           {deleteTargetId && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-8 bg-surface-950/90 backdrop-blur-[50px]">
+                <motion.div initial={{ opacity: 0, scale: 0.9, y: 100 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 100 }} transition={{ type: 'spring', damping: 25 }} className="bg-surface-card rounded-[4rem] p-16 max-w-2xl w-full border-2 border-rose-500/20 shadow-[0_50px_150px_rgba(0,0,0,0.8)] text-center group/modal">
+                   <div className="w-24 h-24 bg-rose-500/10 border-2 border-rose-500/20 rounded-[2rem] flex items-center justify-center mb-12 mx-auto shadow-2xl group-hover/modal:rotate-12 transition-transform">
+                      <Trash2 size={48} className="text-rose-500" />
+                   </div>
+                   <h3 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase mb-6 leading-none">Purge Node?</h3>
+                   <p className="text-sm font-bold text-surface-500 dark:text-slate-400 mb-16 italic uppercase tracking-tight leading-relaxed px-10">This will permanently de-index the script from the neural collective. This action is irreversible and final.</p>
+                   <div className="flex gap-8">
+                      <button onClick={() => setDeleteTargetId(null)} className="flex-1 py-6 rounded-[2rem] bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[12px] tracking-[0.6em] italic border-2 border-surface-100 dark:border-surface-800 active:scale-95 transition-all shadow-inner">ABORT_PURGE</button>
+                      <button onClick={() => handleDeleteScript(deleteTargetId)} disabled={deleting} className="flex-1 py-6 rounded-[2rem] bg-rose-600 text-white font-black uppercase text-[12px] tracking-[1em] italic shadow-[0_20px_50px_rgba(244,63,94,0.4)] border-none active:scale-95 transition-all hover:bg-rose-500 flex items-center justify-center gap-4">
+                        {deleting ? <RefreshCw className="animate-spin" size={24} /> : 'COMMIT_PURGE'}
+                      </button>
+                   </div>
+                </motion.div>
+             </motion.div>
+           )}
+        </AnimatePresence>
+        
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
+        `}</style>
+      </div>
     </ErrorBoundary>
   )
 }

@@ -374,7 +374,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
                 <Plus className="w-4 h-4" />
               </motion.button>
               {opts.showDelete && (
-                <button onClick={(e) => { e.stopPropagation(); showToast('Node Removed', 'info'); }} className="p-3 bg-rose-600 text-white rounded-xl shadow-3xl" title="Remove Node"><Trash2 className="w-4 h-4" /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); showToast('Node Removed', 'info'); }} className="p-3 bg-rose-600 text-white rounded-xl shadow-3xl" title="Remove Node"><Trash2 className="w-4 h-4" /></button>
               )}
             </div>
           </div>
@@ -413,8 +413,8 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
         </div>
 
         <div className="flex items-center gap-4 p-2 bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-3xl">
-          <button onClick={() => setTab('uploads')} className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${tab === 'uploads' ? 'bg-indigo-600 text-white shadow-2xl' : 'text-slate-500 hover:text-white'}`}>Identity Nodes</button>
-          <button onClick={() => setTab('click')} className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${tab === 'click' ? 'bg-indigo-600 text-white shadow-2xl' : 'text-slate-500 hover:text-white'}`}>Elite Core Lib</button>
+          <button type="button" onClick={() => setTab('uploads')} className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${tab === 'uploads' ? 'bg-indigo-600 text-white shadow-2xl' : 'text-slate-500 hover:text-white'}`}>Identity Nodes</button>
+          <button type="button" onClick={() => setTab('click')} className={`px-8 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest italic transition-all ${tab === 'click' ? 'bg-indigo-600 text-white shadow-2xl' : 'text-slate-500 hover:text-white'}`}>Elite Core Lib</button>
         </div>
       </div>
 
@@ -531,7 +531,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
             >
               <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{previewAsset.title}</h2>
-                <button onClick={() => setPreviewAsset(null)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all" title="Close Preview"><X className="w-8 h-8" /></button>
+                <button type="button" onClick={() => setPreviewAsset(null)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 text-slate-500 hover:text-white transition-all" title="Close Preview"><X className="w-8 h-8" /></button>
               </div>
 
               <div className="aspect-video w-full rounded-[3rem] bg-black/40 border border-white/5 overflow-hidden flex items-center justify-center">

@@ -12,7 +12,8 @@
 **Title:** `[Roadmap] Cloud Storage Integration`
 
 **Body:** (copy below)
-```
+
+```markdown
 ## Goal
 Cloud Storage Integration
 
@@ -52,7 +53,7 @@ Copy this row. After creating the issue, replace `XX` with the issue number:
 
 (copy after you have the issue number)
 
-```
+```text
 **New assignment:** #7 — Cloud Storage Integration
 Issue: https://github.com/Droze-svj/click-platform/issues/XX  ← replace XX with issue #
 Branch: `feature/cloud-storage`

@@ -9,6 +9,7 @@ import { Skeleton, CardSkeleton } from './LoadingSkeleton';
 // import { ErrorBoundary } from './ErrorBoundary'; // Temporarily disabled for build
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from '../lib/utils';
+import { apiPost } from '../lib/api';
 
 interface PerformancePrediction {
   expectedViews: { min: number; max: number };
@@ -36,16 +37,10 @@ export default function PredictiveAnalytics() {
     if (!contentData.title || !contentData.body) return;
     setLoading(true);
     try {
-      const response = await fetch('/api/ai/predictive/performance', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(contentData),
-      });
-      const data = await response.json();
-      if (data.success) {
+      const data = await apiPost<any>('/ai/predictive/performance', contentData);
+      if (data?.success && data?.data) {
+        setPrediction(data.data);
+      } else if (data?.data) {
         setPrediction(data.data);
       }
     } catch (error) {
@@ -101,6 +96,8 @@ export default function PredictiveAnalytics() {
             <select
               value={contentData.platform}
               onChange={(e) => setContentData({ ...contentData, platform: e.target.value })}
+              aria-label="Platform"
+              title="Platform"
               className="w-full p-2 border rounded"
             >
               <option value="instagram">Instagram</option>

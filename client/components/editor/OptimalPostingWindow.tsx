@@ -94,7 +94,7 @@ export default function OptimalPostingWindow({ niche, platform, onSchedule, clas
           {windows.map((w, i) => (
             <li key={i}>
               <button
-                type="button"
+               type="button"
                 onClick={() => onSchedule?.(w.hour, w.rationale)}
                 className="w-full flex items-start gap-3 p-2.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-fuchsia-500/30 hover:bg-fuchsia-500/[0.06] transition-all group text-left"
               >

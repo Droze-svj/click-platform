@@ -138,6 +138,7 @@ export default function EnhancedBatchOperations({
               {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} selected
             </span>
             <button
+              type="button"
               onClick={() => onSelectionChange?.([])}
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
             >
@@ -147,24 +148,28 @@ export default function EnhancedBatchOperations({
 
           <div className="flex gap-2 flex-wrap">
             <button
+              type="button"
               onClick={() => setShowExportImport(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
             >
               📤 Export
             </button>
             <button
+              type="button"
               onClick={() => setShowTagModal(true)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
             >
               🏷️ Add Tag
             </button>
             <button
+              type="button"
               onClick={() => { setShowFolderModal(true); setSelectedFolder('none') }}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
             >
               📁 Move to Folder
             </button>
             <button
+              type="button"
               onClick={handleBatchDelete}
               disabled={loading}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50"
@@ -204,6 +209,7 @@ export default function EnhancedBatchOperations({
             />
             <div className="flex gap-2 justify-end">
               <button
+                type="button"
                 onClick={() => {
                   setShowTagModal(false)
                   setNewTag('')
@@ -213,6 +219,7 @@ export default function EnhancedBatchOperations({
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleBatchTag}
                 disabled={loading || !newTag.trim()}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
@@ -241,6 +248,7 @@ export default function EnhancedBatchOperations({
             </select>
             <div className="flex gap-2 justify-end">
               <button
+                type="button"
                 onClick={() => {
                   setShowFolderModal(false)
                   setSelectedFolder('')
@@ -250,6 +258,7 @@ export default function EnhancedBatchOperations({
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleBatchFolder}
                 disabled={loading}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"

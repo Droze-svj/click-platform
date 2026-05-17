@@ -107,7 +107,7 @@ const OmniModelPanel = () => {
         ))}
       </div>
 
-      <button onClick={runDemoRoute} disabled={loading}
+      <button type="button" onClick={runDemoRoute} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-indigo-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <GitBranch className="w-4 h-4" />}
         Run Demo Routing
@@ -183,7 +183,7 @@ const SpatialMemoryPanel = () => {
         </p>
       </div>
 
-      <button onClick={buildDemoLedger} disabled={loading}
+      <button type="button" onClick={buildDemoLedger} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-purple-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
         Build Demo Ledger
@@ -281,7 +281,7 @@ const AEOMetadataPanel = () => {
         </div>
       </div>
 
-      <button onClick={buildAEO} disabled={loading}
+      <button type="button" onClick={buildAEO} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-emerald-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
         Build AEO Metadata
@@ -363,7 +363,7 @@ const UGCRawPanel = () => {
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">UGC Profile</p>
           <div className="space-y-2">
             {profiles.map(p => (
-              <button key={p.id} onClick={() => setSelectedProfile(p.id)}
+              <button type="button" key={p.id} onClick={() => setSelectedProfile(p.id)}
                 className={`w-full text-left p-4 rounded-xl transition-all ${selectedProfile === p.id ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' : 'bg-white/[0.02] border border-white/5 text-slate-400'}`}>
                 <p className="text-[11px] font-black uppercase">{p.label}</p>
                 <p className="text-[9px] mt-0.5 opacity-70">{p.description}</p>
@@ -375,7 +375,7 @@ const UGCRawPanel = () => {
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Humanization Intensity</p>
           <div className="space-y-3">
             {(['subtle', 'medium', 'heavy'] as const).map(level => (
-              <button key={level} onClick={() => setSelectedIntensity(level)}
+              <button type="button" key={level} onClick={() => setSelectedIntensity(level)}
                 className={`w-full p-4 rounded-xl text-left transition-all capitalize text-sm font-black ${selectedIntensity === level ? 'bg-amber-600 text-white' : 'bg-white/[0.02] border border-white/5 text-slate-500'}`}>
                 {level}
                 <span className="text-[9px] block font-normal opacity-70 mt-0.5">
@@ -387,7 +387,7 @@ const UGCRawPanel = () => {
         </div>
       </div>
 
-      <button onClick={runDemo} disabled={loading}
+      <button type="button" onClick={runDemo} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-amber-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
         Synthesize UGC Demo
@@ -482,7 +482,7 @@ const ZeroPartyDataPanel = () => {
         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Target Platform</p>
         <div className="flex gap-3 flex-wrap">
           {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin'].map(p => (
-            <button key={p} onClick={() => setPlatform(p)}
+            <button type="button" key={p} onClick={() => setPlatform(p)}
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${platform === p ? 'bg-rose-600 text-white' : 'bg-white/[0.02] border border-white/5 text-slate-500'}`}>
               {p.replace('_', ' ')}
             </button>
@@ -490,7 +490,7 @@ const ZeroPartyDataPanel = () => {
         </div>
       </div>
 
-      <button onClick={generateManifest} disabled={loading}
+      <button type="button" onClick={generateManifest} disabled={loading}
         className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-rose-600/20">
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MousePointer2 className="w-4 h-4" />}
         Generate Overlay Manifest
@@ -570,7 +570,7 @@ export default function Phase8Dashboard() {
         {/* Section Nav */}
         <div className="flex flex-wrap gap-3 pt-6">
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)}
+            <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
               className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-white/10 text-slate-400 hover:text-white'}`}>
               <s.icon className="w-3.5 h-3.5" />{s.label}
             </button>

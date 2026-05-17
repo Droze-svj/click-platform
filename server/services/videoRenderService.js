@@ -7,6 +7,8 @@ const fs = require('fs')
 const Content = require('../models/Content')
 const logger = require('../utils/logger')
 const videoEnhancer = require('../utils/videoEnhancer')
+const c2paService = require('./c2paService')
+const { toAbsolutePath } = require('../utils/pathUtils')
 
 /**
  * Build FFmpeg video filter chain from editor videoFilters
@@ -97,8 +99,10 @@ const CAPTION_STYLE_MAP = {
  */
 function escapeFfmpegText(text) {
   return String(text || '')
-    .replace(/[\\:]/g, '')      // remove backslashes and colons which break filter parsing
-    .replace(/'/g, '\u2019')    // replace single quotes with Unicode right single quotation mark
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/:/g, '\\:')
+    .replace(/%/g, '\\%')
     .substring(0, 80)           // hard-cap length to prevent filter overflow
 }
 
@@ -170,24 +174,13 @@ function buildDrawBoxFilter(shape) {
  * Resolve input path from Content or videoUrl
  */
 async function resolveInputPath(videoId, videoUrl) {
-  if (videoUrl && (videoUrl.startsWith('http') || videoUrl.startsWith('/'))) {
-    if (videoUrl.startsWith('/')) {
-      const localPath = path.join(__dirname, '../..', videoUrl)
-      if (fs.existsSync(localPath)) return localPath
-      return videoUrl
-    }
-    return videoUrl
-  }
+  if (videoUrl) return toAbsolutePath(videoUrl);
   if (!videoId) throw new Error('Video not found: provide videoId or videoUrl')
   const content = await Content.findById(videoId)
   if (!content || !content.originalFile?.url) {
     throw new Error('Video not found in database')
   }
-  const url = content.originalFile.url
-  if (url.startsWith('/')) {
-    return path.join(__dirname, '../..', url)
-  }
-  return url
+  return toAbsolutePath(content.originalFile.url);
 }
 
 /**
@@ -211,6 +204,7 @@ async function renderFromEditorState(options) {
     shapeOverlays = [],
     exportOptions = {},
     timelineSegments = [],
+    userId,
   } = options
 
   const width = exportOptions.width ?? 1920
@@ -278,7 +272,6 @@ async function renderFromEditorState(options) {
   let shakeY = '0';
   let glitchEnable = '';
   let telephoneEQ = '';
-  let hasShakes = false;
 
   (textOverlays || []).forEach(o => {
     const s = Number(o.startTime ?? 0);
@@ -300,7 +293,6 @@ async function renderFromEditorState(options) {
       const jitterY = `(random(1)*40-20)`;
       shakeX = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterX},${shakeX})`;
       shakeY = `if(between(t,${s.toFixed(2)},${eShake.toFixed(2)}),${jitterY},${shakeY})`;
-      hasShakes = true;
 
       if (o.style === 'punchline') {
         glitchEnable += (glitchEnable ? '+' : '') + `between(t,${s.toFixed(2)},${(s+0.2).toFixed(2)})`;
@@ -337,6 +329,7 @@ async function renderFromEditorState(options) {
 
   const { renderQueue, optimizeFFmpegCommand } = require('./performanceOptimizationService')
 
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     // 🛸 Phase 14: Neural Enhancement Scan
     let enhancementFilters = []
@@ -461,14 +454,62 @@ async function renderFromEditorState(options) {
             .on('progress', (p) => {
               if (p.percent) logger.debug('Render progress', { percent: p.percent.toFixed(1) })
             })
-            .on('end', () => {
-              if (fs.existsSync(outputPath)) {
-                const url = `/uploads/exports/${outputFilename}`
-                logger.info('Neural Node Handoff: Render Complete', { videoId, url })
-                jobResolve({ outputPath, url })
-              } else {
-                jobReject(new Error('Neural Node Error: Output Fragment Missing'))
+            .on('end', async () => {
+              if (!fs.existsSync(outputPath)) {
+                return jobReject(new Error('Neural Node Error: Output Fragment Missing'))
               }
+              // Defensive: ffmpeg can exit 0 with a near-empty file under
+              // OOM / codec bailout / aborted-mid-write conditions. Treat
+              // anything under 1KB as a failed render so the client
+              // doesn't hand the user a zero-byte download.
+              const size = fs.statSync(outputPath).size
+              if (size <= 1024) {
+                try { fs.unlinkSync(outputPath) } catch (_) { /* best effort cleanup */ }
+                return jobReject(new Error(`Neural Node Error: ffmpeg produced an empty/truncated file (${size} bytes) — likely OOM or codec failure`))
+              }
+
+              // C2PA provenance signing — best-effort, never blocks or fails the render.
+              // signRender() handles its own graceful degradation: tries c2pa-node,
+              // falls back to c2patool CLI, and if neither is present returns
+              // { signed: false } with a warning rather than throwing.
+              const c2paJobId = outputFilename.replace(/\.[^.]+$/, '')
+              let c2paResult = { signed: false, sha256: null, sizeBytes: size }
+              try {
+                c2paResult = await c2paService.signRender({
+                  inputPath: outputPath,
+                  tree: null,
+                  jobId: c2paJobId,
+                  userId: userId || null,
+                })
+              } catch (err) {
+                logger.warn('[render] C2PA signing threw; export will be unsigned', {
+                  error: err.message,
+                  videoId,
+                })
+              }
+              // Persist the authenticity record without blocking the render response.
+              c2paService.persistAuthenticity({
+                contentId: videoId || null,
+                userId: userId || null,
+                jobId: c2paJobId,
+                signed: c2paResult.signed,
+                manifest: c2paResult.manifest || null,
+                signer: c2paResult.signer || null,
+                sha256: c2paResult.sha256 || null,
+                reason: c2paResult.reason || null,
+              }).catch((err) => {
+                logger.warn('[render] persistAuthenticity threw', { jobId: c2paJobId, error: err.message })
+              })
+
+              const url = `/uploads/exports/${outputFilename}`
+              logger.info('Neural Node Handoff: Render Complete', {
+                videoId,
+                url,
+                bytes: size,
+                signed: c2paResult.signed,
+                signer: c2paResult.signer || null,
+              })
+              jobResolve({ outputPath, url, signed: c2paResult.signed })
             })
             .on('error', (err) => {
               logger.error('Neural Node Failure', { error: err.message, videoId })

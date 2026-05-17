@@ -84,6 +84,7 @@ export default function AchievementBadge({ achievement, onClose }: { achievement
             <p className="text-sm opacity-90">Achievement Unlocked!</p>
           </div>
           <button
+            type="button"
             onClick={() => {
               setShow(false)
               onClose()

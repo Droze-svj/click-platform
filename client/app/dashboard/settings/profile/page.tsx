@@ -1,29 +1,35 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   User, Mail, Camera, Save, Key, ArrowLeft, 
   Globe, Instagram, Linkedin, MapPin, Activity, 
   Cpu, Layers, Lock, Shield, Twitter, Target,
-  RefreshCw, Plus, X, ArrowRight, Zap, Terminal, Fingerprint, Network
+  RefreshCw, Plus, X, ArrowRight, Zap, Terminal, Fingerprint, Network,
+  ActivitySquare, ShieldCheck, UserCheck, Monitor, Database, Sparkles,
+  Search, Sliders, ChevronRight
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { apiGet, apiPut } from '../../../../lib/api'
+import { apiGet, apiPost, apiPut } from '../../../../lib/api'
 import LoadingSkeleton from '../../../../components/LoadingSkeleton'
 import ToastContainer from '../../../../components/ToastContainer'
 import { useAuth } from '../../../../hooks/useAuth'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
-
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
 
 export default function IdentityMatrixInterfacePage() {
   const router = useRouter()
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  // Coarser save-state for the pill in the header. Cycles:
+  //   idle → saving → saved → idle (after 2s) → dirty (on any edit) → saving …
+  // The previous header pill was hardcoded to "Saved" regardless of state,
+  // so a user couldn't tell whether a click had landed.
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'dirty'>('idle')
   const [profile, setProfile] = useState({
     name: '',
+    username: '',
     email: '',
     bio: '',
     website: '',
@@ -33,25 +39,70 @@ export default function IdentityMatrixInterfacePage() {
     profilePicture: null as File | null,
   })
   const [preview, setPreview] = useState<string | null>(null)
+  // Snapshot of the last-known-saved profile values. When `profile`
+  // diverges from this snapshot the header pill flips to "Unsaved
+  // changes"; the snapshot resets on every successful save.
+  const lastSavedSnapshotRef = useRef<string>('')
+
+  // Drift detector: serialise the fields the form actually persists and
+  // compare against the saved snapshot. We skip this work while a save
+  // is in-flight or right after a save (saveState === 'saved') to avoid
+  // flicker. If the snapshot is empty we haven't loaded yet — also skip.
+  useEffect(() => {
+    if (loading) return
+    if (saveState === 'saving' || saveState === 'saved') return
+    const current = JSON.stringify({
+      name: profile.name,
+      username: profile.username,
+      bio: profile.bio,
+      website: profile.website,
+      location: profile.location,
+      social_links: profile.social_links,
+      niche: profile.niche,
+      hasNewAvatar: !!profile.profilePicture,
+    })
+    if (!lastSavedSnapshotRef.current) return
+    if (current !== lastSavedSnapshotRef.current && saveState !== 'dirty') {
+      setSaveState('dirty')
+    } else if (current === lastSavedSnapshotRef.current && saveState === 'dirty') {
+      setSaveState('idle')
+    }
+  }, [profile, loading, saveState])
 
   const loadProfile = useCallback(async () => {
     try {
+      setLoading(true)
       const profileData: any = await apiGet('/auth/profile')
-      const u = profileData.user || profileData;
-      setProfile({
+      const u = profileData.profile || profileData.user || profileData;
+      const next = {
         name: u.name || '',
+        username: u.username || '',
         email: u.email || '',
         bio: u.bio || '',
         website: u.website || '',
         location: u.location || '',
         social_links: u.social_links || {},
         niche: u.niche || '',
-        profilePicture: null,
+        profilePicture: null as File | null,
+      }
+      setProfile(next)
+      // Baseline for the drift detector — anything the user changes
+      // after this point flips the header pill to "Unsaved changes".
+      lastSavedSnapshotRef.current = JSON.stringify({
+        name: next.name,
+        username: next.username,
+        bio: next.bio,
+        website: next.website,
+        location: next.location,
+        social_links: next.social_links,
+        niche: next.niche,
+        hasNewAvatar: false,
       })
     } catch {
       if (user) {
         setProfile({
           name: user.name || '',
+          username: (user as any).username || '',
           email: user.email || '',
           bio: (user as any).bio || '',
           website: (user as any).website || '',
@@ -82,246 +133,356 @@ export default function IdentityMatrixInterfacePage() {
 
   const saveProfile = async () => {
     setSaving(true)
+    setSaveState('saving')
     try {
       const updateData = {
         name: profile.name,
+        username: profile.username, // preferred display name
         bio: profile.bio,
         website: profile.website,
         location: profile.location,
         social_links: profile.social_links,
         niche: profile.niche,
       }
-      await apiPut('/auth/profile', updateData)
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'NODE_IDENTITY_SYNCHRONIZED', type: 'success' } }))
+      // Capture the server's authoritative profile back so the form
+      // rehydrates with what actually persisted (niche, social_links
+      // merges, etc.). Previously the form trusted local state and
+      // silently drifted when the server normalised values.
+      const saved = await apiPut<{ profile?: any }>('/auth/profile', updateData)
+      const persisted = (saved as any)?.profile
+      if (persisted) {
+        setProfile((p) => ({
+          ...p,
+          name: persisted.name ?? p.name,
+          username: persisted.username ?? p.username,
+          bio: persisted.bio ?? p.bio,
+          website: persisted.website ?? p.website,
+          location: persisted.location ?? p.location,
+          social_links: persisted.social_links ?? p.social_links,
+          niche: persisted.niche ?? p.niche,
+        }))
+      }
+
+      // If the user picked a new avatar, upload it as multipart in a
+      // second request. Doing it separately keeps the JSON profile update
+      // cleanly typed and lets the avatar route handle the file with
+      // multer. The previous code silently discarded the file.
+      if (profile.profilePicture) {
+        const form = new FormData()
+        form.append('avatar', profile.profilePicture)
+        try {
+          const res = await apiPost<{ avatar?: string }>(
+            '/auth/avatar',
+            form,
+            // axios reads FormData boundary automatically when we don't
+            // override Content-Type; but transformRequest in the api
+            // client may JSON-stringify objects, so override explicitly.
+            { headers: { 'Content-Type': 'multipart/form-data' }, transformRequest: [(d: any) => d] } as any,
+          )
+          if (res?.avatar) setPreview(res.avatar)
+          setProfile((p) => ({ ...p, profilePicture: null }))
+        } catch (avatarErr: any) {
+          window.dispatchEvent(new CustomEvent('toast', {
+            detail: { message: avatarErr?.response?.data?.error || "Couldn't upload avatar.", type: 'error' },
+          }))
+        }
+      }
+
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Profile saved.', type: 'success' } }))
+      // Re-baseline the drift detector with the values that actually
+      // persisted (server may normalise) so the pill doesn't re-flip
+      // to "Unsaved changes" immediately.
+      const baselineSource = persisted || updateData
+      lastSavedSnapshotRef.current = JSON.stringify({
+        name: baselineSource.name ?? '',
+        username: baselineSource.username ?? '',
+        bio: baselineSource.bio ?? '',
+        website: baselineSource.website ?? '',
+        location: baselineSource.location ?? '',
+        social_links: baselineSource.social_links ?? {},
+        niche: baselineSource.niche ?? '',
+        hasNewAvatar: false,
+      })
+      setSaveState('saved')
+      // Settle the pill back to idle after the success animation. If the
+      // user edits something within those 2s, the dirty handler flips it
+      // forward; otherwise we go to idle.
+      window.setTimeout(() => setSaveState((s) => (s === 'saved' ? 'idle' : s)), 2000)
     } catch (error: any) {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'SYNC_ERR: UPLINK_ABORTED', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: "Couldn't save profile.", type: 'error' } }))
+      setSaveState('dirty')
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
-        <Fingerprint size={64} className="text-indigo-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] animate-pulse italic">Deciphering Identity DNA...</span>
+     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
+        <Fingerprint size={80} className="text-primary-500 animate-spin mb-12" />
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Loading…</p>
      </div>
   );
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1500px] mx-auto space-y-24">
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <User size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-        </div>
 
         {/* Matrix Header */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
-           <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard/settings')} title="Back"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
-                <ArrowLeft size={32} />
-              </button>
-              <div className="w-20 h-20 bg-indigo-500/5 border border-indigo-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Fingerprint size={40} className="text-indigo-400 relative z-10 group-hover:scale-110 transition-transform duration-700" />
+        <header className="flex flex-col lg:flex-row justify-between items-center gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-6 w-full lg:w-auto min-w-0">
+               <button type="button" onClick={() => router.push('/dashboard/settings')} title="Back to Settings" aria-label="Back to Settings" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+                 <ArrowLeft size={24} />
+               </button>
+              <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
+                 <User size={40} className="text-primary-600 dark:text-primary-400" />
               </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Cpu size={14} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Node Identity v8.4.1</span>
-                   </div>
-                   <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <Shield size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[9px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SIGNATURE_STABLE</span>
-                   </div>
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
+                      Profile
+                    </span>
+                    {/* Live save indicator. Was hardcoded to "Saved" + a
+                        green dot regardless of state, which let users
+                        click Save and not realise whether the request had
+                        actually landed. Reflects `saveState` now. */}
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
+                        <div className={`w-2 h-2 rounded-full ${
+                          saveState === 'saving' ? 'bg-primary-500 animate-pulse' :
+                          saveState === 'saved' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                          saveState === 'dirty' ? 'bg-amber-500' :
+                          'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                        }`} />
+                        {saveState === 'saving' ? 'Saving…'
+                          : saveState === 'dirty' ? 'Unsaved changes'
+                          : 'Saved'}
+                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-2">Profile</h1>
-                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your name, photo, bio, and the public details that show up on every post you publish through Click.</p>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Profile</h1>
               </div>
            </div>
 
-           <button onClick={saveProfile} disabled={saving}
-             className="px-16 py-8 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] hover:bg-indigo-500 hover:text-white transition-all duration-700 shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-6 group relative overflow-hidden"
-           >
-             <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
-             <div className="relative z-10 flex items-center gap-6">
-               {saving ? <RefreshCw className="animate-spin" size={28} /> : <Lock size={28} className="group-hover:scale-110 transition-transform duration-700" />}
-               {saving ? 'SYNCHRONIZING...' : 'LOCK_MISSION_IDENTITY'}
-             </div>
-           </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 relative z-10">
-           {/* Visual Signature & Core Intel */}
-           <div className="lg:col-span-1 space-y-16">
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-                className={`${glassStyle} p-16 rounded-[6rem] flex flex-col items-center text-center space-y-12 border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.6)]`}
+           <div className="flex flex-wrap items-center gap-6 justify-end w-full lg:w-auto">
+              <button type="button" onClick={saveProfile} disabled={saving}
+                className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.6em] italic rounded-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-4 group border-none"
               >
+                {saving ? <RefreshCw className="animate-spin" size={22} /> : <Lock size={22} className="group-hover:scale-110 transition-transform duration-500" />}
+                {saving ? 'Saving…' : 'Save profile'}
+              </button>
+           </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
+           {/* Change photo & Core Intel */}
+           <aside className="lg:col-span-4 space-y-10">
+              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
+                className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 p-12 sm:p-14 rounded-[4rem] flex flex-col items-center text-center gap-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:shadow-[0_80px_150px_rgba(0,0,0,0.4)]"
+              >
+                 <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><Activity size={250} className="text-primary-500" /></div>
+                 
                  <div className="relative group/avatar">
-                    <div className="w-56 h-56 rounded-[4.5rem] bg-black/60 border border-white/10 p-3 shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] overflow-hidden transition-all duration-300 group-hover/avatar:border-indigo-500/40 group-hover/avatar:scale-105">
-                       <div className="w-full h-full rounded-[3.8rem] overflow-hidden bg-white/[0.02] flex items-center justify-center relative">
-                          {preview ? (
-                            <img src={preview} alt="Profile" className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110 grayscale group-hover/avatar:grayscale-0" />
+                    <div className="w-60 h-60 rounded-[4rem] bg-surface-page dark:bg-surface-950 border-4 border-surface-100 dark:border-surface-800 p-2 shadow-inner overflow-hidden transition-all duration-700 group-hover/avatar:border-primary-500/30 group-hover/avatar:scale-105">
+                       <div className="w-full h-full rounded-[3.4rem] overflow-hidden bg-surface-card dark:bg-surface-900 flex items-center justify-center relative">
+                          {preview || (user as any)?.avatar ? (
+                            <img src={preview || (user as any)?.avatar} alt="Profile" className="w-full h-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-1000" />
                           ) : (
-                            <User className="w-24 h-24 text-[var(--text-dim)] group-hover/avatar:text-indigo-400 transition-all duration-300" />
+                            <User className="w-24 h-24 text-surface-200 dark:text-slate-800 group-hover/avatar:text-primary-500 transition-all duration-500" />
                           )}
-                          <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
+                          <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
                        </div>
                     </div>
-                    <label className="absolute -bottom-4 -right-4 w-20 h-20 bg-white text-black border-4 border-[#020205] rounded-[2rem] flex items-center justify-center cursor-pointer hover:bg-indigo-500 hover:text-white transition-all duration-700 shadow-2xl scale-100 hover:rotate-12 active:scale-90 group-hover/avatar:translate-x-2 group-hover/avatar:-translate-y-2">
-                       <Camera size={32} />
-                       <input type="file" accept="image/*" title="Visual Signature" aria-label="Visual Signature" onChange={handleImageChange} className="hidden" />
-                    </label>
+                     <label title="Change photo" aria-label="Change photo" className="absolute -bottom-4 -right-4 w-18 h-18 bg-surface-900 dark:bg-white text-white dark:text-black border-4 border-surface-page dark:border-surface-card rounded-[1.8rem] flex items-center justify-center cursor-pointer hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-90 group-hover/avatar:rotate-12">
+                        <Camera size={28} />
+                        <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                     </label>
                  </div>
                  
-                 <div className="space-y-4">
-                    <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none truncate max-w-xs drop-shadow-2xl">{profile.name || 'Sovereign_Node'}</h3>
-                    <div className="px-6 py-2 rounded-full bg-black/40 border border-white/5 shadow-inner">
-                       <p className="text-[11px] text-[var(--text-dim)] font-black uppercase tracking-[0.4em] italic leading-none">{profile.email || 'NULL_SIGNAL_PROTOCOL'}</p>
+                 <div className="space-y-4 w-full relative z-10 min-w-0">
+                    {/* Name autofit — was `text-4xl font-black italic uppercase tracking-tighter leading-none` which forced
+                        "Dario Vuma" onto one too-wide line, getting clipped at the avatar column edge to "DARIO VUM".
+                        Switched to a fluid size + wrapping so any first+last name renders cleanly. */}
+                    <h3 className="text-2xl sm:text-3xl font-bold text-surface-900 dark:text-white leading-tight group-hover:text-primary-500 transition-colors duration-500 [overflow-wrap:anywhere]">{profile.name || 'Your name'}</h3>
+                    <div className="px-6 py-2 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 shadow-inner max-w-full">
+                       {/* Email was uppercase + tracking-[0.4em] + truncated which clipped "dariovuma@gmail.com" to
+                           "DARIOVUMA@G…". Plain case + break-all so the whole address always shows. */}
+                       <p className="text-[11px] sm:text-xs text-surface-500 dark:text-slate-400 font-semibold italic leading-snug break-all">{profile.email || 'Add your email'}</p>
                     </div>
                  </div>
 
-                 <div className="w-full pt-12 border-t border-white/5 flex flex-col gap-6">
-                    {preview && (
-                       <button onClick={() => { setPreview(null); setProfile(prev => ({ ...prev, profilePicture: null })) }} 
-                         className="text-[11px] font-black text-rose-500 uppercase tracking-[0.5em] hover:text-white transition-all duration-700 p-4 italic bg-rose-500/5 rounded-2xl border border-rose-500/10 shadow-inner group/purge"
-                       >
-                          <div className="flex items-center justify-center gap-4">
-                             <X size={16} className="group-hover:rotate-180 transition-transform" /> PURGE_VISUAL_SIGNATURE
-                          </div>
-                       </button>
-                    )}
-                    <div className="p-8 rounded-[3rem] bg-black/60 border border-white/5 flex items-center justify-between group cursor-default shadow-inner hover:border-indigo-500/30 transition-all duration-300">
-                       <div className="flex items-center gap-5 text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors duration-700">
+                 <div className="w-full pt-10 border-t-2 border-surface-100 dark:border-surface-800 flex flex-col gap-6 relative z-10">
+                     {preview && (
+                        <button type="button" onClick={() => { setPreview(null); setProfile(prev => ({ ...prev, profilePicture: null })) }} 
+                          title="Remove photo" aria-label="Remove photo"
+                          className="text-[10px] font-black text-rose-500 uppercase tracking-[0.5em] hover:text-rose-600 transition-all p-5 italic bg-rose-500/5 rounded-2xl border-2 border-rose-500/10 shadow-inner group/purge"
+                        >
+                           <div className="flex items-center justify-center gap-4">
+                              <X size={18} className="group-hover:rotate-180 transition-transform duration-500" /> Remove photo
+                           </div>
+                        </button>
+                     )}
+                    <div className="p-8 rounded-[2.5rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-between group cursor-default shadow-inner hover:border-primary-500/30 transition-all duration-500">
+                       <div className="flex items-center gap-5 text-surface-400 dark:text-slate-600 group-hover:text-primary-500 transition-colors duration-700">
                           <Activity size={20} className="animate-pulse" />
-                          <span className="text-[12px] font-black uppercase tracking-[0.4em] italic">Logic Tier</span>
+                          <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">Plan</span>
                        </div>
-                       <span className="text-[11px] font-black text-white italic bg-indigo-600 px-5 py-2 rounded-xl shadow-[0_0_30px_rgba(99,102,241,0.5)]">ELITE_SYNDICATE</span>
+                       <span className="text-[10px] font-black text-white italic bg-primary-600 px-5 py-2 rounded-xl shadow-lg uppercase tracking-widest">Pro</span>
                     </div>
                  </div>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                className={`${glassStyle} p-12 rounded-[5rem] space-y-12 border-white/5 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]`}
+              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 p-10 sm:p-12 rounded-[3.5rem] space-y-10 shadow-2xl relative overflow-hidden group transition-all duration-500"
               >
-                 <div className="flex items-center gap-6 border-b border-white/5 pb-8">
-                    <Network size={20} className="text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors" />
-                    <h3 className="text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic leading-none">Mesh Hub Uplinks</h3>
+                 <div className="flex items-center gap-6 border-b-2 border-surface-100 dark:border-surface-800 pb-8">
+                    <Network size={20} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors duration-700" />
+                    <h3 className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic leading-none">Social links</h3>
                  </div>
-                 <div className="space-y-10">
-                    <UplinkField icon={Twitter} label="X_SIGNAL" value={profile.social_links.twitter || ''} placeholder="https://x.com/..." 
+                 <div className="space-y-8">
+                    <UplinkField icon={Twitter} label="X (Twitter)" value={profile.social_links.twitter || ''} placeholder="https://x.com/..." 
                       onChange={(v) => setProfile(prev => ({ ...prev, social_links: { ...prev.social_links, twitter: v } }))} />
-                    <UplinkField icon={Linkedin} label="LINKEDIN_LATTICE" value={profile.social_links.linkedin || ''} placeholder="https://linkedin.com/..." 
+                    <UplinkField icon={Linkedin} label="LinkedIn" value={profile.social_links.linkedin || ''} placeholder="https://linkedin.com/..." 
                       onChange={(v) => setProfile(prev => ({ ...prev, social_links: { ...prev.social_links, linkedin: v } }))} />
-                    <UplinkField icon={Instagram} label="INSTAGRAM_VISUAL" value={profile.social_links.instagram || ''} placeholder="https://instagram.com/..." 
+                    <UplinkField icon={Instagram} label="Instagram" value={profile.social_links.instagram || ''} placeholder="https://instagram.com/..." 
                       onChange={(v) => setProfile(prev => ({ ...prev, social_links: { ...prev.social_links, instagram: v } }))} />
                  </div>
               </motion.div>
-           </div>
+           </aside>
 
            {/* Neural Synthesis Terminal */}
-           <div className="lg:col-span-2 space-y-16">
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                className={`${glassStyle} rounded-[6rem] p-24 border-white/5 relative overflow-hidden flex flex-col h-full shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]`}
+           <section className="lg:col-span-8 space-y-10">
+              <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+                className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[4rem] p-10 sm:p-14 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:shadow-[0_80px_150px_rgba(0,0,0,0.4)]"
               >
-                 <div className="absolute top-0 right-0 p-32 opacity-[0.01] pointer-events-none"><Terminal size={600} className="text-white" /></div>
+                 <div className="absolute top-0 right-0 p-24 opacity-[0.01] pointer-events-none group-hover:opacity-[0.03] transition-opacity duration-1000"><Terminal size={550} className="text-primary-500" /></div>
                  
-                 <div className="flex items-center gap-8 mb-20 relative z-10">
-                    <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl"><Target size={40} className="text-indigo-400 animate-pulse" /></div>
+                 <div className="flex items-center gap-8 mb-16 relative z-10">
+                    <div className="w-18 h-18 rounded-[1.8rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500"><Target size={36} className="text-primary-600 dark:text-primary-400 animate-pulse" /></div>
                     <div>
-                       <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Signature Terminal</h2>
-                       <p className="text-[12px] text-[var(--text-dim)] font-black uppercase tracking-[0.5em] italic leading-none">Calibrating neural bio-synthesis, operational parameters and mission hub coordinates.</p>
+                       <h2 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none mb-3">Account details</h2>
+                       <p className="text-[11px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.5em] italic leading-none">Your name, contact, and where Click reaches you.</p>
                     </div>
                  </div>
 
-                 <div className="space-y-16 relative z-10 flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                       <ConfigField icon={User} label="Identity Designation" value={profile.name} placeholder="OPERATIVE_NAME" 
+                 <div className="space-y-14 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                       <ConfigField icon={User} label="Full name" value={profile.name} placeholder="e.g. Jane Doe"
                          onChange={(v) => setProfile(prev => ({ ...prev, name: v }))} isLarge />
-                       <ConfigField icon={Mail} label="Signal Frequency" value={profile.email} placeholder="NODE@SIGNAL.CORE" 
+                       <ConfigField icon={Mail} label="Email" value={profile.email} placeholder="you@example.com"
                          onChange={(v) => setProfile(prev => ({ ...prev, email: v }))} isLocked />
                     </div>
 
+                    {/* Preferred display name — shown in dashboard greeting and anywhere a single label is rendered. */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                       <ConfigField
+                         icon={UserCheck}
+                         label="Display name"
+                         value={profile.username}
+                         placeholder="Shown on your dashboard greeting"
+                         onChange={(v) => setProfile(prev => ({ ...prev, username: v }))}
+                         isLarge
+                       />
+                       <div className="flex items-end pb-2 px-2">
+                         <p className="text-[11px] font-bold text-surface-400 dark:text-slate-500 italic uppercase tracking-[0.2em]">
+                           Optional. If empty, your first name is used. Max 40 chars.
+                         </p>
+                       </div>
+                    </div>
+
                     <div className="space-y-6">
-                       <label className="text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic pl-6">Neural Bio-Synthesis</label>
+                       <label className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-6">Bio</label>
                        <div className="group relative">
                           <textarea
                             value={profile.bio}
                             onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value.slice(0, 500) }))}
                             rows={8}
-                            placeholder="OUTLINE YOUR LOGIC PARADIGM AND CORE HEURISTICS..."
-                            className="w-full bg-black/60 border border-white/10 rounded-[4rem] px-12 py-12 text-[18px] font-black text-white uppercase italic tracking-[0.1em] focus:outline-none focus:border-indigo-500/40 transition-all placeholder:text-[var(--text-dim)] shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] leading-relaxed min-h-[300px] font-mono"
+                            placeholder="Tell people who you are and what you make."
+                            className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] px-10 py-10 text-lg font-black text-surface-900 dark:text-white uppercase italic tracking-[0.05em] focus:outline-none focus:border-primary-500/40 transition-all placeholder:text-surface-200 dark:placeholder:text-slate-900 shadow-inner leading-relaxed min-h-[280px]"
                             title="Bio"
                           />
-                          <div className="absolute top-8 right-8 pointer-events-none opacity-5 group-focus-within:opacity-20 transition-opacity">
-                             <Fingerprint size={120} className="text-white" />
+                          <div className="absolute top-10 right-10 pointer-events-none opacity-5 group-focus-within:opacity-20 transition-opacity duration-1000">
+                             <Fingerprint size={120} className="text-primary-500" />
                           </div>
                        </div>
-                       <div className="flex justify-between items-center px-10">
-                          <div className="flex items-center gap-4 text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic">
-                             <Activity size={12} className="text-indigo-500 animate-pulse" /> RECURSIVE_OUTPUT_BUFFER
+                       <div className="flex justify-between items-center px-8">
+                          <div className="flex items-center gap-4 text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic">
+                             <ActivitySquare size={14} className="text-primary-500 animate-pulse" /> Bio length
                           </div>
-                          <span className={`text-[12px] font-black italic tracking-widest ${profile.bio.length > 450 ? 'text-rose-500' : 'text-[var(--text-dim)]'}`}>
-                             {profile.bio.length} / 500_IDEATION_BITS
+                          <span className={`text-[11px] font-black italic tracking-widest ${profile.bio.length > 450 ? 'text-rose-500' : 'text-surface-300 dark:text-slate-800'}`}>
+                             {profile.bio.length} / 500 chars
                           </span>
                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                       <ConfigField icon={Globe} label="Matrix Hub (Website)" value={profile.website} placeholder="HTTPS://MATRIX.HUB/..." 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                       <ConfigField icon={Globe} label="Website" value={profile.website} placeholder="https://yoursite.com"
                          onChange={(v) => setProfile(prev => ({ ...prev, website: v }))} />
-                       <ConfigField icon={MapPin} label="Node Coordinates" value={profile.location} placeholder="CITY_CODE, SECTOR_ALPHA" 
+                       <ConfigField icon={MapPin} label="Location" value={profile.location} placeholder="City, Country"
                          onChange={(v) => setProfile(prev => ({ ...prev, location: v }))} />
                     </div>
 
                     <div className="space-y-6">
-                       <label className="text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic pl-6">Domain Expertise (Niche)</label>
+                       <label className="text-[12px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-6">Niche</label>
                        <div className="relative group/select">
                           <select
                             value={profile.niche}
                             onChange={(e) => setProfile(prev => ({ ...prev, niche: e.target.value }))}
-                            className="w-full bg-black/60 border border-white/10 rounded-[3rem] px-12 py-8 text-[15px] font-black text-indigo-400 uppercase italic tracking-[0.4em] focus:outline-none appearance-none cursor-pointer hover:bg-black/80 transition-all shadow-[inset_0_0_40px_rgba(0,0,0,0.5)]"
+                            className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-10 py-7 text-sm font-black text-primary-600 dark:text-primary-400 uppercase italic tracking-[0.4em] focus:outline-none appearance-none cursor-pointer hover:bg-surface-page transition-all shadow-inner backdrop-blur-xl"
                             title="Niche"
                           >
-                             <option value="" className="bg-black">SELECT_DOMAIN_EXPERTISE</option>
-                             <option value="health" className="bg-black">NEURAL_VITALITY (HEALTH)</option>
-                             <option value="finance" className="bg-black">CAPITAL_ALGORITHMS (FINANCE)</option>
-                             <option value="education" className="bg-black">COGNITIVE_UPLOAD (EDUCATION)</option>
-                             <option value="technology" className="bg-black">SYNTHETIC_LOGIC (TECH)</option>
-                             <option value="lifestyle" className="bg-black">LATTICE_LIVING (LIFESTYLE)</option>
-                             <option value="business" className="bg-black">ENTERPRISE_SWARM (BUSINESS)</option>
-                             <option value="entertainment" className="bg-black">KINETIC_FLOW (ENTERTAINMENT)</option>
-                             <option value="other" className="bg-black">NULL_CATEGORY_OVERRIDE</option>
+                             <option value="" className="bg-surface-card dark:bg-surface-900">Choose your niche</option>
+                             <option value="health" className="bg-surface-card dark:bg-surface-900">Health & wellness</option>
+                             <option value="finance" className="bg-surface-card dark:bg-surface-900">Finance</option>
+                             <option value="education" className="bg-surface-card dark:bg-surface-900">Education</option>
+                             <option value="technology" className="bg-surface-card dark:bg-surface-900">Technology</option>
+                             <option value="lifestyle" className="bg-surface-card dark:bg-surface-900">Lifestyle</option>
+                             <option value="business" className="bg-surface-card dark:bg-surface-900">Business</option>
+                             <option value="entertainment" className="bg-surface-card dark:bg-surface-900">Entertainment</option>
+                             <option value="other" className="bg-surface-card dark:bg-surface-900">Other</option>
                           </select>
-                          <div className="absolute right-12 top-1/2 -translate-y-1/2 text-indigo-400 rotate-90 pointer-events-none transition-transform group-hover/select:rotate-0"><ArrowRight size={28} /></div>
+                          <div className="absolute right-10 top-1/2 -translate-y-1/2 text-primary-500 rotate-90 pointer-events-none transition-transform group-hover/select:rotate-0"><ArrowRight size={24} /></div>
                        </div>
                     </div>
                  </div>
 
-                 <div className="pt-20 mt-20 border-t border-white/5 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-6 text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors duration-300">
-                       <Shield size={24} className="text-indigo-600/50" />
-                       <span className="text-[12px] font-black uppercase tracking-[0.4em] italic leading-none">Encryption_Standard: AES-256_SOVEREIGN</span>
+                 <div className="pt-14 mt-14 border-t-2 border-surface-100 dark:border-surface-800 flex flex-col sm:flex-row items-center justify-between gap-10 relative z-10">
+                    <div className="flex items-center gap-6 text-surface-400 dark:text-slate-600">
+                       <ShieldCheck size={28} className="text-primary-500/50" />
+                       <span className="text-[11px] font-black uppercase tracking-[0.4em] italic leading-none">Encrypted in transit and at rest.</span>
                     </div>
-                    <button onClick={saveProfile} disabled={saving}
-                      className="px-24 py-10 bg-white text-black font-black uppercase text-[18px] tracking-[0.6em] italic rounded-[4rem] hover:bg-indigo-600 hover:text-white transition-all duration-300 shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-10 group/lock relative overflow-hidden"
+                    <button type="button" onClick={saveProfile} disabled={saving}
+                      className="w-full sm:w-auto px-16 py-7 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[12px] tracking-[0.8em] italic rounded-[2.5rem] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_30px_80px_rgba(0,0,0,0.4)] active:scale-95 flex items-center justify-center gap-8 border-none group/lock"
                     >
-                      <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />
-                      <div className="relative z-10 flex items-center gap-10">
-                        {saving ? <RefreshCw className="animate-spin" size={32} /> : <Lock size={32} className="group-hover/lock:scale-110 transition-transform duration-300" />}
-                        {saving ? 'SYNCHRONIZING...' : 'LOCK_MISSION_IDENTITY'}
-                      </div>
+                      {saving ? <RefreshCw className="animate-spin" size={28} /> : <Lock size={28} className="group-hover/lock:rotate-12 transition-transform duration-500" />}
+                      {saving ? 'Saving…' : 'Save profile'}
                     </button>
                  </div>
               </motion.div>
-           </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                 {[
+                   { label: 'Uptime', val: '99.9%', icon: Activity, col: 'text-emerald-500' },
+                   { label: 'Account', val: 'Active', icon: UserCheck, col: 'text-primary-500' },
+                   { label: '2FA', val: 'On', icon: Shield, col: 'text-cyan-500' }
+                 ].map((s, i) => (
+                   <div key={i} className="bg-surface-card backdrop-blur-3xl p-8 rounded-[3rem] border border-surface-200 dark:border-surface-800 shadow-xl flex items-center gap-6 group hover:border-primary-500/30 transition-all duration-500">
+                      <div className="w-14 h-14 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center shadow-inner group-hover:rotate-12 transition-transform duration-700">
+                         <s.icon size={28} className={s.col} />
+                      </div>
+                      <div>
+                         <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mb-1">{s.label}</p>
+                         <p className="text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-tighter">{s.val}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </section>
         </div>
 
         <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
           select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         `}</style>
       </div>
@@ -331,18 +492,15 @@ export default function IdentityMatrixInterfacePage() {
 
 function UplinkField({ icon: Icon, label, value, placeholder, onChange }: { icon: any; label: string; value: string; placeholder: string; onChange: (v: string) => void }) {
   return (
-    <div className="space-y-5 group/uplink">
-       <div className="flex items-center gap-4 text-[var(--text-dim)] italic px-4 group-hover/uplink:text-indigo-400 transition-colors duration-700">
+    <div className="space-y-4 group/uplink">
+       <div className="flex items-center gap-4 text-surface-300 dark:text-slate-800 italic px-4 group-hover/uplink:text-primary-500 transition-colors duration-700">
           <Icon size={18} />
-          <span className="text-[11px] font-black uppercase tracking-[0.5em]">{label}</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.4em]">{label}</span>
        </div>
        <div className="relative">
           <input type="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} title={label}
-            className="w-full bg-black/40 border border-white/5 rounded-[2rem] px-10 py-6 text-[13px] font-mono text-indigo-400 focus:outline-none focus:border-indigo-500/30 transition-all placeholder:text-[var(--text-dim)] italic shadow-[inset_0_0_30px_rgba(0,0,0,0.5)]"
+            className="w-full bg-surface-page dark:bg-surface-950/60 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-5 text-xs font-black text-primary-600 dark:text-primary-400 focus:outline-none focus:border-primary-500/40 transition-all placeholder:text-surface-200 dark:placeholder:text-slate-900 italic shadow-inner"
           />
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/uplink:opacity-100 transition-opacity">
-             <Zap size={14} className="text-indigo-400 animate-pulse" />
-          </div>
        </div>
     </div>
   )
@@ -351,23 +509,23 @@ function UplinkField({ icon: Icon, label, value, placeholder, onChange }: { icon
 function ConfigField({ icon: Icon, label, value, placeholder, onChange, isLarge = false, isLocked = false }: { icon: any; label: string; value: string; placeholder: string; onChange: (v: string) => void; isLarge?: boolean; isLocked?: boolean }) {
   return (
     <div className="space-y-6 group/field">
-       <label className="text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic pl-8 group-hover/field:text-indigo-400/50 transition-colors duration-700">{label}</label>
-       <div className="relative group">
-          <Icon className={`absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-300 ${isLocked ? 'text-[var(--text-dim)] group-hover:text-amber-500/50' : 'text-[var(--text-dim)] group-focus-within:text-indigo-400 group-hover:scale-110'}`} size={isLarge ? 28 : 22} />
+       <label className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic pl-8 group-hover/field:text-primary-500 transition-colors duration-700">{label}</label>
+       <div className="relative">
+          <Icon className={`absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-500 ${isLocked ? 'text-surface-300 dark:text-slate-800' : 'text-surface-200 dark:text-slate-900 group-focus-within/field:text-primary-500 group-hover/field:scale-110'}`} size={isLarge ? 32 : 24} />
           <input
             type="text"
             value={value}
             onChange={(e) => !isLocked && onChange(e.target.value)}
             disabled={isLocked}
-            className={`w-full bg-black/60 border border-white/10 rounded-[3rem] pl-20 pr-10 py-8 transition-all duration-700 placeholder:text-[var(--text-dim)] italic shadow-[inset_0_0_50px_rgba(0,0,0,0.5)] font-black uppercase tracking-widest ${
+            className={`w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] pl-20 pr-10 py-8 transition-all duration-700 placeholder:text-surface-200 dark:placeholder:text-slate-900 italic shadow-inner font-black uppercase tracking-tighter ${
                isLarge ? 'text-3xl' : 'text-xl'
             } ${
-               isLocked ? 'opacity-40 text-[var(--text-dim)] cursor-not-allowed border-dashed' : 'text-white focus:outline-none focus:border-indigo-500/50'
+               isLocked ? 'opacity-40 text-surface-300 dark:text-slate-800 cursor-not-allowed border-dashed' : 'text-surface-900 dark:text-white focus:outline-none focus:border-primary-500/50'
             }`}
             placeholder={placeholder}
             title={label}
           />
-          {isLocked && <Lock size={16} className="absolute right-8 top-1/2 -translate-y-1/2 text-[var(--text-dim)]" />}
+          {isLocked && <Lock size={18} className="absolute right-10 top-1/2 -translate-y-1/2 text-surface-200 dark:text-slate-900" />}
        </div>
     </div>
   )

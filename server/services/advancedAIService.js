@@ -193,32 +193,45 @@ async function generateInteractiveContent(topic, type = 'poll') {
 }
 
 /**
- * Voice cloning placeholder (would integrate with ElevenLabs or similar)
- * @param {string} text - Text to convert to speech
- * @param {string} voiceId - Voice ID to use
- * @returns {Promise<Object>} Audio result
+ * Generate voiceover audio for text. Routes through aiVoiceoverService
+ * which picks the right TTS provider (ElevenLabs for cloned voiceId,
+ * OpenAI TTS-1 for stock voices). The previous implementation returned
+ * audioUrl:null and silently broke downstream consumers; this version
+ * delivers a real audio URL or throws a clear error.
+ *
+ * @param {string} text     The text to synthesise.
+ * @param {string} voiceId  Either an OpenAI stock voice name (alloy,
+ *                          echo, fable, onyx, nova, shimmer) OR an
+ *                          ElevenLabs voice_id for cloned voices.
+ * @param {object} options  Optional { hd, speed, userId, projectId }.
  */
-async function generateVoiceContent(text, voiceId = 'default') {
+async function generateVoiceContent(text, voiceId = 'alloy', options = {}) {
   try {
-    logger.info('Generating voice content', { textLength: text.length, voiceId });
+    logger.info('Generating voice content', { textLength: text?.length || 0, voiceId });
+    const { generateVoiceover } = require('./aiVoiceoverService');
 
-    // Placeholder - would integrate with ElevenLabs API or similar
-    // const elevenLabs = require('elevenlabs');
-    // const audio = await elevenLabs.generate({
-    //   voice: voiceId,
-    //   text: text,
-    // });
+    // Detect provider: OpenAI stock voices are the six known strings;
+    // anything else gets treated as an ElevenLabs voice_id.
+    const openaiVoices = new Set(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']);
+    const isOpenAIVoice = openaiVoices.has(String(voiceId).toLowerCase());
 
-    // For now, return placeholder
+    const result = await generateVoiceover(options.userId || 'system', text, {
+      voice: isOpenAIVoice ? voiceId : 'alloy',
+      voiceId: isOpenAIVoice ? null : voiceId,
+      speed: options.speed ?? 1.0,
+      hd: !!options.hd,
+      projectId: options.projectId,
+    });
+
     return {
       success: true,
-      message: 'Voice generation requires ElevenLabs API integration',
       text,
       voiceId,
-      audioUrl: null, // Would be the generated audio URL
+      audioUrl: result.url,
+      provider: result.provider,
     };
   } catch (error) {
-    logger.error('Error generating voice content', { error: error.message });
+    logger.error('Error generating voice content', { error: error.message, voiceId });
     throw error;
   }
 }

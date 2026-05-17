@@ -242,6 +242,7 @@ export default function AdvancedColorGrading({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setShowPreview(!showPreview)}
               className={`p-2 rounded-lg transition-colors ${
                 showPreview
@@ -252,6 +253,7 @@ export default function AdvancedColorGrading({
               {showPreview ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
             <button
+              type="button"
               onClick={resetSettings}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
               title="Reset all settings"
@@ -268,6 +270,7 @@ export default function AdvancedColorGrading({
               />
             </label>
             <button
+              type="button"
               onClick={exportSettings}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
               title="Export settings"
@@ -284,6 +287,7 @@ export default function AdvancedColorGrading({
           const Icon = tab.icon
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex-1 p-4 text-center transition-colors ${

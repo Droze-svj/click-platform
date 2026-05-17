@@ -1,5 +1,7 @@
 // Validate required environment variables on startup
 
+const logger = require('../utils/logger');
+
 const requiredEnvVars = [
   'MONGODB_URI',
   'JWT_SECRET'
@@ -16,52 +18,37 @@ function validateEnv() {
   const missing = [];
   const warnings = [];
 
-  // Check required variables
-  requiredEnvVars.forEach(varName => {
-    if (!process.env[varName]) {
-      missing.push(varName);
-    }
+  requiredEnvVars.forEach((varName) => {
+    if (!process.env[varName]) missing.push(varName);
   });
 
-  // Check optional variables
-  Object.keys(optionalEnvVars).forEach(varName => {
-    if (!process.env[varName]) {
-      warnings.push(`${varName}: ${optionalEnvVars[varName]}`);
-    }
+  Object.keys(optionalEnvVars).forEach((varName) => {
+    if (!process.env[varName]) warnings.push(`${varName}: ${optionalEnvVars[varName]}`);
   });
 
-  // Throw error if required vars are missing
   if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    missing.forEach(varName => {
-      console.error(`   - ${varName}`);
-    });
-    console.error('\nPlease set these variables in your .env file or Render.com environment variables');
+    logger.error('Missing required environment variables', { missing });
 
-    // In production, log but don't exit - let server start to show health check endpoint
+    // In production, log but don't exit — let server start to show the
+    // health check endpoint; the boot-level fatal check in index.js gates
+    // the truly critical deps.
     if (process.env.NODE_ENV === 'production') {
-      console.error('⚠️ Continuing in production mode. Server will start but may not function correctly.');
-      console.error('⚠️ Add missing variables to Render.com and redeploy.');
+      logger.warn('Continuing in production mode; some functionality will be degraded until missing vars are set');
     } else {
+      // eslint-disable-next-line no-process-exit
       process.exit(1);
     }
   }
 
-  // Show warnings for optional vars
   if (warnings.length > 0 && process.env.NODE_ENV !== 'test') {
-    console.warn('\n⚠️  Optional environment variables not set:');
-    warnings.forEach(warning => {
-      console.warn(`   - ${warning}`);
-    });
-    console.warn('');
+    logger.warn('Optional environment variables not set', { warnings });
   }
 
-  // Validate JWT_SECRET strength
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
-    console.warn('⚠️  JWT_SECRET should be at least 32 characters long for security');
+    logger.warn('JWT_SECRET should be at least 32 characters long for security');
   }
 
-  console.log('✅ Environment variables validated');
+  logger.info('Environment variables validated');
 }
 
 module.exports = validateEnv;

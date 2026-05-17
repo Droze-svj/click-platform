@@ -154,7 +154,7 @@ export default function SignalDiffusionLedgerPage() {
         {/* Diffusion Header */}
         <header className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
+              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard"
                 className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
                 <ArrowLeft size={36} />
               </button>
@@ -181,10 +181,10 @@ export default function SignalDiffusionLedgerPage() {
            </div>
 
            <div className="flex items-center gap-8">
-              <button onClick={loadSignals} className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group shadow-2xl active:scale-95 border-none bg-white/[0.02]`}>
-                 <RefreshCw size={36} className={`text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
-              </button>
-              <button onClick={() => setShowPreferences(!showPreferences)} 
+               <button type="button" onClick={loadSignals} title="Refresh Signals" aria-label="Refresh Signals" className={`${glassStyle} w-20 h-20 rounded-[2.2rem] flex items-center justify-center group shadow-2xl active:scale-95 border-none bg-white/[0.02]`}>
+                  <RefreshCw size={36} className={`text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} />
+               </button>
+              <button type="button" onClick={() => setShowPreferences(!showPreferences)} 
                 className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(0,0,0,0.4)] transition-all duration-300 flex items-center gap-8 italic border-2 active:scale-95 ${showPreferences ? 'bg-white text-black border-white' : 'bg-white/[0.02] border-white/10 text-[var(--text-dim)] hover:text-white'}`}
               >
                 <Sliders size={28} className={showPreferences ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} /> SENSOR_FUSION_CALIBRATION
@@ -228,7 +228,7 @@ export default function SignalDiffusionLedgerPage() {
                                      </div>
                                   </div>
                                </div>
-                               <button onClick={() => router.push(`/dashboard/tasks?open=${t.id}`)} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
+                               <button type="button" onClick={() => router.push(`/dashboard/tasks?open=${t.id}`)} title={`View task: ${t.title}`} aria-label={`View task: ${t.title}`} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-indigo-500/50 group-hover:bg-indigo-500/20"><Eye size={28}/></button>
                             </motion.div>
                          ))}
                          {liveStatus.tasks.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Ghost size={48} className="text-[var(--text-dim)] mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">NO_KINETIC_TRAJECTORIES_ARMED</p></div>}
@@ -240,7 +240,7 @@ export default function SignalDiffusionLedgerPage() {
                          {liveStatus.jobs.map(j => (
                             <motion.div whileHover={{ x: 30, scale: 1.02 }} key={j.id} className="flex items-center justify-between p-12 rounded-[4rem] bg-black/60 border-2 border-white/5 hover:border-purple-500/50 hover:bg-white/[0.04] transition-all duration-300 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
                                <div className="flex items-center gap-10">
-                                  <div className="w-16 h-16 rounded-[2rem] bg-purple-500/5 border-2 border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300"><RefreshCw size={32} className="text-purple-500 animate-spin" style={{ animationDuration: '6s' }} /></div>
+                                  <div className="w-16 h-16 rounded-[2rem] bg-purple-500/5 border-2 border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/10 transition-colors duration-300"><RefreshCw size={32} className="text-purple-500 animate-spin" style={{ '--spin-duration': '6s' } as any} /></div>
                                   <div>
                                      <p className="text-3xl font-black text-white uppercase italic tracking-tighter group-hover:text-purple-400 transition-colors duration-300 leading-none mb-3">{j.title}</p>
                                      <div className="flex items-center gap-4">
@@ -249,7 +249,7 @@ export default function SignalDiffusionLedgerPage() {
                                      </div>
                                   </div>
                                </div>
-                               <button onClick={() => router.push('/dashboard/jobs')} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
+                               <button type="button" onClick={() => router.push('/dashboard/jobs')} title={`View job: ${j.title}`} aria-label={`View job: ${j.title}`} className="w-16 h-16 rounded-[2.2rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-300 shadow-2xl active:scale-95 group-hover:border-purple-500/50 group-hover:bg-purple-500/20"><Cpu size={28}/></button>
                             </motion.div>
                          ))}
                          {liveStatus.jobs.length === 0 && <div className="p-16 border-4 border-dashed border-white/5 rounded-[4.5rem] text-center"><Wind size={48} className="text-[var(--text-dim)] mx-auto mb-6 opacity-20" /><p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">ASYNC_LATTICE_QUIESCENT</p></div>}
@@ -281,14 +281,14 @@ export default function SignalDiffusionLedgerPage() {
                     <Search className="text-[var(--text-dim)] group-focus-within/search:text-indigo-400 transition-all duration-300" size={40} />
                     <div className="w-1 h-10 bg-white/5 rounded-full" />
                  </div>
-                 <input type="text" placeholder="SCAN_GLOBAL_SIGNAL_MATRIX..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                 <input type="text" aria-label="Scan Global Signal Matrix" placeholder="SCAN_GLOBAL_SIGNAL_MATRIX..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                    className="w-full bg-black/80 border-4 border-white/5 rounded-[5.5rem] pl-32 pr-16 py-12 text-5xl font-black text-white uppercase italic tracking-tighter focus:outline-none focus:border-indigo-500/50 transition-all duration-300 shadow-inner placeholder:text-[var(--text-dim)] font-mono"
                  />
               </div>
               
               <nav className="flex items-center gap-8 bg-black/60 p-6 rounded-[4.5rem] border-2 border-white/5 shadow-inner">
                  {(['all', 'unread', 'read'] as const).map(f => (
-                   <button key={f} onClick={() => setFilter(f)}
+                   <button type="button" key={f} onClick={() => setFilter(f)}
                      className={`px-16 py-8 rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic ${filter === f ? 'bg-white text-black shadow-2xl scale-110' : 'bg-transparent text-[var(--text-dim)] hover:text-white hover:bg-white/5'}`}
                    >
                      {f.toUpperCase()}
@@ -296,7 +296,7 @@ export default function SignalDiffusionLedgerPage() {
                  ))}
                  <div className="w-[2px] h-20 bg-white/10 mx-6 rounded-full" />
                  <div className="relative group/sector">
-                    <select value={category} onChange={(e) => setCategory(e.target.value)}
+                    <select aria-label="Signal Sector Category" value={category} onChange={(e) => setCategory(e.target.value)}
                       className="appearance-none bg-black/80 border-2 border-white/10 px-20 py-8 rounded-[4rem] text-[14px] font-black uppercase tracking-[0.8em] text-indigo-400 focus:outline-none cursor-pointer italic pr-32 shadow-inner hover:border-indigo-500/50 transition-all"
                     >
                       <option value="">ALL_SIGNAL_SECTORS</option>
@@ -327,18 +327,18 @@ export default function SignalDiffusionLedgerPage() {
                       </div>
                    </div>
                    <div className="flex-1 flex items-center justify-center gap-12 px-16">
-                      <button onClick={async () => { setBusy(true); await Promise.all(Array.from(selectedNotifications).map(id => apiPut(`/notifications/${id}/read`, {}))); await loadSignals(); setSelectedNotifications(new Set()); setBusy(false) }}
-                        className="px-20 py-10 bg-white text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 group/ack"
+                      <button type="button" disabled={busy} onClick={async () => { if (busy) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiPut(`/notifications/${id}/read`, {}).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
+                        className="px-20 py-10 bg-white text-black rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-wait group/ack"
                       >
                          <CheckCircle2 size={40} className="group-hover/ack:scale-125 transition-transform" /> SYNCHRONIZE_SIGNALS
                       </button>
-                      <button onClick={async () => { if (!confirm('CRITICAL: PURGE_SELECTED_TELEMETRY?_THIS_ACTION_IS_PERMANENT.')) return; setBusy(true); await Promise.all(Array.from(selectedNotifications).map(id => apiDelete(`/notifications/${id}`))); await loadSignals(); setSelectedNotifications(new Set()); setBusy(false) }}
-                        className="px-20 py-10 bg-rose-600 text-white rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-rose-500 transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 group/purge"
+                      <button type="button" disabled={busy} onClick={async () => { if (busy) return; if (!confirm('CRITICAL: PURGE_SELECTED_TELEMETRY?_THIS_ACTION_IS_PERMANENT.')) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiDelete(`/notifications/${id}`).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
+                        className="px-20 py-10 bg-rose-600 text-white rounded-[5rem] text-[18px] font-black uppercase tracking-[0.6em] hover:bg-rose-500 transition-all duration-300 italic shadow-2xl flex items-center gap-8 border-none scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-wait group/purge"
                       >
                          <Trash2 size={40} className="group-hover/purge:rotate-12 transition-transform" /> PURGE_LEDGER_DATA
                       </button>
                    </div>
-                   <button onClick={() => setSelectedNotifications(new Set())} className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-rose-500/20 transition-all duration-300 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
+                   <button type="button" onClick={() => setSelectedNotifications(new Set())} title="Cancel selection" aria-label="Cancel selection" className="w-24 h-24 rounded-[3rem] bg-white/5 border-2 border-white/10 text-[var(--text-dim)] hover:text-white hover:bg-rose-500/20 transition-all duration-300 flex items-center justify-center border-none mr-12 hover:scale-110 active:scale-90 shadow-2xl"><X size={48}/></button>
                 </motion.div>
              )}
            </AnimatePresence>
@@ -365,6 +365,7 @@ export default function SignalDiffusionLedgerPage() {
                         <div className="flex items-start gap-16 relative z-10">
                            <div className="pt-8">
                               <input type="checkbox" checked={selectedNotifications.has(n._id)}
+                                aria-label={`Select signal: ${n.title}`}
                                 onChange={() => setSelectedNotifications(prev => { const nS = new Set(prev); nS.has(n._id) ? nS.delete(n._id) : nS.add(n._id); return nS })}
                                 className="w-14 h-14 rounded-[1.8rem] bg-black/80 border-2 border-white/10 text-indigo-500 focus:ring-16 focus:ring-indigo-500/20 cursor-pointer appearance-none checked:bg-indigo-500 checked:border-white transition-all shadow-inner active:scale-90"
                               />
@@ -417,13 +418,14 @@ export default function SignalDiffusionLedgerPage() {
                                  )}
                                  <div className="flex items-center gap-10 ml-auto opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
                                     {!n.read && (
-                                      <button onClick={() => { apiPut(`/notifications/${n._id}/read`, {}); loadSignals() }} 
+                                      <button type="button" onClick={() => { apiPut(`/notifications/${n._id}/read`, {}); loadSignals() }} 
                                         className="px-16 py-8 bg-indigo-500 text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] italic shadow-2xl hover:bg-white hover:text-indigo-600 transition-all duration-300 border-none scale-105 active:scale-95"
                                       >
                                         RESONANCE_ACK
                                       </button>
                                     )}
-                                    <button onClick={() => { if (confirm('PURGE_PERMANENT_SIGNAL?')) { apiDelete(`/notifications/${n._id}`); loadSignals() } }} 
+                                    <button type="button" onClick={() => { if (confirm('PURGE_PERMANENT_SIGNAL?')) { apiDelete(`/notifications/${n._id}`); loadSignals() } }} 
+                                      title="Purge signal" aria-label="Purge signal"
                                       className="w-20 h-20 bg-rose-600/10 border-2 border-rose-500/20 text-rose-950 hover:text-rose-400 hover:bg-rose-600/20 rounded-[2.5rem] flex items-center justify-center transition-all duration-700 active:scale-75 shadow-2xl border-none"
                                     >
                                       <Trash2 size={36}/>
@@ -441,7 +443,7 @@ export default function SignalDiffusionLedgerPage() {
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
           .custom-scrollbar::-webkit-scrollbar { width: 4px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
           .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }

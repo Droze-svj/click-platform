@@ -47,6 +47,30 @@ export const languageNames: Record<SupportedLanguage, string> = {
   'th':      'ไทย',
 };
 
+/** English label for each language, paired with the native name in the
+ *  picker UI ("Deutsch — German"). Helps non-native speakers locate their
+ *  target language without guessing scripts they can't read. */
+export const languageEnglishNames: Record<SupportedLanguage, string> = {
+  'en':      'English',
+  'es':      'Spanish',
+  'fr':      'French',
+  'de':      'German',
+  'pt':      'Portuguese',
+  'it':      'Italian',
+  'ja':      'Japanese',
+  'ko':      'Korean',
+  'zh-Hans': 'Chinese (Simplified)',
+  'ar':      'Arabic',
+  'hi':      'Hindi',
+  'ru':      'Russian',
+  'tr':      'Turkish',
+  'id':      'Indonesian',
+  'vi':      'Vietnamese',
+  'pl':      'Polish',
+  'nl':      'Dutch',
+  'th':      'Thai',
+};
+
 export const languageFlags: Record<SupportedLanguage, string> = {
   'en':      '🇺🇸',
   'es':      '🇪🇸',

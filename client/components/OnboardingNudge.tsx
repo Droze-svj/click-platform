@@ -75,7 +75,7 @@ export default function OnboardingNudge() {
           Start tour <ArrowRight size={12} />
         </Link>
         <button
-          type="button"
+         type="button"
           onClick={dismiss}
           aria-label="Dismiss onboarding nudge"
           className="w-9 h-9 rounded-xl bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-heavy)] transition-all"

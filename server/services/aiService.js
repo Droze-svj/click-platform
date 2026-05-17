@@ -1,6 +1,6 @@
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-const { buildSystemPrompt, buildCompactGuidance } = require('./marketingKnowledge');
+const { buildSystemPrompt, buildCompactGuidance, getTopPerformingPlaybook } = require('./marketingKnowledge');
 let Sentry = null;
 try {
   Sentry = require('@sentry/node');
@@ -8,7 +8,7 @@ try {
   // Optional dependency in some local environments
 }
 
-function withAgentSpan(agentName, fn, model = 'gemini-1.5-flash') {
+function withAgentSpan(agentName, fn, model = 'gemini-2.5-flash') {
   return async (...args) => {
     if (!Sentry || typeof Sentry.startSpan !== 'function') {
       return fn(...args);
@@ -28,37 +28,42 @@ function withAgentSpan(agentName, fn, model = 'gemini-1.5-flash') {
   };
 }
 
-/**
- * 🛡️ Sovereign JSON Purifier
- * Guarantees that Gemini output is stripped of markdown wrapping (```json) before parsing.
- * Prevents fatal syntax crashes across all AI Agents.
- */
-function safeJsonParse(rawString, fallback = {}) {
-  try {
-    if (!rawString) return fallback;
-    let cleaned = rawString.trim();
-    if (cleaned.includes('```')) {
-      const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (match && match[1]) cleaned = match[1].trim();
-    }
-    return JSON.parse(cleaned);
-  } catch (error) {
-    logger.error('Sovereign JSON Purifier Failed', { error: error.message, snippet: String(rawString).substring(0, 100) });
-    return fallback;
-  }
-}
+const { safeJsonParse, applyClicheShield } = require('../utils/aiHelper');
 
 // Generate captions for video clips
-async function generateCaptions(text, niche, platform = 'tiktok', language = 'en') {
+// `userId` (optional) — when provided, we pull the creator's top-performing
+// caption styles + hook angles from their post history and bias the prompt
+// toward what's worked. Cold-start users (no history yet) get pure-playbook
+// generation; the learning kicks in after ~3 posts have synced analytics.
+async function generateCaptions(text, niche, platform = 'tiktok', language = 'en', userId = null) {
   if (!geminiConfigured) {
     logger.warn('Google AI API key not configured, using fallback caption');
     return `Check this out! 🔥 #${niche} #viral #trending`;
   }
 
   try {
-    const system = buildSystemPrompt({ persona: 'caption-writer', niche, platform, stage: 'script', language });
+    const topPerformers = userId
+      ? await getTopPerformingPlaybook(userId, niche, platform).catch(() => null)
+      : null;
+
+    // Pull the user's most recent captions on this platform so the model
+    // can be told NOT to echo them. Cold-start users get an empty list.
+    const recentCaptions = userId
+      ? await fetchRecentCaptions(userId, platform, 8).catch(() => [])
+      : [];
+
+    const system = buildSystemPrompt({ persona: 'caption-writer', niche, platform, stage: 'script', language, topPerformers });
+    const dedupeBlock = recentCaptions.length > 0
+      ? `\n── Do not repeat these recent captions ──\n${recentCaptions.map((c, i) => `${i + 1}. ${c.slice(0, 200)}`).join('\n')}\nWrite something with a meaningfully different hook, angle, or sentence structure than ALL of the above.\n`
+      : '';
+
     const prompt = `${system}
 
+── Grounding rules ──
+- Only reference content described in "Content context" below. Do not invent statistics, dates, prices, brand names, study citations, or numerical claims (views, follower counts, percentages).
+- If the content context doesn't provide a fact, leave it out — don't guess.
+- Stay neutral on gender/race/age/body unless the content context explicitly calls for one.
+${dedupeBlock}
 ── Task ──
 Write ONE caption for the post below. Constraints:
 - Hook-first; first 4 words must stop the scroll.
@@ -71,11 +76,73 @@ Content context: ${text}
 Return only the caption text — no preamble, no explanation.`;
 
     const content = await geminiGenerate(prompt, { maxTokens: 200 });
-    return content || `Check this out! 🔥 #${niche} #viral #trending`;
+    const caption = content || `Check this out! 🔥 #${niche} #viral #trending`;
+
+    // Post-generation dedupe — if the model still echoes a recent caption
+    // (Jaccard similarity > 0.7 on word sets), re-roll once with a
+    // stronger "say something different" nudge. Single retry; we don't
+    // want to spend tokens forever chasing perfect novelty.
+    if (recentCaptions.length > 0 && isTooSimilar(caption, recentCaptions, 0.7)) {
+      logger.info('Caption too similar to recent; re-rolling once', { niche, platform });
+      const retryPrompt = `${prompt}\n\nThe first attempt was too similar to caption #${1 + recentCaptions.findIndex((c) => isTooSimilar(caption, [c], 0.7))}. Rewrite with a completely different opening verb and a different angle from the playbook.`;
+      const retry = await geminiGenerate(retryPrompt, { maxTokens: 200 }).catch(() => null);
+      if (retry && !isTooSimilar(retry, recentCaptions, 0.7)) return retry;
+    }
+    return caption;
   } catch (error) {
     logger.error('Caption generation error', { error: error.message, niche });
     return `Check this out! 🔥 #${niche} #viral #trending`;
   }
+}
+
+/**
+ * Fetch the last N captions this user posted on a platform. Used to
+ * suppress repetition when generating the next one. Returns plain strings.
+ */
+async function fetchRecentCaptions(userId, platform, limit = 8) {
+  try {
+    const ScheduledPost = require('../models/ScheduledPost');
+    const rows = await ScheduledPost.find({
+      userId,
+      platform,
+      $or: [
+        { status: 'posted' },
+        { status: 'published' },
+        { status: 'publishing' },
+      ],
+    })
+      .sort({ postedAt: -1, scheduledTime: -1, createdAt: -1 })
+      .limit(limit)
+      .select('content.text')
+      .lean();
+    return rows.map((r) => r?.content?.text).filter((t) => typeof t === 'string' && t.trim().length > 0);
+  } catch (err) {
+    // Mongo ObjectId cast errors are expected for Supabase UUID userIds —
+    // just return empty so the dedupe path no-ops for those users.
+    return [];
+  }
+}
+
+/**
+ * Jaccard similarity on lowercased word sets. Threshold-based dedupe is
+ * good enough for catching obvious re-rolls of the same caption without
+ * blocking legitimately similar variants (e.g. the same hook with
+ * different hashtags).
+ */
+function isTooSimilar(candidate, others, threshold = 0.7) {
+  const norm = (s) => new Set(String(s).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean));
+  const a = norm(candidate);
+  if (a.size === 0) return false;
+  for (const other of others) {
+    const b = norm(other);
+    if (b.size === 0) continue;
+    let inter = 0;
+    for (const w of a) if (b.has(w)) inter += 1;
+    const union = a.size + b.size - inter;
+    const jaccard = union === 0 ? 0 : inter / union;
+    if (jaccard >= threshold) return true;
+  }
+  return false;
 }
 
 // Detect highlights in transcript
@@ -154,15 +221,18 @@ async function generateSocialContent(text, niche, platforms = ['twitter', 'linke
     const content = {};
 
     for (const platform of platforms) {
-      const prompt = `Transform this ${niche} content into an engaging ${platform} post:
-- Platform-specific format and style
-- Include relevant hashtags
-- Optimize for engagement
-- Keep it authentic and valuable
+      const prompt = `You are a social media growth engineer. 
+Transform this ${niche} content into a HIGH-CONVERSION ${platform} post.
+
+CREATIVE RULES:
+- Use a platform-native opening that stops the scroll.
+- Do NOT be generic. Use a unique angle from the content.
+- Include a specific call-to-value (not just "like this").
+- Match the ${niche} expertise level.
 
 Original content: ${text}`;
 
-      const response = await geminiGenerate(prompt, { maxTokens: 300 });
+      const response = await geminiGenerate(prompt, { temperature: 0.9, maxTokens: 400 });
       content[platform] = {
         text: response || `Check out this ${niche} content!`,
         hashtags: extractHashtags(response || ''),
@@ -221,21 +291,28 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
   }
 
   try {
-    const prompt = `Generate ${count} high-velocity viral content ideas for the ${niche} niche about "${topic}".
+    const prompt = `Generate ${count} viral content ideas for the ${niche} niche about "${topic}".
     Strategic Framework: ${JSON.stringify(framework)}
     Market Trends: ${marketTrends.trendingTopics.join(', ')}
     Generative Seed: ${varianceSeed}
-    
+
+    Grounding rules:
+    - Do NOT invent statistics, study citations, dollar figures, dates, brand names, or named experts. If the topic doesn't supply a fact, leave it out.
+    - "potential" is a RELATIVE score (0-100) derived from how strongly the idea matches the framework's proven patterns — it is NOT a real-world view-count prediction.
+    - "velocityMultiplier" is a RELATIVE growth-rate estimate, not a guarantee.
+    - Stay neutral on gender / race / age / body type unless the topic explicitly calls for one.
+    - All ${count} ideas must be meaningfully distinct from each other (different hook angle AND different format) — no near-duplicates.
+
     Return a JSON object with an "ideas" array. Each idea has:
     - title (punchy hook title)
     - description (brief execution format)
     - hook (the first 3 seconds)
     - platform (suggested: tiktok, instagram, youtube, twitter, linkedin)
-    - potential (0-100 score)
-    - velocityMultiplier (growth prediction)
-    - reason (why it will go viral in this niche)
+    - potential (relative 0-100 score per the rules above)
+    - velocityMultiplier (relative growth estimate, not a guarantee)
+    - reason (why it matches the framework — be specific about WHICH pattern)
     - originalityScore (0-100)
-    
+
     Return only valid JSON.`;
 
     const response = await geminiGenerate(prompt, { maxTokens: 1200, temperature: 0.9 });
@@ -255,31 +332,6 @@ async function generateViralIdeas(topic, niche, count = 3, options = {}) {
     logger.error('Idea generation error', { error: error.message, niche, topic });
     return [];
   }
-}
-
-/**
- * The Cliche Shield (Phase 12)
- * Detects and replaces repetitive marketing jargon with high-impact originality.
- */
-function applyClicheShield(text) {
-  const cliches = {
-    'game-changer': 'paradigm shift',
-    'level up': 'strategic evolution',
-    'cutting-edge': 'pioneer-grade',
-    'seamlessly': 'intuitively',
-    'one-stop shop': 'comprehensive ecosystem',
-    'revolutionary': 'disruptive',
-    'vibrant': 'dynamic',
-    'powerful': 'high-velocity',
-    'ultimate': 'definitive',
-  };
-
-  let cleaned = text;
-  for (const [cliche, replacement] of Object.entries(cliches)) {
-    const regex = new RegExp(`\\b${cliche}\\b`, 'gi');
-    cleaned = cleaned.replace(regex, replacement);
-  }
-  return cleaned;
 }
 
 /**
@@ -448,62 +500,71 @@ Niche: ${niche}`;
  */
 async function generateDiagnosticMatrix(postData, niche = 'general') {
   const startTime = process.hrtime();
-  
+
   if (!geminiConfigured) {
+    // Honest degraded response — `integrityVerified: false` lets the UI
+    // suppress or label this as "AI offline" instead of presenting it as
+    // a real diagnostic. Plain language only: the previous fallback
+    // ("Spectral signal detected", "Manifest kinetic visual spikes")
+    // looked like real insight when it was actually a hardcoded mock.
     return {
       success: true,
-      headline: "Spectral signal detected. Neural affinity mapping suggested.",
-      action: "Manifest kinetic visual spikes in frames 0-4 to counteract diffraction.",
-      opportunity: "Deploy additional edit nodes to pulse higher spectral views.",
-      potencyScore: 85,
-      integrityVerified: false
+      headline: 'Performance diagnostic unavailable — AI engine offline.',
+      action: 'Reconnect or retry in a moment.',
+      opportunity: 'Once the engine is back online, re-run the diagnostic for real insight.',
+      potencyScore: null,
+      signalGaps: [],
+      integrityVerified: false,
     };
   }
 
   try {
-    const prompt = `Analyze this social media post data and generate a "Sovereign Heuristic Matrix" diagnostic:
-    
+    const prompt = `Analyze this social media post's performance and return a diagnostic in plain English.
+
     Data: ${JSON.stringify(postData)}
     Niche: ${niche}
-    
-    Return a JSON object with:
-    - headline (A high-fidelity, slightly philosophical AI insight about the performance)
-    - action (A specific "Protocol Termination" or "Audit" advice to improve the post)
-    - opportunity (A growth "Heuristic Expansion" tip)
-    - potencyScore (0-100 score based on engagement/reach ratio)
-    - signalGaps (array of 3 items like "Frame 0-2 Diffraction", "Sonic Saturation Drop", etc.)
 
-    Use high-fidelity, "Spectral" terminology (Resonance, Diffraction, Neural Potency, Kinetic Rhythm).
+    Grounding rules:
+    - Only describe what the data actually shows. Do not invent numbers, retention curves, or audience demographics that aren't in the data.
+    - Use plain language. Avoid pseudoscientific jargon ("spectral", "diffraction", "neural potency", "kinetic rhythm"). Say what literally happened ("retention dropped at the 8-second mark", not "Sonic Saturation Drop").
+    - If the data is insufficient for a confident diagnosis (e.g. <100 views or <1 hour old), say so in the headline and leave signalGaps empty.
+
+    Return a JSON object with:
+    - headline (one-sentence summary of how the post performed, grounded in the data)
+    - action (one specific change the creator could make next time)
+    - opportunity (one growth angle suggested by the data)
+    - potencyScore (0-100, an engagement-to-reach quality score)
+    - signalGaps (array of specific moments where performance dropped — e.g. ["Retention dropped sharply between 0:08 and 0:12", "CTR on caption was below niche median"]. Empty array if data is too thin to identify gaps.)
+
     Return only valid JSON.`;
 
-    const response = await geminiGenerate(prompt, { maxTokens: 1000, temperature: 0.7 });
+    const response = await geminiGenerate(prompt, { maxTokens: 1000, temperature: 0.5 });
     const result = safeJsonParse(response, {});
-    
-    // Performance Tracking (Phase 13 Monitoring)
+
     const [seconds, nanoseconds] = process.hrtime(startTime);
     const latencyMs = Math.round((seconds * 1000) + (nanoseconds / 1000000));
-    
-    logger.info('Spectral Audit: Diagnostic Matrix synthesized', {
+
+    logger.info('Diagnostic Matrix synthesized', {
       postId: postData.id,
       latencyMs,
       potencyScore: result.potencyScore,
-      niche
+      niche,
     });
 
     return {
       ...result,
-      headline: applyClicheShield(result.headline || "Heuristic synthesis complete."),
-      action: applyClicheShield(result.action || "Audit node performance."),
-      opportunity: applyClicheShield(result.opportunity || "Expand operational reach."),
+      headline: applyClicheShield(result.headline || 'Diagnostic complete.'),
+      action: applyClicheShield(result.action || 'Review the post performance against the niche playbook.'),
+      opportunity: applyClicheShield(result.opportunity || 'Look for patterns across your top-performing posts.'),
       integrityVerified: true,
-      performance: { latencyMs }
+      performance: { latencyMs },
     };
   } catch (error) {
-    logger.error('Diagnostic Matrix synthesis failure', { 
+    logger.error('Diagnostic Matrix synthesis failure', {
       error: error.message,
-      postId: postData.id 
+      postId: postData.id,
     });
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, integrityVerified: false };
   }
 }
 

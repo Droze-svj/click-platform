@@ -53,25 +53,23 @@ interface PmProject {
   aiPredictionConfidence?: number | null
 }
 
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-3xl transition-all duration-300'
-
 const statusColor: Record<string, string> = {
-  planning: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20 shadow-[0_0_30px_rgba(99,102,241,0.3)]',
-  active: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.3)]',
-  on_hold: 'text-amber-400 bg-amber-500/10 border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.3)]',
-  completed: 'text-sky-400 bg-sky-500/10 border-sky-500/20 shadow-[0_0_30px_rgba(14,165,233,0.3)]',
-  archived: 'text-[var(--text-dim)] bg-white/5 border-white/10'
+  planning: 'text-indigo-600 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-900/20 dark:border-indigo-800/50',
+  active: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800/50',
+  on_hold: 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800/50',
+  completed: 'text-primary-600 bg-primary-50 border-primary-200 dark:text-primary-400 dark:bg-primary-900/20 dark:border-primary-800/50',
+  archived: 'text-surface-500 bg-surface-50 border-surface-200 dark:text-surface-400 dark:bg-surface-800/50 dark:border-surface-700/50'
 }
 
 const statusLabel: Record<string, string> = {
-  planning: 'STRAT_INIT',
-  active: 'KINETIC_FLOW',
-  on_hold: 'STATIC_STASIS',
-  completed: 'COGNITIVE_DONE',
-  archived: 'DATA_VAULT'
+  planning: 'Planning',
+  active: 'Active',
+  on_hold: 'On Hold',
+  completed: 'Completed',
+  archived: 'Archived'
 }
 
-export default function KineticWorkspaceHubPage() {
+export default function ProjectsPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [projects, setProjects] = useState<PmProject[]>([])
@@ -98,7 +96,7 @@ export default function KineticWorkspaceHubPage() {
   const [showSwarmHUD, setShowSwarmHUD] = useState(false)
   const [swarmHUDTask, setSwarmHUDTask] = useState('')
 
-  const loadLattice = useCallback(async () => {
+  const loadProjects = useCallback(async () => {
     try {
       const res: any = await apiGet('/pm/projects')
       setProjects(res?.data?.projects ?? res?.projects ?? [])
@@ -111,8 +109,8 @@ export default function KineticWorkspaceHubPage() {
 
   useEffect(() => {
     if (!user) return
-    loadLattice()
-  }, [user, loadLattice])
+    loadProjects()
+  }, [user, loadProjects])
 
   const loadProjectDashboard = useCallback(async (id: string) => {
     setLoadingDashboard(true)
@@ -138,18 +136,20 @@ export default function KineticWorkspaceHubPage() {
     setCreating(true)
     try {
       await apiPost('/pm/projects', { name: newName.trim(), description: newDescription.trim(), status: 'planning' })
-      setShowCreate(false); setNewName(''); setNewDescription(''); await loadLattice()
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: '✓ CLUSTERS_INITIATED', type: 'success' } }))
+      setShowCreate(false); setNewName(''); setNewDescription(''); await loadProjects()
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: '✓ MISSION_INITIALIZED: PROJECT_NODE_DEPLOYED', type: 'success' } }))
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'INIT_FAIL: NODE_REJECTION', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_CREATE', type: 'error' } }))
     } finally { setCreating(false) }
   }
 
   const completeMilestone = async (projectId: string, milestoneId: string) => {
     try {
       await apiPost(`/pm/projects/${projectId}/milestones/${milestoneId}/complete`, {})
-      loadProjectDashboard(projectId); await loadLattice()
-    } catch {}
+      loadProjectDashboard(projectId); await loadProjects()
+    } catch {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_COMPLETE_MILESTONE', type: 'error' } }))
+    }
   }
 
   const addMilestone = async () => {
@@ -159,8 +159,10 @@ export default function KineticWorkspaceHubPage() {
       await apiPost(`/pm/projects/${selectedProject._id}/milestones`, {
         title: newMilestoneTitle.trim(), estimatedDays: newMilestoneDays, dependencyMilestoneIds: []
       })
-      setShowAddMilestone(false); setNewMilestoneTitle(''); setNewMilestoneDays(1); loadProjectDashboard(selectedProject._id); await loadLattice()
-    } catch {} finally { setAddingMilestone(false) }
+      setShowAddMilestone(false); setNewMilestoneTitle(''); setNewMilestoneDays(1); loadProjectDashboard(selectedProject._id); await loadProjects()
+    } catch {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_ADD_MILESTONE', type: 'error' } }))
+    } finally { setAddingMilestone(false) }
   }
 
   const saveMilestone = async () => {
@@ -169,350 +171,308 @@ export default function KineticWorkspaceHubPage() {
       await apiPut(`/pm/projects/${dashboard._id}/milestones/${editingMilestone._id}`, {
         title: editTitle.trim(), dueDate: editDueDate ? new Date(editDueDate).toISOString() : null, estimatedDays: editEstimatedDays, dependencyMilestoneIds: []
       })
-      setEditingMilestone(null); loadProjectDashboard(dashboard._id); await loadLattice()
-    } catch {}
+      setEditingMilestone(null); loadProjectDashboard(dashboard._id); await loadProjects()
+    } catch {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: FAILED_TO_SAVE_MILESTONE', type: 'error' } }))
+    }
   }
 
   const updateProjectStatus = async (status: string) => {
     if (!dashboard?._id) return
     setSavingProject(true)
     try {
-      await apiPut(`/pm/projects/${dashboard._id}`, { status }); setProjectStatus(status); loadProjectDashboard(dashboard._id); await loadLattice()
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: '✓ PHASE_SHIFT_SYNCHRONIZED', type: 'success' } }))
+      await apiPut(`/pm/projects/${dashboard._id}`, { status }); setProjectStatus(status); loadProjectDashboard(dashboard._id); await loadProjects()
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: '✓ LEDGER_UPDATED: STATUS_SYNCHRONIZED', type: 'success' } }))
     } catch {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'SYNC_FAIL: STATUS_STASIS', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'WRITE_ERR: UPDATE_FAILURE', type: 'error' } }))
     } finally { setSavingProject(false) }
   }
 
   const runPredict = async () => {
     if (!selectedProject?._id) return
-    setPredicting(true); setSwarmHUDTask('Quantum Trajectory Forecasting'); setShowSwarmHUD(true)
+    setPredicting(true); setSwarmHUDTask('Analyzing Project Trajectory'); setShowSwarmHUD(true)
     try {
       await apiPost(`/pm/projects/${selectedProject._id}/predict`, {})
       loadProjectDashboard(selectedProject._id)
-    } catch {} finally { setPredicting(false) }
+    } catch {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'PREDICT_ERR: AI_ANALYSIS_FAILED', type: 'error' } }))
+    } finally { setPredicting(false) }
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen font-inter">
-        <GitBranch size={64} className="text-indigo-500 animate-spin mb-8" />
-        <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] animate-pulse italic">Synchronizing Cluster Matrix...</span>
+     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
+        <GitBranch size={80} className="text-primary-500 animate-spin mb-12" />
+        <span className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Lattice...</span>
      </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1700px] mx-auto space-y-24 font-inter">
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1700px] mx-auto space-y-12 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <GitBranch size={1200} className="text-white absolute -bottom-40 -left-60 rotate-12 blur-[1px]" />
-           <Shield size={1000} className="text-white absolute -top-80 -right-60 rotate-[32deg] blur-[2px]" />
-        </div>
-
         <SwarmConsensusHUD isVisible={showSwarmHUD} taskName={swarmHUDTask} onComplete={() => setShowSwarmHUD(false)} />
 
-        {/* Cluster Header HUD */}
-        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
-           <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-20 h-20 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all duration-700 hover:scale-110 active:scale-90 shadow-3xl hover:border-indigo-500/50 backdrop-blur-3xl group">
-                <ArrowLeft size={36} className="group-hover:-translate-x-2 transition-transform duration-700" />
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-8 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
+              <button type="button" onClick={() => router.push('/dashboard')} aria-label="Back to Dashboard" title="Back to Dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+                <ArrowLeft size={24} />
               </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-[0_40px_150px_rgba(99,102,241,0.3)] relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Shield size={48} className="text-indigo-400 relative z-10 group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+              <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
+                <FolderKanban size={40} className="text-primary-600 dark:text-primary-400" />
               </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-4">
-                   <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.8em] text-indigo-400 italic leading-none">Nexus Engine v24.4.2</span>
-                   </div>
-                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
-                       <Radio size={14} className="text-indigo-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-[var(--text-dim)] tracking-widest uppercase italic leading-none">{projects.length} ACTIVE_CLUSTERS</span>
-                   </div>
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
+                      Campaign Hub
+                    </span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
+                        <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                        {projects.length} active
+                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Projects</h1>
-                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Group videos, scripts, and posts under a single brief — campaigns, client work, content series. Click learns the brief once and applies it across every asset inside.</p>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Projects</h1>
               </div>
            </div>
 
-           <button onClick={() => setShowCreate(true)}
-             className="px-16 py-8 bg-white text-black rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_60px_150px_rgba(255,255,255,0.1)] hover:bg-indigo-600 hover:text-white transition-all duration-300 flex items-center gap-8 italic active:scale-95 group relative overflow-hidden outline-none border-none"
+           <button type="button" onClick={() => setShowCreate(true)}
+             className="px-10 py-5 bg-surface-900 dark:bg-white text-white dark:text-black rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center gap-4 active:scale-95 border-none"
            >
-             <div className="absolute inset-x-0 bottom-0 h-2 bg-indigo-300 scale-x-0 group-hover:scale-x-100 transition-transform" />
-             <Plus size={32} className="group-hover:rotate-90 transition-transform duration-300" /> INITIATE_CLUSTER
+             <Plus size={22} /> Initialize Mission
            </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative z-10">
-           {/* Cluster Directory Matrix */}
-           <div className="lg:col-span-3 space-y-12">
-              <div className="flex items-center justify-between px-8 border-l-4 border-indigo-500/30 ml-2">
-                 <span className="text-[13px] font-black text-indigo-400 uppercase tracking-[0.6em] italic leading-none">Operational_Nodes</span>
-                 <Activity size={20} className="text-[var(--text-dim)] animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
+           {/* Sidebar - Project List */}
+           <aside className="lg:col-span-3 space-y-8">
+              <div className="flex items-center justify-between px-6">
+                 <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Project Matrix</span>
+                 <Activity size={18} className="text-primary-500 animate-pulse" />
               </div>
-              <div className="space-y-8 max-h-[1200px] overflow-y-auto pr-6 custom-scrollbar">
+              <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
                  {projects.map((p) => (
                    <motion.button
-                     whileHover={{ x: 15, scale: 1.02 }}
                      key={p._id}
                      onClick={() => setSelectedProject(p)}
-                     className={`w-full text-left rounded-[4.5rem] p-12 border-2 transition-all duration-300 group relative overflow-hidden shadow-3xl ${
+                     className={`w-full text-left rounded-[2.5rem] p-6 border-2 transition-all duration-500 group relative overflow-hidden shadow-xl ${
                        selectedProject?._id === p._id
-                         ? 'bg-indigo-500/10 border-indigo-500 shadow-[0_60px_150px_rgba(99,102,241,0.2)]'
-                         : 'bg-black/40 border-white/5 hover:border-indigo-500/30 hover:bg-white/[0.04]'
+                         ? 'bg-primary-500/5 border-primary-500 shadow-[0_20px_50px_rgba(99,102,241,0.1)]'
+                         : 'bg-surface-card border-surface-100 dark:border-surface-800 hover:border-primary-500/40 hover:bg-surface-page'
                      }`}
                    >
-                     <div className="absolute top-0 right-0 p-12 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-300 pointer-events-none group-hover:rotate-12 group-hover:scale-150"><Target size={150} className="text-white" /></div>
-                     <div className="flex justify-between items-start mb-8 relative z-10">
-                        <span className={`text-[24px] font-black tracking-tighter uppercase italic truncate pr-4 transition-colors duration-300 ${selectedProject?._id === p._id ? 'text-white underline decoration-indigo-500 decoration-4 underline-offset-8' : 'text-slate-700 group-hover:text-white'}`}>{p.name}</span>
-                        <div className={`px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest border-2 shadow-inner ${statusColor[p.status]}`}>
-                           {statusLabel[p.status]}
+                     <div className="flex justify-between items-start mb-6">
+                        <span className="text-xl font-black tracking-tight truncate pr-4 text-surface-900 dark:text-white uppercase italic leading-none">{p.name}</span>
+                        <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border italic leading-none ${statusColor[p.status]}`}>
+                           {statusLabel[p.status].toUpperCase()}
                         </div>
                      </div>
-                     <div className="flex items-center gap-10 relative z-10">
-                        <div className="flex items-center gap-3 text-[11px] font-black text-[var(--text-dim)] uppercase italic bg-black/40 px-6 py-2 rounded-full border border-white/5 shadow-inner">
-                           <Activity size={16} className={selectedProject?._id === p._id ? 'text-indigo-400 animate-pulse' : ''} /> {p.progress}% SAT
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">
+                           <Activity size={14} className={selectedProject?._id === p._id ? 'text-primary-500' : ''} /> {p.progress}%
                         </div>
-                        <div className="flex items-center gap-3 text-[11px] font-black text-[var(--text-dim)] uppercase italic">
-                           <Layers size={16} /> {(p.milestones?.length ?? 0)} NODES
+                        <div className="flex items-center gap-2 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">
+                           <Layers size={14} /> {p.milestones?.length || 0}
                         </div>
                      </div>
                    </motion.button>
                  ))}
                  {projects.length === 0 && (
-                   <div className="py-24 text-center border-4 border-dashed border-white/5 rounded-[4.5rem] opacity-20">
-                      <p className="text-[14px] font-black text-white uppercase tracking-[0.4em] italic">NO_CLUSTERS_MAPPED</p>
+                   <div className="py-24 text-center border-2 border-dashed border-surface-100 dark:border-surface-800 rounded-[2.5rem] opacity-20">
+                      <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.4em] italic">No missions logged</p>
                    </div>
                  )}
               </div>
-           </div>
+           </aside>
 
-           {/* Nexus Area */}
-           <div className="lg:col-span-9">
+           {/* Main Content - Project Dashboard */}
+           <main className="lg:col-span-9">
               <AnimatePresence mode="wait">
                  {!selectedProject ? (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6.5rem] p-32 text-center flex flex-col items-center justify-center min-h-[850px] border-2 border-white/5 shadow-[0_80px_200px_rgba(0,0,0,0.8)] relative group overflow-hidden`}>
-                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                       <div className="w-48 h-48 bg-black/60 border-2 border-white/10 rounded-[5.5rem] flex items-center justify-center mb-16 shadow-3xl relative overflow-hidden group-hover:border-indigo-500/50 transition-all duration-700">
-                          <Terminal size={80} className="text-[var(--text-dim)] group-hover:text-indigo-400 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
+                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-16 text-center flex flex-col items-center justify-center min-h-[750px] shadow-2xl relative overflow-hidden group">
+                       <div className="w-32 h-32 bg-surface-page dark:bg-surface-950 rounded-3xl flex items-center justify-center mb-10 shadow-inner border border-surface-100 dark:border-surface-800 transition-transform duration-700 group-hover:rotate-12">
+                          <Terminal size={64} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors" />
                        </div>
-                       <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-10 leading-none drop-shadow-2xl">Nexus Standby</h3>
-                       <p className="text-[18px] text-slate-700 font-black uppercase tracking-[0.8em] max-w-2xl leading-relaxed italic border-t-2 border-white/5 pt-12">Synchronize with an operational cluster node to begin mission coordination and temporal trajectory mapping.</p>
+                       <h3 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none mb-6">Awaiting Assignment</h3>
+                       <p className="text-surface-500 dark:text-slate-400 text-sm font-medium max-w-md italic uppercase tracking-tight leading-relaxed">Choose a project from the matrix to view its neural dashboard, milestones, and AI-predicted outcomes.</p>
                     </motion.div>
                  ) : loadingDashboard ? (
-                    <div className={`${glassStyle} rounded-[6.5rem] p-32 flex flex-col items-center justify-center gap-16 min-h-[850px] border-2 border-white/5`}>
-                       <div className="relative w-40 h-40">
-                          <div className="absolute inset-0 border-[12px] border-indigo-500/10 rounded-full" />
-                          <div className="absolute inset-0 border-[12px] border-t-indigo-500 rounded-full animate-spin shadow-[0_0_100px_rgba(99,102,241,0.6)]" />
-                       </div>
-                       <span className="text-[16px] font-black uppercase tracking-[1.2em] text-indigo-400 animate-pulse italic">MAPPING_NEURAL_MATRIX...</span>
+                    <div className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-16 flex flex-col items-center justify-center gap-8 min-h-[750px] shadow-2xl">
+                       <RefreshCw className="w-16 h-16 text-primary-500 animate-spin" />
+                       <span className="text-[11px] font-black text-surface-400 uppercase tracking-[0.6em] animate-pulse italic">Syncing Project Node...</span>
                     </div>
                  ) : dashboard ? (
-                    <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className="space-y-20">
-                       {/* Mission Profile HUD */}
-                       <div className={`${glassStyle} rounded-[7rem] p-24 border-2 border-white/10 relative overflow-hidden shadow-[0_100px_250px_rgba(0,0,0,1)] group/hud`}>
-                          <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover/hud:opacity-[0.1] transition-opacity duration-300"><Activity size={600} className="text-indigo-400" /></div>
-                          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-indigo-500/10 blur-[150px] rounded-full opacity-50" />
-                          
-                          <div className="flex flex-col xl:flex-row justify-between items-start gap-20 relative z-10">
-                             <div className="max-w-4xl space-y-12">
-                                <div className="flex items-center gap-10">
-                                   <div className={`px-10 py-4 rounded-3xl text-[12px] font-black uppercase tracking-[0.4em] border-2 shadow-2xl backdrop-blur-3xl ${statusColor[dashboard.status]}`}>
-                                      PHASE: {statusLabel[dashboard.status]}
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
+                       {/* Project Summary */}
+                       <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-10 sm:p-14 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)]">
+                          <div className="flex flex-col xl:flex-row justify-between items-start gap-12 relative z-10">
+                             <div className="max-w-4xl space-y-8">
+                                <div className="flex items-center gap-4">
+                                   <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm italic leading-none ${statusColor[dashboard.status]}`}>
+                                      {statusLabel[dashboard.status].toUpperCase()}
                                    </div>
-                                   <div className="flex items-center gap-5 text-[12px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic bg-black/60 px-10 py-4 rounded-3xl border-2 border-white/5 shadow-inner backdrop-blur-3xl">
-                                      <Database size={18} className="text-indigo-500" /> NODE_ID: {dashboard._id.slice(-16).toUpperCase()}
+                                   <div className="flex items-center gap-3 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-surface-page dark:bg-surface-950 px-4 py-1.5 rounded-xl border border-surface-100 dark:border-surface-800 italic shadow-inner">
+                                      ID: {dashboard._id.slice(-8).toUpperCase()}
                                    </div>
                                 </div>
-                                <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none pr-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover/hud:text-indigo-400 transition-colors duration-300">{dashboard.name}</h2>
-                                <p className="text-[24px] text-[var(--text-dim)] font-bold uppercase tracking-tight italic leading-relaxed max-w-3xl border-l-8 border-indigo-500/40 pl-12 py-4">{dashboard.description || 'MISSION_BRIEF_UNDEFINED'}</p>
+                                <h2 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none group-hover:text-primary-500 transition-colors duration-500">{dashboard.name}</h2>
+                                <p className="text-lg font-bold text-surface-500 dark:text-slate-400 leading-relaxed italic uppercase tracking-tight max-w-3xl">{dashboard.description || 'MISSION_PARAMETERS_UNDEFINED'}</p>
                              </div>
 
-                             <div className="flex flex-col gap-12 w-full xl:w-auto">
-                                <div className="space-y-6">
-                                   <label className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic leading-none ml-10">CLUSTER_CALIBRATION</label>
-                                   <div className="relative group/select">
-                                      <select
-                                        value={projectStatus || dashboard.status}
-                                        onChange={(e) => updateProjectStatus(e.target.value)}
-                                        disabled={savingProject}
-                                        className="w-full xl:w-[450px] px-14 py-10 bg-black/80 border-2 border-indigo-500/40 rounded-[3.5rem] text-[15px] font-black text-indigo-400 uppercase tracking-[0.4em] focus:outline-none hover:bg-black/95 transition-all cursor-pointer appearance-none italic shadow-[0_0_50px_rgba(99,102,241,0.1)] hover:border-indigo-500 backdrop-blur-3xl"
-                                      >
-                                        <option value="planning" className="bg-slate-700">PHASE: STRAT_INIT</option>
-                                        <option value="active" className="bg-slate-700">PHASE: KINETIC_FLOW</option>
-                                        <option value="on_hold" className="bg-slate-700">PHASE: STATIC_STASIS</option>
-                                        <option value="completed" className="bg-slate-700">PHASE: COGNITIVE_DONE</option>
-                                      </select>
-                                      <ChevronDown size={32} className="absolute right-12 top-1/2 -translate-y-1/2 text-indigo-400 pointer-events-none group-hover/select:translate-y-2 transition-transform duration-700" />
-                                   </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-10">
-                                   <button title="Project Settings" className="p-10 rounded-[3rem] bg-white/[0.03] border-2 border-white/5 text-[var(--text-dim)] hover:text-white transition-all duration-700 shadow-3xl active:scale-95 hover:border-white/20 backdrop-blur-3xl group"><Settings2 size={40} className="group-hover:rotate-90 transition-transform duration-300" /></button>
-                                   <button title="Cluster Archive" className="p-10 rounded-[3rem] bg-rose-500/5 border-2 border-rose-500/10 text-rose-950 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-700 shadow-3xl active:scale-95 hover:border-rose-500 backdrop-blur-3xl"><Trash2 size={40}/></button>
+                             <div className="flex flex-col gap-4 w-full xl:w-80">
+                                <label className="text-[11px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic pl-2 leading-none">Operational Status</label>
+                                <div className="relative group/select">
+                                   <select aria-label="Operational Status"
+                                     value={projectStatus || dashboard.status}
+                                     onChange={(e) => updateProjectStatus(e.target.value)}
+                                     disabled={savingProject}
+                                     className="w-full px-8 py-5 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none transition-all cursor-pointer appearance-none shadow-inner backdrop-blur-xl group-hover/select:bg-surface-card"
+                                   >
+                                     <option value="planning">PLANNING</option>
+                                     <option value="active">ACTIVE_STATED</option>
+                                     <option value="on_hold">LATENCY_HOLD</option>
+                                     <option value="completed">MISSION_COMPLETE</option>
+                                   </select>
+                                   <ChevronDown size={22} className="absolute right-8 top-1/2 -translate-y-1/2 text-surface-400 group-hover/select:text-primary-500 pointer-events-none transition-colors" />
                                 </div>
                              </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mt-32 relative z-10">
-                             <div className="bg-black/60 border-2 border-white/5 rounded-[5rem] p-16 space-y-12 group/stat hover:border-indigo-500/50 transition-all duration-300 shadow-inner backdrop-blur-3xl">
-                                <div className="flex justify-between items-center px-4">
-                                   <p className="text-[15px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">Cluster_Saturation</p>
-                                   <Activity size={28} className="text-[var(--text-dim)] group-hover/stat:text-indigo-400 transition-colors duration-300 animate-pulse" />
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+                             <div className="bg-surface-page/50 dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-8 space-y-6 shadow-inner backdrop-blur-xl">
+                                <div className="flex justify-between items-center">
+                                   <p className="text-[10px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] italic leading-none">Neural Progress</p>
+                                   <Activity size={20} className="text-primary-500" />
                                 </div>
-                                <div className="flex items-end gap-8 px-4">
-                                   <span className="text-6xl font-black text-white italic tabular-nums leading-none tracking-tighter drop-shadow-2xl">{dashboard.progress}%</span>
-                                   <span className="text-[13px] font-black text-[var(--text-dim)] uppercase mb-4 tracking-[0.4em] italic">NEURAL_SAT</span>
+                                <div className="flex items-end gap-3">
+                                   <span className="text-5xl font-black text-surface-900 dark:text-white tabular-nums italic leading-none">{dashboard.progress}%</span>
                                 </div>
-                                <div className="h-4 w-full bg-black/60 rounded-full overflow-hidden shadow-inner border-2 border-white/5 mx-auto">
-                                   <motion.div initial={{ width: 0 }} animate={{ width: `${dashboard.progress}%` }} transition={{ duration: 2, ease: "easeOut" }} className="h-full bg-gradient-to-r from-indigo-700 via-indigo-500 to-indigo-400 shadow-[0_0_40px_rgba(99,102,241,1)]" />
+                                <div className="h-2 w-full bg-surface-card dark:bg-surface-800 rounded-full overflow-hidden shadow-inner border border-surface-100 dark:border-surface-800">
+                                   <motion.div initial={{ width: 0 }} animate={{ width: `${dashboard.progress}%` }} transition={{ duration: 2, type: 'spring' }} className="h-full bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
                                 </div>
                              </div>
 
-                             <div className="bg-black/60 border-2 border-white/5 rounded-[5rem] p-16 space-y-12 group/stat hover:border-emerald-500/50 transition-all duration-300 shadow-inner backdrop-blur-3xl">
-                                <div className="flex justify-between items-center px-4">
-                                   <p className="text-[15px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">Quantum_Forecast</p>
-                                   <Radio size={28} className="text-[var(--text-dim)] group-hover/stat:text-emerald-400 transition-colors animate-pulse duration-300" />
+                             <div className="bg-surface-page/50 dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] p-8 space-y-6 shadow-inner backdrop-blur-xl">
+                                <div className="flex justify-between items-center">
+                                   <p className="text-[10px] text-surface-400 dark:text-slate-500 font-black uppercase tracking-[0.4em] italic leading-none">AI Forecast</p>
+                                   <RefreshCw size={20} className="text-emerald-500" />
                                 </div>
                                 {dashboard.aiPredictedCompletionDate ? (
-                                  <div className="space-y-10 px-4">
-                                     <span className="text-6xl font-black text-emerald-400 italic tabular-nums leading-none tracking-tighter uppercase block drop-shadow-2xl">{new Date(dashboard.aiPredictedCompletionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
-                                     <div className="flex items-center gap-8">
-                                        <div className="flex-1 h-3 bg-black/60 rounded-full overflow-hidden border-2 border-white/5">
-                                           <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.7)]" style={{ width: `${(dashboard.aiPredictionConfidence ?? 0) * 100}%` }} />
-                                        </div>
-                                        <span className="text-[13px] font-black text-emerald-500 uppercase italic whitespace-nowrap tabular-nums tracking-widest leading-none">{Math.round((dashboard.aiPredictionConfidence ?? 0) * 100)}% CONSENSUS</span>
-                                     </div>
+                                  <div className="space-y-3">
+                                     <span className="text-3xl font-black text-emerald-500 dark:text-emerald-400 uppercase italic tracking-tighter leading-none block">{new Date(dashboard.aiPredictedCompletionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}</span>
+                                     <span className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] italic leading-none">{Math.round((dashboard.aiPredictionConfidence ?? 0) * 100)}% CONFIDENCE_STABILITY</span>
                                   </div>
                                 ) : (
-                                  <div className="h-40 flex items-center justify-center border-4 border-dashed border-white/5 rounded-[4rem]">
-                                     <p className="text-[18px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic">SIGNAL_OFFLINE</p>
+                                  <div className="py-4 text-center opacity-20">
+                                     <p className="text-[11px] font-black uppercase tracking-[0.4em] italic">NULL_PREDICTION</p>
                                   </div>
                                 )}
                              </div>
 
-                             <motion.button
-                               whileHover={{ scale: 1.05, y: -15 }}
-                               whileTap={{ scale: 0.95 }}
+                             <button
                                onClick={runPredict}
                                disabled={predicting}
-                               className="rounded-[5rem] bg-white border-8 border-transparent hover:border-indigo-500/30 text-black p-16 flex flex-col items-center justify-center gap-10 shadow-[0_80px_200px_rgba(255,255,255,0.1)] hover:shadow-indigo-500/50 transition-all duration-300 disabled:opacity-30 group/btn relative overflow-hidden"
+                               className="bg-primary-600 dark:bg-white text-white dark:text-black p-8 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:bg-primary-500 dark:hover:bg-primary-100 hover:text-white dark:hover:text-primary-600 active:scale-95 border-none group/predict"
                              >
-                                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 via-transparent to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-                                <div className="w-24 h-24 rounded-[3rem] bg-black border-2 border-white/20 flex items-center justify-center shadow-3xl group-hover/btn:rotate-[360deg] transition-transform duration-500 relative z-10">
-                                   <Zap size={48} className={`text-white ${predicting ? 'animate-pulse' : ''}`} />
-                                </div>
-                                <span className="text-[22px] font-black uppercase tracking-[0.6em] italic leading-none underline decoration-indigo-500 decoration-8 underline-offset-[12px] relative z-10">{predicting ? 'CALIBRATING...' : 'RUN_FORECAST'}</span>
-                             </motion.button>
+                                <Zap size={40} className={`transition-all duration-500 ${predicting ? 'animate-pulse' : 'group-hover:scale-125'}`} />
+                                <span className="text-[11px] font-black uppercase tracking-[0.5em] italic leading-none">{predicting ? 'CALIBRATING...' : 'RUN_FORECAST'}</span>
+                             </button>
                           </div>
-                       </div>
+                       </section>
 
-                       {/* Objective Mapping Terminal */}
-                       <section className={`${glassStyle} rounded-[7rem] p-24 border-2 border-white/5 shadow-[0_80px_200px_rgba(0,0,0,0.8)] relative overflow-hidden group/terminal`}>
-                          <div className="absolute top-0 right-0 p-32 opacity-[0.03] pointer-events-none group-hover/terminal:opacity-[0.08] transition-opacity duration-300"><Terminal size={500} className="text-white" /></div>
-                          <div className="flex flex-col xl:flex-row justify-between items-center mb-24 gap-12 relative z-10">
-                             <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl group-hover/terminal:scale-110 transition-transform duration-300"><Target size={48} className="text-indigo-400" /></div>
+                       {/* Milestones / Objectives */}
+                       <section className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-10 sm:p-14 shadow-2xl">
+                          <header className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-8 pb-10 border-b border-surface-100 dark:border-surface-800">
+                             <div className="flex items-center gap-6">
+                                <div className="w-16 h-16 bg-primary-500/10 border-2 border-primary-500/20 rounded-[1.8rem] flex items-center justify-center shadow-lg">
+                                   <Target size={32} className="text-primary-600 dark:text-primary-400" />
+                                </div>
                                 <div>
-                                   <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Objective Terminal</h3>
-                                   <p className="text-[14px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">Stratified mission nodes and temporal trajectory lattices.</p>
+                                   <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Objectives Matrix</h3>
+                                   <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Track key results and mission milestones.</p>
                                 </div>
                              </div>
 
-                             <div className="flex items-center gap-8 p-5 bg-black/60 rounded-[4.5rem] border-2 border-white/10 shadow-inner backdrop-blur-3xl">
-                                <button onClick={() => setViewMode('list')} className={`px-14 py-8 rounded-[3.5rem] text-[13px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic border-none outline-none ${viewMode === 'list' ? 'bg-white text-black shadow-3xl scale-110' : 'text-[var(--text-dim)] hover:text-white hover:bg-white/5'}`}>LATTICE_VIEW</button>
-                                <button onClick={() => setViewMode('gantt')} className={`px-14 py-8 rounded-[3.5rem] text-[13px] font-black uppercase tracking-[0.6em] transition-all duration-300 italic border-none outline-none flex items-center gap-8 ${viewMode === 'gantt' ? 'bg-white text-black shadow-3xl scale-110' : 'text-[var(--text-dim)] hover:text-white hover:bg-white/5'}`}><BarChart3 size={28} /> TEMPORAL_MESH</button>
-                                <div className="w-[2px] h-10 bg-white/5 mx-2" />
-                                <button onClick={() => setShowAddMilestone(true)} className="px-14 py-8 text-indigo-400 text-[13px] font-black uppercase tracking-[0.6em] italic hover:text-white transition-all group/add border-none outline-none bg-transparent flex items-center gap-6"><Plus size={28} className="group-hover:rotate-90 transition-transform duration-300" /> NODE_INJECT</button>
+                             <div className="flex items-center p-2 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[1.8rem] shadow-inner backdrop-blur-xl">
+                                <button type="button" onClick={() => setViewMode('list')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] italic transition-all duration-500 ${viewMode === 'list' ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>Matrix</button>
+                                <button type="button" onClick={() => setViewMode('gantt')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] italic transition-all duration-500 flex items-center gap-3 ${viewMode === 'gantt' ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-xl scale-110' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white'}`}>Chronology</button>
+                                <div className="w-[2px] h-6 bg-surface-100 dark:bg-surface-800 mx-3 rounded-full" />
+                                <button type="button" onClick={() => setShowAddMilestone(true)} className="px-6 py-3 text-primary-500 hover:text-primary-600 text-[10px] font-black uppercase tracking-[0.3em] italic hover:scale-110 transition-all flex items-center gap-3 border-none bg-transparent active:scale-90"><Plus size={20} /> APPEND</button>
                              </div>
-                          </div>
+                          </header>
 
-                          <div className="relative z-10 min-h-[500px]">
+                          <div className="space-y-6 min-h-[450px]">
                              {!dashboard.milestones?.length ? (
-                                <div className="py-72 text-center flex flex-col items-center justify-center opacity-[0.05] gap-20">
-                                   <div className="w-64 h-64 rounded-[7rem] bg-white/5 border-2 border-white/10 flex items-center justify-center shadow-inner"><Cpu size={150} className="text-white animate-pulse" /></div>
-                                   <div className="space-y-8">
-                                      <h4 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Objective Void</h4>
-                                      <p className="text-[22px] font-black text-[var(--text-dim)] uppercase tracking-[1.2em] italic leading-none">No directive nodes mapped to this cluster cycle.</p>
-                                   </div>
+                                <div className="py-32 text-center opacity-10">
+                                   <Cpu size={80} className="mx-auto mb-8" />
+                                   <p className="text-xl font-black uppercase tracking-[0.8em] italic">NULL_OBJECTIVE_SET</p>
                                 </div>
                              ) : viewMode === 'gantt' ? (
-                                <div className="space-y-16 pr-12 overflow-x-auto custom-scrollbar pb-16 pt-8">
+                                <div className="space-y-8 overflow-x-auto pb-8 custom-scrollbar pt-4">
                                    {dashboard.milestones.map((m) => {
-                                     const totalDays = Math.max(1, dashboard.criticalPathTotalDays ?? 1)
-                                     const startPct = ((m.criticalPathInfo?.earliestStart ?? 0) / totalDays) * 100
-                                     const widthPct = Math.max(5, (((m.criticalPathInfo?.earliestFinish ?? 0) - (m.criticalPathInfo?.earliestStart ?? 0)) / totalDays) * 100)
+                                     const totalDays = Math.max(1, dashboard.criticalPathTotalDays || 1)
+                                     const startPct = ((m.criticalPathInfo?.earliestStart || 0) / totalDays) * 100
+                                     const widthPct = Math.max(15, (((m.criticalPathInfo?.earliestFinish || 0) - (m.criticalPathInfo?.earliestStart || 0)) / totalDays) * 100)
                                      return (
-                                       <div key={m._id} className="flex items-center gap-24 group min-w-[1400px]">
-                                         <div className="w-96 truncate flex items-center gap-10">
-                                           <div className={`w-5 h-5 rounded-full shadow-3xl ${m.completedAt ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,1)]' : m.criticalPathInfo?.isOnCriticalPath ? 'bg-indigo-500 animate-pulse shadow-[0_0_25px_rgba(99,102,241,1)]' : 'bg-slate-700 border-2 border-white/5 shadow-inner'}`} />
-                                           <span className={`text-[26px] font-black italic uppercase tracking-tighter transition-colors duration-300 group-hover:text-indigo-400 ${m.completedAt ? 'text-[var(--text-dim)]' : 'text-white'}`}>{m.title}</span>
+                                       <div key={m._id} className="flex items-center gap-10 min-w-[900px] group/row">
+                                         <div className="w-80 truncate flex items-center gap-4">
+                                           <div className={`w-3 h-3 rounded-full shadow-lg ${m.completedAt ? 'bg-emerald-500' : m.criticalPathInfo?.isOnCriticalPath ? 'bg-primary-500' : 'bg-surface-200 dark:bg-slate-800'}`} />
+                                           <span className={`text-base font-black italic uppercase tracking-tight ${m.completedAt ? 'text-surface-300 dark:text-slate-800 line-through' : 'text-surface-900 dark:text-white group-hover/row:text-primary-500 transition-colors'}`}>{m.title}</span>
                                          </div>
-                                         <div className="flex-1 h-20 bg-black/60 border-2 border-white/5 rounded-[3rem] relative overflow-hidden group-hover:bg-black/95 transition-all duration-700 shadow-inner backdrop-blur-3xl">
+                                         <div className="flex-1 h-8 bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl relative overflow-hidden shadow-inner">
                                            <motion.div 
                                              initial={{ scaleX: 0 }} 
                                              animate={{ scaleX: 1 }}
-                                             transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
-                                             className={`absolute h-12 top-4 rounded-3xl ${m.criticalPathInfo?.isOnCriticalPath ? 'bg-indigo-600 shadow-[0_0_60px_rgba(99,102,241,0.8)]' : 'bg-slate-800 border-2 border-white/5'} ${m.completedAt ? 'opacity-20 blur-[2px]' : ''}`}
+                                             transition={{ duration: 1.5, type: 'spring' }}
+                                             className={`absolute h-3 top-2.5 rounded-full ${m.criticalPathInfo?.isOnCriticalPath ? 'bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]' : 'bg-surface-300 dark:bg-slate-800'} ${m.completedAt ? 'opacity-20' : ''}`}
                                              style={{ left: `${startPct}%`, width: `${Math.min(widthPct, 100 - startPct)}%`, originX: 0 }}
                                            />
                                          </div>
-                                         <div className="w-40 text-right">
-                                            <span className="text-[16px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] tabular-nums italic">{m.estimatedDays || 0} CYC</span>
-                                         </div>
+                                         <div className="w-24 text-right text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{m.estimatedDays || 0}d_GAP</div>
                                        </div>
                                      )
                                    })}
                                 </div>
                              ) : (
-                                <div className="space-y-10">
+                                <div className="space-y-4">
                                    {dashboard.milestones.map((m) => (
                                      <motion.div
                                        layout
                                        key={m._id}
-                                       className={`flex items-center gap-16 p-14 rounded-[6rem] border-2 transition-all duration-300 relative overflow-hidden group shadow-3xl backdrop-blur-3xl ${
+                                       className={`flex items-center gap-8 p-6 rounded-[2.5rem] border-2 transition-all duration-500 group shadow-xl ${
                                          m.criticalPathInfo?.isOnCriticalPath
-                                           ? 'border-indigo-500/50 bg-indigo-500/[0.05] shadow-[0_0_100px_rgba(99,102,241,0.1)]'
-                                           : 'border-white/5 bg-black/60 hover:bg-white/[0.05] hover:border-indigo-500/30'
-                                       } ${m.completedAt ? 'opacity-40 grayscale-[0.8] hover:grayscale-0' : ''}`}
+                                           ? 'border-primary-500/30 bg-primary-500/[0.03] dark:bg-primary-500/[0.01]'
+                                           : 'border-surface-100 bg-surface-page/50 dark:border-surface-800 dark:bg-surface-950/30'
+                                       } ${m.completedAt ? 'opacity-40 grayscale scale-[0.98]' : 'hover:scale-[1.01] hover:border-primary-500/20'}`}
                                      >
-                                        <div className="absolute top-0 right-0 p-24 opacity-0 group-hover:opacity-[0.05] transition-opacity duration-500 pointer-events-none -rot-12 scale-150"><Target size={300} className="text-white" /></div>
-                                        
-                                        <button onClick={() => !m.completedAt && completeMilestone(dashboard._id, m._id)} className="shrink-0 relative outline-none border-none bg-transparent">
-                                           <div className={`w-28 h-28 rounded-[3.5rem] flex items-center justify-center border-4 transition-all duration-[1.5s] shadow-3xl ${m.completedAt ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500' : 'bg-black/90 border-white/10 text-[var(--text-dim)] group-hover:text-indigo-400 group-hover:border-indigo-500/70 group-hover:scale-110 group-hover:rotate-12'}`}>
-                                              {m.completedAt ? <CheckCircle2 size={56} className="drop-shadow-[0_0_20px_rgba(16,185,129,0.8)]" /> : <Circle size={56} />}
+                                        <button type="button" onClick={() => !m.completedAt && completeMilestone(dashboard._id, m._id)} className="shrink-0 active:scale-90 transition-transform outline-none border-none bg-transparent">
+                                           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 ${m.completedAt ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-surface-card dark:bg-surface-900 border-surface-200 dark:border-surface-800 text-surface-300 hover:text-primary-500 hover:border-primary-500 shadow-md group-hover:rotate-12'}`}>
+                                              {m.completedAt ? <CheckCircle2 size={32} /> : <Circle size={32} />}
                                            </div>
                                         </button>
 
                                         <div className="flex-1 min-w-0">
-                                           <div className="flex items-center gap-10 mb-6">
-                                              <h4 className={`text-[36px] font-black italic uppercase tracking-tighter truncate leading-none transition-colors duration-300 ${m.completedAt ? 'text-[var(--text-dim)]' : 'text-white group-hover:text-indigo-400'}`}>{m.title}</h4>
+                                           <div className="flex items-center gap-6 mb-3">
+                                              <h4 className={`text-xl font-black italic uppercase tracking-tighter truncate ${m.completedAt ? 'text-surface-400 line-through' : 'text-surface-900 dark:text-white group-hover:text-primary-500 transition-colors duration-500'}`}>{m.title}</h4>
                                               {m.criticalPathInfo?.isOnCriticalPath && !m.completedAt && (
-                                                <div className="px-6 py-2 bg-indigo-500 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.6)] animate-pulse border-none italic">CRITICAL_TRAJECTORY</div>
+                                                <div className="px-3 py-1 bg-primary-600 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-lg shadow-lg italic animate-pulse">Critical Path</div>
                                               )}
                                            </div>
-                                           <div className="flex items-center gap-16">
-                                              <div className="flex items-center gap-5 text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic group-hover:text-[var(--text-dim)] transition-colors bg-black/40 px-6 py-2 rounded-full border border-white/5 shadow-inner backdrop-blur-3xl"><Clock size={18} className="text-indigo-500" /> {m.estimatedDays || 0} Cycles</div>
-                                              {m.automation?.onComplete && m.automation.onComplete !== 'none' && (
-                                                <div className="flex items-center gap-5 text-[13px] font-black text-purple-600 uppercase tracking-[0.4em] italic animate-pulse bg-purple-500/5 px-6 py-2 rounded-full border border-purple-500/20"><Cpu size={18} className="text-purple-500" /> AUTO: {m.automation.onComplete.toUpperCase()}</div>
-                                              )}
+                                           <div className="flex items-center gap-8">
+                                              <div className="flex items-center gap-2.5 text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic"><Clock size={16} className="text-primary-500" /> {m.estimatedDays || 0} DAYS_TO_TARGET</div>
                                               {m.linkedTaskId && (
-                                                <button onClick={() => router.push(`/dashboard/tasks?open=${m.linkedTaskId}`)} className="text-[13px] font-black text-indigo-400 hover:text-white uppercase tracking-[0.4em] italic flex items-center gap-5 transition-all border-none bg-transparent underline underline-offset-8 decoration-indigo-500/30 hover:decoration-white"><Link2 size={18} /> VIEW_TARGET_NODE</button>
+                                                <button type="button" onClick={() => router.push(`/dashboard/tasks?open=${m.linkedTaskId}`)} className="text-[10px] font-black text-primary-500 hover:text-primary-600 uppercase tracking-widest flex items-center gap-2 transition-all border-none bg-transparent italic hover:scale-110"><Link2 size={16} /> VIEW_TASK_NODE</button>
                                               )}
                                            </div>
                                         </div>
 
-                                        <div className="flex items-center gap-16 shrink-0 pr-8">
-                                           {m.dueDate && (
-                                             <div className="flex flex-col items-end">
-                                                <span className="text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[0.6em] italic mb-3">THRESHOLD</span>
-                                                <span className="text-[20px] font-black text-slate-700 uppercase italic leading-none tabular-nums opacity-60 group-hover:opacity-100 transition-all duration-300">{new Date(m.dueDate).toLocaleDateString().toUpperCase()}</span>
-                                             </div>
-                                           )}
-                                           <div className="h-24 w-[2px] bg-white/5" />
-                                           <button onClick={() => setEditingMilestone(m)} className="w-20 h-20 bg-white/[0.03] border-2 border-white/10 rounded-3xl flex items-center justify-center text-[var(--text-dim)] hover:text-white hover:bg-white/10 transition-all duration-700 shadow-3xl active:scale-90 hover:border-indigo-500/50 backdrop-blur-3xl group/edit"><Pencil size={32} className="group-hover/edit:rotate-12 transition-transform" /></button>
+                                        <div className="flex items-center gap-4 shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                                           <button type="button" 
+                                             onClick={() => { setEditTitle(m.title); setEditDueDate(m.dueDate ? new Date(m.dueDate).toISOString().slice(0,10) : ''); setEditEstimatedDays(m.estimatedDays || 1); setEditingMilestone(m); }} 
+                                             title={`Edit objective: ${m.title}`} aria-label={`Edit objective: ${m.title}`}
+                                             className="w-12 h-12 bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500 transition-all shadow-lg active:scale-90"
+                                           >
+                                              <Pencil size={20} />
+                                           </button>
                                         </div>
                                      </motion.div>
                                    ))}
@@ -521,183 +481,203 @@ export default function KineticWorkspaceHubPage() {
                           </div>
                        </section>
                     </motion.div>
-                 ) : null}
+                  ) : null}
               </AnimatePresence>
-           </div>
+           </main>
         </div>
 
-        {/* Modal Overlays */}
+        {/* Create Project Modal */}
         <AnimatePresence>
            {showCreate && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-10 backdrop-blur-3xl">
-                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 100 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 100 }} className={`${glassStyle} w-full max-w-4xl rounded-[7rem] p-24 border-2 border-white/10 shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden`}>
-                    <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300 shadow-inner"><Zap size={400} className="text-white" /></div>
-                    <div className="flex justify-between items-center mb-24 relative z-10">
-                       <div>
-                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Cluster Initiation</h2>
-                          <p className="text-[14px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">NODE_MATRIX_UPLINK_INITIALIZATION</p>
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-12 bg-surface-950/85 backdrop-blur-3xl" onClick={() => setShowCreate(false)}>
+                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 40 }} transition={{ duration: 0.5, type: 'spring' }}
+                   className="bg-surface-card w-full max-w-3xl rounded-[3.5rem] p-10 sm:p-16 border-2 border-primary-500/20 shadow-[0_100px_300px_rgba(0,0,0,0.8)] relative overflow-hidden"
+                   onClick={e => e.stopPropagation()}
+                 >
+                    <header className="flex justify-between items-center mb-16 border-b border-surface-100 dark:border-surface-800 pb-10">
+                       <div className="flex items-center gap-8">
+                          <div className="w-20 h-20 bg-primary-500/10 border-2 border-primary-500/20 rounded-[2rem] flex items-center justify-center shadow-xl transition-transform duration-500 hover:rotate-12">
+                             <Plus size={40} className="text-primary-600" />
+                          </div>
+                          <div>
+                             <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Initialize Mission</h2>
+                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.5em] italic leading-none">Spawn a new operational project node</p>
+                          </div>
                        </div>
-                       <button onClick={() => setShowCreate(false)} title="Close Modal" className="w-20 h-20 bg-white/5 border-2 border-white/5 rounded-3xl flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all shadow-3xl active:scale-90 hover:border-white/20 hover:rotate-90 duration-700 backdrop-blur-3xl"><X size={40} /></button>
-                    </div>
+                       <button type="button" onClick={() => setShowCreate(false)} title="Close Modal" aria-label="Close Modal" className="w-14 h-14 bg-surface-page dark:bg-surface-950 border border-surface-200 dark:border-surface-800 rounded-2xl flex items-center justify-center text-surface-400 hover:text-rose-500 hover:border-rose-500/40 transition-all shadow-inner active:scale-90"><X size={28} /></button>
+                    </header>
                     
-                    <div className="space-y-16 relative z-10">
-                       <div className="space-y-8">
-                          <label htmlFor="cluster-id" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">CLUSTER_IDENTIFIER</label>
+                    <div className="space-y-12">
+                       <div className="space-y-4">
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Mission Identifier</label>
                           <input
-                            id="cluster-id"
                             type="text"
-                            placeholder="INPUT_NODE_DESIGNATION..."
+                            placeholder="PROJECT_ALPHA_STRIKE..."
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
-                            className="w-full bg-black/80 border-2 border-white/5 rounded-[4rem] px-16 py-10 text-[24px] font-black text-white uppercase tracking-tighter italic placeholder:text-[var(--text-dim)] focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-3xl"
+                            className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-3xl px-8 py-6 text-2xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                           />
                        </div>
-                       <div className="space-y-8">
-                          <label htmlFor="mission-params" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">MISSION_PARAMETERS</label>
+                       <div className="space-y-4">
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Operational Brief</label>
                           <textarea
-                            id="mission-params"
-                            placeholder="DESCRIBE_OPERATIONAL_OBJECTIVES..."
+                            placeholder="DEFINE_MISSION_OBJECTIVES..."
                             rows={4}
                             value={newDescription}
                             onChange={(e) => setNewDescription(e.target.value)}
-                            className="w-full bg-black/80 border-2 border-white/5 rounded-[5rem] px-16 py-10 text-[18px] font-black text-indigo-400 uppercase tracking-widest italic placeholder:text-[var(--text-dim)] focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner resize-none backdrop-blur-3xl"
+                            className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-[2.5rem] px-8 py-6 text-base font-extrabold text-surface-600 dark:text-slate-300 focus:border-primary-500 outline-none transition-all shadow-inner resize-none italic uppercase tracking-tight backdrop-blur-xl"
                           />
                        </div>
 
-                       <div className="flex gap-10 pt-10">
-                          <button onClick={() => setShowCreate(false)} className="flex-1 py-10 rounded-[4rem] bg-white/5 border-2 border-white/5 text-[var(--text-dim)] text-[18px] font-black uppercase tracking-[0.8em] italic hover:text-white hover:bg-white/10 transition-all shadow-3xl backdrop-blur-3xl">ABORT_SYNCH</button>
-                          <button onClick={handleCreate} disabled={creating || !newName.trim()} className="flex-1 py-10 rounded-[4rem] bg-white border-8 border-transparent hover:border-indigo-500/30 text-black text-[18px] font-black uppercase tracking-[0.8em] italic shadow-2xl hover:shadow-indigo-500/50 transition-all active:scale-95 disabled:opacity-20 flex items-center justify-center gap-10">
-                             {creating ? <RefreshCw className="animate-spin" size={32} /> : <Zap size={32} className="fill-current" />}
-                             {creating ? 'SYNCHRONIZING...' : 'INSTANTIATE_CLUSTER'}
+                       <footer className="flex flex-col sm:flex-row gap-6 pt-10 border-t-2 border-surface-100 dark:border-surface-800">
+                          <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-6 rounded-[2rem] bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[11px] tracking-[0.6em] italic border-none active:scale-95 transition-all">ABORT_MISSION</button>
+                          <button type="button" onClick={handleCreate} disabled={creating || !newName.trim()} className="flex-1 py-6 rounded-[2rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.8em] italic shadow-[0_20px_60px_rgba(0,0,0,0.4)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:-translate-y-2 transition-all duration-300 border-none active:scale-95 flex items-center justify-center gap-6">
+                             {creating ? <RefreshCw className="animate-spin" size={24} /> : <CheckCircle2 size={24} />}
+                             {creating ? 'SYNCHRONIZING...' : 'COMMIT_MISSION'}
                           </button>
-                       </div>
+                       </footer>
                     </div>
                  </motion.div>
               </div>
            )}
 
+           {/* Add Objective Modal */}
            {showAddMilestone && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-10 backdrop-blur-3xl">
-                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 100 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 100 }} className={`${glassStyle} w-full max-w-4xl rounded-[7rem] p-24 border-2 border-white/10 shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden`}>
-                    <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-300 shadow-inner"><Target size={400} className="text-white" /></div>
-                    <div className="flex justify-between items-center mb-20 relative z-10">
-                       <div>
-                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Node Injection</h2>
-                          <p className="text-[14px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">APPENDING_MISSION_CRITICAL_ANCHOR</p>
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-surface-950/85 backdrop-blur-3xl" onClick={() => setShowAddMilestone(false)}>
+                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                   className="bg-surface-card w-full max-w-xl rounded-[3rem] p-12 border-2 border-primary-500/20 shadow-[0_100px_300px_rgba(0,0,0,0.8)] relative overflow-hidden"
+                   onClick={e => e.stopPropagation()}
+                 >
+                    <header className="flex justify-between items-center mb-12 border-b border-surface-100 dark:border-surface-800 pb-8">
+                       <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-primary-500/10 border-2 border-primary-500/20 rounded-[1.5rem] flex items-center justify-center shadow-lg">
+                             <Target size={32} className="text-primary-600" />
+                          </div>
+                          <div>
+                             <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-1">Append Objective</h2>
+                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Inject a new target node</p>
+                          </div>
                        </div>
-                       <button onClick={() => setShowAddMilestone(false)} title="Close Modal" className="w-20 h-20 bg-white/5 border-2 border-white/5 rounded-3xl flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all shadow-3xl active:scale-90 hover:border-white/20 hover:rotate-90 duration-700 backdrop-blur-3xl"><X size={40} /></button>
-                    </div>
+                       <button type="button" onClick={() => setShowAddMilestone(false)} title="Close Modal" aria-label="Close Modal" className="w-12 h-12 bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all shadow-inner active:scale-90"><X size={24} /></button>
+                    </header>
 
-                    <div className="space-y-12 relative z-10">
-                       <div className="space-y-6">
-                          <label htmlFor="node-id-new" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">NODE_IDENTIFIER</label>
+                    <div className="space-y-10">
+                       <div className="space-y-4">
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Objective Identifier</label>
                           <input
-                            id="node-id-new"
-                            type="text"
-                            placeholder="OBJECTIVE_TITLE..."
-                            value={newMilestoneTitle}
-                            onChange={(e) => setNewMilestoneTitle(e.target.value)}
-                            className="w-full bg-black/80 border-2 border-white/5 rounded-[4rem] px-16 py-8 text-[22px] font-black text-white uppercase tracking-tighter italic placeholder:text-[var(--text-dim)] focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-3xl"
-                          />
+                             type="text"
+                             title="Node Identifier"
+                             aria-label="Node Identifier"
+                             value={editTitle}
+                             onChange={(e) => setEditTitle(e.target.value)}
+                             className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
+                           />
                        </div>
 
-                       <div className="space-y-6">
-                          <label htmlFor="cycle-new" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">CYCLE_ESTIMATION [DAYS]</label>
+                       <div className="space-y-4">
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Temporal Gap (Estimated Days)</label>
                           <input
-                            id="cycle-new"
-                            type="number"
-                            min={1}
-                            value={newMilestoneDays}
-                            onChange={(e) => setNewMilestoneDays(Number(e.target.value) || 1)}
-                            className="w-full bg-black/80 border-2 border-white/5 rounded-[4rem] px-14 py-8 text-[18px] font-black text-indigo-400 uppercase tracking-widest italic focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-3xl"
-                          />
+                             type="number"
+                             min={1}
+                             title="Estimated Days"
+                             aria-label="Estimated Days"
+                             value={newMilestoneDays}
+                             onChange={(e) => setNewMilestoneDays(Number(e.target.value) || 1)}
+                             className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-lg font-black text-surface-900 dark:text-white italic focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
+                           />
                        </div>
 
-                       <div className="flex gap-10 pt-8">
-                          <button onClick={() => setShowAddMilestone(false)} className="flex-1 py-8 rounded-[4rem] bg-white/5 border-2 border-white/5 text-[var(--text-dim)] text-[18px] font-black uppercase tracking-[0.8em] italic hover:text-white hover:bg-white/10 transition-all shadow-3xl backdrop-blur-3xl">CANCEL_OPS</button>
-                          <button onClick={addMilestone} disabled={addingMilestone || !newMilestoneTitle.trim()} className="flex-1 py-8 rounded-[4rem] bg-white border-8 border-transparent hover:border-indigo-500/30 text-black text-[18px] font-black uppercase tracking-[0.8em] italic shadow-2xl hover:shadow-indigo-500/50 transition-all active:scale-95 disabled:opacity-20 flex items-center justify-center gap-10">
-                             {addingMilestone ? <RefreshCw className="animate-spin" size={28} /> : <Target size={28} className="fill-current" />}
-                             {addingMilestone ? 'INJECTING...' : 'INJECT_NODE'}
+                       <footer className="flex gap-6 pt-8 border-t border-surface-100 dark:border-surface-800">
+                          <button type="button" onClick={() => setShowAddMilestone(false)} className="flex-1 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[10px] tracking-[0.6em] italic border-none active:scale-95 transition-all">ABORT</button>
+                          <button type="button" onClick={addMilestone} disabled={addingMilestone || !newMilestoneTitle.trim()} className="flex-1 py-5 rounded-2xl bg-primary-600 text-white font-black uppercase text-[10px] tracking-[0.8em] italic shadow-[0_15px_40px_rgba(99,102,241,0.4)] hover:bg-primary-500 hover:-translate-y-1 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 border-none">
+                             {addingMilestone ? <RefreshCw className="animate-spin" size={20} /> : <Target size={20} />}
+                             {addingMilestone ? 'INJECTING...' : 'COMMIT_TARGET'}
                           </button>
-                       </div>
+                       </footer>
                     </div>
                  </motion.div>
               </div>
            )}
 
+           {/* Edit Objective Modal */}
            {editingMilestone && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-10 backdrop-blur-3xl">
-                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 100 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 100 }} className={`${glassStyle} w-full max-w-4xl rounded-[7rem] p-24 border-2 border-white/10 shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden`} onClick={e => e.stopPropagation()}>
-                    <div className="absolute top-0 right-0 p-32 opacity-[0.05] pointer-events-none group-hover:opacity-[0.1] transition-opacity duration-500 shadow-inner"><Pencil size={400} className="text-white" /></div>
-                    <div className="flex justify-between items-center mb-20 relative z-10">
-                       <div>
-                          <h2 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">Calibrate Node</h2>
-                          <p className="text-[14px] text-[var(--text-dim)] font-black uppercase tracking-[0.6em] italic leading-none">MODIFYING_OBJECTIVE_VECTOR</p>
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-surface-950/85 backdrop-blur-3xl" onClick={() => setEditingMilestone(null)}>
+                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 40 }}
+                   className="bg-surface-card w-full max-w-xl rounded-[3rem] p-12 border-2 border-primary-500/20 shadow-[0_100px_300px_rgba(0,0,0,0.8)] relative overflow-hidden"
+                   onClick={e => e.stopPropagation()}
+                 >
+                    <header className="flex justify-between items-center mb-12 border-b border-surface-100 dark:border-surface-800 pb-8">
+                       <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-primary-500/10 border-2 border-primary-500/20 rounded-[1.5rem] flex items-center justify-center shadow-lg">
+                             <Pencil size={32} className="text-primary-600" />
+                          </div>
+                          <div>
+                             <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-1">Calibrate Target</h2>
+                             <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.4em] italic leading-none">Modify objective node parameters</p>
+                          </div>
                        </div>
-                       <button onClick={() => setEditingMilestone(null)} title="Close Modal" className="w-20 h-20 bg-white/5 border-2 border-white/5 rounded-3xl flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all shadow-3xl active:scale-90 hover:border-white/20 hover:rotate-90 duration-700 backdrop-blur-3xl"><X size={40} /></button>
-                    </div>
+                       <button type="button" onClick={() => setEditingMilestone(null)} title="Close Modal" aria-label="Close Modal" className="w-12 h-12 bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 rounded-xl flex items-center justify-center text-surface-400 hover:text-rose-500 transition-all shadow-inner active:scale-90"><X size={24} /></button>
+                    </header>
 
-                    <div className="space-y-12 relative z-10">
-                       <div className="space-y-6">
-                          <label htmlFor="node-id-edit" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">NODE_IDENTIFIER</label>
+                    <div className="space-y-10">
+                       <div className="space-y-4">
+                          <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Node Identifier</label>
                           <input
-                            id="node-id-edit"
                             type="text"
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
-                            className="w-full bg-black/80 border-2 border-white/5 rounded-[4rem] px-16 py-8 text-[22px] font-black text-white uppercase tracking-tighter italic placeholder:text-[var(--text-dim)] focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-3xl"
+                            aria-label="Project title"
+                            title="Project title"
+                            placeholder="Project title"
+                            className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-xl font-black text-surface-900 dark:text-white uppercase italic tracking-tighter focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                           />
                        </div>
 
-                       <div className="grid grid-cols-2 gap-10">
-                          <div className="space-y-6">
-                             <label htmlFor="threshold-edit" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">TEMPORAL_THRESHOLD</label>
+                       <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                             <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Target Date</label>
                              <input
-                               id="threshold-edit"
                                type="date"
+                               title="Target Date"
+                               aria-label="Target Date"
                                value={editDueDate}
                                onChange={(e) => setEditDueDate(e.target.value)}
-                               className="w-full bg-black/80 border-2 border-white/5 rounded-[4rem] px-14 py-8 text-[18px] font-black text-indigo-400 uppercase tracking-widest italic focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner [color-scheme:dark] backdrop-blur-3xl"
+                               className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-[10px] font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:border-primary-500 outline-none transition-all shadow-inner [color-scheme:dark]"
                              />
                           </div>
-                          <div className="space-y-6">
-                             <label htmlFor="cycle-edit" className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.8em] italic ml-10">CYCLE_ESTIMATION</label>
+                          <div className="space-y-4">
+                             <label className="text-[11px] font-black text-surface-400 uppercase tracking-[0.4em] italic pl-2 leading-none">Gap (Days)</label>
                              <input
-                               id="cycle-edit"
                                type="number"
                                value={editEstimatedDays}
                                onChange={(e) => setEditEstimatedDays(Number(e.target.value) || 1)}
-                               className="w-full bg-black/80 border-2 border-white/5 rounded-[4rem] px-14 py-8 text-[18px] font-black text-indigo-400 uppercase tracking-widest italic focus:outline-none focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-3xl"
+                               aria-label="Estimated days"
+                               title="Estimated days"
+                               placeholder="Days"
+                               className="w-full bg-surface-page dark:bg-surface-950/50 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-6 py-4 text-lg font-black text-surface-900 dark:text-white italic focus:border-primary-500 outline-none transition-all shadow-inner backdrop-blur-xl"
                              />
                           </div>
                        </div>
 
-                       <div className="flex gap-10 pt-8">
-                          <button onClick={() => setEditingMilestone(null)} className="flex-1 py-8 rounded-[4rem] bg-white/5 border-2 border-white/5 text-[var(--text-dim)] text-[18px] font-black uppercase tracking-[0.8em] italic hover:text-white hover:bg-white/10 transition-all shadow-3xl backdrop-blur-3xl">ABORT_CALIBRATION</button>
-                          <button onClick={saveMilestone} className="flex-1 py-8 rounded-[4rem] bg-white border-8 border-transparent hover:border-indigo-500/30 text-black text-[18px] font-black uppercase tracking-[0.8em] italic shadow-2xl hover:shadow-indigo-500/50 transition-all active:scale-95 flex items-center justify-center gap-10">
-                             <CheckCircle2 size={32} /> SAVE_CALIBRATION
+                       <footer className="flex gap-6 pt-8 border-t border-surface-100 dark:border-surface-800">
+                          <button type="button" onClick={() => setEditingMilestone(null)} className="flex-1 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 text-surface-400 dark:text-slate-600 font-black uppercase text-[10px] tracking-[0.6em] italic border-none active:scale-95 transition-all">ABORT</button>
+                          <button type="button" onClick={saveMilestone} className="flex-1 py-5 rounded-2xl bg-primary-600 text-white font-black uppercase text-[10px] tracking-[0.8em] italic shadow-[0_15px_40px_rgba(99,102,241,0.4)] hover:bg-primary-500 hover:-translate-y-1 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 border-none">
+                             <CheckCircle2 size={20} /> COMMIT_CHANGES
                           </button>
-                       </div>
+                       </footer>
                     </div>
                  </motion.div>
               </div>
            )}
         </AnimatePresence>
         
-        <ToastContainer />
-
         <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
           .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
-          select { -webkit-appearance: none; appearance: none; cursor: pointer; }
-          input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-          .shadow-22xl { shadow-sm: 0 40px 100px rgba(0,0,0,0.8); }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--color-primary-500), 0.1); border-radius: 10px; }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
         `}</style>
-     </div>
+      </div>
     </ErrorBoundary>
   )
 }

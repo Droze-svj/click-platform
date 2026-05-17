@@ -7,51 +7,246 @@
     "create": "Créer",
     "search": "Rechercher",
     "filter": "Filtrer",
-    "loading": "Chargement...",
+    "loading": "Chargement…",
     "error": "Erreur",
     "success": "Succès",
-    "close": "Fermer"
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "retry": "Réessayer",
+    "more": "Plus",
+    "menu": "Menu",
+    "logout": "Déconnexion",
+    "yes": "Oui",
+    "no": "Non",
+    "redirecting": "Redirection vers la connexion…",
+    "dismiss": "Ignorer"
   },
-  "dashboard": {
-    "title": "Tableau de bord",
-    "welcome": "Bon retour",
-    "stats": {
-      "videosProcessed": "Vidéos Traitées",
-      "contentGenerated": "Contenu Généré",
-      "postsScheduled": "Publications Planifiées"
+  "nav": {
+    "dashboard": "Tableau",
+    "videos": "Vidéos",
+    "content": "Contenu",
+    "aiFeatures": "Fonctions IA",
+    "library": "Bibliothèque",
+    "scripts": "Scripts",
+    "workflows": "Flux",
+    "tasks": "Tâches",
+    "projects": "Projets",
+    "jobs": "Travaux",
+    "teams": "Équipes",
+    "approvals": "Approbations",
+    "quotes": "Citations",
+    "scheduler": "Planificateur",
+    "calendar": "Calendrier",
+    "social": "Social",
+    "analytics": "Analytique",
+    "achievements": "Succès",
+    "membership": "Adhésion",
+    "notifications": "Notifications",
+    "settings": "Paramètres",
+    "templates": "Modèles",
+    "infrastructure": "Infrastructure",
+    "clickTagline": "Contenu propulsé par IA"
+  },
+  "workflow": {
+    "niche": "Niche",
+    "setNiche": "Choisir une niche",
+    "next": "Suivant",
+    "stages": {
+      "ingest": {
+        "label": "Importer",
+        "description": "Importez vos rushes — fichier, lien ou enregistrement live."
+      },
+      "script": {
+        "label": "Script",
+        "description": "L'IA rédige accroche, corps et CTA selon votre niche."
+      },
+      "edit": {
+        "label": "Monter",
+        "description": "Coupez, sous-titrez et marquez la vidéo."
+      },
+      "schedule": {
+        "label": "Planifier",
+        "description": "Publiez sur chaque plateforme à l'heure optimale."
+      },
+      "analyze": {
+        "label": "Analyser",
+        "description": "Mesurez la performance et identifiez ce qui marche."
+      }
     }
+  },
+  "ingest": {
+    "tabs": {
+      "file": "Importer",
+      "link": "Coller un lien",
+      "record": "Enregistrer",
+      "cloud": "Cloud",
+      "remix": "Remix"
+    },
+    "paste": "Coller",
+    "dropTitle": "Déposez une vidéo ici",
+    "dropHint": "Ou choisissez un fichier. MP4, MOV, WebM jusqu'à 500 Mo.",
+    "chooseFile": "Choisir un fichier",
+    "linkLabel": "URL de la vidéo",
+    "linkPlaceholder": "https://www.tiktok.com/@user/video/12345 ou https://cdn/clip.mp4",
+    "linkAction": "Importer",
+    "linkSupports": "Accepte {platforms}. Les téléchargements depuis les plateformes nécessitent {ytdlp} sur le serveur.",
+    "recordStart": "Démarrer l'enregistrement",
+    "recordStop": "Arrêter et envoyer",
+    "recordHint": "Caméra + micro — sauvegardé en WebM puis envoyé dans votre bibliothèque.",
+    "cloudHint": "Collez un lien Google Drive, Dropbox ou S3. Le téléchargement se fait côté serveur, donc le partage doit être réglé sur {visibility}.",
+    "cloudVisibility": "Tous ceux qui ont le lien → peuvent voir",
+    "cloudPlaceholder": "https://drive.google.com/file/d/…/view",
+    "cloudAction": "Récupérer",
+    "remixHint": "Choisissez un projet précédent à cloner pour un nouveau montage.",
+    "remixRefresh": "Actualiser",
+    "remixEmpty": "Aucun import pour l'instant — envoyez votre première vidéo pour démarrer votre bibliothèque remixable.",
+    "tip": "Astuce",
+    "tipPaste": "⌘V sur cette page pour coller une URL depuis le presse-papiers.",
+    "tipReversible": "Tout apparaît dans votre bibliothèque et reste réversible.",
+    "uploading": "Envoi {percent}%",
+    "processing": "Traitement…",
+    "errors": {
+      "noUrl": "Collez d'abord une URL",
+      "notVideo": "Déposez un fichier vidéo (.mp4 / .mov / .webm)",
+      "clipboardEmpty": "Le presse-papiers est vide",
+      "clipboardNotUrl": "Le presse-papiers ne contient pas d'URL",
+      "clipboardDenied": "Accès au presse-papiers refusé — collez manuellement",
+      "uploadFailed": "Échec de l'envoi : {message}",
+      "ingestFailed": "Échec de l'import : {message}",
+      "remixFailed": "Échec du remix",
+      "noContentId": "Le serveur n'a pas renvoyé de contentId",
+      "cameraDenied": "Impossible d'accéder à la caméra/au micro"
+    }
+  },
+  "language": {
+    "label": "Langue",
+    "picker": "Choisir la langue",
+    "options": "Langues",
+    "search": "Rechercher une langue…",
+    "recent": "Utilisées récemment",
+    "recentBadge": "récent",
+    "all": "Toutes les langues",
+    "noResults": "Aucune langue ne correspond",
+    "useSuggested": "Utiliser",
+    "useIt": "L'utiliser"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez vos préférences",
+    "language": "Langue",
+    "saveSettings": "Enregistrer",
+    "profile": "Profil",
+    "editProfile": "Modifier le profil",
+    "general": "Général",
+    "notifications": "Notifications",
+    "privacy": "Confidentialité",
+    "security": "Sécurité",
+    "appearance": "Apparence",
+    "theme": "Thème",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeAuto": "Auto (Système)",
+    "timezone": "Fuseau horaire",
+    "saving": "Enregistrement...",
+    "saved": "Paramètres enregistrés",
+    "saveFailed": "Échec de l'enregistrement"
+  },
+  "video": {
+    "title": "Vidéos",
+    "upload": "Importer",
+    "edit": "Monter",
+    "processing": "Traitement…",
+    "noVideo": "Aucune vidéo chargée",
+    "noVideoHint": "Veuillez fournir une URL vidéo pour commencer l'édition.",
+    "goToVideos": "Voir les vidéos"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "loggingIn": "Connexion en cours...",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "loginTitle": "Bienvenue sur Click",
+    "loginSubtitle": "Connectez-vous à votre compte pour accéder à la création de contenu par AI.",
+    "registerTitle": "Créez votre compte",
+    "registerSubtitle": "Lancez-vous dans la création de contenu par AI."
   },
   "content": {
     "title": "Contenu",
-    "create": "Créer du Contenu",
-    "edit": "Modifier le Contenu",
-    "delete": "Supprimer le Contenu",
+    "create": "Créer du contenu",
+    "edit": "Modifier le contenu",
+    "delete": "Supprimer le contenu",
     "duplicate": "Dupliquer",
     "publish": "Publier",
-    "schedule": "Planifier"
+    "schedule": "Programmer"
   },
   "analytics": {
     "title": "Analytiques",
-    "overview": "Aperçu",
+    "overview": "Vue d'ensemble",
     "trends": "Tendances",
     "platforms": "Plateformes",
     "engagement": "Engagement",
     "views": "Vues",
-    "likes": "J'aime",
+    "likes": "Likes",
     "shares": "Partages"
   },
   "moderation": {
-    "title": "Modération du Contenu",
+    "title": "Modération du contenu",
     "checking": "Vérification du contenu...",
     "approved": "Contenu approuvé",
     "flagged": "Contenu signalé pour examen",
-    "profanity": "Grossièreté détectée",
+    "profanity": "Vulgarité détectée",
     "spam": "Spam détecté"
+  },
+  "backup": {
+    "title": "Sauvegardes",
+    "create": "Créer une sauvegarde",
+    "download": "Télécharger",
+    "delete": "Supprimer",
+    "passwordRequired": "Mot de passe requis pour la sauvegarde chiffrée",
+    "created": "Sauvegarde créée avec succès",
+    "createFailed": "Échec de la création de la sauvegarde",
+    "downloaded": "Sauvegarde téléchargée",
+    "downloadFailed": "Échec du téléchargement de la sauvegarde",
+    "deleted": "Sauvegarde supprimée",
+    "deleteFailed": "Échec de la suppression de la sauvegarde"
+  },
+  "translation": {
+    "title": "Traduction",
+    "translate": "Traduire",
+    "translateTo": "Traduire en",
+    "translateToAll": "Tout traduire",
+    "targetLanguage": "Langue cible",
+    "viewIn": "Voir en",
+    "original": "Original",
+    "translations": "Traductions",
+    "noTranslations": "Aucune traduction pour le moment",
+    "translating": "Traduction en cours…",
+    "translated": "Traduit",
+    "translationFailed": "Échec de la traduction",
+    "viewOriginal": "Voir l'original",
+    "selectLanguage": "Sélectionner la langue"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bon retour",
+    "heroWelcome": "Bienvenue sur Click",
+    "heroTitle": "Créez, adaptez et publiez",
+    "heroSubtitle": "Outils propulsés par l'AI, planification intelligente et analyses dans un seul espace de travail.",
+    "heroDescription": "Votre espace de travail propulsé par l'AI pour créer, adapter et publier sur 6 plateformes. Transformez vos contenus longs en formats prêts pour les réseaux sociaux — plus vite.",
+    "stats": {
+      "videosProcessed": "Vidéos traitées",
+      "contentGenerated": "Contenu généré",
+      "contentCreated": "Contenu créé",
+      "quotesCreated": "Citations créées",
+      "postsScheduled": "Posts programmés"
+    },
+    "clickToView": "Click pour voir les détails →"
   }
 }
-
-
-
-
-
-

@@ -100,9 +100,11 @@ export default function SignalInterceptionGridPage() {
         {/* Recon Header */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16 relative z-50">
            <div className="flex items-center gap-12">
-              <button 
+              <button
+                type="button"
                 onClick={() => router.push('/dashboard')} 
                 title="Abort Session"
+                aria-label="Back to Dashboard"
                 className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl hover:border-rose-500/50">
                 <ArrowLeft size={40} />
               </button>
@@ -126,7 +128,8 @@ export default function SignalInterceptionGridPage() {
               </div>
            </div>
 
-           <button 
+           <button
+             type="button"
              onClick={handleRecon}
              title="Execute Grid Probe"
              className="px-16 py-8 bg-white text-black rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_50px_150px_rgba(255,255,255,0.05)] hover:bg-indigo-500 hover:text-white transition-all duration-300 flex items-center gap-8 italic active:scale-95 group overflow-hidden relative"
@@ -249,7 +252,7 @@ export default function SignalInterceptionGridPage() {
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+        html.dark body { font-family: 'Outfit', sans-serif; background: #020205; color: white; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
         ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.1); border-radius: 20px; border: 2px solid transparent; background-clip: content-box; }

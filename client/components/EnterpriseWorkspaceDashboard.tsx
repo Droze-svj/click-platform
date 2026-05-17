@@ -104,6 +104,7 @@ export default function EnterpriseWorkspaceDashboard() {
         <div className="flex items-center gap-4 overflow-x-auto">
           {workspaces.map(ws => (
             <button
+              type="button"
               key={ws._id}
               onClick={() => setSelectedWorkspace(ws)}
               className={`px-4 py-2 rounded-lg whitespace-nowrap ${

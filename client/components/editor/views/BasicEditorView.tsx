@@ -217,6 +217,7 @@ function ImageOverlayKeyframePanel({
 
         {setActiveCategory && (
           <button
+            type="button"
             onClick={() => { setActiveCategory('effects'); showToast('Telemetry redirected', 'info') }}
             title="Go to System Effects"
             className="text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-widest italic transition-colors flex items-center gap-2 ml-auto"
@@ -1284,7 +1285,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
           />
           {globalSearch && (
-            <button onClick={() => setGlobalSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+            <button type="button" onClick={() => setGlobalSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
               <span className="text-[10px] font-black">✕</span>
             </button>
           )}
@@ -1300,7 +1301,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               className="bg-slate-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
             >
               {globalSearchResults.map((r, i) => (
-                <button key={i} onClick={() => { setActiveEditTab(r.tab); r.action() }}
+                <button type="button" key={i} onClick={() => { setActiveEditTab(r.tab); r.action() }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.06] transition-colors text-left border-b border-white/[0.04] last:border-0"
                 >
                   <Sparkles className="w-3 h-3 text-indigo-400 shrink-0" />
@@ -1329,13 +1330,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
           </motion.button>
           <div className="flex-1" />
           {overlayCount > 0 && <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">{overlayCount} layers</span>}
-          {hasLook && <button onClick={resetFilters} className="text-[9px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors">Reset look</button>}
+          {hasLook && <button type="button" onClick={resetFilters} className="text-[9px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors">Reset look</button>}
         </div>
 
         {/* Animated Tab bar */}
         <div className="relative flex gap-0.5 bg-black/50 p-1 rounded-2xl border border-white/[0.06]">
           {EDIT_TABS.map(({ id, icon: Icon, label, shortcut }) => (
             <button
+              type="button"
               key={id}
               onClick={() => setActiveEditTab(id)}
               title={`${label} (Alt+${shortcut})`}
@@ -1376,16 +1378,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   return (
                     <div key={i} className="flex-1 flex items-center justify-center">
                       <div
-                        style={{ height: `${Math.min(h, 95)}%` }}
-                        className={`w-full rounded-sm transition-colors ${isCurrent ? 'bg-indigo-400' : i / 48 < currentTime / Math.max(duration, 1) ? 'bg-indigo-600/60' : 'bg-slate-600/40'}`}
+                        style={{ '--bar-height': `${Math.min(h, 95)}%` } as any}
+                        className={`w-full rounded-sm transition-colors h-[var(--bar-height)] ${isCurrent ? 'bg-indigo-400' : i / 48 < currentTime / Math.max(duration, 1) ? 'bg-indigo-600/60' : 'bg-slate-600/40'}`}
                       />
                     </div>
                   )
                 })}
                 {/* Playhead */}
                 <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)] pointer-events-none"
-                  style={{ left: `${(currentTime / Math.max(duration, 1)) * 100}%` }}
+                  className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)] pointer-events-none left-[var(--playhead-pos)]"
+                  style={{ '--playhead-pos': `${(currentTime / Math.max(duration, 1)) * 100}%` } as any}
                 />
               </div>
             </div>
@@ -1399,11 +1401,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <input
                 type="range" min={0.25} max={4} step={0.25} value={speedValue}
                 onChange={e => { setSpeedValue(Number(e.target.value)); showToast(`Speed: ${e.target.value}×`, 'info') }}
+                aria-label={`Playback speed: ${speedValue} times`}
+                title={`Playback speed: ${speedValue} times`}
                 className="w-full accent-indigo-500"
               />
               <div className="flex justify-between mt-1.5">
                 {[0.25, 0.5, 1, 1.5, 2, 3, 4].map(v => (
-                  <button key={v} onClick={() => { setSpeedValue(v); showToast(`Speed: ${v}×`, 'info') }}
+                  <button type="button" key={v} onClick={() => { setSpeedValue(v); showToast(`Speed: ${v}×`, 'info') }}
                     className={`text-[8px] font-black px-1.5 py-1 rounded-lg transition-all ${speedValue === v ? 'bg-indigo-600 text-white' : 'bg-white/[0.04] text-slate-500 hover:text-white hover:bg-white/10 border border-white/[0.06]'}`}
                   >{v}×</button>
                 ))}
@@ -1475,7 +1479,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               </div>
               <div className="grid grid-cols-3 gap-1.5">
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => {
                     setTrimInPoint(currentTime)
                     if (trimOutPoint != null && currentTime >= trimOutPoint) setTrimOutPoint(null)
@@ -1486,7 +1490,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   Set In
                 </button>
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => {
                     if (trimInPoint != null && currentTime <= trimInPoint) {
                       showToast('Out must come after In', 'error')
@@ -1500,7 +1504,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   Set Out
                 </button>
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => {
                     setTrimInPoint(null)
                     setTrimOutPoint(null)
@@ -1543,6 +1547,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-white text-xs font-medium placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 transition-all"
                 />
                 <button
+                  type="button"
                   onClick={() => { if (textCustom.trim()) { handleAddOverlay(textCustom); setTextCustom('') } else { handleAddOverlay('New Text') } }}
                   className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shrink-0"
                 >Add</button>
@@ -1550,7 +1555,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Duration:</span>
                 {[-1, 3, 5, 8, 15].map(d => (
-                  <button key={d} onClick={() => setTextDuration(d)}
+                  <button type="button" key={d} onClick={() => setTextDuration(d)}
                     className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase transition-all ${textDuration === d ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white'}`}
                   >{d === -1 ? '∞' : `${d}s`}</button>
                 ))}
@@ -1581,6 +1586,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {/* Auto-cap count badge */}
                   {(() => { const autoCaps = textOverlays?.filter(o => o.id.startsWith('autocap-')).length ?? 0; return autoCaps > 0 ? (
                     <button
+                      type="button"
                       title="Clear auto-generated captions"
                       onClick={() => {
                         pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
@@ -1616,13 +1622,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     { id: 'minimal-white', label: 'Minimal', preview: { color: '#e2e8f0', shadow: 'none' } },
                     { id: 'neon-glow',     label: 'Neon',    preview: { color: '#00F5FF', shadow: 'drop-shadow(0 0 8px rgba(0,245,255,0.8))' } },
                   ] as const).map(s => (
-                    <button key={s.id} onClick={() => { setCaptionStyle(s.id); if (s.id === 'neon-glow') setCaptionColor('#00F5FF'); else setCaptionColor('#FFFFFF') }}
+                    <button type="button" key={s.id} onClick={() => { setCaptionStyle(s.id); if (s.id === 'neon-glow') setCaptionColor('#00F5FF'); else setCaptionColor('#FFFFFF') }}
                       className={`py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1 ${
                         captionStyle === s.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 border border-indigo-400/30' : 'bg-white/5 text-slate-500 hover:text-white border border-white/[0.06]'
                       }`}
                     >
-                      <span style={{ color: captionStyle === s.id ? s.preview.color : undefined, filter: captionStyle === s.id ? s.preview.shadow : undefined }}
-                        className="text-[9px] font-black leading-none">Aa</span>
+                      <span style={{ '--caption-color': captionStyle === s.id ? s.preview.color : undefined, '--caption-filter': captionStyle === s.id ? s.preview.shadow : undefined } as any}
+                        className="text-[9px] font-black leading-none text-[var(--caption-color)] [filter:var(--caption-filter)]">Aa</span>
                       {s.label}
                     </button>
                   ))}
@@ -1657,7 +1663,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Words/line</span>
                     <div className="flex gap-0.5">
                       {[2, 3, 4, 5, 6].map(n => (
-                        <button key={n} onClick={() => setWordsPerCap(n)}
+                        <button type="button" key={n} onClick={() => setWordsPerCap(n)}
                           className={`flex-1 py-1 rounded-lg text-[8px] font-black transition-all ${
                             wordsPerCap === n ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white'
                           }`}
@@ -1671,7 +1677,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block mb-1">Position</span>
                     <div className="flex gap-0.5">
                       {(['top', 'mid', 'bottom'] as const).map(pos => (
-                        <button key={pos} onClick={() => setCaptionY(pos)}
+                        <button type="button" key={pos} onClick={() => setCaptionY(pos)}
                           title={`Position captions at ${pos}`}
                           className={`flex-1 py-1 rounded-lg text-[7px] font-black uppercase transition-all ${
                             captionY === pos ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white'
@@ -1691,10 +1697,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       />
                       <div className="flex gap-0.5 flex-1">
                         {['#FFFFFF', '#FFFF00', '#00F5FF'].map(c => (
-                          <button key={c} onClick={() => setCaptionColor(c)}
+                          <button type="button" key={c} onClick={() => setCaptionColor(c)}
                             title={`Set caption color to ${c}`}
-                            style={{ background: c }}
-                            className={`flex-1 h-7 rounded-lg border transition-all ${
+                            style={{ '--swatch-bg': c } as any}
+                            className={`flex-1 h-7 rounded-lg border transition-all bg-[var(--swatch-bg)] ${
                               captionColor === c ? 'border-white/50 scale-95' : 'border-white/10'
                             }`}
                           />
@@ -1805,7 +1811,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       <Type className="w-3 h-3 text-slate-400 shrink-0" />
                       <span className="flex-1 text-[10px] font-black text-slate-200 truncate">{o.text}</span>
                       <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
-                      <button onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
+                      <button type="button" onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
+                        aria-label={`Delete text overlay "${o.text.slice(0, 20)}"`}
+                        title="Delete text overlay"
                         className="text-slate-600 hover:text-rose-400 transition-colors"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>
@@ -1826,20 +1834,24 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   {/* Preview */}
                   <div className="relative h-16 rounded-xl overflow-hidden bg-black/60 border border-white/5 flex items-center justify-center">
                     <span
+                      className="[font-family:var(--font-family)] [font-size:var(--font-size)] [text-shadow:var(--text-shadow)] [font-weight:var(--font-weight)] [-webkit-text-stroke:var(--text-stroke)] text-[var(--text-color)]"
                       style={{
-                        fontFamily: o.fontFamily ?? 'Inter',
-                        fontSize: Math.min(o.fontSize ?? 32, 28),
-                        textShadow: o.style === 'neon' ? `0 0 10px ${o.color}` : o.style === 'shadow' ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
-                        fontWeight: o.style === 'bold-kinetic' ? 900 : 700,
-                        WebkitTextStroke: o.style === 'outline' ? `1px ${o.color}` : undefined,
-                        color: o.style === 'outline' ? 'transparent' : o.color,
-                      }}
+                        '--font-family': o.fontFamily ?? 'Inter',
+                        '--font-size': `${Math.min(o.fontSize ?? 32, 28)}px`,
+                        '--text-shadow': o.style === 'neon' ? `0 0 10px ${o.color}` : o.style === 'shadow' ? '2px 2px 4px rgba(0,0,0,0.8)' : 'none',
+                        '--font-weight': o.style === 'bold-kinetic' ? 900 : 700,
+                        '--text-stroke': o.style === 'outline' ? `1px ${o.color}` : undefined,
+                        '--text-color': o.style === 'outline' ? 'transparent' : o.color,
+                      } as any}
                     >{o.text || 'Preview'}</span>
                     <span className="absolute top-1.5 left-2 text-[8px] font-black text-slate-600 uppercase tracking-widest">Live Preview</span>
                   </div>
 
                   <span className="text-[9px] font-black uppercase tracking-[0.25em] text-indigo-400 block">Editing: {o.text.slice(0, 24)}{o.text.length > 24 ? '…' : ''}</span>
                   <input value={o.text} onChange={e => updateTextOverlay(o.id, { text: e.target.value })}
+                    aria-label="Overlay text content"
+                    title="Overlay text content"
+                    placeholder="Overlay text"
                     className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none focus:border-indigo-500/50 transition-all"
                   />
                   <div className="grid grid-cols-2 gap-2">
@@ -1847,12 +1859,16 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black block mb-1">Font Size</span>
                       <input type="number" value={o.fontSize ?? 32} min={10} max={120}
                         onChange={e => updateTextOverlay(o.id, { fontSize: Number(e.target.value) })}
+                        aria-label="Font size"
+                        title="Font size"
                         className="w-full px-2 py-1.5 rounded-lg bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none"
                       />
                     </div>
                     <div>
                       <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black block mb-1">Color</span>
                       <input type="color" value={o.color} onChange={e => updateTextOverlay(o.id, { color: e.target.value })}
+                        aria-label="Text color"
+                        title="Text color"
                         className="w-full h-8 rounded-lg border border-white/[0.06] bg-transparent cursor-pointer"
                       />
                     </div>
@@ -1861,7 +1877,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black block mb-1">Style</span>
                     <div className="flex flex-wrap gap-1">
                       {(['none','neon','minimal','bold-kinetic','outline','shadow'] as const).map(s => (
-                        <button key={s} onClick={() => updateTextOverlay(o.id, { style: s })}
+                        <button type="button" key={s} onClick={() => updateTextOverlay(o.id, { style: s })}
                           className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${o.style === s ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white'}`}
                         >{s}</button>
                       ))}
@@ -1872,6 +1888,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <div>
                       <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black block mb-1">Animate In</span>
                       <select value={(o as any).animationIn ?? 'none'} onChange={e => updateTextOverlay(o.id, { animationIn: e.target.value as any })}
+                        aria-label="Animation in"
+                        title="Animation in"
                         className="w-full px-2 py-1.5 rounded-lg bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none"
                       >
                         {['none','fade','slide-up','slide-down','slide-left','scale','bounce'].map(a => (
@@ -1882,6 +1900,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <div>
                       <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black block mb-1">Animate Out</span>
                       <select value={(o as any).animationOut ?? 'none'} onChange={e => updateTextOverlay(o.id, { animationOut: e.target.value as any })}
+                        aria-label="Animation out"
+                        title="Animation out"
                         className="w-full px-2 py-1.5 rounded-lg bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none"
                       >
                         {['none','fade','slide-up','slide-down','slide-right','scale','bounce'].map(a => (
@@ -1893,6 +1913,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <div>
                     <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black block mb-1">Font</span>
                     <select value={o.fontFamily ?? 'Inter, system-ui, sans-serif'} onChange={e => updateTextOverlay(o.id, { fontFamily: e.target.value })}
+                      aria-label="Font family"
+                      title="Font family"
                       className="w-full px-2 py-1.5 rounded-lg bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none"
                     >
                       {CAPTION_FONTS.map(f => <option key={f.family} value={f.family} className="bg-slate-900">{f.name}</option>)}
@@ -1903,19 +1925,23 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black shrink-0">Start</span>
                     <input type="number" value={o.startTime} step={0.1} min={0} max={duration}
                       onChange={e => updateTextOverlay(o.id, { startTime: Number(e.target.value) })}
+                      aria-label="Overlay start time in seconds"
+                      title="Overlay start time in seconds"
                       className="w-20 px-2 py-1 rounded-lg bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none"
                     />
                     <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black shrink-0">End</span>
                     <input type="number" value={o.endTime} step={0.1} min={0} max={duration}
                       onChange={e => updateTextOverlay(o.id, { endTime: Number(e.target.value) })}
+                      aria-label="Overlay end time in seconds"
+                      title="Overlay end time in seconds"
                       className="w-20 px-2 py-1 rounded-lg bg-black/40 border border-white/[0.06] text-white text-xs focus:outline-none"
                     />
                   </div>
                   {/* Upload custom font */}
-                  <button onClick={() => fontInputRef.current?.click()}
+                  <button type="button" onClick={() => fontInputRef.current?.click()}
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 transition-all text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest"
                   ><Upload className="w-3 h-3" /> Upload Font</button>
-                  <input ref={fontInputRef} type="file" accept=".ttf,.otf,.woff,.woff2" className="hidden" onChange={handleFontUpload} />
+                  <input ref={fontInputRef} type="file" accept=".ttf,.otf,.woff,.woff2" className="hidden" onChange={handleFontUpload} aria-label="Upload custom font file" title="Upload custom font file" />
                 </motion.div>
               )
             })()}
@@ -1928,7 +1954,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             {/* Category pills */}
             <div className="flex gap-1.5 flex-wrap">
               {FILTER_CATEGORIES.map(c => (
-                <button key={c.id} onClick={() => setFilterCategory(c.id)}
+                <button type="button" key={c.id} onClick={() => setFilterCategory(c.id)}
                   className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${filterCategory === c.id ? 'bg-indigo-600 text-white' : 'bg-white/[0.04] text-slate-500 hover:text-white border border-white/[0.06]'}`}
                 >{c.label}</button>
               ))}
@@ -1943,13 +1969,15 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 </div>
                 <input type="range" min={0} max={100} value={filtStrength}
                   onChange={e => setFiltStrength(Number(e.target.value))}
+                  aria-label={`Filter strength: ${filtStrength} percent`}
+                  title={`Filter strength: ${filtStrength} percent`}
                   className="w-full accent-indigo-500"
                 />
                 <div className="flex justify-between mt-1">
-                  <button onClick={resetFilters} className="text-[9px] text-slate-500 hover:text-rose-400 font-black uppercase tracking-widest transition-colors">Reset</button>
+                  <button type="button" onClick={resetFilters} className="text-[9px] text-slate-500 hover:text-rose-400 font-black uppercase tracking-widest transition-colors">Reset</button>
                   <div className="flex gap-2">
                     {setCompareMode && ['before','after','split'].map(m => (
-                      <button key={m} onClick={() => setCompareMode(m as any)}
+                      <button type="button" key={m} onClick={() => setCompareMode(m as any)}
                         className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg transition-all ${compareMode === m ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-white'}`}
                       >{m}</button>
                     ))}
@@ -1964,7 +1992,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1 block mb-1.5">Pinned</span>
                 <div className="flex gap-2">
                   {pinnedPresets.map(p => (
-                    <button key={p.n} onClick={() => applyFilter(p)}
+                    <button type="button" key={p.n} onClick={() => applyFilter(p)}
                       className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all bg-gradient-to-br ${p.swatch} bg-opacity-20 ${selectedFilterName === p.n ? 'border-indigo-500/50 text-white' : 'border-white/10 text-slate-300'}`}
                     >{p.n}</button>
                   ))}
@@ -1981,10 +2009,10 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   className={`relative overflow-hidden flex flex-col items-start gap-1 p-2.5 rounded-xl border transition-all group ${selectedFilterName === p.n ? 'border-indigo-500/60 bg-indigo-600/10 ring-1 ring-indigo-500/30' : 'border-white/[0.06] bg-white/[0.02] hover:border-white/20'}`}
                 >
                   {/* Live CSS filter preview on a gradient */}
-                  <div
-                    className={`w-full h-9 rounded-lg bg-gradient-to-br ${p.swatch} mb-1 transition-all`}
-                    style={{ filter: filterToCss(p.f) }}
-                  />
+                    <div
+                      className={`w-full h-9 rounded-lg bg-gradient-to-br ${p.swatch} mb-1 transition-all [filter:var(--preview-filter)]`}
+                      style={{ '--preview-filter': filterToCss(p.f) } as any}
+                    />
                   <span className="text-[10px] font-black text-slate-200 group-hover:text-white">{p.n}</span>
                   <span className="text-[8px] text-slate-600 group-hover:text-slate-400">{p.desc}</span>
                   {selectedFilterName === p.n && (
@@ -1992,7 +2020,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       className="absolute top-2 left-2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]"
                     />
                   )}
-                  <div role="button" onClick={e => { e.stopPropagation(); togglePinFilter(p.n) }}
+                  <div role="button" tabIndex={0} aria-label={pinnedFilterNames.includes(p.n) ? `Unpin ${p.n} filter` : `Pin ${p.n} filter`} onClick={e => { e.stopPropagation(); togglePinFilter(p.n) }}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); togglePinFilter(p.n) } }}
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-1"
                   >
                     <Pin className={`w-3 h-3 ${pinnedFilterNames.includes(p.n) ? 'text-indigo-400' : 'text-slate-500'}`} />
@@ -2019,6 +2048,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <Timer className="w-3 h-3 text-slate-500" />
                 <input type="number" value={motionGraphicDuration} min={1} max={30} step={1}
                   onChange={e => setMotionGraphicDuration(Number(e.target.value) || 5)}
+                  aria-label="Motion graphic duration in seconds"
+                  title="Motion graphic duration in seconds"
                   className="w-8 bg-transparent text-white text-xs font-black focus:outline-none"
                 />
                 <span className="text-[9px] text-slate-500">s</span>
@@ -2034,7 +2065,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     const t = MOTION_GRAPHIC_TEMPLATES.find(x => x.id === id)
                     if (!t) return null
                     return (
-                      <button key={t.id} onClick={() => applyMotionGraphicTemplate(t)}
+                      <button type="button" key={t.id} onClick={() => applyMotionGraphicTemplate(t)}
                         className="flex-shrink-0 px-3 py-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/40 transition-all text-left"
                       >
                         <div className="text-[10px] font-black text-indigo-300 whitespace-nowrap">{t.name}</div>
@@ -2048,7 +2079,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
             {/* Template grid */}
             <div className="grid grid-cols-1 gap-2">
               {filteredMotionTemplates.map(t => (
-                <button key={t.id} onClick={() => applyMotionGraphicTemplate(t)}
+                <button type="button" key={t.id} onClick={() => applyMotionGraphicTemplate(t)}
                   className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] hover:border-indigo-500/30 transition-all text-left group"
                 >
                   <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center shrink-0">
@@ -2073,14 +2104,14 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-2">Add Shape</span>
               <div className="flex gap-2">
                 {(['rect','circle','line'] as const).map(kind => (
-                  <button key={kind} onClick={() => addShape(kind)}
-                    className="flex-1 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-indigo-500/30 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest capitalize transition-all"
+                  <button type="button" key={kind} onClick={() => addShape(kind)}
+                    className="flex-1 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-indigo-500/30 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all"
                   >{kind}</button>
                 ))}
               </div>
               <div className="flex gap-1.5 mt-2 flex-wrap">
                 {SHAPE_PRESETS.map(p => (
-                  <button key={p.id} onClick={() => addShapePreset(p)}
+                  <button type="button" key={p.id} onClick={() => addShapePreset(p)}
                     className="px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 text-[8px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all"
                   >{p.name}</button>
                 ))}
@@ -2093,9 +2124,11 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex gap-2">
                 <input value={imageUrlInput} onChange={e => setImageUrlInput(e.target.value)}
                   placeholder="Paste image URL…"
+                  aria-label="Image URL"
+                  title="Image URL"
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
                 />
-                <button onClick={addImageOverlay} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Add</button>
+                <button type="button" onClick={addImageOverlay} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Add</button>
               </div>
             </div>
 
@@ -2107,12 +2140,12 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   placeholder="SVG URL or data URI…"
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/40 transition-all"
                 />
-                <button onClick={addSvgOverlay} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Add</button>
+                <button type="button" onClick={addSvgOverlay} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Add</button>
               </div>
-              <button onClick={() => svgFileInputRef.current?.click()}
+              <button type="button" onClick={() => svgFileInputRef.current?.click()}
                 className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all"
               ><Upload className="w-3 h-3" /> Upload SVG File</button>
-              <input ref={svgFileInputRef} type="file" accept=".svg" className="hidden" onChange={handleSvgFileUpload} />
+              <input ref={svgFileInputRef} type="file" accept=".svg" className="hidden" onChange={handleSvgFileUpload} aria-label="Upload SVG file" title="Upload SVG file" />
             </div>
 
             {/* Gradient overlays */}
@@ -2121,7 +2154,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-2">Gradient Overlays</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {GRADIENT_PRESETS.map(p => (
-                    <button key={p.id} onClick={() => addGradientOverlay(p)}
+                    <button type="button" key={p.id} onClick={() => addGradientOverlay(p)}
                       className="px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/10 hover:border-indigo-500/30 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all text-left"
                     >{p.name}</button>
                   ))}
@@ -2145,7 +2178,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                         <Type className="w-3 h-3 text-indigo-400 shrink-0" />
                         <span className="flex-1 text-[10px] text-slate-300 truncate">{o.text}</span>
                         <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}–{o.endTime.toFixed(1)}s</span>
-                        <button onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
+                        <button type="button" onClick={e => { e.stopPropagation(); pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTextOverlays((prev: TextOverlay[]) => prev.filter(t => t.id !== o.id)) }}
+                          aria-label={`Delete text layer "${o.text.slice(0, 20)}"`}
+                          title="Delete text layer"
                           className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
                         ><Trash2 className="w-3 h-3" /></button>
                       </div>
@@ -2155,6 +2190,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                         <input type="range" min={0} max={1} step={0.05}
                           value={layerOpacities[o.id] ?? 1}
                           onChange={e => setLayerOpacities(prev => ({ ...prev, [o.id]: Number(e.target.value) }))}
+                          aria-label="Layer opacity"
+                          title="Layer opacity"
                           className="flex-1 accent-indigo-500 h-1"
                         />
                         <span className="text-[7px] text-slate-600 font-black w-6 text-right">{Math.round((layerOpacities[o.id] ?? 1) * 100)}%</span>
@@ -2166,7 +2203,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       <Box className="w-3 h-3 text-emerald-400 shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300 capitalize">{o.kind}</span>
                       <span className="text-[8px] text-slate-600">{o.startTime.toFixed(1)}s</span>
-                      <button onClick={() => setShapeOverlays?.((prev: ShapeOverlay[]) => prev.filter(s => s.id !== o.id))}
+                      <button type="button" onClick={() => setShapeOverlays?.((prev: ShapeOverlay[]) => prev.filter(s => s.id !== o.id))}
+                        aria-label={`Delete ${o.kind} shape`}
+                        title={`Delete ${o.kind} shape`}
                         className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>
@@ -2175,7 +2214,9 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     <div key={o.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] group">
                       <ImageIcon className="w-3 h-3 text-amber-400 shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300 truncate">{o.url.split('/').pop()}</span>
-                      <button onClick={() => setImageOverlays?.((prev: ImageOverlay[]) => prev.filter(i => i.id !== o.id))}
+                      <button type="button" onClick={() => setImageOverlays?.((prev: ImageOverlay[]) => prev.filter(i => i.id !== o.id))}
+                        aria-label="Delete image layer"
+                        title="Delete image layer"
                         className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"
                       ><Trash2 className="w-3 h-3" /></button>
                     </div>
@@ -2187,7 +2228,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <Layers className="w-8 h-8 text-slate-700" />
                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">No layers yet</p>
                 <p className="text-[9px] text-slate-700 max-w-[160px] leading-relaxed">Add shapes, images, or SVGs above. Text overlays appear here too.</p>
-                <button onClick={() => { setActiveEditTab('text'); handleAddOverlay('New Text') }}
+                <button type="button" onClick={() => { setActiveEditTab('text'); handleAddOverlay('New Text') }}
                   className="px-4 py-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-[9px] font-black text-indigo-400 hover:bg-indigo-600/40 transition-all uppercase tracking-widest"
                 >+ Add Text Layer</button>
               </div>
@@ -2199,13 +2240,17 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex gap-2">
                 <input value={compoundName} onChange={e => setCompoundName(e.target.value)}
                   placeholder="Compound name…"
+                  aria-label="Compound name"
+                  title="Compound name"
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none transition-all"
                 />
                 <input type="number" value={compoundDuration} min={1} max={60}
                   onChange={e => setCompoundDuration(Number(e.target.value) || 5)}
+                  aria-label="Compound duration in seconds"
+                  title="Compound duration in seconds"
                   className="w-14 px-2 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white focus:outline-none text-center"
                 />
-                <button onClick={saveAsCompound} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Save</button>
+                <button type="button" onClick={saveAsCompound} className="px-3 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase hover:bg-indigo-500 transition-all shrink-0">Save</button>
               </div>
               {savedCompounds.length > 0 && (
                 <div className="mt-2 space-y-1">
@@ -2214,8 +2259,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                       <Archive className="w-3 h-3 text-violet-400 shrink-0" />
                       <span className="flex-1 text-[10px] text-slate-300">{c.name}</span>
                       <span className="text-[8px] text-slate-600">{c.duration}s</span>
-                      <button onClick={() => addCompoundToTimeline(c)} className="px-2 py-0.5 rounded-lg bg-indigo-600/30 text-indigo-400 text-[8px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all">Inject</button>
-                      <button onClick={() => deleteCompound(c.id)} className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"><Trash2 className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => addCompoundToTimeline(c)} className="px-2 py-0.5 rounded-lg bg-indigo-600/30 text-indigo-400 text-[8px] font-black uppercase hover:bg-indigo-600 hover:text-white transition-all">Inject</button>
+                      <button type="button" onClick={() => deleteCompound(c.id)} aria-label={`Delete compound "${c.name}"`} title={`Delete compound "${c.name}"`} className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-rose-400 transition-all"><Trash2 className="w-3 h-3" /></button>
                     </div>
                   ))}
                 </div>
@@ -2232,7 +2277,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1 block mb-1.5">One-Click Packs</span>
               <div className="space-y-2">
                 {CREATIVITY_PACKS.map(pack => (
-                  <button key={pack.id} onClick={() => applyCreativityPack(pack.id)}
+                  <button type="button" key={pack.id} onClick={() => applyCreativityPack(pack.id)}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-indigo-600/20 hover:border-indigo-500/30 transition-all text-left group"
                   >
                     <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -2250,7 +2295,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1 block mb-1.5">Style Bundles</span>
               <div className="grid grid-cols-2 gap-2">
                 {STYLE_BUNDLES.slice(0, 8).map(b => (
-                  <button key={b.id} onClick={() => applyStyleBundleOneClick(b)}
+                  <button type="button" key={b.id} onClick={() => applyStyleBundleOneClick(b)}
                     className="relative overflow-hidden flex flex-col gap-1 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/20 transition-all text-left group"
                   >
                     <div className={`w-full h-5 rounded-lg bg-gradient-to-r ${b.swatch} mb-1`} />
@@ -2266,7 +2311,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1 block mb-1.5">Platform Optimized</span>
               <div className="grid grid-cols-2 gap-2">
                 {PLATFORM_BUNDLES.map(b => (
-                  <button key={b.id} onClick={() => applyPlatformBundle(b)}
+                  <button type="button" key={b.id} onClick={() => applyPlatformBundle(b)}
                     className="flex flex-col gap-1 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 hover:border-indigo-500/20 transition-all text-left group"
                   >
                     <Globe className="w-4 h-4 text-indigo-400 mb-1" />
@@ -2283,9 +2328,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <div className="flex gap-2">
                 <input value={customStyleName} onChange={e => setCustomStyleName(e.target.value)}
                   placeholder="Style name…"
+                  aria-label="Custom style name"
+                  title="Custom style name"
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-white placeholder:text-slate-600 focus:outline-none transition-all"
                 />
-                <button onClick={saveMyStyle} disabled={!customStyleName.trim()}
+                <button type="button" onClick={saveMyStyle} disabled={!customStyleName.trim()}
+                  aria-label="Save custom style"
+                  title="Save custom style"
                   className="px-3 py-2 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase disabled:opacity-40 hover:bg-emerald-500 transition-all shrink-0"
                 ><Save className="w-3 h-3" /></button>
               </div>
@@ -2306,7 +2355,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pl-1 block mb-1.5">Go To</span>
               <div className="grid grid-cols-2 gap-2">
                 {QUICK_NAV.map(nav => (
-                  <button key={nav.id} onClick={() => setActiveCategory?.(nav.id)}
+                  <button type="button" key={nav.id} onClick={() => setActiveCategory?.(nav.id)}
                     className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/10 transition-all text-left group"
                   >
                     <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${nav.color} flex items-center justify-center shrink-0`}>
@@ -2385,7 +2434,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                   <div key={i} className="flex items-start gap-2">
                     <Icon className={`w-3 h-3 ${color} mt-0.5 shrink-0`} />
                     <p className="flex-1 text-[9px] text-slate-400 leading-relaxed">{text}</p>
-                    <button onClick={() => showToast(`${action} directive queued`, 'info')}
+                    <button type="button" onClick={() => showToast(`${action} directive queued`, 'info')}
                       className={`shrink-0 px-2 py-0.5 rounded-lg bg-white/5 text-[8px] font-black uppercase tracking-widest ${color} hover:bg-white/10 transition-all`}
                     >{action}</button>
                   </div>

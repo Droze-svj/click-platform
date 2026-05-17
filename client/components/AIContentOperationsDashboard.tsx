@@ -441,6 +441,7 @@ export default function AIContentOperationsDashboard() {
             </div>
             {platforms.map(p => (
               <button
+                type="button"
                 key={p.id}
                 onClick={() => setSelectedPlatform(p.id)}
                 className={`group relative overflow-hidden px-10 py-5 rounded-[2.2rem] transition-all duration-500 flex items-center gap-4 ${selectedPlatform === p.id ? `bg-white text-black shadow-2xl scale-105 -translate-y-1` : 'text-slate-600 hover:text-white border border-transparent'}`}

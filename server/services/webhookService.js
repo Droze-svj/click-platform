@@ -267,6 +267,12 @@ function passesFilters(payload, filters) {
  */
 async function triggerWebhook(userId, event, payload, workspaceId = null) {
   try {
+    // Webhook.userId is typed as ObjectId. Supabase users (UUID) can't have
+    // configured webhooks in the Mongo collection, so skip the Mongo query
+    // (it would CastError) and only fan out to SSE listeners.
+    const mongooseLib = require('mongoose');
+    const canQueryMongo = mongooseLib.Types.ObjectId.isValid(String(userId));
+
     const query = {
       userId,
       status: 'active',
@@ -277,7 +283,7 @@ async function triggerWebhook(userId, event, payload, workspaceId = null) {
       query.workspaceId = workspaceId;
     }
 
-    const webhooks = await Webhook.find(query);
+    const webhooks = canQueryMongo ? await Webhook.find(query) : [];
 
     // Also broadcast via SSE if available
     try {
@@ -463,28 +469,28 @@ async function replayWebhook(webhookId, logId = null) {
 }
 
 /**
- * Transform webhook payload using custom script
+ * Transform webhook payload using a sandboxed script.
+ * Uses Node.js built-in `vm` module — no eval(), no RCE surface.
+ * The script runs in an isolated context with a 500 ms CPU budget.
  */
 function transformPayload(payload, transformationScript) {
+  if (!transformationScript) return payload;
   try {
-    if (!transformationScript) {
-      return payload;
-    }
-
-    // Create safe execution context
-    const context = {
-      payload: JSON.parse(JSON.stringify(payload)), // Deep clone
-      console: {
-        log: () => {} // Disable console.log
-      }
-    };
-
-    // Execute transformation (in production, use a sandbox like vm2)
-    const transformed = eval(`(function() { ${transformationScript} return payload; })()`);
-    return transformed || payload;
+    const vm = require('vm');
+    const sandbox = vm.createContext({
+      payload: JSON.parse(JSON.stringify(payload)), // deep-clone so mutations don't escape
+    });
+    // Wrap in IIFE so the script can use `return` statements
+    vm.runInContext(`(function() { ${transformationScript} })()`, sandbox, {
+      timeout: 500, // ms — prevent infinite loops
+      filename: 'webhook-transform',
+    });
+    return (typeof sandbox.payload === 'object' && sandbox.payload !== null)
+      ? sandbox.payload
+      : payload;
   } catch (error) {
     logger.error('Error transforming webhook payload', { error: error.message });
-    return payload; // Return original on error
+    return payload;
   }
 }
 

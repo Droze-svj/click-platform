@@ -138,6 +138,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
           </h3>
         </div>
         <button
+          type="button"
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-1 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
         >
@@ -153,6 +154,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
             No collections yet. Create one to organize your content!
           </p>
           <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
@@ -186,6 +188,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
               </div>
               {contentId && (
                 <button
+                  type="button"
                   onClick={() => handleAddToCollection(collection._id)}
                   className="px-3 py-1.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors opacity-0 group-hover:opacity-100"
                 >
@@ -236,6 +239,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
 
             <div className="flex gap-3 mt-6">
               <button
+                type="button"
                 onClick={() => {
                   setShowCreateModal(false)
                   setNewCollectionName('')
@@ -246,6 +250,7 @@ export default function ContentCollections({ contentId, onCollectionSelect }: Co
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleCreateCollection}
                 disabled={isCreating || !newCollectionName.trim()}
                 className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

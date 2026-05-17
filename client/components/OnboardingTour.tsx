@@ -161,6 +161,7 @@ export default function OnboardingTour({ openByRequest, onClose }: OnboardingTou
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{step.content}</p>
         <div className="flex justify-between items-center">
           <button
+            type="button"
             onClick={handleSkip}
             className="text-sm text-gray-600 hover:text-gray-800"
           >
@@ -169,6 +170,7 @@ export default function OnboardingTour({ openByRequest, onClose }: OnboardingTou
           <div className="flex gap-2">
             {currentStep > 0 && (
               <button
+                type="button"
                 onClick={() => setCurrentStep(currentStep - 1)}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 text-sm"
               >
@@ -176,6 +178,7 @@ export default function OnboardingTour({ openByRequest, onClose }: OnboardingTou
               </button>
             )}
             <button
+              type="button"
               onClick={handleNext}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
             >

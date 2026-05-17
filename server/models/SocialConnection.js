@@ -51,8 +51,16 @@ const socialConnectionSchema = new mongoose.Schema({
   }
 });
 
-// Ensure one connection per platform per user
-socialConnectionSchema.index({ userId: 1, platform: 1 }, { unique: true });
+// Multi-account: a user can connect multiple accounts on the same platform
+// (two TikToks, three Twitters, etc.). Uniqueness is on (userId, platform,
+// platformUserId) so the same account isn't connected twice, while different
+// accounts on the same platform coexist. The compound index also keeps
+// per-platform lookups fast.
+socialConnectionSchema.index(
+  { userId: 1, platform: 1, platformUserId: 1 },
+  { unique: true, partialFilterExpression: { platformUserId: { $type: 'string' } } }
+);
+socialConnectionSchema.index({ userId: 1, platform: 1, isActive: 1 });
 socialConnectionSchema.index({ userId: 1, isActive: 1 });
 
 socialConnectionSchema.pre('save', function(next) {

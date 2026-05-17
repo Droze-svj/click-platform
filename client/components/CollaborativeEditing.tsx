@@ -269,6 +269,7 @@ export default function CollaborativeEditing({
         <div className="flex items-center gap-2">
           {/* Comments Toggle */}
           <button
+            type="button"
             onClick={() => setShowCommentsPanel(!showCommentsPanel)}
             className={`p-2 rounded-lg transition-colors relative ${
               showCommentsPanel
@@ -286,6 +287,7 @@ export default function CollaborativeEditing({
 
           {/* Invite Button */}
           <button
+            type="button"
             onClick={() => setShowInviteDialog(true)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
             title="Invite collaborators"
@@ -295,6 +297,7 @@ export default function CollaborativeEditing({
 
           {/* Share Button */}
           <button
+            type="button"
             onClick={generateShareLink}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-600 dark:text-gray-400"
             title="Copy share link"
@@ -362,6 +365,7 @@ export default function CollaborativeEditing({
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Comments</h4>
               <button
+                type="button"
                 onClick={() => setShowCommentsPanel(false)}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
               >
@@ -400,6 +404,7 @@ export default function CollaborativeEditing({
                       </div>
                       {!comment.resolved && (
                         <button
+                          type="button"
                           onClick={() => resolveComment(comment.id)}
                           className="text-green-600 hover:text-green-700 text-sm"
                         >
@@ -436,6 +441,7 @@ export default function CollaborativeEditing({
                 className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <button
+                type="button"
                 onClick={() => newComment.trim() && addComment(newComment, commentPosition || { x: 50, y: 50, time: 0 })}
                 disabled={!newComment.trim()}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -455,6 +461,7 @@ export default function CollaborativeEditing({
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--text-main)]">Invite Collaborators</h2>
                 <button
+                  type="button"
                   onClick={() => setShowInviteDialog(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                 >
@@ -489,12 +496,14 @@ export default function CollaborativeEditing({
 
                 <div className="flex gap-3">
                   <button
+                    type="button"
                     onClick={() => inviteParticipant('colleague@example.com')}
                     className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     Send Invitation
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowInviteDialog(false)}
                     className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >

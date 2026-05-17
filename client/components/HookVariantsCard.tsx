@@ -114,7 +114,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
           Niche <span className="font-bold text-[var(--text-main)] capitalize">{niche}</span> · platform <span className="font-bold text-[var(--text-main)] capitalize">{platform}</span>
         </p>
         <button
-          type="button"
+         type="button"
           onClick={generate}
           disabled={loading || !baseHook.trim()}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--tint-amber-fg)] text-[var(--page-bg)] text-[11px] font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
@@ -142,7 +142,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
                   <span className="text-[10px] font-black uppercase tracking-widest text-[var(--tint-amber-fg)]">{v.framing}</span>
                   <div className="flex items-center gap-2">
                     <button
-                      type="button"
+                     type="button"
                       onClick={() => copy(v)}
                       aria-label="Copy variant"
                       className="w-8 h-8 rounded-lg bg-[var(--glass-surface)] border border-[var(--glass-border)] flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--text-main)]"
@@ -150,7 +150,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
                       {isCopied ? <Check size={14} className="text-[var(--tint-emerald-fg)]" /> : <Copy size={14} />}
                     </button>
                     <button
-                      type="button"
+                     type="button"
                       onClick={() => pick(v)}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-colors ${isPicked ? 'bg-[var(--tint-emerald-bg)] border-[var(--tint-emerald-edge)] text-[var(--tint-emerald-fg)]' : 'bg-[var(--glass-surface)] border-[var(--glass-border)] text-[var(--text-dim)] hover:text-[var(--text-main)]'}`}
                     >

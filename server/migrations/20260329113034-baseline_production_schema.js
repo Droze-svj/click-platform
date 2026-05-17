@@ -4,21 +4,21 @@ module.exports = {
    * @param client {import('mongodb').MongoClient}
    * @returns {Promise<void>}
    */
-  async up(db, client) {
-    // TODO write your migration here.
-    // See https://github.com/seppevs/migrate-mongo/#creating-a-new-migration-script
-    // Example:
-    // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: true}});
+  async up(db) {
+    // Baseline index pass for production schema v1.
+    // Ensures the indexes defined in the Mongoose models are actually present
+    // on the Atlas cluster after the initial deploy.
+    await db.collection('users').createIndex({ email: 1 }, { unique: true, sparse: false });
+    await db.collection('users').createIndex({ whopUserId: 1 }, { unique: true, sparse: true });
+    await db.collection('scheduledposts').createIndex({ userId: 1, status: 1, scheduledTime: 1 });
+    await db.collection('contents').createIndex({ userId: 1, type: 1, createdAt: -1 });
+    await db.collection('exportjobs').createIndex({ userId: 1, createdAt: -1 });
   },
 
-  /**
-   * @param db {import('mongodb').Db}
-   * @param client {import('mongodb').MongoClient}
-   * @returns {Promise<void>}
-   */
-  async down(db, client) {
-    // TODO write the statements to rollback your migration (if possible)
-    // Example:
-    // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
+  async down(db) {
+    await db.collection('users').dropIndex({ email: 1 });
+    await db.collection('scheduledposts').dropIndex({ userId: 1, status: 1, scheduledTime: 1 });
+    await db.collection('contents').dropIndex({ userId: 1, type: 1, createdAt: -1 });
+    await db.collection('exportjobs').dropIndex({ userId: 1, createdAt: -1 });
   }
 };

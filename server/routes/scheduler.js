@@ -1,18 +1,58 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const ScheduledPost = require('../models/ScheduledPost');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const cron = require('node-cron');
 const { getOptimalPostingWindows } = require('../services/optimalPostingTimeService');
+const logger = require('../utils/logger');
 const router = express.Router();
+
+// Supabase users have UUID ids on `req.user.id`; Mongoose users have ObjectId
+// on `req.user._id`. ScheduledPost.userId is typed as String so it accepts
+// either, but Mongo-only operations (User.findByIdAndUpdate) must be guarded.
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
+
+/**
+ * Emit an in-app notification when a scheduled post fails. Best-effort:
+ * a notification failure must NOT cascade into a second cron error,
+ * since the post status is already saved. Lazy-required so the cron
+ * works even if notificationService isn't loaded for some reason.
+ */
+async function emitFailureNotification(post, reason) {
+  try {
+    const notificationService = require('../services/notificationService');
+    await notificationService.createNotification(
+      post.userId,
+      'Scheduled post failed',
+      reason || `Your ${post.platform} post couldn't be published. Open the scheduler for details.`,
+      'error',
+      '/dashboard/scheduler',
+      {
+        category: 'publishing',
+        priority: 'high',
+        context: {
+          postId: String(post._id),
+          platform: post.platform,
+          scheduledTime: post.scheduledTime,
+        },
+      }
+    );
+  } catch (err) {
+    logger.warn('emitFailureNotification: notification create failed', {
+      postId: post?._id,
+      error: err.message,
+    });
+  }
+}
 
 // Get optimal posting windows derived from a user's real per-platform engagement.
 // Returns `confident: false` (and empty windows) if the user has fewer than the
 // minimum required posts — the UI should NOT show a recommendation in that case.
 router.get('/optimal-times', auth, asyncHandler(async (req, res) => {
   const { platform, timezone, lookbackDays } = req.query;
-  const result = await getOptimalPostingWindows(req.user._id, {
+  const result = await getOptimalPostingWindows(req.user._id || req.user.id, {
     platform: platform || null,
     timezone: timezone || null,
     lookbackDays: lookbackDays ? parseInt(lookbackDays, 10) : undefined,
@@ -29,13 +69,76 @@ const DEFAULT_DRY_RUN = process.env.DRY_RUN_PUBLISH === 'true';
 
 router.post('/schedule', auth, async (req, res) => {
   try {
-    const { contentId, platform, content, scheduledTime, mediaUrl, hashtags, dryRun } = req.body;
+    const { contentId, platform, content, scheduledTime, mediaUrl, hashtags, dryRun, accountId } = req.body;
 
-    if (!platform || !scheduledTime) {
-      return res.status(400).json({ error: 'Platform and scheduled time are required' });
+    // Structured validation — the prior code accepted empty text and
+    // 500'd opaquely on invalid timestamps. Each branch now returns an
+    // actionable `code` the client can map to a translation key.
+    if (!platform) {
+      return res.status(400).json({ error: 'Platform is required', code: 'PLATFORM_REQUIRED' });
+    }
+    if (!scheduledTime) {
+      return res.status(400).json({ error: 'Scheduled time is required', code: 'SCHEDULED_TIME_REQUIRED' });
+    }
+    const when = new Date(scheduledTime);
+    if (!Number.isFinite(when.getTime())) {
+      return res.status(400).json({
+        error: 'scheduledTime is not a valid date',
+        code: 'SCHEDULED_TIME_INVALID',
+        details: `Got: ${JSON.stringify(scheduledTime)}`,
+      });
+    }
+    // Content can be a plain string (legacy clients) or an object
+    // with { text, mediaUrl, hashtags } (new clients). Normalise both.
+    const text = typeof content === 'string' ? content : (content?.text || '');
+    const finalMediaUrl = mediaUrl || content?.mediaUrl || '';
+    const finalHashtags = Array.isArray(hashtags)
+      ? hashtags
+      : (Array.isArray(content?.hashtags) ? content.hashtags : []);
+    if (!text.trim() && !finalMediaUrl) {
+      return res.status(400).json({
+        error: 'Post needs text content or a mediaUrl',
+        code: 'CONTENT_EMPTY',
+      });
     }
 
-    const when = new Date(scheduledTime);
+    // Pre-flight: confirm the user actually has a connected account on this
+    // platform (and that the requested accountId, if any, exists). Catching
+    // this here means the schedule never enters the queue with credentials
+    // we can't fulfil — instead of failing opaquely at publish-time, the
+    // composer gets a clear 400 the UI can route to a "Connect …" prompt.
+    try {
+      const oauthService = require('../services/oauthService');
+      const accounts = await oauthService.listSocialAccounts(
+        req.user._id || req.user.id,
+        platform,
+      );
+      if (!Array.isArray(accounts) || accounts.length === 0) {
+        return res.status(400).json({
+          error: `No connected ${platform} account. Connect ${platform} first.`,
+          code: 'PLATFORM_NOT_CONNECTED',
+          platform,
+        });
+      }
+      if (accountId && !accounts.some((a) => a.accountId === accountId || a.platformUserId === accountId)) {
+        return res.status(400).json({
+          error: `Selected ${platform} account is no longer connected.`,
+          code: 'ACCOUNT_NOT_CONNECTED',
+          platform,
+          accountId,
+        });
+      }
+    } catch (preflightErr) {
+      // Don't 500 the publish on a transient storage hiccup — log and let
+      // the worker surface the real failure if it actually can't load
+      // credentials at run-time.
+      logger.warn('Schedule pre-flight account check failed; continuing', {
+        userId: req.user?._id || req.user?.id,
+        platform,
+        error: preflightErr.message,
+      });
+    }
+
     // Compute the cancel-window cutoff. The cron picks up posts only after
     // both `scheduledTime` AND `holdUntil` have passed. Posts scheduled
     // far in the future already have ample cancel time, so we only set the
@@ -46,13 +149,17 @@ router.post('/schedule', auth, async (req, res) => {
     const holdUntil = SAFETY_HOLD_MINUTES > 0 ? minPickup : null;
 
     const scheduledPost = new ScheduledPost({
-      userId: req.user._id,
+      userId: req.user._id || req.user.id,
       contentId: contentId || null,
       platform,
+      // Multi-account: when the client passed an accountId, persist it so
+      // the worker knows which connected account to publish from. Without
+      // one, the worker falls back to the user's active/primary account.
+      accountId: accountId || null,
       content: {
-        text: content || '',
-        mediaUrl: mediaUrl || '',
-        hashtags: hashtags || []
+        text,
+        mediaUrl: finalMediaUrl,
+        hashtags: finalHashtags,
       },
       scheduledTime: when,
       holdUntil,
@@ -62,14 +169,17 @@ router.post('/schedule', auth, async (req, res) => {
 
     await scheduledPost.save();
 
-    // Update usage
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { 'usage.postsScheduled': 1 }
-    });
+    // Update usage counter — only meaningful for legacy Mongo users.
+    // Supabase users don't have a Mongo doc to increment, so skip silently.
+    if (isMongoUserId(req.user._id || req.user.id)) {
+      await User.findByIdAndUpdate(req.user._id || req.user.id, {
+        $inc: { 'usage.postsScheduled': 1 }
+      });
+    }
 
     // Trigger webhook
     const { triggerWebhook } = require('../services/webhookService');
-    await triggerWebhook(req.user._id, 'post.scheduled', {
+    await triggerWebhook(req.user._id || req.user.id, 'post.scheduled', {
       postId: scheduledPost._id,
       contentId: contentId || null,
       platform,
@@ -87,7 +197,23 @@ router.post('/schedule', auth, async (req, res) => {
       dryRun: scheduledPost.dryRun,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Schedule failures hit the user in a "queue post" flow — generic 500
+    // messages stranded them. Surface a tiny structured shape so the UI
+    // can render a translatable toast + a Retry button on transient
+    // errors. Validation errors are already returned 400 above; anything
+    // here is an actual server problem.
+    logger.error('Schedule create failed', {
+      userId: req.user?._id || req.user?.id,
+      platform: req.body?.platform,
+      error: error.message,
+    });
+    const msg = error.name === 'ValidationError'
+      ? `Invalid post fields: ${Object.keys(error.errors || {}).join(', ')}`
+      : (error.message || 'Could not schedule post');
+    res.status(500).json({
+      error: msg,
+      code: error.code || (error.name === 'ValidationError' ? 'SCHEDULE_VALIDATION' : 'SCHEDULE_INTERNAL'),
+    });
   }
 });
 
@@ -103,7 +229,7 @@ router.post('/schedule', auth, async (req, res) => {
 router.post('/:postId/cancel', auth, async (req, res) => {
   try {
     const { postId } = req.params;
-    const post = await ScheduledPost.findOne({ _id: postId, userId: req.user._id });
+    const post = await ScheduledPost.findOne({ _id: postId, userId: req.user._id || req.user.id });
     if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
 
     if (['posted', 'failed', 'cancelled'].includes(post.status)) {
@@ -134,7 +260,7 @@ router.post('/:postId/cancel', auth, async (req, res) => {
     await post.save();
 
     const { triggerWebhook } = require('../services/webhookService');
-    await triggerWebhook(req.user._id, 'post.cancelled', {
+    await triggerWebhook(req.user._id || req.user.id, 'post.cancelled', {
       postId: post._id,
       contentId: post.contentId,
       platform: post.platform,
@@ -152,7 +278,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const { platform, status, startDate, endDate } = req.query;
 
-    const query = { userId: req.user._id };
+    const query = { userId: req.user._id || req.user.id };
     if (platform) query.platform = platform;
     if (status) query.status = status;
     if (startDate || endDate) {
@@ -179,7 +305,7 @@ router.put('/:postId', auth, async (req, res) => {
   try {
     const post = await ScheduledPost.findOne({
       _id: req.params.postId,
-      userId: req.user._id
+      userId: req.user._id || req.user.id
     });
 
     if (!post) {
@@ -208,7 +334,7 @@ router.delete('/:postId', auth, async (req, res) => {
   try {
     const post = await ScheduledPost.findOne({
       _id: req.params.postId,
-      userId: req.user._id
+      userId: req.user._id || req.user.id
     });
 
     if (!post) {
@@ -220,7 +346,7 @@ router.delete('/:postId', auth, async (req, res) => {
 
     // Trigger webhook
     const { triggerWebhook } = require('../services/webhookService');
-    await triggerWebhook(req.user._id, 'post.cancelled', {
+    await triggerWebhook(req.user._id || req.user.id, 'post.cancelled', {
       postId: postId.toString(),
       platform: post.platform
     }).catch(err => logger.error('Webhook trigger failed', { error: err.message }));
@@ -239,7 +365,7 @@ router.get('/calendar', auth, async (req, res) => {
     const endDate = new Date(year || new Date().getFullYear(), month || new Date().getMonth(), 0);
 
     const posts = await ScheduledPost.find({
-      userId: req.user._id,
+      userId: req.user._id || req.user.id,
       scheduledTime: { $gte: startDate, $lte: endDate }
     }).sort({ scheduledTime: 1 });
 
@@ -258,8 +384,6 @@ router.get('/calendar', auth, async (req, res) => {
 });
 
 // Process scheduled posts (runs every minute)
-const logger = require('../utils/logger');
-const mongoose = require('mongoose');
 
 cron.schedule('* * * * *', async () => {
   try {
@@ -295,17 +419,30 @@ cron.schedule('* * * * *', async () => {
         if (conn) {
           hasConnection = true;
         } else if (['linkedin', 'facebook'].includes(post.platform?.toLowerCase())) {
-          const User = require('../models/User');
-          const user = await User.findById(post.userId).select('oauth').lean();
-          if (post.platform?.toLowerCase() === 'facebook') {
-            hasConnection = !!(user?.oauth?.facebook?.connected);
-          } else if (post.platform?.toLowerCase() === 'linkedin') {
+          // post.userId is a String — may be a Mongo ObjectId or a Supabase
+          // UUID. Only do User.findById for ObjectIds; for UUIDs, read from
+          // the unified OAuthStorage (social_links JSONB).
+          const platformKey = post.platform.toLowerCase();
+          let oauthRow = null;
+          if (isMongoUserId(post.userId)) {
+            const User = require('../models/User');
+            const user = await User.findById(post.userId).select('oauth').lean();
+            oauthRow = user?.oauth?.[platformKey] || null;
+          } else {
+            const OAuthStorage = require('../utils/oauthStorage');
+            oauthRow = await OAuthStorage.loadTokens(String(post.userId), platformKey);
+          }
+
+          if (platformKey === 'facebook') {
+            hasConnection = !!(oauthRow?.connected);
+          } else if (platformKey === 'linkedin') {
             try {
-              const { getConnectionStatus } = require('../services/linkedinOAuthService');
-              const status = await getConnectionStatus(post.userId?.toString());
+              // Call via the singleton instance — destructuring would drop `this`.
+              const linkedinService = require('../services/linkedinOAuthService');
+              const status = await linkedinService.getConnectionStatus(post.userId?.toString());
               hasConnection = !!(status?.connected);
             } catch (_) {
-              hasConnection = !!(user?.oauth?.linkedin?.connected);
+              hasConnection = !!(oauthRow?.connected);
             }
           }
         }
@@ -313,19 +450,44 @@ cron.schedule('* * * * *', async () => {
         if (hasConnection) {
           // Post directly to platform
           try {
+            // Multi-account: route through the user's chosen account id
+            // (stored on the post). `postToSocialMedia` ultimately passes
+            // this into the platform service so the right access token is
+            // used. Falls back to the active/primary account inside the
+            // service when null.
             const result = await postToSocialMedia(
               post.userId,
               post.platform,
               {
                 text: post.content.text,
                 mediaUrl: post.content.mediaUrl || '',
-                hashtags: post.content.hashtags || []
-              }
+                hashtags: post.content.hashtags || [],
+              },
+              { accountId: post.accountId || null }
             );
 
+            // Reject non-success results explicitly instead of treating
+            // them as success — the previous code assigned undefined
+            // to platformPostId which broke downstream analytics sync.
+            if (result && result.success === false) {
+              throw new Error(result.error || 'Platform rejected the post');
+            }
+
             post.status = 'posted';
-            post.platformPostId = result.platformPostId || result._id?.toString() || `post-${Date.now()}`;
+            post.platformPostId = result?.platformPostId
+              || result?.id
+              || result?._id?.toString()
+              || `post-${Date.now()}`;
+            // Guard against ObjectId values sneaking in — analytics sync
+            // expects a string and skips anything that looks like a Mongo
+            // id (24-hex).
+            if (/^[a-f0-9]{24}$/i.test(String(post.platformPostId))) {
+              logger.warn('platformPostId looks like ObjectId; analytics sync may skip', {
+                postId: post._id, platformPostId: post.platformPostId,
+              });
+            }
             post.postedAt = new Date();
+            const platformUrl = result?.url || result?.platformPostUrl || null;
             await post.save();
 
             logger.info('Post published', {
@@ -333,6 +495,33 @@ cron.schedule('* * * * *', async () => {
               platform: post.platform,
               userId: post.userId
             });
+
+            // Push live update + in-app success notification so any open
+            // dashboard tab flips the post from `scheduled` to `published`
+            // without the user refreshing.
+            try {
+              const { emitToUser } = require('../services/socketService');
+              emitToUser(post.userId, 'post:status', {
+                postId: String(post._id),
+                platform: post.platform,
+                status: 'published',
+                url: platformUrl,
+                postedAt: post.postedAt,
+              });
+              const notificationService = require('../services/notificationService');
+              await notificationService.createNotification(
+                post.userId,
+                `${post.platform} post published`,
+                platformUrl
+                  ? `Your ${post.platform} post is live — ${platformUrl}`
+                  : `Your ${post.platform} post has been published.`,
+                'success',
+                '/dashboard/posts',
+                { category: 'publishing', priority: 'normal', context: { postId: String(post._id), platform: post.platform } }
+              );
+            } catch (notifyErr) {
+              logger.warn('Could not emit post:published live update', { error: notifyErr.message });
+            }
           } catch (postError) {
             logger.error('Error posting to platform', {
               postId: post._id,
@@ -340,20 +529,37 @@ cron.schedule('* * * * *', async () => {
               error: postError.message
             });
             post.status = 'failed';
+            post.error = postError.message || `Failed to post to ${post.platform}.`;
             await post.save();
+            try {
+              const { emitToUser } = require('../services/socketService');
+              emitToUser(post.userId, 'post:status', {
+                postId: String(post._id),
+                platform: post.platform,
+                status: 'failed',
+                error: post.error,
+              });
+            } catch { /* socket optional */ }
+            await emitFailureNotification(post, post.error);
           }
         } else {
-          // No connection - mark as posted (mock for now)
-          post.status = 'posted';
-          post.platformPostId = `mock-${Date.now()}`;
-          post.postedAt = new Date();
+          // No active SocialConnection for this platform — fail the post
+          // visibly instead of fake-succeeding with a mock platformPostId.
+          // The previous behaviour ("posted" + mock id) was deceptive: the
+          // analytics cron blacklists mock-* ids, so engagement never
+          // arrived and the user thought their post worked. Now the post
+          // shows up in the scheduler as `failed` with a clear reason and
+          // a notification fires (see emitFailureNotification below).
+          post.status = 'failed';
+          post.error = `No active ${post.platform} connection. Reconnect at /dashboard/integrations.`;
           await post.save();
 
-          logger.info('Post marked as posted (no connection)', {
+          logger.warn('Scheduled post failed: missing connection', {
             postId: post._id,
             platform: post.platform,
-            userId: post.userId
+            userId: post.userId,
           });
+          await emitFailureNotification(post, post.error);
         }
       } catch (error) {
         logger.error('Error publishing post', {
@@ -362,7 +568,9 @@ cron.schedule('* * * * *', async () => {
         });
         try {
           post.status = 'failed';
+          post.error = error.message || 'Unexpected publishing error.';
           await post.save();
+          await emitFailureNotification(post, post.error);
         } catch (saveError) {
           // If MongoDB is disconnected, can't save - that's okay
           logger.debug('Could not save failed post status', { error: saveError.message });
@@ -400,11 +608,11 @@ router.put('/posts/:postId', auth, asyncHandler(async (req, res) => {
 
   const post = await ScheduledPost.findOne({
     _id: postId,
-    userId: req.user._id
+    userId: req.user._id || req.user.id
   });
 
   if (!post) {
-    return sendError(res, 'Post not found', 404);
+    return res.status(404).json({ success: false, error: 'Post not found' });
   }
 
   if (scheduledTime) {
@@ -421,7 +629,7 @@ router.put('/posts/:postId', auth, asyncHandler(async (req, res) => {
   }
 
   await post.save();
-  sendSuccess(res, 'Post updated successfully', 200, post);
+  res.json({ success: true, message: 'Post updated successfully', data: post });
 }));
 
 module.exports = router;

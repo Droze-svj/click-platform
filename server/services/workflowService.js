@@ -1,9 +1,18 @@
 // Workflow automation service
 
+const mongoose = require('mongoose');
 const Workflow = require('../models/Workflow');
 const UserAction = require('../models/UserAction');
 const logger = require('../utils/logger');
 const { isDevUser } = require('../utils/devUser');
+
+// Mongoose models keyed off userId only work for 24-char ObjectId strings.
+// Supabase UUID ids would CastError on every write.
+function isMongoUserId(userId) {
+  if (!userId) return false;
+  const s = String(userId);
+  return mongoose.Types.ObjectId.isValid(s) && /^[a-f0-9]{24}$/i.test(s);
+}
 
 /**
  * Track user action
@@ -11,6 +20,7 @@ const { isDevUser } = require('../utils/devUser');
 async function trackAction(userId, action, metadata = {}) {
   try {
     if (isDevUser(userId)) return null;
+    if (!isMongoUserId(userId)) return null;
 
     let userAction;
     // Wrap in try-catch to handle CastErrors gracefully
@@ -59,6 +69,7 @@ async function trackAction(userId, action, metadata = {}) {
  * Analyze user patterns and suggest workflows
  */
 async function analyzePatterns(userId, days = 30) {
+  if (!isMongoUserId(userId)) return;
   try {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
@@ -134,6 +145,7 @@ async function analyzePatterns(userId, days = 30) {
 async function getSuggestedNextSteps(userId, currentAction = null) {
   try {
     if (isDevUser(userId)) return [];
+    if (!isMongoUserId(userId)) return [];
 
     // Get recent actions - wrap in try-catch to handle CastErrors
     let recentActions = [];

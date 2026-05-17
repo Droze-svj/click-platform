@@ -109,6 +109,7 @@ export default function ROICalculator() {
           <div className="flex gap-2">
             {(['7d', '30d', '90d'] as const).map((p) => (
               <button
+                type="button"
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

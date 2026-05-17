@@ -10,7 +10,7 @@ import {
   Plug, Video, Calendar, Users, Palette, FileText, Hammer
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiGet, apiPost, apiPut } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import { useToast } from '../../../contexts/ToastContext'
 import ToastContainer from '../../../components/ToastContainer'
@@ -119,15 +119,19 @@ export default function OnboardingPage() {
     setNiche(value)
     setEditingNiche(false)
     showToast(`✓ NICHE_LOCKED: ${value.toUpperCase()}`, 'success')
+    // Persist niche to server User model so AI services (strategist, Gemini
+    // playbooks, marketing intelligence) can read it without a client context.
+    try {
+      await apiPut('/niche/select', { niche: value })
+    } catch {
+      showToast('NICHE_Could not sync: Saved locally — will retry on next session.', 'error')
+    }
     const profileStep = steps.find(s => s.id === 'profile')
     if (profileStep && !profileStep.completed) {
       try {
         await apiPost('/onboarding/complete-step', { stepId: 'profile' })
         setSteps(prev => prev.map(s => s.id === 'profile' ? { ...s, completed: true } : s))
-      } catch {
-        // Silent — local state is the source of truth for niche; the server
-        // marker is a nice-to-have for the progress bar.
-      }
+      } catch { /* non-critical */ }
     }
   }
 
@@ -160,7 +164,7 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
           <div className="flex items-center gap-10">
-            <button type="button" onClick={() => router.push('/dashboard')} title="Back" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
+            <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-16 h-16 rounded-[1.8rem] bg-white/[0.02] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors hover:border-rose-500/50">
               <ArrowLeft size={28} />
             </button>
             <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-3xl">
@@ -208,12 +212,10 @@ export default function OnboardingPage() {
               {NICHE_OPTIONS.map(opt => {
                 const selected = workflow.niche === opt.value
                 return (
-                  <button
+                  <button type="button"
                     key={opt.value}
-                    type="button"
                     onClick={() => handlePickNiche(opt.value)}
-                    // eslint-disable-next-line jsx-a11y/aria-proptypes -- runtime boolean serialises correctly to "true"/"false".
-                    aria-pressed={selected}
+                    aria-label={selected ? `${opt.value} niche — selected` : `Select ${opt.value} niche`}
                     className={`group p-5 rounded-2xl border transition-all text-left flex flex-col gap-2 ${
                       selected
                         ? `bg-[var(--tint-${opt.accent}-bg)] border-[var(--tint-${opt.accent}-edge)] text-[var(--tint-${opt.accent}-fg)] shadow-lg`
@@ -238,7 +240,7 @@ export default function OnboardingPage() {
                 <p className="text-lg font-black text-white capitalize leading-none">{workflow.niche}</p>
               </div>
             </div>
-            <button type="button" onClick={() => setEditingNiche(true)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
+            <button type="button" onClick={() => setEditingNiche(true)} title="Change Niche" aria-label="Change Niche" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white">
               Change
             </button>
           </div>
@@ -299,7 +301,7 @@ export default function OnboardingPage() {
                     </Link>
                   )}
                   {!step.completed && (
-                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title="Mark as complete" className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
+                    <button type="button" disabled={isCompleting} onClick={() => handleComplete(step.id)} title={`Mark "${step.title}" as complete`} aria-label={`Mark "${step.title}" as complete`} className="w-12 h-12 rounded-full bg-white/5 border-2 border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-500/30 flex items-center justify-center transition-colors disabled:opacity-40 flex-shrink-0">
                       {isCompleting ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                     </button>
                   )}

@@ -11,6 +11,32 @@ const logFormat = winston.format.combine(
   winston.format.json()
 );
 
+/**
+ * Stringify metadata safely. Replaces circular references with a marker
+ * instead of crashing the request — axios errors carry the request +
+ * response objects which reference each other, so a `logger.error(err)`
+ * call could 500 the whole response by throwing inside the formatter.
+ * That actually happened during the Google OAuth callback flow: the
+ * token-exchange error was real, but `JSON.stringify` blew up trying
+ * to log it, the 500 masked the original error, and there was no
+ * useful diagnostic in the response.
+ */
+function safeStringify(obj) {
+  const seen = new WeakSet();
+  return JSON.stringify(obj, (_key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (seen.has(value)) return '[Circular]';
+      seen.add(value);
+      // Trim a few known-noisy axios internals so the log isn't
+      // dominated by them when we DO get to print them.
+      if (value.constructor && /^(ClientRequest|IncomingMessage|Socket|TLSSocket|HTTPParser)$/.test(value.constructor.name)) {
+        return `[${value.constructor.name}]`;
+      }
+    }
+    return value;
+  });
+}
+
 // Console format for development
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
@@ -18,7 +44,11 @@ const consoleFormat = winston.format.combine(
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
     let msg = `${timestamp} [${level}]: ${message}`;
     if (Object.keys(meta).length > 0) {
-      msg += ` ${JSON.stringify(meta)}`;
+      try {
+        msg += ` ${safeStringify(meta)}`;
+      } catch (err) {
+        msg += ` [meta-serialise-failed: ${err.message}]`;
+      }
     }
     return msg;
   })

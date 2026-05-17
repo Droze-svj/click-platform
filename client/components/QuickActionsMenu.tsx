@@ -98,6 +98,7 @@ export default function QuickActionsMenu() {
         <div className="space-y-1">
           {actions.map((action, index) => (
             <button
+              type="button"
               key={index}
               onClick={() => {
                 action.action()

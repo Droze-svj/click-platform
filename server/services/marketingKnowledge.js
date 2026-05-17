@@ -116,11 +116,11 @@ const NICHE_PLAYBOOKS = {
     keywords: ['protein synthesis', 'cortisol', 'longevity', 'biomarkers', 'circadian'],
   },
   finance: {
-    voice: 'Confident, specific, math-forward. Dollar amounts beat percentages.',
-    angles: ['Mistake countdown (e.g. "5 IRA mistakes")', 'Income breakdown', 'Tax loophole', 'Cost-of-X reveal', 'Side-hustle month-by-month'],
+    voice: 'Confident, specific, math-forward. Dollar amounts beat percentages. Inclusive of starting points — debt-payoff and emergency-fund first, investing second.',
+    angles: ['Mistake countdown (e.g. "5 IRA mistakes")', 'Income breakdown', 'Tax loophole', 'Cost-of-X reveal', 'Side-hustle month-by-month', 'Debt-payoff plan (defensive finance)', 'Emergency-fund build from $0', 'Living-on-low-income money mechanics'],
     triggers: ['Dollar specificity ($4,237 not "around $4k")', 'Time-to-money ("in 90 days")', 'Risk reframe'],
-    avoid: ['"Get rich quick" framing', 'Stock picks without disclaimer', 'Crypto pump language'],
-    keywords: ['HYSA', 'Roth', '401k match', 'tax bracket', 'compound interest', 'dividend'],
+    avoid: ['"Get rich quick" framing', 'Stock picks without disclaimer', 'Crypto pump language', 'Assuming high-income or risk-tolerant audience'],
+    keywords: ['HYSA', 'Roth', '401k match', 'tax bracket', 'compound interest', 'dividend', 'emergency fund', 'debt snowball', 'avalanche method'],
   },
   education: {
     voice: 'Clear, structured, patient. Promise one thing per video.',
@@ -157,6 +157,50 @@ const NICHE_PLAYBOOKS = {
     avoid: ['Slow setups', 'Inside jokes that exclude new viewers'],
     keywords: ['reaction', 'POV', 'storytime', 'caught on camera', 'wait for it'],
   },
+  // ── Expansion niches (added pass 6) — same shape as the originals so the
+  // prompt block, posting windows, and keyword targeting all just work. ──
+  crypto: {
+    voice: 'Sober, data-first. Cite on-chain numbers, not vibes. Educator energy over hype.',
+    angles: ['On-chain whale move breakdown', 'Tax / regulatory landmines', 'Protocol mechanism explained simply', 'Real-yield vs ponzi-yield', 'Long-time-horizon "boring wins" thesis'],
+    triggers: ['Specific dollar flows ($217M into X)', 'Wallet-address-level proof', 'Cycle-aware framing (post-halving, pre-cycle)', 'Risk-first reframes'],
+    avoid: ['"To the moon" / pump language', 'Unbacked price predictions', 'Insider language without explaining the term'],
+    keywords: ['on-chain', 'TVL', 'cold storage', 'self-custody', 'real yield', 'cycle', 'liquidity', 'narrative', 'tokenomics'],
+  },
+  parenting: {
+    voice: 'Warm, non-judgmental, evidence-aware. Talk to the parent, not at them. Inclusive of every family shape.',
+    angles: ['Pediatrician-said-this myth-bust', 'Developmental milestone reframe', 'Real-day chaos POV', 'Gear-that-actually-works review', 'Co-parent dynamics (any family shape)', 'Single-parent reality check', 'Two-mom / two-dad family moments', 'Grandparent-as-caregiver POV', 'Step-parent / blended-family scenarios'],
+    triggers: ['Age-specific specificity ("at 14 months…")', 'Permission-giving language', 'Honest-mess footage (lived-in vs aspirational)'],
+    avoid: ['Sanctimommy framing', 'Fear-based clickbait about child harm', 'One-size-fits-all parenting rules', 'Assuming two-parent / cisgender / heteronormative household by default'],
+    keywords: ['developmental', 'sleep regression', 'sensory', 'gentle parenting', 'milestone', 'nap', 'wonder week', 'transition', 'co-parenting', 'blended family'],
+  },
+  beauty: {
+    voice: 'Knowledgeable best-friend energy. Concrete ingredients + technique > brand worship. Inclusive of every skin type, age, gender, and condition.',
+    angles: ['Ingredient deep-dive (what retinol actually does)', 'Dupe reveal w/ side-by-side', 'Get-ready-with-me + technique callout', 'Skin-type-specific routine', 'Before/after w/ honest timeline', 'Barrier repair / skin-condition focus (eczema, rosacea, acne)', 'Men\'s skincare basics', 'Mature-skin routine (40+)', 'Deeper-skin-tone-specific shade matching', 'Minimal / "skinimalism" routine'],
+    triggers: ['Specific %s ("2% salicylic")', 'Texture/finish callouts on camera', 'Honest pricing breakdown', 'Skin-type + age-range disclosure'],
+    avoid: ['"This changed my life" with no detail', 'Hidden affiliate framing', 'Filtered before-after that misleads', 'Defaulting to one body / gender / age / skin tone as the assumed viewer'],
+    keywords: ['retinol', 'niacinamide', 'glaze', 'lid', 'crease', 'undertone', 'glass skin', 'cool-toned', 'dewy', 'matte', 'barrier repair', 'ceramides'],
+  },
+  wellness: {
+    voice: 'Calm, grounded, evidence-respecting but not clinical. Permission to start small. Aware that wellness shows up differently across cultures and bodies.',
+    angles: ['Stress physiology explained simply', 'Tiny-habit stack (2-minute version)', 'Sleep architecture deep-dive', 'Nervous-system reset technique', 'Burnout recovery roadmap', 'Culturally-rooted wellness practice (e.g. Ayurveda, TCM, Indigenous) with respect, not appropriation', 'Faith-based wellness (prayer, fasting, Sabbath rhythms) when relevant', 'Disability-aware wellness (chair-based, low-spoon)', 'Wellness on a budget'],
+    triggers: ['Cited mechanisms (cortisol, vagus nerve, HRV)', 'Permission-to-suck framing for hard days', 'Habit-stacking with existing routine'],
+    avoid: ['"Everything is trauma" overreach', 'Healing absolutism', 'Selling a course inside a free video', 'Defaulting to Western individualist framing as universal'],
+    keywords: ['nervous system', 'HRV', 'vagal tone', 'somatic', 'glymphatic', 'reset', 'co-regulation', 'parasympathetic', 'cultural practice', 'rest ethic'],
+  },
+  science: {
+    voice: 'Curious explainer. Awe + specificity. Translate jargon without dumbing down the idea.',
+    angles: ['Counterintuitive finding from recent paper', 'How does X actually work (steel-man the curiosity)', 'Common-knowledge debunk with source', 'Why-this-matters tie-back', 'Visualization of a scale humans can\'t intuit'],
+    triggers: ['Recent-paper citation w/ year', 'Scale comparisons ("a teaspoon = a billion stars")', 'Hands-on demo or simulation'],
+    avoid: ['"Scientists hate this" framing', 'Overclaiming preliminary results', 'Single-study-as-fact'],
+    keywords: ['hypothesis', 'replication', 'effect size', 'mechanism', 'first-principles', 'order of magnitude', 'p<0.05', 'meta-analysis'],
+  },
+  gaming: {
+    voice: 'High-energy, community-aware. Specifics about builds, patches, meta. Insider literacy.',
+    angles: ['Patch winners/losers', 'Build guide w/ rotation', 'Tier list with reasoning', 'Speedrun trick / glitch', 'Esports moment breakdown'],
+    triggers: ['Patch number specificity (e.g. "14.21 changed…")', 'Exact APM / KDA / damage numbers', 'Frame-perfect callouts'],
+    avoid: ['"This game is dead" doomposting', 'Spoilers in title without warning', 'Gatekeeping vocab'],
+    keywords: ['meta', 'patch', 'nerf', 'buff', 'comp', 'rotation', 'macro', 'micro', 'tilt', 'matchup', 'frame data'],
+  },
   other: {
     voice: 'Adapt to creator energy. Default to specific + visual.',
     angles: ['Reveal', 'Walkthrough', 'Comparison', 'Listicle'],
@@ -179,6 +223,15 @@ const NICHE_POSTING_WINDOWS = {
   lifestyle:     [{ start: 7,  end: 9,  label: 'Routine reveals'       }, { start: 19, end: 22, label: 'Wind-down hours'        }],
   business:      [{ start: 7,  end: 10, label: 'Pre-meeting scroll'    }, { start: 12, end: 14, label: 'Lunch break'             }],
   entertainment: [{ start: 18, end: 22, label: 'Prime-time'            }, { start: 22, end: 24, label: 'Late-night doomscroll' }],
+  // Expansion niches — windows derived from how the audience consumes
+  // content (e.g. crypto traders read pre-market; parents are awake at
+  // dawn nap windows; gamers peak after work and on weekends).
+  crypto:        [{ start: 7,  end: 10, label: 'Pre-market trader scroll' }, { start: 21, end: 24, label: 'Late-night degen hours' }],
+  parenting:     [{ start: 5,  end: 8,  label: 'Pre-dawn nap window'   }, { start: 20, end: 23, label: 'After-bedtime decompress' }],
+  beauty:        [{ start: 6,  end: 9,  label: 'Get-ready window'       }, { start: 19, end: 22, label: 'Evening skincare hour'  }],
+  wellness:      [{ start: 6,  end: 9,  label: 'Morning reset'          }, { start: 20, end: 23, label: 'Wind-down ritual hour'   }],
+  science:       [{ start: 11, end: 14, label: 'Lunch curiosity'        }, { start: 20, end: 23, label: 'Evening explainer time'  }],
+  gaming:        [{ start: 16, end: 19, label: 'After-school session'   }, { start: 21, end: 24, label: 'Prime gaming hours'      }],
   other:         [{ start: 7,  end: 9,  label: 'Morning commute'       }, { start: 19, end: 22, label: 'Evening prime'           }],
 };
 
@@ -190,6 +243,97 @@ const CTA_LIBRARY = {
   comment:  ['Reply A or B and I will follow up.', 'What did I miss? Drop it below.'],
   dm:       ['DM me "[keyword]" for the doc.', 'DM "GUIDE" for the swipe file.'],
   click:    ['Link in bio for the full breakdown.', 'Full version on the channel.'],
+};
+
+/**
+ * Niche-specific CTA overrides. Each entry is merged ON TOP of CTA_LIBRARY
+ * by `getKnowledgeSlice`, so unspecified categories fall through to the
+ * global pool. Add a niche here only when its CTAs genuinely land harder
+ * than the generic ones — otherwise the global pool is fine.
+ *
+ * Finance leans DM-for-document and save-for-tax-season. Beauty leans
+ * link-in-bio and save-for-shopping. Parenting drops the hard sell and
+ * prioritises share-with-another-parent. Crypto stays cautious (no
+ * "buy this", always "do your own research"). Gaming uses pin-the-comment
+ * / part-2-on-stream framing.
+ */
+const CTA_LIBRARY_BY_NICHE = {
+  finance: {
+    save:    ['Save this — you will use it at tax time.', 'Bookmark this for your next 401k decision.'],
+    dm:      ['DM "401K" and I will send you the spreadsheet.', 'DM "TAX" for the deduction checklist.'],
+    comment: ['What income bracket should I run this for next? Drop it below.', 'Which mistake hits hardest? 1, 2, or 3?'],
+  },
+  crypto: {
+    save:    ['Save this — re-read it during the next pump.', 'Bookmark for the next time the timeline is euphoric.'],
+    dm:      ['DM "ONCHAIN" and I will send the dashboard link.', 'DM "SETUP" for the cold-storage checklist.'],
+    comment: ['Not financial advice — what would you do here?', 'Which cycle phase do you think we are in? Drop it.'],
+    follow:  ['More breakdowns like this on the page — no shilling, no pumps.'],
+  },
+  beauty: {
+    click:   ['Every product linked in bio — no affiliates, just what worked.', 'Full routine with prices in bio.'],
+    save:    ['Save this — you will want it on your next Sephora trip.', 'Save before the shade sells out.'],
+    share:   ['Tag the friend who keeps asking what you use.'],
+  },
+  parenting: {
+    share:   ['Send this to a friend who is in the trenches with you.', 'Tag the parent who needed to hear this today.'],
+    save:    ['Save this for your next 3am self.', 'Bookmark for the next sleep regression.'],
+    comment: ['What worked for you? Other parents are reading.', 'No advice without context — what age is your kid?'],
+  },
+  wellness: {
+    save:    ['Save this for the day you cannot get out of bed.', 'Bookmark for your next stressful week.'],
+    dm:      ['DM "RESET" for the 5-minute version of this.', 'DM "SLEEP" for the protocol PDF.'],
+  },
+  gaming: {
+    follow:  ['Pinned comment has the full build.', 'Part 2 going live on stream tonight.'],
+    comment: ['What rank are you running this in? Drop it below.', 'Drop your build and I will react to it next stream.'],
+    save:    ['Save before the next patch nerfs this.'],
+  },
+};
+
+// ── Niche-specific retention curve overrides ─────────────────────────────
+//
+// Pacing varies by niche even within "short-form". A finance explainer
+// needs an authority signal early; a beauty get-ready-with-me can breathe;
+// gaming punchlines need to hit before the patch-attention dies. Only
+// override where the difference vs the default actually matters — every
+// other niche uses RETENTION_CURVES['short-form'] as-is.
+const RETENTION_CURVES_BY_NICHE = {
+  finance: {
+    'short-form': [
+      { mark: '0–2s',   rule: 'Drop a specific dollar number in the first sentence — not a vague "save more". Specificity = credibility.' },
+      { mark: '2–5s',   rule: 'Show the spreadsheet, statement, or chart on screen. Trust collapses without visual proof for money claims.' },
+      { mark: '5–15s',  rule: 'One mistake or tactic per video. Do not stack 3 lessons — half the audience will skip the second one anyway.' },
+      { mark: '15–25s', rule: 'Mid-roll: name the cost of getting it wrong. Loss-aversion is the strongest retention lever in finance content.' },
+      { mark: '25–end', rule: 'Land with the bracket / band / age range this applies to. Specificity > catch-all.' },
+    ],
+  },
+  education: {
+    'short-form': [
+      { mark: '0–2s',   rule: 'Open with the promise as a question the viewer is already asking. "Why X?" beats "Today I will teach you Y".' },
+      { mark: '2–5s',   rule: 'Show the destination — the finished thing they will be able to do — before the steps.' },
+      { mark: '5–15s',  rule: 'Step 1 must show visible progress. Educational drop-off is highest when step 1 feels like setup.' },
+      { mark: '15–25s', rule: 'Insert a callback to step 1 inside step 3. Memory consolidation = re-watch + share.' },
+      { mark: '25–end', rule: 'Single takeaway in a quotable sentence. Educators win when one line gets clipped into a tweet.' },
+    ],
+  },
+  beauty: {
+    'short-form': [
+      { mark: '0–2s',   rule: 'Lead with the finished face/look or a counterintuitive ingredient claim. Skin transformations need an endpoint.' },
+      { mark: '2–5s',   rule: 'Quick texture / pigment swatch close-up. Beauty viewers verify with their eyes before they trust.' },
+      { mark: '5–15s',  rule: 'One technique at a time, slow enough to copy. Filmed-on-phone POV outperforms over-produced.' },
+      { mark: '15–25s', rule: 'Reveal a dupe or a hack the audience did not see coming. This is the share moment.' },
+      { mark: '25–end', rule: 'Show side-by-side under different lighting (overhead vs window). Anti-filter signals win trust.' },
+    ],
+  },
+  gaming: {
+    'short-form': [
+      { mark: '0–2s',   rule: 'Open mid-action or on the moment of impact — never on a menu. The first frame must be loud.' },
+      { mark: '2–5s',   rule: 'Caption the patch number / rank / build context so viewers know the stakes immediately.' },
+      { mark: '5–15s',  rule: 'Pacing under 1.4s per cut. Frame data matters — slow clips feel dead in this niche.' },
+      { mark: '15–25s', rule: 'Pattern interrupt: meme overlay, callback to a missed mechanic, or a chat reaction.' },
+      { mark: '25–end', rule: 'Close with a "try this in your next match" — turns watch into action.' },
+    ],
+  },
 };
 
 // ── Language + region awareness ──────────────────────────────────────────
@@ -255,6 +399,15 @@ function getKnowledgeSlice({ niche, platform, stage = 'script', language = 'en' 
   const lp = LANGUAGE_PROFILES[lang];
   const lengthClass = ['youtube'].includes(p) ? 'long-form' : 'short-form';
 
+  // Resolve niche-specific overrides on top of the global pools. Each CTA
+  // category and retention curve category individually falls through to
+  // the global default when the niche doesn't override it — so we never
+  // *lose* coverage by adding a niche entry, only refine it.
+  const nicheCtaOverrides = CTA_LIBRARY_BY_NICHE[n] || {};
+  const ctas = { ...CTA_LIBRARY, ...nicheCtaOverrides };
+  const nicheRetentionOverrides = RETENTION_CURVES_BY_NICHE[n] || {};
+  const retention = nicheRetentionOverrides[lengthClass] || RETENTION_CURVES[lengthClass];
+
   return {
     niche: n,
     platform: p,
@@ -263,9 +416,16 @@ function getKnowledgeSlice({ niche, platform, stage = 'script', language = 'en' 
     nichePlaybook: np,
     platformPlaybook: pp,
     languageProfile: lp,
-    retention: RETENTION_CURVES[lengthClass],
+    retention,
     hooks: HOOK_FRAMEWORKS,
-    ctas: CTA_LIBRARY,
+    ctas,
+    // Surface which CTA categories were customised so prompt builders can
+    // call those out explicitly when relevant (e.g. "use a finance-specific
+    // DM CTA" rather than the generic one).
+    nicheCtaOverrideCategories: Object.keys(nicheCtaOverrides),
+    // Whether this niche has a custom retention curve at this length. The
+    // prompt builder uses this to label the section accurately.
+    retentionIsNicheSpecific: Boolean(nicheRetentionOverrides[lengthClass]),
   };
 }
 
@@ -326,11 +486,38 @@ function buildStyleProfileBlock(profile) {
  * output adapts to their voice over time instead of starting from
  * scratch every time.
  */
-function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage = 'script', language = 'en', extra = '', styleProfile = null } = {}) {
+function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage = 'script', language = 'en', extra = '', styleProfile = null, topPerformers = null } = {}) {
   const slice = getKnowledgeSlice({ niche, platform, stage, language });
   const np = slice.nichePlaybook;
   const pp = slice.platformPlaybook;
   const lp = slice.languageProfile;
+
+  // Pull live 2026 trend context + recommended frameworks from the
+  // global marketing knowledge base. lazy-required so a circular import
+  // (or a missing module in some test setup) degrades to "no trends"
+  // instead of failing the whole prompt build.
+  let trendBlock = [];
+  try {
+    const { getOpenSourceKnowledgeInsights } = require('./globalMarketingIntelligenceService');
+    if (typeof getOpenSourceKnowledgeInsights === 'function') {
+      const insights = getOpenSourceKnowledgeInsights(slice.niche, 'video');
+      const trends = Array.isArray(insights?.globalTrends) ? insights.globalTrends.slice(0, 5) : [];
+      const frameworks = Array.isArray(insights?.recommendedFrameworks) ? insights.recommendedFrameworks.slice(0, 3) : [];
+      if (trends.length > 0 || frameworks.length > 0) {
+        trendBlock = [
+          '── Current 2026 trends + frameworks ──',
+          ...(trends.length > 0
+            ? [`Trends in motion right now: ${trends.join(' · ')}.`]
+            : []),
+          ...(frameworks.length > 0
+            ? [`High-leverage frameworks: ${frameworks.map(f => f.name || f.title).filter(Boolean).join(' · ')}.`]
+            : []),
+          'Reference one trend or framework only if it organically fits the clip — never force it. Generic gestures toward "trending now" are worse than ignoring trends entirely.',
+          '',
+        ];
+      }
+    }
+  } catch (_) { /* missing module — silently skip */ }
 
   const personaLine = {
     'script-writer':    'You are Click — a senior short-form scriptwriter who has written for top-1% creators in this niche.',
@@ -371,10 +558,21 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
     `Sound: ${pp.soundStrategy}`,
     `Avoid on this platform: ${pp.avoid.join(' · ')}`,
     '',
-    '── Retention curve ──',
+    slice.retentionIsNicheSpecific
+      ? `── Retention curve (tuned for ${slice.niche}) ──`
+      : '── Retention curve ──',
     ...slice.retention.map(r => `${r.mark}: ${r.rule}`),
+    slice.nicheCtaOverrideCategories?.length
+      ? `\nCTA note: For this niche, prefer the ${slice.nicheCtaOverrideCategories.join(' / ')}-style CTAs from the library — generic CTAs underperform here.`
+      : '',
     '',
+    ...trendBlock,
     ...(styleProfile ? buildStyleProfileBlock(styleProfile) : []),
+    // The learning loop's payoff — when the creator has 3+ posts of real
+    // performance data, prompts get explicitly biased toward what's
+    // already worked for them. Empty array for cold-start users so the
+    // static playbook still leads the prompt.
+    ...buildTopPerformersBlock(topPerformers),
     '── Output rules ──',
     `• Reply ENTIRELY in ${lp.name}. Do not mix English unless the niche/platform playbook explicitly calls for it.`,
     '• Be specific. Replace generic adjectives with numbers, examples, or named things.',
@@ -383,6 +581,165 @@ function buildSystemPrompt({ persona = 'script-writer', niche, platform, stage =
     '• Hooks should pass the "would I keep scrolling" test in the first frame.',
     extra,
   ].filter(Boolean).join('\n');
+}
+
+/**
+ * Build a "what actually worked for this creator" snapshot that prompts
+ * can be biased toward. Reads:
+ *   - UserStyleProfile.topPerformers() across the facets that matter for
+ *     copy + edit decisions (hooks, captions, color grades, transitions)
+ *   - Recent ScheduledPost.analytics for top-performing hooks/CTAs by
+ *     engagement score, filtered to the requested niche + platform.
+ *
+ * Returns null when the sample size across all signals is below `minSamples`
+ * (default 3). A cold-start user gets pure-niche-playbook prompts; once
+ * 3+ posts have synced analytics, the prompt block starts bending toward
+ * what actually won.
+ *
+ * Honest constraints:
+ *   - Mongo-only path. Supabase users without a Mongo doc return null
+ *     gracefully; the caller falls back to the static playbook.
+ *   - Cheap to call (≤ ~50ms in practice) but the caller should still
+ *     short-circuit when the prompt is high-frequency (per-keystroke).
+ */
+async function getTopPerformingPlaybook(userId, niche, platform, opts = {}) {
+  const minSamples = opts.minSamples ?? 3;
+  try {
+    const mongooseLib = require('mongoose');
+    // UserStyleProfile.userId is ObjectId-typed — only legacy Mongo users
+    // have a profile doc. Supabase users (UUIDs) still have ScheduledPost
+    // rows (userId: String), so we run the analytics aggregation either
+    // way and just skip the profile-derived signals for UUIDs.
+    let profile = null;
+    if (mongooseLib.Types.ObjectId.isValid(String(userId))) {
+      const UserStyleProfile = require('../models/UserStyleProfile');
+      profile = await UserStyleProfile.findOne({ userId }).lean();
+    }
+
+    // ScheduledPost.analytics path — filter by platform + (optionally)
+    // the post's stored niche tag.
+    //
+    // 90-day window — without this, an early viral post from year one
+    // skews the suggestions forever. Creators evolve; their playbook
+    // should follow. The window length is intentionally generous so a
+    // creator who only publishes once a month still gets enough sample.
+    const ScheduledPost = require('../models/ScheduledPost');
+    const platformFilter = platform ? { platform } : {};
+    const windowStart = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    // Combine the niche + recency filters under $and so they don't
+    // collide with each other (Mongo only allows one top-level $or per
+    // query). Niche filter only kicks in when the caller passed a niche
+    // AND the user has posts tagged with it — pre-denormalisation rows
+    // (no niche field) pass through. Without this, a creator who
+    // pivots niches (fitness → finance) would forever be biased toward
+    // their old top performers.
+    const recencyClause = {
+      $or: [
+        { postedAt: { $gte: windowStart } },
+        { postedAt: { $exists: false } },
+      ],
+    };
+    const nicheClause = niche
+      ? { $or: [{ niche }, { niche: { $exists: false } }, { niche: null }] }
+      : null;
+    const filter = {
+      userId: String(userId),
+      status: 'posted',
+      ...platformFilter,
+      'analytics.lastUpdated': { $exists: true },
+      $and: nicheClause ? [recencyClause, nicheClause] : [recencyClause],
+    };
+    const recentPosts = await ScheduledPost.find(filter)
+      .sort({ 'analytics.engagementRate.byImpressions': -1, 'analytics.engagement': -1 })
+      .limit(20)
+      .lean();
+
+    // Aggregate hook angles + CTA categories that win — derived from the
+    // posts' text + the niche playbook. Imperfect heuristic, but
+    // directionally correct: a post that mentions "save this" landed
+    // because of the save CTA, etc.
+    const hookHits = {};
+    const ctaHits = {};
+    for (const p of recentPosts) {
+      const text = (p.content?.text || '').toLowerCase();
+      // CTA detection — search for the niche-specific CTA strings.
+      for (const [cat, variants] of Object.entries(CTA_LIBRARY)) {
+        const all = [...(variants || []), ...((CTA_LIBRARY_BY_NICHE[niche] || {})[cat] || [])];
+        for (const v of all) {
+          if (v && text.includes(v.toLowerCase().slice(0, 12))) {
+            ctaHits[cat] = (ctaHits[cat] || 0) + 1;
+            break;
+          }
+        }
+      }
+      // Hook detection — heuristic: if first sentence matches a hook
+      // framework's lead pattern (number, "stop", quote-mark, "5 ", etc.).
+      const firstSentence = text.split(/[.!?]/, 1)[0] || '';
+      if (/^[0-9]/.test(firstSentence)) hookHits['data-flex'] = (hookHits['data-flex'] || 0) + 1;
+      if (/^(stop|don'?t)/.test(firstSentence)) hookHits['enemy-frame'] = (hookHits['enemy-frame'] || 0) + 1;
+      if (/^(\d+\s+(things|mistakes|ways|tips))/.test(firstSentence)) hookHits['list-tease'] = (hookHits['list-tease'] || 0) + 1;
+      if (/before|after/.test(firstSentence)) hookHits['before-after'] = (hookHits['before-after'] || 0) + 1;
+    }
+
+    // Profile-based weighted facets (only meaningful if Mongo profile exists)
+    const topHooks       = profile && typeof profile === 'object' && Array.isArray(profile.weightedHooks)        ? sortWeighted(profile.weightedHooks, 3)        : [];
+    const topCaptions    = profile && typeof profile === 'object' && Array.isArray(profile.weightedCaptionStyles) ? sortWeighted(profile.weightedCaptionStyles, 3) : [];
+    const topColorGrades = profile && typeof profile === 'object' && Array.isArray(profile.weightedColorGrades)  ? sortWeighted(profile.weightedColorGrades, 3)  : [];
+
+    const sampleSize = recentPosts.length + (topHooks.length + topCaptions.length + topColorGrades.length);
+    if (sampleSize < minSamples) return null;
+
+    const topHookAngles = Object.entries(hookHits).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
+    const topCtaCategories = Object.entries(ctaHits).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
+
+    return {
+      sampleSize,
+      postsAnalysed: recentPosts.length,
+      windowDays: 90,
+      windowStart: windowStart.toISOString(),
+      lastIngestedAt: profile?.lastIngestedAt || null,
+      topHookAngles,
+      topCtaCategories,
+      topHooks: topHooks.map((h) => h.key),
+      topCaptions: topCaptions.map((c) => c.key),
+      topColorGrades: topColorGrades.map((c) => c.key),
+    };
+  } catch (err) {
+    // Never let a prompt build fail because the learning loop errored —
+    // log and fall back to the static playbook.
+    const logger = require('../utils/logger');
+    logger.warn('getTopPerformingPlaybook failed; falling back to static playbook', { error: err.message, userId, niche, platform });
+    return null;
+  }
+}
+
+function sortWeighted(arr, limit) {
+  return arr
+    .slice()
+    .sort((a, b) => {
+      const aScore = (a.performanceScore || 0) * Math.log((a.sampleSize || 0) + 1);
+      const bScore = (b.performanceScore || 0) * Math.log((b.sampleSize || 0) + 1);
+      return bScore - aScore;
+    })
+    .slice(0, limit);
+}
+
+/**
+ * Render the top-performing playbook into a prompt block. Returns [] when
+ * nothing's learned yet so the array spreads cleanly into the prompt.
+ */
+function buildTopPerformersBlock(topPerformers) {
+  if (!topPerformers || !topPerformers.sampleSize) return [];
+  const lines = [];
+  lines.push('── What worked for THIS creator (bias output toward these) ──');
+  if (topPerformers.topHookAngles?.length) lines.push(`Hook angles that landed: ${topPerformers.topHookAngles.join(' · ')}`);
+  if (topPerformers.topCtaCategories?.length) lines.push(`CTA categories with proven hit rate: ${topPerformers.topCtaCategories.join(' · ')}`);
+  if (topPerformers.topHooks?.length) lines.push(`Hook styles the creator has run successfully: ${topPerformers.topHooks.join(' · ')}`);
+  if (topPerformers.topCaptions?.length) lines.push(`Caption styles that worked: ${topPerformers.topCaptions.join(' · ')}`);
+  if (topPerformers.topColorGrades?.length) lines.push(`Color grades that performed: ${topPerformers.topColorGrades.join(' · ')}`);
+  lines.push(`Signal sample size: ${topPerformers.sampleSize} (across ${topPerformers.postsAnalysed} posts + profile weights). Treat these as bias, not constraints — break the pattern when the creative brief calls for it.`);
+  lines.push('');
+  return lines;
 }
 
 /** A compact one-liner for low-token contexts (e.g. caption suggestions). */
@@ -395,14 +752,18 @@ function buildCompactGuidance({ niche, platform, stage = 'script', language = 'e
 module.exports = {
   HOOK_FRAMEWORKS,
   RETENTION_CURVES,
+  RETENTION_CURVES_BY_NICHE,
   PLATFORM_PLAYBOOKS,
   NICHE_PLAYBOOKS,
   CTA_LIBRARY,
+  CTA_LIBRARY_BY_NICHE,
   NICHE_POSTING_WINDOWS,
   LANGUAGE_PROFILES,
   getKnowledgeSlice,
   buildSystemPrompt,
   buildCompactGuidance,
+  getTopPerformingPlaybook,
+  buildTopPerformersBlock,
   normaliseNiche,
   normalisePlatform,
   normaliseLanguage,

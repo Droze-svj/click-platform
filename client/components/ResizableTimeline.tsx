@@ -106,6 +106,7 @@ export default function ResizableTimeline({
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <GripVertical className="w-4 h-4 text-gray-300" />
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation()
               toggleMaximize()

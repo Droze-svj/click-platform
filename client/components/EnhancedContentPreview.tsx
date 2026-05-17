@@ -63,6 +63,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center z-10">
           <h2 className="text-2xl font-bold">{content.title || 'Content Preview'}</h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
@@ -78,6 +79,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
             <div className="mb-6">
               <div className="flex flex-wrap gap-2">
                 <button
+                  type="button"
                   onClick={() => setSelectedPlatform(null)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
                     selectedPlatform === null
@@ -89,6 +91,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
                 </button>
                 {Array.from(new Set(posts.map(p => p.platform))).map((platform) => (
                   <button
+                    type="button"
                     key={platform}
                     onClick={() => setSelectedPlatform(platform)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${
@@ -129,6 +132,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
                       </div>
                       <div className="flex gap-2">
                         <button
+                          type="button"
                           onClick={() => handleCopy(post.content, postId)}
                           className={`px-3 py-1 rounded text-sm ${
                             copied === postId
@@ -139,6 +143,7 @@ export default function EnhancedContentPreview({ content, onClose }: EnhancedCon
                           {copied === postId ? '✓ Copied' : '📋 Copy'}
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleSchedule(post.platform, post.content)}
                           className="px-3 py-1 rounded text-sm bg-purple-600 text-white hover:bg-purple-700"
                         >

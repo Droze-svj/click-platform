@@ -144,6 +144,7 @@ export default function MarketingStrategistChat({
           </div>
         </div>
         <button
+          type="button"
           onClick={generate30DayPlan}
           className="mchat-plan-btn"
           aria-label="Generate a 30-day marketing plan"
@@ -176,6 +177,7 @@ export default function MarketingStrategistChat({
               <div className="mchat-playbooks">
                 {msg.relatedPlaybooks.map(pb => (
                   <button
+                    type="button"
                     key={pb}
                     onClick={() => sendMessage(`Tell me more about the ${pb} strategy for ${niche}`)}
                     className="mchat-playbook-btn"
@@ -192,6 +194,7 @@ export default function MarketingStrategistChat({
               <div className="mchat-followups">
                 {msg.followUps.map((q, i) => (
                   <button
+                    type="button"
                     key={i}
                     onClick={() => sendMessage(q)}
                     className="mchat-followup-btn"
@@ -232,6 +235,7 @@ export default function MarketingStrategistChat({
           aria-label="Ask a strategy question"
         />
         <button
+          type="button"
           onClick={() => sendMessage()}
           disabled={isLoading || !inputValue.trim()}
           className={`mchat-send-btn ${inputValue.trim() ? 'mchat-send-active' : 'mchat-send-disabled'}`}

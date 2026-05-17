@@ -67,6 +67,7 @@ export default function ContentSuggestions() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">💡 Content Suggestions</h2>
         <button
+          type="button"
           onClick={loadSuggestions}
           className="text-sm text-purple-600 hover:text-purple-800"
         >
@@ -76,6 +77,7 @@ export default function ContentSuggestions() {
 
       <div className="flex gap-2 mb-4 border-b">
         <button
+          type="button"
           onClick={() => setActiveTab('ideas')}
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'ideas'
@@ -86,6 +88,7 @@ export default function ContentSuggestions() {
           Daily Ideas
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('gaps')}
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'gaps'
@@ -96,6 +99,7 @@ export default function ContentSuggestions() {
           Content Gaps
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('trending')}
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'trending'
@@ -135,6 +139,7 @@ export default function ContentSuggestions() {
                     </div>
                   )}
                   <button
+                    type="button"
                     onClick={() => handleUseIdea(idea)}
                     className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
                   >
@@ -160,6 +165,7 @@ export default function ContentSuggestions() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => router.push(`/dashboard/content?platform=${gap.platform}`)}
                       className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
                     >

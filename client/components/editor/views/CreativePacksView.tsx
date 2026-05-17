@@ -394,14 +394,14 @@ const CreativePacksView: React.FC<CreativePacksViewProps> = ({ showToast, onAppl
                 {/* Actions */}
                 <div className="mt-auto flex items-center gap-2">
                   <button
-                    type="button"
+                   type="button"
                     onClick={() => setPreviewId(isPreviewing ? null : pack.id)}
                     className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-[11px] font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white transition-colors"
                   >
                     {isPreviewing ? 'Hide details' : 'View details'}
                   </button>
                   <button
-                    type="button"
+                   type="button"
                     onClick={() => handleApply(pack)}
                     disabled={!!applying}
                     className={`flex-1 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${

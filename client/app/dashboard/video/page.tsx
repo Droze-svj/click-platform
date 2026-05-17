@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import FileUpload from '../../../components/FileUpload'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
@@ -10,9 +10,11 @@ import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
 import { apiGet } from '../../../lib/api'
 import {
-  Video, Upload, Play, Loader2, CheckCircle, AlertCircle,
+  Video, Upload, UploadCloud, Play, Loader2, CheckCircle, AlertCircle,
   RefreshCw, Layers, Clock, ArrowLeft,
-  Search, Target, FileVideo, ActivitySquare, Sparkles, Filter, MoreVertical
+  Search, Target, FileVideo, ActivitySquare, Sparkles, Filter, MoreVertical,
+  ChevronRight, LayoutDashboard, BrainCircuit, PlayCircle, Eye, Trash2, Download,
+  Share2, Edit3, Settings2, Database, History, Cloud, Activity, Box, Monitor, Signal
 } from 'lucide-react'
 import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,14 +31,20 @@ interface VideoItem {
 }
 
 const STATUS_CFG: Record<string, { label: string; bg: string; text: string; icon: any }> = {
-  completed:  { label: 'Completed',  bg: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-400', icon: CheckCircle },
-  processing: { label: 'Processing', bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-700 dark:text-indigo-400', icon: Loader2 },
-  pending:    { label: 'Queued',     bg: 'bg-amber-100 dark:bg-amber-900/40', text: 'text-amber-700 dark:text-amber-400', icon: Clock },
-  failed:     { label: 'Failed',     bg: 'bg-rose-100 dark:bg-rose-900/40', text: 'text-rose-700 dark:text-rose-400', icon: AlertCircle },
+  completed:  { label: 'Completed',  bg: 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]', text: 'text-emerald-500', icon: CheckCircle },
+  processing: { label: 'Processing', bg: 'bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]', text: 'text-primary-500', icon: Loader2 },
+  pending:    { label: 'Queued',     bg: 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]', text: 'text-amber-500', icon: Clock },
+  failed:     { label: 'Failed',     bg: 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]', text: 'text-rose-500', icon: AlertCircle },
 }
 
 export default function VideoStudioPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const aiTool = searchParams?.get('aiTool') || ''
+  const editLink = useCallback(
+    (id: string) => `/dashboard/video/edit/${id}${aiTool ? `?aiTool=${aiTool}` : ''}`,
+    [aiTool]
+  )
   const { user, loading: authLoading } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
   const [videos, setVideos] = useState<VideoItem[]>([])
@@ -72,8 +80,8 @@ export default function VideoStudioPage() {
   useEffect(() => {
     if (!socket || !connected) return
     const handler = (data: any) => {
-      if (data.status === 'completed') { setSuccess(`Analysis Complete: ${data.clips || 0} clips generated`); setTimeout(loadVideos, 500) }
-      else if (data.status === 'failed') { setError('Video processing failed'); setTimeout(loadVideos, 500) }
+      if (data.status === 'completed') { setSuccess(`✓ ANALYSIS_COMPLETE: ${data.clips || 0} CLIPS_GENERATED`); setTimeout(loadVideos, 500) }
+      else if (data.status === 'failed') { setError('PROCESSING_FAILURE: SEQUENCE_ABORTED'); setTimeout(loadVideos, 500) }
     }
     on('video-processed', handler)
     return () => off('video-processed', handler)
@@ -84,16 +92,16 @@ export default function VideoStudioPage() {
 
   const handleUploadResponse = useCallback(async (_file: File, uploadResponse?: any) => {
     setError(''); setSuccess('')
-    if (!uploadResponse) { setError('Upload failed — empty response'); return }
+    if (!uploadResponse) { setError('WRITE_ERR: UPLOAD_FAILED'); return }
     const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
-    if (!contentId) { setError('Upload failed — missing video ID'); return }
-    setSuccess('Upload successful — analyzing your video...')
+    if (!contentId) { setError('PARAM_ERR: MISSING_CONTENT_ID'); return }
+    setSuccess('✓ UPLOAD_STABLE: ANALYZING_VECTORS...')
     await loadVideos()
-    router.push(`/dashboard/video/edit/${contentId}`)
-  }, [loadVideos, router])
+    router.push(editLink(contentId))
+  }, [loadVideos, router, editLink])
 
   const uploadFromPageDrop = useCallback(async (file: File) => {
-    if (!/^video\//.test(file.type)) { setError('Please upload a valid video file (.mp4, .mov, .webm)'); return }
+    if (!/^video\//.test(file.type)) { setError('MIME_ERR: INVALID_VIDEO_FORMAT'); return }
     setError('')
     setPageDropProgress(0)
     try {
@@ -145,15 +153,15 @@ export default function VideoStudioPage() {
       const f = e.dataTransfer?.files?.[0]
       if (f) void uploadFromPageDrop(f)
     }
-    document.addEventListener('dragenter', onDragEnter)
-    document.addEventListener('dragleave', onDragLeave)
-    document.addEventListener('dragover', onDragOver)
-    document.addEventListener('drop', onDrop)
+    document.addEventListener('dragenter', onDragEnter as any)
+    document.addEventListener('dragleave', onDragLeave as any)
+    document.addEventListener('dragover', onDragOver as any)
+    document.addEventListener('drop', onDrop as any)
     return () => {
-      document.removeEventListener('dragenter', onDragEnter)
-      document.removeEventListener('dragleave', onDragLeave)
-      document.removeEventListener('dragover', onDragOver)
-      document.removeEventListener('drop', onDrop)
+      document.removeEventListener('dragenter', onDragEnter as any)
+      document.removeEventListener('dragleave', onDragLeave as any)
+      document.removeEventListener('dragover', onDragOver as any)
+      document.removeEventListener('drop', onDrop as any)
     }
   }, [uploadFromPageDrop])
 
@@ -174,33 +182,33 @@ export default function VideoStudioPage() {
   })
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 bg-surface-50 dark:bg-surface-950 min-h-screen">
-       <Loader2 size={40} className="text-primary-500 animate-spin mb-6" />
-       <p className="text-sm font-bold text-surface-500 uppercase tracking-widest animate-pulse">Loading Video Studio...</p>
+    <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
+       <Loader2 size={80} className="text-primary-500 animate-spin mb-12" />
+       <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Neural Studio...</p>
     </div>
   )
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-24 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-8 bg-surface-50 dark:bg-surface-950 text-surface-900 dark:text-surface-50 transition-colors duration-500">
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-10 max-w-[1900px] mx-auto space-y-16 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter overflow-x-hidden">
         <ToastContainer />
 
         <AnimatePresence>
           {(pageDragOver || pageDropProgress !== null) && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[9999] bg-surface-900/80 backdrop-blur-sm flex items-center justify-center border-[12px] border-dashed border-primary-500/50"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9999] bg-surface-950/90 backdrop-blur-3xl flex items-center justify-center border-[12px] border-dashed border-primary-500/50"
             >
-              <div className="bg-white dark:bg-surface-900 p-12 rounded-[3rem] shadow-2xl border border-surface-200 dark:border-surface-800 text-center">
-                <Upload className="w-16 h-16 text-primary-500 mx-auto mb-6" />
-                <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-3">
-                  {pageDropProgress !== null ? 'Uploading Video...' : 'Drop video here'}
+              <div className="bg-surface-card p-16 rounded-[4rem] shadow-[0_100px_300px_rgba(0,0,0,0.8)] border-2 border-surface-100 dark:border-surface-800 text-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-primary-500/5 animate-pulse pointer-events-none" />
+                <Upload className="w-24 h-24 text-primary-500 mx-auto mb-10 animate-bounce relative z-10" />
+                <h2 className="text-6xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase mb-6 relative z-10">
+                  {pageDropProgress !== null ? 'Syncing Payload...' : 'Drop Payload Here'}
                 </h2>
+                <p className="text-[12px] font-black text-surface-400 uppercase tracking-[0.6em] italic mb-10 relative z-10">NEURAL_STUDIO_INGESTION_READY</p>
                 {pageDropProgress !== null && (
-                  <div className="mt-6 h-2 w-full max-w-sm mx-auto rounded-full bg-surface-100 dark:bg-surface-800 overflow-hidden">
-                    <div className="h-full bg-primary-500 transition-all duration-200" style={{ width: `${pageDropProgress}%` }} />
+                  <div className="mt-10 h-4 w-full max-w-md mx-auto rounded-full bg-surface-page dark:bg-surface-950 overflow-hidden shadow-inner border border-surface-100 dark:border-surface-800 relative z-10">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pageDropProgress}%` }} className="h-full bg-primary-500 shadow-[0_0_30px_rgba(99,102,241,0.6)] transition-all duration-200" />
                   </div>
                 )}
               </div>
@@ -210,130 +218,156 @@ export default function VideoStudioPage() {
 
         <SwarmConsensusHUD isVisible={showSwarmHUD} taskName={swarmHUDTask} onComplete={() => setShowSwarmHUD(false)} />
 
-        {/* Header */}
-        <header className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-surface-200 dark:border-surface-800">
-           <div className="flex items-center gap-5 w-full md:w-auto">
-              <button type="button" onClick={() => router.push('/dashboard')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
-                <ArrowLeft size={20} />
+        {/* Tactical Header HUD */}
+        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 pb-12 border-b-2 border-surface-100 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-8 w-full lg:w-auto min-w-0">
+              <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard"
+                className="w-16 h-16 rounded-2xl bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-primary-500 hover:border-primary-500/30 transition-all shadow-xl active:scale-90 group">
+                <ArrowLeft size={28} className="group-hover:-translate-x-1 transition-transform" />
               </button>
-              <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-2xl flex items-center justify-center shadow-sm">
-                <FileVideo size={32} className="text-primary-600 dark:text-primary-400" />
+              <div className="w-24 h-24 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-2xl flex-shrink-0 group hover:rotate-12 transition-transform duration-700">
+                <FileVideo size={48} className="text-primary-600 dark:text-primary-400" />
               </div>
-              <div className="flex-1">
-                 <div className="flex items-center gap-2 mb-1">
-                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                     Advanced Editor
-                   </span>
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-3 flex-wrap">
+                    <span className="px-4 py-1.5 rounded-xl text-[10px] font-black bg-primary-500/10 text-primary-600 dark:text-primary-400 uppercase tracking-[0.3em] border-2 border-primary-500/20 shadow-inner italic leading-none">
+                      Advanced Studio
+                    </span>
+                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-xl bg-surface-card dark:bg-surface-900 text-surface-500 border-2 border-surface-100 dark:border-surface-800 text-[10px] font-black italic shadow-inner">
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                        {videos.length} PAYLOADS_DETECTED
+                    </div>
                  </div>
-                 <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-2">Video Studio</h1>
+                 <h1 className="text-5xl sm:text-6xl font-black tracking-tighter leading-none mt-4 truncate uppercase italic drop-shadow-2xl">Video Studio</h1>
               </div>
            </div>
 
-           <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-             <button type="button" onClick={() => { setSwarmHUDTask('Refreshing inventory'); setShowSwarmHUD(true); loadVideos() }} className="px-5 py-3 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 rounded-xl text-xs font-bold uppercase tracking-wider shadow-sm transition-colors flex items-center gap-2">
-               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-               <span>Refresh</span>
-             </button>
+           <div className="flex items-center gap-6 w-full lg:w-auto justify-end">
+              <button type="button" onClick={() => { setSwarmHUDTask('Refreshing inventory'); setShowSwarmHUD(true); loadVideos() }} 
+                className="px-10 py-5 bg-surface-card dark:bg-surface-900 border-2 border-primary-500/20 text-surface-900 dark:text-white hover:bg-surface-page dark:hover:bg-primary-500/5 rounded-2xl text-[12px] font-black uppercase tracking-[0.5em] shadow-2xl transition-all flex items-center gap-5 active:scale-95 italic group/sync"
+              >
+                <RefreshCw size={24} className={`group-hover/sync:rotate-180 transition-transform duration-700 ${loading ? 'animate-spin' : ''}`} />
+                <span>Sync Archive</span>
+              </button>
            </div>
         </header>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 relative z-10">
+        {/* Performance Matrix Stats */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 relative z-10">
           {[
-            { label: 'Total Videos', value: videos.length, icon: Layers, colors: 'bg-primary-50 text-primary-600 border-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50' },
-            { label: 'Processed', value: completedCount, icon: ActivitySquare, colors: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50' },
-            { label: 'Generated Clips', value: totalClips, icon: Sparkles, colors: 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50' },
-          ].map(s => (
-            <div key={s.label} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl p-6 shadow-sm flex items-center gap-4">
-               <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${s.colors}`}>
-                  <s.icon size={20} />
+            { label: 'Payload Inventory', value: videos.length, icon: Layers, colors: 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-500/20' },
+            { label: 'Neural Processed', value: completedCount, icon: ActivitySquare, colors: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+            { label: 'Synthetic Yields', value: totalClips, icon: Sparkles, colors: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' },
+          ].map((s, idx) => (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} key={s.label} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-10 shadow-2xl flex items-center gap-8 group hover:bg-surface-page transition-all duration-700 relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-1000"><s.icon size={150} /></div>
+               <div className={`w-16 h-16 rounded-2xl border-2 flex items-center justify-center shrink-0 shadow-lg group-hover:rotate-12 transition-all duration-500 relative z-10 ${s.colors}`}>
+                  <s.icon size={32} />
                </div>
-               <div>
-                 <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mb-1">{s.label}</p>
-                 <h4 className="text-2xl font-black text-surface-900 dark:text-surface-50 tracking-tight">{s.value}</h4>
+               <div className="relative z-10">
+                 <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.5em] italic mb-3 leading-none">{s.label}</p>
+                 <h4 className="text-5xl font-black text-surface-900 dark:text-white tracking-tighter leading-none italic">{s.value}</h4>
                </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </section>
 
-        {/* Upload Zone */}
-        <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl overflow-hidden relative z-10 shadow-sm flex flex-col xl:flex-row">
-          <div className="bg-primary-50 dark:bg-primary-900/10 p-8 sm:p-12 xl:w-1/3 border-b xl:border-b-0 xl:border-r border-surface-200 dark:border-surface-800 flex flex-col justify-center">
-            <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/40 rounded-2xl flex items-center justify-center border border-primary-200 dark:border-primary-800 mb-6">
-              <Upload size={28} className="text-primary-600 dark:text-primary-400" />
+        {/* Intake Module */}
+        <section className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[4rem] sm:rounded-[5rem] overflow-hidden relative z-10 shadow-2xl flex flex-col xl:flex-row transition-all duration-700 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] group">
+          <div className="bg-primary-500/5 dark:bg-primary-900/10 p-12 sm:p-20 xl:w-1/3 border-b-2 xl:border-b-0 xl:border-r-2 border-surface-100 dark:border-surface-800 flex flex-col justify-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.05] transition-opacity duration-1000"><UploadCloud size={300} className="text-primary-500" /></div>
+            <div className="w-24 h-24 bg-surface-page dark:bg-surface-950 rounded-[2rem] flex items-center justify-center border-2 border-surface-100 dark:border-surface-800 mb-10 shadow-2xl relative z-10 group-hover:rotate-12 transition-transform duration-1000">
+              <Upload size={40} className="text-primary-600 dark:text-primary-400" />
             </div>
-            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Upload Raw Footage</h2>
-            <p className="text-sm text-surface-600 dark:text-surface-400 leading-relaxed">
-              Drop your long-form video or raw clips here. Our AI will automatically analyze the content, identify key moments, and prepare it for advanced editing.
+            <h2 className="text-4xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-6 relative z-10">Initialize Intake</h2>
+            <p className="text-[13px] font-bold text-surface-400 dark:text-slate-600 leading-relaxed italic uppercase tracking-tight relative z-10">
+              Inject raw footage or multi-track sequences into the neural matrix. A/B Swarm will auto-calibrate vectors for optimal high-velocity synthesis.
             </p>
           </div>
-          <div className="p-8 sm:p-12 xl:w-2/3 flex items-center justify-center bg-surface-50 dark:bg-surface-950">
-            <div className="w-full max-w-2xl">
+          <div className="p-12 sm:p-20 xl:w-2/3 flex items-center justify-center bg-surface-page/20 dark:bg-white/[0.01] backdrop-blur-3xl relative">
+            <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+            <div className="w-full max-w-2xl relative z-10">
               <FileUpload onUpload={(file, res) => { setSwarmHUDTask('Analyzing your video'); setShowSwarmHUD(true); handleUploadResponse(file, res) }} uploadUrl="/api/video/upload" />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Library */}
+        {/* Archive Lattices */}
         {videos.length > 0 && (
-          <div className="space-y-6 relative z-10">
-            <div className="flex flex-col md:flex-row items-stretch lg:items-center gap-4 justify-between">
-               <h3 className="text-lg font-black text-surface-900 dark:text-white">Recent Projects</h3>
-               <div className="flex flex-col sm:flex-row items-center gap-4">
-                 <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-                    <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search projects..." className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+          <section className="space-y-12 relative z-10">
+            <header className="flex flex-col md:flex-row items-stretch lg:items-center gap-8 justify-between border-b-2 border-surface-100 dark:border-surface-800 pb-10">
+               <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center shadow-xl group hover:border-primary-500/30 transition-all">
+                    <Database size={32} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors" />
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-black text-surface-900 dark:text-white tracking-tighter italic uppercase leading-none mb-2">Payload Archive</h3>
+                    <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic leading-none">SECURE_STORAGE_NODES</p>
+                  </div>
+               </div>
+               <div className="flex flex-col sm:flex-row items-center gap-8 flex-1 justify-end max-w-4xl">
+                 <div className="relative w-full sm:w-96 group">
+                    <Search size={24} className="absolute left-8 top-1/2 -translate-y-1/2 text-surface-200 dark:text-slate-800 group-focus-within:text-primary-500 transition-colors" />
+                    <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="SEARCH_ARCHIVE..." className="w-full bg-surface-card dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-3xl pl-20 pr-8 py-5 text-base font-black text-surface-900 dark:text-white uppercase italic tracking-widest focus:outline-none focus:border-primary-500 transition-all shadow-inner backdrop-blur-xl" />
                  </div>
-                 <div className="flex items-center gap-2 w-full sm:w-auto bg-white dark:bg-surface-900 p-1 rounded-xl border border-surface-200 dark:border-surface-800 overflow-x-auto">
+                 <div className="flex items-center gap-3 w-full sm:w-auto bg-surface-card dark:bg-surface-950/60 p-2.5 rounded-[2rem] border-2 border-surface-100 dark:border-surface-800 shadow-inner overflow-x-auto custom-scrollbar">
                     {['all', 'completed', 'processing', 'failed'].map(opt => (
-                      <button key={opt} onClick={() => setStatusFilter(opt as any)} className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors whitespace-nowrap ${statusFilter === opt ? 'bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white'}`}>
+                      <button type="button" key={opt} onClick={() => setStatusFilter(opt as any)} className={`px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all italic whitespace-nowrap ${statusFilter === opt ? 'bg-surface-900 dark:bg-white text-white dark:text-black shadow-2xl scale-105 z-10' : 'text-surface-400 dark:text-slate-700 hover:text-surface-900 dark:hover:text-white'}`}>
                         {opt}
                       </button>
                     ))}
                  </div>
                </div>
-            </div>
+            </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {visibleVideos.map(video => {
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12">
+              {visibleVideos.map((video, idx) => {
                 const cfg = getStatusCfg(video.status)
                 return (
-                  <div key={video._id} className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-2xl overflow-hidden group flex flex-col hover:border-primary-300 dark:hover:border-primary-700 transition-colors shadow-sm">
-                    <div className="aspect-video relative bg-surface-100 dark:bg-surface-950 overflow-hidden border-b border-surface-200 dark:border-surface-800">
-                      <video src={video.originalFile?.url} className="w-full h-full object-cover" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button onClick={() => router.push(`/dashboard/video/edit/${video._id}`)} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all">
-                          <Play size={20} className="ml-1" />
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }} layout key={video._id} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 rounded-[3.5rem] overflow-hidden group flex flex-col hover:border-primary-500/50 transition-all duration-700 shadow-2xl relative">
+                    <div className="aspect-video relative bg-surface-page dark:bg-surface-950 overflow-hidden border-b-2 border-surface-100 dark:border-surface-800">
+                      <video src={video.originalFile?.url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2s]" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm">
+                        <button type="button" onClick={() => router.push(editLink(video._id))} aria-label={`Open ${video.title || 'video'} in editor`} title={`Open ${video.title || 'video'} in editor`} className="w-20 h-20 bg-white text-black rounded-[2rem] flex items-center justify-center shadow-[0_40px_100px_rgba(255,255,255,0.4)] transform translate-y-12 group-hover:translate-y-0 transition-all duration-700 active:scale-90 border-none group/play">
+                          <Play size={36} className="ml-1 fill-current group-hover:scale-125 transition-transform" />
                         </button>
                       </div>
-                      <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider backdrop-blur-md bg-white/90 dark:bg-surface-900/90 shadow-sm">
-                        <div className={`w-1.5 h-1.5 rounded-full ${cfg.bg} border border-current ${cfg.text}`} /> 
+                      <div className="absolute top-8 left-8 flex items-center gap-3.5 px-6 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest italic backdrop-blur-3xl bg-white/90 dark:bg-surface-900/90 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-white/20 dark:border-white/5">
+                        <div className={`w-3.5 h-3.5 rounded-full ${cfg.bg} animate-pulse`} /> 
                         <span className="text-surface-900 dark:text-white">{cfg.label}</span>
                       </div>
                     </div>
-                    <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div className="p-10 flex-1 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <h3 className="text-lg font-black text-surface-900 dark:text-white truncate" title={video.title}>{video.title}</h3>
-                          <button className="text-surface-400 hover:text-surface-900 dark:hover:text-white transition-colors shrink-0">
-                            <MoreVertical size={18} />
+                        <div className="flex items-start justify-between gap-8 mb-6">
+                          <h3 className="text-2xl font-black text-surface-900 dark:text-white truncate uppercase italic tracking-tighter leading-none group-hover:text-primary-500 transition-colors" title={video.title}>{video.title}</h3>
+                          <button title="More Options" aria-label="More Options" className="text-surface-200 dark:text-slate-900 hover:text-surface-900 dark:hover:text-white transition-all shrink-0 active:scale-90 border-none bg-transparent">
+                            <MoreVertical size={28} />
                           </button>
                         </div>
-                        <div className="flex items-center text-[11px] font-medium text-surface-500 gap-4">
-                          <span className="flex items-center gap-1.5"><Clock size={12} /> {new Date(video.createdAt).toLocaleDateString()}</span>
-                          <span className="flex items-center gap-1.5"><Sparkles size={12} /> {video.generatedContent?.shortVideos?.length || 0} Clips</span>
+                        <div className="flex flex-wrap items-center text-[10px] font-black text-surface-300 dark:text-slate-800 gap-10 italic uppercase tracking-[0.3em]">
+                          <span className="flex items-center gap-3.5 group/meta hover:text-primary-500 transition-colors"><Clock size={18} className="text-primary-500 group-hover/meta:scale-110 transition-transform" /> {new Date(video.createdAt).toLocaleDateString().toUpperCase()}</span>
+                          <span className="flex items-center gap-3.5 group/meta hover:text-primary-500 transition-colors"><Sparkles size={18} className="text-primary-500 group-hover/meta:scale-110 transition-transform" /> {video.generatedContent?.shortVideos?.length || 0} YIELDS</span>
                         </div>
                       </div>
-                      <button onClick={() => router.push(`/dashboard/video/edit/${video._id}`)} className="w-full mt-6 py-2.5 bg-surface-900 dark:bg-white text-white dark:text-surface-900 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-surface-800 dark:hover:bg-surface-100 transition-colors shadow-sm">
-                        Open Editor
+                      <button type="button" onClick={() => router.push(editLink(video._id))} className="w-full mt-12 py-6 bg-surface-900 dark:bg-white text-white dark:text-black rounded-[1.8rem] text-[13px] font-black uppercase tracking-[0.6em] italic hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_30px_70px_rgba(0,0,0,0.4)] active:scale-95 border-none">
+                        Open
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
-          </div>
+          </section>
         )}
+        
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.1); border-radius: 20px; }
+          .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.2); }
+        `}</style>
       </div>
     </ErrorBoundary>
   )

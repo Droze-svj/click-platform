@@ -2,8 +2,13 @@
 // Handle subscription changes, add-ons, promo codes, and usage
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+
+// Supabase users have UUID ids; Mongoose-only ops (User.findById, populate)
+// throw CastError when given a UUID. Guard with this helper.
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 const { sendSuccess, sendError } = require('../utils/response');
 const {
   processSubscriptionChange,
@@ -109,7 +114,11 @@ router.get('/usage', auth, asyncHandler(async (req, res) => {
 
   try {
     const usage = await getCurrentUsage(userId);
-    const user = await User.findById(userId).populate('membershipPackage');
+    // Supabase users (UUID) don't have a Mongo doc to populate. Skip the
+    // lookup and surface a Free-tier package, matching the dev-user branch.
+    const user = isMongoUserId(userId)
+      ? await User.findById(userId).populate('membershipPackage')
+      : null;
 
     // Calculate percentages
     const usagePercentages = {};
@@ -183,8 +192,11 @@ router.get('/overage', auth, asyncHandler(async (req, res) => {
  * Get available add-ons
  */
 router.get('/add-ons', auth, asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).populate('membershipPackage');
-  const packageId = user.membershipPackage?._id;
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const user = isMongoUserId(userId)
+    ? await User.findById(userId).populate('membershipPackage')
+    : null;
+  const packageId = user?.membershipPackage?._id;
 
   const query = { isActive: true };
   if (packageId) {

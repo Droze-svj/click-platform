@@ -15,6 +15,7 @@ const { generateThumbnail } = require('./thumbnailService');
 const { optimizeImage } = require('../utils/imageOptimizer');
 const { aiCallJson } = require('../utils/aiRouter');
 const { buildSystemPrompt } = require('./marketingKnowledge');
+const { toAbsolutePath } = require('../utils/pathUtils');
 
 /**
  * Main entry point for the One-Click Viral Pipeline (Phase 2)
@@ -129,13 +130,10 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
     updateProgress(userId, contentId, 'finalizing', 95, 'Finalizing viral assets...');
     
     const updatedContent = await Content.findById(contentId);
-    const finalVideoUrl = updatedContent.originalFile.url;
-    const finalVideoPath = finalVideoUrl.startsWith('/') 
-      ? path.join(__dirname, '../..', finalVideoUrl)
-      : videoPath;
+    const finalVideoPath = toAbsolutePath(updatedContent.originalFile.url);
 
     const thumbnailFilename = `viral-thumb-v2-${contentId}.jpg`;
-    const thumbnailPath = path.join(__dirname, '../../uploads/thumbnails', thumbnailFilename);
+    const thumbnailPath = toAbsolutePath(`uploads/thumbnails/${thumbnailFilename}`);
     const thumbnailsDir = path.dirname(thumbnailPath);
     
     if (!fs.existsSync(thumbnailsDir)) fs.mkdirSync(thumbnailsDir, { recursive: true });
@@ -161,12 +159,41 @@ async function runViralPipeline(contentId, videoPath, user, pipelineOptions = {}
 
   } catch (error) {
     logger.error('❌ One-Click Viral Pipeline v2 failed', { contentId, error: error.message, stack: error.stack });
-    
+
     const content = await Content.findById(contentId);
     if (content) {
       content.status = 'failed';
       content.metadata = { ...content.metadata, lastError: error.message };
       await content.save();
+    }
+
+    // Best-effort cleanup of any contentId-scoped intermediates so failed
+    // pipelines don't leak disk space. We scan the conventional temp
+    // directories and remove anything that includes the contentId in its
+    // filename. Anything outside these dirs (real source uploads) is left
+    // alone.
+    try {
+      const tempRoots = [
+        toAbsolutePath('uploads/temp'),
+        toAbsolutePath('uploads/intermediates'),
+        toAbsolutePath('uploads/exports'),
+      ];
+      for (const root of tempRoots) {
+        if (!fs.existsSync(root)) continue;
+        for (const name of fs.readdirSync(root)) {
+          if (!name.includes(String(contentId))) continue;
+          try {
+            const p = path.join(root, name);
+            const stat = fs.statSync(p);
+            if (stat.isDirectory()) fs.rmSync(p, { recursive: true, force: true });
+            else fs.unlinkSync(p);
+          } catch (rmErr) {
+            logger.debug('Pipeline cleanup: could not remove', { name, error: rmErr.message });
+          }
+        }
+      }
+    } catch (cleanupErr) {
+      logger.warn('Pipeline cleanup pass failed', { contentId, error: cleanupErr.message });
     }
 
     updateProgress(userId, contentId, 'failed', 0, `Pipeline Error: ${error.message}`);

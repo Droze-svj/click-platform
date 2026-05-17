@@ -36,12 +36,20 @@ interface Props {
 }
 
 const PLATFORMS = [
-  { id: 'tiktok',  label: 'TikTok' },
-  { id: 'shorts',  label: 'YouTube Shorts' },
-  { id: 'reels',   label: 'Instagram Reels' },
+  // `comingSoon` flags the platforms whose backend posting service isn't
+  // wired yet (TikTok needs Content-Posting API approval). The drawer
+  // surfaces this as a badge AND blocks Schedule when the active
+  // platform is unavailable, so the user is never deceived by the
+  // server-side typed error after-the-fact.
+  { id: 'tiktok',  label: 'TikTok',          comingSoon: true  },
+  { id: 'shorts',  label: 'YouTube Shorts',  comingSoon: false },
+  { id: 'reels',   label: 'Instagram Reels', comingSoon: false },
 ] as const
 
 type PlatformId = typeof PLATFORMS[number]['id']
+const PLATFORM_BY_ID: Record<PlatformId, typeof PLATFORMS[number]> = Object.fromEntries(
+  PLATFORMS.map((p) => [p.id, p])
+) as Record<PlatformId, typeof PLATFORMS[number]>
 
 /** ISO local datetime → "<input type=datetime-local>"-shaped string. */
 function toLocalInput(iso: string): string {
@@ -70,8 +78,12 @@ function slotLabel(iso: string): string {
   return `${day} ${h12}${ap}`
 }
 
+// First platform with a working backend posting service. Used as the
+// drawer's default tab so users don't land on an unsupported platform.
+const DEFAULT_PLATFORM: PlatformId = (PLATFORMS.find((p) => !p.comingSoon)?.id ?? 'shorts') as PlatformId
+
 export default function SchedulePublishDrawer({ open, clip, onClose, onPublished }: Props) {
-  const [platform, setPlatform] = useState<PlatformId>('tiktok')
+  const [platform, setPlatform] = useState<PlatformId>(DEFAULT_PLATFORM)
   const [caption, setCaption] = useState('')
   const [scheduledTime, setScheduledTime] = useState('')
   const [busy, setBusy] = useState(false)
@@ -82,21 +94,36 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
   // as `originalCaption` / `originalTime` for delta capture.
   const [originalCaption, setOriginalCaption] = useState('')
   const [originalTime, setOriginalTime] = useState('')
+  // Tracks whether the user has typed in the caption box since the last
+  // seed. While false we can safely overwrite the caption with a freshly
+  // arrived AI suggestion (handles the race where the drawer opens
+  // before the smartPublishService backfill lands). Once true, we never
+  // clobber typed work.
+  const [userHasTyped, setUserHasTyped] = useState(false)
 
   // Slot quick-picks scoped to the active platform. Falls back to ALL
   // slots if no platform-specific predictions exist.
   const slotsForPlatform = (clip.recommendedSlots || []).filter((s) => s.platform === platform)
   const allSlots = slotsForPlatform.length > 0 ? slotsForPlatform : (clip.recommendedSlots || [])
+  const recommendedForPlatform = (clip.recommendedCaptions && (clip.recommendedCaptions as Record<string, string | undefined>)[platform]) || ''
+  // The 3-angle variants written by smartPublishService. Surfaced as an
+  // A/B/C strip above the caption box so the user can pick the angle
+  // (curiosity-gap / value / contrarian) instead of being locked into
+  // the top-1 only.
+  const variantsForPlatform: string[] = (clip.recommendedCaptionVariants && (clip.recommendedCaptionVariants as Record<string, string[] | undefined>)[platform]) || []
+  // Track the picked variant index so we can highlight it in the strip
+  // and so we can re-set the caption when the user clicks a tab.
+  const [pickedVariantIdx, setPickedVariantIdx] = useState<number>(0)
 
   // When platform changes (or drawer opens), seed caption + time from
   // the suggestion. Stash the originals so we can submit deltas.
   useEffect(() => {
     if (!open) return
-    const suggestedCaption =
-      (clip.recommendedCaptions && (clip.recommendedCaptions as any)[platform]) ||
-      clip.caption || ''
+    const suggestedCaption = recommendedForPlatform || clip.caption || ''
     setCaption(suggestedCaption)
     setOriginalCaption(suggestedCaption)
+    setUserHasTyped(false)
+    setPickedVariantIdx(0)
     const topSlot = allSlots[0]
     const seedIso = topSlot?.isoTime || new Date(Date.now() + 60 * 60 * 1000).toISOString()
     setScheduledTime(toLocalInput(seedIso))
@@ -105,6 +132,19 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
     setSuccess(null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, platform, clip.id])
+
+  // Late-arrival reseed: if the AI suggestion lands AFTER the drawer
+  // opened (background setImmediate from the auto-edit pipeline), update
+  // the caption seed — but only if the user hasn't started typing. Once
+  // they touch the box, never overwrite.
+  useEffect(() => {
+    if (!open || userHasTyped) return
+    if (!recommendedForPlatform) return
+    if (recommendedForPlatform === caption) return
+    setCaption(recommendedForPlatform)
+    setOriginalCaption(recommendedForPlatform)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, recommendedForPlatform, userHasTyped])
 
   // Esc closes
   useEffect(() => {
@@ -185,18 +225,31 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Platform</p>
             <div className="flex gap-2 flex-wrap">
               {PLATFORMS.map((p) => (
-                <button
+                <button type="button"
                   key={p.id}
-                  type="button"
                   onClick={() => setPlatform(p.id)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors border ${
+                  className={`relative px-4 py-2 rounded-xl text-sm font-bold transition-colors border inline-flex items-center gap-2 ${
                     platform === p.id
                       ? 'bg-indigo-500 border-indigo-500 text-white'
                       : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/5'
                   }`}
-                >{p.label}</button>
+                >
+                  {p.label}
+                  {p.comingSoon && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/40 text-[9px] font-black uppercase tracking-widest text-amber-300">
+                      Soon
+                    </span>
+                  )}
+                </button>
               ))}
             </div>
+            {PLATFORM_BY_ID[platform]?.comingSoon && (
+              <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-[11px] text-amber-300 leading-relaxed">
+                <strong className="font-black uppercase tracking-wider">Coming soon —</strong>{' '}
+                {PLATFORM_BY_ID[platform]?.label} direct posting isn&apos;t available yet. Try
+                YouTube Shorts or Instagram Reels for now.
+              </div>
+            )}
           </div>
 
           {/* Caption */}
@@ -207,9 +260,44 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
               </p>
               <span className="text-[10px] text-slate-500 tabular-nums">{caption.length} chars</span>
             </div>
+
+            {/* A/B/C variant picker — three distinct angles per platform
+                from smartPublishService (curiosity-gap / value /
+                contrarian). Clicking a tab swaps the textarea text and
+                resets userHasTyped so the next late-arrival reseed
+                still works. Hidden when only 0–1 variants exist. */}
+            {variantsForPlatform.length > 1 && (
+              <div className="mb-2 flex gap-1 flex-wrap">
+                {variantsForPlatform.slice(0, 3).map((variant, idx) => {
+                  const label = ['Hook', 'Value', 'Contrarian'][idx] || `Angle ${idx + 1}`
+                  const active = idx === pickedVariantIdx
+                  return (
+                    <button
+                      type="button"
+                      key={idx}
+                      onClick={() => {
+                        setPickedVariantIdx(idx)
+                        setCaption(variant)
+                        setOriginalCaption(variant)
+                        setUserHasTyped(false)
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest transition-colors border ${
+                        active
+                          ? 'bg-indigo-500 border-indigo-500 text-white'
+                          : 'bg-white/[0.03] border-white/10 text-slate-300 hover:bg-white/5'
+                      }`}
+                      title={variant}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             <textarea
               value={caption}
-              onChange={(e) => setCaption(e.target.value)}
+              onChange={(e) => { setCaption(e.target.value); setUserHasTyped(true) }}
               rows={4}
               className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 resize-none"
               placeholder="Write a caption…"
@@ -217,10 +305,9 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
             {clip.recommendedHashtags && (clip.recommendedHashtags as any)[platform]?.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {(clip.recommendedHashtags as any)[platform].slice(0, 8).map((tag: string) => (
-                  <button
+                  <button type="button"
                     key={tag}
-                    type="button"
-                    onClick={() => setCaption((c) => c.includes(tag) ? c : (c.trim() + ' ' + tag).trim())}
+                    onClick={() => { setCaption((c) => c.includes(tag) ? c : (c.trim() + ' ' + tag).trim()); setUserHasTyped(true) }}
                     className="px-2 py-1 rounded-md bg-white/[0.04] border border-white/10 text-[11px] font-bold text-slate-300 hover:bg-indigo-500/20 hover:border-indigo-500/30"
                   >
                     {tag}
@@ -238,9 +325,8 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
                 {allSlots.slice(0, 4).map((s) => {
                   const isPicked = scheduledTime === toLocalInput(s.isoTime)
                   return (
-                    <button
+                    <button type="button"
                       key={s.isoTime + s.platform}
-                      type="button"
                       onClick={() => setScheduledTime(toLocalInput(s.isoTime))}
                       className={`px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${
                         isPicked
@@ -270,6 +356,8 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
               type="datetime-local"
               value={scheduledTime}
               onChange={(e) => setScheduledTime(e.target.value)}
+              aria-label="Scheduled publish time"
+              title="Scheduled publish time"
               className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50"
             />
           </div>
@@ -278,7 +366,7 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
           {clip.publishRationale && (
             <div>
               <button
-                type="button"
+               type="button"
                 onClick={() => setShowRationale((v) => !v)}
                 className="flex items-center gap-2 text-[11px] font-bold text-indigo-300 hover:text-indigo-200"
               >
@@ -311,9 +399,10 @@ export default function SchedulePublishDrawer({ open, clip, onClose, onPublished
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-bold text-slate-300 hover:bg-white/5">Cancel</button>
             <button
-              type="button"
+             type="button"
               onClick={handleSchedule}
-              disabled={busy || !caption.trim()}
+              disabled={busy || !caption.trim() || !!PLATFORM_BY_ID[platform]?.comingSoon}
+              title={PLATFORM_BY_ID[platform]?.comingSoon ? `${PLATFORM_BY_ID[platform]?.label} direct posting isn't available yet` : undefined}
               className="px-5 py-2 rounded-lg text-sm font-bold bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed text-white inline-flex items-center gap-2"
             >
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

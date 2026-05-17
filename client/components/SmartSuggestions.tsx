@@ -75,6 +75,7 @@ export default function SmartSuggestions() {
       <div className="space-y-3">
         {suggestions.slice(0, 3).map((suggestion) => (
           <button
+            type="button"
             key={suggestion.id}
             onClick={() => handleSuggestionClick(suggestion)}
             className="w-full text-left p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 group"
@@ -109,6 +110,7 @@ export default function SmartSuggestions() {
 
       {suggestions.length > 3 && (
         <button
+          type="button"
           onClick={() => router.push('/dashboard/suggestions')}
           className="mt-4 w-full text-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
         >

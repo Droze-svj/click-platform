@@ -89,6 +89,7 @@ export default function AchievementSystem() {
                                 </div>
 
                                 <button
+                                    type="button"
                                     onClick={() => setUnlocked(null)}
                                     className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-colors"
                                 >

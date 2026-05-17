@@ -316,6 +316,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
 
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => setScheduleOpenFor(scheduleOpenFor === id ? null : id)}
                     disabled={!!getValidationErrors(id) || isComplianceFailed}
                     className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -333,7 +334,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
                     <label htmlFor={`schedule-${id}`} className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">When to post</label>
                     {optimalTimes[id] && (
                       <button
-                        type="button"
+                       type="button"
                         onClick={() => applyOptimalTime(id)}
                         className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all"
                       >
@@ -357,7 +358,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
                     />
                     <div className="flex gap-2">
                       <button
-                        type="button"
+                       type="button"
                         onClick={() => handleSchedule(id)}
                         disabled={state.loading || !state.scheduledAt}
                         className="flex-1 px-3 py-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -365,7 +366,7 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
                         {state.loading ? 'Scheduling...' : 'Confirm schedule'}
                       </button>
                       <button
-                        type="button"
+                       type="button"
                         onClick={() => {
                           setPlatforms(prev => ({
                             ...prev,
@@ -408,7 +409,8 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
               <p className="text-[10px] text-blue-300/70">Auto-repost sequence (+24h delay)</p>
             </div>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={() => setRecursiveReach(!recursiveReach)}
             className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${
               recursiveReach ? 'bg-blue-500' : 'bg-white/10'
@@ -426,13 +428,15 @@ export const SocialPublishingView: React.FC<SocialPublishingViewProps> = ({
 
       {/* Action Footer */}
       <div className="mt-auto pt-8 flex gap-4">
-        <button 
+        <button
+          type="button"
           onClick={onClose}
           className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold transition-all"
         >
           Cancel
         </button>
-        <button 
+        <button
+          type="button"
           onClick={handlePublish}
           disabled={isPublishing || isComplianceFailed || Object.values(platforms).every(p => !p.enabled)}
           className="flex-[2] py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-bold transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2 disabled:opacity-50"

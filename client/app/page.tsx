@@ -9,11 +9,9 @@ import { LiveDemo } from '../components/landing/LiveDemo';
 import { PlatformMarquee } from '../components/landing/PlatformMarquee';
 import { EnginePillars } from '../components/landing/EnginePillars';
 import { Workflow } from '../components/landing/Workflow';
+import { Fingerprint } from 'lucide-react';
 
-// Below-the-fold sections — keep server-render on (so SEO crawl is
-// unchanged) but defer client hydration so the initial JS bundle is
-// just the above-the-fold flow (Nav, Hero, LiveDemo, PlatformMarquee,
-// EnginePillars, Workflow).
+// Below-the-fold sections
 const IntelligenceShowcase = dynamic(
   () => import('../components/landing/IntelligenceShowcase').then((m) => m.IntelligenceShowcase),
   { ssr: true },
@@ -43,8 +41,11 @@ const Footer = dynamic(
   { ssr: true },
 );
 
-// SoftwareApplication structured data — gives Google rich-snippet
-// eligibility on the SERP for the four pricing tiers.
+// JSON-LD for Google. Previously broadcast a fabricated 4.9-star
+// aggregate rating with 25,000 reviews — that's a violation of Google's
+// structured-data policy (and FTC truth-in-advertising rules) and gets
+// the site penalised, not boosted. Now omits aggregateRating entirely
+// until we have real review data to back it up.
 const STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -53,7 +54,7 @@ const STRUCTURED_DATA = {
   applicationSubCategory: 'Video Editing',
   operatingSystem: 'Web',
   description:
-    'Niche-aware AI auto-edits, retention forecasts, and omni-channel publishing for high-velocity creators.',
+    'AI video editor + multi-platform scheduler. Turn one raw clip into a week of niche-tuned posts across TikTok, Reels, Shorts, X, and LinkedIn.',
   offers: PLANS.filter((p) => p.priceMonthly > 0).map((p) => ({
     '@type': 'Offer',
     name: p.name,
@@ -66,25 +67,31 @@ const STRUCTURED_DATA = {
       referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' },
     },
   })),
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.9',
-    ratingCount: '25000',
-  },
 };
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-indigo-500/30 overflow-x-hidden font-sans">
+    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 selection:bg-primary-500/30 overflow-x-hidden font-inter transition-colors duration-500 bg-noise-grain">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
       />
-      {/* Persistent ambient backgrounds (decorative) */}
+      
+      {/* High-Fidelity Ambient Backgrounds (Design System Aligned) */}
       <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/15 blur-[140px] rounded-full" />
-        <div className="absolute top-[40%] right-[-10%] w-[30%] h-[50%] bg-fuchsia-600/15 blur-[160px] rounded-full" />
-        <div className="absolute bottom-[-20%] left-[20%] w-[50%] h-[50%] bg-blue-600/10 blur-[160px] rounded-full" />
+        <div className="absolute top-[-5%] left-[-10%] w-[50%] h-[50%] bg-primary-600/10 blur-[160px] rounded-full mix-blend-screen opacity-60" />
+        <div className="absolute top-[30%] right-[-10%] w-[40%] h-[60%] bg-fuchsia-600/10 blur-[180px] rounded-full mix-blend-screen opacity-40" />
+        <div className="absolute bottom-[-10%] left-[10%] w-[60%] h-[60%] bg-blue-600/10 blur-[180px] rounded-full mix-blend-screen opacity-40" />
+        
+        {/* Neural Grid - Subtle Landing Manifestation */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:64px_64px] opacity-20 dark:opacity-40" />
+        
+        {/* Spectral Mesh HUD Aesthetics */}
+        <div className="absolute top-48 left-12 hidden xl:flex flex-col gap-4 opacity-[0.03] dark:opacity-[0.07]">
+           <Fingerprint size={120} className="text-primary-500" />
+           <div className="h-px w-32 bg-primary-500/50" />
+           <p className="text-[10px] font-black uppercase tracking-[1em] italic text-primary-500 leading-none">Click</p>
+        </div>
       </div>
 
       <ScrollProgress />
@@ -105,6 +112,10 @@ export default function LandingPage() {
       </main>
 
       <Footer />
+      
+      <style jsx global>{`
+        html { scroll-behavior: smooth; }
+      `}</style>
     </div>
   );
 }

@@ -201,7 +201,8 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <button 
+                          <button
+                            type="button"
                             onClick={() => {
                               setSwarmHUDTask(`Optimizing: ${post.title}`)
                               setShowSwarmHUD(true)
@@ -328,7 +329,8 @@ const SchedulingView: React.FC<SchedulingViewProps> = ({ showToast }) => {
                 </div>
 
                 <div className="pt-8 border-t border-white/5 flex justify-end">
-                    <button 
+                    <button
+                        type="button"
                         onClick={() => {
                           setSwarmHUDTask('Neural Metadata Injection Launch')
                           setShowSwarmHUD(true)

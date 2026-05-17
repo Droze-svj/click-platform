@@ -86,7 +86,7 @@ export default function FluxForecastingMatrixPage() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1750px] mx-auto space-y-24 bg-[var(--page-bg)]">
+      <div className="min-h-screen relative z-10 pb-24 sm:pb-48 px-4 sm:px-10 pt-16 max-w-[1750px] mx-auto space-y-12 sm:space-y-24 bg-black text-white">
         <ToastContainer />
         <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
            <Activity size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
@@ -95,8 +95,9 @@ export default function FluxForecastingMatrixPage() {
         {/* Matrix Header */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
            <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard/analytics')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
+               <button type="button" onClick={() => router.push('/dashboard/analytics')} 
+                title="Back to Analytics" aria-label="Back to Analytics"
+                className="w-16 h-16 rounded-[1.8rem] bg-white/5 border-2 border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl outline-none focus:ring-2 focus:ring-emerald-500">
                 <ArrowLeft size={32} />
               </button>
               <div className="w-20 h-20 bg-emerald-500/5 border border-emerald-500/20 rounded-[2.5rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
@@ -114,8 +115,8 @@ export default function FluxForecastingMatrixPage() {
                        <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">TRAJECTORY_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
-                 <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Tracking engagement kinetic and resonance growth across temporal segments.</p>
+                  <h1 className="text-6xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Flux Matrix</h1>
+                  <p className="text-slate-400 text-[11px] uppercase font-black tracking-[0.4em] italic leading-none">Tracking engagement kinetic and resonance growth across temporal segments.</p>
               </div>
            </div>
 
@@ -125,7 +126,8 @@ export default function FluxForecastingMatrixPage() {
                  <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${pulseMode ? 'bg-emerald-500 animate-ping' : 'bg-slate-800'}`} />
                     <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic">Pulse_Mode</span>
-                    <button 
+                    <button
+                      type="button"
                       onClick={() => setPulseMode(!pulseMode)}
                       title={pulseMode ? "Disable Pulse Sync" : "Enable Pulse Sync"}
                       aria-label="Toggle Spectral Pulse Mode"
@@ -141,10 +143,11 @@ export default function FluxForecastingMatrixPage() {
                  )}
               </div>
 
-              <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border border-white/10 shadow-inner">
+               <div className="flex items-center p-2 rounded-[2.5rem] bg-black/40 border-2 border-white/5 shadow-inner">
                 {['7', '30', '90'].map(p => (
-                  <button key={p} onClick={() => setPeriod(p)}
-                    className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-700 ${
+                  <button type="button" key={p} onClick={() => setPeriod(p)}
+                    title={`View ${p} Cycles`} aria-label={`View ${p} Cycles`}
+                    className={`px-8 py-3 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${
                       period === p ? 'bg-white text-black shadow-2xl scale-105' : 'text-slate-400 hover:text-white'
                     }`}
                   >
@@ -152,7 +155,8 @@ export default function FluxForecastingMatrixPage() {
                   </button>
                 ))}
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => loadFluxPerformance(true, true)} 
                 disabled={refreshing}
                 className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.4em] italic rounded-[3rem] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center gap-6 group"
@@ -172,14 +176,14 @@ export default function FluxForecastingMatrixPage() {
         </div>
 
         {/* Temporal Velocity Matrix */}
-        <div className={`${glassStyle} rounded-[6rem] p-24 relative overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]`}>
+        <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] p-8 sm:p-24 relative overflow-hidden shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]`}>
            <div className="absolute top-0 right-0 p-32 opacity-[0.015] pointer-events-none"><Terminal size={600} className="text-white" /></div>
            <div className="flex items-center gap-8 mb-20 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/20 shadow-2xl"><ActivitySquare size={40} className="text-emerald-400" /></div>
-              <div>
-                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
-                 <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
-              </div>
+               <div>
+                  <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Temporal Velocity</h2>
+                  <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">High-fidelity resonance trajectory modeling across the current timeline.</p>
+               </div>
            </div>
 
            <div className="space-y-12 relative z-10">
@@ -202,13 +206,13 @@ export default function FluxForecastingMatrixPage() {
                           <div className="flex-1 space-y-3">
                              <div className="flex items-center gap-6">
                                 <div className="h-2 bg-black/60 rounded-full flex-1 overflow-hidden shadow-inner border border-white/5">
-                                   <div className="h-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)]" style={{ width: `${viewWidth}%` }} />
+                                   <div className="h-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)]" style={{ '--view-width': `${viewWidth}%`, width: 'var(--view-width)' } as any} />
                                 </div>
                                 <span className="w-24 text-right text-[11px] font-black text-white uppercase italic tracking-widest tabular-nums">{formatFmt(day.views)}</span>
                              </div>
                              <div className="flex items-center gap-6">
                                 <div className="h-2 bg-black/60 rounded-full flex-1 overflow-hidden shadow-inner border border-white/5">
-                                   <div className="h-full bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.6)]" style={{ width: `${engWidth}%` }} />
+                                   <div className="h-full bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.6)]" style={{ '--eng-width': `${engWidth}%`, width: 'var(--eng-width)' } as any} />
                                 </div>
                                 <span className="w-24 text-right text-[11px] font-black text-amber-500 uppercase italic tracking-widest tabular-nums">{formatFmt(engagement)}</span>
                              </div>
@@ -217,23 +221,23 @@ export default function FluxForecastingMatrixPage() {
                      )
                    })}
                 </div>
-              ) : (
+               ) : (
                 <div className="py-48 flex flex-col items-center justify-center text-center space-y-8 opacity-10">
                    <Target size={120} className="text-white animate-pulse" />
-                   <h3 className="text-4xl font-black text-[var(--text-main)] uppercase italic tracking-tighter">NULL_FLUX_SIGNATURE</h3>
+                   <h3 className="text-4xl font-black text-white uppercase italic tracking-tighter">NULL_FLUX_SIGNATURE</h3>
                    <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic">No resonance data manifested in this temporal segment.</p>
                 </div>
-              )}
+               )}
            </div>
         </div>
 
         {/* Resonance Ledger */}
-        <div className={`${glassStyle} rounded-[6rem] overflow-hidden relative z-10 border-white/5 shadow-2xl`}>
-           <div className="px-20 py-12 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                 <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><Monitor size={20} className="text-emerald-400" /></div>
-                 <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
-              </div>
+        <div className={`${glassStyle} rounded-[3rem] sm:rounded-[6rem] overflow-hidden relative z-10 border-white/5 shadow-2xl`}>
+           <div className="px-8 sm:px-20 py-8 sm:py-12 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row items-center justify-between gap-6">
+               <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 rounded-[1.5rem] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-inner"><Monitor size={20} className="text-emerald-400" /></div>
+                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">Resonance Ledger</h3>
+               </div>
               <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.4em] italic bg-black/40 px-6 py-2 rounded-full border border-white/5">
                  LITERAL_SIGNAL_LOGS_V9
               </div>
@@ -277,15 +281,8 @@ export default function FluxForecastingMatrixPage() {
               </table>
            </div>
         </div>
-
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-          ::-webkit-scrollbar { width: 6px; }
-          ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-          ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.2); border-radius: 10px; }
-        `}</style>
       </div>
+
     </ErrorBoundary>
   )
 }
@@ -293,7 +290,7 @@ export default function FluxForecastingMatrixPage() {
 function KineticCard({ label, value, icon: Icon, color, trend }: { label: string; value: string; icon: any; color: string; trend: string }) {
   return (
     <motion.div whileHover={{ y: -15, backgroundColor: 'rgba(255,255,255,0.06)' }}
-      className={`${glassStyle} p-12 rounded-[5rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden`}
+      className={`${glassStyle} p-8 sm:p-12 rounded-[3rem] sm:rounded-[5rem] flex flex-col items-center text-center group border-white/5 relative overflow-hidden`}
     >
        <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity duration-700 pointer-events-none"><Boxes size={120} className="text-white" /></div>
        <div className={`w-24 h-24 rounded-[3rem] bg-white/[0.02] border border-white/10 flex items-center justify-center mb-8 shadow-2xl group-hover:rotate-12 group-hover:scale-110 transition-all duration-700`}>

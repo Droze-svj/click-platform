@@ -99,7 +99,7 @@ const ArbitragePanel = () => {
                             </div>
                         </div>
 
-                        <button onClick={() => steerFunnel(offer.id)}
+                        <button type="button" onClick={() => steerFunnel(offer.id)}
                             className="w-full py-6 rounded-[2.5rem] bg-white text-black font-black text-[14px] uppercase tracking-[0.6em] transition-all duration-700 italic hover:bg-orange-500 hover:text-white shadow-2xl active:scale-95 group relative overflow-hidden">
                             <span className="relative z-10 flex items-center justify-center gap-4">
                                 <Zap size={20} className="group-hover:animate-bounce" /> STEER_SWARM_UPLINK
@@ -280,7 +280,7 @@ export default function Click12Dashboard() {
            {/* High-End Tab Nav */}
            <div className={`flex flex-wrap items-center gap-4 p-5 rounded-[4rem] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] relative z-10 backdrop-blur-3xl bg-white/[0.01]`}>
               {TABS.map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-5 px-10 py-5 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-700 italic active:scale-95 border ${
                     activeTab === tab.id 
                     ? 'bg-white text-black border-white shadow-[0_20px_80px_rgba(255,255,255,0.1)] scale-105' 

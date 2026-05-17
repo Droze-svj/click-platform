@@ -219,12 +219,14 @@ export default function TemplateMarketplace() {
 
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => handleUseTemplate(template)}
                   className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
                 >
                   Use Template
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedTemplate(template)
                     setShowRatingModal(true)
@@ -260,6 +262,7 @@ export default function TemplateMarketplace() {
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
+                      type="button"
                       key={star}
                       onClick={() => setRating(star)}
                       className={`text-2xl ${
@@ -285,6 +288,7 @@ export default function TemplateMarketplace() {
 
               <div className="flex gap-3 justify-end">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowRatingModal(false)
                     setSelectedTemplate(null)
@@ -294,6 +298,7 @@ export default function TemplateMarketplace() {
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleRateTemplate}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >

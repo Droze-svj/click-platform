@@ -147,7 +147,8 @@ export default function AdvancedSchedulingHub() {
                   Bulk Ops ({selectedPosts.length})
                 </motion.button>
               )}
-              <button 
+              <button
+                type="button"
                 title="Settings"
                 className="p-3 bg-white/[0.03] border border-white/10 rounded-full hover:bg-white/10 transition-all font-black uppercase text-[10px]"
               >
@@ -159,6 +160,7 @@ export default function AdvancedSchedulingHub() {
           <div className="flex items-center gap-4 bg-white/5 p-2 rounded-3xl border border-white/10">
             {['timeline', 'templates', 'recursion', 'sync'].map((tab) => (
               <button
+                type="button"
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
                 className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-white'}`}
@@ -183,7 +185,8 @@ export default function AdvancedSchedulingHub() {
                   {/* Conflict Glow Effect */}
                   {post.status === 'failed' && <div className="absolute inset-0 bg-rose-500/5 pointer-events-none animate-pulse" />}
                   
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => toggleSelect(post._id)}
                     title={selectedPosts.includes(post._id) ? "Deselect post" : "Select post"}
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${selectedPosts.includes(post._id) ? 'bg-indigo-500 border-indigo-500' : 'border-white/10 bg-white/5'}`}
@@ -216,7 +219,8 @@ export default function AdvancedSchedulingHub() {
                       <p className="text-[10px] font-black uppercase text-slate-600 italic tracking-widest">Trajectory Date</p>
                       <p className="text-[13px] font-black uppercase italic">{new Date(post.scheduledTime).toLocaleDateString()}</p>
                     </div>
-                    <button 
+                    <button
+                      type="button"
                       title="View Details"
                       className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center hover:bg-indigo-500/20 transition-all text-slate-500 hover:text-white"
                     >
@@ -295,7 +299,8 @@ export default function AdvancedSchedulingHub() {
                         <code className="flex-1 text-[11px] text-indigo-300 truncate font-mono bg-transparent outline-none border-none">
                           {user?.calendarSecret ? `https://api.click.app/scheduler/calendar/feed/${user.calendarSecret}.ics` : 'Synchronizing credentials...'}
                         </code>
-                        <button 
+                        <button
+                          type="button"
                           onClick={() => {
                             if (user?.calendarSecret) {
                               navigator.clipboard.writeText(`https://api.click.app/scheduler/calendar/feed/${user.calendarSecret}.ics`);
@@ -382,7 +387,7 @@ export default function AdvancedSchedulingHub() {
                exit={{ opacity: 0, scale: 0.9, y: 20 }}
                className={`${glassStyle} w-full max-w-xl p-12 rounded-[5rem] bg-black/90 relative`}
              >
-                <button onClick={() => setShowBulkModal(false)} className="absolute top-10 right-10 p-4 hover:bg-white/10 rounded-full transition-all text-slate-500 hover:text-white"><XCircle size={32}/></button>
+                <button type="button" onClick={() => setShowBulkModal(false)} className="absolute top-10 right-10 p-4 hover:bg-white/10 rounded-full transition-all text-slate-500 hover:text-white"><XCircle size={32}/></button>
                 <h2 className="text-5xl font-black italic uppercase tracking-tighter mb-4">Bulk Ops</h2>
                 <p className="text-[14px] font-black text-slate-500 uppercase tracking-widest italic mb-12">Shifting {selectedPosts.length} selected trajectories in temporal space.</p>
                 
@@ -393,7 +398,8 @@ export default function AdvancedSchedulingHub() {
                      { label: '+1 Day', ms: 86400000 },
                      { label: '+1 Week', ms: 604800000 },
                    ].map(opt => (
-                     <button 
+                     <button
+                       type="button"
                        key={opt.label}
                        onClick={() => handleBulkReschedule(opt.ms)}
                        className="py-6 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/5 text-[15px] font-black uppercase italic tracking-widest hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-all group flex items-center justify-center gap-4"

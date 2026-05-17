@@ -111,9 +111,9 @@ export default function ResonanceCommandMatrix() {
   useEffect(() => { fetchResonanceData() }, [fetchResonanceData])
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
-        <Brain size={64} className="text-indigo-500 animate-pulse mb-8" />
-        <span className="text-[12px] font-black text-slate-800 uppercase tracking-[0.6em] animate-pulse italic">Decoding Resonance Matrix...</span>
+     <div className="flex flex-col items-center justify-center py-48 bg-black min-h-screen text-white">
+        <Brain size={64} className="text-indigo-500 animate-pulse mb-8 drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+        <span className="text-[12px] font-black text-slate-400 uppercase tracking-[0.6em] animate-pulse italic">Decoding Resonance Matrix...</span>
      </div>
   );
 
@@ -142,14 +142,14 @@ export default function ResonanceCommandMatrix() {
                    </div>
                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black/40 border border-white/5 shadow-inner">
                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                       <span className="text-[9px] font-black text-slate-800 tracking-widest uppercase italic leading-none">ANOMALY_MONITOR_SYNCED</span>
+                       <span className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic leading-none">ANOMALY_MONITOR_SYNCED</span>
                    </div>
                  </div>
-                 <h1 className="text-8xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-2">Resonance Hub</h1>
-                 <p className="text-slate-800 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Real-time engagement anomaly detection and heuristic advisor protocol.</p>
+                 <h1 className="text-8xl font-black text-white italic uppercase tracking-tighter leading-none mb-2">Resonance Hub</h1>
+                 <p className="text-slate-400 text-[14px] uppercase font-black tracking-[0.4em] italic leading-none">Real-time engagement anomaly detection and heuristic advisor protocol.</p>
               </div>
            </div>
-           <button onClick={fetchResonanceData} 
+           <button type="button" onClick={fetchResonanceData} 
              className="px-12 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] italic rounded-[3rem] hover:bg-indigo-500 hover:text-white transition-all shadow-[0_40px_100px_rgba(255,255,255,0.1)] active:scale-95 flex items-center gap-6 group"
            >
               <RefreshCw size={28} className="group-hover:rotate-180 transition-transform duration-1000" />
@@ -176,8 +176,8 @@ export default function ResonanceCommandMatrix() {
                <div className={`text-7xl font-black italic tracking-tighter tabular-nums leading-none mb-6 drop-shadow-2xl ${kpi.color}`}>
                  {kpi.value}<span className="text-2xl opacity-40 ml-1">{kpi.unit}</span>
                </div>
-               <div className="text-[14px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-none">{kpi.label}</div>
-               <div className="text-[10px] text-slate-950 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5">
+               <div className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-none">{kpi.label}</div>
+               <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-6 italic bg-white/5 px-6 py-2 rounded-full border border-white/5">
                   {kpi.trend}
                </div>
             </motion.div>
@@ -194,13 +194,13 @@ export default function ResonanceCommandMatrix() {
               <div className="space-y-12 relative z-10">
                  <div className="flex items-center gap-6">
                     <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-2xl animate-pulse"><Sparkles size={32} className="text-indigo-400" /></div>
-                    <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Heuristic Protocol</h3>
+                    <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Heuristic Protocol</h3>
                  </div>
                  <div className="border-l-4 border-indigo-500/40 pl-10 space-y-6">
                     <p className="text-4xl font-black text-white leading-tight italic tracking-tighter max-w-2xl">
                        &quot;{data.nextBestAction}&quot;
                     </p>
-                    <p className="text-[14px] text-slate-800 font-black uppercase tracking-[0.4em] italic leading-relaxed">
+                    <p className="text-[14px] text-slate-400 font-black uppercase tracking-[0.4em] italic leading-relaxed">
                        Recommended based on multi-node engagement patterns and algorithmic resonance modeling.
                     </p>
                  </div>
@@ -221,7 +221,7 @@ export default function ResonanceCommandMatrix() {
                   <div className="flex items-center justify-between">
                      <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-[2rem] bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shadow-2xl"><Flame size={32} className="text-orange-400 animate-pulse" /></div>
-                        <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Kinetic Breach</h3>
+                        <h3 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">Kinetic Breach</h3>
                      </div>
                      <ArrowUpRight size={40} className="text-orange-400 opacity-20 group-hover:opacity-100 group-hover:scale-125 transition-all duration-1000" />
                   </div>
@@ -251,8 +251,8 @@ export default function ResonanceCommandMatrix() {
            <div className="flex items-center gap-8 mb-12 relative z-10">
               <div className="p-6 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/20 shadow-2xl shadow-indigo-500/20"><ActivitySquare size={40} className="text-indigo-400" /></div>
               <div>
-                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">Node Integrity Ledger</h2>
-                 <p className="text-[12px] text-slate-800 font-black uppercase tracking-[0.5em] italic leading-none">Diagnostic surveillance of high-cadence content nodes across the global substrate.</p>
+                 <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">Node Integrity Ledger</h2>
+                 <p className="text-[12px] text-slate-400 font-black uppercase tracking-[0.5em] italic leading-none">Diagnostic surveillance of high-cadence content nodes across the global substrate.</p>
               </div>
            </div>
 
@@ -276,7 +276,7 @@ export default function ResonanceCommandMatrix() {
                            </span>
                          )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-8 text-[12px] text-slate-800 font-black uppercase tracking-widest italic">
+                      <div className="flex flex-wrap items-center gap-8 text-[12px] text-slate-400 font-black uppercase tracking-widest italic">
                          <div className="flex items-center gap-3"><Eye size={16} /> <span>{(post.views / 1000).toFixed(1)}K_SAT</span></div>
                          <div className="flex items-center gap-3"><Heart size={16} /> <span>{post.likes.toLocaleString()}_AFFINITY</span></div>
                          <div className="flex items-center gap-3"><MessageSquare size={16} /> <span>{post.comments}_SIGNALS</span></div>
@@ -311,20 +311,24 @@ export default function ResonanceCommandMatrix() {
                           {getAnomalyIcon(selectedPost.anomalyType)}
                        </div>
                        <div>
-                          <h4 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">
+                          <h4 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">
                              {selectedPost.platform.toUpperCase()} Node Diagnostic
                           </h4>
-                          <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.5em] italic">Heuristic Depth Scan active...</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] italic">Heuristic Depth Scan active...</span>
                        </div>
                     </div>
-                    <button onClick={() => setSelectedPost(null)} className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-800 hover:text-white transition-all hover:scale-110 shadow-2xl"><X size={32} /></button>
+                    <button type="button" onClick={() => setSelectedPost(null)} 
+                        title="Close Diagnostic" aria-label="Close Diagnostic"
+                        className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 shadow-2xl">
+                        <X size={32} />
+                    </button>
                  </div>
 
                  <div className="flex flex-col items-center justify-center py-16 relative z-10 space-y-6">
                     <div className={`text-[12rem] font-black italic tracking-tighter leading-none drop-shadow-2xl ${getScoreColor(selectedPost.healthScore)}`}>
                        {selectedPost.healthScore}<span className="text-4xl opacity-40 ml-4">%</span>
                     </div>
-                    <div className="text-[14px] font-black text-slate-800 uppercase tracking-[0.8em] italic leading-none border-t border-white/5 pt-8">NODE_INTEGRITY_INDEX</div>
+                    <div className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-t border-white/5 pt-8">NODE_INTEGRITY_INDEX</div>
                  </div>
 
                  {selectedPost.anomalyType !== 'none' && selectedPost.anomalyAdvice && (
@@ -338,7 +342,7 @@ export default function ResonanceCommandMatrix() {
                       <p className="text-4xl font-black text-white italic tracking-tighter leading-tight border-l-4 border-indigo-500/30 pl-10">
                         {selectedPost.anomalyAdvice.action}
                       </p>
-                      <p className="text-[16px] text-slate-800 font-black italic leading-relaxed pl-10 opacity-80 uppercase tracking-widest border-l-4 border-indigo-500/10">
+                      <p className="text-[16px] text-slate-400 font-black italic leading-relaxed pl-10 opacity-80 uppercase tracking-widest border-l-4 border-indigo-500/10">
                         {selectedPost.anomalyAdvice.reasoning}
                       </p>
                    </div>
@@ -352,7 +356,7 @@ export default function ResonanceCommandMatrix() {
                  </div>
                  
                  <div className="pt-8 flex justify-center relative z-10">
-                    <button onClick={() => setSelectedPost(null)} className="px-16 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3.5rem] hover:bg-indigo-600 hover:text-white transition-all duration-700 shadow-2xl active:scale-95">CLOSE_DIAGNOSTIC</button>
+                    <button type="button" onClick={() => setSelectedPost(null)} className="px-16 py-6 bg-white text-black font-black uppercase text-[15px] tracking-[0.8em] italic rounded-[3.5rem] hover:bg-indigo-600 hover:text-white transition-all duration-700 shadow-2xl active:scale-95">CLOSE_DIAGNOSTIC</button>
                  </div>
               </motion.div>
             </motion.div>
@@ -361,7 +365,7 @@ export default function ResonanceCommandMatrix() {
 
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
+          body { font-family: 'Inter', sans-serif; background: black; color: white; overflow-x: hidden; }
           ::-webkit-scrollbar { width: 6px; }
           ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
           ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }

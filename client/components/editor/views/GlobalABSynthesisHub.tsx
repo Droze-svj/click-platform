@@ -105,6 +105,7 @@ const GlobalABSynthesisHub: React.FC<{
               </p>
               <div className="h-3 w-[1px] bg-white/10" />
               <button
+                type="button"
                 onClick={() => setShowHeatMap(!showHeatMap)}
                 className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all text-[8px] font-black uppercase tracking-widest ${showHeatMap ? 'bg-indigo-500 border-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'bg-white/5 border-white/10 text-slate-500'}`}
               >
@@ -116,6 +117,7 @@ const GlobalABSynthesisHub: React.FC<{
         </div>
         <div className="flex gap-4">
           <button
+            type="button"
             onClick={handleRunTest}
             disabled={isSynthesizing}
             className={`px-8 py-3 rounded-2xl font-black uppercase tracking-widest transition-all relative overflow-hidden group ${
@@ -137,6 +139,7 @@ const GlobalABSynthesisHub: React.FC<{
             </span>
           </button>
           <button
+            type="button"
             onClick={onClose}
             title="Close A/B Studio"
             className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all"
@@ -321,6 +324,7 @@ const Viewport: React.FC<{
                           {onExportWhop && (
                             <div className="flex gap-2">
                                <button
+                                 type="button"
                                  onClick={(e) => {
                                    e.stopPropagation();
                                    if (!isExported) onExportWhop(metadata.region);
@@ -346,6 +350,7 @@ const Viewport: React.FC<{
 
                                {isExported && onSyncFeedback && (
                                  <button
+                                   type="button"
                                    onClick={(e) => {
                                      e.stopPropagation();
                                      if (!isSynced) onSyncFeedback(metadata.region, metadata.engagement);
@@ -396,6 +401,7 @@ const Viewport: React.FC<{
                                 <div className="flex items-center gap-2">
                                     {onStyleFix && !isFixed && (
                                       <button
+                                        type="button"
                                         onClick={() => onStyleFix(metadata.region, metadata.engagement.map((s, i) => s < 70 ? i : -1).filter(i => i !== -1))}
                                         className="px-2 py-0.5 rounded bg-violet-500 text-white text-[7px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all shadow-[0_0_10px_rgba(139,92,241,0.5)]"
                                       >

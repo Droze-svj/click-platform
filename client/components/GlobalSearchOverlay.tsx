@@ -53,6 +53,7 @@ export default function GlobalSearchOverlay() {
                   <span className="text-[10px] font-bold text-gray-500">ESC</span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
                   className="p-1 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"
                 >

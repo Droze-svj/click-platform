@@ -51,6 +51,13 @@ interface ColorGradingViewProps {
   /** Optional: when provided, applying a preset records to the user's
    *  style profile so future suggestions can bias toward grades they pick. */
   onRecordPick?: (facet: 'colorGrades', key: string) => void
+  /**
+   * Weighted "what worked" map keyed by colorGrade id. When present the
+   * preset grid is re-ranked so the top performer renders first and gets
+   * a "Your top pick" badge. Pass `null`/`undefined` for cold-start
+   * users — the grid then renders in its original authored order.
+   */
+  topPerformers?: Array<{ key: string; performanceScore?: number; sampleSize?: number }>
 }
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
@@ -153,7 +160,7 @@ const ColorWheel: React.FC<ColorWheelProps> = ({ label, desc, colorClass, value,
 }
 
 const ColorGradingView: React.FC<ColorGradingViewProps> = ({
-  videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast, onRecordPick
+  videoFilters, setVideoFilters, colorGradeSettings, setColorGradeSettings, showToast, onRecordPick, topPerformers
 }) => {
   const [isComparing, setIsComparing] = React.useState(false)
   const [preCompareFilters, setPreCompareFilters] = React.useState<VideoFilter | null>(null)
@@ -213,6 +220,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
           </div>
           <div className="flex items-center gap-4">
             <button
+               type="button"
                onClick={toggleComparison}
                title={isComparing ? "Apply Grade" : "Compare with Original"}
                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest ${isComparing ? 'bg-amber-500 border-amber-400 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}
@@ -225,7 +233,22 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-4 relative z-10">
-          {COLOR_PRESETS.map((p, idx) => (
+          {/* Re-rank presets by weighted performance score when learned
+              signals are available. Tiles that don't appear in
+              topPerformers keep their authored order beneath the
+              promoted ones. The first promoted tile gets a "Your top
+              pick" badge so the user understands why the order changed. */}
+          {(() => {
+            const score = new Map<string, number>()
+            ;(topPerformers || []).forEach((t) => {
+              if (!t?.key) return
+              const s = (t.performanceScore || 0) * Math.log((t.sampleSize || 0) + 1)
+              score.set(t.key, s)
+            })
+            const topKey = (topPerformers && topPerformers[0]?.key) || null
+            const sorted = COLOR_PRESETS.slice().sort((a, b) => (score.get(b.id) || 0) - (score.get(a.id) || 0))
+            return sorted
+          })().map((p, idx) => (
             <motion.button
               key={p.id}
               initial={{ opacity: 0, y: 10 }}
@@ -242,6 +265,15 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{p.group}</span>
                 <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${p.swatch} shadow-[0_0_10px_rgba(255,255,255,0.2)]`} />
               </div>
+              {/* "Your top pick" badge — surfaced only on the highest-
+                   scoring preset (after re-rank). Quietly absent for
+                   cold-start users so the editor never lies about what
+                   it has learned. */}
+              {topPerformers && topPerformers[0]?.key === p.id && (
+                <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  Your top pick
+                </span>
+              )}
               <span className="block font-black text-xl text-white italic tracking-tight group-hover:text-indigo-400 transition-colors uppercase">{p.label}</span>
               <span className="block text-[10px] text-slate-500 font-medium mt-1 uppercase tracking-widest opacity-60 italic">{p.desc}</span>
             </motion.button>
@@ -272,6 +304,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
                 <div className="flex items-center gap-4">
                   <span className="text-white font-black text-xs italic tabular-nums bg-white/5 px-3 py-1 rounded-lg border border-white/5">{(videoFilters as any)[key] ?? reset}</span>
                   <button
+                    type="button"
                     onClick={() => setVideoFilters((prev: any) => ({ ...prev, [key]: reset }))}
                     className="p-1.5 rounded-lg bg-white/5 hover:bg-fuchsia-500/20 text-slate-600 hover:text-fuchsia-400 transition-all border border-transparent hover:border-fuchsia-500/20"
                     title="Reset to default"
@@ -345,6 +378,7 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
         <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between">
            <p className="text-[10px] text-slate-500 font-medium italic max-w-md">Precision grading enabled. Move the central reticle to shift the color balance of specific luminance ranges. Master Balance adjusts global luminosity for the target range.</p>
             <button
+              type="button"
               title="Match Color Node"
               className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all"
             >

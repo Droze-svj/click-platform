@@ -187,7 +187,8 @@ export const ArbitrageSteererView: React.FC = () => {
                                             <span className="text-[8px] font-black text-slate-600 uppercase block mb-1">Conv. Rate</span>
                                             <span className="text-xl font-black text-white italic">{(offer.cvr * 100).toFixed(0)}%</span>
                                          </div>
-                                         <button 
+                                         <button
+                                            type="button"
                                             onClick={() => performSteer(offer.id)}
                                             className={`${idx === 0 ? 'bg-indigo-600' : 'bg-white/5 border border-white/10'} px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-all`}
                                          >

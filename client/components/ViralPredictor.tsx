@@ -97,6 +97,7 @@ export default function ViralPredictor({ content, onPrediction }: ViralPredictor
       </div>
 
       <button
+        type="button"
         onClick={analyzeContent}
         disabled={loading || !content.text}
         className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-4"

@@ -34,12 +34,16 @@ class RedisCache {
       this.client = redis.createClient({
         url: redisUrl,
         socket: {
-          connectTimeout: 5000,
-          lazyConnect: true,
-        },
-        retry_strategy: (times) => {
-          const delay = Math.min(times * 50, 2000);
-          return delay;
+          connectTimeout: 10000,
+          keepAlive: 15000,
+          reconnectStrategy: (retries) => {
+            if (retries > 20) {
+              logger.error('Redis max reconnection retries reached');
+              return new Error('Redis connection lost');
+            }
+            const delay = Math.min(retries * 100, 3000);
+            return delay;
+          }
         }
       });
 

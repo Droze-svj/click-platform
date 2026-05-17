@@ -83,12 +83,14 @@ export default function SubscriptionBanner() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => router.push('/dashboard/membership')}
             className={`px-4 py-2 text-sm font-medium text-white bg-${bannerType === 'error' ? 'red' : 'yellow'}-600 rounded-md hover:bg-${bannerType === 'error' ? 'red' : 'yellow'}-700`}
           >
             {status.isExpired ? 'Renew Now' : 'Upgrade'}
           </button>
           <button
+            type="button"
             onClick={() => setDismissed(true)}
             className="text-gray-400 hover:text-gray-600"
             aria-label="Dismiss"

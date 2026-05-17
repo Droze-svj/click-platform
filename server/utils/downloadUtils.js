@@ -1,0 +1,154 @@
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
+const path = require('path');
+const { execFile } = require('child_process');
+const logger = require('./logger');
+const YTDlpWrap = require('yt-dlp-wrap').default;
+
+const BINARY_DIR = path.join(process.cwd(), 'bin');
+const BINARY_PATH = path.join(BINARY_DIR, 'yt-dlp');
+if (!fs.existsSync(BINARY_DIR)) fs.mkdirSync(BINARY_DIR, { recursive: true });
+
+const ytDlp = new YTDlpWrap(fs.existsSync(BINARY_PATH) ? BINARY_PATH : 'yt-dlp');
+
+const DIRECT_VIDEO_EXTS = ['.mp4', '.mov', '.webm', '.m4v', '.mkv'];
+const PLATFORM_PATTERNS = [
+  { name: 'youtube',   re: /(?:youtube\.com|youtu\.be)/i },
+  { name: 'tiktok',    re: /tiktok\.com/i },
+  { name: 'instagram', re: /instagram\.com/i },
+  { name: 'twitter',   re: /(?:twitter\.com|x\.com)/i },
+  { name: 'facebook',  re: /facebook\.com/i },
+  { name: 'vimeo',     re: /vimeo\.com/i },
+];
+
+function classifyUrl(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { return { kind: 'invalid' }; }
+  if (!/^https?:$/.test(u.protocol)) return { kind: 'invalid' };
+
+  const ext = path.extname(u.pathname).toLowerCase();
+  if (DIRECT_VIDEO_EXTS.includes(ext)) return { kind: 'direct', ext };
+
+  for (const p of PLATFORM_PATTERNS) {
+    if (p.re.test(u.host)) return { kind: 'platform', platform: p.name };
+  }
+  return { kind: 'unknown' };
+}
+
+function streamDownload(url, destPath, { maxBytes = 500 * 1024 * 1024, redirects = 3 } = {}) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => { try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch { /* file already gone */ } };
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    };
+    const succeed = (val) => {
+      if (settled) return;
+      settled = true;
+      resolve(val);
+    };
+
+    const get = (currentUrl, hopsLeft) => {
+      const lib = currentUrl.startsWith('https:') ? https : http;
+      const request = lib.get(currentUrl, (res) => {
+        // Follow redirects
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hopsLeft > 0) {
+          res.resume();
+          const next = new URL(res.headers.location, currentUrl).toString();
+          return get(next, hopsLeft - 1);
+        }
+        if (res.statusCode !== 200) {
+          res.resume();
+          return fail(new Error(`Source returned HTTP ${res.statusCode}`));
+        }
+        const ct = (res.headers['content-type'] || '').toLowerCase();
+        if (ct && !ct.startsWith('video/') && !ct.startsWith('application/octet-stream')) {
+          res.resume();
+          return fail(new Error(`Source is not a video (content-type: ${ct})`));
+        }
+        const cl = parseInt(res.headers['content-length'] || '0', 10);
+        if (cl && cl > maxBytes) {
+          res.resume();
+          return fail(new Error(`File exceeds ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
+        }
+        let received = 0;
+        const file = fs.createWriteStream(destPath);
+        res.on('data', (chunk) => {
+          received += chunk.length;
+          if (received > maxBytes) {
+            res.destroy();
+            file.destroy();
+            return fail(new Error(`Stream exceeded ${Math.round(maxBytes / 1024 / 1024)}MB cap`));
+          }
+        });
+        res.on('error', fail);
+        res.pipe(file);
+        file.on('finish', () => file.close(() => succeed({ bytes: received })));
+        file.on('error', fail);
+      });
+      request.on('error', fail);
+      request.setTimeout(45_000, () => {
+        request.destroy(new Error('Download timed out'));
+      });
+    };
+    get(url, redirects);
+  });
+}
+
+async function ensureYtDlp() {
+  if (fs.existsSync(BINARY_PATH)) {
+    return BINARY_PATH;
+  }
+  
+  // Try system first
+  try {
+    await ytDlp.getVersion();
+    return 'yt-dlp';
+  } catch (e) {
+    logger.info('yt-dlp binary not found in PATH, downloading to bin/yt-dlp...');
+    try {
+      await YTDlpWrap.downloadFromGithub(BINARY_PATH);
+      fs.chmodSync(BINARY_PATH, '755');
+      ytDlp.setBinaryPath(BINARY_PATH);
+      return BINARY_PATH;
+    } catch (dlError) {
+      logger.error('Failed to download yt-dlp from GitHub', { error: dlError.message });
+      throw new Error('YT_DLP_MISSING_AND_DOWNLOAD_FAILED');
+    }
+  }
+}
+
+function ytDlpAvailable() {
+  return new Promise((resolve) => {
+    ensureYtDlp().then(() => resolve(true)).catch(() => resolve(false));
+  });
+}
+
+async function ytDlpDownload(url, destPath) {
+  await ensureYtDlp();
+  
+  // Limit to <= 1080p so we don't pull 4K masters from creators' channels.
+  const args = [
+    url,
+    '-f', 'bv*[height<=1080]+ba/b[height<=1080]',
+    '--merge-output-format', 'mp4',
+    '--max-filesize', '500M',
+    '--no-playlist',
+    '-o', destPath,
+  ];
+
+  return ytDlp.execPromise(args);
+}
+
+module.exports = {
+  classifyUrl,
+  streamDownload,
+  ytDlpAvailable,
+  ytDlpDownload,
+  DIRECT_VIDEO_EXTS,
+  PLATFORM_PATTERNS
+};

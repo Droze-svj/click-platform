@@ -4,6 +4,17 @@ const User = require('../models/User');
 const { getDevUserObjectId, allowDevMode: computeAllowDevMode } = require('../utils/devUser');
 const { getDatabaseHealth } = require('../config/database');
 const logger = require('../utils/logger');
+const { getJwtSecret } = require('../utils/jwtSecret');
+const crypto = require('crypto');
+
+// Utility to ensure a user ID is a valid Mongoose ObjectId
+function ensureObjectId(idStr) {
+  if (!idStr) return null;
+  const str = String(idStr);
+  if (mongoose.Types.ObjectId.isValid(str)) return str;
+  // If it's a UUID, hash it to a deterministic 24-character hex string
+  return crypto.createHash('md5').update(str).digest('hex').substring(0, 24);
+}
 
 /**
  * Enhanced Authentication Middleware (Unified Mongoose Architecture)
@@ -42,6 +53,7 @@ const auth = async (req, res, next) => {
           subscription: { status: 'active', tier: 'elite' },
           isDevUser: true
         };
+        req.userId = String(req.user._id);
         return next();
       }
       return res.status(401).json({ error: 'No token provided' });
@@ -56,7 +68,7 @@ const auth = async (req, res, next) => {
       };
     } else {
       try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        decoded = jwt.verify(token, getJwtSecret());
       } catch (err) {
         return res.status(401).json({ error: 'Invalid token', details: err.message });
       }
@@ -86,9 +98,13 @@ const auth = async (req, res, next) => {
       const { supabase, isSupabaseConfigured } = require('../config/supabase');
       if (isSupabaseConfigured()) {
         try {
+          // NOTE: `niche` is NOT a column on Supabase `users`. Including it
+          // makes the query throw 42703 and pushes the request into the
+          // "user not found" 401 branch, locking out legitimate sessions.
+          // `username` IS a column and we use it as the preferred display name.
           const { data, error: sbError } = await supabase
             .from('users')
-            .select('id, email, first_name, last_name, subscription, niche, avatar, bio, website, location, social_links, email_verified, created_at')
+            .select('id, email, first_name, last_name, username, subscription, avatar, bio, website, location, social_links, email_verified, created_at')
             .eq('id', userId)
             .single();
           
@@ -115,18 +131,43 @@ const auth = async (req, res, next) => {
           subscription: { status: 'active', tier: 'elite' },
           isDevUser: true
         };
+        req.userId = String(devObjectId);
         req.allowDevMode = true;
         return next();
       }
       return res.status(401).json({ error: 'User not found in production database' });
     }
 
-    // Attach user to request
+    // Attach user to request. Supabase users only have `id` (UUID); the
+    // lookup above already mirrors it onto `_id`, but belt-and-suspenders
+    // so every downstream consumer can read either property safely.
+    if (user && !user._id && user.id) user._id = user.id;
+    if (user && !user.id && user._id) user.id = String(user._id);
+    
+    // Crucial fix: Map the UUID to a valid ObjectId for downstream Mongoose compatibility
+    const mappedMongoId = ensureObjectId(user._id || user.id);
+    
     req.user = user;
+    // We attach both the original UUID (for Supabase) and the mapped Mongo ID
+    req.user.supabaseId = user.id; 
+    req.user._id = mappedMongoId; // Override Mongoose _id to be safe
+    req.userId = mappedMongoId;
     req.allowDevMode = allowDevMode;
 
-    // Check email verification (skipped in dev mode)
-    if (!user.email_verified && !allowDevMode) {
+    // Check email verification.
+    //
+    // Skipped in two cases:
+    //   1. allowDevMode — localhost dev sessions never need verification
+    //   2. AUTO_VERIFY_EMAIL=true — explicit opt-out for staging /
+    //      tester environments where SMTP isn't configured. Without
+    //      this flag, every remote tester registers successfully but
+    //      then gets a 403 on every dashboard request forever because
+    //      the verification email never arrives.
+    //
+    // Leave AUTO_VERIFY_EMAIL unset in production to keep verification
+    // required for real paying customers.
+    const autoVerify = process.env.AUTO_VERIFY_EMAIL === 'true';
+    if (!user.email_verified && !allowDevMode && !autoVerify) {
       return res.status(403).json({
         error: 'Email verification required',
         emailVerified: false,

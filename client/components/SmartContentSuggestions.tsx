@@ -108,6 +108,7 @@ export default function SmartContentSuggestions() {
           </h3>
         </div>
         <button
+          type="button"
           onClick={loadSuggestions}
           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
         >

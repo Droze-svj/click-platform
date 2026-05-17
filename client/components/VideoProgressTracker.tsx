@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, XCircle, Clock, Zap, Cpu, ArrowRight } from 'lucide-react'
+import { apiGet } from '../lib/api'
 
 interface Progress {
   videoId: string
@@ -39,18 +40,11 @@ export default function VideoProgressTracker({
 
     const pollProgress = async () => {
       try {
-        let endpoint = (operation === 'export' && jobId) 
-          ? `/api/export/${jobId}`
-          : operation ? `/api/video/progress/${videoId}?operation=${operation}` : `/api/video/progress/${videoId}`;
+        const endpoint = (operation === 'export' && jobId)
+          ? `/export/${jobId}`
+          : operation ? `/video/progress/${videoId}?operation=${operation}` : `/video/progress/${videoId}`
 
-        const response = await fetch(endpoint, { credentials: 'include' })
-
-        if (!response.ok) {
-          setFailures((n) => n + 1)
-          return
-        }
-
-        const data = await response.json()
+        const data = await apiGet<any>(endpoint)
         if (data?.data) {
           setFailures(0)
           setProgress(data.data)

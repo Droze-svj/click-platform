@@ -100,6 +100,7 @@ export default function DailyChallenges() {
 
           return (
             <button
+              type="button"
               key={challenge.id}
               onClick={() => handleChallengeClick(challenge)}
               className="w-full text-left p-4 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 group"
@@ -165,6 +166,7 @@ export default function DailyChallenges() {
 
       {activeChallenges.length > 3 && (
         <button
+          type="button"
           onClick={() => router.push('/dashboard/achievements')}
           className="mt-4 w-full text-center text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
         >

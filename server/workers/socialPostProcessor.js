@@ -24,6 +24,37 @@ function simulatedResult(platform) {
 }
 
 /**
+ * Classify a publish failure as retryable or permanent. The cron will only
+ * re-queue rows tagged `failed_retryable`; `failed_permanent` rows park
+ * and surface to the dashboard for the user to act on.
+ *
+ * Transient (retryable): network timeouts, 5xx, 429 rate limit, ECONNRESET.
+ * Permanent: 401/403 auth, 400 invalid input, "Account not linked", quota.
+ */
+function classifyPublishError(error) {
+  const msg = String(error?.message || '').toLowerCase();
+  const status = error?.response?.status || error?.statusCode;
+  if (status === 429 || (status >= 500 && status < 600)) return 'failed_retryable';
+  if (msg.includes('etimedout') || msg.includes('econnreset') || msg.includes('socket hang up') || msg.includes('network')) {
+    return 'failed_retryable';
+  }
+  if (status === 401 || status === 403) return 'failed_permanent';
+  if (msg.includes('not connected') || msg.includes('not linked') || msg.includes('invalid_grant') || msg.includes('token expired')) {
+    return 'failed_permanent';
+  }
+  // Unknown failure — bias to retryable so transient hiccups don't bury
+  // posts. Backoff caps attempts so we don't loop forever.
+  return 'failed_retryable';
+}
+
+/** Exponential backoff: attempt 0 → 1m, 1 → 5m, 2 → 25m, 3+ → permanent. */
+function nextRetryDelay(attemptCount) {
+  if (attemptCount >= 3) return null;
+  const minutes = [1, 5, 25][attemptCount] || 25;
+  return minutes * 60 * 1000;
+}
+
+/**
  * Social media posting job processor
  */
 async function processSocialPostJob(jobData, job) {
@@ -47,6 +78,11 @@ async function processSocialPostJob(jobData, job) {
     }
     // Per-post dryRun overrides the job-payload value if it changed.
     if (fresh?.dryRun) jobData.dryRun = true;
+    // Flip to 'publishing' so the dashboard shows a live status — the
+    // window between cron pickup and the final 'posted'/'failed_*' write
+    // can be several seconds when the platform is slow.
+    await ScheduledPost.findByIdAndUpdate(scheduledPostId, { $set: { status: 'publishing' } })
+      .catch((dbErr) => logger.warn('Could not mark post as publishing', { scheduledPostId, error: dbErr.message }));
   }
   const dryRun = DRY_RUN_GLOBAL || jobDryRun === true || jobData.dryRun === true;
 
@@ -143,10 +179,71 @@ async function processSocialPostJob(jobData, job) {
         }
       }, { new: true });
 
-      // Trigger webhook for successful posts
+      // Best-effort immediate ingest. The platform's real analytics
+      // numbers only land later (engagement, impressions, retention all
+      // take 24h+ to settle), but we still want the *style picks* —
+      // hook angle, caption style, color grade — folded into the
+      // learning profile right now so the very next suggestion benefits.
+      // The 6h cron will pick up the real metrics when they arrive.
+      if (scheduledPost && scheduledPost.contentId) {
+        const { ingestPostPerformance } = require('../services/creatorPerformanceService');
+        ingestPostPerformance({
+          userId: scheduledPost.userId,
+          contentId: scheduledPost.contentId,
+          metrics: scheduledPost.analytics || { views: 0, engagement: 0 },
+        }).catch((err) => {
+          // Non-blocking — if ingestion fails the cron will catch it later.
+          logger.warn('Post-publish ingest failed (will retry via cron)', {
+            scheduledPostId, error: err.message,
+          });
+        });
+      }
+
+      // Trigger webhook + emit socket event + create in-app notifications
+      // so the dashboard updates live without a page refresh.
       if (scheduledPost) {
         const { triggerWebhook } = require('../services/webhookService');
+        const { emitToUser } = require('../services/socketService');
+        const notificationService = require('../services/notificationService');
+
         for (const result of results) {
+          // Live socket update for any open dashboard tabs
+          emitToUser(userId, 'post:status', {
+            postId: scheduledPostId,
+            platform: result.platform,
+            status: result.success ? 'published' : 'failed',
+            url: result.url || null,
+            error: result.error || null,
+            dryRun: !!result.dryRun,
+          });
+
+          // In-app notification (best-effort)
+          try {
+            if (result.success) {
+              await notificationService.createNotification(
+                userId,
+                `${result.platform} post published`,
+                result.dryRun
+                  ? `Dry-run completed for ${result.platform}.`
+                  : `Your ${result.platform} post is live${result.url ? ` — ${result.url}` : ''}.`,
+                'success',
+                '/dashboard/posts',
+                { category: 'publishing', priority: 'normal', context: { postId: String(scheduledPostId), platform: result.platform } }
+              );
+            } else {
+              await notificationService.createNotification(
+                userId,
+                `${result.platform} post failed`,
+                result.error || `Your ${result.platform} post could not be published.`,
+                'error',
+                '/dashboard/scheduler',
+                { category: 'publishing', priority: 'high', context: { postId: String(scheduledPostId), platform: result.platform } }
+              );
+            }
+          } catch (notifErr) {
+            logger.warn('Notification create failed', { error: notifErr.message, postId: scheduledPostId });
+          }
+
           if (result.success) {
             await triggerWebhook(userId, 'post.posted', {
               postId: scheduledPostId,
@@ -191,11 +288,49 @@ async function processSocialPostJob(jobData, job) {
       error: error.message,
     });
 
-    // Update scheduled post status
+    // Update scheduled post status — classify retryable vs permanent so
+    // the cron knows whether to re-queue or park.
     if (scheduledPostId) {
-      await ScheduledPost.findByIdAndUpdate(scheduledPostId, {
-        $set: { status: 'failed', error: error.message }
-      }).catch(() => {});
+      try {
+        const current = await ScheduledPost.findById(scheduledPostId).select('attemptCount').lean();
+        const attempt = (current?.attemptCount || 0) + 1;
+        const classification = classifyPublishError(error);
+        const delay = classification === 'failed_retryable' ? nextRetryDelay(current?.attemptCount || 0) : null;
+        const finalStatus = (classification === 'failed_retryable' && delay !== null) ? 'failed_retryable' : 'failed_permanent';
+        await ScheduledPost.findByIdAndUpdate(scheduledPostId, {
+          $set: {
+            status: finalStatus,
+            error: error.message,
+            attemptCount: attempt,
+            nextRetryAt: delay !== null ? new Date(Date.now() + delay) : null,
+          },
+        });
+      } catch (dbErr) {
+        logger.error('Failed to mark scheduled post as failed', {
+          scheduledPostId, error: dbErr.message,
+        });
+      }
+
+      // Notify the user live + by webhook
+      try {
+        const { emitToUser } = require('../services/socketService');
+        emitToUser(userId, 'post:status', {
+          postId: scheduledPostId,
+          status: 'failed',
+          error: error.message,
+        });
+        const notificationService = require('../services/notificationService');
+        await notificationService.createNotification(
+          userId,
+          'Scheduled post failed',
+          error.message || 'The post could not be published.',
+          'error',
+          '/dashboard/scheduler',
+          { category: 'publishing', priority: 'high', context: { postId: String(scheduledPostId) } }
+        );
+      } catch (notifErr) {
+        logger.warn('Failure notification could not be created', { error: notifErr.message });
+      }
 
       // Trigger webhook for failed post
       const { triggerWebhook } = require('../services/webhookService');

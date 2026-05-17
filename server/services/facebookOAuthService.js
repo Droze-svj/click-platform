@@ -3,9 +3,36 @@
 
 const axios = require('axios');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 const User = require('../models/User');
+const OAuthStorage = require('../utils/oauthStorage');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
+
+// Supabase users have UUIDs; Mongoose User.findById throws CastError on them.
+// These helpers route reads/writes to either User.oauth.facebook (legacy
+// Mongo users) or Supabase social_links.oauth.facebook (Supabase users).
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
+
+async function readFacebookOauth(userId) {
+  if (isMongoUserId(userId)) {
+    const user = await User.findById(userId).select('oauth.facebook');
+    return user?.oauth?.facebook || null;
+  }
+  return await OAuthStorage.loadTokens(userId, 'facebook');
+}
+
+async function writeFacebookOauth(userId, patch) {
+  if (isMongoUserId(userId)) {
+    const setPatch = {};
+    for (const [k, v] of Object.entries(patch)) {
+      setPatch[`oauth.facebook.${k}`] = v;
+    }
+    await User.findByIdAndUpdate(userId, { $set: setPatch });
+  } else {
+    await OAuthStorage.saveTokens(userId, 'facebook', patch);
+  }
+}
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v18.0';
 const DEFAULT_SCOPE = 'pages_manage_posts,pages_read_engagement,pages_show_list,public_profile';
@@ -29,18 +56,13 @@ function defaultRedirectUri() {
 async function getAuthorizationUrl(userId, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Facebook OAuth not configured');
 
-  const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
-
   const oauthState = state || crypto.randomBytes(32).toString('hex');
 
-  // Persist state to User model
-  if (!user.oauth) user.oauth = {};
-  if (!user.oauth.facebook) user.oauth.facebook = {};
-  user.oauth.facebook.state = oauthState;
-  user.oauth.facebook.stateCreatedAt = new Date();
-  user.markModified('oauth');
-  await user.save();
+  // Persist state — works for both Mongo ObjectIds and Supabase UUIDs.
+  await writeFacebookOauth(userId, {
+    state: oauthState,
+    stateCreatedAt: new Date().toISOString(),
+  });
 
   const params = new URLSearchParams({
     client_id: process.env.FACEBOOK_APP_ID,
@@ -58,8 +80,8 @@ async function exchangeCodeForToken(userId, code, state) {
   if (!isConfigured()) throw new Error('Facebook OAuth not configured');
   if (!userId || !code || !state) throw new Error('userId, code, and state are required');
 
-  const user = await User.findById(userId);
-  if (!user || !user.oauth?.facebook?.state || user.oauth.facebook.state !== state) {
+  const fbOauth = await readFacebookOauth(userId);
+  if (!fbOauth?.state || fbOauth.state !== state) {
     logger.warn('Facebook OAuth exchange: state mismatch', { ...LOG_CONTEXT, userId });
     throw new Error('Invalid OAuth state');
   }
@@ -87,18 +109,25 @@ async function exchangeCodeForToken(userId, code, state) {
   const userInfo = await getFacebookUserInfo(access_token);
   const pages = await getFacebookPages(access_token);
 
-  await User.findByIdAndUpdate(userId, {
-    $set: {
-      'oauth.facebook.accessToken': access_token,
-      'oauth.facebook.connected': true,
-      'oauth.facebook.connectedAt': new Date(),
-      'oauth.facebook.expiresAt': expires_in ? new Date(Date.now() + expires_in * 1000) : null,
-      'oauth.facebook.platformUserId': userInfo.id,
-      'oauth.facebook.platformUsername': userInfo.name,
-      'oauth.facebook.pages': pages,
+  // Route through the unified credential store so Facebook lives in the
+  // same accounts[] shape as every other platform. Pages are kept on the
+  // root row (not per-account) because they're a Facebook-only concept.
+  const oauthService = require('./oauthService');
+  await oauthService.saveSocialCredentials(userId, 'facebook', {
+    accessToken: access_token,
+    refreshToken: null,
+    platformUserId: userInfo.id,
+    extra: {
+      platformUserId: userInfo.id,
+      platformUsername: userInfo.name,
+      avatar: userInfo.picture || null,
+      expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000).toISOString() : null,
+      pages,
     },
-    $unset: { 'oauth.facebook.state': '' },
   });
+
+  // Clear the consumed OAuth state — root-level field, not per-account.
+  await writeFacebookOauth(userId, { state: null });
 
   logger.info('Facebook OAuth token exchange successful', { ...LOG_CONTEXT, userId });
   return { accessToken: access_token, expiresIn: expires_in };
@@ -132,22 +161,32 @@ async function getFacebookPages(accessToken) {
   }
 }
 
-async function getFacebookClient(userId, pageId = null) {
-  const user = await User.findById(userId).select('oauth.facebook');
-  if (!user || !user.oauth?.facebook?.connected || !user.oauth.facebook.accessToken) {
+async function getFacebookClient(userId, pageIdOrAccountId = null) {
+  // Read through the unified credential store. The first positional arg is
+  // either a Facebook Page id (for page-targeted posts) or a Facebook user
+  // accountId (for multi-account selection). We try as accountId first;
+  // if that miss yields no creds, treat it as a pageId and fall back.
+  const oauthService = require('./oauthService');
+  let creds = await oauthService.getSocialCredentials(userId, 'facebook', pageIdOrAccountId);
+  if (!creds || !creds.accessToken) {
+    // Maybe pageIdOrAccountId is a Page id rather than account id — load
+    // active credentials and look up the page below.
+    creds = await oauthService.getSocialCredentials(userId, 'facebook', null);
+  }
+  if (!creds || !creds.accessToken) {
     throw new Error('Facebook account not connected');
   }
 
-  if (pageId && user.oauth.facebook.pages) {
-    const page = user.oauth.facebook.pages.find(p => p.id === pageId);
+  if (pageIdOrAccountId && Array.isArray(creds.pages)) {
+    const page = creds.pages.find((p) => p.id === pageIdOrAccountId);
     if (page?.accessToken) return page.accessToken;
   }
 
-  if (user.oauth.facebook.expiresAt && new Date() > user.oauth.facebook.expiresAt) {
+  if (creds.expiresAt && new Date() > new Date(creds.expiresAt)) {
     throw new Error('Facebook token expired. Please reconnect your account.');
   }
 
-  return user.oauth.facebook.accessToken;
+  return creds.accessToken;
 }
 
 async function postToFacebook(userId, text, options = {}, retries = 1) {
@@ -204,8 +243,8 @@ async function postToFacebook(userId, text, options = {}, retries = 1) {
  * Refresh a long-lived access token
  */
 async function refreshAccessToken(userId) {
-  const user = await User.findById(userId).select('oauth.facebook');
-  if (!user?.oauth?.facebook?.accessToken) throw new Error('Facebook not connected');
+  const fbOauth = await readFacebookOauth(userId);
+  if (!fbOauth?.accessToken) throw new Error('Facebook not connected');
 
   try {
     const response = await axios.get(`${GRAPH_API_BASE}/oauth/access_token`, {
@@ -213,18 +252,16 @@ async function refreshAccessToken(userId) {
         grant_type: 'fb_exchange_token',
         client_id: process.env.FACEBOOK_APP_ID,
         client_secret: process.env.FACEBOOK_APP_SECRET,
-        fb_exchange_token: user.oauth.facebook.accessToken
+        fb_exchange_token: fbOauth.accessToken
       }
     });
 
     const { access_token, expires_in } = response.data;
-    
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'oauth.facebook.accessToken': access_token,
-        'oauth.facebook.expiresAt': expires_in ? new Date(Date.now() + expires_in * 1000) : null,
-        'oauth.facebook.lastRefreshAt': new Date()
-      }
+
+    await writeFacebookOauth(userId, {
+      accessToken: access_token,
+      expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000).toISOString() : null,
+      lastRefreshAt: new Date().toISOString(),
     });
 
     logger.info('Facebook token refreshed successfully', { ...LOG_CONTEXT, userId });
@@ -235,10 +272,32 @@ async function refreshAccessToken(userId) {
   }
 }
 
-async function disconnectFacebook(userId) {
+/**
+ * Disconnect Facebook. Pass `accountId` to drop one of multiple accounts.
+ */
+async function disconnectFacebook(userId, accountId = null) {
   if (!userId) throw new Error('userId is required');
-  await User.findByIdAndUpdate(userId, { $unset: { 'oauth.facebook': '' } });
-  logger.info('Facebook account disconnected', { ...LOG_CONTEXT, userId });
+  const oauthService = require('./oauthService');
+  const remaining = await oauthService.removeSocialAccount(userId, 'facebook', accountId);
+  logger.info('Facebook account disconnected', { ...LOG_CONTEXT, userId, accountId, remaining });
+  return { success: true, remaining };
+}
+
+/** Return every connected Facebook account. */
+async function getConnectedAccounts(userId) {
+  const oauthService = require('./oauthService');
+  const accounts = await oauthService.listSocialAccounts(userId, 'facebook');
+  return accounts.map((a) => ({
+    platform: 'facebook',
+    accountId: a.accountId,
+    platform_user_id: a.platformUserId,
+    username: a.platformUsername,
+    display_name: a.platformUsername,
+    avatar: a.avatar,
+    isPrimary: a.isPrimary,
+    isActive: a.isActive,
+    connectedAt: a.addedAt,
+  }));
 }
 
 module.exports = {
@@ -253,4 +312,5 @@ module.exports = {
   refreshAccessToken,
   disconnectFacebook,
   defaultRedirectUri,
+  getConnectedAccounts,
 };

@@ -69,6 +69,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
           </h2>
         </div>
         <button
+          type="button"
           onClick={loadRecommendations}
           className="p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
         >
@@ -80,6 +81,7 @@ export default function ContentDiscovery({ onContentSelect }: { onContentSelect?
       <div className="flex gap-2 mb-6">
         {(['performance', 'similarity', 'trending', 'recent'] as const).map((type) => (
           <button
+            type="button"
             key={type}
             onClick={() => setBasedOn(type)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

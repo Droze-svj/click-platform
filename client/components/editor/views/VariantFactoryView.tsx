@@ -76,6 +76,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
           <h2 className="text-lg font-black tracking-tight text-[var(--text-main)] italic uppercase">Viral Variant Factory</h2>
         </div>
         <button
+          type="button"
           onClick={onBack}
           className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors flex items-center gap-2"
         >
@@ -95,6 +96,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
               <Shuffle className="w-10 h-10 text-slate-600 animate-pulse" />
            </div>
            <button
+             type="button"
              onClick={handleGenerate}
              className="px-10 py-5 rounded-2xl bg-fuchsia-600 hover:bg-fuchsia-500 transition-all shadow-[0_0_30px_rgba(192,38,211,0.3)] flex items-center gap-3 group"
            >
@@ -163,6 +165,7 @@ const VariantFactoryView: React.FC<VariantFactoryViewProps> = ({ onApplyVariant,
                </div>
 
                <button
+                 type="button"
                  onClick={() => onApplyVariant(variant)}
                  className="mt-6 w-full py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 group/btn"
                >

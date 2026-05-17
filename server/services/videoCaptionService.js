@@ -2,8 +2,10 @@
 
 const OpenAI = require('openai');
 const logger = require('../utils/logger');
+const { toAbsolutePath } = require('../utils/pathUtils');
 const { captureException } = require('../utils/sentry');
 const Content = require('../models/Content');
+const { resolveContent } = require('../utils/devStore');
 const {
   smartSentenceSplit,
   distributeSentencesByCharCount,
@@ -44,7 +46,7 @@ async function generateTranscript(videoFilePath, language = null) {
     // Read video file
     // Create file stream for OpenAI (using fs.createReadStream for Node.js)
     const { createReadStream } = require('fs');
-    const fileStream = createReadStream(videoFilePath);
+    const fileStream = createReadStream(toAbsolutePath(videoFilePath));
 
     // Call Whisper API
     const response = await client.audio.transcriptions.create({
@@ -401,11 +403,14 @@ async function generateAutoCaptions(videoId, options = {}) {
   }
 
   const visualAwareness = require('./visualAwarenessService');
-  const avoidanceZones = videoPath ? await visualAwareness.getAvoidanceZones(videoPath) : [];
+  const absVideoPath = toAbsolutePath(videoPath);
+  const avoidanceZones = absVideoPath ? await visualAwareness.getAvoidanceZones(absVideoPath) : [];
   const safePosition = visualAwareness.calculateSafeCaptionPosition(avoidanceZones);
 
   try {
-    const content = await Content.findById(videoId);
+    // resolveContent handles dev-content-* IDs by reading the in-memory store
+    // instead of casting them to ObjectId (which throws).
+    const content = await resolveContent(videoId);
     let segments = [];
     const duration = content?.originalFile?.duration || content?.metadata?.duration || 60;
     const language = content?.language || 'en';

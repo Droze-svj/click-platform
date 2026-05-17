@@ -370,6 +370,7 @@ export default function CustomTemplateCreator({
           </div>
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={resetToDefaults}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
@@ -377,6 +378,7 @@ export default function CustomTemplateCreator({
               Reset
             </button>
             <button
+              type="button"
               onClick={handlePreview}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
@@ -384,6 +386,7 @@ export default function CustomTemplateCreator({
               Preview
             </button>
             <button
+              type="button"
               onClick={handleSave}
               className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
@@ -400,6 +403,7 @@ export default function CustomTemplateCreator({
           const Icon = tab.icon
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -860,6 +864,7 @@ export default function CustomTemplateCreator({
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-[var(--text-main)]">Text Overlays</h3>
                   <button
+                    type="button"
                     onClick={addTextOverlay}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
@@ -976,6 +981,7 @@ export default function CustomTemplateCreator({
                         </div>
 
                         <button
+                          type="button"
                           onClick={() => removeTextOverlay(overlay.id)}
                           className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm"
                         >

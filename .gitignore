@@ -53,3 +53,5 @@ debug_server.log
 # Playwright test artifacts
 playwright-report/
 test-results/
+ffmpeg-*.log
+ffmpeg_logs/

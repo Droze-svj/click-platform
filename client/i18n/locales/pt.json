@@ -53,11 +53,26 @@
     "setNiche": "Escolher nicho",
     "next": "Próximo",
     "stages": {
-      "ingest":   { "label": "Importar",  "description": "Traga material — arquivo, link ou gravação ao vivo." },
-      "script":   { "label": "Roteiro",   "description": "A IA escreve gancho, corpo e CTA para o seu nicho." },
-      "edit":     { "label": "Editar",    "description": "Corte, legende e marque seu vídeo com inteligência de estilo." },
-      "schedule": { "label": "Agendar",   "description": "Publique em cada plataforma no melhor horário." },
-      "analyze":  { "label": "Analisar",  "description": "Meça resultados e descubra o que repetir." }
+      "ingest": {
+        "label": "Importar",
+        "description": "Traga material — arquivo, link ou gravação ao vivo."
+      },
+      "script": {
+        "label": "Roteiro",
+        "description": "A IA escreve gancho, corpo e CTA para o seu nicho."
+      },
+      "edit": {
+        "label": "Editar",
+        "description": "Corte, legende e marque seu vídeo com inteligência de estilo."
+      },
+      "schedule": {
+        "label": "Agendar",
+        "description": "Publique em cada plataforma no melhor horário."
+      },
+      "analyze": {
+        "label": "Analisar",
+        "description": "Meça resultados e descubra o que repetir."
+      }
     }
   },
   "ingest": {
@@ -106,18 +121,132 @@
   },
   "language": {
     "label": "Idioma",
-    "picker": "Selecionar idioma"
+    "picker": "Selecionar idioma",
+    "options": "Idiomas",
+    "search": "Pesquisar idiomas…",
+    "recent": "Usados recentemente",
+    "recentBadge": "recente",
+    "all": "Todos os idiomas",
+    "noResults": "Nenhum idioma encontrado",
+    "useSuggested": "Usar",
+    "useIt": "Usar"
   },
   "settings": {
     "title": "Configurações",
     "subtitle": "Gerencie suas preferências",
     "language": "Idioma",
-    "saveSettings": "Salvar"
+    "saveSettings": "Salvar",
+    "profile": "Perfil",
+    "editProfile": "Editar perfil",
+    "general": "Geral",
+    "notifications": "Notificações",
+    "privacy": "Privacidade",
+    "security": "Segurança",
+    "appearance": "Aparência",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Escuro",
+    "themeAuto": "Automático (Sistema)",
+    "timezone": "Fuso horário",
+    "saving": "Salvando...",
+    "saved": "Configurações salvas com sucesso",
+    "saveFailed": "Erro ao salvar configurações"
   },
   "video": {
     "title": "Vídeos",
     "upload": "Enviar",
     "edit": "Editar",
-    "processing": "Processando…"
+    "processing": "Processando…",
+    "noVideo": "Nenhum vídeo carregado",
+    "noVideoHint": "Insira uma URL de vídeo para começar a editar.",
+    "goToVideos": "Ir para Vídeos"
+  },
+  "auth": {
+    "login": "Entrar",
+    "register": "Cadastrar-se",
+    "logout": "Sair",
+    "loggingIn": "Entrando...",
+    "email": "E-mail",
+    "password": "Senha",
+    "passwordPlaceholder": "Digite sua senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "noAccount": "Não tem uma conta?",
+    "hasAccount": "Já tem uma conta?",
+    "loginTitle": "Boas-vindas ao Click",
+    "loginSubtitle": "Entre na sua conta para acessar a criação de conteúdo com AI.",
+    "registerTitle": "Crie sua conta",
+    "registerSubtitle": "Comece a criar conteúdo com AI."
+  },
+  "content": {
+    "title": "Conteúdo",
+    "create": "Criar conteúdo",
+    "edit": "Editar conteúdo",
+    "delete": "Excluir conteúdo",
+    "duplicate": "Duplicar",
+    "publish": "Publicar",
+    "schedule": "Agendar"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Visão geral",
+    "trends": "Tendências",
+    "platforms": "Plataformas",
+    "engagement": "Engajamento",
+    "views": "Visualizações",
+    "likes": "Curtidas",
+    "shares": "Compartilhamentos"
+  },
+  "moderation": {
+    "title": "Moderação de conteúdo",
+    "checking": "Verificando conteúdo...",
+    "approved": "Conteúdo aprovado",
+    "flagged": "Conteúdo sinalizado para revisão",
+    "profanity": "Linguagem imprópria detectada",
+    "spam": "Spam detectado"
+  },
+  "backup": {
+    "title": "Backups",
+    "create": "Criar backup",
+    "download": "Baixar",
+    "delete": "Excluir",
+    "passwordRequired": "Senha necessária para backup criptografado",
+    "created": "Backup criado com sucesso",
+    "createFailed": "Falha ao criar backup",
+    "downloaded": "Backup baixado",
+    "downloadFailed": "Falha ao baixar backup",
+    "deleted": "Backup excluído",
+    "deleteFailed": "Falha ao excluir backup"
+  },
+  "translation": {
+    "title": "Tradução",
+    "translate": "Traduzir",
+    "translateTo": "Traduzir para",
+    "translateToAll": "Traduzir para todos",
+    "targetLanguage": "Idioma de destino",
+    "viewIn": "Ver em",
+    "original": "Original",
+    "translations": "Traduções",
+    "noTranslations": "Nenhuma tradução ainda",
+    "translating": "Traduzindo…",
+    "translated": "Traduzido",
+    "translationFailed": "Falha na tradução",
+    "viewOriginal": "Ver original",
+    "selectLanguage": "Selecionar idioma"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Bem-vindo de volta",
+    "heroWelcome": "Bem-vindo ao Click",
+    "heroTitle": "Crie, adapte e publique",
+    "heroSubtitle": "Ferramentas com AI, agendamento inteligente e analytics em um só workspace.",
+    "heroDescription": "Seu workspace com AI para criar, adaptar e publicar em 6 plataformas. Transforme conteúdos longos em formatos prontos para redes sociais — mais rápido.",
+    "stats": {
+      "videosProcessed": "Vídeos processados",
+      "contentGenerated": "Conteúdos gerados",
+      "contentCreated": "Conteúdos criados",
+      "quotesCreated": "Citações criadas",
+      "postsScheduled": "Posts agendados"
+    },
+    "clickToView": "Click para ver detalhes →"
   }
 }

@@ -72,6 +72,7 @@ Vercel is the recommended platform for Next.js applications:
 4. **Deploy**: Push to main branch or deploy manually
 
 **Environment Variables in Vercel:**
+
 - Go to Project Settings → Environment Variables
 - Add all variables from `.env.example`
 - Set for Production, Preview, and Development environments
@@ -207,10 +208,12 @@ jobs:
 ## Rollback Strategy
 
 ### Vercel
+
 - Use Vercel dashboard to revert to previous deployment
 - Or use Vercel CLI: `vercel rollback`
 
 ### Other Platforms
+
 - Keep previous build artifacts for quick rollback
 - Use version control tags for deployment tracking
 - Maintain backup of working configuration
@@ -218,10 +221,8 @@ jobs:
 ## Support
 
 For deployment issues:
+
 1. Check build logs for specific errors
 2. Verify environment variables are correctly set
 3. Test build locally with production environment variables
-4. Review Next.js deployment documentation: https://nextjs.org/docs/deployment
-
-
-
+4. Review Next.js deployment documentation at nextjs.org/docs/deployment

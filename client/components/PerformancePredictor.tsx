@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TrendingUp, TrendingDown, BarChart3, Zap } from 'lucide-react'
+import { apiPost } from '../lib/api'
 
 interface Prediction {
   score: number // 0-100
@@ -29,25 +30,17 @@ export default function PerformancePredictor({ content, onPredict }: Performance
   const handlePredict = async () => {
     setIsPredicting(true)
     try {
-      const response = await fetch('/api/ai/predict-performance', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          content: content.text,
-          type: content.type,
-          platform: content.platform,
-          tags: content.tags
-        })
+      const data = await apiPost<any>('/ai/predict-performance', {
+        content: content.text,
+        type: content.type,
+        platform: content.platform,
+        tags: content.tags,
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        setPrediction(data.data)
+      const result = data?.data ?? data
+      if (result) {
+        setPrediction(result)
         if (onPredict) {
-          onPredict(data.data)
+          onPredict(result)
         }
       }
     } catch (error) {
@@ -60,6 +53,7 @@ export default function PerformancePredictor({ content, onPredict }: Performance
   if (!prediction && !isPredicting) {
     return (
       <button
+        type="button"
         onClick={handlePredict}
         className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
       >

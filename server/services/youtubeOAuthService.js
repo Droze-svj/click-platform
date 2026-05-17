@@ -1,12 +1,19 @@
 // YouTube OAuth Service
 // Features: Google OAuth 2.0, channel info, video upload permissions, User model storage.
 
+const mongoose = require('mongoose');
 const OAuthService = require('./oauthService');
+const OAuthStorage = require('../utils/oauthStorage');
 const logger = require('../utils/logger');
 const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+
+// Supabase users have UUIDs; Mongoose User.findById throws CastError on them.
+// Route UUID users through OAuthStorage (Supabase social_links.oauth.youtube);
+// keep the legacy User.oauth.youtube path for ObjectId users.
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API_BASE = 'https://www.googleapis.com/youtube/v3';
@@ -45,18 +52,25 @@ class YouTubeOAuthService {
 
   async getAuthorizationUrl(userId, state, callbackUrl) {
     if (!this.isConfigured()) throw new Error('YouTube OAuth not configured');
-    
-    const User = require('../models/User');
-    const user = await User.findById(userId);
-    if (!user) throw new Error('User not found');
 
-    // Persist state to User model
-    if (!user.oauth) user.oauth = {};
-    if (!user.oauth.youtube) user.oauth.youtube = {};
-    user.oauth.youtube.state = state;
-    user.oauth.youtube.stateCreatedAt = new Date();
-    user.markModified('oauth');
-    await user.save();
+    if (isMongoUserId(userId)) {
+      // Legacy Mongo user — persist state to the User document.
+      const User = require('../models/User');
+      const user = await User.findById(userId);
+      if (!user) throw new Error('User not found');
+      if (!user.oauth) user.oauth = {};
+      if (!user.oauth.youtube) user.oauth.youtube = {};
+      user.oauth.youtube.state = state;
+      user.oauth.youtube.stateCreatedAt = new Date();
+      user.markModified('oauth');
+      await user.save();
+    } else {
+      // Supabase user (UUID) — persist via OAuthStorage (Supabase social_links).
+      await OAuthStorage.saveTokens(userId, 'youtube', {
+        state,
+        stateCreatedAt: new Date().toISOString(),
+      });
+    }
 
     const params = new URLSearchParams({
       client_id: this.clientId,
@@ -140,30 +154,30 @@ class YouTubeOAuthService {
   }
 
   async getConnectedAccounts(userId) {
-    const creds = await OAuthService.getSocialCredentials(userId, 'youtube');
-    if (!creds) return [];
-
-    return [{
+    // Multi-account: return every connected YouTube channel, not just one.
+    const accounts = await OAuthService.listSocialAccounts(userId, 'youtube');
+    return accounts.map((a) => ({
       platform: 'youtube',
-      platform_user_id: creds.platformUserId,
-      username: creds.platformUsername,
-      display_name: creds.platformUsername,
-      avatar: creds.avatar,
+      accountId: a.accountId,
+      platform_user_id: a.platformUserId,
+      username: a.platformUsername,
+      display_name: a.platformUsername,
+      avatar: a.avatar,
+      isPrimary: a.isPrimary,
+      isActive: a.isActive,
       is_connected: true,
-      connected_at: creds.connectedAt
-    }];
+      connected_at: a.addedAt,
+    }));
   }
 
-  async disconnectAccount(userId) {
-    const User = require('../models/User');
-    const user = await User.findById(userId);
-    if (user && user.oauth && user.oauth.youtube) {
-      user.oauth.youtube = { connected: false };
-      user.markModified('oauth');
-      await user.save();
-    }
-    logger.info('YouTube account disconnected', { userId });
-    return { success: true };
+  /**
+   * Disconnect YouTube. Pass `accountId` to drop one of multiple
+   * connected channels; omit to disconnect all.
+   */
+  async disconnectAccount(userId, accountId = null) {
+    const remaining = await OAuthService.removeSocialAccount(userId, 'youtube', accountId);
+    logger.info('YouTube account disconnected', { userId, accountId, remaining });
+    return { success: true, remaining };
   }
 
   async getYouTubeUserInfo(accessToken) {

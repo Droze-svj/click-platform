@@ -63,10 +63,10 @@ export default function EnhancedCalendar({ onDateSelect }: EnhancedCalendarProps
            </div>
         </div>
         <div className="flex gap-4">
-          <button onClick={prevMonth} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all border border-white/5">
+          <button type="button" onClick={prevMonth} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all border border-white/5">
             <ChevronLeft size={18} className="text-slate-400 hover:text-white" />
           </button>
-          <button onClick={nextMonth} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all border border-white/5">
+          <button type="button" onClick={nextMonth} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all border border-white/5">
             <ChevronRight size={18} className="text-slate-400 hover:text-white" />
           </button>
         </div>

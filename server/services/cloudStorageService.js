@@ -1,17 +1,29 @@
-const AWS = require('aws-sdk');
+// aws-sdk is optional — many self-hosted deployments use Cloudinary for
+// images and don't push videos to S3. Resolving it lazily means a missing
+// install no longer crashes the entire CloudStorageService at first
+// require (which broke avatar uploads through `uploadImage`, because the
+// module never loaded). When aws-sdk is unavailable, `s3` stays null and
+// the S3-backed methods throw a clear error explaining the dependency.
+let AWS = null;
+let s3 = null;
+try {
+  AWS = require('aws-sdk');
+  AWS.config.update({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION
+  });
+  s3 = new AWS.S3();
+} catch (e) {
+  // Logged once at boot — the rest of the service still works for
+  // Cloudinary-backed uploads.
+  // eslint-disable-next-line no-console
+  console.warn('[cloudStorageService] aws-sdk not installed; S3 uploads disabled. Cloudinary uploads still work.');
+}
 const cloudinary = require('cloudinary').v2;
 const logger = require('../utils/logger');
 const fs = require('fs');
 const path = require('path');
-
-// Configure AWS
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION
-});
-
-const s3 = new AWS.S3();
 
 // Configure Cloudinary (for thumbnails/images)
 cloudinary.config({
@@ -25,9 +37,12 @@ class CloudStorageService {
    * Uploads a file to AWS S3 (best for videos)
    */
   static async uploadVideo(filePath, folder = 'videos') {
+    if (!s3) {
+      throw new Error('S3 uploads are disabled — aws-sdk is not installed. Run `pnpm add aws-sdk` to enable.');
+    }
     const fileName = `${folder}/${Date.now()}-${path.basename(filePath)}`;
     const fileStream = fs.createReadStream(filePath);
-    
+
     const params = {
       Bucket: process.env.AWS_S3_BUCKET || 'click-platform-assets',
       Key: fileName,

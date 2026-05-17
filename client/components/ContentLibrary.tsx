@@ -208,6 +208,7 @@ export default function ContentLibrary() {
                 </span>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handleUseItem(item)}
                     className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                     title="Use this content"
@@ -215,6 +216,7 @@ export default function ContentLibrary() {
                     <Copy className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => duplicateItem(item)}
                     className="p-1.5 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                     title="Duplicate"

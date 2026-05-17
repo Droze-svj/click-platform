@@ -134,6 +134,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
             </div>
           </div>
           <button
+            type="button"
             onClick={handleDismiss}
             className="text-blue-200 hover:text-white transition-colors"
           >
@@ -156,6 +157,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
         {/* Actions */}
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleUpdate}
             disabled={updating}
             className="flex-1 bg-white text-blue-600 hover:bg-blue-50 disabled:bg-blue-100 font-medium py-2 px-4 rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
@@ -174,6 +176,7 @@ export const PWAUpdateHandler: React.FC<PWAUpdateHandlerProps> = ({ onUpdate }) 
           </button>
 
           <button
+            type="button"
             onClick={handleRemindLater}
             className="px-3 py-2 text-xs text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >

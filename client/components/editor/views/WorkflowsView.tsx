@@ -69,6 +69,7 @@ const WorkflowsView: React.FC = () => {
         <div className="flex items-center gap-4">
            {!isCreating && (
              <button
+               type="button"
                onClick={() => {
                  setEditingId(undefined)
                  setIsCreating(true)
@@ -80,6 +81,7 @@ const WorkflowsView: React.FC = () => {
            )}
            {isCreating && (
              <button
+               type="button"
                onClick={() => setIsCreating(false)}
                className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
              >

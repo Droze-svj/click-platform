@@ -134,7 +134,7 @@ function ScoreRing({ score }: { score: number }) {
           stroke={color} strokeWidth="8"
           strokeDasharray={circ} strokeDashoffset={offset}
           strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+          className="transition-[stroke-dashoffset] duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
         />
       </svg>
       <div className="text-center">
@@ -171,6 +171,7 @@ function BreakdownRow({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-left"
     >
@@ -383,8 +384,8 @@ export default function ComplianceDashboard() {
           <div className="flex border-b border-gray-200 dark:border-gray-800">
             {TABS.map(tab => (
               <button
+                type="button"
                 key={tab.id}
-                id={`compliance-tab-${tab.id}`}
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all border-b-2 -mb-px ${
                   activeTab === tab.id
@@ -433,8 +434,8 @@ export default function ComplianceDashboard() {
                       <div className="flex flex-wrap gap-2">
                         {PLATFORMS.map(p => (
                           <button
+                            type="button"
                             key={p}
-                            id={`platform-filter-${p}`}
                             onClick={() => togglePlatform(p)}
                             className={`px-3 py-1.5 text-xs font-medium rounded-lg border capitalize transition-all ${
                               selectedPlatforms.includes(p)
@@ -449,6 +450,7 @@ export default function ComplianceDashboard() {
                     </div>
 
                     <button
+                      type="button"
                       id="run-compliance-check-btn"
                       onClick={handleCheck}
                       disabled={isChecking || !checkerText.trim()}
@@ -555,13 +557,16 @@ export default function ComplianceDashboard() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      id="refresh-rules-btn"
+                      type="button"
                       onClick={loadRules}
+                      aria-label="Refresh workspace rules"
+                      title="Refresh workspace rules"
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <RefreshCw className={`w-4 h-4 ${isLoadingRules ? 'animate-spin' : ''}`} />
                     </button>
                     <button
+                      type="button"
                       id="add-rule-btn"
                       onClick={() => setIsAddingRule(!isAddingRule)}
                       className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 transition-colors"
@@ -650,10 +655,11 @@ export default function ComplianceDashboard() {
                       />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => setIsAddingRule(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                      <button type="button" onClick={() => setIsAddingRule(false)} className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                         Cancel
                       </button>
                       <button
+                        type="button"
                         id="save-rule-btn"
                         onClick={handleSaveRule}
                         disabled={isSavingRule || !newRule.name}
@@ -710,6 +716,7 @@ export default function ComplianceDashboard() {
                             </div>
                           )}
                           <button
+                            type="button"
                             id={`delete-rule-${rule._id}`}
                             onClick={() => handleDeleteRule(rule._id)}
                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
@@ -742,23 +749,23 @@ export default function ComplianceDashboard() {
                     {Object.entries(policies).map(([platform, policy]) => (
                       <div key={platform} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                         <h3 className="font-semibold capitalize text-gray-900 dark:text-[var(--text-main)] mb-3">{platform}</h3>
-                        <dl className="space-y-1.5">
+                        <div className="space-y-1.5">
                           {policy.maxCharacters && (
                             <div className="flex justify-between text-sm">
-                              <dt className="text-gray-500">Max characters</dt>
-                              <dd className="font-mono text-gray-900 dark:text-white">{policy.maxCharacters.toLocaleString()}</dd>
+                              <span className="text-gray-500">Max characters</span>
+                              <span className="font-mono text-gray-900 dark:text-white">{policy.maxCharacters.toLocaleString()}</span>
                             </div>
                           )}
                           {policy.maxHashtags !== undefined && (
                             <div className="flex justify-between text-sm">
-                              <dt className="text-gray-500">Max hashtags</dt>
-                              <dd className="font-mono text-gray-900 dark:text-white">{policy.maxHashtags}</dd>
+                              <span className="text-gray-500">Max hashtags</span>
+                              <span className="font-mono text-gray-900 dark:text-white">{policy.maxHashtags}</span>
                             </div>
                           )}
                           {policy.recommendedHashtags !== undefined && (
                             <div className="flex justify-between text-sm">
-                              <dt className="text-gray-500">Recommended hashtags</dt>
-                              <dd className="font-mono text-indigo-600 dark:text-indigo-400">{policy.recommendedHashtags}</dd>
+                              <span className="text-gray-500">Recommended hashtags</span>
+                              <span className="font-mono text-indigo-600 dark:text-indigo-400">{policy.recommendedHashtags}</span>
                             </div>
                           )}
                           {policy.noExternalLinks && (
@@ -770,13 +777,14 @@ export default function ComplianceDashboard() {
                           {(policy as any).notes && (
                             <p className="text-xs text-gray-400 italic">{(policy as any).notes}</p>
                           )}
-                        </dl>
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-12">
                     <button
+                      type="button"
                       id="load-platform-policies-btn"
                       onClick={loadPolicies}
                       className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg"
@@ -797,8 +805,10 @@ export default function ComplianceDashboard() {
                     <p className="text-xs text-gray-500 mt-0.5">Past compliance checks across your content library</p>
                   </div>
                   <button
-                    id="refresh-history-btn"
+                    type="button"
                     onClick={loadHistory}
+                    aria-label="Refresh compliance history"
+                    title="Refresh compliance history"
                     className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <RefreshCw className={`w-4 h-4 ${isLoadingHistory ? 'animate-spin' : ''}`} />

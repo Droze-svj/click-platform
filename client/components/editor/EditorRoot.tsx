@@ -1,5 +1,3 @@
-import "./styles/layout-autofit.css";
-import "./styles/layout-autofit.css";
 'use client'
 
 import React from 'react'

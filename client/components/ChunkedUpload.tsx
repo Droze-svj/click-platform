@@ -176,6 +176,7 @@ export default function ChunkedUpload({
         <div className="flex items-center gap-2">
           {status === 'idle' && (
             <button
+              type="button"
               onClick={startUpload}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
@@ -184,6 +185,7 @@ export default function ChunkedUpload({
           )}
           {status === 'uploading' && (
             <button
+              type="button"
               onClick={pauseUpload}
               className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors flex items-center gap-2"
             >
@@ -193,6 +195,7 @@ export default function ChunkedUpload({
           )}
           {status === 'paused' && (
             <button
+              type="button"
               onClick={resumeUpload}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
             >

@@ -69,7 +69,8 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                 </div>
             </div>
 
-            <button 
+            <button
+                type="button"
                 onClick={deploySandbox}
                 disabled={isDeploying || !!sandbox}
                 className="px-10 py-4 bg-white/5 border border-white/10 hover:border-indigo-500/50 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] italic transition-all disabled:opacity-50"

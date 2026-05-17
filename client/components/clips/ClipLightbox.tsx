@@ -174,10 +174,11 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
       {/* Prev */}
       {index > 0 && (
         <button
-          type="button"
+         type="button"
           onClick={(e) => { e.stopPropagation(); onIndexChange(index - 1) }}
           title="Previous clip"
-          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/15 flex items-center justify-center text-white transition-all"
+          aria-label="Previous clip"
+          className="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/15 flex items-center justify-center text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -185,10 +186,11 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
       {/* Next */}
       {index < clips.length - 1 && (
         <button
-          type="button"
+         type="button"
           onClick={(e) => { e.stopPropagation(); onIndexChange(index + 1) }}
           title="Next clip"
-          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/15 flex items-center justify-center text-white transition-all"
+          aria-label="Next clip"
+          className="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-white/5 border border-white/10 hover:bg-white/15 flex items-center justify-center text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -200,10 +202,11 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
       >
         {/* Close */}
         <button
-          type="button"
+         type="button"
           onClick={onClose}
           title="Close (Esc)"
-          className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/60 border border-white/10 hover:bg-white/15 flex items-center justify-center text-white transition-colors"
+          aria-label="Close clip viewer"
+          className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/60 border border-white/10 hover:bg-white/15 flex items-center justify-center text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
         >
           <X className="w-4 h-4" />
         </button>
@@ -234,10 +237,40 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
             }}
           />
           {activeCaption && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-[12%] flex justify-center px-6">
-              <span className="max-w-[88%] text-center text-white font-black uppercase tracking-tight text-xl md:text-2xl leading-tight px-4 py-2 rounded-md bg-black/70 [text-shadow:_0_2px_8px_rgba(0,0,0,0.9)]">
-                {activeCaption.text}
-              </span>
+            <div className="pointer-events-none absolute inset-x-0 bottom-6 sm:bottom-10 flex justify-center px-4 sm:px-6">
+              {/* Kinetic per-word caption. When the server provided
+                  `words` with timings, render each word as its own span
+                  and gate its visibility on the playhead — words pop in
+                  on their `start` boundary, and emphasis-tagged words
+                  scale + shift hue. Falls back to a single block for
+                  legacy clips with no word data. */}
+              {Array.isArray(activeCaption.words) && activeCaption.words.length > 0 ? (
+                <span className="max-w-[88%] flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1 text-center text-white font-black uppercase tracking-tight text-lg sm:text-xl md:text-2xl leading-tight px-3 sm:px-4 py-1.5 sm:py-2 rounded-md bg-black/70 [text-shadow:_0_2px_8px_rgba(0,0,0,0.9)]">
+                  {activeCaption.words.map((w, i) => {
+                    const visible = currentTime >= w.start - 0.05
+                    const justRevealed = visible && currentTime - w.start < 0.18
+                    const isEmphasis = w.emphasis === 'pop'
+                    return (
+                      <span
+                        key={`${i}-${w.start}`}
+                        className={[
+                          'inline-block transition-all duration-150 ease-out',
+                          visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+                          justRevealed ? 'scale-110' : 'scale-100',
+                          isEmphasis && visible ? 'text-fuchsia-300 drop-shadow-[0_0_10px_rgba(217,70,239,0.7)]' : '',
+                        ].join(' ')}
+                        style={{ willChange: 'transform, opacity' }}
+                      >
+                        {w.word}
+                      </span>
+                    )
+                  })}
+                </span>
+              ) : (
+                <span className="max-w-[88%] text-center text-white font-black uppercase tracking-tight text-lg sm:text-xl md:text-2xl leading-tight px-3 sm:px-4 py-1.5 sm:py-2 rounded-md bg-black/70 break-words [text-shadow:_0_2px_8px_rgba(0,0,0,0.9)]">
+                  {activeCaption.text}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -245,7 +278,7 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
         {/* Info panel */}
         <div className="w-full md:w-96 flex-shrink-0 flex flex-col bg-[#0a0a0c] border-t md:border-t-0 md:border-l border-white/5 overflow-y-auto">
           <div className="p-5 border-b border-white/5">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 italic mb-2">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-400 italic mb-2 truncate">
               Clip {index + 1} of {clips.length} · {clip.parentTitle || 'Untitled'}
             </p>
             <div className="flex items-baseline gap-2 mb-2">
@@ -310,9 +343,8 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
               {[1, 2, 3, 4, 5].map(n => {
                 const filled = (clip.rating || 0) >= n
                 return (
-                  <button
+                  <button type="button"
                     key={n}
-                    type="button"
                     onClick={() => setRating(n)}
                     disabled={busy}
                     title={`Rate ${n} star${n === 1 ? '' : 's'}`}
@@ -328,7 +360,7 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
           {/* Actions */}
           <div className="p-5 grid grid-cols-2 gap-2 mt-auto">
             <button
-              type="button"
+             type="button"
               onClick={publish}
               disabled={busy || clip.published}
               title={clip.published ? 'Already picked — Click is learning from it' : 'Publish this clip and train Click on the style'}
@@ -345,7 +377,7 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
             </a>
             {onOpenInEditor && (
               <button
-                type="button"
+               type="button"
                 onClick={() => onOpenInEditor(clip)}
                 className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest transition-colors"
               >
@@ -353,14 +385,14 @@ export default function ClipLightbox({ clips, index, onIndexChange, onClose, onC
               </button>
             )}
             <button
-              type="button"
+             type="button"
               onClick={share}
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest transition-colors"
             >
               <Share2 className="w-3.5 h-3.5" /> Share
             </button>
             <button
-              type="button"
+             type="button"
               onClick={remove}
               disabled={busy}
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-300 text-[10px] font-black uppercase tracking-widest transition-colors disabled:opacity-50"

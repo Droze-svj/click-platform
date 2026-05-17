@@ -51,8 +51,13 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
 
   return (
     <div 
-      className={`relative group ${className} w-[var(--agent-size)] h-[var(--agent-size)]`} 
-      style={{ '--agent-size': `${size}px`, '--glow-color': color } as any}
+      className={`relative group ${className}`} 
+      style={{ 
+        '--avatar-size': `${size}px`, 
+        '--glow-col': color,
+        width: 'var(--avatar-size)', 
+        height: 'var(--avatar-size)' 
+      } as any}
       title={asset.alt}
     >
       {/* Background Pulse Glow */}
@@ -62,7 +67,8 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
           opacity: [0.3, 0.6, 0.3],
         }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute inset-[-10%] blur-3xl rounded-full pointer-events-none z-0 bg-[var(--glow-color)]"
+        className="absolute inset-[-10%] blur-3xl rounded-full pointer-events-none z-0"
+        style={{ backgroundColor: 'var(--glow-col)' } as any}
       />
 
       {/* Holographic Ring Inner */}
@@ -81,6 +87,7 @@ export default function AgentAvatar({ agentId, size = 100, className = '', glowC
             src={asset.src}
             alt={asset.alt}
             fill
+            sizes="(max-width: 640px) 8rem, (max-width: 1024px) 12rem, 16rem"
             className="object-cover group-hover:scale-110 transition-transform duration-1000 grayscale-[0.2] group-hover:grayscale-0"
           />
           

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, Download, Share2, Trash2, Play, Sparkles, Check, Send } from 'lucide-react'
+import { Star, Download, Share2, Trash2, Play, Sparkles, Check, Send, Crop, Loader2 } from 'lucide-react'
 import { apiPost, apiDelete } from '../../lib/api'
 
 function CheckIcon() {
@@ -56,10 +56,23 @@ export interface Clip {
   published?: boolean
   publishedAt?: string | null
   folder?: { id: string; name: string; color: string } | null
-  captions?: Array<{ start: number; end: number; text: string }>
+  captions?: Array<{
+    start: number;
+    end: number;
+    text: string;
+    /** Optional per-word timings + emphasis hints — when present the
+     *  lightbox renders kinetic / animated captions where each word
+     *  pops in on its `start` boundary instead of a static block. */
+    words?: Array<{ word: string; start: number; end: number; emphasis?: 'pop' | null }>;
+    style?: string | null;
+  }>
   // Smart Publish suggestions written by smartPublishService at edit time.
   // The drawer uses these as editable defaults; deltas feed the learning loop.
   recommendedCaptions?: { tiktok?: string; shorts?: string; reels?: string; x?: string } | null
+  // Up to 3 distinct caption angles per platform — drawer surfaces an
+  // A/B/C picker so the user can choose between curiosity-gap, value,
+  // and contrarian framings instead of being locked into [0].
+  recommendedCaptionVariants?: { tiktok?: string[]; shorts?: string[]; reels?: string[]; x?: string[] } | null
   recommendedHashtags?: { tiktok?: string[]; shorts?: string[]; reels?: string[]; x?: string[] } | null
   recommendedSlots?: Array<{ platform: string; isoTime: string; score: number; confidence: string; reason: string }>
   publishRationale?: string | null
@@ -115,6 +128,45 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
   // of the score chip. Reset whenever the URL changes.
   const [thumbBroken, setThumbBroken] = useState(false)
   useEffect(() => { setThumbBroken(false) }, [clip.thumbnail])
+
+  // Multi-aspect-ratio export state. `aspectExports` holds the result the
+  // server returns (array of { ratio, url, label, resolution, size }) so we
+  // can render a per-ratio download list once the export completes.
+  const [aspectBusy, setAspectBusy] = useState(false)
+  const [aspectOpen, setAspectOpen] = useState(false)
+  const [aspectExports, setAspectExports] = useState<Array<{ ratio: string; url: string; label: string; resolution: string; size: number }>>([])
+
+  const runAspectExport = async () => {
+    if (aspectBusy) return
+    setAspectBusy(true)
+    setAspectOpen(true)
+    setAspectExports([])
+    try {
+      const res: any = await apiPost('/video/ai-editing/export-aspect-ratios', {
+        videoId: clip.contentId,
+        aspectRatios: ['9:16', '1:1', '16:9'],
+      })
+      const data = res?.data || res
+      const exports = data?.exports || data?.data?.exports || []
+      setAspectExports(Array.isArray(exports) ? exports : [])
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('toast', { detail: {
+          message: `Generated ${exports.length} aspect-ratio version${exports.length === 1 ? '' : 's'}`,
+          type: 'success',
+        }}))
+      }
+    } catch (err: any) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('toast', { detail: {
+          message: `Multi-ratio export failed: ${err?.message || 'unknown error'}`,
+          type: 'error',
+        }}))
+      }
+      setAspectOpen(false)
+    } finally {
+      setAspectBusy(false)
+    }
+  }
 
   const setRating = async (value: number) => {
     if (busy) return
@@ -198,7 +250,7 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
              interfere with playback affordance. */}
         {onToggleSelect && (
           <button
-            type="button"
+           type="button"
             onClick={(e) => { e.stopPropagation(); onToggleSelect() }}
             title={selected ? 'Deselect' : 'Select'}
             aria-label={selected ? 'Deselect clip' : 'Select clip'}
@@ -208,7 +260,7 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
           </button>
         )}
         <button
-          type="button"
+         type="button"
           onClick={onOpen}
           className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/40 transition-colors"
           aria-label="Open clip"
@@ -217,7 +269,7 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
         </button>
 
         {/* Score chip */}
-        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full border backdrop-blur-md text-[10px] font-black uppercase tracking-widest ${scoreColor(clip.viralScore)}`}>
+        <div className={`absolute top-2 left-2 px-2 py-1 rounded-full border backdrop-blur-md text-[10px] font-black uppercase tracking-widest tabular-nums ${scoreColor(clip.viralScore)}`}>
           {scoreLabel(clip.viralScore)}{clip.viralScore != null ? ` · ${clip.viralScore}` : ''}
         </div>
 
@@ -265,7 +317,7 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
 
       {/* Caption */}
       <div className="p-4 flex-1 flex flex-col gap-3">
-        <p className="text-sm font-bold text-white leading-snug line-clamp-3">
+        <p className="text-sm font-bold text-white leading-snug line-clamp-3 break-words">
           {clip.caption || clip.highlight || 'Untitled clip'}
         </p>
 
@@ -288,7 +340,7 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
                 AI plan{slotLabel ? ` · ${slotLabel}` : ''}
               </p>
               {suggestedCaption && (
-                <p className="text-[11px] text-slate-300 leading-snug line-clamp-2 italic">
+                <p className="text-[11px] text-slate-300 leading-snug line-clamp-2 italic break-words">
                   "{suggestedCaption}"
                 </p>
               )}
@@ -311,13 +363,13 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
           {[1, 2, 3, 4, 5].map(n => {
             const filled = (clip.rating || 0) >= n
             return (
-              <button
+              <button type="button"
                 key={n}
-                type="button"
                 onClick={() => setRating(n)}
                 disabled={busy}
-                title={`Rate ${n} star${n === 1 ? '' : 's'}`}
-                className="p-0.5 hover:scale-125 transition-transform disabled:opacity-50"
+                title={filled ? `Currently rated ${n} star${n === 1 ? '' : 's'}` : `Rate ${n} star${n === 1 ? '' : 's'}`}
+                aria-label={filled ? `Currently rated ${n} star${n === 1 ? '' : 's'} — click to re-rate` : `Rate ${n} star${n === 1 ? '' : 's'}`}
+                className="p-0.5 hover:scale-125 transition-transform disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60 rounded"
               >
                 <Star className={`w-3.5 h-3.5 ${filled ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
               </button>
@@ -325,37 +377,103 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
           })}
           <div className="flex-1" />
           <button
-            type="button"
+           type="button"
             onClick={publish}
             disabled={busy || clip.published}
             title={clip.published ? 'Already picked — Click is learning from it' : 'Pick as best (publishes + trains your style)'}
-            className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${clip.published ? 'text-emerald-400' : 'text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10'}`}
+            aria-label={clip.published ? 'Already picked as best' : 'Pick as best clip'}
+            className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 ${clip.published ? 'text-emerald-400' : 'text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/10'}`}
           >
             <Send className="w-3.5 h-3.5" />
           </button>
           <a
             href={clip.url}
             download
-            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             title="Download"
+            aria-label="Download clip"
           >
             <Download className="w-3.5 h-3.5" />
           </a>
           <button
-            type="button"
+           type="button"
             onClick={share}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             title="Share"
+            aria-label="Share clip"
           >
             <Share2 className="w-3.5 h-3.5" />
           </button>
+          {/* One-tap multi-aspect-ratio export. Re-renders the source into
+              9:16 + 1:1 + 16:9 so the creator can post the same clip
+              everywhere without re-uploading. The competitive moat
+              competitors (Opus Clip, Klap) charge for. */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={runAspectExport}
+              disabled={aspectBusy}
+              className="p-1.5 rounded-lg hover:bg-fuchsia-500/10 text-slate-400 hover:text-fuchsia-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/60 disabled:opacity-50"
+              title="Export to 9:16 + 1:1 + 16:9"
+              aria-label="Export in multiple aspect ratios"
+            >
+              {aspectBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crop className="w-3.5 h-3.5" />}
+            </button>
+            {aspectOpen && (
+              <div
+                role="dialog"
+                aria-label="Aspect ratio exports"
+                className="absolute right-0 top-full mt-2 z-30 w-[260px] rounded-2xl border border-white/10 bg-[#0a0a14]/95 backdrop-blur-2xl shadow-2xl p-3"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-fuchsia-400">Aspect Ratios</span>
+                  <button
+                    type="button"
+                    onClick={() => setAspectOpen(false)}
+                    aria-label="Close"
+                    className="w-5 h-5 rounded text-slate-500 hover:text-white text-xs"
+                  >✕</button>
+                </div>
+                {aspectBusy && (
+                  <div className="flex items-center gap-2 px-2 py-3 text-[11px] text-slate-400">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-fuchsia-400" />
+                    Generating 3 ratios… ~30s
+                  </div>
+                )}
+                {!aspectBusy && aspectExports.length === 0 && (
+                  <div className="px-2 py-3 text-[11px] text-slate-500">
+                    No exports yet. Click <Crop className="inline w-3 h-3" /> to start.
+                  </div>
+                )}
+                {!aspectBusy && aspectExports.length > 0 && (
+                  <div className="space-y-1.5">
+                    {aspectExports.map((ex) => (
+                      <a
+                        key={ex.ratio}
+                        href={ex.url}
+                        download
+                        className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg bg-white/[0.04] hover:bg-fuchsia-500/10 border border-white/5 hover:border-fuchsia-500/30 transition-colors group"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] font-bold text-white truncate">{ex.ratio}</div>
+                          <div className="text-[9px] text-slate-500 truncate">{ex.label}</div>
+                        </div>
+                        <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-fuchsia-300" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <button
-            type="button"
+           type="button"
             onClick={() => confirmDelete ? remove() : setConfirmDelete(true)}
             onMouseLeave={() => setConfirmDelete(false)}
             disabled={busy}
-            className={`p-1.5 rounded-lg transition-colors ${confirmDelete ? 'bg-rose-500/20 text-rose-400' : 'hover:bg-white/10 text-slate-400 hover:text-white'}`}
+            className={`p-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/60 ${confirmDelete ? 'bg-rose-500/20 text-rose-400' : 'hover:bg-white/10 text-slate-400 hover:text-white'}`}
             title={confirmDelete ? 'Click again to delete' : 'Delete'}
+            aria-label={confirmDelete ? 'Confirm delete clip' : 'Delete clip'}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

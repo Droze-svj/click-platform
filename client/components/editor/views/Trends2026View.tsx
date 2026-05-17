@@ -230,9 +230,8 @@ export default function Trends2026View({
         </div>
         <div className="flex flex-wrap gap-2">
           {NICHES.map(n => (
-            <button
+            <button type="button"
               key={n}
-              type="button"
               onClick={() => setNiche(n)}
               className={`px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors border ${
                 niche === n
@@ -272,9 +271,8 @@ export default function Trends2026View({
         </div>
         <div className="space-y-2.5">
           {HOOK_CANDIDATES.map((h) => (
-            <button
+            <button type="button"
               key={h.id}
-              type="button"
               onClick={() => handleApplyHook(h)}
               className={`w-full text-left rounded-xl p-3.5 border transition-colors flex items-center gap-4 ${
                 appliedHookId === h.id
@@ -407,9 +405,8 @@ export default function Trends2026View({
           {OVERLAY_LIBRARY.map(k => {
             const active = appliedOverlays.has(k.id)
             return (
-              <button
+              <button type="button"
                 key={k.id}
-                type="button"
                 onClick={() => handleApplyOverlay(k)}
                 className={`rounded-xl p-3 text-left border transition-colors ${
                   active ? 'bg-rose-500/10 border-rose-500/40' : 'bg-white/[0.02] border-white/10 hover:border-rose-500/30'
@@ -437,9 +434,8 @@ export default function Trends2026View({
         </div>
         <div className="space-y-2">
           {TREND_SOUNDS.map(s => (
-            <button
+            <button type="button"
               key={s.id}
-              type="button"
               onClick={() => handleApplyTrendingSound(s)}
               className={`w-full text-left rounded-xl p-3.5 border transition-colors flex items-center gap-4 ${
                 appliedSoundId === s.id
@@ -478,9 +474,8 @@ export default function Trends2026View({
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {VOICE_PRESETS.map(v => (
-            <button
+            <button type="button"
               key={v.id}
-              type="button"
               onClick={() => { setVoicePreset(v.id); showToast?.(`Voice preset: ${v.label}`, 'info') }}
               className={`text-left rounded-xl p-3 border transition-colors ${
                 voicePreset === v.id ? 'bg-indigo-500/10 border-indigo-500/40' : 'bg-white/[0.02] border-white/10 hover:border-indigo-500/30'

@@ -3,10 +3,17 @@
  */
 
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const axios = require('axios');
 const logger = require('../utils/logger');
 const User = require('../models/User');
 const oauthService = require('./oauthService');
+const OAuthStorage = require('../utils/oauthStorage');
+
+// Supabase users have UUIDs; Mongoose User.findById throws CastError on those.
+// Use OAuthStorage (Supabase social_links.oauth.<platform>) for UUID users
+// and keep the legacy User.oauth.<platform> path for ObjectId users.
+const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
 const TOKEN_URL = 'https://api.twitter.com/2/oauth2/token';
 const API_BASE = 'https://api.twitter.com/2';
@@ -33,23 +40,31 @@ function defaultRedirectUri() {
 async function getAuthorizationUrl(userId, state, callbackUrl) {
   if (!isConfigured()) throw new Error('Twitter OAuth not configured');
 
-  const user = await User.findById(userId);
-  if (!user) throw new Error('User not found');
-
   // Twitter uses PKCE, code_challenge is derived from code_verifier
   const verifier = crypto.randomBytes(32).toString('base64url');
   const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
 
-  if (!user.oauth) user.oauth = {};
-  user.oauth.twitter = {
-    ...user.oauth.twitter,
-    codeVerifier: verifier,
-    state,
-    stateCreatedAt: new Date()
-  };
-
-  user.markModified('oauth');
-  await user.save();
+  if (isMongoUserId(userId)) {
+    // Legacy Mongo user — persist the PKCE verifier on the User document
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+    if (!user.oauth) user.oauth = {};
+    user.oauth.twitter = {
+      ...user.oauth.twitter,
+      codeVerifier: verifier,
+      state,
+      stateCreatedAt: new Date()
+    };
+    user.markModified('oauth');
+    await user.save();
+  } else {
+    // Supabase user (UUID) — persist via OAuthStorage (Supabase social_links)
+    await OAuthStorage.saveTokens(userId, 'twitter', {
+      codeVerifier: verifier,
+      state,
+      stateCreatedAt: new Date().toISOString()
+    });
+  }
 
   const params = new URLSearchParams({
     response_type: 'code',
@@ -67,25 +82,42 @@ async function getAuthorizationUrl(userId, state, callbackUrl) {
 /**
  * Get connected account details
  */
+/**
+ * Multi-account-aware: returns an array of every connected Twitter
+ * account for this user. Callers that previously expected a single
+ * object should pick `[0]` when a single-account view is acceptable, or
+ * render the full list (which is the right move for a "Switch account"
+ * UI). Returns [] when nothing is connected.
+ */
 async function getConnectedAccounts(userId) {
-  const creds = await oauthService.getSocialCredentials(userId, 'twitter');
-  if (!creds || !creds.connectedAt) return null;
-  return {
+  const accounts = await oauthService.listSocialAccounts(userId, 'twitter');
+  return accounts.map((a) => ({
     platform: 'twitter',
-    username: creds.platformUsername,
-    avatar: creds.avatar,
-    connectedAt: creds.connectedAt
-  };
+    accountId: a.accountId,
+    platform_user_id: a.platformUserId,
+    username: a.platformUsername,
+    display_name: a.platformUsername,
+    avatar: a.avatar,
+    isPrimary: a.isPrimary,
+    isActive: a.isActive,
+    connectedAt: a.addedAt,
+  }));
 }
 
 /**
  * Exchange code for token
  */
 async function exchangeCodeForToken(userId, code, state) {
-  const user = await User.findById(userId);
-  if (!user || !user.oauth?.twitter) throw new Error('OAuth session not found');
-
-  const twitterData = user.oauth.twitter;
+  // Resolve the PKCE verifier + state we saved during getAuthorizationUrl.
+  let twitterData;
+  if (isMongoUserId(userId)) {
+    const user = await User.findById(userId);
+    if (!user || !user.oauth?.twitter) throw new Error('OAuth session not found');
+    twitterData = user.oauth.twitter;
+  } else {
+    twitterData = await OAuthStorage.loadTokens(userId, 'twitter');
+    if (!twitterData) throw new Error('OAuth session not found');
+  }
   if (twitterData.state !== state) throw new Error('Invalid state');
 
   const credentials = Buffer.from(`${process.env.TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`).toString('base64');
@@ -224,13 +256,13 @@ async function getAccessTokenForAccount(userId) {
   return creds.accessToken;
 }
 
-async function disconnectTwitter(userId) {
-  const user = await User.findById(userId);
-  if (user?.oauth) {
-    user.oauth.twitter = { connected: false };
-    user.markModified('oauth');
-    await user.save();
-  }
+/**
+ * Disconnect Twitter. Pass `accountId` to drop just one of multiple
+ * connected accounts; omit it to disconnect every Twitter account.
+ * Returns the number of remaining connected accounts.
+ */
+async function disconnectTwitter(userId, accountId = null) {
+  return oauthService.removeSocialAccount(userId, 'twitter', accountId);
 }
 
 module.exports = {

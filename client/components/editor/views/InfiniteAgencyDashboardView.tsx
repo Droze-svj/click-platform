@@ -204,7 +204,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                 { id: 'distribution', label: 'PRESENCE', icon: Globe, color: 'text-blue-400' },
                 { id: 'ab_test', label: 'PATTERN', icon: Split, color: 'text-purple-400' }
               ].map(v => (
-                 <button key={v.id} onClick={() => setActiveView(v.id as any)}
+                 <button type="button" key={v.id} onClick={() => setActiveView(v.id as any)}
                    className={`px-12 py-6 rounded-[2.8rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-1000 flex items-center gap-4 italic active:scale-90 border-2 ${activeView === v.id ? 'bg-white text-black border-white shadow-[0_40px_100px_rgba(255,255,255,0.2)] scale-110' : 'text-slate-700 border-transparent hover:text-white hover:bg-white/5'}`}>
                    <v.icon size={22} className={activeView === v.id ? 'text-black' : v.color} />
                    {v.label}
@@ -310,7 +310,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                                 <p className="text-5xl font-black italic text-emerald-400 leading-none uppercase tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">8.42X</p>
                              </div>
                           </div>
-                          <button onClick={loadAll} className="flex flex-col items-end group">
+                          <button type="button" onClick={loadAll} className="flex flex-col items-end group">
                              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-3 group-hover:text-white transition-colors">Top Performing Region</span>
                              <div className="flex items-center gap-6">
                                 <span className="text-3xl font-black text-white tracking-tighter group-hover:text-indigo-400 transition-colors leading-tight">Global · TikTok</span>
@@ -434,7 +434,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     <p className="text-[11px] font-medium text-slate-400 leading-tight border-l-2 border-indigo-500/20 pl-4 ml-1">Autonomous workers handling content tasks</p>
                  </div>
                  <div className="flex items-center gap-8">
-                    <button onClick={() => setDebateMode(!debateMode)} className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] border-2 transition-all duration-1000 italic active:scale-90 ${debateMode ? 'bg-indigo-600 border-indigo-400 text-white animate-pulse shadow-[0_0_50px_rgba(99,102,241,0.6)]' : 'bg-white/5 border-white/10 text-slate-800 hover:text-white hover:bg-white/10 hover:border-white/20'}`}>
+                    <button type="button" onClick={() => setDebateMode(!debateMode)} className={`px-10 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em] border-2 transition-all duration-1000 italic active:scale-90 ${debateMode ? 'bg-indigo-600 border-indigo-400 text-white animate-pulse shadow-[0_0_50px_rgba(99,102,241,0.6)]' : 'bg-white/5 border-white/10 text-slate-800 hover:text-white hover:bg-white/10 hover:border-white/20'}`}>
                        {debateMode ? 'DEBATING' : 'START_DEBATE'}
                     </button>
                  </div>
@@ -501,13 +501,13 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                              </div>
                           </div>
                        </div>
-                       <button onClick={() => setAutoSurgeActive(!autoSurgeActive)} className={`w-24 h-12 rounded-[2rem] relative transition-all duration-1000 border-4 shadow-3xl active:scale-75 ${autoSurgeActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_50px_rgba(99,102,241,0.5)]' : 'bg-slate-950 border-slate-900 shadow-inner'}`}>
+                       <button type="button" onClick={() => setAutoSurgeActive(!autoSurgeActive)} className={`w-24 h-12 rounded-[2rem] relative transition-all duration-1000 border-4 shadow-3xl active:scale-75 ${autoSurgeActive ? 'bg-indigo-600 border-indigo-400 shadow-[0_0_50px_rgba(99,102,241,0.5)]' : 'bg-slate-950 border-slate-900 shadow-inner'}`}>
                           <motion.div animate={{ x: autoSurgeActive ? 48 : 0 }} className={`absolute top-1 left-1 w-7 h-7 rounded-full shadow-2xl ${autoSurgeActive ? 'bg-white' : 'bg-slate-700'}`} />
                        </button>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-8 relative z-10 px-2">
-                       <button onClick={() => setActiveView('surge_ledger')} className="py-6 rounded-[2.5rem] bg-black/80 border-2 border-white/5 text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic hover:bg-white hover:text-black hover:scale-105 active:scale-90 transition-all duration-700 shadow-2xl">View ledger</button>
+                       <button type="button" onClick={() => setActiveView('surge_ledger')} className="py-6 rounded-[2.5rem] bg-black/80 border-2 border-white/5 text-[11px] font-black text-slate-800 uppercase tracking-[0.4em] italic hover:bg-white hover:text-black hover:scale-105 active:scale-90 transition-all duration-700 shadow-2xl">View ledger</button>
                        <div className="px-8 py-6 rounded-[2.5rem] bg-black/40 border-2 border-white/5 flex flex-col justify-center shadow-inner group-hover:border-indigo-500/20 transition-all duration-1000">
                           <span className="text-[10px] font-black text-slate-950 uppercase italic leading-none mb-2 tracking-[0.2em] opacity-40">THRESHOLD</span>
                           <span className="text-[17px] font-black text-white leading-none italic uppercase tracking-widest drop-shadow-2xl">{">"} 90% PROB</span>
@@ -531,7 +531,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                     </div>
                  </div>
 
-                 <button onClick={() => loadAll()} className="w-full relative group h-24 rounded-[3.5rem] overflow-hidden shadow-[0_80px_200px_rgba(99,102,241,0.3)] active:scale-95 transition-all outline-none border-none">
+                 <button type="button" onClick={() => loadAll()} className="w-full relative group h-24 rounded-[3.5rem] overflow-hidden shadow-[0_80px_200px_rgba(99,102,241,0.3)] active:scale-95 transition-all outline-none border-none">
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-700 via-indigo-500 to-violet-800 transition-all duration-1000 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-white/10 animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="relative flex items-center justify-center gap-10 font-black text-[20px] uppercase tracking-[0.8em] italic text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.4)]">
@@ -553,7 +553,7 @@ const InfiniteAgencyDashboardView: React.FC = () => {
                        <p className="text-[11px] font-black text-slate-800 uppercase tracking-[0.5em] italic leading-none border-l-4 border-emerald-500/20 pl-8 ml-4">Cryptographic Decision Entropy Logs</p>
                     </div>
                  </div>
-                 <button onClick={() => setGovernanceOpen(true)} className="px-12 py-5 bg-emerald-600 text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic hover:bg-white hover:scale-110 active:scale-75 transition-all duration-700 shadow-[0_40px_100px_rgba(16,185,129,0.3)]">Review</button>
+                 <button type="button" onClick={() => setGovernanceOpen(true)} className="px-12 py-5 bg-emerald-600 text-black rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] italic hover:bg-white hover:scale-110 active:scale-75 transition-all duration-700 shadow-[0_40px_100px_rgba(16,185,129,0.3)]">Review</button>
               </div>
 
               <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar pr-8 relative z-10 px-8">

@@ -93,6 +93,7 @@ export default function Toast({ id, message, type, title, duration = 5000, onClo
         </p>
         {action && (
           <button
+            type="button"
             onClick={action.onClick}
             className={`mt-2 text-sm font-medium ${textColors[type]} hover:underline`}
           >
@@ -101,6 +102,7 @@ export default function Toast({ id, message, type, title, duration = 5000, onClo
         )}
       </div>
       <button
+        type="button"
         onClick={handleClose}
         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 flex-shrink-0 transition-colors"
         aria-label="Close notification"

@@ -18,6 +18,8 @@
     "start:client": "cd client && pnpm start",
     "prisma:generate": "NODE_OPTIONS='--max-old-space-size=2048' npx --no-install prisma generate --schema=prisma/schema.prisma",
     "install:all": "pnpm install && cd client && pnpm install",
+    "seed:testers": "node scripts/seed-test-users.js",
+    "preflight": "node scripts/preflight.js",
     "test": "jest",
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration",

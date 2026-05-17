@@ -149,13 +149,15 @@ const ApprovalQueueView: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
              <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
-                <button 
+                <button
+                  type="button"
                   onClick={() => setFilter('pending')}
                   className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'pending' ? 'bg-emerald-500 text-black' : 'text-slate-500 hover:text-white'}`}
                 >
                   Action Required
                 </button>
-                <button 
+                <button
+                  type="button"
                   onClick={() => setFilter('all')}
                   className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filter === 'all' ? 'bg-white/10 text-white' : 'text-slate-500 hover:text-white'}`}
                 >
@@ -245,7 +247,7 @@ const ApprovalQueueView: React.FC = () => {
                      <History className="w-4 h-4 text-violet-400" />
                      Decision Matrix
                   </h3>
-                  <button onClick={() => setSelectedId(null)} className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all">
+                  <button type="button" onClick={() => setSelectedId(null)} className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all">
                      <XCircle className="w-4 h-4" />
                   </button>
                </div>
@@ -276,7 +278,8 @@ const ApprovalQueueView: React.FC = () => {
                                 <Sparkles className="w-3.5 h-3.5 text-violet-400" />
                                 <span className="text-[10px] font-black text-white uppercase italic">AI Revision Drafted</span>
                              </div>
-                             <button 
+                             <button
+                               type="button"
                                onClick={() => setShowDiff(true)}
                                className="text-[9px] font-black text-violet-400 uppercase hover:underline"
                              >
@@ -301,6 +304,7 @@ const ApprovalQueueView: React.FC = () => {
                <div className="grid grid-cols-2 gap-4 mt-auto">
                   {detailedApproval?.contentId?.metadata?.proposedV2 ? (
                     <button
+                      type="button"
                       onClick={() => handleAction('accept-v2')}
                       disabled={processing}
                       className="col-span-2 py-4 rounded-[1.5rem] bg-violet-600 text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all shadow-[0_10px_30px_rgba(139,92,246,0.4)] disabled:opacity-50"
@@ -310,6 +314,7 @@ const ApprovalQueueView: React.FC = () => {
                     </button>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => handleAction('approve')}
                       disabled={processing}
                       className="col-span-2 py-4 rounded-[1.5rem] bg-emerald-500 text-black text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all shadow-[0_10px_30px_rgba(16,185,129,0.3)] disabled:opacity-50"
@@ -319,6 +324,7 @@ const ApprovalQueueView: React.FC = () => {
                     </button>
                   )}
                   <button
+                    type="button"
                     onClick={() => handleAction('request-changes')}
                     disabled={processing || !comment}
                     className="py-4 rounded-[1.5rem] bg-amber-500/10 border border-amber-500/50 text-amber-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-black transition-all disabled:opacity-50"
@@ -327,6 +333,7 @@ const ApprovalQueueView: React.FC = () => {
                      Request Change
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleAction('reject')}
                     disabled={processing || !comment}
                     className="py-4 rounded-[1.5rem] bg-rose-500/10 border border-rose-500/50 text-rose-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50"

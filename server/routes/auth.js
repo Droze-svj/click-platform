@@ -183,6 +183,15 @@ router.post('/register',
       const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       // Create user in Supabase
+      //
+      // `email_verified` is normally false on insert — a verification email
+      // gets queued below and the user clicks the link to mark themselves
+      // verified. But in dev / staging environments where SMTP isn't
+      // configured, the email never arrives and the user gets locked out
+      // of the dashboard forever. Setting AUTO_VERIFY_EMAIL=true skips
+      // verification entirely so testers can use the platform without
+      // needing real email infrastructure. Leave unset in production.
+      const autoVerify = process.env.AUTO_VERIFY_EMAIL === 'true';
       const { data: user, error: insertError } = await supabase
         .from('users')
         .insert({
@@ -190,7 +199,7 @@ router.post('/register',
           password: hashedPassword,
           first_name: finalFirstName,
           last_name: finalLastName,
-          email_verified: false, // Require email verification
+          email_verified: autoVerify,
           login_attempts: 0,
           social_links: {
             email_verification: {
@@ -569,9 +578,37 @@ router.post('/login',
         findError = supabaseError;
       }
 
-      // If Supabase query failed or no user found, return error
+      // If Supabase query failed or didn't find the user, try the Mongoose
+      // store before returning 401. Both stores coexist: the production
+      // signup path writes to Supabase, but the seed-test-users script
+      // (and any prior Mongoose-fallback registrations) write to Mongo.
+      // Without this fallback, those users could never log in even with
+      // correct credentials.
       if (findError || !user) {
-        
+        try {
+          const User = require('../models/User');
+          const mongoUser = await User.findOne({ email: email.toLowerCase() });
+          if (mongoUser && await mongoUser.comparePassword(password)) {
+            const { token, refreshToken, expiresIn } = issueTokenPair(mongoUser._id.toString());
+            return res.json({
+              success: true,
+              message: 'Login successful (Mongoose fallback)',
+              data: {
+                token,
+                refreshToken,
+                expiresIn,
+                user: {
+                  id: mongoUser._id,
+                  email: mongoUser.email,
+                  name: mongoUser.name,
+                  emailVerified: true,
+                },
+              },
+            });
+          }
+        } catch (mongoErr) {
+          logger.warn('[login] Mongo fallback lookup failed', { error: mongoErr.message });
+        }
         return res.status(401).json({ success: false, error: 'Invalid credentials' });
       }
 

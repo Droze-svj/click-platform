@@ -20,14 +20,14 @@ function withAgentSpan(agentName, fn, modelGetter) {
     if (!Sentry || typeof Sentry.startSpan !== 'function') {
       return fn(...args);
     }
-    const model = typeof modelGetter === 'function' ? modelGetter(...args) : (modelGetter || 'gemini-1.5-flash');
+    const model = typeof modelGetter === 'function' ? modelGetter(...args) : (modelGetter || 'gemini-2.5-flash');
     return Sentry.startSpan(
       {
         op: 'gen_ai.invoke_agent',
         name: `invoke_agent ${agentName}`,
         attributes: {
           'gen_ai.agent.name': agentName,
-          'gen_ai.request.model': model || 'gemini-1.5-flash',
+          'gen_ai.request.model': model || 'gemini-2.5-flash',
           'gen_ai.operation.name': 'invoke_agent',
         },
       },
@@ -68,7 +68,7 @@ function initAIProvider(provider = 'google', model = null) {
 
     if (provider === 'google' || provider === 'openai') {
       // Use Gemini as primary
-      currentModel = model || 'gemini-1.5-flash';
+      currentModel = model || 'gemini-2.5-flash';
     } else if (provider === 'anthropic') {
       currentModel = model || AI_PROVIDERS.anthropic.defaultModel;
     }
@@ -94,24 +94,24 @@ function selectModelForTask(taskType, options = {}) {
 
     const modelSelection = {
       'content-generation': {
-        high: 'gemini-1.5-flash',
-        medium: 'gemini-1.5-flash',
-        low: 'gemini-1.5-flash',
+        high: 'gemini-2.5-flash',
+        medium: 'gemini-2.5-flash',
+        low: 'gemini-2.5-flash',
       },
       'content-analysis': {
-        high: 'gemini-1.5-flash',
-        medium: 'gemini-1.5-flash',
-        low: 'gemini-1.5-flash',
+        high: 'gemini-2.5-flash',
+        medium: 'gemini-2.5-flash',
+        low: 'gemini-2.5-flash',
       },
       'summarization': {
-        high: 'gemini-1.5-flash',
-        medium: 'gemini-1.5-flash',
-        low: 'gemini-1.5-flash',
+        high: 'gemini-2.5-flash',
+        medium: 'gemini-2.5-flash',
+        low: 'gemini-2.5-flash',
       },
       'translation': {
-        high: 'gemini-1.5-flash',
-        medium: 'gemini-1.5-flash',
-        low: 'gemini-1.5-flash',
+        high: 'gemini-2.5-flash',
+        medium: 'gemini-2.5-flash',
+        low: 'gemini-2.5-flash',
       },
     };
 
@@ -121,7 +121,7 @@ function selectModelForTask(taskType, options = {}) {
     return taskModels[complexityLevel];
   } catch (error) {
     logger.error('Select model for task error', { error: error.message, taskType });
-    return 'gemini-1.5-flash';
+    return 'gemini-2.5-flash';
   }
 }
 
@@ -251,8 +251,8 @@ function getAvailableModels() {
 module.exports = {
   initAIProvider,
   selectModelForTask,
-  generateWithModel: withAgentSpan('Multi-Model Generation Agent', generateWithModel, (_prompt, _taskType, options = {}) => options.model || currentModel || 'gemini-1.5-flash'),
-  compareModelOutputs: withAgentSpan('Model Comparison Agent', compareModelOutputs, () => currentModel || 'gemini-1.5-flash'),
+  generateWithModel: withAgentSpan('Multi-Model Generation Agent', generateWithModel, (_prompt, _taskType, options = {}) => options.model || currentModel || 'gemini-2.5-flash'),
+  compareModelOutputs: withAgentSpan('Model Comparison Agent', compareModelOutputs, () => currentModel || 'gemini-2.5-flash'),
   getAvailableModels,
 };
 

@@ -374,9 +374,8 @@ const TextMotionStudioView: React.FC<Props> = ({
           const Icon = t.icon
           const active = tab === t.id
           return (
-            <button
+            <button type="button"
               key={t.id}
-              type="button"
               onClick={() => { setTab(t.id); setMoodFilter('All'); setSearch('') }}
               className={`flex items-center gap-3 px-5 py-3 rounded-2xl border-2 transition-colors ${
                 active
@@ -413,9 +412,8 @@ const TextMotionStudioView: React.FC<Props> = ({
           {moods.slice(0, 8).map(m => {
             const Icon = MOOD_ICONS[m] || Type
             return (
-              <button
+              <button type="button"
                 key={m}
-                type="button"
                 onClick={() => setMoodFilter(m)}
                 className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition-colors flex items-center gap-1.5 ${
                   moodFilter === m

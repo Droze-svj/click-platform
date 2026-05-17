@@ -14,9 +14,8 @@ export function PricingToggle({ period, onChange, yearlyDiscount = 20 }: Props) 
       {(['monthly', 'yearly'] as BillingPeriod[]).map((p) => {
         const active = p === period;
         return (
-          <button
+          <button type="button"
             key={p}
-            type="button"
             role="tab"
             aria-selected={active}
             onClick={() => onChange(p)}

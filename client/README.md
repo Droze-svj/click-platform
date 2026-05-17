@@ -42,7 +42,7 @@ npm start
 
 ## Project Structure
 
-```
+```text
 client/
 ├── app/                    # Next.js app directory
 │   ├── dashboard/         # Dashboard pages
@@ -72,9 +72,11 @@ client/
 See `.env.example` for required environment variables.
 
 Required:
+
 - `NEXT_PUBLIC_API_URL` - Backend API URL
 
 Optional:
+
 - `NEXT_PUBLIC_SENTRY_DSN` - Sentry DSN for error tracking
 - `SENTRY_ORG` - Sentry organization
 - `SENTRY_PROJECT` - Sentry project name
@@ -127,6 +129,3 @@ npm run test:coverage
 ## License
 
 See main repository LICENSE file.
-
-
-

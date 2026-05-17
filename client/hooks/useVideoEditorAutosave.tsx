@@ -59,6 +59,12 @@ export function useVideoEditorAutosave({
   const lastSavedDateRef = useRef<Date | null>(null)
   const saveKey = `video-editor-state-${videoId || 'local'}`
   const backupIndexRef = useRef(0)
+  // Guards against concurrent in-flight saves. If a save is already
+  // running and a new one is requested, we stash the latest state and
+  // let the running save fire it again on completion. This prevents
+  // out-of-order writes from clobbering newer state with older state.
+  const inFlightRef = useRef(false)
+  const pendingRef = useRef<VideoEditorState | null>(null)
 
   const saveToLocalStorage = useCallback(
     (stateString: string) => {
@@ -75,6 +81,14 @@ export function useVideoEditorAutosave({
     async (stateToSave: VideoEditorState) => {
       const stateString = JSON.stringify(stateToSave)
       if (stateString === lastSavedRef.current) return
+
+      // If a save is already running, stash this state and let the
+      // running save chain to it on completion. Latest write wins.
+      if (inFlightRef.current) {
+        pendingRef.current = stateToSave
+        return
+      }
+      inFlightRef.current = true
 
       if (idleTimeoutRef.current) {
         clearTimeout(idleTimeoutRef.current)
@@ -157,10 +171,25 @@ export function useVideoEditorAutosave({
           idleTimeoutRef.current = undefined
           setAutosaveStatus((prev) => ({ ...prev, status: 'idle', message: '' }))
         }, ERROR_DISPLAY_MS)
+      } finally {
+        inFlightRef.current = false
+        // If state changed while we were saving, fire one more save with
+        // the latest version so the server ends up with the newest state.
+        const pending = pendingRef.current
+        pendingRef.current = null
+        if (pending) {
+          // Schedule on a microtask so the status update flushes first.
+          Promise.resolve().then(() => saveStateRef.current?.(pending))
+        }
       }
     },
     [videoId, name, folderId, saveToLocalStorage, saveKey]
   )
+
+  // Self-reference so the finally block can call back into the latest
+  // saveState without forming a dependency cycle.
+  const saveStateRef = useRef<typeof saveState | null>(null)
+  saveStateRef.current = saveState
 
   useEffect(() => {
     if (!enabled) return
@@ -197,8 +226,30 @@ export function useVideoEditorAutosave({
       if (!enabled || !state) return
       try {
         const stateString = JSON.stringify(state)
-        localStorage.setItem(saveKey, stateString)
-        localStorage.setItem(`${saveKey}-timestamp`, new Date().toISOString())
+        try {
+          localStorage.setItem(saveKey, stateString)
+          localStorage.setItem(`${saveKey}-timestamp`, new Date().toISOString())
+        } catch (storageError: any) {
+          if (storageError?.name === 'QuotaExceededError') {
+            // Free space by dropping other editors' state, then retry.
+            const ours = new Set([saveKey, `${saveKey}-timestamp`])
+            const stale = Object.keys(localStorage).filter(
+              (k) => k.startsWith('video-editor-state-') && !ours.has(k)
+            )
+            stale.slice(0, 5).forEach((k) => {
+              try { localStorage.removeItem(k) } catch { /* ignore */ }
+            })
+            try {
+              localStorage.setItem(saveKey, stateString)
+              localStorage.setItem(`${saveKey}-timestamp`, new Date().toISOString())
+            } catch {
+              // Last resort — give up gracefully so the unload still proceeds.
+              console.warn('Save on unload skipped: storage quota exceeded')
+            }
+          } else {
+            throw storageError
+          }
+        }
       } catch (e) {
         console.error('Save on unload failed', e)
       }

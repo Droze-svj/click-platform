@@ -382,7 +382,7 @@ export default function ClickDebugPanel() {
                         <span className="text-[10px] font-black text-white">JS Heap</span>
                         <span className={`text-[10px] font-black ${(health.memory ?? 0) > 300 ? 'text-amber-400' : 'text-emerald-400'}`}>{health.memory ?? 0}MB / 512MB</span>
                       </div>
-                      <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden" role="progressbar" aria-valuenow={health.memory || 0} aria-valuemin={0} aria-valuemax={512} aria-label="JS heap usage">
+                      <div className="h-1 rounded-full bg-white/[0.04] overflow-hidden" aria-label={`JS heap usage ${health.memory || 0}MB of 512MB`}>
                         <motion.div animate={{ width: `${Math.min(((health.memory || 0) / 512) * 100, 100)}%` }} className={`h-full rounded-full ${(health.memory || 0) > 400 ? 'bg-rose-500' : (health.memory || 0) > 200 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                       </div>
                     </div>

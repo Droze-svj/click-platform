@@ -101,7 +101,8 @@ export const CulturalArbitrageHUD: React.FC = () => {
                         <Activity className="w-3 h-3 text-emerald-400" />
                         <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">Live-Wire Engine Ingesting...</span>
                     </div>
-                    <button 
+                    <button
+                        type="button"
                         onClick={scanMarket}
                         className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
                     >
@@ -239,7 +240,8 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <button 
+                                    <button
+                                        type="button"
                                         onClick={() => triggerResurrection(asset)}
                                         disabled={resurrecting === asset.contentId}
                                         className={`w-full py-4 mt-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-xl transition-all flex items-center justify-center gap-4 ${

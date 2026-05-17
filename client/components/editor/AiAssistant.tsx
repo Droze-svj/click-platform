@@ -175,7 +175,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                             </div>
                             <span className="text-xs font-bold uppercase text-theme-primary tracking-wider">Neural Oracle</span>
                         </div>
-                        <button onClick={onClose} title="Close AI Assistant" className="p-2 hover:bg-surface-card-hover rounded-xl transition-colors text-theme-muted hover:text-theme-primary">
+                        <button type="button" onClick={onClose} title="Close AI Assistant" className="p-2 hover:bg-surface-card-hover rounded-xl transition-colors text-theme-muted hover:text-theme-primary">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
@@ -201,6 +201,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
 
                                     {!branch.active && (
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 showToast?.(`Merging [${branch.name}] into master...`, 'info')
                                                 setBranches(prev => prev.map(b => ({ ...b, active: b.id === branch.id })))
@@ -234,6 +235,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                 Current clip matches trending motif. <span className="text-white font-bold">Apply &quot;Slow-Pan&quot;</span> to increase potential ROI.
                             </p>
                             <button
+                                type="button"
                                 onClick={() => showToast?.('Remix Protocol Initialized...', 'success')}
                                 className="w-full py-2 rounded-xl bg-rose-600 text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/30 active:scale-95 transition-all"
                             >
@@ -273,7 +275,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                         <div className="flex items-center justify-between">
                             <p className="text-[10px] font-bold uppercase text-theme-muted tracking-widest">Next moves</p>
                             <button
-                                type="button"
+                               type="button"
                                 onClick={fetchSuggestions}
                                 disabled={loadingSuggestions}
                                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/30 text-[9px] font-black uppercase tracking-[0.18em] text-violet-300 hover:bg-violet-500/20 disabled:opacity-50"
@@ -301,7 +303,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                 {suggestions.map(s => (
                                     <li key={s.id}>
                                         <button
-                                            type="button"
+                                           type="button"
                                             onClick={() => applySuggestion(s)}
                                             className="w-full text-left p-2.5 rounded-xl border border-white/10 bg-white/[0.02] hover:border-violet-500/30 hover:bg-violet-500/[0.06] transition-all group"
                                         >
@@ -366,6 +368,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                                 }}
                             />
                             <button
+                                type="button"
                                 onClick={() => {
                                     if (inputValue.trim()) {
                                         const userText = inputValue.trim()

@@ -327,7 +327,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
               )
             })}
           </div>
-          <button onClick={handleViralOneClick} className="px-8 py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[11px]">Run Pipeline</button>
+          <button type="button" onClick={handleViralOneClick} className="px-8 py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[11px]">Run Pipeline</button>
         </div>
 
         <AnimatePresence>
@@ -365,7 +365,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                        <p className="text-[8px] font-black text-indigo-400 uppercase">Est. Test CPC</p>
                        <p className="text-lg font-black text-white italic">$0.12</p>
                     </div>
-                    <button onClick={handleLaunchAds} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-600/20">Launch $5/Day Test Ad</button>
+                    <button type="button" onClick={handleLaunchAds} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-600/20">Launch $5/Day Test Ad</button>
                   </div>
                 </motion.div>
               )}
@@ -438,7 +438,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                       <p className="text-[8px] text-slate-400 uppercase tracking-widest">Emotion-Cued Framing Applied</p>
                     </div>
                   </div>
-                  <button onClick={() => showToast('Blasting to TikTok, IG & YouTube...', 'success')} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest">Publish All</button>
+                  <button type="button" onClick={() => showToast('Blasting to TikTok, IG & YouTube...', 'success')} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest">Publish All</button>
                 </div>
               )}
             </motion.div>
@@ -480,7 +480,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
               onChange={e => setMinSilenceDuration(parseFloat(e.target.value))}
               className="w-full accent-violet-600"
             />
-            <button onClick={handleRemoveSilence} className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Cut Silence</button>
+            <button type="button" onClick={handleRemoveSilence} className="w-full py-4 bg-violet-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Cut Silence</button>
           </div>
         </div>
 

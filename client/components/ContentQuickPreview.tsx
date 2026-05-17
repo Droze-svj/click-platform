@@ -87,6 +87,7 @@ export default function ContentQuickPreview({ content, children }: ContentQuickP
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsPreviewOpen(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >

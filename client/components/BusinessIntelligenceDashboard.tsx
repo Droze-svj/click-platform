@@ -143,6 +143,7 @@ export default function BusinessIntelligenceDashboard() {
             <option value={365}>Last year</option>
           </select>
           <button
+            type="button"
             onClick={() => exportData('json')}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
           >
@@ -150,6 +151,7 @@ export default function BusinessIntelligenceDashboard() {
             Export JSON
           </button>
           <button
+            type="button"
             onClick={() => exportData('csv')}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
           >

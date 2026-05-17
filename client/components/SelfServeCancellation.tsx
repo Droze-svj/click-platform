@@ -52,12 +52,14 @@ export default function SelfServeCancellation({ onCancelled }: SelfServeCancella
         <p className="text-gray-600">Are you sure you want to cancel your subscription?</p>
         <div className="flex gap-4">
           <button
+            type="button"
             onClick={() => setStep('reason')}
             className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             Yes, Cancel
           </button>
           <button
+            type="button"
             onClick={() => onCancelled?.()}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
           >
@@ -95,6 +97,7 @@ export default function SelfServeCancellation({ onCancelled }: SelfServeCancella
         />
         <div className="flex gap-4">
           <button
+            type="button"
             onClick={() => setStep('refund')}
             disabled={!reason}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
@@ -102,6 +105,7 @@ export default function SelfServeCancellation({ onCancelled }: SelfServeCancella
             Continue
           </button>
           <button
+            type="button"
             onClick={() => setStep('confirm')}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
           >
@@ -128,6 +132,7 @@ export default function SelfServeCancellation({ onCancelled }: SelfServeCancella
         </label>
         <div className="flex gap-4">
           <button
+            type="button"
             onClick={handleCancel}
             disabled={loading}
             className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
@@ -135,6 +140,7 @@ export default function SelfServeCancellation({ onCancelled }: SelfServeCancella
             {loading ? 'Processing...' : 'Cancel Subscription'}
           </button>
           <button
+            type="button"
             onClick={() => setStep('reason')}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
           >

@@ -169,18 +169,21 @@ export default function EnhancedContentCalendar() {
         </div>
         <div className="flex bg-surface-50 dark:bg-surface-950 p-1.5 rounded-xl border border-surface-200 dark:border-surface-800 shadow-sm w-fit">
           <button
+            type="button"
             onClick={() => setView('month')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'month' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
             Month
           </button>
           <button
+            type="button"
             onClick={() => setView('week')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'week' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >
             Week
           </button>
           <button
+            type="button"
             onClick={() => setView('day')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${view === 'day' ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 shadow-sm border border-primary-200 dark:border-primary-800/50' : 'text-surface-500 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800'}`}
           >

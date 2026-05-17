@@ -219,6 +219,7 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
                       .slice(0, 2)
                       .map(targetCol => (
                         <button
+                          type="button"
                           key={targetCol.id}
                           onClick={(e) => {
                             e.stopPropagation()
@@ -244,6 +245,7 @@ export default function ApprovalKanbanBoard({ clientWorkspaceId, agencyWorkspace
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">{selectedCard.title}</h2>
               <button
+                type="button"
                 onClick={() => setSelectedCard(null)}
                 className="text-gray-400 hover:text-gray-600"
               >

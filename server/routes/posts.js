@@ -2,6 +2,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
+const { addScheduledPostJob } = require('../queues');
 const router = express.Router();
 
 // Supabase client will be created in route handlers to avoid loading issues
@@ -37,7 +38,6 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       page = 1,
       limit = 20,
       status,
-      platform,
       scheduled_after,
       scheduled_before
     } = req.query;
@@ -83,8 +83,18 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     const { data: posts, error, count } = await query;
 
     if (error) {
-      
-      return res.status(500).json({ success: false, error: 'Failed to fetch posts' });
+      // Supabase schema/RLS errors used to bubble up as a 500 to a brand-new
+      // user with no posts (the dashboard would render the angry "Failed
+      // to fetch posts" toast). Fall through to an honest empty list +
+      // isFallback flag so the UI renders the cold-start state.
+      const logger = require('../utils/logger');
+      logger.warn('[posts] Supabase query failed; returning empty list', { error: error.message, code: error.code });
+      return res.json({
+        success: true,
+        posts: [],
+        pagination: { page: parseInt(page), limit: parseInt(limit), total: 0, pages: 0 },
+        isFallback: true,
+      });
     }
 
     res.json({
@@ -119,8 +129,7 @@ router.post('/', auth, asyncHandler(async (req, res) => {
       thumbnail,
       tags = [],
       categories = [],
-      scheduled_at,
-      platforms = []
+      scheduled_at
     } = req.body;
 
     // Generate slug from title
@@ -155,8 +164,12 @@ router.post('/', auth, asyncHandler(async (req, res) => {
 
     // If scheduled, we could trigger scheduling logic here
     if (scheduled_at && status === 'scheduled') {
-      // TODO: Implement scheduling logic
-      logger.info('Post scheduled', { postId: post.id, scheduledAt: scheduled_at });
+      try {
+        await addScheduledPostJob({ postId: post.id, userId: req.user.id }, scheduled_at);
+        logger.info('Post scheduled successfully via background job', { postId: post.id, scheduledAt: scheduled_at });
+      } catch (jobError) {
+        logger.error('Failed to queue scheduled post job', { error: jobError.message, postId: post.id });
+      }
     }
 
     res.status(201).json({
@@ -399,7 +412,13 @@ router.post('/:id/schedule', auth, asyncHandler(async (req, res) => {
       return res.status(404).json({ success: false, error: 'Post not found' });
     }
 
-    // TODO: When using BullMQ, queue for later: jobQueueService.addJob('scheduled-posts', { postId: post.id, scheduledAt: post.scheduled_at })
+    // Queue for later via centralized background worker system
+    try {
+      await addScheduledPostJob({ postId: post.id, userId: req.user.id }, post.scheduled_at);
+      logger.info('Post scheduling job added', { postId: post.id, scheduledAt: post.scheduled_at });
+    } catch (jobError) {
+      logger.error('Failed to add post scheduling job', { error: jobError.message, postId: post.id });
+    }
 
     res.json({
       success: true,

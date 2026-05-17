@@ -103,7 +103,8 @@ export const NetworkStatusHUD: React.FC = () => {
                             {health?.status === 'operational' ? 'Global Nodes Operational' : 'Network Stability Degraded'}
                         </span>
                     </div>
-                    <button 
+                    <button
+                        type="button"
                         onClick={auditNetwork}
                         disabled={auditing}
                         className={`p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all ${auditing ? 'animate-spin' : ''}`}

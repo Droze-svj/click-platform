@@ -149,7 +149,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         className="relative w-full max-w-lg mx-4"
       >
-        <button onClick={onComplete} title="Close onboarding"
+        <button type="button" onClick={onComplete} title="Close onboarding"
           className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all z-10"
         >
           <X className="w-4 h-4" />
@@ -193,7 +193,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                     <p className="text-slate-500 text-xs mb-5">Click will tailor its AI to your exact context.</p>
                     <div className="grid grid-cols-2 gap-2">
                       {NICHE_TYPES.map(n => (
-                        <button key={n.id} onClick={() => setNicheType(n.id)}
+                        <button type="button" key={n.id} onClick={() => setNicheType(n.id)}
                           className={`p-4 rounded-2xl border text-left transition-all ${nicheType === n.id ? 'bg-indigo-600/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
                         >
                           <div className="text-2xl mb-1">{n.emoji}</div>
@@ -211,7 +211,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                     <p className="text-slate-500 text-xs mb-5">Optimizes export settings, aspect ratio &amp; captions.</p>
                     <div className="grid grid-cols-2 gap-2">
                       {PLATFORM_TARGETS.map(p => (
-                        <button key={p.id} onClick={() => setPlatformTarget(p.id)}
+                        <button type="button" key={p.id} onClick={() => setPlatformTarget(p.id)}
                           className={`p-4 rounded-2xl border text-left flex items-center gap-3 transition-all ${platformTarget === p.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
                         >
                           <span className="text-xl">{p.emoji}</span>
@@ -228,7 +228,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                     <p className="text-slate-500 text-xs mb-5">AI will score and optimize every edit toward this.</p>
                     <div className="grid grid-cols-2 gap-2">
                       {CREATOR_GOALS.map(g => (
-                        <button key={g.id} onClick={() => setCreatorGoal(g.id)}
+                        <button type="button" key={g.id} onClick={() => setCreatorGoal(g.id)}
                           className={`p-4 rounded-2xl border text-left transition-all ${creatorGoal === g.id ? 'bg-indigo-600/20 border-indigo-500/50' : 'bg-white/[0.03] border-white/10 hover:border-white/20'}`}
                         >
                           <div className="text-2xl mb-1">{g.emoji}</div>
@@ -249,7 +249,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   </>
                 )}
 
-                <button onClick={advanceQuiz} disabled={!quizCanAdvance}
+                <button type="button" onClick={advanceQuiz} disabled={!quizCanAdvance}
                   className="w-full mt-5 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/20"
                 >
                   {quizStep < 2 ? 'Continue' : 'Configure My AI'} <ArrowRight className="w-4 h-4" />
@@ -291,7 +291,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   ))}
                 </div>
 
-                <button onClick={advanceStep}
+                <button type="button" onClick={advanceStep}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30"
                 >
                   Start Creating <ArrowRight className="w-4 h-4" />
@@ -336,12 +336,12 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                   </p>
                 </div>
 
-                <button onClick={advanceStep}
+                <button type="button" onClick={advanceStep}
                   className={`w-full py-4 rounded-2xl bg-gradient-to-r ${step.color} text-white font-black text-sm uppercase tracking-widest hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg mb-3`}
                 >
                   {step.action} <ChevronRight className="w-4 h-4" />
                 </button>
-                <button onClick={skipStep}
+                <button type="button" onClick={skipStep}
                   className="w-full py-2 text-[10px] font-black text-slate-500 hover:text-slate-300 uppercase tracking-widest transition-all"
                 >
                   {step.skip}

@@ -17,7 +17,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 import { useAuth } from '../../../hooks/useAuth'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+import { API_URL } from '../../../lib/api'
 const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
 
 interface Achievement {

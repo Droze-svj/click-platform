@@ -1,9 +1,7 @@
-// Video Transcription Service
-
+// Video Transcription Service - Unified with aiTranscriptionService
+const { transcribeVideo: realTranscribe } = require('./aiTranscriptionService');
 const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
 const logger = require('../utils/logger');
-
-const whisperService = require('./whisperService');
 
 /**
  * Transcribe video
@@ -14,7 +12,7 @@ async function transcribeVideo(videoId, options = {}) {
       language = 'en',
       videoPath = null,
       audioFile = null,
-      timestamps = true
+      userId = 'system'
     } = options;
 
     const inputPath = videoPath || audioFile;
@@ -22,38 +20,28 @@ async function transcribeVideo(videoId, options = {}) {
       throw new Error('Video path or audio file required for transcription');
     }
 
-    logger.info('Starting real transcription for video', { videoId, inputPath });
+    logger.info('Starting transcription for video', { videoId, inputPath });
 
-    // Use Whisper Service for real transcription
-    const transcriptText = await whisperService.generateTranscriptFromVideo(inputPath, {
-      language,
-      responseFormat: timestamps ? 'verbose_json' : 'text',
-    });
+    // Delegate to the unified AI transcription service
+    const transResult = await realTranscribe(userId, videoId, inputPath, { language });
 
-    if (!transcriptText) {
-      throw new Error('Transcription failed to generate text');
+    if (!transResult.success) {
+      throw new Error('Transcription failed');
     }
-
-    // If verbose_json was used, transcriptText might be an object if we didn't extract .text in whisperService
-    // But whisperService.js:125 says: const transcript = typeof transcription === 'string' ? transcription : transcription.text;
-    // Actually, verbose_json returns an object with segments if handled correctly.
-    // Let's assume whisperService returns just the text for now as per its code.
-
-    // If we want segments, we might need a more detailed call or update whisperService.
-    // whisperService.js:91 uses response_format: responseFormat.
-    // If responseFormat is 'verbose_json', OpenAI returns an object.
 
     const transcript = {
       videoId,
-      language,
-      fullText: typeof transcriptText === 'string' ? transcriptText : transcriptText.text,
-      segments: transcriptText.segments || [],
-      duration: transcriptText.duration || 0,
-      wordCount: (typeof transcriptText === 'string' ? transcriptText : transcriptText.text).split(/\s+/).length,
+      language: transResult.language,
+      fullText: transResult.text,
+      segments: transResult.segments || [],
+      words: transResult.words || [],
+      duration: transResult.duration || 0,
+      wordCount: transResult.text.split(/\s+/).length,
       confidence: 0.99,
+      provider: transResult.provider
     };
 
-    logger.info('Video transcribed successfully', { videoId, language, segments: transcript.segments.length });
+    logger.info('Video transcribed successfully', { videoId, language, segments: transcript.segments.length, provider: transResult.provider });
     return transcript;
   } catch (error) {
     logger.error('Transcribe video error', { error: error.message, videoId });
@@ -203,9 +191,3 @@ module.exports = {
   extractKeywords,
   generateVideoSummary,
 };
-
-
-
-
-
-

@@ -210,6 +210,7 @@ export default function EnhancedFileUpload({
           <AlertCircle size={18} />
           <span className="text-sm">{error}</span>
           <button
+            type="button"
             onClick={() => setError(null)}
             className="ml-auto text-red-500 hover:text-red-700"
           >
@@ -263,6 +264,7 @@ export default function EnhancedFileUpload({
               <div className="flex items-center gap-2">
                 {fileEntry.status === 'error' && (
                   <button
+                    type="button"
                     onClick={() => retryUpload(fileEntry.file)}
                     className="text-xs text-purple-600 hover:text-purple-700 font-medium"
                   >
@@ -270,6 +272,7 @@ export default function EnhancedFileUpload({
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={() => removeFile(fileEntry.file)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   aria-label="Remove file"

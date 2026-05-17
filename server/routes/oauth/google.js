@@ -2,12 +2,8 @@
 
 const express = require('express');
 const auth = require('../../middleware/auth');
-const {
-  getAuthorizationUrl,
-  exchangeCodeForToken,
-  disconnectGoogle,
-  isConfigured
-} = require('../../services/googleOAuthService');
+// Singleton instance — destructuring would drop `this` and crash.
+const googleService = require('../../services/googleOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter } = require('../../middleware/oauthRateLimiter');
@@ -19,14 +15,15 @@ const router = express.Router();
  * Get Google OAuth authorization URL
  */
 router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) => {
-  if (!isConfigured()) {
+  if (!googleService.isConfigured()) {
     return sendError(res, 'Google OAuth not configured', 503);
   }
 
   const callbackUrl = process.env.GOOGLE_CALLBACK_URL ||
     `${req.protocol}://${req.get('host')}/api/oauth/google/callback`;
 
-  const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { url, state } = await googleService.getAuthorizationUrl(userId, callbackUrl);
 
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
@@ -49,15 +46,12 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
   }
 
   try {
-    // Note: In production, you'd get userId from session/cookie
-    // For now, we'll redirect to frontend with code/state
-    // Frontend will call /complete endpoint
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?platform=google&code=${code}&state=${state}`);
-  } catch (error) {
-    logger.error('Google OAuth callback error', { error: error.message });
+  } catch (err) {
+    logger.error('Google OAuth callback error', { error: err.message });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error.message)}`);
+    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
   }
 }));
 
@@ -72,9 +66,9 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
     return sendError(res, 'Authorization code and state are required', 400);
   }
 
-  const { accessToken, userInfo } = await exchangeCodeForToken(req.user._id, code, state);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { userInfo } = await googleService.exchangeCodeForToken(userId, code, state);
 
-  // Get user info for response
   sendSuccess(res, 'Google account connected successfully', 200, {
     connected: true,
     userInfo: {
@@ -90,7 +84,8 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
  * Disconnect Google account
  */
 router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  await disconnectGoogle(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  await googleService.disconnectGoogle(userId);
   sendSuccess(res, 'Google account disconnected', 200);
 }));
 
@@ -99,11 +94,10 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get Google connection status
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  // Check if Supabase is configured
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(503).json({ 
-      success: false, 
-      error: 'Database not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.' 
+    return res.status(503).json({
+      success: false,
+      error: 'Database not configured. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.'
     });
   }
 
@@ -114,10 +108,11 @@ router.get('/status', auth, asyncHandler(async (req, res) => {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    const userId = req.userId || req.user?._id || req.user?.id;
     const { data: user, error } = await supabase
       .from('users')
       .select('social_links')
-      .eq('id', req.user._id)
+      .eq('id', userId)
       .single();
 
     if (error) {
@@ -132,7 +127,7 @@ router.get('/status', auth, asyncHandler(async (req, res) => {
     sendSuccess(res, 'Status retrieved', 200, {
       connected,
       connectedAt,
-      configured: isConfigured()
+      configured: googleService.isConfigured()
     });
   } catch (dbError) {
     logger.error('Google OAuth status error', { error: dbError.message });

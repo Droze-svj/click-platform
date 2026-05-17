@@ -86,6 +86,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
           <h2 className="text-lg font-black tracking-tight text-[var(--text-main)] italic uppercase">The Mimic // Style Mirror</h2>
         </div>
         <button
+          type="button"
           onClick={onBack}
           className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors flex items-center gap-2"
         >
@@ -126,6 +127,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Upload File</span>
               </div>
               <button
+                type="button"
                 disabled={!url}
                 onClick={handleStartAnalysis}
                 className="p-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 disabled:hover:bg-indigo-600 transition-all flex flex-col items-center justify-center gap-3 shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)]"
@@ -210,6 +212,7 @@ const StyleMimicView: React.FC<StyleMimicViewProps> = ({ onStyleMirror, onBack }
             </div>
 
             <button
+              type="button"
               onClick={() => onStyleMirror(extractedProfile)}
               className="w-full bg-white text-black py-4 rounded-full text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-3 group"
             >

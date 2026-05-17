@@ -215,6 +215,7 @@ export default function ColorScopes({ videoElement, filters }: ColorScopesProps)
             const Icon = scope.icon
             return (
               <button
+                type="button"
                 key={scope.id}
                 onClick={() => setActiveScope(scope.id as any)}
                 className={`px-2 py-1 text-xs rounded transition-colors ${activeScope === scope.id

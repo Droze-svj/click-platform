@@ -44,6 +44,7 @@ const SurgeHistoryLedger: React.FC<SurgeHistoryLedgerProps> = ({ entries, onClos
           </p>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="px-6 py-2 rounded-full border border-white/10 hover:bg-white/5 transition-colors text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white"
         >

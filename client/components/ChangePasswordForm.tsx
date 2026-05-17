@@ -1,10 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import axios from 'axios'
+import { apiPost, handleApiError } from '../lib/api'
 import { Eye, EyeOff, Lock } from 'lucide-react'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 export default function ChangePasswordForm() {
   const [formData, setFormData] = useState({
@@ -56,18 +54,13 @@ export default function ChangePasswordForm() {
 
     setSaving(true)
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-
-      await axios.put(
-        `${API_URL}/user/change-password`,
-        {
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-        },
-        {
-        }
-      )
+      // The server endpoint is POST /api/auth/change-password — the previous
+      // PUT /api/user/change-password 404'd silently because no such route
+      // existed. apiPost auto-attaches the Bearer token from localStorage.
+      await apiPost('/auth/change-password', {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      })
 
       setSuccess(true)
       setFormData({
@@ -78,7 +71,7 @@ export default function ChangePasswordForm() {
 
       setTimeout(() => setSuccess(false), 3000)
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to change password')
+      setError(handleApiError(error) || 'Failed to change password')
     } finally {
       setSaving(false)
     }
@@ -99,20 +92,22 @@ export default function ChangePasswordForm() {
       )}
 
       <div>
-        <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+        <label htmlFor="currentPassword" className="text-sm font-medium mb-2 flex items-center gap-2">
           <Lock className="w-4 h-4" />
           Current Password
         </label>
         <div className="relative">
           <input
+            id="currentPassword"
             type={showPasswords.current ? 'text' : 'password'}
             value={formData.currentPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
             required
+            placeholder="Enter current password"
             className="w-full px-4 py-2 pr-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
           />
           <button
-            type="button"
+           type="button"
             onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
@@ -122,17 +117,19 @@ export default function ChangePasswordForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">New Password</label>
+        <label htmlFor="newPassword" className="block text-sm font-medium mb-2">New Password</label>
         <div className="relative">
           <input
+            id="newPassword"
             type={showPasswords.new ? 'text' : 'password'}
             value={formData.newPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
             required
+            placeholder="Enter new password"
             className="w-full px-4 py-2 pr-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
           />
           <button
-            type="button"
+           type="button"
             onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
@@ -145,17 +142,19 @@ export default function ChangePasswordForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">Confirm New Password</label>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">Confirm New Password</label>
         <div className="relative">
           <input
+            id="confirmPassword"
             type={showPasswords.confirm ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
             required
+            placeholder="Confirm new password"
             className="w-full px-4 py-2 pr-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
           />
           <button
-            type="button"
+           type="button"
             onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
@@ -164,8 +163,7 @@ export default function ChangePasswordForm() {
         </div>
       </div>
 
-      <button
-        type="submit"
+      <button        type="submit"
         disabled={saving}
         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
       >

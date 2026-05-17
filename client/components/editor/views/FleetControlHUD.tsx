@@ -112,7 +112,8 @@ export const FleetControlHUD: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
+                        type="button"
                         onClick={syncFleet}
                         disabled={isSyncing}
                         className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/50 text-white transition-all group"

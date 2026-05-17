@@ -73,6 +73,7 @@ export default function IdeationHub() {
         <div className="flex gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/10">
           {(['gaps', 'forcing', 'autopsy'] as const).map((tab) => (
             <button
+              type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -196,7 +197,8 @@ export default function IdeationHub() {
                 <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8 flex-1">
                   {framework.desc}
                 </p>
-                <button 
+                <button
+                  type="button"
                   title={`Apply ${framework.name} framework`}
                   className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-all"
                 >
@@ -233,6 +235,7 @@ export default function IdeationHub() {
                     className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all"
                   />
                   <button
+                    type="button"
                     onClick={handleAutopsy}
                     disabled={isAnalyzing || !competitorUrl}
                     className="px-10 py-5 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-600/20"

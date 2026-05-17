@@ -152,6 +152,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.06)', overflowX: 'auto' }}>
         {SECTIONS.map(s => (
           <button
+            type="button"
             key={s.id}
             onClick={() => setActiveSection(s.id)}
             style={{
@@ -188,6 +189,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
+                      type="button"
                       onClick={() => copyHook(hook)}
                       style={{ padding: '3px 10px', background: 'rgba(0,200,100,0.12)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: 5, color: '#00c864', fontSize: 11, cursor: 'pointer' }}
                     >
@@ -195,6 +197,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
                     </button>
                     {onHookSelect && (
                       <button
+                        type="button"
                         onClick={() => onHookSelect(hook)}
                         style={{ padding: '3px 10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 5, color: 'rgba(255,255,255,0.6)', fontSize: 11, cursor: 'pointer' }}
                       >
@@ -254,6 +257,7 @@ export default function NicheStrategyPanel({ currentNiche = 'fitness', currentPl
                   <span style={{ fontSize: 16 }}>📣</span>
                   <div style={{ flex: 1, color: '#e0e0ff', fontSize: 12 }}>{cta}</div>
                   <button
+                    type="button"
                     onClick={() => copyHook(cta)}
                     style={{ padding: '3px 8px', background: 'rgba(0,200,100,0.1)', border: '1px solid rgba(0,200,100,0.2)', borderRadius: 4, color: '#00c864', fontSize: 11, cursor: 'pointer' }}
                   >

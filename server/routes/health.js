@@ -97,100 +97,161 @@ async function checkQueues() {
   }
 }
 
+// Promise wrapper that resolves to a graceful "timeout" entry rather than
+// rejecting — so a single hung dep never tears down the whole probe.
+function withTimeout(p, ms, label) {
+  return Promise.race([
+    p,
+    new Promise((resolve) => setTimeout(() => resolve({ connected: false, error: `${label} timed out after ${ms}ms` }), ms)),
+  ]);
+}
+
+// Mongo probe — reads readyState off the global mongoose connection so we
+// don't open a second one per request.
+async function checkMongo() {
+  try {
+    const mongoose = require('mongoose');
+    const readyState = mongoose.connection?.readyState; // 1 = connected
+    const STATES = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+    if (readyState === 1) {
+      // Treat readyState=1 as healthy. We previously did an admin.ping()
+      // here but it occasionally hangs on Atlas-backed deployments even
+      // when reads/writes succeed — false negatives are worse than no
+      // active probe at all. If a finer check is needed, add a 1-doc
+      // collection ping with its own short timeout instead.
+      return { connected: true, readyState: 'connected' };
+    }
+    return { connected: false, readyState: STATES[readyState] || `unknown(${readyState})` };
+  } catch (err) {
+    return { connected: false, error: err.message };
+  }
+}
+
+// Gemini ping — cached for 60s so we don't slam the API with every
+// readiness check. Failures are non-fatal: we surface them but the
+// readiness gate doesn't trip on Gemini being down.
+let geminiCache = { at: 0, result: null };
+async function checkGemini() {
+  const now = Date.now();
+  if (geminiCache.result && now - geminiCache.at < 60_000) {
+    return { ...geminiCache.result, cached: true };
+  }
+  try {
+    const { aiCall } = require('../utils/aiRouter');
+    const start = Date.now();
+    const r = await aiCall('ok', { maxTokens: 5, taskKind: 'fast' });
+    const result = r?.text
+      ? { connected: true, provider: r.provider, latency: `${Date.now() - start}ms` }
+      : { connected: false, error: r?.error || 'empty response' };
+    geminiCache = { at: now, result };
+    return result;
+  } catch (err) {
+    const result = { connected: false, error: err.message };
+    geminiCache = { at: now, result };
+    return result;
+  }
+}
+
 /**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Health check endpoint
- *     tags: [Health]
+ * GET /api/health
+ *
+ * Deep readiness probe. Returns HTTP 503 when any *required* dependency
+ * is unreachable (Supabase, Mongo, Redis). Gemini failures are
+ * surfaced but do NOT trip readiness — the app still functions for
+ * non-AI surfaces when Gemini is rate-limited.
  */
 router.get('/', async (req, res) => {
   const startTime = Date.now();
+  const PROBE_TIMEOUT_MS = 5000;
 
-  try {
-    // Simplified health check - always return OK for uptime monitoring
-    let dbStatus = { connected: false, error: 'Not checked' };
-    let redisStatus = { enabled: false, status: 'Not checked' };
+  const [dbStatus, mongoStatus, redisStatus, geminiStatus] = await Promise.all([
+    withTimeout(checkDatabase(), PROBE_TIMEOUT_MS, 'Supabase'),
+    withTimeout(checkMongo(),    PROBE_TIMEOUT_MS, 'Mongo'),
+    withTimeout(checkRedis(),    PROBE_TIMEOUT_MS, 'Redis'),
+    withTimeout(checkGemini(),   PROBE_TIMEOUT_MS, 'Gemini'),
+  ]);
 
-    try {
-      [dbStatus, redisStatus] = await Promise.all([
-        checkDatabase(),
-        checkRedis()
-      ]);
-    } catch (dbError) {
-      // Ignore database errors for uptime monitoring
-      dbStatus = { connected: false, error: dbError.message };
-    }
+  // Readiness rule: if ANY required dep is down, the service is not
+  // ready. Redis is required when REDIS_URL is configured (it gates the
+  // workers). Gemini is non-blocking.
+  const supabaseRequired = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const mongoRequired = !!process.env.MONGODB_URI;
+  const redisRequired = !!process.env.REDIS_URL && !/localhost|127\.0\.0\.1/.test(process.env.REDIS_URL || '');
 
-    const health = {
-      status: 'ok', // Always report OK for uptime monitoring
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      responseTime: `${Date.now() - startTime}ms`,
-      environment: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '1.0.0',
-      memory: {
-        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
-        unit: 'MB'
+  const failures = [];
+  if (supabaseRequired && dbStatus.connected === false) failures.push('supabase');
+  if (mongoRequired && mongoStatus.connected === false) failures.push('mongo');
+  if (redisRequired && redisStatus.connected === false) failures.push('redis');
+
+  const httpCode = failures.length === 0 ? 200 : 503;
+  const overall = failures.length === 0 ? 'ok' : 'degraded';
+
+  const health = {
+    status: overall,
+    failures,
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    responseTime: `${Date.now() - startTime}ms`,
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0',
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      unit: 'MB',
+    },
+    deps: {
+      supabase: dbStatus,
+      mongo: mongoStatus,
+      redis: redisStatus,
+      gemini: geminiStatus,
+    },
+    integrations: {
+      sentry: {
+        enabled: !!process.env.SENTRY_DSN,
+        status: process.env.SENTRY_DSN ? 'configured' : 'not configured',
       },
-      integrations: {
-        sentry: {
-          enabled: !!process.env.SENTRY_DSN,
-          status: process.env.SENTRY_DSN ? 'configured' : 'not configured',
-        },
-        s3: {
-          enabled: isCloudStorageEnabled(),
-          status: isCloudStorageEnabled() ? 'configured' : 'using local storage',
-          bucket: process.env.AWS_S3_BUCKET || null,
-        },
-        oauth: {
-          twitter: {
-            enabled: twitterOAuth.isConfigured(),
-            configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET),
-          },
-          youtube: {
-            enabled: !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET),
-          },
-          linkedin: {
-            enabled: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
-          },
-          facebook: {
-            enabled: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
-          },
-          encryption: {
-            enabled: !!process.env.OAUTH_ENCRYPTION_KEY,
-            status: process.env.OAUTH_ENCRYPTION_KEY ? 'configured' : 'using default (INSECURE)',
-          },
-          tokenHealth: {
-            status: 'monitored',
-            frequency: '15m'
-          }
-        },
-        database: dbStatus,
-        redis: redisStatus,
-        queues: await checkQueues(),
-        system: {
-          ioLatency: `${Date.now() - startTime}ms`,
-          platform: process.platform,
-          arch: process.arch,
-          memoryUsage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB'
-        }
+      s3: {
+        enabled: isCloudStorageEnabled(),
+        status: isCloudStorageEnabled() ? 'configured' : 'using local storage',
+        bucket: process.env.AWS_S3_BUCKET || null,
       },
-    };
+      oauth: {
+        twitter:  { enabled: twitterOAuth.isConfigured() },
+        youtube:  { enabled: !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET) },
+        linkedin: { enabled: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) },
+        facebook: { enabled: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) },
+        google:   { enabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) },
+        encryption: {
+          enabled: !!process.env.OAUTH_ENCRYPTION_KEY,
+          status: process.env.OAUTH_ENCRYPTION_KEY ? 'configured' : 'using default (INSECURE)',
+        },
+      },
+      queues: await checkQueues().catch((err) => ({ status: 'error', message: err.message })),
+      system: {
+        ioLatency: `${Date.now() - startTime}ms`,
+        platform: process.platform,
+        arch: process.arch,
+        memoryUsage: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
+      },
+    },
+  };
 
-    // Always return 200 OK for uptime monitoring
-    res.status(200).json(health);
-  } catch (error) {
-    // Even if everything fails, return 200 OK for uptime monitoring
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      service: 'running',
-      error: error.message
-    });
-  }
+  res.status(httpCode).json(health);
+});
+
+/**
+ * GET /api/health/light
+ *
+ * Liveness probe — always 200 if the process is up. Use this for k8s
+ * livenessProbe so a transient Mongo blip doesn't trigger a pod restart.
+ * `/api/health` is the readiness probe.
+ */
+router.get('/light', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 /**

@@ -52,6 +52,7 @@ export default function ContentComparison({ original, edited, onClose }: Content
     return (
       <div className="p-4">
         <button
+          type="button"
           onClick={compare}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
@@ -77,6 +78,7 @@ export default function ContentComparison({ original, edited, onClose }: Content
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Content Comparison</h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >

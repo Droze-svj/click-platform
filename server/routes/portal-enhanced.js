@@ -20,7 +20,7 @@ const router = express.Router();
  * GET /api/client-portal/:portalId/activity
  * Get activity feed
  */
-router.get('/:portalId/activity', asyncHandler(async (req, res) => {
+router.get('/:portalId/activity', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { portalId } = req.params;
   const { limit = 50, offset = 0, types } = req.query;
 
@@ -57,9 +57,19 @@ router.get('/:portalId/activity', asyncHandler(async (req, res) => {
  * PUT /api/client-portal/:portalId/activity/:activityId/read
  * Mark activity as read
  */
-router.put('/:portalId/activity/:activityId/read', asyncHandler(async (req, res) => {
-  const { activityId } = req.params;
-  await PortalActivity.findByIdAndUpdate(activityId, { isRead: true });
+router.put('/:portalId/activity/:activityId/read', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
+  const { portalId, activityId } = req.params;
+  // Resource-ownership guard — the activityId must belong to the same
+  // portal the caller is authorised against. Without this, a logged-in
+  // user could mark any activity row read by guessing its id.
+  const updated = await PortalActivity.findOneAndUpdate(
+    { _id: activityId, portalId },
+    { isRead: true },
+    { new: true },
+  );
+  if (!updated) {
+    return sendError(res, 'Activity not found for this portal', 404);
+  }
   sendSuccess(res, 'Activity marked as read', 200);
 }));
 
@@ -67,7 +77,7 @@ router.put('/:portalId/activity/:activityId/read', asyncHandler(async (req, res)
  * PUT /api/client-portal/:portalId/activity/read-all
  * Mark all activities as read
  */
-router.put('/:portalId/activity/read-all', asyncHandler(async (req, res) => {
+router.put('/:portalId/activity/read-all', auth, requireWorkspaceAccess(), asyncHandler(async (req, res) => {
   const { portalId } = req.params;
   await PortalActivity.updateMany({ portalId, isRead: false }, { isRead: true });
   sendSuccess(res, 'All activities marked as read', 200);

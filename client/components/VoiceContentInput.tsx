@@ -108,6 +108,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
     <div className="flex items-center gap-2">
       {!isRecording ? (
         <button
+          type="button"
           onClick={startRecording}
           disabled={disabled || isProcessing}
           className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
@@ -121,6 +122,7 @@ export default function VoiceContentInput({ onTranscript, onError, disabled }: V
         </button>
       ) : (
         <button
+          type="button"
           onClick={stopRecording}
           className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 animate-pulse transition-all"
           title="Stop recording"

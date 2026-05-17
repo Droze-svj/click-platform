@@ -94,10 +94,12 @@ import KeyboardShortcutsHelp from './editor/KeyboardShortcutsHelp'
 import { InsightsSidebar } from './editor/InsightsSidebar'
 import EditorHUD from './editor/EditorHUD'
 import QuickActionsBar from './editor/QuickActionsBar'
-import CommandK from './editor/CommandK'
+import SmartCleanupPanel from './editor/SmartCleanupPanel'
+import CommandK from './CommandK'
 import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
+import { useBrandKit } from './BrandKit'
 import {
   VideoFilter,
   TextOverlay,
@@ -209,10 +211,23 @@ function loadLayoutPreferences(): EditorLayoutPreferences {
   }
 }
 
-const glassStyle = "bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 shadow-sm transition-all duration-300 rounded-[2rem]"
+const glassStyle = "bg-black/40 backdrop-blur-3xl border-2 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 rounded-[3rem]"
 
-const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; videoId?: string; initialState?: any }> = ({ videoUrl, videoPath, videoId, initialState }) => {
+const ModernVideoEditor: React.FC<{
+  videoUrl?: string;
+  videoPath?: string;
+  videoId?: string;
+  initialState?: any;
+  /**
+   * Deep-link from /dashboard/tools cards. When set, the SmartCleanup
+   * panel auto-opens on mount with this tool pre-selected so the user
+   * never sees the "what now?" gap between picking the AI tool and
+   * landing in the editor.
+   */
+  initialAiTool?: 'silence' | 'fillers' | 'edit-by-text' | null;
+}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool }) => {
   const { showToast } = useToast()
+  const brandKit = useBrandKit()
   const actualVideoUrl = videoUrl || videoPath
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
@@ -248,6 +263,13 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   const [contentPanelCollapsed, setContentPanelCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [commandKOpen, setCommandKOpen] = useState(false)
+  // Smart cleanup panel — opens an in-editor modal that runs the
+  // /video/tools/* AI ops (silence cut, filler removal, edit-by-text)
+  // on the currently loaded videoId without leaving the workspace.
+  // initialAiTool deep-links from /dashboard/tools cards so the panel
+  // opens already focused on the picked tool.
+  const [smartCleanupOpen, setSmartCleanupOpen] = useState<boolean>(!!initialAiTool)
+  const [smartCleanupInitialTool, setSmartCleanupInitialTool] = useState<'silence' | 'fillers' | 'edit-by-text' | null>(initialAiTool || null)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
 
@@ -432,6 +454,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       else setTextOverlays(next)
     },
     duration: videoState.duration,
+    resetKey: videoId ?? null,
     showToast,
   })
 
@@ -1018,12 +1041,8 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     captureShadowTelemetry()
   }, [styleDNA, timelineSegments.length, setTextOverlays, captureShadowTelemetry, showToast])
 
-  // --- Mock Multiplayer Presence Data ---
-  const mockCollaborators = [
-     { id: '1', name: 'Sarah J.', role: 'Lead Editor', avatar: 'SJ', color: 'bg-emerald-500', status: 'Editing A-Roll' },
-     { id: '2', name: 'Mike T.', role: 'Sound Design', avatar: 'MT', color: 'bg-orange-500', status: 'Tweaking Audio Levels' },
-     { id: '3', name: 'Client_Acme', role: 'Reviewer', avatar: 'A', color: 'bg-indigo-500', status: 'Viewing' }
-  ]
+  // Real-time collaborators come from the socket presence system (future feature).
+  const mockCollaborators: Array<{ id: string; name: string; role: string; avatar: string; color: string; status: string }> = []
 
   // --- Handlers ---
   const handleApplyStyleProfile = useCallback((profile: StyleProfile) => {
@@ -1065,7 +1084,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
            ...prev,
            {
              id: watermarkId,
-             url: '/whop-logo-placeholder.png', // Replace with dynamic profile logo URL
+             url: brandKit.logoUrl || '/icons/icon-192x192.png',
              x: 85, y: 10, width: 10, height: 10,
              opacity: 0.8,
              startTime: 0,
@@ -1086,8 +1105,11 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
       (window as any).setMedianClipLength(neuralPacing)
     }
 
-    showToast(`Neural DNA Protocol Deployed: ${profile.name} (Pacing: ${neuralPacing.toFixed(1)}s)`, 'success')
-  }, [showToast, setCaptionStyle, setVideoFilters, setTextOverlays, videoState.duration, setImageOverlays])
+    showToast(`Applied ${profile.name} (pacing: ${neuralPacing.toFixed(1)}s)`, 'success')
+    // brandKit.logoUrl is read inside the watermark branch — listed in
+    // the dep array so the callback regenerates if the user updates
+    // their brand kit logo without leaving the editor.
+  }, [showToast, setCaptionStyle, setVideoFilters, setTextOverlays, videoState.duration, setImageOverlays, brandKit.logoUrl])
 
   /**
    * One-shot "Apply my learned style" — fed by QuickActionsBar after it
@@ -1132,136 +1154,42 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
 
 
-  const handleGenerateClips = useCallback(() => {
+  const handleGenerateClips = useCallback(async () => {
     if (!transcript) {
       showToast('Neural transcript required for synthesis', 'error')
       return
     }
-    showToast('Synthesizing Stylized Variations...', 'info')
-
-    // V4: Enhanced Stylized Mock Clips
-    const mockClips: AutoEditClip[] = [
-      {
-        id: `clip-trending-${Date.now()}`,
-        name: 'Trending Hook (Fast-Paced)',
-        segments: [
-          {
-            id: 'seg-ai-hook-1',
-            startTime: 0,
-            endTime: 3.5,
-            duration: 3.5,
-            type: 'video',
-            name: 'High-Retention Hook',
-            color: '#F43F5E',
-            track: 0,
-            sourceUrl: '/videos/hook_variation_1_v4.mp4'
-          }
-        ],
-        engagementScore: {
-          overall: 96,
-          viralPotential: 98,
-          hookStrength: 99,
-          sentimentDensity: 85,
-          trendAlignment: 95,
-          retentionHeatmap: Array(20).fill(0).map(() => Math.floor(Math.random() * 20) + 80)
-        },
-        metadata: {
-          titles: {
-             curiosityGap: 'This One Secret Changes Everything...',
-             seoWinner: 'Neural Excellence in Video Editing',
-             minimalist: 'Neural Control'
-          },
-          description: {
-             summary: 'Unlock the neural potential of your content with this one-click strategy.',
-             timestamps: [],
-             hashtags: ['#viral', '#hacks', '#neural']
-          },
-          abTestSuggestions: []
+    if (!videoId) {
+      showToast('No video loaded — upload a video first', 'error')
+      return
+    }
+    showToast('Synthesizing AI variations...', 'info')
+    try {
+      const res: any = await apiPost('/video/ai-editing/auto-edit', {
+        videoId: videoId,
+        editingOptions: {
+          transcript,
+          generateClips: true,
+          clipCount: 3,
         }
-      },
-      {
-        id: `clip-insight-${Date.now()}`,
-        name: 'Deep Insight (Educational)',
-        segments: [
-          {
-            id: 'seg-ai-insight-1',
-            startTime: 10,
-            endTime: 25,
-            duration: 15,
-            type: 'video',
-            name: 'Core Value Proposition',
-            color: '#6366F1',
-            track: 0,
-            sourceUrl: '/videos/educational_variation_v4.mp4'
-          }
-        ],
-        engagementScore: {
-          overall: 89,
-          viralPotential: 75,
-          hookStrength: 82,
-          sentimentDensity: 94,
-          trendAlignment: 80,
-          retentionHeatmap: Array(20).fill(0).map(() => Math.floor(Math.random() * 30) + 60)
-        },
-        metadata: {
-          titles: {
-             curiosityGap: 'The Science of Semantic Retention',
-             seoWinner: 'AI Semantic Video Mastery',
-             minimalist: 'Semantic AI'
-          },
-          description: {
-             summary: 'A deep dive into how AI processes high-authority narrative clusters.',
-             timestamps: [],
-             hashtags: ['#education', '#science', '#ai']
-          },
-          abTestSuggestions: []
-        }
-      },
-      {
-        id: `clip-story-${Date.now()}`,
-        name: 'Viral Storyteller (Narrative)',
-        segments: [
-          {
-            id: 'seg-ai-story-1',
-            startTime: 5,
-            endTime: 20,
-            duration: 15,
-            type: 'video',
-            name: 'Narrative Arc',
-            color: '#8B5CF6',
-            track: 0,
-            sourceUrl: '/videos/story_variation_v4.mp4'
-          }
-        ],
-        engagementScore: {
-          overall: 92,
-          viralPotential: 88,
-          hookStrength: 90,
-          sentimentDensity: 95,
-          trendAlignment: 85,
-          retentionHeatmap: Array(20).fill(0).map(() => Math.floor(Math.random() * 25) + 75)
-        },
-        metadata: {
-          titles: {
-             curiosityGap: 'Why Most Creators Fail (The Narrative Loop)',
-             seoWinner: 'Mastering Viral Storytelling',
-             minimalist: 'Story Loops'
-          },
-          description: {
-             summary: 'Discover the hidden story structure behind every viral hit.',
-             timestamps: [],
-             hashtags: ['#storytelling', '#creators', '#growth']
-          },
-          abTestSuggestions: []
-        }
+      })
+      const serverClips: AutoEditClip[] = (res?.data?.clips || res?.clips || []).map((c: any, i: number) => ({
+        id: c.id || `clip-${Date.now()}-${i}`,
+        name: c.name || `Variation ${i + 1}`,
+        segments: c.segments || [],
+        engagementScore: c.engagementScore || { overall: c.viralScore || 80, viralPotential: 80, hookStrength: 80, sentimentDensity: 80, trendAlignment: 80, retentionHeatmap: [] },
+        metadata: c.metadata || { titles: { curiosityGap: c.caption || '', seoWinner: '', minimalist: '' }, description: { summary: '', timestamps: [], hashtags: c.hashtags || [] }, abTestSuggestions: [] },
+      }))
+      if (serverClips.length > 0) {
+        setAutoEditClips(serverClips)
+        showToast(`${serverClips.length} AI variation${serverClips.length === 1 ? '' : 's'} ready`, 'success')
+      } else {
+        showToast('No clips generated — try with a longer video or different settings', 'info')
       }
-    ]
-
-    setTimeout(() => {
-      setAutoEditClips(mockClips)
-      showToast('3 Neural Variations Synthesized', 'success')
-    }, 2000)
-  }, [transcript, showToast])
+    } catch {
+      showToast('Clip generation failed — check that the backend is running', 'error')
+    }
+  }, [transcript, videoId, showToast])
 
   const handleForgeMaster = useCallback(async (persona: string) => {
     showToast(`Neural Forge Initiated: Persona ${persona.toUpperCase()}`, 'info')
@@ -1411,6 +1339,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
     if (typeof window === 'undefined') return 340
     try { return parseInt(localStorage.getItem('click-editor-left-panel-w') || '340') || 340 } catch { return 340 }
   })
+  const [zenMode, setZenMode] = useState(false)
   const [rightPanelWidth, setRightPanelWidth] = useState(() => {
     if (typeof window === 'undefined') return 320
     try { return parseInt(localStorage.getItem('click-editor-right-panel-w') || '320') || 320 } catch { return 320 }
@@ -1537,6 +1466,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
           case 'b':
             e.preventDefault()
             updateLayout({ focusMode: 'balanced' })
+            break
+          case 'z':
+            e.preventDefault()
+            setZenMode(p => !p)
             break
         }
       }
@@ -1772,7 +1705,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden font-['Outfit'] selection:bg-indigo-500/30">
+    <div className="h-screen w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden font-['Outfit'] selection:bg-indigo-500/30 editor-auto">
 
       {/* Background nebula */}
       <motion.div
@@ -1780,7 +1713,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
         className="fixed inset-0 pointer-events-none opacity-30 mix-blend-screen z-0"
       >
         <div className="absolute top-1/4 left-1/4 w-[800px] h-[800px] bg-indigo-500/[0.08] blur-[160px] rounded-full animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[1000px] h-[1000px] bg-indigo-600/[0.05] blur-[200px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[1000px] h-[1000px] bg-indigo-600/[0.05] blur-[200px] rounded-full animate-pulse animation-delay-3000" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-screen h-screen bg-[var(--page-bg)]" />
       </motion.div>
 
@@ -1873,7 +1806,6 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
       {/* ── Horizontal chrome: sidebar + main ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden relative z-10">
-
         <EditorSidebar
           activeCategory={activeCategory}
           setActiveCategory={setActiveCategory}
@@ -1886,17 +1818,13 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
           videoDuration={videoState.duration}
         />
 
-        {/* ── Main workspace: HUD → content row → timeline ── */}
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative pt-[60px]">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative pt-[60px] editor-auto">
 
-          {/* Make It Viral CTA — single click, full edit recipe.
-              Pinned top-right of the workspace at z-50 so it floats
-              above the HUD without claiming layout space. */}
           <button
             type="button"
             onClick={handleMakeItViral}
             disabled={isMakingViral || !videoId}
-            className="absolute top-4 right-6 z-50 px-5 py-2.5 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white text-xs font-black uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.75)] hover:from-fuchsia-400 hover:to-indigo-400 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center gap-2"
+            className="absolute top-4 right-6 z-[60] px-5 py-2.5 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.18em] shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.75)] hover:from-fuchsia-400 hover:to-indigo-400 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center gap-2 border border-white/10 backdrop-blur-md"
             title="Run the one-click viral recipe — hook, cuts, B-roll, beat sync, CTA"
           >
             <span className="text-base leading-none">{isMakingViral ? '⟳' : '✨'}</span>
@@ -1925,21 +1853,28 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             onCommandK={() => setCommandKOpen(true)}
             styleDNA={styleDNA}
             onNormalizeStyle={handleStyleNormalize}
+            zenMode={zenMode}
+            setZenMode={setZenMode}
           />
 
-          {/* Quick-actions rail — single-tap shortcuts to the most-used
-              operations + 'Apply my style' that pulls the user's learned
-              style profile from /api/video/clips/style-insight and
-              applies the top color grade + caption style. Lives between
-              the HUD and the preview so it's always reachable. */}
+
+
           <QuickActionsBar
             setActiveCategory={setActiveCategory}
             onSplitAtPlayhead={handleSplitAtPlayhead}
             onApplyMyStyle={handleApplyMyStyle}
+            onOpenSmartCleanup={() => setSmartCleanupOpen(true)}
             showToast={showToast}
           />
 
-          {/* Real-time Heatmap - Sticky below HUD or float? Let's place it at the top of the content row */}
+          <SmartCleanupPanel
+            open={smartCleanupOpen}
+            videoId={videoId}
+            initialTool={smartCleanupInitialTool}
+            onClose={() => { setSmartCleanupOpen(false); setSmartCleanupInitialTool(null) }}
+            showToast={showToast}
+          />
+
           <div className="px-4 pt-2 relative z-20">
             <AnimatePresence>
               {(activeCategory === 'insights' || activeCategory === 'ai-edit') && (
@@ -1960,11 +1895,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             </AnimatePresence>
           </div>
 
-          {/* ─── Quick-Access Control Strip (below HUD, above content) ─── */}
           <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 gap-3 border-b border-white/[0.04]">
-            {/* Left: Panel toggle + layout mode pills */}
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setContentPanelCollapsed(p => !p)}
                 title={contentPanelCollapsed ? 'Show tool panel' : 'Hide tool panel'}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
@@ -1977,11 +1911,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 <span className="hidden sm:block">{contentPanelCollapsed ? 'Show Panel' : 'Hide Panel'}</span>
               </button>
 
-              {/* Layout mode quick-switch */}
               <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
                 {(['balanced', 'preview', 'timeline'] as const).map((mode) => (
                   <button
-                    type="button"
+                   type="button"
                     key={mode}
                     onClick={() => updateLayout({ focusMode: mode })}
                     title={`${mode} layout`}
@@ -1997,11 +1930,10 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 ))}
               </div>
 
-              {/* Timeline density quick-switch — persists via layoutPrefs.timelineDensity */}
               <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
                 {(['compact', 'comfortable', 'expanded'] as const).map((d) => (
                   <button
-                    type="button"
+                   type="button"
                     key={d}
                     onClick={() => updateLayout({ timelineDensity: d })}
                     title={`${d} timeline density`}
@@ -2017,11 +1949,8 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 ))}
               </div>
 
-              {/* Make-It-Great pipeline — single autonomous run that chains
-                   analyze → suggestions → auto-edit → posting window. Each
-                   stage uses the workflow's niche/platform for personalisation. */}
               <button
-                type="button"
+               type="button"
                 disabled={creatorPipeline.running || !videoId}
                 onClick={() => {
                   if (!videoId) return
@@ -2045,7 +1974,6 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 <span className="hidden sm:block">{creatorPipeline.running ? 'Working…' : 'Make it great'}</span>
               </button>
 
-              {/* Inline stage indicator while pipeline runs */}
               {creatorPipeline.running && creatorPipeline.stages.length > 0 && (
                 <div className="hidden md:flex items-center gap-1 text-[8px] font-mono text-slate-500 ml-1">
                   {creatorPipeline.stages.map((s: PipelineStage) => (
@@ -2066,9 +1994,9 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               )}
             </div>
 
-            {/* Center: Playback controls */}
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setVideoState(prev => ({ ...prev, currentTime: Math.max(0, prev.currentTime - 5) }))}
                 title="Back 5s"
                 className="w-7 h-7 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all text-[9px] font-black"
@@ -2076,6 +2004,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 ‹5
               </button>
               <button
+                type="button"
                 onClick={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
                 title={videoState.isPlaying ? 'Pause' : 'Play'}
                 className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transition-all"
@@ -2085,6 +2014,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   : <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-white ml-0.5" />}
               </button>
               <button
+                type="button"
                 onClick={() => setVideoState(prev => ({ ...prev, currentTime: Math.min(prev.duration, prev.currentTime + 5) }))}
                 title="Forward 5s"
                 className="w-7 h-7 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all text-[9px] font-black"
@@ -2093,9 +2023,9 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
               </button>
             </div>
 
-            {/* Right: Props panel + zoom */}
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => setPropertiesPanelOpen(p => !p)}
                 title={propertiesPanelOpen ? 'Hide Properties' : 'Show Properties'}
                 className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
@@ -2107,16 +2037,20 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 <span className="hidden sm:block">{propertiesPanelOpen ? 'Hide Props' : 'Show Props'}</span>
                 <Layers className="w-3 h-3 rotate-90" />
               </button>
+              <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Uplink: Live</span>
             </div>
           </div>
+        </div>
 
-          {/* ── Content row: tool panel LEFT + video preview RIGHT ── */}
+        {/* ── Neural Command Input (Center) ── */}
+
           <div className="flex-1 min-h-0 flex flex-row overflow-hidden gap-4 px-4 pb-4">
 
-            {/* Tool panel — resizable, collapsible */}
             <div
               className={`flex-shrink-0 flex flex-col overflow-hidden transition-all duration-300 ${
-                contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline'
+                contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' || zenMode
                   ? 'opacity-0 pointer-events-none translate-y-full md:translate-y-0 md:w-0'
                   : 'opacity-100 translate-y-0'
               } ${
@@ -2125,7 +2059,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   : 'relative'
               }`}
               style={{
-                width: viewportWidth < 768 ? '100%' : (contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' ? 0 : clampedLeftPanelWidth),
+                width: viewportWidth < 768 ? '100%' : (contentPanelCollapsed || layoutPrefs.focusMode === 'preview' || layoutPrefs.focusMode === 'timeline' || zenMode ? 0 : clampedLeftPanelWidth),
                 minWidth: 0,
                 paddingBottom: viewportWidth < 768 ? 'env(safe-area-inset-bottom)' : 0
               }}
@@ -2138,17 +2072,19 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   <div className="w-12 h-1.5 bg-white/20 rounded-full" />
                 </div>
               )}
-              <div className={`glass-neural overflow-hidden flex flex-col h-full border-white/5 shadow-2xl ${viewportWidth < 768 ? 'rounded-none border-none bg-transparent shadow-none' : 'rounded-[2.5rem]'}`}>
+              <div className={`overflow-hidden flex flex-col h-full bg-surface-900 border border-surface-800 ${viewportWidth < 768 ? 'rounded-none border-none bg-transparent' : 'rounded-xl shadow-lg'}`}>
                 <div className="flex-shrink-0 px-6 py-4 border-b border-surface-200 dark:border-surface-800 bg-surface-100 dark:bg-surface-900">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
-                      <button 
+                      <button
+                        type="button"
                         onClick={() => setActiveCategory('edit')}
                         className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory !== 'ai' && activeCategory !== 'predict' ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]' : 'text-slate-500 hover:text-white'}`}
                       >
                         MANUAL OVERRIDE
                       </button>
-                      <button 
+                      <button
+                        type="button"
                         onClick={() => setActiveCategory('ai')}
                         className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'ai' || activeCategory === 'predict' ? 'bg-fuchsia-600 text-white shadow-[0_0_20px_rgba(192,38,211,0.4)]' : 'text-slate-500 hover:text-white'}`}
                       >
@@ -2158,23 +2094,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                     </div>
                   </div>
                   
-                  <div className={`flex items-center gap-2 ${viewportWidth < 768 ? 'flex-nowrap overflow-x-auto custom-scrollbar pb-1' : 'flex-wrap'}`}>
-                    {WORKFLOW_STEPS.filter(step => (activeCategory === 'ai' || activeCategory === 'predict') ? ['ai', 'predict', 'intelligence', 'export'].includes(step.id) : !['ai', 'predict'].includes(step.id)).map((step) => (
-                      <button
-                        key={step.id}
-                        onClick={() => setActiveCategory(step.id)}
-                        title={`Navigate to ${step.label} section`}
-                        className={`px-4 py-2 rounded-xl text-[9px] whitespace-nowrap font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${
-                          activeCategory === step.id
-                            ? 'bg-white/10 text-white border border-white/20 shadow-lg'
-                            : 'text-slate-500 border border-transparent hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {visitedWorkflowSteps.has(step.id) && <div className="w-1 h-1 rounded-full bg-current" />}
-                        {step.label}
-                      </button>
-                    ))}
-                  </div>
+
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
                   <AnimatePresence mode="wait">
@@ -2204,7 +2124,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
 
             {/* Video preview — flex-1 fills all remaining space */}
             <div
-              className={`relative overflow-hidden rounded-[2.5rem] glass-neural border-white/5 shadow-2xl ${
+              className={`relative overflow-hidden rounded-xl bg-surface-900 border border-surface-800 shadow-lg ${
                 layoutPrefs.focusMode === 'timeline' ? 'min-h-[120px] flex-1' : 'flex-1 min-h-0'
               }`}
             >
@@ -2273,6 +2193,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 <div className="flex items-center gap-3 px-4 py-2 bg-surface-100 dark:bg-surface-900 rounded-2xl border border-surface-200 dark:border-surface-800 pointer-events-auto shadow-sm">
                   {/* Volume */}
                   <button
+                    type="button"
                     onClick={() => setVideoState(prev => ({ ...prev, isMuted: !prev.isMuted }))}
                     title={videoState.isMuted ? 'Unmute' : 'Mute'}
                     className="text-slate-400 hover:text-white transition-colors text-[11px]"
@@ -2292,6 +2213,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   <div className="flex items-center gap-1">
                     {[0.5, 1, 1.5, 2].map(s => (
                       <button
+                        type="button"
                         key={s}
                         onClick={() => setPlaybackSpeed(s)}
                         className={`px-1.5 py-0.5 rounded text-[9px] font-black transition-all ${
@@ -2316,8 +2238,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
           } ${
             layoutPrefs.focusMode === 'timeline' ? '!h-[400px] !min-h-[300px]' : ''
           }`}>
-            <div className="glass-neural flex-1 min-h-0 rounded-[2.5rem] border-white/5 p-4 flex flex-col gap-3 overflow-hidden shadow-2xl relative">
-              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+            <div className="bg-surface-900 flex-1 min-h-0 rounded-xl border border-surface-800 p-3 flex flex-col gap-2 overflow-hidden shadow-lg relative">
               <div className="flex items-center justify-between gap-4 relative z-10 px-2 flex-shrink-0">
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
@@ -2331,6 +2252,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                 </div>
                 <div className="flex items-center gap-4">
                   <button
+                    type="button"
                     onClick={() => setSnapToKeyframes((prev) => !prev)}
                     title="Toggle neural snapping to keyframes"
                     className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${snapToKeyframes ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 border border-white/5 text-slate-500 hover:text-white'}`}
@@ -2341,6 +2263,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
                   <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-2xl border border-white/5">
                     {[0.5, 1, 2].map((s) => (
                       <button
+                        type="button"
                         key={s}
                         onClick={() => setPlaybackSpeed(s)}
                         title={`Set playback speed to ${s}x`}
@@ -2440,6 +2363,7 @@ const ModernVideoEditor: React.FC<{ videoUrl?: string; videoPath?: string; video
             setTimelineSegments={setTimelineSegments}
             selectedSegmentId={selectedSegmentId}
             transcript={transcript}
+            zenMode={zenMode}
           />
 
           {/* Inspector — quick-edit panel for the active selection. Renders to the

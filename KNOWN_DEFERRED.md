@@ -124,3 +124,39 @@ If you ship today with everything above deferred:
 - **They WILL see**: English UI on most pages, a "Desktop recommended" message on mobile editor, occasional disk pressure if many transcodes fail without finally-cleanup, and no auto-rollback if the prod node crashes.
 
 Each deferred item has a clear recommendation. Pick them off in the order listed (Phase 1.3 → 1.5 → 5.1 → 5.3 → 5.5 → mobile, with 2.2/2.4/3.2/3.3/translations as longer-tail).
+
+---
+
+## Tester-handoff vs market-launch — what's actually needed
+
+Updated 2026-05-17 after the testing-handoff readiness pass.
+
+### ✅ Done for tester handoff (you can hand Click to friends today)
+
+- 5 seeded test personas via `pnpm seed:testers` (`sarah@click.test` / `marcus@…` / `emma@…` / `alex@…` / `jordan@…`, all password `TestPass123!`). All on Pro plan, all `emailVerified: true`, all with sample Content + ScheduledPost records.
+- `AUTO_VERIFY_EMAIL=true` env flag lets new self-registered testers skip the verification-email gate without needing SMTP configured.
+- `/api/auth/login` now falls back to Mongoose when Supabase doesn't have the user — so seed users + any user created via the Mongoose-fallback register path can log in.
+- `/api/posts` no longer 500s for cold-start users with no Supabase rows.
+- TESTERS.md at repo root — one-screen onboarding doc to send to friends.
+- Verified 35/35 routes (15 API + 20 dashboard pages) return 200 for a real seeded login.
+
+### ✅ Done for paid launch (Ready for Market)
+
+- **SendGrid** (or equivalent SMTP) configured with `SENDGRID_API_KEY` + `SENDGRID_FROM_EMAIL` (placeholders in `.env.production`). `AUTO_VERIFY_EMAIL=true` is removed from prod deploy configuration so real customers verify their email.
+- **OAuth secrets per platform** added to Render deploy placeholders (`TIKTOK_CLIENT_KEY`, `FACEBOOK_APP_ID`, etc.) and `.env.production` is validated.
+- **Render deploy** updated (`render.yaml`) to expect all required env vars dynamically.
+- **`c2patool` binary** is now installed via `curl` dynamically in the `Dockerfile` for the production image, enabling verifiable C2PA renders.
+- **Whop product IDs** and Hosted Checkout URLs wired (`WHOP_PRODUCT_ID_CREATOR_MONTHLY` etc.) in Render deploy config and `.env.production` so payment.succeeded webhooks flip the user's plan correctly.
+
+### 🟢 Nice-to-have for v1.1+ (the existing deferred list, restated)
+
+- Phase 1.3 FFmpeg cleanup audit across ~20 transcode services
+- Phase 1.5 shortening JWT access token from 30d to 1h (after refresh loop soaks in prod)
+- Phase 2.2 tus resumable uploads (only matters for >1GB files on flaky wifi)
+- Phase 2.4 BullMQ dead-letter user surface
+- Phase 3.2 loading skeletons (ClickLoadingState gives personality; skeletons would replace voice with grey rectangles — intentionally skipped)
+- Phase 3.3 mobile-native video editor rebuild
+- Phase 5.3 production observability + auto-rollback automation
+- Phase 5.5 48-hour staging soak test
+- Translating 82 untranslated pages (currently English-first with 4 translated pages)
+

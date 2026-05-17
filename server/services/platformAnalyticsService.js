@@ -489,11 +489,23 @@ async function syncTikTokAnalytics(userId, postId, platformPostId) {
       if (apiErr.response?.status === 401 || apiErr.response?.data?.error?.code === 40101) {
         throw apiErr;
       }
-      logger.warn('TikTok video/list API unavailable; skipping sync (no fabricated data)', {
+      logger.warn('TikTok video/list API unavailable; marking as zero-engagement so cron retries later', {
         error: apiErr.message,
         platformPostId,
       });
-      return null;
+      // Returning `null` previously left posts with `lastAnalyticsSync: null`
+      // forever — the ingestion cron's `$or` clause never picked them up
+      // again. Return a zero-engagement snapshot with a recent
+      // syncedAt so the cron's "stale" filter eventually re-tries.
+      return {
+        platform: 'tiktok',
+        engagement: 0,
+        impressions: 0,
+        reach: 0,
+        engagementBreakdown: { likes: 0, comments: 0, shares: 0, views: 0 },
+        syncedAt: new Date(),
+        syncError: apiErr.message,
+      };
     }
   } catch (error) {
     logger.error('TikTok analytics sync error', { error: error.message, userId, postId });

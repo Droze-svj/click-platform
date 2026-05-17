@@ -8,7 +8,9 @@ import { ToastProvider } from '../contexts/ToastContext';
 import { WorkflowProvider } from '../contexts/WorkflowContext';
 import { PreferencesProvider } from '../hooks/usePreferences';
 import { TranslationProvider } from '../hooks/useTranslation';
+import { ThemeProvider } from '../components/ThemeProvider';
 import ToastContainer from '../components/ToastContainer';
+import { CookieConsent } from '../components/CookieConsent';
 import LocaleSync from '../components/LocaleSync';
 
 // Body default
@@ -53,14 +55,13 @@ export default function RootLayout({
 }) {
   const fontVars = `${inter.variable} ${playfair.variable} ${caveat.variable} ${jetbrains.variable} ${vt323.variable}`;
   return (
-    <html lang="en" className={fontVars}>
+    <html lang="en" className={fontVars} suppressHydrationWarning>
       <head>
-        <title>Click — Content Intelligence for High-Velocity Creators</title>
+        <title>Click — AI video editor + multi-platform scheduler for creators</title>
         <meta
           name="description"
-          content="Click is the premium command center for high-velocity creators. Niche-aware AI auto-edits, predicts retention, and lands every clip on every platform — automatically."
+          content="Turn one raw clip into a week of niche-tuned posts. Click edits, captions, and schedules to TikTok, Reels, Shorts, X, and LinkedIn — and learns from every post you ship."
         />
-        <meta name="theme-color" content="#050505" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
         {/* Preconnect to Google Fonts CDN — next/font already preloads
@@ -68,38 +69,66 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
 
-        <meta property="og:title" content="Click — Content Intelligence" />
+        <meta property="og:title" content="Click — AI video editor + multi-platform scheduler" />
         <meta
           property="og:description"
-          content="Niche-aware AI auto-edits, retention forecasts, and omni-channel publishing for high-velocity creators."
+          content="One clip in. A week of niche-tuned posts out. Click edits, captions, and publishes to every platform — and learns from each post you ship."
         />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/opengraph-image" />
 
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Click — Content Intelligence" />
+        <meta name="twitter:title" content="Click — AI video editor + multi-platform scheduler" />
         <meta
           name="twitter:description"
-          content="Niche-aware AI auto-edits, retention forecasts, and omni-channel publishing for high-velocity creators."
+          content="One clip in. A week of niche-tuned posts out. Click edits, captions, and publishes to every platform — and learns from each post you ship."
         />
         <meta name="twitter:image" content="/opengraph-image" />
 
         <link rel="icon" href="/favicon.ico" />
+        
+        {/* Anti-Flash Theme Script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('click-theme') || 'dark';
+                  var resolved = theme;
+                  if (theme === 'system') {
+                    resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.classList.add(resolved);
+                  document.documentElement.setAttribute('data-theme', resolved);
+                  document.documentElement.style.colorScheme = resolved;
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className={inter.className}>
-        <PreferencesProvider>
-          <TranslationProvider>
-            <ToastProvider>
-              <WorkflowProvider>
-                <LocaleSync />
-                <div className="click-app-container">
-                  {children}
-                </div>
-                <ToastContainer />
-              </WorkflowProvider>
-            </ToastProvider>
-          </TranslationProvider>
-        </PreferencesProvider>
+      <body className={`${inter.className} bg-noise-grain`}>
+        <ThemeProvider>
+          <PreferencesProvider>
+            <TranslationProvider>
+              <ToastProvider>
+                <WorkflowProvider>
+                  <LocaleSync />
+                  <div className="click-app-container">
+                    {children}
+                  </div>
+                  <ToastContainer />
+                  {/* Cookie consent banner. Renders client-side only; shows
+                      once per browser, persists choice to localStorage,
+                      and dispatches a window event for any analytics
+                      loader to subscribe to. GDPR/ePrivacy-aware: no
+                      cookie wall, no pre-ticked options. */}
+                  <CookieConsent />
+                </WorkflowProvider>
+              </ToastProvider>
+            </TranslationProvider>
+          </PreferencesProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

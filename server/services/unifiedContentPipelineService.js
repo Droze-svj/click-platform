@@ -7,11 +7,17 @@ const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
 const { generateSocialContent, detectHighlights, predictPerformance } = require('./aiService');
 const { generateHashtags } = require('./hashtagService');
+const { safeJsonParse } = require('../utils/aiHelper');
+const { postToSocial } = require('./socialMediaService');
+const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
+const contentRecyclingService = require('./contentRecyclingService');
+
+// Supported platforms
+const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'facebook', 'instagram', 'youtube', 'tiktok'];
+
 // Content recycling - use recycling service if available
 async function identifyRecyclableContentForPipeline(userId, contentId) {
   try {
-    const contentRecyclingService = require('./contentRecyclingService');
-
     // Check if content is recyclable
     const content = await Content.findById(contentId);
     if (!content) {
@@ -19,7 +25,7 @@ async function identifyRecyclableContentForPipeline(userId, contentId) {
     }
 
     // Use detectEvergreenContent if available
-    if (contentRecyclingService.detectEvergreenContent) {
+    if (contentRecyclingService && contentRecyclingService.detectEvergreenContent) {
       const evergreen = await contentRecyclingService.detectEvergreenContent(userId, contentId);
       return {
         isRecyclable: evergreen.isEvergreen || false,
@@ -34,12 +40,7 @@ async function identifyRecyclableContentForPipeline(userId, contentId) {
     logger.warn('Content recycling service not available', { error: error.message });
   }
 
-  // Fallback: basic recycling detection
-  const content = await Content.findById(contentId);
-  if (!content) {
-    return { isRecyclable: false };
-  }
-
+  // Fallback: basic recycling detection is already covered above if content was null
   return {
     isRecyclable: true,
     evergreenScore: 50,
@@ -49,10 +50,6 @@ async function identifyRecyclableContentForPipeline(userId, contentId) {
     }
   };
 }
-const { postToPlatform } = require('./socialMediaService');
-
-// Supported platforms
-const SUPPORTED_PLATFORMS = ['twitter', 'linkedin', 'facebook', 'instagram', 'youtube', 'tiktok'];
 
 /**
  * Main pipeline: Process long-form content into social-ready assets
@@ -111,34 +108,39 @@ async function processContentPipeline(userId, contentId, options = {}) {
       data: { platforms: Object.keys(socialAssets), totalAssets: Object.values(socialAssets).flat().length }
     });
 
-    // Step 4: AI Performance Prediction (built-in)
+    // Step 4 & 5: Parallel AI Intelligence (Performance Prediction + Recycling Detection)
+    const intelligencePromises = [];
+
     if (includePerformancePrediction) {
-      const performancePredictions = await predictPerformanceForAssets(
-        userId,
-        contentId,
-        socialAssets
+      intelligencePromises.push(
+        predictPerformanceForAssets(userId, contentId, socialAssets)
+          .then(res => {
+            pipeline.performance = res;
+            pipeline.steps.push({
+              step: 'performance_prediction',
+              status: 'completed',
+              data: { predictions: Object.keys(res).length }
+            });
+          })
       );
-      pipeline.performance = performancePredictions;
-      pipeline.steps.push({
-        step: 'performance_prediction',
-        status: 'completed',
-        data: { predictions: Object.keys(performancePredictions).length }
-      });
     }
 
-    // Step 5: Content Recycling Detection (built-in)
     if (enableRecycling) {
-      const recyclingPlan = await detectAndPlanRecycling(
-        userId,
-        contentId,
-        socialAssets
+      intelligencePromises.push(
+        detectAndPlanRecycling(userId, contentId, socialAssets)
+          .then(res => {
+            pipeline.recycling = res;
+            pipeline.steps.push({
+              step: 'recycling_detection',
+              status: 'completed',
+              data: { recyclable: res.isRecyclable, plan: res.plan }
+            });
+          })
       );
-      pipeline.recycling = recyclingPlan;
-      pipeline.steps.push({
-        step: 'recycling_detection',
-        status: 'completed',
-        data: { recyclable: recyclingPlan.isRecyclable, plan: recyclingPlan.plan }
-      });
+    }
+
+    if (intelligencePromises.length > 0) {
+      await Promise.all(intelligencePromises);
     }
 
     // Step 6: Distribution (one-click to all 6 networks)
@@ -315,11 +317,8 @@ async function generateMultiFormatAssets(content, extractedContent, platforms) {
 /**
  * Generate Twitter/X assets
  */
-async function generateTwitterAssets(text, title, contentType) {
+async function generateTwitterAssets(text, title) {
   try {
-    const { generateSocialContent } = require('./aiService');
-    const { generateHashtags } = require('./hashtagService');
-
     // Generate main post
     const socialContent = await generateSocialContent(text, 'general', ['twitter']);
     const hashtags = await generateHashtags(text, { count: 3, platform: 'twitter' });
@@ -349,11 +348,8 @@ async function generateTwitterAssets(text, title, contentType) {
 /**
  * Generate LinkedIn assets
  */
-async function generateLinkedInAssets(text, title, contentType) {
+async function generateLinkedInAssets(text, title) {
   try {
-    const { generateSocialContent } = require('./aiService');
-    const { generateHashtags } = require('./hashtagService');
-
     const socialContent = await generateSocialContent(text, 'general', ['linkedin']);
     const hashtags = await generateHashtags(text, { count: 5, platform: 'linkedin' });
 
@@ -375,11 +371,8 @@ async function generateLinkedInAssets(text, title, contentType) {
 /**
  * Generate Facebook assets
  */
-async function generateFacebookAssets(text, title, contentType) {
+async function generateFacebookAssets(text, title) {
   try {
-    const { generateSocialContent } = require('./aiService');
-    const { generateHashtags } = require('./hashtagService');
-
     const socialContent = await generateSocialContent(text, 'general', ['facebook']);
     const hashtags = await generateHashtags(text, { count: 5, platform: 'facebook' });
 
@@ -401,11 +394,8 @@ async function generateFacebookAssets(text, title, contentType) {
 /**
  * Generate Instagram assets
  */
-async function generateInstagramAssets(text, title, contentType, hasVideo) {
+async function generateInstagramAssets(text, title, hasVideo) {
   try {
-    const { generateSocialContent } = require('./aiService');
-    const { generateHashtags } = require('./hashtagService');
-
     const socialContent = await generateSocialContent(text, 'general', ['instagram']);
     const hashtags = await generateHashtags(text, { count: 10, platform: 'instagram' });
 
@@ -508,7 +498,6 @@ async function generateTikTokAssets(content, extractedContent) {
  */
 async function generateTikTokTextAssets(text, title) {
   try {
-    const { generateHashtags } = require('./hashtagService');
     const hashtags = await generateHashtags(text, { count: 5, platform: 'tiktok' });
 
     return [{
@@ -530,7 +519,6 @@ async function generateTikTokTextAssets(text, title) {
  */
 async function generateThread(text, title) {
   try {
-    const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../utils/googleAI');
     if (!geminiConfigured) {
       logger.warn('Google AI API key not configured');
       return [];
@@ -542,7 +530,7 @@ Title: ${title}
 Content: ${text}`;
 
     const raw = await geminiGenerate(prompt, { temperature: 0.7, maxTokens: 1024 });
-    const result = JSON.parse(raw || '{}');
+    const result = safeJsonParse(raw, {});
     return (result.tweets || []).map((tweet, index) => ({
       type: 'thread',
       content: tweet,
@@ -560,12 +548,30 @@ Content: ${text}`;
  */
 async function generateCarousel(text, title) {
   try {
+    if (!geminiConfigured) {
+      return {
+        type: 'carousel',
+        slides: [{ content: text.substring(0, 500), image: null }],
+        platform: 'instagram',
+        format: 'carousel'
+      };
+    }
+
+    const prompt = `Break this content into 3-5 engaging Instagram Carousel slides. Each slide should be concise and visual. Return valid JSON only with a "slides" array where each slide has "content" and "visualSuggestion".
+    
+    Title: ${title}
+    Content: ${text}`;
+
+    const raw = await geminiGenerate(prompt, { temperature: 0.7, maxTokens: 1024 });
+    const result = safeJsonParse(raw, {});
+    
     return {
       type: 'carousel',
-      slides: [
-        { content: text.substring(0, 500), image: null },
-        { content: text.substring(500, 1000), image: null }
-      ],
+      slides: (result.slides || []).map(slide => ({
+        content: slide.content,
+        visualSuggestion: slide.visualSuggestion,
+        image: null
+      })),
       platform: 'instagram',
       format: 'carousel'
     };
@@ -753,6 +759,9 @@ async function publishAllNetworks(userId, contentId, options = {}) {
         try {
           if (schedule) {
             // Schedule for optimal time
+            const optimalTimes = await getOptimalPostingTimes(userId, [platform]);
+            const optimalTime = optimalTimes[platform];
+            
             const scheduledPost = new ScheduledPost({
               userId,
               contentId,
@@ -762,18 +771,19 @@ async function publishAllNetworks(userId, contentId, options = {}) {
                 hashtags: asset.hashtags || [],
                 mediaUrl: asset.url || asset.thumbnail || null
               },
-              scheduledTime: new Date(), // Use optimal time service
-              status: 'scheduled'
+              scheduledTime: optimalTime?.nextBestTime || new Date(),
+              status: 'scheduled',
+              optimized: !!optimalTime
             });
             await scheduledPost.save();
-            results.scheduled.push({ platform, postId: scheduledPost._id });
+            results.scheduled.push({ platform, postId: scheduledPost._id, time: scheduledPost.scheduledTime });
           } else {
             // Publish immediately
-            await postToPlatform(userId, platform, {
-              text: asset.content || asset.caption || '',
-              hashtags: asset.hashtags || [],
+            await postToSocial(userId, platform, {
+              description: asset.content || asset.caption || '',
+              tags: asset.hashtags || [],
               mediaUrl: asset.url || asset.thumbnail || null
-            });
+            }, contentId);
             results.published.push({ platform, assetId: asset.id });
           }
         } catch (error) {
@@ -918,7 +928,7 @@ Create variation ${i + 1} with:
 - Same core message`;
 
       const raw = await geminiGenerate(prompt, { temperature: 0.8, maxTokens: 1024 });
-      const variation = JSON.parse(raw || '{}');
+      const variation = safeJsonParse(raw, {});
       variations.push({
         ...variation,
         platform,

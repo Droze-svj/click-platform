@@ -184,6 +184,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 <p className="text-[10px] text-white/70 font-bold uppercase tracking-widest">New intelligence active.</p>
               </div>
               <button
+                type="button"
                 onClick={update}
                 disabled={state.isUpdating}
                 className="px-6 py-3 bg-white text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10"
@@ -208,6 +209,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
               <div className="absolute -bottom-32 -left-32 w-48 h-48 bg-fuchsia-500/10 blur-[80px] rounded-full group-hover:bg-fuchsia-500/20 transition-all duration-700" />
 
               <button
+                type="button"
                 onClick={dismissPrompt}
                 className="absolute top-6 right-6 p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all"
                 aria-label="Dismiss install prompt"
@@ -232,6 +234,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
 
                 <div className="flex items-center gap-4">
                   <button
+                    type="button"
                     onClick={install}
                     disabled={state.isInstalling}
                     className="flex-1 bg-white hover:bg-zinc-200 disabled:opacity-50 text-black h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 shadow-2xl shadow-white/5"
@@ -281,6 +284,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
                 <span className="text-zinc-400">Some features may be limited.</span>
               </div>
               <button
+                type="button"
                 onClick={() => window.location.reload()}
                 className="text-xs font-bold text-zinc-500 hover:text-white underline underline-offset-4 ml-2"
               >

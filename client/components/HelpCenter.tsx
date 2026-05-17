@@ -95,6 +95,7 @@ export default function HelpCenter() {
       {/* Categories */}
       <div className="flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={() => setSelectedCategory(null)}
           className={`px-4 py-2 rounded-lg transition-colors ${
             selectedCategory === null
@@ -106,6 +107,7 @@ export default function HelpCenter() {
         </button>
         {categories.map((cat) => (
           <button
+            type="button"
             key={cat.category}
             onClick={() => setSelectedCategory(cat.category)}
             className={`px-4 py-2 rounded-lg transition-colors ${

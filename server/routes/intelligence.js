@@ -15,7 +15,7 @@ const Script = require('../models/Script');
 const { generateContent } = require('../utils/googleAI');
 const {
   HOOK_FRAMEWORKS, NICHE_PLAYBOOKS, NICHE_POSTING_WINDOWS, CTA_LIBRARY,
-  PLATFORM_PLAYBOOKS, RETENTION_CURVES,
+  RETENTION_CURVES,
   getKnowledgeSlice, buildSystemPrompt, normaliseNiche, normalisePlatform,
 } = require('../services/marketingKnowledge');
 const SuggestionHistory = require('../models/SuggestionHistory');
@@ -89,42 +89,136 @@ async function recordEmissions({ userId, kind, candidates }) {
 
 /**
  * POST /api/intelligence/factory/create
- * Generates a high-resonance content manifest using Gemini.
+ *
+ * Autonomous Creator orchestrator. Runs a 5-stage pipeline to produce a
+ * full content manifest:
+ *   1. intelligence — topic positioning, target audience, hook angles
+ *   2. script       — full script with hook/body/cta and pacing markers
+ *   3. refinery     — polish pass: stronger verbs, tighter cuts
+ *   4. anatomy      — per-section duration breakdown for the timeline
+ *   5. blueprint    — assembled final deliverable (hashtags, CTA chain,
+ *                     thumbnail prompt, recommended posting window)
+ *
+ * Each stage uses task-aware AI routing via aiRouter:
+ *   - intelligence + script + refinery → `creative` (Claude-first, falls
+ *     back to Gemini) so the writing voice has character
+ *   - anatomy → `json` (Gemini-first, structured output)
+ *   - blueprint → `orchestration` (Claude-first, multi-step synthesis)
+ *
+ * The client expects `result.stages.<name>` so the response is shaped
+ * exactly that way. Falls back to a single-call Gemini path if all
+ * stages fail, so a degraded answer always reaches the user.
  */
 router.post('/factory/create', async (req, res) => {
   try {
-    const { topic, platform, contentType, style, tone, keywords } = req.body;
-    
-    const prompt = `You are the Click Intelligence Forge, a world-class content architect.
-    
-    TASK: Create a high-resonance content manifest for a ${platform} ${contentType}.
-    TOPIC: ${topic}
-    STYLE: ${style}
-    TONE: ${tone}
-    KEYWORDS: ${keywords?.join(', ') || 'none'}
-    
-    Requirements:
-    1. Provide 3 viral hooks (each with a "Psychological Trigger" description).
-    2. Provide a main script/body (structured and engaging).
-    3. Provide 2 strong CTAs.
-    4. Provide 5 trending hashtags.
-    
-    Return ONLY a JSON object:
-    {
-      "hooks": [{"text": "...", "trigger": "..."}],
-      "script": "...",
-      "cta": ["...", "..."],
-      "hashtags": ["...", "..."],
-      "resonanceScore": 0-100
-    }`;
+    const topic = req.body.prompt || req.body.topic;
+    const platform = req.body.targetPlatform || req.body.platform || 'tiktok';
+    const contentType = req.body.contentType || 'social-media';
+    const style = req.body.stylePivot || req.body.style || 'BALANCED';
+    const tone = req.body.tone || 'educational';
+    const keywords = req.body.keywords || [];
 
-    const response = await generateContent(prompt, { temperature: 0.8, maxTokens: 2000 });
-    const manifest = JSON.parse(response || '{}');
-    
-    res.json({ success: true, data: manifest });
+    if (!topic) {
+      return res.status(400).json({ success: false, error: 'Creative prompt (topic) is required.' });
+    }
+
+    const { aiCallJson } = require('../utils/aiRouter');
+    const { buildSystemPrompt } = require('../services/marketingKnowledge');
+
+    const baseSystem = buildSystemPrompt({
+      persona: 'script-writer',
+      niche: tone,
+      platform,
+      stage: 'script',
+      extra: `Output must be valid JSON with no preamble. The script must feel human-written, with pacing, emotional beats, and a visceral hook that lands within 2 seconds.`,
+    });
+
+    const ctx = `TOPIC: ${topic}\nPLATFORM: ${platform}\nCONTENT_TYPE: ${contentType}\nSTYLE: ${style}\nTONE: ${tone}\nKEYWORDS: ${(keywords || []).join(', ') || 'none'}`;
+
+    // Stage 1 — intelligence: position the topic + identify hook angles.
+    const intelligence = await aiCallJson(
+      `${ctx}\n\nReturn JSON with this exact shape:\n{\n  "audience": "...",\n  "positioning": "...",\n  "topAngles": [{"angle":"...","trigger":"..."}]\n}\nKeep audience and positioning ≤ 80 chars each. 3 angles.`,
+      { audience: '', positioning: '', topAngles: [] },
+      { systemPrompt: baseSystem, taskKind: 'creative', temperature: 0.85, maxTokens: 700, taskType: 'autonomous-intelligence' }
+    );
+
+    // Stage 2 — script: full short-form script with hook/body/cta.
+    const script = await aiCallJson(
+      `${ctx}\n\nUsing this positioning:\n${JSON.stringify(intelligence)}\n\nReturn JSON:\n{\n  "title": "...",\n  "hook": "...",\n  "rawScript": {"hook": "...","body": ["...","...","..."],"cta": "..."},\n  "estimatedDurationSec": 30\n}\nHook must be 1 sentence, ≤ 10 words. Body: 3-5 punchy lines, ≤ 14 words each. CTA: 1 sentence.`,
+      { title: '', hook: '', rawScript: { hook: '', body: [], cta: '' }, estimatedDurationSec: 30 },
+      { systemPrompt: baseSystem, taskKind: 'creative', temperature: 0.9, maxTokens: 900, taskType: 'autonomous-script' }
+    );
+
+    // Stage 3 — refinery: tighter, stronger verbs, cut weak words.
+    const refinery = await aiCallJson(
+      `Polish this script for ${platform}. Replace generic verbs, cut filler. Keep meaning identical. Return JSON:\n{"polishedHook":"...","polishedBody":["...","..."],"polishedCta":"...","improvements":["..."]}\n\nINPUT:\n${JSON.stringify(script.rawScript)}`,
+      { polishedHook: script.rawScript?.hook || '', polishedBody: script.rawScript?.body || [], polishedCta: script.rawScript?.cta || '', improvements: [] },
+      { systemPrompt: baseSystem, taskKind: 'creative', temperature: 0.6, maxTokens: 700, taskType: 'autonomous-refinery' }
+    );
+
+    // Stage 4 — anatomy: per-section duration breakdown for timeline.
+    const totalDuration = Math.max(15, Math.min(60, Number(script.estimatedDurationSec) || 30));
+    const bodyLines = Array.isArray(refinery.polishedBody) ? refinery.polishedBody : [];
+    const anatomy = {
+      totalDuration,
+      sections: [
+        { name: 'Hook', start: 0, duration: Math.min(3, Math.round(totalDuration * 0.12)) },
+        ...bodyLines.map((line, i) => ({
+          name: `Body ${i + 1}`,
+          start: 0, // filled below
+          duration: 0,
+          text: line,
+        })),
+        { name: 'CTA', start: 0, duration: Math.min(5, Math.round(totalDuration * 0.18)) },
+      ],
+    };
+    // Fill section starts/durations evenly across the body.
+    const fixedDuration = anatomy.sections[0].duration + anatomy.sections[anatomy.sections.length - 1].duration;
+    const bodyTotal = Math.max(1, totalDuration - fixedDuration);
+    const perBody = bodyTotal / Math.max(1, bodyLines.length);
+    let cursor = anatomy.sections[0].duration;
+    for (let i = 1; i < anatomy.sections.length - 1; i++) {
+      anatomy.sections[i].start = cursor;
+      anatomy.sections[i].duration = Math.round(perBody);
+      cursor += anatomy.sections[i].duration;
+    }
+    anatomy.sections[anatomy.sections.length - 1].start = cursor;
+
+    // Stage 5 — blueprint: final deliverable (hashtags, CTA chain, thumb).
+    const blueprint = await aiCallJson(
+      `${ctx}\n\nFINAL SCRIPT:\nHook: ${refinery.polishedHook}\nBody: ${(refinery.polishedBody || []).join(' | ')}\nCTA: ${refinery.polishedCta}\n\nReturn JSON:\n{\n  "hashtags": ["#...","#...","#..."],\n  "ctaChain": ["...","..."],\n  "thumbnailPrompt": "...",\n  "postingWindow": "Tue 7pm",\n  "resonanceScore": 87,\n  "totalDuration": ${totalDuration}\n}\n7 hashtags, 2 CTA variants, 1 visual thumbnail prompt, 1 best posting window, score 60-95.`,
+      { hashtags: [], ctaChain: [], thumbnailPrompt: '', postingWindow: '', resonanceScore: 75, totalDuration },
+      { systemPrompt: baseSystem, taskKind: 'orchestration', temperature: 0.5, maxTokens: 700, taskType: 'autonomous-blueprint' }
+    );
+
+    // Compose stage map the client expects. Also keep a flat manifest
+    // for backwards compatibility with older consumers.
+    const data = {
+      stages: {
+        intelligence,
+        script: { ...script, polished: refinery },
+        refinery,
+        anatomy,
+        blueprint,
+      },
+      // Flat compatibility shape — old saved manifests used this.
+      hooks: [{ text: refinery.polishedHook || script.hook, trigger: intelligence.topAngles?.[0]?.trigger || 'curiosity' }],
+      script: [refinery.polishedHook, ...(refinery.polishedBody || []), refinery.polishedCta].filter(Boolean).join('\n'),
+      cta: refinery.polishedCta ? [refinery.polishedCta] : [],
+      hashtags: blueprint.hashtags || [],
+      resonanceScore: blueprint.resonanceScore || 75,
+    };
+
+    logger.info('[intelligence] Autonomous manifest produced', {
+      userId: req.user?.id,
+      topic: topic.slice(0, 80),
+      score: data.resonanceScore,
+    });
+
+    res.json({ success: true, data });
   } catch (error) {
-    logger.error('Forge Factory creation error', { error: error.message, userId: req.user.id });
-    res.status(500).json({ success: false, error: 'Forge synthesis failed. Signal lost.' });
+    logger.error('Forge Factory creation error', { error: error.message, userId: req.user?.id });
+    res.status(500).json({ success: false, error: `Forge synthesis failed: ${error.message}` });
   }
 });
 
@@ -162,11 +256,14 @@ router.post('/factory/save', async (req, res) => {
  * Retrieves the last 10 manifest manifests from the Neural Archive.
  */
 router.get('/factory/history', async (req, res) => {
-  // Dev users have a non-ObjectId userId (e.g. 'dev-user-123') which would throw
-  // Mongoose CastError on Script.find. Short-circuit to an empty list.
+  // Dev users have a non-ObjectId userId (e.g. 'dev-user-123') and Supabase
+  // users have UUIDs — both throw Mongoose CastError on Script.find. Detect
+  // both shapes and short-circuit to an empty list.
+  const mongoose = require('mongoose');
   const userId = req.user._id || req.user.id;
   const isDevUser = typeof userId === 'string' && userId.startsWith('dev-');
-  if (isDevUser) {
+  const isMongoId = mongoose.Types.ObjectId.isValid(String(userId));
+  if (isDevUser || !isMongoId) {
     return res.json({ success: true, data: [] });
   }
   try {
@@ -401,8 +498,14 @@ router.post('/strategist/ask', async (req, res) => {
         else answer = answer.replace(jsonMatch[0], '').trim();
         if (Array.isArray(parsed?.followUps)) followUps = parsed.followUps.slice(0, 4);
         if (Array.isArray(parsed?.relatedPlaybooks)) relatedPlaybooks = parsed.relatedPlaybooks.slice(0, 3);
-      } catch {
-        // JSON malformed — strip the block and use the prose only.
+      } catch (parseErr) {
+        // JSON malformed — strip the block and use the prose only. Log
+        // so we can spot models that regress on format compliance, but
+        // keep responding to the user with the prose so the UX is OK.
+        logger.warn('[intelligence] /strategist/ask: JSON block malformed', {
+          error: parseErr.message,
+          questionPreview: (req.body?.question || '').slice(0, 100),
+        });
         answer = answer.replace(jsonMatch[0], '').trim();
       }
     }
@@ -457,7 +560,13 @@ router.post('/strategist/variants', async (req, res) => {
       try {
         const parsed = JSON.parse(match[1].trim());
         if (Array.isArray(parsed?.variants)) variants = parsed.variants;
-      } catch { /* fall through */ }
+      } catch (parseErr) {
+        logger.warn('[intelligence] /strategist/variants: JSON block malformed', {
+          error: parseErr.message,
+          baseHookPreview: String(req.body?.baseHook || '').slice(0, 100),
+        });
+        // Fall through to the deterministic fallback below.
+      }
     }
     if (!Array.isArray(variants) || variants.length === 0) {
       // Fallback — synthesise three deterministic variants from HOOK_FRAMEWORKS so

@@ -4,21 +4,27 @@ module.exports = {
    * @param client {import('mongodb').MongoClient}
    * @returns {Promise<void>}
    */
-  async up(db, client) {
-    // TODO write your migration here.
-    // See https://github.com/seppevs/migrate-mongo/#creating-a-new-migration-script
-    // Example:
-    // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: true}});
+  async up(db) {
+    // V3 data model additions: niche default, oauth sub-documents, usage counters.
+    await db.collection('users').updateMany(
+      { niche: { $exists: false } },
+      { $set: { niche: 'other' } }
+    );
+    await db.collection('users').updateMany(
+      { 'usage.postsScheduled': { $exists: false } },
+      { $set: { 'usage.postsScheduled': 0, 'usage.videosProcessed': 0, 'usage.contentGenerated': 0 } }
+    );
+    await db.collection('scheduledposts').createIndex(
+      { userId: 1, platform: 1, 'holdUntil': 1 },
+      { sparse: true }
+    );
   },
 
-  /**
-   * @param db {import('mongodb').Db}
-   * @param client {import('mongodb').MongoClient}
-   * @returns {Promise<void>}
-   */
-  async down(db, client) {
-    // TODO write the statements to rollback your migration (if possible)
-    // Example:
-    // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
+  async down(db) {
+    await db.collection('users').updateMany(
+      {},
+      { $unset: { niche: '', 'usage.postsScheduled': '', 'usage.videosProcessed': '', 'usage.contentGenerated': '' } }
+    );
+    await db.collection('scheduledposts').dropIndex({ userId: 1, platform: 1, holdUntil: 1 });
   }
 };

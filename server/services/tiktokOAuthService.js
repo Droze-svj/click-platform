@@ -2,6 +2,7 @@
 // Features: OAuth 2.0, video upload/publish permissions, User model storage.
 
 const OAuthService = require('./oauthService');
+const OAuthStorage = require('../utils/oauthStorage');
 const logger = require('../utils/logger');
 const fs = require('fs');
 const axios = require('axios');
@@ -43,18 +44,27 @@ class TikTokOAuthService {
 
   async getAuthorizationUrl(userId, state, callbackUrl) {
     if (!this.isConfigured()) throw new Error('TikTok OAuth not configured');
-    
-    const User = require('../models/User');
-    const user = await User.findById(userId);
-    if (!user) throw new Error('User not found');
 
-    // Persist state to User model
-    if (!user.oauth) user.oauth = {};
-    if (!user.oauth.tiktok) user.oauth.tiktok = {};
-    user.oauth.tiktok.state = state;
-    user.oauth.tiktok.stateCreatedAt = new Date();
-    user.markModified('oauth');
-    await user.save();
+    // Persist state. Supabase users (UUID) can't hit User.findById without a
+    // CastError, so route them through OAuthStorage like the other 5
+    // platforms. Mongo (ObjectId) users still use the legacy User.oauth
+    // path so existing data keeps working.
+    const mongoose = require('mongoose');
+    if (mongoose.Types.ObjectId.isValid(String(userId))) {
+      const User = require('../models/User');
+      const user = await User.findById(userId);
+      if (!user) throw new Error('User not found');
+      if (!user.oauth) user.oauth = {};
+      if (!user.oauth.tiktok) user.oauth.tiktok = {};
+      user.oauth.tiktok.state = state;
+      user.oauth.tiktok.stateCreatedAt = new Date();
+      user.markModified('oauth');
+      await user.save();
+    } else {
+      // Supabase user — namespaced state map so concurrent flows don't
+      // overwrite each other (multi-account opens this risk).
+      await OAuthStorage.putState(userId, 'tiktok', state, { startedAt: new Date().toISOString() });
+    }
 
     const params = new URLSearchParams({
       client_key: this.clientKey,
@@ -128,30 +138,28 @@ class TikTokOAuthService {
   }
 
   async getConnectedAccounts(userId) {
-    const creds = await OAuthService.getSocialCredentials(userId, 'tiktok');
-    if (!creds) return [];
-
-    return [{
+    const accounts = await OAuthService.listSocialAccounts(userId, 'tiktok');
+    return accounts.map((a) => ({
       platform: 'tiktok',
-      platform_user_id: creds.platformUserId,
-      username: creds.platformUsername,
-      display_name: creds.platformUsername,
-      avatar: creds.avatar,
+      accountId: a.accountId,
+      platform_user_id: a.platformUserId,
+      username: a.platformUsername,
+      display_name: a.platformUsername,
+      avatar: a.avatar,
+      isPrimary: a.isPrimary,
+      isActive: a.isActive,
       is_connected: true,
-      created_at: creds.connectedAt
-    }];
+      created_at: a.addedAt,
+    }));
   }
 
-  async disconnectAccount(userId) {
-    const User = require('../models/User');
-    const user = await User.findById(userId);
-    if (user && user.oauth && user.oauth.tiktok) {
-      user.oauth.tiktok = { connected: false };
-      user.markModified('oauth');
-      await user.save();
-    }
-    logger.info('TikTok account disconnected', { userId });
-    return { success: true };
+  /**
+   * Disconnect TikTok. Pass `accountId` to drop one of multiple accounts.
+   */
+  async disconnectAccount(userId, accountId = null) {
+    const remaining = await OAuthService.removeSocialAccount(userId, 'tiktok', accountId);
+    logger.info('TikTok account disconnected', { userId, accountId, remaining });
+    return { success: true, remaining };
   }
 
   async getTikTokUserInfo(accessToken) {

@@ -540,6 +540,7 @@ export default function SocialMediaExporter({ videoUrl, videoId, onExport }: Soc
                   </div>
 
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleExport(preset)

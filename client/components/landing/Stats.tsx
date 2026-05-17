@@ -13,13 +13,17 @@ interface GlobalMetrics {
   source?: 'live' | 'cache' | 'fallback';
 }
 
-// Fallback values shown if /api/analytics/global is unreachable. Same as
-// the server's FALLBACK so the landing never shows blank stats.
+// No hardcoded marketing numbers. The previous fallback shipped
+// 25,000 creators / 145M clips / 312% lift to every visitor whenever
+// /api/analytics/global was unreachable — those numbers were not
+// real, which is a credibility AND an FTC truth-in-advertising risk.
+// Now: the section only renders when we actually have live data, and
+// even then it labels it live so visitors can trust what they see.
 const FALLBACK: GlobalMetrics = {
-  creators: 25_000,
-  clipsGenerated: 145_000_000,
-  brandLiftPct: 312,
-  uptimePct: 99.9,
+  creators: 0,
+  clipsGenerated: 0,
+  brandLiftPct: 0,
+  uptimePct: 0,
   source: 'fallback',
 };
 
@@ -53,18 +57,21 @@ export function Stats() {
     { label: 'System Uptime', value: `${metrics.uptimePct}%`, Icon: ShieldCheck, color: 'text-emerald-400' },
   ];
 
+  // Hide the entire section until we have verifiable data. A page of
+  // zeros is worse than no section at all (looks broken) and we don't
+  // want to ship inflated fallback numbers visitors might quote back.
+  if (!metrics.source || metrics.source === 'fallback') return null;
+
   return (
     <section id="results" className="py-32 px-6 relative overflow-hidden">
       <div aria-hidden="true" className="absolute inset-0 bg-indigo-900/10 blur-[100px] -z-10" />
       <div className="max-w-7xl mx-auto">
-        {metrics.source && metrics.source !== 'fallback' && (
-          <div className="flex justify-center mb-10">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse" aria-hidden="true" />
-              Live · updated every 5 min
-            </span>
-          </div>
-        )}
+        <div className="flex justify-center mb-10">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse" aria-hidden="true" />
+            Live · updated every 5 min
+          </span>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {STATS.map((s, i) => {
             const { Icon } = s;

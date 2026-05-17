@@ -37,6 +37,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
           </p>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
         >
@@ -129,6 +130,7 @@ const WhopProductHub: React.FC<WhopProductHubProps> = ({ products, onClose }) =>
                     </div>
                     <div className="flex gap-2">
                        <button
+                         type="button"
                          title="View External Product"
                          aria-label="View External Product"
                          className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all"

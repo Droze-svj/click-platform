@@ -58,6 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.state.error?.message}
           </pre>
           <button
+            type="button"
             onClick={() => this.setState({ hasError: false, error: null })}
             className="mt-6 px-6 py-2 rounded-xl bg-rose-600 text-white font-bold uppercase tracking-wider text-xs hover:bg-rose-700 transition-colors shadow-sm"
           >
@@ -70,3 +71,5 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children
   }
 }
+
+export default ErrorBoundary

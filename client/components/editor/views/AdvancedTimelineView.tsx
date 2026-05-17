@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import { Stage, Layer, Rect, Text as KonvaText, Line, Group, Circle, Arrow } from 'react-konva'
+import styles from './AdvancedTimelineView.module.css'
+
+import { Stage, Layer, Rect, Text as KonvaText, Line, Group, Circle } from 'react-konva'
 import {
   Clock, Scissors, Compass, Magnet, ZoomIn, ZoomOut,
-  Layers, Music2, Film, Type, ChevronRight, Trash2, Sparkles, Ghost
+  Layers, Music2, Film, Type, Ghost
 } from 'lucide-react'
-import { TimelineSegment, getDefaultTrackForSegmentType } from '../../../types/editor'
+import { TimelineSegment } from '../../../types/editor'
 import { formatTime } from '../../../utils/editorUtils'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { Text } from 'react-konva'
@@ -61,7 +63,7 @@ interface CtxMenu { x: number; y: number; segId: string }
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
-  useProfessionalTimeline,
+  useProfessionalTimeline: _useProfessionalTimeline,
   setUseProfessionalTimeline,
   videoState,
   setVideoState,
@@ -71,7 +73,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
   onSegmentSelect,
   aiSuggestions,
   showToast,
-  setActiveCategory,
+  setActiveCategory: _setActiveCategory,
   showAiPreviews = true,
   retentionHeatmap = [],
 }) => {
@@ -270,15 +272,17 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           {/* Track filter pills */}
           <div className="hidden md:flex items-center gap-1">
             <button
+              type="button"
               onClick={() => setSelectedTrackFilter(null)}
               className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === null ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500 hover:text-white'}`}
             >All</button>
             {DYNAMIC_TRACKS.map(t => (
               <button
+                type="button"
                 key={t.id}
                 onClick={() => setSelectedTrackFilter(selectedTrackFilter === t.id ? null : t.id)}
-                className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === t.id ? 'text-white border border-white/10 [background-color:var(--track-color)]' : 'bg-white/5 text-slate-500 hover:text-white border border-transparent'}`}
-                style={{ '--track-color': selectedTrackFilter === t.id ? t.color + '33' : undefined } as React.CSSProperties}
+                className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${selectedTrackFilter === t.id ? 'text-white border border-white/10' : 'bg-white/5 text-slate-500 hover:text-white border border-transparent'}`}
+                style={selectedTrackFilter === t.id ? { backgroundColor: t.color + '33' } : undefined}
               >{t.label}</button>
             ))}
           </div>
@@ -287,6 +291,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
 
           {/* Magnetic + Zoom */}
           <button
+            type="button"
             onClick={handleRunVAD}
             disabled={!vadReady || vadProcessing}
             className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-2 ${vadProcessing ? 'bg-sky-500/20 text-sky-400 animate-pulse' : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10'}`}
@@ -300,6 +305,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           {/* Ghosting Overlay Selector */}
           <div className="flex items-center gap-1 bg-white/5 rounded-lg border border-white/10 px-1.5 py-1">
             <button
+               type="button"
                onClick={() => clearGhostCurve()}
                className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter ${!activeProfile ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
             >
@@ -307,6 +313,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
             </button>
             {profiles.map(p => (
               <button
+                type="button"
                 key={p.id}
                 onClick={() => loadGhostCurve(p.id)}
                 className={`p-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all ${activeProfile?.id === p.id ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-500 hover:text-white'}`}
@@ -320,17 +327,18 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           <div className="h-4 w-px bg-white/10" />
 
           <button
+            type="button"
             onClick={() => setIsMagnetic(v => !v)}
             className={`p-1.5 rounded-lg border transition-all ${isMagnetic ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' : 'bg-white/5 border-white/10 text-slate-500'}`}
             title="Magnetic snap"
           >
             <Magnet className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.5))} title="Zoom Out" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
+          <button type="button" onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.5))} title="Zoom Out" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <span className="text-[9px] font-mono text-slate-600 w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
-          <button onClick={() => setZoomLevel(z => Math.min(10, z + 0.5))} title="Zoom In" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
+          <button type="button" onClick={() => setZoomLevel(z => Math.min(10, z + 0.5))} title="Zoom In" className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10">
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
 
@@ -338,6 +346,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
 
           {/* Scroll to playhead */}
           <button
+            type="button"
             onClick={() => {
               const el = containerRef.current?.parentElement
               if (el) el.scrollLeft = Math.max(0, timeToX(playheadTime) - 100)
@@ -349,6 +358,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => setUseProfessionalTimeline(false)}
             className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase italic tracking-wider transition-all bg-white/5 hover:bg-white/10 text-slate-400 border border-white/10"
           >
@@ -367,15 +377,16 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
           {DYNAMIC_TRACKS.map(track => (
             <div
               key={track.id}
-              className="flex items-center justify-center gap-1.5 px-2 group cursor-pointer"
-              style={{ height: TRACK_HEIGHT + TRACK_GAP, opacity: selectedTrackFilter === null || selectedTrackFilter === track.id ? 1 : 0.25 }}
+              className={`flex items-center justify-center gap-1.5 px-2 group cursor-pointer ${styles.trackRow}`}
+              style={{ height: `${TRACK_HEIGHT + TRACK_GAP}px`, opacity: selectedTrackFilter === null || selectedTrackFilter === track.id ? 1 : 0.25 }}
             >
               <div className="w-1 h-5 rounded-full" style={{ backgroundColor: track.color + '88' }} />
               <span className="text-[8px] font-black text-slate-600 uppercase tracking-wider group-hover:text-white transition-colors">{track.label}</span>
             </div>
           ))}
           {/* Add Layer Button */}
-          <button 
+          <button
+            type="button"
             onClick={() => {
               const newLayerId = DYNAMIC_TRACKS.length;
               showToast(`Added new Layer ${newLayerId - 4}`, 'success');
@@ -389,7 +400,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
 
         {/* Scrollable canvas area */}
         <div className="flex-1 overflow-x-auto overflow-y-auto relative" ref={containerRef}>
-          <div style={{ width: canvasWidth, height: canvasHeight }}>
+          <div className={styles.canvas} style={{ width: canvasWidth, height: canvasHeight }}>
             <Stage
               width={canvasWidth}
               height={canvasHeight}
@@ -613,8 +624,8 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
       {/* ── Right-click Context Menu ─────────────────────────────────────────── */}
       {ctxMenu && (
         <div
-          className="fixed z-[9999] rounded-2xl border border-white/10 bg-black/95 backdrop-blur-3xl shadow-2xl overflow-hidden"
-          style={{ left: ctxMenu.x, top: ctxMenu.y, minWidth: 160 }}
+          className={`fixed z-[9999] rounded-2xl border border-white/10 bg-black/95 backdrop-blur-3xl shadow-2xl overflow-hidden ${styles.contextMenu}`}
+          style={{ left: ctxMenu.x, top: ctxMenu.y }}
         >
           {[
             { action: 'split',     label: '✂ Split at midpoint',  color: 'text-white' },
@@ -624,6 +635,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
             { action: 'delete',    label: '✕ Delete segment',      color: 'text-rose-400' },
           ].map(item => (
             <button
+              type="button"
               key={item.action}
               onClick={() => handleContextAction(item.action)}
               className={`w-full px-4 py-3 text-left text-[11px] font-black uppercase tracking-wider hover:bg-white/10 transition-all ${item.color}`}
@@ -631,7 +643,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
               {item.label}
             </button>
           ))}
-          <button onClick={() => setCtxMenu(null)} className="w-full px-4 py-2 text-[9px] text-slate-600 hover:bg-white/5 transition-all text-left">
+          <button type="button" onClick={() => setCtxMenu(null)} className="w-full px-4 py-2 text-[9px] text-slate-600 hover:bg-white/5 transition-all text-left">
             Cancel
           </button>
         </div>

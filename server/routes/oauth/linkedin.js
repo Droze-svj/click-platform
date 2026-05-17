@@ -2,16 +2,8 @@
 
 const express = require('express');
 const auth = require('../../middleware/auth');
-const {
-  getAuthorizationUrl,
-  exchangeCodeForToken,
-  postToLinkedIn,
-  disconnectLinkedIn,
-  getConnectionStatus,
-  healthCheck,
-  isConfigured,
-  defaultRedirectUri,
-} = require('../../services/linkedinOAuthService');
+// Singleton instance — destructuring would drop `this` and crash.
+const linkedinService = require('../../services/linkedinOAuthService');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
@@ -23,7 +15,9 @@ const router = express.Router();
  * Health check for LinkedIn OAuth config
  */
 router.get('/health', asyncHandler(async (req, res) => {
-  const h = healthCheck();
+  const h = typeof linkedinService.healthCheck === 'function'
+    ? linkedinService.healthCheck()
+    : { configured: linkedinService.isConfigured() };
   sendSuccess(res, 'Health check', 200, h);
 }));
 
@@ -32,13 +26,18 @@ router.get('/health', asyncHandler(async (req, res) => {
  * Get LinkedIn OAuth authorization URL
  */
 router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) => {
-  if (!isConfigured()) {
+  if (!linkedinService.isConfigured()) {
     return sendError(res, 'LinkedIn OAuth not configured', 503);
   }
 
-  const callbackUrl = defaultRedirectUri(req);
-  const { url, state } = await getAuthorizationUrl(req.user._id, callbackUrl);
-  
+  const callbackUrl = typeof linkedinService.defaultRedirectUri === 'function'
+    ? linkedinService.defaultRedirectUri(req)
+    : (process.env.LINKEDIN_CALLBACK_URL ||
+       `${req.protocol}://${req.get('host')}/api/oauth/linkedin/callback`);
+
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { url, state } = await linkedinService.getAuthorizationUrl(userId, callbackUrl);
+
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
 
@@ -60,15 +59,12 @@ router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
   }
 
   try {
-    // Note: In production, you'd get userId from session/cookie
-    // For now, we'll redirect to frontend with code/state
-    // Frontend will call /complete endpoint
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     res.redirect(`${frontendUrl}/dashboard/social?platform=linkedin&code=${code}&state=${state}`);
-  } catch (error) {
-    logger.error('LinkedIn OAuth callback error', { error: error.message });
+  } catch (err) {
+    logger.error('LinkedIn OAuth callback error', { error: err.message });
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error.message)}`);
+    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
   }
 }));
 
@@ -83,12 +79,11 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
     return sendError(res, 'Authorization code and state are required', 400);
   }
 
-  const { accessToken } = await exchangeCodeForToken(req.user._id, code, state);
-  
-  // Get user info for response
-  const { getLinkedInUserInfo } = require('../../services/linkedinOAuthService');
-  const userInfo = await getLinkedInUserInfo(accessToken);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const { accessToken } = await linkedinService.exchangeCodeForToken(userId, code, state);
+
+  const userInfo = await linkedinService.getLinkedInUserInfo(accessToken);
+
   sendSuccess(res, 'LinkedIn account connected successfully', 200, {
     connected: true,
     userInfo: {
@@ -117,8 +112,9 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   if (visibility === 'CONNECTIONS' || visibility === 'PUBLIC') options.visibility = visibility;
   if (fallbackToTextOnImageError === true || fallbackToTextOnImageError === 'true') options.fallbackToTextOnImageError = true;
 
-  const post = await postToLinkedIn(req.user._id, text, options);
-  
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const post = await linkedinService.postToLinkedIn(userId, text, options);
+
   sendSuccess(res, 'LinkedIn post published successfully', 200, { post });
 }));
 
@@ -127,7 +123,8 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
  * Disconnect LinkedIn account
  */
 router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  await disconnectLinkedIn(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  await linkedinService.disconnectLinkedIn(userId);
   sendSuccess(res, 'LinkedIn account disconnected', 200);
 }));
 
@@ -136,11 +133,9 @@ router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
  * Get LinkedIn connection status (from Supabase social_links)
  */
 router.get('/status', auth, asyncHandler(async (req, res) => {
-  const status = await getConnectionStatus(req.user._id);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  const status = await linkedinService.getConnectionStatus(userId);
   sendSuccess(res, 'Status retrieved', 200, status);
 }));
 
 module.exports = router;
-
-
-

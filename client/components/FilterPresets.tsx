@@ -316,6 +316,7 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
           const Icon = category.icon
           return (
             <button
+              type="button"
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${selectedCategory === category.id
@@ -334,6 +335,7 @@ export default function FilterPresets({ onApplyPreset, currentFilters }: FilterP
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filteredPresets.map(preset => (
           <button
+            type="button"
             key={preset.id}
             onClick={() => applyPreset(preset, 100)}
             onMouseEnter={() => setHoveredPreset(preset.id)}

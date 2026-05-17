@@ -103,6 +103,7 @@ export default function ContentPerformanceHeatmap() {
         <div className="flex gap-2">
           {(['7d', '30d', '90d'] as const).map((period) => (
             <button
+              type="button"
               key={period}
               onClick={() => setSelectedPeriod(period)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${

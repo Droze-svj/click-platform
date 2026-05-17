@@ -69,7 +69,40 @@ function pickClipShape(parentId, clip) {
         const s = Number(t.startTime ?? t.start ?? 0);
         const e = Number(t.endTime ?? t.end ?? s + 2);
         if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return;
-        out.push({ start: s, end: e, text: t.text.trim() });
+        // Pass through word-level timings when present so the client can
+        // render kinetic / per-word captions. Falls back to deriving
+        // even spacing from the caption span if the source has only
+        // the text string — degraded but still animatable.
+        const sourceWords = Array.isArray(t.words) ? t.words : null;
+        let words;
+        if (sourceWords && sourceWords.length > 0) {
+          words = sourceWords
+            .filter((w) => w && (w.word || w.text))
+            .map((w) => ({
+              word: String(w.word || w.text).trim(),
+              start: Number(w.start ?? s),
+              end: Number(w.end ?? w.start ?? s),
+            }))
+            .filter((w) => w.word.length > 0 && Number.isFinite(w.start) && Number.isFinite(w.end));
+        } else {
+          const tokens = t.text.trim().split(/\s+/);
+          const span = (e - s) / Math.max(1, tokens.length);
+          words = tokens.map((tok, i) => ({
+            word: tok,
+            start: s + i * span,
+            end: s + (i + 1) * span,
+          }));
+        }
+        // Emphasis hints: caps-locked, long, or marked with ! capture
+        // the "punch" word styles competitors animate the loudest.
+        const emphasize = (w) => /^[A-Z]{2,}$/.test(w.word) || w.word.length >= 8 || /[!?]$/.test(w.word);
+        out.push({
+          start: s,
+          end: e,
+          text: t.text.trim(),
+          style: t.style || null,
+          words: words.map((w) => ({ ...w, emphasis: emphasize(w) ? 'pop' : null })),
+        });
       };
       if (Array.isArray(km.suggestedCaptions)) km.suggestedCaptions.forEach(push);
       if (Array.isArray(km.viralMoments)) km.viralMoments.forEach((m) => push({ ...m, text: m.text || m.label }));
@@ -146,16 +179,94 @@ router.get('/hub/:contentId', auth, async (req, res) => {
     const userId = getUserIdFromReq(req);
     const { contentId } = req.params;
 
-    // Handle dev contentIds — return enriched mock clips. Each clip carries
-    // the full option fingerprint (hookScore, sentimentEnergy, viralMomentCount,
-    // stylePresetId, variationId, etc.) so the lightbox's score breakdown
-    // bars and "Why this score" reasons render with real values during
-    // live testing instead of empty "—" placeholders.
+    // Handle dev contentIds. The previous version unconditionally
+    // returned a hardcoded pair of mock clips (BBB cartoon + Sintel
+    // trailer) — so EVERY dev auto-edit looked identical regardless of
+    // what the user actually uploaded or what the pipeline rendered.
+    // Now we first try to read the user's real auto-edited clips from
+    // devVideoStore.generatedContent.shortVideos. We only fall back to
+    // the enriched mocks when the dev video genuinely has no real clips
+    // yet (e.g. before auto-edit has run).
     if (
       allowDevMode(req) &&
       (contentId.toString().startsWith('dev-content-') || contentId.toString().startsWith('dev-'))
     ) {
-      logger.info('Serving mock clips for dev content', { contentId });
+      const { devVideoStore } = require('../../utils/devStore');
+      const dev = devVideoStore.get(contentId.toString());
+      const realClips = Array.isArray(dev?.generatedContent?.shortVideos)
+        ? dev.generatedContent.shortVideos
+        : [];
+
+      if (realClips.length > 0) {
+        logger.info('Serving real auto-edited clips for dev content', {
+          contentId, count: realClips.length,
+        });
+        // Resolve relative `/uploads/...` paths to absolute backend URLs
+        // so the browser hits :5001 (where the files actually live)
+        // instead of :3010 (the Next origin, which doesn't proxy
+        // /uploads). Without this the lightbox video tag 404s on the
+        // client even though the file exists on disk.
+        const backendBase = `${req.protocol}://${req.get('host')}`;
+        const toAbsolute = (u) => {
+          if (!u) return u;
+          if (/^https?:\/\//i.test(u)) return u;
+          if (u.startsWith('/')) return `${backendBase}${u}`;
+          return `${backendBase}/${u}`;
+        };
+        const items = realClips.map((c, i) => ({
+          id: c._id || c.id || `${contentId}-clip-${i}`,
+          contentId,
+          url: toAbsolute(c.url),
+          thumbnail: toAbsolute(c.thumbnail) || null,
+          duration: c.duration ?? null,
+          caption: c.caption || c.recommendedCaptions?.tiktok || c.recommendedCaptions?.shorts || 'AI Auto-Edited Clip',
+          hookText: c.hookText || null,
+          platform: c.platform || 'shorts',
+          highlight: !!c.highlight,
+          style: c.style || null,
+          stylePresetId: c.stylePresetId || null,
+          stylePresetLabel: c.stylePresetLabel || null,
+          variationId: c.variationId || null,
+          variationLabel: c.variationLabel || null,
+          variationIndex: typeof c.variationIndex === 'number' ? c.variationIndex : null,
+          variationsInPreset: c.variationsInPreset || null,
+          viralScore: typeof c.viralScore === 'number' ? c.viralScore : null,
+          hookScore: typeof c.hookScore === 'number' ? c.hookScore : null,
+          sentimentEnergy: typeof c.sentimentEnergy === 'number' ? c.sentimentEnergy : null,
+          viralMomentCount: typeof c.viralMomentCount === 'number' ? c.viralMomentCount : null,
+          // Pass-through editor option metadata so the lightbox's
+          // "AI edits applied" panel and "Why this score" reasons can
+          // render the user's actual choices, not generic defaults.
+          // Earlier these were dropped during the hub map even though
+          // autoEditVideo persisted them.
+          colorGrade: c.colorGrade || null,
+          hookStyle: c.hookStyle || null,
+          pacingIntensity: c.pacingIntensity || null,
+          transitionStyle: c.transitionStyle || null,
+          musicGenre: c.musicGenre || null,
+          ctaStyle: c.ctaStyle || null,
+          voiceTone: c.voiceTone || null,
+          niche: c.niche || null,
+          editsApplied: Array.isArray(c.editsApplied) ? c.editsApplied : (c.applied || []),
+          rating: c.rating ?? null,
+          published: !!c.published,
+          aiGenerated: true,
+          createdAt: c.createdAt || dev.updatedAt || new Date().toISOString(),
+          recommendedCaptions: c.recommendedCaptions || null,
+          recommendedCaptionVariants: c.recommendedCaptionVariants || null,
+          recommendedHashtags: c.recommendedHashtags || null,
+          recommendedSlots: c.recommendedSlots || [],
+          publishRationale: c.publishRationale || null,
+        }));
+        return sendSuccess(res, 'Real auto-edited clips', 200, {
+          contentId: String(contentId),
+          title: dev?.title || 'Untitled',
+          thumbnail: dev?.thumbnail || null,
+          items,
+        });
+      }
+
+      logger.info('Serving mock clips for dev content (no real clips yet)', { contentId });
       const now = new Date().toISOString();
       return sendSuccess(res, 'Dev clips', 200, {
         items: [
@@ -276,8 +387,11 @@ router.post('/:contentId/:clipId/rate', auth, async (req, res) => {
   try {
     const userId = getUserIdFromReq(req);
     const { contentId, clipId } = req.params;
-    const rating = Math.max(1, Math.min(5, Number(req.body?.rating) || 0));
-    if (!rating) return sendError(res, 'rating must be 1..5', 400);
+    const raw = Number(req.body?.rating);
+    if (!Number.isFinite(raw) || raw < 1 || raw > 5) {
+      return sendError(res, 'rating must be an integer 1..5', 400);
+    }
+    const rating = Math.round(raw);
 
     const doc = await Content.findOne({ _id: contentId, userId });
     if (!doc) return sendError(res, 'Content not found', 404);
@@ -386,6 +500,62 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
 
     // Feed the pick back into the user's style fingerprint. Best-effort —
     // a learning failure must NOT block the publish action itself.
+    //
+    // The captionDelta/timeDelta magnitudes feed the engagement-weighted
+    // learning side of styleLearningService: small/no edits → user kept
+    // the AI suggestion → +retention on the weighted facets; large edits
+    // → suggestion was rejected → -retention. This is the cheap
+    // engagement-proxy until real analytics land.
+    const captionDeltaChars = (originalCaption !== null && userCaption)
+      ? Math.abs((userCaption || '').length - (originalCaption || '').length)
+      : 0;
+    const timeDeltaMs = (originalTime && scheduledTime)
+      ? Math.abs(originalTime.getTime() - scheduledTime.getTime())
+      : 0;
+    const keptSuggestion = !clip.captionDelta && !clip.timeDelta;
+
+    // Per-variant accept tracking — when the clip has a recommendedCaptionVariants
+    // map for the published platform, figure out which variant the user
+    // actually shipped (if any) and bump a `captionVariantsAccepted`
+    // counter on the profile keyed by the variant's framework angle.
+    // Cheap heuristic: longest matching prefix.
+    let acceptedVariantAngle = null;
+    try {
+      const platformKey = (platform || clip.publishedPlatform || '').toLowerCase();
+      const variants = clip.recommendedCaptionVariants?.[platformKey] || [];
+      if (Array.isArray(variants) && variants.length > 0 && (userCaption || clip.caption)) {
+        const final = String(userCaption || clip.caption).trim().toLowerCase();
+        let bestMatch = -1;
+        let bestScore = 0;
+        for (let i = 0; i < variants.length; i++) {
+          const candidate = String(variants[i] || '').trim().toLowerCase();
+          if (!candidate) continue;
+          // Match score = chars in common at the start. Anything ≥ 60% of
+          // the candidate length counts as "accepted variant i".
+          let prefix = 0;
+          const n = Math.min(final.length, candidate.length);
+          while (prefix < n && final[prefix] === candidate[prefix]) prefix++;
+          const score = prefix / Math.max(1, candidate.length);
+          if (score > bestScore && score >= 0.6) {
+            bestScore = score;
+            bestMatch = i;
+          }
+        }
+        if (bestMatch >= 0) {
+          const angles = ['curiosity-gap', 'value-led', 'contrarian'];
+          acceptedVariantAngle = angles[bestMatch] || `variant-${bestMatch}`;
+          try {
+            const UserStyleProfile = require('../../models/UserStyleProfile');
+            await UserStyleProfile.recordPick(userId, 'captionVariantsAccepted', acceptedVariantAngle);
+          } catch (e) {
+            logger.warn('captionVariantsAccepted recordPick failed', { error: e.message, userId });
+          }
+        }
+      }
+    } catch (e) {
+      logger.warn('per-variant accept detection failed', { error: e.message });
+    }
+
     let learnResult = null;
     try {
       const { learnFromPublishedClip } = require('../../services/styleLearningService');
@@ -396,6 +566,8 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
         style: clip.style,
         captionStyle: clip.captionStyle,
         hookStyle: clip.hookStyle,
+        transitionStyle: clip.transitionStyle,
+        colorGrade: clip.colorGrade,
         pacingIntensity: clip.pacingIntensity,
         musicGenre: clip.musicGenre,
         platform: platform || clip.publishedPlatform,
@@ -404,6 +576,11 @@ router.post('/:contentId/:clipId/publish', auth, async (req, res) => {
         // styleLearningService.
         caption: userCaption || clip.caption,
         publishedAt: clip.publishedAt,
+        // Engagement-proxy signal so the weighted-performance facets
+        // climb for picks the user kept and fade for picks they rejected.
+        keptSuggestion,
+        captionDelta: captionDeltaChars,
+        timeDelta: timeDeltaMs,
       });
     } catch (e) {
       logger.warn('learnFromPublishedClip failed; publish still succeeded', { error: e.message });

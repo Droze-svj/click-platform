@@ -1,6 +1,6 @@
 // Google Gemini AI client for content generation, moderation, etc.
 // Uses GOOGLE_AI_API_KEY (Gemini API key from AI Studio: https://aistudio.google.com/apikey)
-// 2026 Upgrade: gemini-2.0-flash — faster, better JSON, improved creative reasoning
+// 2026 Upgrade: gemini-2.5-flash — faster, better JSON, improved creative reasoning
 
 let genAI = null;
 let model = null;
@@ -17,9 +17,16 @@ try {
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (apiKey) {
+    const logger = require('./logger');
     genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
     embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    logger.info(`🛡️ [GoogleAI] Model initialized: gemini-flash-latest (Key: ${apiKey.substring(0, 6)}...${apiKey.slice(-4)})`);
+  } else {
+    try {
+      const logger = require('./logger');
+      logger.warn('⚠️ [GoogleAI] No API key found; will use mock data in dev mode.');
+    } catch (_) { /* logger optional */ }
   }
 } catch (err) {
   // Package not installed or init failed
@@ -35,10 +42,15 @@ async function generateContent(prompt, options = {}) {
   if (!model) {
     if (process.env.NODE_ENV !== 'production') {
       const logger = require('./logger');
-      logger.info('🛡️ [GoogleAI] Dev Fallback: Generating high-fidelity mock response (No API Key)');
+      const lowerPrompt = prompt.toLowerCase();
+      logger.info('🛡️ [GoogleAI] Dev Fallback: analyzing prompt for mock', { 
+        promptLength: prompt.length,
+        hasManifest: lowerPrompt.includes('manifest'),
+        hasJsonObject: lowerPrompt.includes('json object'),
+        hasScript: lowerPrompt.includes('script')
+      });
       
-      // Intelligent mock based on prompt context
-      if (prompt.includes('VIDEO FACTS') || prompt.includes('recommendedCuts')) {
+      if (lowerPrompt.includes('video facts') || lowerPrompt.includes('recommendedcuts')) {
         return JSON.stringify({
           recommendedCuts: [{ start: 0.5, end: 2.0, reason: "Dead air removal", confidence: 0.95 }],
           transitions: [],
@@ -60,7 +72,8 @@ async function generateContent(prompt, options = {}) {
         });
       }
       
-      if (prompt.includes('JSON object') || prompt.includes('manifest')) {
+      if (lowerPrompt.includes('json object') || lowerPrompt.includes('manifest') || lowerPrompt.includes('script')) {
+        logger.info('🛡️ [GoogleAI] Returning mock manifest');
         return JSON.stringify({
           hooks: [
             { text: "This secret hack will change your workflow forever. 🚀", trigger: "Curiosity & Efficiency" },
@@ -74,6 +87,7 @@ async function generateContent(prompt, options = {}) {
         });
       }
       
+      logger.warn('🛡️ [GoogleAI] Prompt did not match any mock pattern, returning default fallback');
       return "This is a high-fidelity autonomous manifest generated via Click Dev Fallback. In production, this would be synthesized by Gemini 1.5 Pro.";
     }
     return null;
@@ -110,7 +124,7 @@ async function generateContent(prompt, options = {}) {
       // Sentry tag if available so quota exhaustion surfaces in alerting
       // without crashing handlers.
       if (Sentry && typeof Sentry.captureMessage === 'function') {
-        try { Sentry.captureMessage(`Gemini ${isQuota ? 'quota' : 'error'}: ${msg.slice(0, 100)}`, 'warning'); } catch {}
+        try { Sentry.captureMessage(`Gemini ${isQuota ? 'quota' : 'error'}: ${msg.slice(0, 100)}`, 'warning'); } catch (e) { /* ignore sentry errors */ }
       }
       return null;
     }
@@ -121,9 +135,9 @@ async function generateContent(prompt, options = {}) {
     return Sentry.startSpan(
       {
         op: 'gen_ai.request',
-        name: 'request gemini-2.0-flash',
+        name: 'request gemini-2.5-flash',
         attributes: {
-          'gen_ai.request.model': 'gemini-2.0-flash',
+          'gen_ai.request.model': 'gemini-2.5-flash',
           'gen_ai.operation.name': 'request',
           'gen_ai.request.messages': JSON.stringify(reqMessages),
           'gen_ai.request.max_tokens': options.maxTokens || 1024,
@@ -156,6 +170,13 @@ async function generateContent(prompt, options = {}) {
           // failure (quota, rate-limit, network) so callers fall through to
           // their structured fallbacks rather than 500-ing the request.
           span.setStatus?.({ code: 'error', message: (err?.message || '').slice(0, 100) })
+          try {
+            const logger = require('./logger');
+            logger.error('[GoogleAI] generateContent failed (in span)', { 
+              error: err?.message?.slice(0, 240),
+              stack: err?.stack?.slice(0, 500)
+            });
+          } catch (le) { /* logger optional */ }
           return null;
         }
       }

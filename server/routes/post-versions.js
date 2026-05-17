@@ -21,8 +21,12 @@ const router = express.Router();
 router.post('/:postId/versions', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const { changeReason, content } = req.body;
+  const userId = req.user._id || req.user.id;
 
-  const post = await ScheduledPost.findById(postId);
+  // Ownership guard. The previous `findById` allowed any authenticated
+  // user to create a new version on any post by guessing its id —
+  // mutating other users' content history.
+  const post = await ScheduledPost.findOne({ _id: postId, userId });
   if (!post) {
     return sendError(res, 'Post not found', 404);
   }
@@ -56,6 +60,14 @@ router.post('/:postId/versions', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:postId/versions', auth, asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  const userId = req.user._id || req.user.id;
+
+  // Verify the post belongs to the caller before exposing its version
+  // history. Previous code did `find({ postId })` with no ownership
+  // check, letting any user enumerate any other user's edit history.
+  const post = await ScheduledPost.findOne({ _id: postId, userId }).select('_id').lean();
+  if (!post) return sendError(res, 'Post not found', 404);
+
   const versions = await PostVersion.find({ postId })
     .populate('createdBy', 'name email')
     .sort({ versionNumber: -1 })
@@ -70,6 +82,12 @@ router.get('/:postId/versions', auth, asyncHandler(async (req, res) => {
  */
 router.get('/:postId/versions/:versionNumber', auth, asyncHandler(async (req, res) => {
   const { postId, versionNumber } = req.params;
+  const userId = req.user._id || req.user.id;
+
+  // Same ownership guard as the list endpoint above.
+  const post = await ScheduledPost.findOne({ _id: postId, userId }).select('_id').lean();
+  if (!post) return sendError(res, 'Post not found', 404);
+
   const version = await PostVersion.findOne({ postId, versionNumber: parseInt(versionNumber) })
     .populate('createdBy', 'name email')
     .populate('comments.userId', 'name email')

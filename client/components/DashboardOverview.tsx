@@ -96,7 +96,7 @@ export default function DashboardOverview() {
         </div>
         <h3 className="text-xl font-bold text-[var(--text-main)]">Connection Interrupted</h3>
         <p className="text-rose-200/60 text-sm max-w-sm mx-auto">{error}</p>
-        <button onClick={loadDashboardData} className="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold text-sm">Retry Sync</button>
+        <button type="button" onClick={loadDashboardData} className="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold text-sm">Retry Sync</button>
       </div>
     )
   }
@@ -213,6 +213,7 @@ export default function DashboardOverview() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {overview.quickActions.map((action: any) => (
                   <button
+                    type="button"
                     key={action.id}
                     className="p-8 rounded-[2rem] bg-white/5 border border-white/5 hover:bg-white/10 hover:border-indigo-500/30 transition-all text-left group"
                   >

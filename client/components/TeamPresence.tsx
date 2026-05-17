@@ -161,6 +161,7 @@ export default function TeamPresence() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
 
               <button
+                type="button"
                 onClick={() => setShowInviteModal(false)}
                 className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white transition-colors"
               >
@@ -186,6 +187,7 @@ export default function TeamPresence() {
                   </div>
 
                   <button
+                    type="button"
                     onClick={handleInvite}
                     disabled={inviting || !inviteEmail}
                     className="w-full bg-white text-black py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-200 transition-all disabled:opacity-50"

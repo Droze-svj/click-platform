@@ -131,6 +131,7 @@ export default function EnhancedWorkflowBuilder() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Workflow Automation</h1>
           <button
+            type="button"
             onClick={() => setShowCreateModal(true)}
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
           >
@@ -153,6 +154,7 @@ export default function EnhancedWorkflowBuilder() {
                     {suggestion.description}
                   </p>
                   <button
+                    type="button"
                     onClick={() => handleUseSuggestion(suggestion)}
                     className="text-sm text-blue-600 hover:underline"
                   >
@@ -205,6 +207,7 @@ export default function EnhancedWorkflowBuilder() {
 
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => handleExecuteWorkflow(workflow.id)}
                   className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm"
                 >
@@ -279,6 +282,7 @@ export default function EnhancedWorkflowBuilder() {
 
               <div className="flex gap-3 justify-end mt-6">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowCreateModal(false)
                     setNewWorkflow({
@@ -295,6 +299,7 @@ export default function EnhancedWorkflowBuilder() {
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleCreateWorkflow}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >

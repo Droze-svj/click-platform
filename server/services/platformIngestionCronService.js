@@ -63,6 +63,20 @@ async function runIngestionTick() {
         const result = await syncAllUserAnalytics(userId, DEFAULT_PER_USER_LIMIT);
         summary.synced += result.synced || 0;
         summary.failed += result.failed || 0;
+
+        // Push a live update to every dashboard tab open for this user so
+        // headline stats refresh without polling. Best-effort: socket
+        // service may not be initialised yet (cron starts at boot).
+        if ((result.synced || 0) > 0) {
+          try {
+            const { emitToUser } = require('./socketService');
+            emitToUser(String(userId), 'analytics:updated', {
+              synced: result.synced,
+              failed: result.failed,
+              at: new Date().toISOString(),
+            });
+          } catch { /* socket optional */ }
+        }
       } catch (err) {
         summary.failed += 1;
         logger.warn('Per-user ingestion failed', { ...LOG_CONTEXT, userId: String(userId), error: err.message });

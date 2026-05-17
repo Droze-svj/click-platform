@@ -23,6 +23,10 @@ interface User {
   id: string
   email: string
   name: string
+  /** User-chosen preferred display name shown in the dashboard greeting. */
+  username?: string | null
+  first_name?: string | null
+  last_name?: string | null
   subscription: {
     status: string
     plan: string
@@ -53,47 +57,27 @@ export function useAuth() {
   // Debug logging disabled to prevent console spam
   // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
 
-  // Mock user for development mode
-  const mockUser: User = {
-    id: 'dev-user-123',
-    email: 'dev@example.com',
-    name: 'Development User',
-    subscription: { status: 'active', plan: 'pro' },
-    niche: 'video editing',
-    brandSettings: {},
-    usage: {
-      videosProcessed: 5,
-      contentGenerated: 10,
-      quotesCreated: 3,
-      postsScheduled: 7,
-    },
+  // Always use the real auth flow. The previous dev-mode mock-user override
+  // poisoned legitimate sessions by overwriting real JWT tokens with a fake
+  // `dev-jwt-token-…` string, which then 500'd against any auth-gated route.
+  // One-time cleanup: discard any leftover fake dev tokens from prior sessions.
+  if (typeof window !== 'undefined') {
+    const stale = localStorage.getItem('token')
+    if (stale && stale.startsWith('dev-jwt-token-')) {
+      localStorage.removeItem('token')
+      cachedToken = null
+      cachedUser = null
+      lastAuthSuccess = 0
+    }
   }
 
   const [user, setUser] = useState<User | null>(() => {
-    // Use mock user in development mode
-    if (process.env.NODE_ENV === 'development') {
-      // Don't auto-login if we're on the landing page so we can actually see it!
-      if (typeof window !== 'undefined' && window.location.pathname === '/') {
-        return null
-      }
-
-      // Set a mock JWT token for development
-      if (typeof window !== 'undefined') {
-        const mockToken = 'dev-jwt-token-' + Date.now() // Simple mock token for dev
-        localStorage.setItem('token', mockToken)
-      }
-      return mockUser
-    }
-
     if (typeof window === 'undefined') return null
     const token = localStorage.getItem('token')
     if (token && cachedToken === token && cachedUser) return cachedUser
     return null
   })
   const [loading, setLoading] = useState(() => {
-    // In development mode, we use mock user immediately, so loading should be false
-    if (process.env.NODE_ENV === 'development') return false
-
     if (typeof window === 'undefined') return true
     const token = localStorage.getItem('token')
     // If we have a cached user for the current token, we can render immediately and refresh in the background.
@@ -164,42 +148,6 @@ export function useAuth() {
     const authStartTime = Date.now()
 
     try {
-      // Skip auth check in development mode - use mock user
-      // IMPORTANT: Check this BEFORE setting authCheckInProgress to avoid blocking future checks
-      if (process.env.NODE_ENV === 'development') {
-        // Don't auto-login on landing page
-        if (typeof window !== 'undefined' && window.location.pathname === '/') {
-          setLoading(false)
-          return
-        }
-
-        console.log('🔧 [useAuth] Development mode - using mock user')
-
-        // Ensure token is set in development mode for API calls
-        if (typeof window !== 'undefined') {
-          const existingToken = localStorage.getItem('token')
-          if (!existingToken || !existingToken.startsWith('dev-jwt-token-')) {
-            const mockToken = 'dev-jwt-token-' + Date.now()
-            localStorage.setItem('token', mockToken)
-            console.log('🔧 [useAuth] Set development token:', mockToken.substring(0, 20) + '...')
-          }
-        }
-
-        // Debug logging disabled to prevent console spam
-        // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {});
-
-        setUser(mockUser)
-        setLoading(false)
-        setError(null)
-        authCheckInProgress = false // Reset flag before returning
-        // Process any queued auth checks
-        if (authCheckQueue.length > 0) {
-          const nextCheck = authCheckQueue.shift()
-          if (nextCheck) nextCheck()
-        }
-        return
-      }
-
       authCheckInProgress = true
       lastAuthCheck = now
 
@@ -240,11 +188,6 @@ export function useAuth() {
         return
       }
 
-      console.log('🔍 [useAuth] Checking auth with token present (length):', token.length)
-      console.log('🔍 [useAuth] API URL: (using client/lib/api)')
-      console.log('🔍 [useAuth] Retry attempt:', retryCount)
-      console.log('🔍 [useAuth] About to call apiGet /auth/me')
-
       sendAuthDebugLog('auth_check_start', {
         tokenLength: token.length,
         retryCount,
@@ -255,10 +198,6 @@ export function useAuth() {
       })
 
       const response = await apiGet<any>('/auth/me', { timeout: 60000 })
-
-      console.log('🔍 [useAuth] apiGet returned, processing response')
-
-      console.log('✅ [useAuth] User loaded:', response)
 
       sendAuthDebugLog('auth_check_success', {
         duration: Date.now() - authStartTime,
@@ -278,11 +217,13 @@ export function useAuth() {
       lastAuthSuccess = Date.now()
       setError(null)
     } catch (err: any) {
-      console.error('❌ [useAuth] Auth check failed:', err)
-      console.error('Error details:', {
-        code: err.code,
-        status: err.response?.status || err.status
-      })
+      // Quiet by default — only log auth failures that aren't 401/403 (which
+      // are expected when the token expires or the user signs out). Real
+      // errors still go to sendAuthDebugLog below.
+      const errStatus = err.response?.status || err.status
+      if (errStatus && errStatus !== 401 && errStatus !== 403) {
+        console.error('[useAuth] Auth check failed', { status: errStatus, code: err.code })
+      }
 
       // Enhanced error debugging
       sendAuthDebugLog('auth_check_error', {
@@ -312,7 +253,6 @@ export function useAuth() {
         err.message?.includes('timeout') ||
         err.message?.includes('Network Error')
       )) {
-        console.log(`🔄 [useAuth] Retrying in 2 seconds... (attempt ${retryCount + 1}/2)`)
         sendAuthDebugLog('auth_retry_scheduled', {
           retryAttempt: retryCount + 1,
           maxRetries: 2,
@@ -327,6 +267,19 @@ export function useAuth() {
       // Network timeouts / cold-start issues should NOT log users out.
       const status = err.response?.status || err.status
       if (status === 401 || status === 403) {
+        // First 401: give it one more chance after a short delay before
+        // forcing logout. Backend cold-start / transient Supabase RLS
+        // races can briefly 401 a valid token, especially right after
+        // login. A single retry rules those out without making bad
+        // tokens loop forever. Release the in-progress flag first so the
+        // retry can actually execute (otherwise the queue check inside
+        // checkAuth() would deadlock against this call's own lock).
+        if (retryCount === 0) {
+          authCheckInProgress = false
+          lastAuthCheck = 0
+          await new Promise(r => setTimeout(r, 800))
+          return checkAuth(retryCount + 1)
+        }
         setError(err.response?.data?.error || err?.message || 'Authentication failed')
         localStorage.removeItem('token')
         cachedToken = null

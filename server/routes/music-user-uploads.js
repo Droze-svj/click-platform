@@ -147,6 +147,25 @@ router.get('/user-uploads', auth, asyncHandler(async (req, res) => {
       });
     }
 
+    // Supabase UUID users have no rows in the Mongo `music` collection
+    // (the Music model's userId is ObjectId-typed). A Mongoose query with
+    // a UUID throws CastError → 500. Return an empty list instead so the
+    // editor's user-music panel just shows the empty state.
+    const mongoose = require('mongoose');
+    const userIdStr = req.user?._id ? String(req.user._id) : String(req.user?.id || '');
+    const isMongoUserId = mongoose.Types.ObjectId.isValid(userIdStr) && /^[a-f0-9]{24}$/i.test(userIdStr);
+    if (!isMongoUserId) {
+      return sendSuccess(res, 'User music retrieved', 200, {
+        tracks: [],
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          totalPages: 0
+        }
+      });
+    }
+
     const query = {
       userId: req.user._id,
       provider: 'internal',

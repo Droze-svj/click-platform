@@ -62,7 +62,12 @@ const initMongoDB = async () => {
     
     try {
       await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 2000, // Fast fail
+        // 2s was too tight for cold Atlas cluster wake-ups — the
+        // dev server kept silently falling back to in-memory after
+        // every restart, which meant writes evaporated. 8s gives
+        // Atlas the runway it actually needs while still failing
+        // fast enough that we don't hang the whole boot.
+        serverSelectionTimeoutMS: 8000,
       });
       databaseStatus.mongodb = true;
       return true;

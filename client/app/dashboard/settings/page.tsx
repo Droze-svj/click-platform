@@ -9,10 +9,11 @@ import {
   Settings, Cpu, Zap, Palette, Bell, EyeOff, Shield, RefreshCw, Layers, 
   ArrowRight, Check, AlertCircle, Terminal, Hexagon, ActivitySquare, 
   Lock, Unlock, Wifi, Globe, Monitor, User, ShieldCheck, ZapOff, 
-  ArrowLeft, Sliders, ChevronRight, Fingerprint, Gauge, Sparkles, Brain,
+  ArrowLeft, Sliders, ChevronDown, ChevronRight, Fingerprint, Gauge, Sparkles, Brain,
   Network, Database, Target, Activity, X, Plus, Scan, Binary, Anchor,
   Orbit, Wind, Ghost, Signal, ShieldAlert, CpuIcon, ActivityIcon,
-  HardDrive, Workflow, ShieldQuestion, UserCheck, Key, Trash2
+  HardDrive, Workflow, ShieldQuestion, UserCheck, Key, Trash2, Search,
+  CheckCircle2
 } from 'lucide-react'
 import { extractApiData } from '../../../utils/apiResponse'
 import { useAuth } from '../../../hooks/useAuth'
@@ -21,9 +22,8 @@ import { supportedLanguages, languageNames, type SupportedLanguage } from '../..
 import ChangePasswordForm from '../../../components/ChangePasswordForm'
 import ToastContainer from '../../../components/ToastContainer'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-700'
+import { useTheme } from '../../../components/ThemeProvider'
+import { API_URL, apiPost, handleApiError } from '../../../lib/api'
 
 interface UserSettings {
   notifications: {
@@ -55,28 +55,29 @@ const DEFAULT_BRAND_KIT: BrandKit = {
 }
 
 const FONT_OPTIONS = [
-  { value: '', label: 'DEFAULT_LATTICE' },
-  { value: 'Inter', label: 'INTER_NEURAL' },
-  { value: 'Roboto', label: 'ROBOTO_LOGIC' },
-  { value: 'Open Sans', label: 'OPEN_SANS' },
-  { value: 'Lato', label: 'LATO_LINEAR' },
-  { value: 'Montserrat', label: 'MONTSERRAT_LUXE' },
-  { value: 'Poppins', label: 'POPPINS_GEOMETRIC' },
-  { value: 'Georgia', label: 'GEORGIA_CLASSIC' },
-  { value: 'Playfair Display', label: 'PLAYFAIR_DISPLAY' },
-  { value: 'Oswald', label: 'OSWALD_KINETIC' },
-  { value: 'Bebas Neue', label: 'BEBAS_NEUE' },
+  { value: '', label: 'Default' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Open Sans', label: 'Open Sans' },
+  { value: 'Lato', label: 'Lato' },
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'Poppins', label: 'Poppins' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Oswald', label: 'Oswald' },
+  { value: 'Bebas Neue', label: 'Bebas Neue' },
 ]
 
 function isValidLang(l: string): l is SupportedLanguage {
   return supportedLanguages.includes(l as SupportedLanguage)
 }
 
-export default function SovereignCalibrationNodePage() {
+export default function SettingsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
   const { language, setLanguage, t } = useTranslation()
+  const { resolvedTheme } = useTheme()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const tabFromUrl = searchParams.get('tab')
@@ -98,7 +99,7 @@ export default function SovereignCalibrationNodePage() {
   const notificationsSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialLoadDoneRef = useRef(false)
 
-  const loadMatrixSettings = useCallback(async () => {
+  const loadSettings = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
       if (!token) { router.push('/login'); return }
@@ -115,7 +116,7 @@ export default function SovereignCalibrationNodePage() {
     } finally { setLoading(false) }
   }, [router, setLanguage])
 
-  const loadIdentityDNA = useCallback(async () => {
+  const loadBrandKit = useCallback(async () => {
     const token = localStorage.getItem('token')
     if (!token) return
     setBrandKitLoading(true)
@@ -128,28 +129,56 @@ export default function SovereignCalibrationNodePage() {
     } finally { setBrandKitLoading(false) }
   }, [router])
 
-  useEffect(() => { loadMatrixSettings().then(() => { initialLoadDoneRef.current = true }) }, [loadMatrixSettings])
+  useEffect(() => { loadSettings().then(() => { initialLoadDoneRef.current = true }) }, [loadSettings])
   useEffect(() => { if (tabFromUrl === 'brand') setActiveTab('brand') }, [tabFromUrl])
-  useEffect(() => { if (activeTab === 'brand') loadIdentityDNA() }, [activeTab, loadIdentityDNA])
+  useEffect(() => { if (activeTab === 'brand') loadBrandKit() }, [activeTab, loadBrandKit])
 
-  const commitMatrixChange = async (options?: { skipToast?: boolean }) => {
+  // Deactivate the user's account. Gated behind two confirmations because
+  // the previous "Delete account" button had no onClick at all — users
+  // who clicked it during the live demo would see nothing happen, which
+  // is worse than the dialog because they'd assume the button was broken.
+  // Deactivate the user's account. Gated behind a confirm + password
+  // prompt because the server endpoint requires password verification —
+  // and because the previous button had no onClick at all, which silently
+  // failed during the live demo.
+  const deactivateAccount = async () => {
+    const ok = window.confirm(
+      'Delete your account? This will revoke all sessions, disconnect every social platform, and remove your published-content history. You can reactivate by contacting support.',
+    )
+    if (!ok) return
+    const password = window.prompt('Enter your password to confirm:')
+    if (!password) {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Cancelled.', type: 'info' } }))
+      return
+    }
+    try {
+      await apiPost('/auth/deactivate', { password, reason: 'user_request' })
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Account deleted. Signing you out.', type: 'success' } }))
+      try { localStorage.removeItem('token') } catch (_) { /* best-effort */ }
+      setTimeout(() => router.push('/login'), 800)
+    } catch (err: any) {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: handleApiError(err) || "Couldn't delete account.", type: 'error' } }))
+    }
+  }
+
+  const saveSettings = async (options?: { skipToast?: boolean }) => {
     setSaving(true)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
       await axios.put(`${API_URL}/user/settings`, settings, { headers: { Authorization: `Bearer ${token}` } })
       if (!options?.skipToast) {
-         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'CALIBRATION_LOCKED: SYSTEM_SYNC_COMPLETE', type: 'success' } }))
+         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Settings saved successfully', type: 'success' } }))
       }
     } catch (error: any) {
       if (!options?.skipToast) {
-         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'CALIBRATION_ERR: UPLINK_DIFFRACTION', type: 'error' } }))
+         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Failed to save settings', type: 'error' } }))
       }
       throw error
     } finally { setSaving(false) }
   }
 
-  const tuneParameter = (path: string, value: any) => {
+  const handleSettingChange = (path: string, value: any) => {
     const keys = path.split('.')
     setSettings(prev => {
       const newSettings = { ...prev }
@@ -167,10 +196,9 @@ export default function SovereignCalibrationNodePage() {
       notificationsSaveTimeoutRef.current = setTimeout(() => {
         notificationsSaveTimeoutRef.current = null
         setAutoSaveStatus('saving')
-        commitMatrixChange({ skipToast: true })
+        saveSettings({ skipToast: true })
           .then(() => {
             setAutoSaveStatus('saved')
-            window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'SIGNAL_PROTOCOL_UPDATED', type: 'success' } }))
             setTimeout(() => setAutoSaveStatus('idle'), 2000)
           })
           .catch(() => { setAutoSaveStatus('error'); setTimeout(() => setAutoSaveStatus('idle'), 3000) })
@@ -182,303 +210,262 @@ export default function SovereignCalibrationNodePage() {
     setBrandKit(prev => ({ ...prev, [field]: value }))
   }
 
-  const manifestIdentityDNA = async () => {
+  const saveBrandKit = async () => {
     const token = localStorage.getItem('token')
     if (!token) return
     setBrandKitSaving(true)
     try {
       await axios.put(`${API_URL}/pro-mode/brand-kit`, brandKit, { headers: { Authorization: `Bearer ${token}` } })
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'NEURAL_IDENTITY_MANIFESTED', type: 'success' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Brand kit updated successfully', type: 'success' } }))
     } catch (e) {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'IDENTITY_TRANSITION_FAILED', type: 'error' } }))
+      window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Failed to update brand kit', type: 'error' } }))
     } finally { setBrandKitSaving(false) }
   }
 
   if (loading) return (
-     <div className="flex flex-col items-center justify-center py-48 bg-[var(--page-bg)] min-h-screen">
-        <Fingerprint size={80} className="text-indigo-500 animate-pulse mb-12 drop-shadow-[0_0_40px_rgba(99,102,241,0.5)]" />
-        <span className="text-[16px] font-black text-[var(--text-dim)] uppercase tracking-[1em] animate-pulse italic">Deciphering Matrix Topology...</span>
+     <div className="flex flex-col items-center justify-center py-48 bg-surface-page min-h-screen transition-colors duration-500">
+        <Fingerprint size={80} className="text-primary-500 animate-spin mb-12" />
+        <p className="text-sm font-black text-surface-500 uppercase tracking-widest animate-pulse italic leading-none">Syncing Preferences Hub...</p>
      </div>
   );
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen relative z-10 pb-48 px-10 pt-16 max-w-[1850px] mx-auto space-y-24">
+      <div className="min-h-screen relative z-10 pb-48 px-4 sm:px-6 lg:px-12 pt-8 max-w-[1900px] mx-auto space-y-12 bg-surface-page text-surface-900 dark:text-surface-50 transition-colors duration-500 font-inter">
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <Settings size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-        </div>
-
-        {/* Calibration Header */}
-        <header className="flex flex-col lg:flex-row items-center justify-between gap-12 relative z-50">
-           <div className="flex items-center gap-10">
-              <button onClick={() => router.push('/dashboard')} title="Abort"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-[var(--text-dim)] hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
-                <ArrowLeft size={36} />
-              </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <Settings size={48} className="text-indigo-400 relative z-10 group-hover:rotate-180 transition-transform duration-300 animate-pulse" />
+        
+        {/* Header */}
+        <header className="flex flex-col md:flex-row items-center justify-between gap-12 pb-10 border-b border-surface-200 dark:border-surface-800 relative z-50">
+           <div className="flex items-center gap-6 w-full md:w-auto min-w-0">
+               <button type="button" onClick={() => router.push('/dashboard')} title="Back to Dashboard" aria-label="Back to Dashboard" className="w-14 h-14 rounded-2xl bg-surface-card border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-400 hover:text-surface-900 dark:hover:text-white transition-all shadow-sm active:scale-90">
+                 <ArrowLeft size={24} />
+               </button>
+              <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg flex-shrink-0 group hover:rotate-12 transition-transform duration-500">
+                <Settings size={40} className="text-primary-600 dark:text-primary-400" />
               </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Fingerprint size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Calibration Node v16.4.2</span>
-                   </div>
-                   <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                       <Activity size={12} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">SOVEREIGN_LATTICE_SYNC:ACTIVE</span>
-                   </div>
+              <div className="flex-1 min-w-0">
+                 <div className="flex items-center gap-4 mb-2 flex-wrap">
+                    <span className="px-3 py-1 rounded-lg text-[10px] font-black bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-[0.2em] border border-primary-200 dark:border-primary-800 italic leading-none">
+                      Settings
+                    </span>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-surface-card text-surface-500 border border-surface-200 dark:bg-surface-800/50 dark:text-surface-400 dark:border-surface-700/50 text-[10px] font-black italic shadow-inner">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        Synced
+                    </div>
                  </div>
-                 <h1 className="text-5xl md:text-6xl font-black text-[var(--text-main)] tracking-tight leading-[1.05] mb-3">Settings</h1>
-                 <p className="text-[var(--text-dim)] text-sm md:text-base font-medium leading-relaxed max-w-2xl mt-3">Your account, defaults, integrations, and notifications. Set things once here and Click remembers them across every project.</p>
+                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter leading-none mt-3 truncate uppercase italic">Settings</h1>
               </div>
            </div>
 
-           <Link href="/dashboard/settings/profile" className="group flex items-center gap-10 p-6 pr-16 rounded-[4.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 hover:border-indigo-500/40 transition-all duration-300 shadow-[0_60px_150px_rgba(0,0,0,0.8)] bg-black/40">
-              <div className="w-24 h-24 rounded-[3.5rem] bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-700 flex items-center justify-center font-black text-5xl border-8 border-black/40 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300 shadow-2xl text-white italic">
-                {user?.name?.[0] || 'U'}
+           <Link href="/dashboard/settings/profile" className="flex items-center gap-6 p-3 pr-10 rounded-3xl bg-surface-card border-2 border-surface-100 dark:border-surface-800 hover:border-primary-500/40 transition-all shadow-xl group/profile">
+              <div className="w-16 h-16 rounded-2xl bg-primary-500 flex items-center justify-center font-black text-2xl text-white shadow-lg group-hover/profile:rotate-12 transition-transform italic">
+                {user?.name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
               </div>
               <div className="text-left">
-                <p className="text-[24px] font-black uppercase tracking-[0.2em] text-white italic leading-none mb-4 group-hover:text-indigo-400 transition-colors">{user?.name || 'Sovereign_Node'}</p>
-                <div className="flex items-center gap-4 px-6 py-2 rounded-full bg-black/60 border-2 border-white/5">
-                   <ShieldCheck size={16} className="text-indigo-400" />
-                   <span className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-none">CORE_IDENTITY_DNA_LOCKED</span>
-                </div>
+                <p className="text-lg font-black text-surface-900 dark:text-white leading-none mb-2 italic uppercase">{user?.name || 'User'}</p>
+                <p className="text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.3em] leading-none italic">Edit profile</p>
               </div>
            </Link>
         </header>
 
-        <main className="grid grid-cols-1 lg:grid-cols-4 gap-20 relative z-10">
-           {/* Navigation Matrix */}
-           <aside className="lg:col-span-1 space-y-16">
-              <nav className={`${glassStyle} p-12 rounded-[6rem] space-y-8 border-white/5 shadow-[inset_0_0_100px_rgba(0,0,0,0.6)] bg-black/40`}>
+        <main className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
+           {/* Sidebar Navigation */}
+           <aside className="lg:col-span-3 space-y-10">
+              <nav className="p-4 rounded-[3rem] bg-surface-card border border-surface-200 dark:border-surface-800 shadow-xl space-y-3">
                 {[
-                  { id: 'general', label: 'Neural_Core', icon: <CpuIcon size={32} />, desc: 'System fundamentals' },
-                  { id: 'agentic', label: 'Heuristic_Matrix', icon: <Zap size={32} />, desc: 'Swarm & consensus' },
-                  { id: 'brand', label: 'Identity_DNA', icon: <Palette size={32} />, desc: 'Synthetic style' },
-                  { id: 'notifications', label: 'Resonance_Routing', icon: <Bell size={32} />, desc: 'Signal protocols' },
-                  { id: 'privacy', label: 'Logic_Sovereignty', icon: <EyeOff size={32} />, desc: 'Privacy & consent' },
-                  { id: 'security', label: 'Shielding_Protocols', icon: <Shield size={32} />, desc: 'Access & integrity' },
+                  { id: 'general', label: 'System', icon: <CpuIcon size={24} />, desc: 'Core settings' },
+                  { id: 'agentic', label: 'AI agent', icon: <Zap size={24} />, desc: 'Autonomy & confidence' },
+                  { id: 'brand', label: 'Brand', icon: <Palette size={24} />, desc: 'Visual identity' },
+                  { id: 'notifications', label: 'Notifications', icon: <Bell size={24} />, desc: 'Alerts' },
+                  { id: 'privacy', label: 'Privacy', icon: <EyeOff size={24} />, desc: 'Data & consent' },
+                  { id: 'security', label: 'Access', icon: <Shield size={24} />, desc: 'Password & account' },
                 ].map((tab) => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-                    className={`w-full group flex items-center justify-between p-10 rounded-[3.5rem] transition-all duration-300 italic font-black relative overflow-hidden ${
-                      activeTab === tab.id ? 'bg-white text-black scale-105 shadow-[0_40px_100px_rgba(255,255,255,0.1)]' : 'hover:bg-white/[0.04] text-[var(--text-dim)] hover:text-white border-2 border-transparent'
+                  <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                    className={`w-full flex items-center justify-between p-5 rounded-[2.2rem] transition-all duration-500 group/tab relative overflow-hidden ${
+                      activeTab === tab.id 
+                        ? 'bg-primary-500 text-white shadow-2xl scale-105 z-10' 
+                        : 'text-surface-500 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-page border-2 border-transparent'
                     }`}
                   >
-                    <div className="flex items-center gap-8 relative z-10 text-left">
-                      <div className={`w-20 h-20 rounded-[2rem] border-2 flex items-center justify-center transition-all duration-300 ${
-                        activeTab === tab.id ? 'bg-black text-white border-black rotate-12 scale-110' : 'bg-black/60 border-white/10 text-[var(--text-dim)] group-hover:text-indigo-400 group-hover:rotate-12 group-hover:bg-white/5 shadow-inner'
+                    <div className="flex items-center gap-6 text-left relative z-10">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-md ${
+                        activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-surface-page text-surface-400 border border-surface-100 dark:border-surface-800'
                       }`}>
                         {tab.icon}
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[18px] font-black uppercase tracking-[0.2em] leading-none block">{tab.label}</span>
-                        <p className={`text-[11px] font-black uppercase tracking-[0.2em] italic leading-none ${activeTab === tab.id ? 'text-black/40' : 'text-[var(--text-dim)] group-hover:text-[var(--text-dim)]'}`}>{tab.desc}</p>
+                        <span className="text-base font-black italic uppercase tracking-tighter block leading-none">{tab.label}</span>
+                        <p className={`text-[9px] font-black uppercase tracking-widest italic ${activeTab === tab.id ? 'text-white/60' : 'text-surface-400'}`}>{tab.desc}</p>
                       </div>
                     </div>
-                    {activeTab === tab.id && <ChevronRight size={36} className="text-black relative z-10" />}
+                    {activeTab === tab.id && <ChevronRight size={22} className="text-white relative z-10" />}
                   </button>
                 ))}
               </nav>
 
-              <div className="p-20 rounded-[6rem] bg-gradient-to-br from-indigo-900 via-indigo-950 to-black shadow-[0_100px_300px_rgba(0,0,0,1)] relative overflow-hidden group border-2 border-white/10">
-                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                 <Workflow size={300} className="absolute -bottom-20 -right-20 text-white/[0.03] group-hover:rotate-45 group-hover:scale-150 transition-all duration-300" />
-                 <h4 className="text-4xl font-black text-[var(--text-main)] uppercase italic mb-8 relative z-10 leading-none tracking-tighter">Sovereign_OS</h4>
-                 <p className="text-[14px] text-white/50 font-black uppercase tracking-[0.5em] italic mb-20 relative z-10 leading-relaxed">
-                   Scale your agency to infinite horizons with our autonomous hive suite and neural manifest engines.
+              <div className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[3.5rem] p-10 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:shadow-[0_40px_100px_rgba(0,0,0,0.5)]">
+                 <div className="absolute -bottom-20 -right-20 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000 pointer-events-none">
+                    <Workflow size={300} />
+                 </div>
+                 <h4 className="text-2xl font-black uppercase italic mb-4 relative z-10 leading-none tracking-tighter group-hover:text-primary-500 transition-colors">Need more?</h4>
+                 <p className="text-sm font-bold text-surface-400 dark:text-slate-600 mb-10 relative z-10 leading-relaxed italic uppercase tracking-tight">
+                   Upgrade to Pro for advanced AI, unlimited generations, and team workspaces.
                  </p>
-                 <button className="w-full py-10 rounded-[3rem] bg-white text-black font-black uppercase text-[15px] tracking-[0.6em] transition-all duration-300 hover:bg-indigo-500 hover:text-white relative z-10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] italic active:scale-90 group/btn border-none">
-                    <div className="flex items-center justify-center gap-6">
-                       UPGRADE_CAPACITY <ArrowRight size={24} className="group-hover/btn:translate-x-6 transition-transform" />
-                    </div>
+                 <button className="w-full py-5 rounded-[1.8rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[11px] tracking-[0.4em] italic transition-all hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white relative z-10 shadow-2xl border-none active:scale-95">
+                    Upgrade to Pro
                  </button>
               </div>
            </aside>
 
-           {/* Calibration Terminal Main */}
-           <section className="lg:col-span-3 space-y-16">
-              <div className={`${glassStyle} rounded-[7rem] p-32 border-white/5 relative overflow-hidden min-h-[1100px] flex flex-col justify-between shadow-[inset_0_0_200px_rgba(0,0,0,1)] bg-black/40`}>
-                 <div className="absolute top-0 right-0 p-48 opacity-[0.015] pointer-events-none group-hover:rotate-12 transition-transform duration-300"><Database size={800} className="text-white" /></div>
-                 
+           {/* Main Content Area */}
+           <section className="lg:col-span-9">
+              <div className="bg-surface-card backdrop-blur-3xl border border-surface-200 dark:border-surface-800 rounded-[4rem] p-10 sm:p-14 shadow-2xl min-h-[850px] flex flex-col justify-between transition-all duration-500">
                  <AnimatePresence mode="wait">
-                    <motion.div key={activeTab} initial={{ opacity: 0, x: 100 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -100 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                      className="space-y-32 relative z-10"
+                    <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5, type: 'spring' }}
+                      className="space-y-16 relative z-10"
                     >
                       {activeTab === 'general' && (
-                        <div className="space-y-32">
-                          <header className="space-y-10">
-                            <div className="flex items-center gap-12">
-                               <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><CpuIcon className="text-indigo-400" size={56} /></div>
-                               <div>
-                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Neural Core</h2>
-                                  <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Global OS fundamentals and spectral localization</p>
-                                </div>
-                            </div>
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform duration-500">
+                                <CpuIcon className="text-primary-600 dark:text-primary-400" size={40} />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">System</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Theme and language.</p>
+                              </div>
                           </header>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-32 pt-20">
-                            <ConfigGroup title="Lattice Spectrum">
-                              <DropdownControl label="Visual Chroma" description="Deep visual style of the Sovereign Command terminal" 
+                          
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                             <DropdownControl label="Theme" description="Pick your interface theme."
                                 value={settings.preferences.theme}
-                                options={[{id: 'light', label:'PRISTINE_LIGHT_V1'}, {id:'dark', label:'SOVEREIGN_DEPTH_V4'}, {id:'auto', label:'OS_LATTICE_SYNC'}]}
-                                onChange={(v) => tuneParameter('preferences.theme', v)}
+                                options={[{id: 'light', label:'Light'}, {id:'dark', label:'Dark'}, {id:'auto', label:'Match system'}]}
+                                onChange={(v) => handleSettingChange('preferences.theme', v)}
                               />
-                            </ConfigGroup>
-                            <ConfigGroup title="Neural Localization">
-                               <DropdownControl label="Linguistic Resonance" description="Primary communication protocol for neural interfaces" 
+                             <DropdownControl label="Language" description="Interface language."
                                 value={settings.preferences.language}
-                                options={supportedLanguages.map(l => ({id: l, label: languageNames[l].toUpperCase()}))}
-                                onChange={(v) => { if (isValidLang(v)) { setLanguage(v); tuneParameter('preferences.language', v); } }}
+                                options={supportedLanguages.map(l => ({id: l, label: languageNames[l]}))}
+                                onChange={(v) => { if (isValidLang(v)) { setLanguage(v); handleSettingChange('preferences.language', v); } }}
                               />
-                            </ConfigGroup>
                           </div>
                         </div>
                       )}
 
                       {activeTab === 'agentic' && (
-                        <div className="space-y-32">
-                          <header className="space-y-10">
-                            <div className="flex items-center gap-12">
-                               <div className="w-24 h-24 rounded-[3.5rem] bg-amber-500/5 border-2 border-amber-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(245,158,11,0.2)] animate-pulse"><Zap className="text-amber-400" size={56} /></div>
-                               <div>
-                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Heuristic Matrix</h2>
-                                  <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none">Autonomous swarm and synthetic avatar orchestration</p>
-                               </div>
-                            </div>
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-lg">
+                                <Zap className="text-amber-500" size={40} />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">AI agent</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Choose how Click's AI behaves on your behalf.</p>
+                             </div>
                           </header>
                           
-                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-32 pt-16">
-                            <div className="space-y-32">
-                              <ConfigGroup title="Hive Collective Control">
-                                <ToggleControl label="Consensus Logic Swarm" description="Multi-agent recursive logic for zero-hallucination mission-critical QA" 
-                                  value={settings.agentic.autonomousSwarm} onChange={(v) => tuneParameter('agentic.autonomousSwarm', v)} />
-                                <ToggleControl label="Mission Auto-Manifest" description="Autonomous content manifest targets for lattice saturation protocols" 
-                                  value={settings.agentic.slaAutoFulfill} onChange={(v) => tuneParameter('agentic.slaAutoFulfill', v)} />
-                              </ConfigGroup>
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                             <div className="space-y-8">
+                                <ToggleControl label="Autonomous mode" description="Let multiple AI agents collaborate to produce higher-quality output." 
+                                  value={settings.agentic.autonomousSwarm} onChange={(v) => handleSettingChange('agentic.autonomousSwarm', v)} />
+                                <ToggleControl label="Auto-publish scheduled posts" description="Publish queued posts automatically at their scheduled time — no extra approval needed." 
+                                  value={settings.agentic.slaAutoFulfill} onChange={(v) => handleSettingChange('agentic.slaAutoFulfill', v)} />
+                             </div>
 
-                              <ConfigGroup title="Logic Consensus Threshold">
-                                <div className="p-20 rounded-[6rem] bg-indigo-500/[0.04] border-2 border-indigo-500/20 space-y-20 shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
-                                  <div className="flex justify-between items-center px-6">
-                                     <div className="space-y-4 text-left">
-                                        <p className="text-[20px] font-black uppercase tracking-[0.5em] text-white italic leading-none">Heuristic Consensus Seed</p>
-                                        <p className="text-[14px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em] italic leading-tight max-w-sm">Minimum confidence threshold for autonomous deployment protocols_v14</p>
-                                     </div>
-                                     <span className="text-6xl font-black text-indigo-400 italic tabular-nums tracking-tighter leading-none drop-shadow-[0_0_30px_rgba(99,102,241,0.5)]">{settings.agentic.predictiveThreshold}%</span>
-                                  </div>
-                                  <div className="px-6 pb-4">
-                                     <input type="range" min="0" max="100" value={settings.agentic.predictiveThreshold} title="Heuristic Seed" aria-label="Heuristic Seed" 
-                                       onChange={(e) => tuneParameter('agentic.predictiveThreshold', parseInt(e.target.value))}
-                                       className="w-full h-6 bg-black/60 rounded-full appearance-none cursor-pointer accent-white focus:outline-none border-2 border-white/5 shadow-inner"
-                                     />
-                                  </div>
-                                  <div className="flex justify-between text-[13px] font-black text-[var(--text-dim)] uppercase tracking-[1em] italic leading-none px-10">
-                                     <span>FAST_EVOLUTION</span>
-                                     <span>PEAK_INTEGRITY</span>
-                                  </div>
+                             <div className="p-10 rounded-[3.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-12 shadow-inner backdrop-blur-xl group/range">
+                                <div className="flex justify-between items-center">
+                                   <div className="space-y-3">
+                                      <p className="text-2xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none">Confidence Threshold</p>
+                                      <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic leading-none">Minimum quality score before Click publishes.</p>
+                                   </div>
+                                   <span className="text-6xl font-black text-primary-500 tabular-nums italic group-hover/range:scale-110 transition-transform">{settings.agentic.predictiveThreshold}%</span>
                                 </div>
-                              </ConfigGroup>
-                            </div>
-
-                            <div className="space-y-32">
-                              <ConfigGroup title="Synthetic Avatars // Pulse Engines">
-                                <div className={`${glassStyle} p-20 rounded-[6rem] space-y-20 border-violet-500/30 shadow-[inset_0_0_100px_rgba(139,92,246,0.1)] bg-violet-600/5`}>
-                                  <DropdownControl label="Neural Render Seed" description="Preferred engine for high-fidelity avatar generation" 
-                                    value={settings.agentic.digitalTwinProvider}
-                                    options={[{id: 'heygen', label:'HEYGEN_RENDER_ULTRA'}, {id:'sora', label:'SORA_CORE_KINETIC_V2'}, {id:'both', label:'HYBRID_SWARM_RENDER'}]}
-                                    onChange={(v) => tuneParameter('agentic.digitalTwinProvider', v)}
-                                  />
-                                  <div className="space-y-16">
-                                     <InputControl label="HeyGen Uplink Cipher" type="password" placeholder="X-API-KEY-CIPHER-XXXX" value={settings.agentic.heygenApiKey || ''}
-                                      onChange={(v) => tuneParameter('agentic.heygenApiKey', v)} />
-                                     <InputControl label="Sora Core Signature" type="password" placeholder="SORA-AUTH-SIGNATURE-XXXX" value={settings.agentic.soraApiKey || ''}
-                                      onChange={(v) => tuneParameter('agentic.soraApiKey', v)} />
-                                  </div>
+                                <div className="relative pt-4">
+                                   <input type="range" min="0" max="100" value={settings.agentic.predictiveThreshold}
+                                     title="Confidence Threshold"
+                                     aria-label="Confidence Threshold"
+                                     onChange={(e) => handleSettingChange('agentic.predictiveThreshold', parseInt(e.target.value))}
+                                     className="w-full h-3 bg-surface-card dark:bg-surface-800 rounded-full appearance-none cursor-pointer accent-primary-500 shadow-inner"
+                                   />
+                                   <div className="flex justify-between mt-6">
+                                      <span className="text-[10px] font-black text-surface-300 dark:text-slate-800 italic uppercase tracking-widest">Experimental</span>
+                                      <span className="text-[10px] font-black text-primary-500 italic uppercase tracking-widest">Stable</span>
+                                   </div>
                                 </div>
-                              </ConfigGroup>
-                            </div>
+                             </div>
                           </div>
                         </div>
                       )}
 
                       {activeTab === 'brand' && (
-                        <div className="space-y-32">
-                          <header className="space-y-10">
-                             <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 rounded-[3.5rem] bg-fuchsia-500/5 border-2 border-fuchsia-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(217,70,239,0.2)] animate-pulse"><Palette className="text-fuchsia-400" size={56} /></div>
-                                <div>
-                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Identity DNA</h2>
-                                   <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none">Synthetic DNA constraints for autonomous AI payloads</p>
-                                </div>
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-fuchsia-500/10 border-2 border-fuchsia-500/20 flex items-center justify-center shadow-lg">
+                                <Palette className="text-fuchsia-500" size={40} />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">Brand Kit</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Set your colors and fonts. Every generated asset matches.</p>
                              </div>
                           </header>
 
                           {brandKitLoading ? (
-                            <div className="flex flex-col items-center justify-center py-96 bg-black/60 rounded-[8rem] border-2 border-white/5 shadow-inner">
-                              <RefreshCw className="w-32 h-32 text-indigo-500 animate-spin mb-12 shadow-[0_0_60px_rgba(99,102,241,0.5)]" />
-                              <p className="text-[18px] font-black text-[var(--text-dim)] uppercase tracking-[1em] animate-pulse italic">Deciphering DNA Matrix Spectrum...</p>
+                            <div className="flex flex-col items-center justify-center py-40 bg-surface-page dark:bg-surface-950/30 rounded-[4rem] border-4 border-dashed border-surface-100 dark:border-surface-800 shadow-inner">
+                              <RefreshCw className="w-20 h-20 text-primary-500 animate-spin mb-10" />
+                              <p className="text-[12px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[1em] animate-pulse italic">Loading brand kit…</p>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-32 pt-20">
-                               <ConfigGroup title="Chroma DNA Topology">
-                                  <div className="flex gap-20">
-                                     <div className="flex flex-col gap-10 flex-1">
-                                        <label className="text-[16px] font-black uppercase text-[var(--text-dim)] tracking-[0.8em] italic pl-10 text-left mb-2">Primary_Hex</label>
-                                        <div className="flex items-center gap-12 p-10 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner font-black group/color transition-all duration-300 hover:border-white/20">
-                                           <input type="color" value={brandKit.primaryColor || '#6366f1'} title="Primary Color" aria-label="Primary Color" onChange={(e) => updateBrandKitField('primaryColor', e.target.value)} className="w-24 h-24 rounded-[2rem] border-none bg-transparent cursor-pointer shadow-3xl group-hover/color:rotate-12 group-hover:scale-110 transition-transform duration-300 p-0" />
-                                           <input type="text" value={brandKit.primaryColor || ''} title="Primary Hex" aria-label="Primary Hex" onChange={(e) => updateBrandKitField('primaryColor', e.target.value)} className="bg-transparent border-none text-4xl font-black font-mono text-white focus:outline-none w-full italic tracking-tighter" placeholder="#FF00FF" />
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                               <div className="space-y-12">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                     <div className="space-y-6">
+                                        <label className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic pl-4">Primary color</label>
+                                        <div className="flex items-center gap-6 p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.2rem] shadow-inner backdrop-blur-xl group/color hover:border-primary-500/30 transition-all">
+                                           <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden rounded-[1.2rem] border-2 border-surface-200 dark:border-surface-800 shadow-lg">
+                                              <input type="color"
+                                                title="Primary color"
+                                                aria-label="Primary color"
+                                                value={brandKit.primaryColor || '#6366f1'} 
+                                                onChange={(e) => updateBrandKitField('primaryColor', e.target.value)} 
+                                                className="absolute inset-[-15px] w-[180%] h-[180%] cursor-pointer p-0" 
+                                              />
+                                           </div>
+                                           <input type="text" value={brandKit.primaryColor || ''} onChange={(e) => updateBrandKitField('primaryColor', e.target.value)} className="bg-transparent border-none text-lg font-black text-surface-900 dark:text-white focus:outline-none w-full uppercase italic tracking-tighter" placeholder="#FFFFFF" />
                                         </div>
                                      </div>
-                                     <div className="flex flex-col gap-10 flex-1">
-                                        <label className="text-[16px] font-black uppercase text-[var(--text-dim)] tracking-[0.8em] italic pl-10 text-left mb-2">Accent_Hex</label>
-                                        <div className="flex items-center gap-12 p-10 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner font-black group/color transition-all duration-300 hover:border-white/20">
-                                           <input type="color" value={brandKit.accentColor || '#8b5cf6'} title="Accent Color" aria-label="Accent Color" onChange={(e) => updateBrandKitField('accentColor', e.target.value)} className="w-24 h-24 rounded-[2rem] border-none bg-transparent cursor-pointer shadow-3xl group-hover/color:rotate-12 group-hover:scale-110 transition-transform duration-300 p-0" />
-                                           <input type="text" value={brandKit.accentColor || ''} title="Accent Hex" aria-label="Accent Hex" onChange={(e) => updateBrandKitField('accentColor', e.target.value)} className="bg-transparent border-none text-4xl font-black font-mono text-white focus:outline-none w-full italic tracking-tighter" placeholder="#AA00FF" />
-                                        </div>
-                                     </div>
-                                  </div>
-                               </ConfigGroup>
-
-                               <ConfigGroup title="Lattice Glyph Architecture">
-                                  <div className="space-y-16">
-                                     <DropdownControl label="Headline Lattice" description="Typography for core titles and logic anchors" 
-                                      value={brandKit.titleFont || ''} options={FONT_OPTIONS.map(o => ({id: o.value, label: o.label}))}
-                                      onChange={(v) => updateBrandKitField('titleFont', v)} />
-                                     <DropdownControl label="Meta Logic Font" description="Primary interface and linguistic rendering substrate" 
-                                      value={brandKit.bodyFont || ''} options={FONT_OPTIONS.map(o => ({id: o.value, label: o.label}))}
-                                      onChange={(v) => updateBrandKitField('bodyFont', v)} />
-                                  </div>
-                                </ConfigGroup>
-
-                               <ConfigGroup title="Manifest Payload Overlays" fullWidth>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-24 p-24 rounded-[7rem] bg-black/60 border-2 border-white/5 shadow-inner">
-                                     <DropdownControl label="Logic Manifest Style" description="Visual style of rendered text payloads" 
-                                       value={brandKit.lowerThirdStyle || ''} options={[{id:'', label:'NULL_SECTOR'}, {id:'bar', label:'CORE_STREAM_BAR'}, {id:'pill', label:'DYNAMIC_FLEX_PILL'}, {id:'minimal', label:'CLEAN_LATTICE'}]}
-                                       onChange={(v) => updateBrandKitField('lowerThirdStyle', v)} />
-                                     <DropdownControl label="Identifier Quadrant" description="Lattice coordinate for core IDENTITY anchor" 
-                                       value={brandKit.logoPlacement || ''} options={[{id:'', label:'IDENTIFIER_HIDDEN'}, {id:'top-left', label:'ALPHA_QUADRANT'}, {id:'top-right', label:'BETA_QUADRANT'}, {id:'bottom-right', label:'OMEGA_QUADRANT'}]}
-                                       onChange={(v) => updateBrandKitField('logoPlacement', v)} />
-                                     <div className="flex flex-col gap-12 justify-center px-6">
-                                        <label className="text-[20px] font-black uppercase tracking-[0.5em] text-white italic leading-none pl-6 text-left">Identifier Saturation</label>
-                                        <div className="flex items-center gap-10">
-                                           <input type="range" min="0" max="100" value={brandKit.logoOpacity || 100} title="Saturation" aria-label="Saturation" onChange={(e) => updateBrandKitField('logoOpacity', parseInt(e.target.value))} className="flex-1 h-6 bg-black/80 rounded-full appearance-none cursor-pointer accent-white border-2 border-white/5 shadow-inner" />
-                                           <span className="text-5xl font-black font-mono text-indigo-400 italic w-32 text-right tabular-nums">{brandKit.logoOpacity || 100}%</span>
+                                     <div className="space-y-6">
+                                        <label className="text-[11px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.5em] italic pl-4">Accent color</label>
+                                        <div className="flex items-center gap-6 p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2.2rem] shadow-inner backdrop-blur-xl group/color hover:border-primary-500/30 transition-all">
+                                           <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden rounded-[1.2rem] border-2 border-surface-200 dark:border-surface-800 shadow-lg">
+                                              <input type="color" value={brandKit.accentColor || '#8b5cf6'} onChange={(e) => updateBrandKitField('accentColor', e.target.value)} aria-label="Accent color" title="Accent color" className="absolute inset-[-15px] w-[180%] h-[180%] cursor-pointer p-0" />
+                                           </div>
+                                           <input type="text" value={brandKit.accentColor || ''} onChange={(e) => updateBrandKitField('accentColor', e.target.value)} className="bg-transparent border-none text-lg font-black text-surface-900 dark:text-white focus:outline-none w-full uppercase italic tracking-tighter" placeholder="#000000" />
                                         </div>
                                      </div>
                                   </div>
-                               </ConfigGroup>
+                                  <DropdownControl label="Headline font" description="Used for titles and big hooks."
+                                    value={brandKit.titleFont || ''} options={FONT_OPTIONS.map(o => ({id: o.value, label: o.label}))}
+                                    onChange={(v) => updateBrandKitField('titleFont', v)} />
+                                  <DropdownControl label="Body font" description="Used for captions and supporting text."
+                                    value={brandKit.bodyFont || ''} options={FONT_OPTIONS.map(o => ({id: o.value, label: o.label}))}
+                                    onChange={(v) => updateBrandKitField('bodyFont', v)} />
+                               </div>
 
-                               <div className="col-span-full flex justify-end pt-20">
-                                  <button onClick={manifestIdentityDNA} disabled={brandKitSaving}
-                                    className="px-32 py-12 rounded-[5rem] bg-indigo-600 text-white font-black uppercase text-[20px] tracking-[1em] hover:bg-white hover:text-indigo-600 transition-all duration-300 shadow-[0_60px_150px_rgba(99,102,241,0.2)] disabled:opacity-50 italic flex items-center gap-12 active:scale-90 group relative overflow-hidden border-none"
-                                  >
-                                    <div className="absolute inset-x-0 bottom-0 h-2 bg-white/20 animate-shimmer" />
-                                    <div className="relative z-10 flex items-center gap-12">
-                                      {brandKitSaving ? <RefreshCw className="animate-spin" size={40} /> : <Scan size={40} className="group-hover:rotate-180 transition-transform duration-300" />}
-                                      {brandKitSaving ? 'SYNTHESIZING...' : 'MANIFEST_IDENTITY_DNA'}
-                                    </div>
-                                  </button>
+                               <div className="space-y-12">
+                                  <DropdownControl label="Lower-third style" description="How name banners and captions appear on screen."
+                                    value={brandKit.lowerThirdStyle || ''} options={[{id:'', label:'None'}, {id:'bar', label:'Classic bar'}, {id:'pill', label:'Modern pill'}, {id:'minimal', label:'Minimal'}]}
+                                    onChange={(v) => updateBrandKitField('lowerThirdStyle', v)} />
+                                  <DropdownControl label="Logo placement" description="Where your logo or watermark sits."
+                                    value={brandKit.logoPlacement || ''} options={[{id:'', label:'Hidden'}, {id:'top-left', label:'Top left'}, {id:'top-right', label:'Top right'}, {id:'bottom-right', label:'Bottom right'}]}
+                                    onChange={(v) => updateBrandKitField('logoPlacement', v)} />
+                                  
+                                  <div className="col-span-full flex justify-end pt-8">
+                                     <button type="button" onClick={saveBrandKit} disabled={brandKitSaving}
+                                       className="w-full px-12 py-7 bg-primary-600 text-white font-black uppercase text-[12px] tracking-[0.8em] italic rounded-[2.5rem] hover:bg-primary-500 transition-all shadow-[0_25px_60px_rgba(99,102,241,0.4)] flex items-center justify-center gap-8 active:scale-95 border-none group/save"
+                                     >
+                                       {brandKitSaving ? <RefreshCw className="animate-spin" size={28} /> : <CheckCircle2 size={28} className="group-hover:scale-125 transition-transform" />}
+                                       {brandKitSaving ? 'Saving…' : 'Save brand kit'}
+                                     </button>
+                                  </div>
                                </div>
                             </div>
                           )}
@@ -486,154 +473,139 @@ export default function SovereignCalibrationNodePage() {
                       )}
 
                       {activeTab === 'notifications' && (
-                        <div className="space-y-32">
-                          <header className="space-y-10">
-                             <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 rounded-[3.5rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(244,63,94,0.2)] animate-pulse"><Bell className="text-rose-400" size={56} /></div>
-                                <div>
-                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Resonance Routing</h2>
-                                   <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-rose-500/30">Signal protocols and urgency thresholds</p>
-                                </div>
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/10 border-2 border-rose-500/20 flex items-center justify-center shadow-lg">
+                                <Bell className="text-rose-500" size={40} />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">Notifications</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Choose what Click pings you about.</p>
                              </div>
                           </header>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-32 pt-20">
-                             <ConfigGroup title="Neural Frequency Channels">
-                                <ToggleControl label="Neural Uplink (E-Mail)" description="Weekly logic sequence reports and autonomous mission summaries" 
-                                  value={settings.notifications.email} onChange={(v) => tuneParameter('notifications.email', v)} />
-                                <ToggleControl label="HUD Visual Sync (Push)" description="Real-time mission status alerts and nodal breakthrough pings" 
-                                  value={settings.notifications.push} onChange={(v) => tuneParameter('notifications.push', v)} />
-                             </ConfigGroup>
-                             <ConfigGroup title="Heuristic Signal Triggers">
-                                <ToggleControl label="Payload Deciphered" description="Signal when new autonomous content nodes are manifested" 
-                                  value={settings.notifications.contentReady} onChange={(v) => tuneParameter('notifications.contentReady', v)} />
-                                <ToggleControl label="Market Pulse Resonance" description="Heuristic market shifts detected from the Sovereign Matrix" 
-                                  value={settings.notifications.mentions ?? true} onChange={(v) => tuneParameter('notifications.mentions', v)} />
-                             </ConfigGroup>
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                             <div className="space-y-10">
+                                <ToggleControl label="Email" description="Weekly summary plus action items."
+                                  value={settings.notifications.email} onChange={(v) => handleSettingChange('notifications.email', v)} />
+                                <ToggleControl label="Push" description="Real-time alerts when a post is ready or scheduled."
+                                  value={settings.notifications.push} onChange={(v) => handleSettingChange('notifications.push', v)} />
+                             </div>
+                             <div className="space-y-10">
+                                <ToggleControl label="Content ready" description="Ping me when a generated clip finishes processing."
+                                  value={settings.notifications.contentReady} onChange={(v) => handleSettingChange('notifications.contentReady', v)} />
+                                <ToggleControl label="Mentions" description="Tell me when my brand or handle is mentioned."
+                                  value={settings.notifications.mentions ?? true} onChange={(v) => handleSettingChange('notifications.mentions', v)} />
+                             </div>
                           </div>
                         </div>
                       )}
 
                       {activeTab === 'privacy' && (
-                        <div className="space-y-32">
-                          <header className="space-y-10">
-                            <div className="flex items-center gap-12">
-                               <div className="w-24 h-24 rounded-[3.5rem] bg-slate-500/5 border-2 border-slate-500/20 flex items-center justify-center shadow-inner"><EyeOff className="text-[var(--text-dim)]" size={56} /></div>
-                               <div>
-                                  <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Logic Sovereignty</h2>
-                                  <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-white/10">Manifestation consent and neural telemetry analytics</p>
-                               </div>
-                            </div>
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-surface-100 dark:bg-surface-800 border-2 border-surface-200 dark:border-surface-700 flex items-center justify-center shadow-lg">
+                                <EyeOff className="text-surface-600 dark:text-surface-300" size={40} />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">Privacy</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Decide what Click can use to improve your results.</p>
+                             </div>
                           </header>
-                          <div className="max-w-6xl space-y-28 pt-20">
-                             <ConfigGroup title="Sovereign Consent Matrix Topology">
-                                <ToggleControl label="Heuristic Analytics Mining" description="Allow Sovereign Matrix to optimize global trends via anonymized logic data" 
-                                  value={settings.privacy.analyticsConsent} onChange={(v) => tuneParameter('privacy.analyticsConsent', v)} />
-                                <ToggleControl label="Mission History Archival" description="Allow system to store operational history for recursive hive training & audit" 
-                                  value={settings.privacy.dataConsent} onChange={(v) => tuneParameter('privacy.dataConsent', v)} />
-                             </ConfigGroup>
+                          
+                          <div className="max-w-4xl space-y-10">
+                             <ToggleControl label="Anonymous analytics" description="Help Click improve by sharing anonymous usage data."
+                               value={settings.privacy.analyticsConsent} onChange={(v) => handleSettingChange('privacy.analyticsConsent', v)} />
+                             <ToggleControl label="Use my content to improve my AI" description="Let Click learn from your past posts to make better suggestions for you."
+                               value={settings.privacy.dataConsent} onChange={(v) => handleSettingChange('privacy.dataConsent', v)} />
                           </div>
                         </div>
                       )}
 
                       {activeTab === 'security' && (
-                        <div className="space-y-32">
-                          <header className="space-y-10">
-                             <div className="flex items-center gap-12">
-                                <div className="w-24 h-24 rounded-[3.5rem] bg-indigo-500/5 border-2 border-indigo-500/20 flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.2)] animate-pulse"><Shield size={56} className="text-indigo-400" /></div>
-                                <div>
-                                   <h2 className="text-6xl font-black uppercase tracking-tighter italic text-[var(--text-main)] leading-none mb-4">Shielding Protocols</h2>
-                                   <p className="text-[var(--text-dim)] font-black uppercase tracking-[1em] text-[15px] italic leading-none underline decoration-indigo-500/30">Authentication matrices and cross-node encryption</p>
-                                </div>
+                        <div className="space-y-16">
+                          <header className="flex items-center gap-10">
+                             <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center shadow-lg">
+                                <Shield size={40} className="text-indigo-600 dark:text-indigo-400" />
+                             </div>
+                             <div className="space-y-3">
+                                <h2 className="text-4xl font-black tracking-tighter text-surface-900 dark:text-white uppercase italic leading-none">Access</h2>
+                                <p className="text-base font-bold text-surface-500 dark:text-slate-400 italic uppercase tracking-tight">Password, sessions, and account deletion.</p>
                              </div>
                           </header>
-                          <div className="max-w-5xl space-y-40 pt-20">
-                              <ConfigGroup title="Cipher Matrix Interface Control">
-                                 <ChangePasswordForm />
-                              </ConfigGroup>
-                              <ConfigGroup title="Terminal Dissolution Horizon">
-                                 <div className="p-24 rounded-[7rem] bg-rose-600/[0.04] border-4 border-rose-500/20 flex flex-col gap-16 shadow-[inset_0_0_150px_rgba(244,63,94,0.15)] relative overflow-hidden group/dang">
-                                    <div className="absolute top-0 right-0 p-16 opacity-[0.05] group-hover:opacity-[0.2] transition-opacity duration-300 rotate-12 scale-150 pointer-events-none"><ZapOff size={600} /></div>
-                                    <div className="space-y-12 relative z-10">
-                                       <div className="flex items-center gap-10">
-                                          <div className="w-16 h-16 rounded-[2rem] bg-rose-500/20 border-2 border-rose-500/40 flex items-center justify-center animate-bounce shadow-2xl"><ShieldAlert size={36} className="text-rose-500" /></div>
-                                          <p className="text-[28px] text-rose-500 font-black uppercase tracking-[0.4em] italic leading-none underline decoration-rose-500/40">LATTICE_DISSOLUTION_PROTOCOL</p>
-                                       </div>
-                                       <div className="p-12 bg-black/60 border-2 border-white/5 rounded-[4.5rem] shadow-inner">
-                                          <p className="text-[16px] text-[var(--text-dim)] font-black uppercase tracking-[0.3em] italic leading-relaxed max-w-5xl text-left border-l-8 border-rose-600/30 pl-16">
-                                            Initializing lattice dissolution will immediately disconnect all active resonance bridges, purge the Sovereign Ledger permanently, and terminate your identity DNA across the entire global substrate. This action is absolute, non-invertible, and chemically permanent. No logic recovery possible.
-                                          </p>
-                                       </div>
-                                    </div>
-                                    <button title="Dissolve" className="w-fit px-32 py-12 bg-rose-600 text-white font-black uppercase text-[18px] tracking-[1em] rounded-[4.5rem] hover:bg-white hover:text-rose-600 transition-all duration-300 shadow-[0_60px_150px_rgba(244,63,94,0.3)] relative z-10 italic active:scale-75 group/btn border-none">
-                                      <div className="flex items-center gap-10">
-                                        EXECUTE_DISSOLUTION_PURGE <Trash2 size={36} className="group-hover/btn:rotate-12 transition-transform duration-700" />
-                                      </div>
-                                    </button>
+                          
+                          <div className="max-w-4xl space-y-20">
+                              <div className="bg-surface-page dark:bg-surface-950/40 p-10 sm:p-14 rounded-[4rem] border-2 border-surface-100 dark:border-surface-800 shadow-inner backdrop-blur-xl">
+                                <ChangePasswordForm />
+                              </div>
+                              
+                              <div className="p-10 sm:p-14 rounded-[4rem] bg-rose-500/5 dark:bg-rose-500/[0.02] border-2 border-rose-500/20 space-y-12 relative overflow-hidden group/danger transition-all duration-500 hover:border-rose-500/40">
+                                 <div className="absolute top-0 right-0 p-16 opacity-[0.03] group-hover/danger:opacity-[0.1] transition-opacity duration-1000 pointer-events-none">
+                                    <ShieldAlert size={350} />
                                  </div>
-                              </ConfigGroup>
+                                 <div className="flex items-center gap-8 relative z-10">
+                                    <div className="w-16 h-16 rounded-[1.5rem] bg-rose-500/20 border-2 border-rose-500/30 flex items-center justify-center shadow-lg group-hover/danger:rotate-12 transition-transform duration-500">
+                                       <ShieldAlert size={36} className="text-rose-600 dark:text-rose-400" />
+                                    </div>
+                                    <div>
+                                       <h3 className="text-3xl font-black text-rose-600 dark:text-rose-400 uppercase tracking-tighter italic leading-none mb-1">Danger zone</h3>
+                                       <p className="text-[10px] font-black text-rose-500/40 uppercase tracking-[0.5em] italic">Irreversible actions</p>
+                                    </div>
+                                 </div>
+                                 <p className="text-base font-bold text-surface-500 dark:text-slate-400 leading-relaxed border-l-4 border-rose-500/40 pl-10 relative z-10 italic uppercase tracking-tight max-w-3xl">
+                                   Delete your account: permanently remove all of your videos, posts, connected accounts, and subscription. This cannot be undone.
+                                 </p>
+                                 <button
+                                   type="button"
+                                   onClick={deactivateAccount}
+                                   className="px-12 py-6 bg-rose-600 text-white font-black uppercase text-[12px] tracking-[0.8em] italic rounded-[2rem] hover:bg-rose-700 transition-all shadow-[0_25px_60px_rgba(225,29,72,0.4)] active:scale-95 border-none relative z-10 group-hover/danger:-translate-y-2"
+                                 >
+                                   Delete account
+                                 </button>
+                              </div>
                           </div>
                         </div>
                       )}
                     </motion.div>
                  </AnimatePresence>
 
-                 {/* Persistent Commit Center */}
-                 <footer className="flex justify-end pt-24 border-t-4 border-white/5 relative z-[100] mt-24">
-                    <button onClick={() => commitMatrixChange()} disabled={saving}
-                      className="px-48 py-14 bg-white text-black font-black uppercase text-[24px] tracking-[1.5em] italic rounded-[6rem] hover:bg-emerald-600 hover:text-white transition-all duration-300 shadow-[0_80px_200px_rgba(255,255,255,0.2)] hover:shadow-emerald-500/40 disabled:opacity-50 active:scale-95 flex items-center gap-12 group relative overflow-hidden border-none"
+                 <footer className="flex flex-col sm:flex-row justify-between items-center pt-14 border-t-2 border-surface-100 dark:border-surface-800 mt-20 gap-10">
+                    <div className="flex items-center gap-6">
+                       <div className={`w-4 h-4 rounded-full transition-all duration-500 ${autoSaveStatus === 'saved' ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]' : autoSaveStatus === 'saving' ? 'bg-primary-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.8)]' : 'bg-surface-200 dark:bg-surface-900 shadow-inner'}`} />
+                       <span className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.6em] italic">
+                          {autoSaveStatus === 'saved' ? 'Saved' : autoSaveStatus === 'saving' ? 'Saving…' : 'Idle'}
+                       </span>
+                    </div>
+                    <button type="button" onClick={() => saveSettings()} disabled={saving}
+                      className="w-full sm:w-auto px-20 py-7 bg-surface-900 dark:bg-white text-white dark:text-black font-black uppercase text-[14px] tracking-[1em] italic rounded-[3rem] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_35px_100px_rgba(0,0,0,0.5)] disabled:opacity-50 active:scale-95 flex items-center justify-center gap-8 border-none group/commit"
                     >
-                      <div className="absolute inset-x-0 bottom-0 h-4 bg-emerald-400 group-hover:h-full transition-all duration-300 opacity-20" />
-                      <div className="relative z-10 flex items-center gap-12">
-                        {saving ? <RefreshCw className="animate-spin text-emerald-600 group-hover:text-white" size={48} /> : <Lock size={48} className="group-hover:scale-125 group-hover:rotate-12 transition-transform duration-300" />}
-                        {saving ? 'SYNCHRONIZING...' : 'COMMIT_CORE_CONFIG'}
-                      </div>
+                      {saving ? <RefreshCw className="animate-spin" size={32} /> : <Lock size={32} className="group-hover/commit:rotate-12 transition-transform" />}
+                      {saving ? 'Saving…' : 'Save all settings'}
                     </button>
                  </footer>
               </div>
            </section>
         </main>
-
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-          select { background-color: transparent !important; border: none !important; outline: none !important; appearance: none !important; }
-          input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 48px; width: 48px; border-radius: 50%; background: white; box-shadow: 0 0 60px rgba(255,255,255,0.8); cursor: pointer; border: 8px solid #020205; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-          input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3) rotate(15deg); }
-          @keyframes shimmer-line { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-          .animate-shimmer { animation: shimmer-line 3s infinite linear; }
-        `}</style>
       </div>
     </ErrorBoundary>
   )
 }
 
-function ConfigGroup({ title, children, fullWidth = false }: { title: string; children: React.ReactNode; fullWidth?: boolean }) {
-  return (
-    <div className={`flex flex-col gap-20 ${fullWidth ? 'col-span-full' : ''} group/group`}>
-      <div className="flex items-center gap-12 border-b-2 border-white/10 pb-12 transition-all group-hover/group:border-indigo-500/30">
-        <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center"><Sliders size={20} className="text-[var(--text-dim)] group-hover/group:text-indigo-400 transition-colors" /></div>
-        <h3 className="text-[18px] font-black uppercase tracking-[1em] text-[var(--text-dim)] italic leading-none group-hover/group:text-slate-700 transition-colors">{title}</h3>
-      </div>
-      <div className="flex flex-col gap-12">{children}</div>
-    </div>
-  )
-}
-
 function ToggleControl({ label, description, value, onChange }: { label: string; description: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-center justify-between p-14 rounded-[5.5rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
-      <div className="flex flex-col gap-6 text-left pl-8">
-        <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-indigo-400 transition-colors leading-none mb-2">{label}</span>
-        <span className="text-[15px] font-bold text-[var(--text-dim)] uppercase tracking-widest italic leading-tight max-w-xl opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
+    <div className="flex items-center justify-between p-8 sm:p-10 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 transition-all duration-500 shadow-inner group/toggle backdrop-blur-xl">
+      <div className="flex flex-col gap-3 text-left min-w-0 pr-10">
+        <span className="text-xl font-black text-surface-900 dark:text-white group-hover/toggle:text-primary-500 transition-colors uppercase italic tracking-tighter leading-none">{label}</span>
+        <span className="text-[12px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-tight leading-relaxed">{description}</span>
       </div>
-      <button onClick={() => onChange(!value)} title={value ? 'OFF' : 'ON'} aria-label={value ? 'OFF' : 'ON'}
-        className={`w-36 h-20 rounded-full relative transition-all duration-300 border-8 border-black shadow-[0_0_80px_rgba(0,0,0,1)] flex-shrink-0 ${value ? 'bg-indigo-600 shadow-[0_0_80px_rgba(99,102,241,0.5)]' : 'bg-slate-700'}`}
+      <button type="button" onClick={() => onChange(!value)}
+        title={label} aria-label={`${label}: ${value ? 'Enabled' : 'Disabled'}`}
+        className={`h-11 w-[84px] rounded-full relative transition-all duration-500 flex-shrink-0 shadow-2xl ${value ? 'bg-primary-500' : 'bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800'}`}
       >
-        <motion.div animate={{ x: value ? 64 : 4 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} 
-          className={`absolute top-1 left-1 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center ${value ? 'bg-white' : 'bg-slate-900 border-2 border-white/5'}`}
+        <motion.div animate={{ x: value ? 44 : 4 }} transition={{ type: "spring", stiffness: 600, damping: 30 }} 
+          className="absolute top-1 left-1 w-9 h-9 rounded-full bg-white shadow-xl flex items-center justify-center"
         >
-          {value ? <Check size={28} className="text-indigo-600" /> : <X size={28} className="text-[var(--text-dim)]" />}
+          {value && <Check size={22} className="text-primary-600" aria-hidden="true" />}
         </motion.div>
       </button>
     </div>
@@ -642,36 +614,21 @@ function ToggleControl({ label, description, value, onChange }: { label: string;
 
 function DropdownControl({ label, description, value, options, onChange }: { label: string; description: string; value: string; options: {id: string; label: string}[], onChange: (v: string) => void }) {
   return (
-    <div className="flex flex-col gap-16 p-14 rounded-[5.5rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
-      <div className="flex flex-col gap-6 text-left pl-8">
-        <span className="text-[24px] font-black uppercase tracking-[0.4em] text-white italic group-hover:text-indigo-400 transition-colors leading-none mb-2">{label}</span>
-        <span className="text-[15px] font-bold text-[var(--text-dim)] uppercase tracking-widest italic leading-tight opacity-40 group-hover:opacity-100 transition-opacity">{description}</span>
+    <div className="flex flex-col gap-8 p-10 rounded-[3.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 transition-all duration-500 shadow-inner group/drop backdrop-blur-xl">
+      <div className="flex flex-col gap-3 text-left">
+        <span className="text-xl font-black text-surface-900 dark:text-white group-hover/drop:text-primary-500 transition-colors uppercase italic tracking-tighter leading-none">{label}</span>
+        <span className="text-[12px] font-bold text-surface-400 dark:text-slate-600 italic uppercase tracking-tight leading-relaxed">{description}</span>
       </div>
-      <div className="relative group/sel">
-         <select value={value} onChange={(e) => onChange(e.target.value)} title={label} aria-label={label}
-           className="w-full bg-black/80 border-2 border-white/10 px-16 py-10 rounded-[3.5rem] text-[20px] font-black uppercase tracking-[0.8em] text-white focus:outline-none focus:border-indigo-500 transition-all duration-300 appearance-none cursor-pointer italic shadow-inner"
+      <div className="relative group/select">
+         <select value={value} onChange={(e) => onChange(e.target.value)}
+           aria-label={label}
+           title={label}
+           className="w-full bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 px-10 py-6 rounded-[2rem] text-sm font-black text-surface-900 dark:text-white uppercase italic tracking-[0.2em] focus:border-primary-500 outline-none appearance-none cursor-pointer transition-all shadow-xl backdrop-blur-xl group-hover/select:bg-surface-page dark:group-hover/select:bg-surface-950/60"
          >
-           {options.map(o => <option key={o.id} value={o.id} className="bg-[var(--page-bg)] text-white py-10">{o.label}</option>)}
+           {options.map(o => <option key={o.id} value={o.id} className="bg-surface-card dark:bg-surface-900">{o.label}</option>)}
          </select>
-         <div className="absolute right-12 top-1/2 -translate-y-1/2 text-[var(--text-dim)] pointer-events-none group-hover/sel:text-indigo-400 transition-colors duration-300 group-hover/sel:rotate-180">
-            <ChevronRight size={44} className="rotate-90" />
-         </div>
+         <ChevronDown size={28} className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-surface-300 dark:text-slate-800 group-hover/select:text-primary-500 transition-all" />
       </div>
-    </div>
-  )
-}
-
-function InputControl({ label, type = 'text', placeholder, value, onChange }: { label: string; type?: string; placeholder: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex flex-col gap-12 p-14 rounded-[6rem] bg-black/60 border-2 border-white/5 hover:border-indigo-500/50 transition-all duration-300 group shadow-[inset_0_0_100px_rgba(0,0,0,0.6)]">
-      <div className="flex items-center gap-6 pl-8">
-         <Key size={24} className="text-[var(--text-dim)] group-hover:text-indigo-400 transition-colors" />
-         <span className="text-[22px] font-black uppercase tracking-[0.5em] text-white italic group-hover:text-indigo-400 transition-colors leading-none text-left">{label}</span>
-      </div>
-      <input type={type} placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black/95 border-2 border-white/10 px-16 py-10 rounded-[4rem] text-[24px] font-mono font-black text-indigo-400 focus:outline-none focus:border-indigo-500 transition-all duration-300 placeholder:text-[var(--text-dim)] italic shadow-[0_0_40px_rgba(0,0,0,0.8)]"
-        title={label}
-      />
     </div>
   )
 }

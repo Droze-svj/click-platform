@@ -106,7 +106,8 @@ export const ExpertDNAView: React.FC = () => {
                          />
                       </div>
                    </div>
-                   <button 
+                   <button
+                    type="button"
                     onClick={mineDNA}
                     disabled={isMining}
                     className="flex items-center gap-3 px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-2xl transition-all"

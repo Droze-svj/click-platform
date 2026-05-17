@@ -5,7 +5,7 @@ const User = require('../models/User');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const logger = require('../utils/logger');
-const { isDevUser } = require('../utils/devUser');
+const { isDevUser, ensureObjectId } = require('../utils/devUser');
 
 /**
  * Track user event (privacy-compliant)
@@ -234,7 +234,7 @@ async function getComprehensiveAnalytics(userId, period = 30) {
     const contentBreakdown = await Content.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+          userId: ensureObjectId(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -254,7 +254,7 @@ async function getComprehensiveAnalytics(userId, period = 30) {
     const platformStats = await ScheduledPost.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+          userId: ensureObjectId(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -310,7 +310,7 @@ async function getPerformanceTrends(userId, period = 30) {
     const contentTrends = await Content.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+          userId: ensureObjectId(userId),
           createdAt: { $gte: startDate }
         }
       },
@@ -332,7 +332,7 @@ async function getPerformanceTrends(userId, period = 30) {
     const postingTrends = await ScheduledPost.aggregate([
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
+          userId: ensureObjectId(userId),
           createdAt: { $gte: startDate }
         }
       },

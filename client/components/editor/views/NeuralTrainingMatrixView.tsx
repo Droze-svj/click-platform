@@ -148,6 +148,7 @@ export const NeuralTrainingMatrixView: React.FC<NeuralTrainingMatrixViewProps> =
         </motion.div>
 
         <button
+          type="button"
           onClick={onCancel}
           className="mt-12 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.4em] transition-colors italic"
         >

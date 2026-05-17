@@ -5,49 +5,52 @@
 
 const logger = require('../utils/logger');
 const OAuthService = require('./oauthService');
+const { isDevUser } = require('../utils/devUser');
 
 /**
  * Main posting function to dispatch to platform-specific handlers
  */
-async function postToSocial(userId, platform, contentData, contentId = null) {
+async function postToSocialMedia(userId, platform, contentData, options = {}) {
   const Content = require('../models/Content');
-  const translationService = require('./globalTranslationService');
+  const contentId = options.contentId;
   
   try {
     let { title, description, mediaUrl, tags = [], targetLang = 'en' } = contentData;
     
+    // Default to mock data if in dev mode
+    const isDev = isDevUser(userId);
+
+    if (isDev) {
+      logger.info(`[DevMode] Mocking social post to ${platform}`);
+      return {
+        success: true,
+        platform,
+        externalId: `mock-post-${Date.now()}`,
+        postUrl: `https://${platform}.com/mock-post-${Date.now()}`
+      };
+    }
+
     // 🌍 Phase 15: Localized Metadata Injection
     if (targetLang && targetLang !== 'en' && contentId) {
       const content = await Content.findById(contentId);
       if (content?.metadata?.translations?.[targetLang]) {
         logger.info(`Phase 15: Injecting localized metadata for ${targetLang}`);
         const translation = content.metadata.translations[targetLang];
-        // If we have a translated description/title in metadata, use it
         description = translation.description || description;
         title = translation.title || title;
+        
+        // Update contentData with translated values so they are used in dispatch
+        contentData.title = title;
+        contentData.description = description;
       }
     }
 
-    // 💰 Phase 17: Autonomous Affiliate Orchestration
-    if (contentId) {
-      const monetizationService = require('./monetizationService');
-      const monetizationPlan = await monetizationService.getPlanByContent(userId, contentId);
-      
-      if (monetizationPlan && monetizationPlan.triggers && monetizationPlan.triggers.length > 0) {
-        // Find the best trigger (highest intent score)
-        const bestTrigger = [...monetizationPlan.triggers].sort((a, b) => b.intentScore - a.intentScore)[0];
-        if (bestTrigger && bestTrigger.checkoutUrl) {
-          description += `\n\n👉 Join ${bestTrigger.productName} here: ${bestTrigger.checkoutUrl}`;
-          logger.info('Autonomous Affiliate: Injected link into description', { contentId, productId: bestTrigger.productId });
-        }
-      }
-    }
-    
-    logger.info(`Dispatching post to ${platform}`, { userId, contentId, title, targetLang });
+    // Check user's OAuth tokens for the platform — pass through the
+    // caller-supplied accountId so multi-account users post from the
+    // right token. `accountId === null` resolves to the active/primary
+    // account, matching the previous single-account behaviour.
+    const authData = await OAuthService.getSocialCredentials(userId, platform, options.accountId || null);
 
-    // Check user's OAuth tokens for the platform
-    const authData = await OAuthService.getSocialCredentials(userId, platform);
-    
     if (!authData && process.env.NODE_ENV === 'production') {
       throw new Error(`Account not linked for platform: ${platform}`);
     }
@@ -56,7 +59,7 @@ async function postToSocial(userId, platform, contentData, contentId = null) {
     const finalAuth = authData || { accessToken: 'dev-token' };
 
     // Dispatch with recursive recovery logic
-    const result = await dispatchWithRecovery(userId, platform, finalAuth, contentData);
+    const result = await dispatchWithRecovery(userId, platform, finalAuth, contentData, false, options);
 
     // If contentId is provided, persist the post result to the Content model
     if (contentId && result.success) {
@@ -88,9 +91,147 @@ async function postToSocial(userId, platform, contentData, contentId = null) {
 }
 
 /**
+ * Connect social media account
+ */
+async function connectAccount(userId, platform, accessToken, refreshToken, metadata = {}) {
+  try {
+    const isDev = isDevUser(userId);
+    if (isDev) {
+      logger.info(`[DevMode] Mocking account connection for ${platform}`);
+      return { platform, connected: true };
+    }
+
+    await OAuthService.saveSocialCredentials(userId, platform, {
+      accessToken,
+      refreshToken,
+      extra: metadata
+    });
+
+    return { platform, connected: true };
+  } catch (error) {
+    logger.error(`Failed to connect ${platform} account`, { userId, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Disconnect social media account
+ */
+async function disconnectAccount(userId, platform) {
+  try {
+    const isDev = isDevUser(userId);
+    if (isDev) {
+      logger.info(`[DevMode] Mocking account disconnection for ${platform}`);
+      return { platform, disconnected: true };
+    }
+
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user || !user.oauth) return { platform, disconnected: true };
+
+    const platformKey = platform.toLowerCase();
+    if (user.oauth[platformKey]) {
+      user.oauth[platformKey].connected = false;
+      user.markModified('oauth');
+      await user.save();
+    }
+
+    return { platform, disconnected: true };
+  } catch (error) {
+    logger.error(`Failed to disconnect ${platform} account`, { userId, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Get connected accounts
+ */
+async function getConnectedAccounts(userId) {
+  try {
+    const isDev = isDevUser(userId);
+    if (isDev) {
+      logger.info(`[DevMode] Returning mock connected accounts for ${userId}`);
+      return [
+        { platform: 'tiktok', connected: true },
+        { platform: 'instagram', connected: true }
+      ];
+    }
+
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (!user || !user.oauth) return [];
+
+    return Object.entries(user.oauth)
+      .filter(([, data]) => data.connected)
+      .map(([platform]) => ({ platform, connected: true }));
+  } catch (error) {
+    logger.error('Failed to get connected accounts', { userId, error: error.message });
+    return [];
+  }
+}
+
+/**
+ * Get optimal posting times
+ */
+async function getOptimalPostingTimes(userId, platform) {
+  try {
+    const { NICHE_POSTING_WINDOWS } = require('./marketingKnowledge');
+    const Content = require('../models/Content');
+    
+    // In dev mode or for users with no content, return general defaults
+    const isDev = isDevUser(userId);
+    let niche = 'business';
+
+    if (!isDev) {
+      const lastContent = await Content.findOne({ userId }).sort({ createdAt: -1 });
+      niche = lastContent?.niche || lastContent?.metadata?.niche || 'business';
+    }
+
+    const windows = NICHE_POSTING_WINDOWS[niche]?.[platform.toLowerCase()] || 
+                    NICHE_POSTING_WINDOWS['business'][platform.toLowerCase()] || [];
+
+    return {
+      platform,
+      niche,
+      optimalTimes: windows,
+      timezone: 'UTC' // Default
+    };
+  } catch (error) {
+    logger.error('Failed to get optimal posting times', { userId, platform, error: error.message });
+    return { platform, optimalTimes: [], error: error.message };
+  }
+}
+
+/**
+ * Refresh access token
+ */
+async function refreshAccessToken(userId, platform) {
+  try {
+    const isDev = isDevUser(userId);
+    if (isDev) {
+      logger.info(`[DevMode] Mocking token refresh for ${platform}`);
+      return { accessToken: 'new-dev-token' };
+    }
+
+    const platformKey = platform.toLowerCase() === 'x' ? 'twitter' : platform.toLowerCase();
+    const refreshService = require(`./${platformKey}OAuthService`);
+    
+    if (refreshService && typeof refreshService.refreshAccessToken === 'function') {
+      const newToken = await refreshService.refreshAccessToken(userId);
+      return { accessToken: newToken };
+    }
+    
+    throw new Error(`Refresh service not implemented for ${platform}`);
+  } catch (error) {
+    logger.error(`Token refresh failed for ${platform}`, { userId, error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Dispatcher with built-in 401 retry / token refresh
  */
-async function dispatchWithRecovery(userId, platform, auth, contentData, isRetry = false) {
+async function dispatchWithRecovery(userId, platform, auth, contentData, isRetry = false, options = {}) {
   try {
     let result;
     switch (platform.toLowerCase()) {
@@ -127,16 +268,20 @@ async function dispatchWithRecovery(userId, platform, auth, contentData, isRetry
     const isAuthError = error.response?.status === 401 || error.message?.includes('expired') || error.message?.includes('auth');
     
     if (isAuthError && !isRetry) {
-      logger.warn(`Auth failure for ${platform}. Attempting reactive token refresh...`, { userId });
+      logger.warn(`Auth failure for ${platform}. Attempting reactive token refresh...`, { userId, accountId: options?.accountId || null });
       try {
         const platformKey = platform.toLowerCase() === 'x' ? 'twitter' : platform.toLowerCase();
         const refreshService = require(`./${platformKey}OAuthService`);
-        const refreshMethod = (platformKey === 'twitter' || platformKey === 'linkedin') ? 'refreshAccessToken' : 'refreshAccessToken'; // standard name
-        
-        const newAccessToken = await refreshService[refreshMethod](userId);
+
+        // Refresh the *specific* account's token, not just the primary,
+        // so the retry uses the right credentials when the user has
+        // multiple accounts.
+        const newAccessToken = typeof refreshService.refreshAccessToken === 'function'
+          ? await refreshService.refreshAccessToken(userId, options?.accountId || undefined)
+          : null;
         logger.info(`Reactive refresh successful for ${platform}. Retrying dispatch...`);
-        
-        return await dispatchWithRecovery(userId, platform, { accessToken: newAccessToken }, contentData, true);
+
+        return await dispatchWithRecovery(userId, platform, { accessToken: newAccessToken }, contentData, true, options);
       } catch (refreshErr) {
         logger.error(`Reactive refresh failed for ${platform}`, { userId, error: refreshErr.message });
         throw error; // throw original 401
@@ -146,16 +291,15 @@ async function dispatchWithRecovery(userId, platform, auth, contentData, isRetry
   }
 }
 
-
 /**
  * Synchronize social insights for a user across all connected platforms
  */
 async function syncSocialInsights(userId) {
   try {
-    const connectedAccounts = await OAuthService.getConnectedSocials(userId);
+    const connectedAccounts = await getConnectedAccounts(userId);
     const results = {};
 
-    for (const platform of connectedAccounts) {
+    for (const { platform } of connectedAccounts) {
       try {
         const authData = await OAuthService.getSocialCredentials(userId, platform);
         let insights;
@@ -215,7 +359,7 @@ async function deleteFromSocial(userId, platform, externalId) {
     case 'x':
       return await require('./TwitterSocialService').deleteTweet(finalAuth, externalId);
     case 'instagram':
-      return await require('./MetaSocialService').deletePost(finalAuth, externalId); // if implemented
+      return await require('./MetaSocialService').deletePost(finalAuth, externalId);
     case 'facebook':
       return await require('./MetaSocialService').deletePost(finalAuth, externalId);
     case 'linkedin':
@@ -229,9 +373,13 @@ async function deleteFromSocial(userId, platform, externalId) {
   }
 }
 
-
 module.exports = {
-  postToSocial,
-  deleteFromSocial,
-  syncSocialInsights
+  postToSocialMedia,
+  connectAccount,
+  disconnectAccount,
+  getConnectedAccounts,
+  getOptimalPostingTimes,
+  refreshAccessToken,
+  syncSocialInsights,
+  deleteFromSocial
 };

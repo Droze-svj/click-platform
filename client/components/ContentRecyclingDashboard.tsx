@@ -182,6 +182,7 @@ export default function EntropyReversalNode() {
         <div className="flex gap-6 p-4 bg-black/80 backdrop-blur-3xl rounded-[3rem] border-2 border-white/5 mb-20 relative z-10 shadow-inner max-w-4xl mx-auto">
           {(['suggestions', 'plans', 'stats'] as const).map((tab) => (
             <button
+              type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-6 rounded-[2rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-700 italic border-4 ${
@@ -248,6 +249,7 @@ export default function EntropyReversalNode() {
                       )}
 
                       <button
+                        type="button"
                         onClick={() => setSelectedContent(item)}
                         title="Init Trajectory"
                         className="w-full py-8 bg-white text-black rounded-[3rem] text-[14px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-1000 flex items-center justify-center gap-6 shadow-3xl italic active:scale-95 group/btn"
@@ -318,6 +320,7 @@ export default function EntropyReversalNode() {
                     </div>
                     
                     <button
+                      type="button"
                       onClick={() => toggleRecycling(plan._id, !plan.repostSchedule.isActive)}
                       title={plan.repostSchedule.isActive ? "Pause Cascade" : "Resume Cascade"}
                       className={`w-32 h-32 rounded-[3rem] flex items-center justify-center transition-all duration-1000 shadow-3xl border-4 relative overflow-hidden group/ctl active:scale-90 ${
@@ -416,7 +419,8 @@ export default function EntropyReversalNode() {
                    <div className="w-16 h-16 bg-indigo-500/10 border-2 border-indigo-500/30 rounded-[2rem] flex items-center justify-center rotate-12"><RefreshCw size={32} className="text-indigo-400" /></div>
                    <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">Reversal Calibrations</h3>
                 </div>
-                <button 
+                <button
+                  type="button"
                   onClick={() => setSelectedContent(null)} 
                   title="Abort Calibration"
                   className="w-16 h-16 bg-white/5 border-2 border-white/10 rounded-[2rem] text-slate-800 hover:text-white hover:border-rose-500/50 transition-all duration-700 hover:rotate-90 active:scale-90 flex items-center justify-center"
@@ -525,14 +529,16 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
       </div>
 
       <div className="flex gap-8 pt-12">
-        <button 
+        <button
+          type="button"
           onClick={onCancel} 
           title="Abort Process"
           className="flex-1 py-8 bg-black/80 border-4 border-white/5 text-slate-800 hover:text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic hover:border-rose-500/50 shadow-3xl"
         >
           ABORT_PROCESS
         </button>
-        <button 
+        <button
+          type="button"
           onClick={handleCreate} 
           title="Initiate Reversal"
           className="flex-2 py-8 bg-white text-black rounded-[3rem] text-[16px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all duration-1000 shadow-[0_40px_150px_rgba(79,70,229,0.3)] italic active:scale-95 group/seal"

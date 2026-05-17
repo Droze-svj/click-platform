@@ -168,7 +168,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
             <div className="flex items-center gap-2">
               {canUndo && (
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => onUndoLast?.()}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors"
                 >
@@ -177,7 +177,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                 </button>
               )}
               <button
-                type="button"
+               type="button"
                 disabled={pendingSuggestions.length === 0}
                 onClick={() => onApplyAll?.(pendingSuggestions)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-fuchsia-500 hover:bg-fuchsia-600 text-white text-xs font-bold uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-lg shadow-fuchsia-500/30"
@@ -215,7 +215,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="text-[10px] font-bold tabular-nums text-slate-500">{Math.round(s.confidence * 100)}%</span>
                     <button
-                      type="button"
+                     type="button"
                       disabled={applied}
                       onClick={() => onApplyOne?.(s)}
                       className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${applied

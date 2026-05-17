@@ -77,6 +77,7 @@ export default function KeyboardShortcutsHelper() {
             </h2>
           </div>
           <button
+            type="button"
             onClick={() => setIsOpen(false)}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             aria-label="Close"

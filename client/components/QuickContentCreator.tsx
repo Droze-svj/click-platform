@@ -178,6 +178,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
   return (
     <>
       <button
+        type="button"
         onClick={() => setShowModal(true)}
         className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
       >
@@ -213,6 +214,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => {
                       setShowModal(false)
                       setQuickText('')
@@ -229,6 +231,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                     <div className="flex items-center gap-4">
                       {['Subtle', 'Dynamic', 'Radical'].map((v) => (
                         <button
+                          type="button"
                           key={v}
                           onClick={() => setVariance(v.toLowerCase() as any)}
                           className={`text-[9px] font-black uppercase tracking-tighter transition-all ${
@@ -267,6 +270,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
 
                   <div className="flex gap-3">
                     <button
+                      type="button"
                       onClick={handleQuickText}
                       disabled={!quickText.trim() || loading}
                       className="flex-[2] bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest italic hover:shadow-xl hover:shadow-blue-500/20 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
@@ -275,6 +279,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                       {loading ? 'SYNTHESIZING...' : 'STRATEGIC ADAPTATION'}
                     </button>
                     <button
+                      type="button"
                       onClick={() => setVariance('radical')}
                       title="Neural Refresh: Maximum Variance"
                       className="flex-1 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-400 hover:bg-white/10 transition-all group"
@@ -292,6 +297,7 @@ export default function QuickContentCreator({ onContentCreated }: QuickContentCr
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {quickTemplates.map((template) => (
                     <button
+                      type="button"
                       key={template.id}
                       onClick={() => handleQuickCreate(template)}
                       disabled={loading}

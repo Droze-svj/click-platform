@@ -23,6 +23,7 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const { guardOwnership } = require('../../utils/ownership');
 const { autoJumpcut, autoEditVideo } = require('../../services/aiVideoEditingService');
 const { uploadFile } = require('../../services/storageService');
+const { toAbsolutePath } = require('../../utils/pathUtils');
 const logger = require('../../utils/logger');
 
 // ── 1. Remove silences ──────────────────────────────────────────────────────
@@ -121,16 +122,14 @@ router.post('/edit-by-text', auth, asyncHandler(async (req, res) => {
     }
   }
 
-  const inputPath = owned.originalFile?.url?.startsWith('/')
-    ? path.join(__dirname, '../../..', owned.originalFile.url)
-    : owned.originalFile?.url;
+  const inputPath = toAbsolutePath(owned.originalFile?.url);
 
   if (!inputPath || !fs.existsSync(inputPath)) {
     return sendError(res, 'Source video file not found on disk', 404);
   }
 
   const outputFilename = `text-edit-${videoId}-${Date.now()}.mp4`;
-  const outputPath = path.join(__dirname, '../../../uploads/videos', outputFilename);
+  const outputPath = toAbsolutePath(`uploads/videos/${outputFilename}`);
 
   // Build a select filter that keeps the union of ranges. setpts/asetpts
   // re-pack the timeline so the output plays without gaps. This is the same

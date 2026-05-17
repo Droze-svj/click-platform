@@ -151,6 +151,7 @@ export default function ContentBenchmarking({ contentId }: { contentId: string }
         <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
           {(['benchmark', 'comparison', 'prediction'] as const).map((tab) => (
             <button
+              type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 font-medium transition-colors border-b-2 ${

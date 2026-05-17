@@ -32,6 +32,9 @@ export default function CreatePostPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Guard against double-fire: the header button + form Enter key can both
+    // hit this handler, and async create-post bursts will dupe the row.
+    if (loading) return
 
     if (!formData.title.trim()) {
       setError('Title is required')
@@ -119,12 +122,14 @@ export default function CreatePostPage() {
         </div>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => router.push('/dashboard/posts')}
             className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={loading}
             className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg flex items-center gap-2"
@@ -157,6 +162,7 @@ export default function CreatePostPage() {
           </label>
           <input
             type="text"
+            aria-label="Post Title"
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -171,6 +177,7 @@ export default function CreatePostPage() {
             Content *
           </label>
           <textarea
+            aria-label="Post Content"
             value={formData.content}
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             rows={12}
@@ -189,6 +196,7 @@ export default function CreatePostPage() {
             Excerpt (Optional)
           </label>
           <textarea
+            aria-label="Post Excerpt"
             value={formData.excerpt}
             onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
             rows={3}
@@ -208,6 +216,7 @@ export default function CreatePostPage() {
             </label>
             <input
               type="url"
+              aria-label="Featured Image URL"
               value={formData.featured_image}
               onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -220,6 +229,7 @@ export default function CreatePostPage() {
             </label>
             <input
               type="url"
+              aria-label="Thumbnail URL"
               value={formData.thumbnail}
               onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -236,6 +246,7 @@ export default function CreatePostPage() {
           <div className="flex gap-2 mb-2">
             <input
               type="text"
+              aria-label="Add a tag"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
@@ -243,7 +254,7 @@ export default function CreatePostPage() {
               placeholder="Add a tag"
             />
             <button
-              type="button"
+             type="button"
               onClick={addTag}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
@@ -258,8 +269,10 @@ export default function CreatePostPage() {
               >
                 {tag}
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => removeTag(tag)}
+                  aria-label={`Remove tag ${tag}`}
+                  title={`Remove tag ${tag}`}
                   className="hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -277,6 +290,7 @@ export default function CreatePostPage() {
           <div className="flex gap-2 mb-2">
             <input
               type="text"
+              aria-label="Add a category"
               value={categoryInput}
               onChange={(e) => setCategoryInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCategory())}
@@ -284,7 +298,7 @@ export default function CreatePostPage() {
               placeholder="Add a category"
             />
             <button
-              type="button"
+             type="button"
               onClick={addCategory}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
@@ -299,8 +313,10 @@ export default function CreatePostPage() {
               >
                 {category}
                 <button
-                  type="button"
+                 type="button"
                   onClick={() => removeCategory(category)}
+                  aria-label={`Remove category ${category}`}
+                  title={`Remove category ${category}`}
                   className="hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -324,10 +340,11 @@ export default function CreatePostPage() {
               { id: 'tiktok', name: 'TikTok', icon: '🎵' },
               { id: 'youtube', name: 'YouTube', icon: '📺' }
             ].map((platform) => (
-              <button
+              <button type="button"
                 key={platform.id}
-                type="button"
                 onClick={() => togglePlatform(platform.id)}
+                aria-label={formData.platforms.includes(platform.id) ? `${platform.name} — selected` : `Select ${platform.name}`}
+                title={formData.platforms.includes(platform.id) ? `${platform.name} — selected` : `Select ${platform.name}`}
                 className={`p-3 border rounded-lg text-left transition-colors ${
                   formData.platforms.includes(platform.id)
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
@@ -350,6 +367,7 @@ export default function CreatePostPage() {
           </label>
           <input
             type="datetime-local"
+            aria-label="Schedule Post"
             value={formData.scheduled_at}
             onChange={(e) => setFormData(prev => ({ ...prev, scheduled_at: e.target.value }))}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -365,6 +383,7 @@ export default function CreatePostPage() {
             Status
           </label>
           <select
+            aria-label="Post Status"
             value={formData.status}
             onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"

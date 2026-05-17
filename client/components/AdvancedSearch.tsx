@@ -333,7 +333,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             />
             {query && (
               <button
-                type="button"
+               type="button"
                 onClick={() => {
                   setQuery('')
                   setResults([])
@@ -346,7 +346,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             )}
           </div>
           <button
-            type="button"
+           type="button"
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-3 rounded-lg border transition-colors ${
               showFilters || Object.values(filters).some(v =>
@@ -358,8 +358,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           >
             <Filter className="w-5 h-5" />
           </button>
-          <button
-            type="submit"
+          <button            type="submit"
             disabled={loading || !query.trim()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
@@ -385,6 +384,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
           >
             {suggestions.map((suggestion, idx) => (
               <button
+                type="button"
                 key={idx}
                 onClick={() => handleSuggestionClick(suggestion.text)}
                 className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
@@ -404,12 +404,14 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
             <h3 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">Filters</h3>
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={clearFilters}
                 className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
                 Clear All
               </button>
               <button
+                type="button"
                 onClick={() => setShowFilters(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -427,6 +429,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               <div className="flex flex-wrap gap-2">
                 {facets.platforms.map(platform => (
                   <button
+                    type="button"
                     key={platform}
                     onClick={() => toggleFilter('platforms', platform)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
@@ -451,6 +454,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               <div className="flex flex-wrap gap-2">
                 {facets.contentTypes.map(type => (
                   <button
+                    type="button"
                     key={type}
                     onClick={() => toggleFilter('contentTypes', type)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
@@ -475,6 +479,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {facets.tags.slice(0, 20).map(tag => (
                   <button
+                    type="button"
                     key={tag}
                     onClick={() => toggleFilter('tags', tag)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
@@ -499,6 +504,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               <div className="flex flex-wrap gap-2">
                 {facets.statuses.map(status => (
                   <button
+                    type="button"
                     key={status}
                     onClick={() => toggleFilter('status', status)}
                     className={`px-3 py-1 rounded-full text-sm transition-colors ${
@@ -519,6 +525,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
       {/* Quick Actions */}
       <div className="flex gap-2 flex-wrap">
         <button
+          type="button"
           onClick={() => {
             const types: Array<'semantic' | 'faceted' | 'natural'> = ['semantic', 'faceted', 'natural']
             const currentIndex = types.indexOf(searchType)
@@ -532,6 +539,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
         {query && (
           <>
             <button
+              type="button"
               onClick={saveCurrentSearch}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-2 text-sm"
             >
@@ -539,6 +547,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               Save Search
             </button>
             <button
+              type="button"
               onClick={createSearchAlert}
               className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center gap-2 text-sm"
             >
@@ -561,6 +570,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               <div className="space-y-2">
                 {searchHistory.slice(0, 5).map((item, idx) => (
                   <button
+                    type="button"
                     key={idx}
                     onClick={() => handleHistoryClick(item)}
                     className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
@@ -582,6 +592,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               <div className="space-y-2">
                 {savedSearches.slice(0, 5).map((saved) => (
                   <button
+                    type="button"
                     key={saved._id}
                     onClick={() => handleSavedSearchClick(saved)}
                     className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
@@ -638,6 +649,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
               {query && (
                 <>
                   <button
+                    type="button"
                     onClick={saveCurrentSearch}
                     className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
@@ -645,6 +657,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                     Save
                   </button>
                   <button
+                    type="button"
                     onClick={createSearchAlert}
                     className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"
                   >
@@ -678,6 +691,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                       </span>
                     )}
                     <button
+                      type="button"
                       onClick={() => handleResultClick(result, idx)}
                       className="p-1 text-gray-400 hover:text-gray-600"
                       title="Preview"
@@ -729,6 +743,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => {
                     setQuery(alert.query)
                     if (alert.filters) setFilters(prev => ({ ...prev, ...alert.filters }))
@@ -754,6 +769,7 @@ export default function AdvancedSearch({ onResultSelect }: { onResultSelect?: (c
                   {previewContent.content.title}
                 </h3>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowPreview(false)
                     setPreviewContent(null)

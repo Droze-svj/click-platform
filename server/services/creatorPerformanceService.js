@@ -99,7 +99,22 @@ async function ingestPostPerformance({ userId, contentId, metrics } = {}) {
       });
     }
   }
-  return { updated, delta, picks: picks.length };
+
+  // Stamp the profile's `lastIngestedAt` so the insights endpoint can
+  // surface "Last updated X minutes ago" and the client can decide when
+  // to refresh. Previously this was read but never written, so the UI
+  // had no way to tell whether data was 2 minutes or 2 weeks old.
+  try {
+    await UserStyleProfile.updateOne(
+      { userId },
+      { $set: { lastIngestedAt: new Date() } },
+      { upsert: false },
+    );
+  } catch (e) {
+    logger.warn('[creatorPerformance] lastIngestedAt write failed', { userId, error: e.message });
+  }
+
+  return { updated, delta, picks: picks.length, lastIngestedAt: new Date() };
 }
 
 /**

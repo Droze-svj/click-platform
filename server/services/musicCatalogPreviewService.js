@@ -19,8 +19,14 @@ const previewCache = new Map(); // In-memory cache for preview URLs
  */
 async function getPreviewUrl(trackId, source, userId) {
   try {
-    // Check cache
-    const cacheKey = `${source}:${trackId}`;
+    // Per-user cache key. Previously this was `${source}:${trackId}` with
+    // no userId — meaning if licensed-music permissions differ between
+    // users (e.g. user A bought a premium license and user B is on free),
+    // the cached URL from A's request would be served to B. Scoping by
+    // userId makes that structurally impossible. `userId` may be null
+    // for anonymous catalog browsing; we fall back to a public bucket
+    // key so anonymous reads still share a cache entry.
+    const cacheKey = `${userId || 'public'}:${source}:${trackId}`;
     const cached = previewCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < PREVIEW_CACHE_TTL) {
       return cached.url;
