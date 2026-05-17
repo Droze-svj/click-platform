@@ -129,7 +129,7 @@ function renderThumbnail({ inputPath, outputPath, timestamp, overlay }) {
     // text so commas/colons in user content don't break the filter.
     const escapedText = String(overlay || '')
       .replace(/\\/g, '\\\\')
-      .replace(/'/g, "\\'")
+      .replace(/'/g, "’")
       .replace(/:/g, '\\:')
       .replace(/%/g, '\\%');
 

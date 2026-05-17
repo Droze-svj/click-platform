@@ -22,7 +22,7 @@ async function applyAnimatedText(videoPath, outputPath, textOverlay) {
     else if (position === 'bottom') yPos = 'h-th-50';
     
     // Build text filter with style
-    let textFilter = `drawtext=text='${text.replace(/'/g, "\\'")}'`;
+    let textFilter = `drawtext=text='${text.replace(/'/g, "’")}'`;
     textFilter += `:fontfile=${font.family || 'Arial'}`;
     textFilter += `:fontsize=${font.size || 42}`;
     textFilter += `:fontcolor=${style.color || '#FFFFFF'}`;

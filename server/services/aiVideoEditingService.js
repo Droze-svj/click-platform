@@ -1369,7 +1369,7 @@ function renderManualEditIntermediate({ inputPath, editorState, outputDir, video
       const escaped = text
         .replace(/[\r\n]+/g, ' ')          // newlines → space
         .replace(/\\/g, '\\\\')             // backslash first (everything below adds backslashes)
-        .replace(/'/g, "\\'")               // single quote (filter delimiter)
+        .replace(/'/g, "’")               // single quote -> typographic quote
         .replace(/`/g, '\\`')               // backtick (shell command substitution if filter leaks to shell)
         .replace(/;/g, '\\;')               // semicolon (filter-graph separator)
         .replace(/,/g, '\\,')               // comma (drawtext arg separator)
@@ -2246,7 +2246,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           }
 
           // Safe-escape for drawtext: single quotes must be \' in the filter string
-          const safeText = rawText.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
+          const safeText = rawText.replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
 
           const captionFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${sty.fontColor}':x='${x}':y='${finalY}':box=1:boxcolor='${sty.bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow}:shadowy=${sty.shadow}:enable='between(t\\,${s}\\,${e})'`;
           videoFilters.push(captionFilter);
@@ -2275,7 +2275,7 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           const e = Math.max(0.1, Number(overlay.endTime ?? duration) - globalTimeOffset).toFixed(3);
           if (Number(s) >= globalDuration || Number(e) <= 0) return;
 
-          const safeText = (overlay.text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
+          const safeText = (overlay.text || '').replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
 
           const textFilter = `drawtext=text='${safeText}':fontsize=${fontSize}:fontcolor='${color}':x='${x}':y='${y}':box=1:boxcolor='${bgColor}':borderw=2:bordercolor='black':enable='between(t\\,${s}\\,${e})'`;
           videoFilters.push(textFilter);
@@ -2295,8 +2295,8 @@ Transcript: "${transcript.substring(0, 1500)}"`;
           const endT = Math.max(0.1, (inlay.time + inlay.duration) - globalTimeOffset).toFixed(3);
           if (Number(startT) >= globalDuration || Number(endT) <= 0) return;
 
-          const prodName = (inlay.product || 'Product').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
-          const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:').replace(/%/g, '\\%');
+          const prodName = (inlay.product || 'Product').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
+          const prodPrice = (inlay.price || 'Link in bio').toUpperCase().replace(/\\/g, '\\\\').replace(/'/g, "’").replace(/:/g, '\\:').replace(/%/g, '\\%');
           
           // Outer glass border box (160px tall card, positioned 280px above bottom edge)
           videoFilters.push(`drawbox=x='(w-500)/2':y='h-440':w=500:h=160:color=white@0.8:thickness=4:enable='between(t\\,${startT}\\,${endT})'`);

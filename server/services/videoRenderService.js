@@ -100,7 +100,7 @@ const CAPTION_STYLE_MAP = {
 function escapeFfmpegText(text) {
   return String(text || '')
     .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
+    .replace(/'/g, "’")
     .replace(/:/g, '\\:')
     .replace(/%/g, '\\%')
     .substring(0, 80)           // hard-cap length to prevent filter overflow

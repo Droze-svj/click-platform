@@ -213,7 +213,7 @@ async function addTextOverlay(videoPath, textConfigs) {
         end
       } = config;
 
-      let filter = `drawtext=text='${text.replace(/'/g, "\\'")}':x=${x}:y=${y}:fontsize=${fontsize}:fontcolor=${fontcolor}`;
+      let filter = `drawtext=text='${text.replace(/'/g, "’")}':x=${x}:y=${y}:fontsize=${fontsize}:fontcolor=${fontcolor}`;
 
       if (fontfile) filter += `:fontfile=${fontfile}`;
       if (box) filter += `:box=${box}:boxcolor=${boxcolor}`;
@@ -323,7 +323,7 @@ async function applyAdvancedCaptions(videoPath, captions, styleConfig) {
 
     const captionFilters = captions.map(caption => {
       const { text, startTime, endTime } = caption;
-      const escapedText = text.replace(/'/g, "\\'").replace(/:/g, '\\:');
+      const escapedText = text.replace(/'/g, "’").replace(/:/g, '\\:');
 
       return `drawtext=text='${escapedText}':x=(w-text_w)/2:y=${yPosition}:fontsize=${fontSize}:fontcolor=${fontColor}:box=1:boxcolor=${backgroundColor}:outline=${outlineColor}:outline_width=${outlineWidth}:enable='between(t,${startTime},${endTime})'`;
     });

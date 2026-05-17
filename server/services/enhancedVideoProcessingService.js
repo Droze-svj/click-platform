@@ -99,7 +99,7 @@ async function addTextOverlays(videoPath, textOverlays, options = {}) {
       // Escape for FFmpeg drawtext
       const escapedText = overlay.text
         .replace(/\\/g, '\\\\\\\\')
-        .replace(/'/g, '\\\'')
+        .replace(/'/g, '’')
         .replace(/:/g, '\\:');
 
       const nextLabel = index === textOverlays.length - 1 ? '[v]' : `[v${index}]`;
