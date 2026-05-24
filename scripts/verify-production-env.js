@@ -34,6 +34,11 @@ const REQUIRED_VARS = {
     validate: (val) => val.length >= 32,
     message: 'Must be at least 32 characters long for security'
   },
+  OAUTH_ENCRYPTION_KEY: {
+    required: true,
+    validate: (val) => val.length >= 32,
+    message: 'Must be at least 32 characters long for security'
+  },
   
   // Frontend (NEXT_PUBLIC_*)
   NEXT_PUBLIC_API_URL: { 
