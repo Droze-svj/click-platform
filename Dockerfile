@@ -55,7 +55,7 @@ RUN pip3 install --break-system-packages --no-cache-dir yt-dlp \
    && yt-dlp --version
 
 # Install c2patool for C2PA provenance signing
-RUN curl -L https://github.com/contentauth/c2patool/releases/download/v0.8.2/c2patool-x86_64-unknown-linux-musl.tar.gz -o c2patool.tar.gz \
+RUN curl -L https://github.com/contentauth/c2patool/releases/download/v0.8.2/c2patool-v0.8.2-x86_64-unknown-linux-gnu.tar.gz -o c2patool.tar.gz \
     && tar -xzf c2patool.tar.gz \
     && mv c2patool /usr/local/bin/ \
     && rm c2patool.tar.gz \
