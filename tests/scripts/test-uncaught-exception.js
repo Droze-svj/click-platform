@@ -11,8 +11,9 @@ const TEST_TIMEOUT = 20000; // 20 seconds (server takes time to start)
 
 function testUncaughtException(mode) {
   return new Promise((resolve, reject) => {
+    const testPort = (13000 + Math.floor(Math.random() * 5000)).toString();
     const serverProcess = spawn('node', [SERVER_PATH], {
-      env: { ...process.env, NODE_ENV: mode },
+      env: { ...process.env, PORT: testPort, NODE_ENV: mode },
       cwd: path.join(__dirname, '../..'),
       stdio: ['pipe', 'pipe', 'pipe']
     });

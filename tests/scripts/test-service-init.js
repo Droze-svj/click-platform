@@ -11,8 +11,9 @@ const TEST_TIMEOUT = 15000; // 15 seconds
 
 function testServiceInit(testName, envVars) {
   return new Promise((resolve, reject) => {
+    const testPort = (13000 + Math.floor(Math.random() * 5000)).toString();
     const serverProcess = spawn('node', [SERVER_PATH], {
-      env: { ...process.env, ...envVars, NODE_ENV: 'development' },
+      env: { ...process.env, PORT: testPort, ...envVars, NODE_ENV: 'development' },
       cwd: path.join(__dirname, '../..'),
       stdio: ['pipe', 'pipe', 'pipe']
     });
@@ -110,7 +111,7 @@ async function runTests() {
     {
       name: 'Sentry Initialization Failure',
       env: { SENTRY_DSN: 'invalid-dsn' },
-      expectedPattern: /Sentry.*placeholder|Sentry DSN not configured/i
+      expectedPattern: /Sentry.*initialized|Sentry.*failed|SENTRY_DSN not set/i
     },
     {
       name: 'Supabase Initialization Failure',

@@ -127,7 +127,7 @@ run_test "Missing Redis" \
 echo -e "\nTest 2: Server startup with missing Sentry"
 run_test "Missing Sentry" \
     "SENTRY_DSN=" \
-    "Sentry DSN not configured"
+    "SENTRY_DSN not set"
 
 echo -e "\nTest 3: Server startup with missing Email Service"
 run_test "Missing Email Service" \
