@@ -366,7 +366,12 @@ setImmediate(() => {
     // CRITICAL: Skip initialization if REDIS_URL is missing in production to prevent crashes
     const redisUrl = process.env.REDIS_URL?.trim();
     if (isProduction && (!redisUrl || redisUrl === '' || redisUrl.includes('localhost') || redisUrl.includes('127.0.0.1'))) {
-      logger.warn('⚠️ Skipping worker initialization: REDIS_URL is missing or invalid for production.');
+      if (redisUrl && (redisUrl.includes('localhost') || redisUrl.includes('127.0.0.1'))) {
+        logger.error('❌ REDIS_URL contains localhost/127.0.0.1 in production. This is not allowed.');
+        logger.error('❌ Workers will NOT be initialized. Use a cloud Redis service.');
+      } else {
+        logger.warn('⚠️ Skipping worker initialization: REDIS_URL is missing or invalid for production.');
+      }
       return;
     }
 
@@ -483,7 +488,7 @@ try {
 // started anyway and only failed on the first DB query, which during a
 // live demo presented as an opaque 500 instead of a clear boot failure.
 if (process.env.NODE_ENV === 'production') {
-  const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'MONGODB_URI', 'JWT_SECRET'];
+  const required = ['MONGODB_URI', 'JWT_SECRET'];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length > 0) {
     logger.error('FATAL: missing required env vars in production', { missing });
@@ -491,27 +496,28 @@ if (process.env.NODE_ENV === 'production') {
     process.exit(1);
   }
 
-  // Probe Supabase reachability once. We don't gate boot on Mongo here
-  // (a separate retry loop handles that) or Redis (graceful degradation),
-  // but Supabase is the auth source-of-truth — if it's unreachable the
-  // app cannot serve a single authed request.
-  (async () => {
-    try {
-      const { createClient } = require('@supabase/supabase-js');
-      const probe = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-      const { error: probeErr } = await probe.from('users').select('id').limit(1);
-      if (probeErr) {
-        logger.error('FATAL: Supabase reachable but query failed', { error: probeErr.message });
+  // Probe Supabase reachability once if configured.
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    (async () => {
+      try {
+        const { createClient } = require('@supabase/supabase-js');
+        const probe = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        const { error: probeErr } = await probe.from('users').select('id').limit(1);
+        if (probeErr) {
+          logger.error('FATAL: Supabase reachable but query failed', { error: probeErr.message });
+          // eslint-disable-next-line no-process-exit
+          process.exit(1);
+        }
+        logger.info('Supabase reachability check passed');
+      } catch (err) {
+        logger.error('FATAL: Supabase unreachable at boot', { error: err.message });
         // eslint-disable-next-line no-process-exit
         process.exit(1);
       }
-      logger.info('Supabase reachability check passed');
-    } catch (err) {
-      logger.error('FATAL: Supabase unreachable at boot', { error: err.message });
-      // eslint-disable-next-line no-process-exit
-      process.exit(1);
-    }
-  })();
+    })();
+  } else {
+    logger.info('Supabase not configured. Caching and analytics will run in standalone MongoDB mode.');
+  }
 }
 
 // Initialize production configuration if in production
@@ -821,13 +827,15 @@ const CACHE_SKIP_PATHS = [
   '/subscription',
   '/integrations',
   '/oauth/connections',
+  '/user/',
+  '/settings',
 ];
 app.use('/api', (req, res, next) => {
   if (req.method !== 'GET') return next();
   const path = req.path || '';
   if (CACHE_SKIP_PATHS.some((p) => path.includes(p))) return next();
   const { cacheMiddleware } = require('./middleware/cacheMiddleware');
-  return cacheMiddleware(300000)(req, res, next); // 5 minutes cache
+  return cacheMiddleware(300)(req, res, next); // 5 minutes cache
 });
 
 app.get('/api/test-mi', (req, res) => res.json({ success: true, message: 'MI test route works' }));
@@ -1704,13 +1712,16 @@ if (redisCache && typeof redisCache.middleware === 'function') {
   app.use('/api', redisCache.middleware({
     ttl: 300, // 5 minutes default
     skipCache: (req) => {
-      // Don't cache non-GET requests, auth routes, or uploads
+      // Don't cache non-GET requests, auth routes, user-specific data, or uploads
       return req.method !== 'GET' ||
         req.originalUrl.includes('/auth/') ||
+        req.originalUrl.includes('/user/') ||
         req.originalUrl.includes('/upload/') ||
         req.originalUrl.includes('/admin/') ||
         req.originalUrl.includes('/batch/') ||
-        req.originalUrl.includes('/export/');
+        req.originalUrl.includes('/export/') ||
+        req.originalUrl.includes('/notifications') ||
+        req.originalUrl.includes('/settings');
     },
     condition: (req) => {
       // Only cache for authenticated users or public routes
@@ -2131,7 +2142,6 @@ app.use('/api/upload/chunked', require('./routes/upload/chunked'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/privacy', require('./routes/privacy'));
 app.use('/api/cache', require('./routes/cache'));
-app.use('/api/oauth', require('./routes/oauth'));
 app.use('/api/oauth/twitter', require('./routes/oauth/twitter'));
 app.use('/api/oauth/linkedin', require('./routes/oauth/linkedin'));
 app.use('/api/oauth/google', require('./routes/oauth/google'));
@@ -2140,6 +2150,7 @@ app.use('/api/oauth/instagram', require('./routes/oauth/instagram'));
 app.use('/api/oauth/youtube', require('./routes/oauth/youtube'));
 app.use('/api/oauth/tiktok', require('./routes/oauth/tiktok'));
 app.use('/api/oauth/health', require('./routes/oauth/health'));
+app.use('/api/oauth', require('./routes/oauth'));
 // Live trends — /now returns trending sounds + hashtags + topics for a
 // platform. Wired here so the editor's "TRENDS" Quick Action and any
 // niche dashboards can read fresh feeds without hammering external APIs.
@@ -2159,8 +2170,41 @@ app.use('/api/feature-flags', require('./routes/feature-flags'));
 app.use('/api/sovereign', require('./routes/sovereign'));
 app.use('/api/captions-spatial', require('./routes/spatial'));
 app.use('/api/phase8/spatial', require('./routes/spatial'));
+app.use('/api/phase8', require('./routes/phase8'));
 app.use('/api/monetization', require('./routes/monetization'));
 app.use('/api/click', require('./routes/click'));
+app.use('/api/vector-memory', require('./routes/vector-memory'));
+app.use('/api/social', require('./routes/social'));
+
+app.get('/api/dev/db-cleanup', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const adminDb = mongoose.connection.db.admin();
+    const dbs = await adminDb.listDatabases();
+    let droppedMsg = [];
+    for (const dbInfo of dbs.databases) {
+      if (dbInfo.name !== 'click_v3' && dbInfo.name !== 'admin' && dbInfo.name !== 'local') {
+        const tempDb = mongoose.connection.client.db(dbInfo.name);
+        await tempDb.dropDatabase();
+        droppedMsg.push(`Dropped DB: ${dbInfo.name}`);
+      }
+    }
+    
+    // Also drop some specific junk collections in click_v3 if any
+    const db = mongoose.connection.db;
+    const collections = await db.listCollections().toArray();
+    let droppedCols = 0;
+    const junkCols = collections.filter(c => c.name.includes('test') || c.name.includes('old') || c.name.includes('bak'));
+    for (const coll of junkCols.slice(0, 10)) {
+      await db.collection(coll.name).drop();
+      droppedCols++;
+    }
+
+    res.json({ success: true, message: `Dropped ${droppedCols} junk collections. ${droppedMsg.join(', ')}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Health check (no rate limiting)
 app.use('/api/health', require('./routes/health'));
@@ -2437,11 +2481,25 @@ if (process.env.JEST_WORKER_ID) {
     }
   };
 
-  if (healthCheckServer && healthCheckServer.listening) {
+  if (healthCheckServer) {
     logger.info('Closing health check server to start main server...');
-    healthCheckServer.close(() => {
-      setTimeout(startMainServer, 100);
-    });
+    if (typeof healthCheckServer.closeAllConnections === 'function') {
+      healthCheckServer.closeAllConnections();
+    }
+    const closeServer = () => {
+      healthCheckServer.close(() => {
+        logger.info('Health check server closed');
+        setTimeout(startMainServer, 100);
+      });
+    };
+    if (healthCheckServer.listening) {
+      closeServer();
+    } else {
+      healthCheckServer.once('listening', closeServer);
+      healthCheckServer.once('error', () => {
+        startMainServer();
+      });
+    }
   } else {
     startMainServer();
   }
